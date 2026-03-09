@@ -1,0 +1,562 @@
+import LandingHeader from "./components/LandingHeader";
+import LandingHero from "./components/LandingHero";
+import Link from "next/link";
+import type { IconType } from "react-icons";
+import {
+  FiArrowRight,
+  FiBarChart2,
+  FiBookOpen,
+  FiCheck,
+  FiCheckCircle,
+  FiClipboard,
+  FiFileText,
+  FiLayers,
+  FiLock,
+  FiMail,
+  FiShield,
+  FiX,
+} from "react-icons/fi";
+import s from "./landing-premium.module.css";
+
+type CardItem = {
+  icon: IconType;
+  title: string;
+  text: string;
+};
+
+type StepItem = {
+  no: string;
+  title: string;
+  text: string;
+};
+
+type PlanItem = {
+  name: string;
+  price: string;
+  subtitle: string;
+  points: string[];
+  cta: string;
+  featured?: boolean;
+  badge?: string;
+};
+
+type ComparisonRow = {
+  label: string;
+  values: Array<string | boolean>;
+};
+
+const modules: CardItem[] = [
+  {
+    icon: FiClipboard,
+    title: "Yapılandırılmış Anamnez",
+    text: "Temel bilgiler, klinik öykü ve gözlemler için düzenli kayıt alanı sunar.",
+  },
+  {
+    icon: FiBarChart2,
+    title: "Skor Girişi",
+    text: "Alt boyut ve toplam skor girişi tek ekranda, hızlı ve kontrollü şekilde yapılır.",
+  },
+  {
+    icon: FiFileText,
+    title: "Versiyonlu Raporlama",
+    text: "Her değerlendirme ayrı sürüm olarak korunur; geçmiş kayıtlar kaybolmaz.",
+  },
+  {
+    icon: FiBookOpen,
+    title: "Klinik Kaynak Alanı",
+    text: "Ekip standardını destekleyen teori, uygulama ve raporlama içerikleri sunar.",
+  },
+];
+
+const approach: CardItem[] = [
+  {
+    icon: FiLayers,
+    title: "Düzenli veri yapısı",
+    text: "Anamnez ve skor alanları standart şemada tutulur.",
+  },
+  {
+    icon: FiShield,
+    title: "Sabit klinik çekirdek",
+    text: "Risk işaretleme ve rapor mantığı kural tabanlı yapı ile korunur.",
+  },
+  {
+    icon: FiLock,
+    title: "Versiyonlu kayıt mantığı",
+    text: "Her rapor ayrı sürüm olarak arşivlenir ve önceki kayıtların üstüne yazılmaz.",
+  },
+];
+
+const steps: StepItem[] = [
+  {
+    no: "01",
+    title: "Danışan kaydı oluşturulur",
+    text: "Anonim kod ve klinik bağlam düzenli alanlarda kaydedilir.",
+  },
+  {
+    no: "02",
+    title: "Alt boyut skorları girilir",
+    text: "Terapist, maddelere boğulmadan gerekli skorları tek ekranda tamamlar.",
+  },
+  {
+    no: "03",
+    title: "Rapor üretilir",
+    text: "Kural tabanlı rapor iskeleti ile klinik çıktı hızlıca hazırlanır.",
+  },
+  {
+    no: "04",
+    title: "Sürüm geçmişi korunur",
+    text: "Yeni rapor ayrı sürüm olarak saklanır, değişim izi görünür kalır.",
+  },
+];
+
+const plans: PlanItem[] = [
+  {
+    name: "Uzman",
+    price: "1.490 TL / ay",
+    subtitle: "Tek terapist / tek panel",
+    points: [
+      "Yapılandırılmış anamnez",
+      "Skor girişi ve rapor geçmişi",
+      "Aylık 25 aktif danışan kapasitesi",
+    ],
+    cta: "Başvur",
+  },
+  {
+    name: "Profesyonel",
+    price: "2.990 TL / ay",
+    subtitle: "Klinik ekipler için ölçeklenebilir",
+    points: [
+      "Çoklu kullanıcı erişimi",
+      "Genişletilmiş eğitim alanı",
+      "Daha yüksek vaka hacmi",
+    ],
+    cta: "İletişime Geç",
+    featured: true,
+    badge: "Önerilen",
+  },
+  {
+    name: "Kurumsal",
+    price: "Özel Teklif",
+    subtitle: "Merkez, kurum ve çoklu ekip yapısı",
+    points: [
+      "Admin rolü",
+      "Klinik onboarding",
+      "Özel uyarlama ve entegrasyon",
+    ],
+    cta: "Görüşme Planla",
+  },
+];
+
+const comparisonRows: ComparisonRow[] = [
+  { label: "Yapılandırılmış anamnez", values: [true, true, true] },
+  { label: "Tek ölçek skor girişi", values: [true, true, true] },
+  { label: "Versiyonlu rapor geçmişi", values: [true, true, true] },
+  { label: "Aylık aktif danışan", values: ["25", "75", "Kuruma göre"] },
+  { label: "Kullanıcı sayısı", values: ["1", "3", "Çoklu"] },
+  { label: "Klinik onboarding", values: [false, true, true] },
+  { label: "Özel uyarlama", values: [false, false, true] },
+];
+
+const heroHighlights = [
+  "Tek panelde kayıt, skor ve rapor akışı",
+  "Terapist kontrolünde klinik işleyiş",
+  "Versiyonlu ve izlenebilir rapor mantığı",
+];
+
+const metricCards = [
+  {
+    title: "Tek panel",
+    text: "Danışan kaydı, skor girişi ve raporlama aynı yapı içinde ilerler.",
+  },
+  {
+    title: "Hızlı kayıt",
+    text: "Düzenli alanlar sayesinde tekrar eden klinik bilgi yükü azalır.",
+  },
+  {
+    title: "Versiyonlu rapor",
+    text: "Her sürüm korunur; önceki kayıtların üstüne yazılmaz.",
+  },
+  {
+    title: "Ekip standardı",
+    text: "Kaynak alanı ve ortak raporlama dili ile daha tutarlı çıktı üretilir.",
+  },
+];
+
+const therapistFeatures = [
+  "Danışan listesi ve kayıt akışı",
+  "Alt boyut skor girişi",
+  "Versiyonlu rapor geçmişi",
+  "Eğitim ve klinik kaynak alanı",
+];
+
+function renderCell(value: string | boolean) {
+  if (typeof value === "boolean") {
+    return value ? (
+      <span className={s.boolTrue}>
+        <FiCheck />
+      </span>
+    ) : (
+      <span className={s.boolFalse}>
+        <FiX />
+      </span>
+    );
+  }
+
+  return <span className={s.tableText}>{value}</span>;
+}
+
+export default function Home() {
+  return (
+      <>
+        <LandingHeader />
+        
+      <LandingHero />
+<main className={s.page}>
+      <section id="platform" className={`${s.section} ${s.heroSection}`}>
+        <div className={s.shell}>
+          <div className={s.heroGrid}>
+            <div className={s.heroCopy}>
+              <span className={s.eyebrow}>Terapistler için klinik operasyon platformu</span>
+              <h1 className={s.heroTitle}>
+                Klinik değerlendirme, skor ve rapor süreçlerini tek panelde yönetin
+              </h1>
+              <p className={s.heroText}>
+                Self Meta AI; yapılandırılmış anamnez, alt boyut skor girişi ve versiyonlu
+                klinik raporlamayı terapist odaklı sade bir akışta birleştirir.
+              </p>
+
+              <div className={s.heroActions}>
+                <a href="#paketler" className={s.primaryButton}>
+                  Paketleri İncele <FiArrowRight />
+                </a>
+                <Link href="/starter" className={s.secondaryButton}>
+                  Terapist Panelini Gör
+                </Link>
+              </div>
+
+              <div className={s.highlightList}>
+                {heroHighlights.map((item) => (
+                  <div key={item} className={s.highlightItem}>
+                    <FiCheckCircle />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className={s.heroVisual}>
+              <div className={s.mockPanel}>
+                <div className={s.mockTop}>
+                  <div className={s.mockDots}>
+                    <span />
+                    <span />
+                    <span />
+                  </div>
+                  <strong>Self Meta</strong>
+                  <span className={s.mockState}>Stabil</span>
+                </div>
+
+                <div className={s.mockBody}>
+                  <div className={s.mockFlow}>
+                    <div className={s.mockTitle}>Klinik Akış</div>
+
+                    <div className={s.flowRow}>
+                      <b>1. Danışan Kaydı</b>
+                      <span>Anonim kod ve anamnez</span>
+                    </div>
+
+                    <div className={s.flowRow}>
+                      <b>2. Skor Girişi</b>
+                      <div className={s.scoreChips}>
+                        <span>Alt 1</span>
+                        <span>18</span>
+                        <span>Alt 2</span>
+                        <span>24</span>
+                        <span>Alt 3</span>
+                        <span>16</span>
+                        <span>Alt 4</span>
+                        <span>20</span>
+                      </div>
+                    </div>
+
+                    <div className={s.flowRow}>
+                      <b>3. Risk Etiketi</b>
+                      <span>Orta risk</span>
+                    </div>
+
+                    <div className={s.flowRow}>
+                      <b>4. Rapor v4</b>
+                      <span>Genel özet · Klinik yorum · Risk alanları</span>
+                    </div>
+                  </div>
+
+                  <div className={s.mockAside}>
+                    <div className={s.sideCard}>
+                      <small>LLM desteği</small>
+                      <strong>Dil iyileştirme</strong>
+                    </div>
+                    <div className={`${s.sideCard} ${s.sideCardDark}`}>
+                      <small>Klinik çekirdek</small>
+                      <strong>Sabit kurallar</strong>
+                    </div>
+                    <div className={`${s.sideCard} ${s.sideCardSoft}`}>
+                      <small>Raporlama</small>
+                      <strong>Versiyonlu çıktı</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={s.floatCard}>
+                <FiLock />
+                <div>
+                  <strong>Önceki kayıtlar korunur</strong>
+                  <span>Her değerlendirme ayrı sürüm olur</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={s.metricsGrid}>
+            {metricCards.map((item) => (
+              <article key={item.title} className={s.metricCard}>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="moduller" className={s.section}>
+        <div className={s.shell}>
+          <div className={s.sectionHead}>
+            <span className={s.sectionTag}>Modüller</span>
+            <h2>Klinik akışta kullanılan temel modüller</h2>
+            <p>
+              Terapistin günlük işleyişinde gerçekten karşılık bulan çekirdek alanlar.
+            </p>
+          </div>
+
+          <div className={s.moduleGrid}>
+            {modules.map((item) => {
+              const Icon = item.icon;
+              return (
+                <article key={item.title} className={s.moduleCard}>
+                  <div className={s.iconBox}>
+                    <Icon />
+                  </div>
+                  <h3>{item.title}</h3>
+                  <p>{item.text}</p>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      <section id="yaklasim" className={s.section}>
+        <div className={s.shell}>
+          <div className={s.approachPanel}>
+            <div className={s.sectionHeadLeft}>
+              <span className={s.sectionTag}>Yaklaşım</span>
+              <h2>Kontrollü yapay zeka yaklaşımı</h2>
+              <p>
+                Sistem; veri düzeni, klinik kural ve rapor geçmişi tarafında sabit
+                kalır. Yapay zeka desteği varsa, terapistin kontrolünü zayıflatmadan
+                yalnızca akıcılığı destekler.
+              </p>
+            </div>
+
+            <div className={s.approachGrid}>
+              {approach.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <article key={item.title} className={s.approachCard}>
+                    <div className={s.iconBoxSmall}>
+                      <Icon />
+                    </div>
+                    <h3>{item.title}</h3>
+                    <p>{item.text}</p>
+                  </article>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="terapistler" className={s.section}>
+        <div className={s.shell}>
+          <div className={s.splitGrid}>
+            <div className={s.photoPanel}>
+              <div className={s.photoBadge}>Görsel Alanı</div>
+              <div className={s.photoFrame}>
+                <div className={s.photoLayerOne} />
+                <div className={s.photoLayerTwo} />
+                <div className={s.photoStats}>
+                  <div>
+                    <strong>Tek panel</strong>
+                    <span>Kayıt, skor, rapor</span>
+                  </div>
+                  <div>
+                    <strong>İzlenebilir</strong>
+                    <span>Sürüm kontrollü çıktı</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className={s.splitContent}>
+              <span className={s.sectionTag}>Terapistler İçin</span>
+              <h2>Terapist için sade, düzenli ve güven veren bir kullanım deneyimi</h2>
+              <p>
+                Amaç; terapisti ekrana değil sürece odaklamak. Bu yüzden sayfalar
+                gösterişli değil, açık ve işlevsel olacak şekilde kurgulanır.
+              </p>
+
+              <div className={s.featureList}>
+                {therapistFeatures.map((item) => (
+                  <div key={item} className={s.featureItem}>
+                    <FiCheckCircle />
+                    <span>{item}</span>
+                  </div>
+                ))}
+              </div>
+
+              <div className={s.inlineNote}>
+                Klinik kayıt yapısı, rapor dilini ve ekip içi standardı destekleyen
+                operasyon mantığıyla ilerler.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className={s.section}>
+        <div className={s.shell}>
+          <div className={s.sectionHead}>
+            <span className={s.sectionTag}>İş Akışı</span>
+            <h2>Sunumda anlatması kolay, klinikte kullanması mantıklı akış</h2>
+            <p>Ürünün omurgası; anlaşılır ve tekrar edilebilir 4 temel adıma dayanır.</p>
+          </div>
+
+          <div className={s.stepGrid}>
+            {steps.map((item) => (
+              <article key={item.no} className={s.stepCard}>
+                <div className={s.stepNo}>{item.no}</div>
+                <h3>{item.title}</h3>
+                <p>{item.text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="paketler" className={`${s.section} ${s.pricingSection}`}>
+        <div className={s.shell}>
+          <div className={s.sectionHead}>
+            <span className={s.sectionTag}>Paketler</span>
+            <h2>Klinik yapıya uygun, net ve ölçeklenebilir paketler</h2>
+            <p>
+              Paketler; terapist sayısı, vaka hacmi ve kurumsal ihtiyaç düzeyine göre ayrılır.
+            </p>
+          </div>
+
+          <div className={s.planGrid}>
+            {plans.map((plan) => (
+              <article
+                key={plan.name}
+                className={`${s.planCard} ${plan.featured ? s.planCardFeatured : ""}`}
+              >
+                {plan.badge ? <span className={s.planBadge}>{plan.badge}</span> : null}
+
+                <div className={s.planHead}>
+                  <h3>{plan.name}</h3>
+                  <p>{plan.subtitle}</p>
+                </div>
+
+                <div className={s.planPrice}>{plan.price}</div>
+
+                <ul className={s.planPoints}>
+                  {plan.points.map((point) => (
+                    <li key={point}>
+                      <FiCheckCircle />
+                      <span>{point}</span>
+                    </li>
+                  ))}
+                </ul>
+
+                <a href="#iletisim" className={s.primaryButton}>
+                  {plan.cta}
+                </a>
+              </article>
+            ))}
+          </div>
+
+          <div className={s.tableWrap}>
+            <table className={s.table}>
+              <thead>
+                <tr>
+                  <th>Özellik</th>
+                  <th>Uzman</th>
+                  <th>Profesyonel</th>
+                  <th>Kurumsal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {comparisonRows.map((row) => (
+                  <tr key={row.label}>
+                    <td>{row.label}</td>
+                    {row.values.map((value, index) => (
+                      <td key={`${row.label}-${index}`}>{renderCell(value)}</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section id="iletisim" className={s.section}>
+        <div className={s.shell}>
+          <div className={s.ctaPanel}>
+            <div className={s.ctaText}>
+              <span className={s.sectionTagDark}>İletişim</span>
+              <h2>Klinik işleyişi sadeleştiren güçlü bir ürüne geçiş yapmak istersen, başlangıç burası</h2>
+              <p>
+                Self Meta AI; terapist odaklı klinik değerlendirme, skor ve rapor süreçlerini
+                tek panel mantığıyla bir araya getiren ölçeklenebilir bir üründür.
+              </p>
+            </div>
+
+            <div className={s.ctaActions}>
+              <Link href="/starter" className={s.primaryButtonLight}>
+                Panele Geç <FiArrowRight />
+              </Link>
+              <Link href="/auth-login" className={s.secondaryButtonLight}>
+                Giriş Ekranı
+              </Link>
+
+              <div className={s.contactBox}>
+                <FiMail />
+                <span>selfmeta.ai.demo@gmail.com</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <footer className={s.footer}>
+        <div className={s.shell}>
+          <div className={s.footerRow}>
+            <strong>Self Meta AI</strong>
+            <span>Klinik değerlendirme, skor girişi ve versiyonlu raporlama altyapısı</span>
+          </div>
+        </div>
+      </footer>
+    </main>
+      </>
+    );
+}

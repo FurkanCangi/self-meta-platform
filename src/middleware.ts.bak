@@ -1,0 +1,92 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createServerClient } from "@supabase/ssr";
+
+const PROTECTED_PREFIXES = [
+  "/starter",
+  "/clients",
+  "/assessments",
+  "/reports",
+  "/progress",
+  "/trainings",
+  "/blog",
+];
+
+const PUBLIC_PREFIXES = [
+  "/",
+  "/login",
+  "/signup",
+  "/pricing",
+  "/privacy",
+  "/terms",
+  "/self-regulasyon-nedir",
+];
+
+function isProtected(pathname: string) {
+  return PROTECTED_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
+function isPublic(pathname: string) {
+  return PUBLIC_PREFIXES.some((p) => pathname === p || pathname.startsWith(p + "/"));
+}
+
+export async function middleware(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+
+  if (pathname.startsWith("/_next") || pathname.startsWith("/api") || pathname.startsWith("/images") || pathname.startsWith("/favicon")) {
+    return NextResponse.next();
+  }
+
+  const res = NextResponse.next();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            res.cookies.set(name, value, options);
+          });
+        },
+      },
+    }
+  );
+
+  const { data: authData } = await supabase.auth.getUser();
+  const user = authData?.user ?? null;
+
+  if (!isProtected(pathname)) {
+    if (isPublic(pathname)) return res;
+    return res;
+  }
+
+  if (!user) {
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    url.searchParams.set("next", pathname);
+    return NextResponse.redirect(url);
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("plan, role")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  const plan = profile?.plan ?? "none";
+  if (plan === "none") {
+    const url = req.nextUrl.clone();
+    url.pathname = "/pricing";
+    url.hash = "paketler";
+    url.searchParams.set("next", pathname);
+    return NextResponse.redirect(url);
+  }
+
+  return res;
+}
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+};
