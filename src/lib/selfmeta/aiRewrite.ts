@@ -1,0 +1,51 @@
+import OpenAI from "openai"
+import { buildAIClinicalPrompt } from "./aiClinicalPrompt"
+
+const client = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  timeout: 180000,
+  maxRetries: 2,
+})
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+export async function rewriteClinicalReport(analysis: {
+  profileType: string
+  globalLevel: string
+  priorityDomains: string[]
+  domainSummary: Record<string, string>
+  anamnezThemes: string[]
+}) {
+  const prompt = buildAIClinicalPrompt(analysis)
+
+  let lastError: unknown = null
+
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const res = await client.responses.create({
+        model: process.env.OPENAI_REPORT_MODEL || "gpt-4.1-mini",
+        input: prompt,
+        max_output_tokens: 2000,
+      })
+
+      const text = (res.output_text || "").trim()
+
+      if (!text) {
+        throw new Error("AI rewrite boş döndü.")
+      }
+
+      return text
+    } catch (err) {
+      lastError = err
+      if (attempt < 3) {
+        await sleep(2000 * attempt)
+      }
+    }
+  }
+
+  throw lastError instanceof Error
+    ? lastError
+    : new Error("AI rewrite isteği başarısız oldu.")
+}

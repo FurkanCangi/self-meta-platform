@@ -1,0 +1,79 @@
+import OpenAI from "openai";
+import { zodTextFormat } from "openai/helpers/zod";
+import { AIReportAnalysisSchema } from "./aiReportSchema";
+import { buildAIReportSystemPrompt, buildAIReportUserPrompt, type RawAIScores } from "./aiReportPrompt";
+import { renderAIReport } from "./aiReportRenderer";
+
+type ReasoningEffort = "none" | "low" | "medium" | "high" | "xhigh";
+
+export type GenerateAIClinicalReportInput = {
+  clientCode?: string;
+  anamnez?: string;
+  ageMonths?: number | null;
+  scores?: RawAIScores;
+  deterministicReport?: string;
+};
+
+function normalizeReasoningEffort(value: string | undefined): ReasoningEffort {
+  const normalized = (value || "medium").trim().toLowerCase();
+  if (
+    normalized === "none" ||
+    normalized === "low" ||
+    normalized === "medium" ||
+    normalized === "high" ||
+    normalized === "xhigh"
+  ) {
+    return normalized;
+  }
+  return "medium";
+}
+
+export async function generateAIClinicalReport(input: GenerateAIClinicalReportInput) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY tanımlı değil. .env.local dosyasını kontrol et.");
+  }
+
+  const model = process.env.OPENAI_REPORT_MODEL || "gpt-5-mini";
+  const reasoningEffort = normalizeReasoningEffort(process.env.OPENAI_REPORT_REASONING_EFFORT);
+
+  const client = new OpenAI({
+    apiKey,
+    timeout: 180000,
+    maxRetries: 2,
+  });
+
+  const response = await client.responses.parse({
+    model,
+    reasoning: { effort: reasoningEffort },
+    input: [
+      {
+        role: "system",
+        content: buildAIReportSystemPrompt(),
+      },
+      {
+        role: "user",
+        content: buildAIReportUserPrompt(input),
+      },
+    ],
+    text: {
+      format: zodTextFormat(AIReportAnalysisSchema, "self_meta_ai_report"),
+    },
+    max_output_tokens: 2200,
+  });
+
+  const analysis = response.output_parsed;
+  if (!analysis) {
+    throw new Error("Model yapılandırılmış çıktı döndürmedi.");
+  }
+
+  const reportText = renderAIReport(analysis, input.scores ?? {}, input.ageMonths);
+
+  return {
+    analysis,
+    reportText,
+    model,
+    reasoningEffort,
+    pipeline: "structured-analysis-v3-age-bands",
+  };
+}

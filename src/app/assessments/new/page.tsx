@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import AssessmentWizardClient from "@/components/assessment/AssessmentWizardClient";
 
-function AssessmentPageFallback() {
+function AssessmentNewPageFallback() {
   return (
     <div className="mx-auto max-w-5xl px-4 py-10">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -11,9 +11,9 @@ function AssessmentPageFallback() {
   );
 }
 
-export default function AssessmentsPage() {
+export default function AssessmentsNewPage() {
   return (
-    <Suspense fallback={<AssessmentPageFallback />}>
+    <Suspense fallback={<AssessmentNewPageFallback />}>
       <AssessmentWizardClient />
     </Suspense>
   );
