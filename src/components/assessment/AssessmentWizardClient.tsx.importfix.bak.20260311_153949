@@ -38,7 +38,7 @@ export default function AssessmentWizardClient() {
 
   const [reportLocked, setReportLocked] = useState(false)
   const [reportLockReason, setReportLockReason] = useState("")
-  const selfMetaSupabase = supabase
+  const selfMetaSupabase = createClient()
 
   const checkExistingReportLock = async (clientCode?: string | number | null) => {
     try {

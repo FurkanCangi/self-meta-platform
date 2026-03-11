@@ -35,37 +35,6 @@ type ClientInfo = {
 }
 
 export default function AssessmentWizardClient() {
-
-  const [reportLocked, setReportLocked] = useState(false)
-  const [reportLockReason, setReportLockReason] = useState("")
-  const selfMetaSupabase = supabase
-
-  const checkExistingReportLock = async (clientCode?: string | number | null) => {
-    try {
-      const normalized = String(clientCode ?? "").trim()
-      if (!normalized) return
-
-      const { data, error } = await selfMetaSupabase
-        .from("reports")
-        .select("id, report_text, client_code, created_at")
-        .eq("client_code", normalized)
-        .not("report_text", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(1)
-
-      if (!error && data && data.length > 0) {
-        setReportLocked(true)
-        setReportLockReason("Bu vaka için rapor daha önce oluşturulmuş. Yeniden rapor alınamaz.")
-      } else {
-        setReportLocked(false)
-        setReportLockReason("")
-      }
-    } catch (error) {
-      console.error("report lock check failed", error)
-    }
-  }
-
-
   const router = useRouter()
   const searchParams = useSearchParams()
   const clientCode = searchParams.get("client") || ""
@@ -75,18 +44,11 @@ export default function AssessmentWizardClient() {
   const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null)
 
   useEffect(() => {
-    const clientCode =
-      (clientInfo as any)?.code ??
-      (clientInfo as any)?.client_code ??
-      (clientInfo as any)?.id ??
-      null
-
+    const clientCode = (clientInfo as any)?.code ?? (clientInfo as any)?.client_code ?? (clientInfo as any)?.id ?? null
     if (clientCode) {
       void checkExistingReportLock(clientCode)
     }
   }, [clientInfo])
-
-
   const [loadingClient, setLoadingClient] = useState(true)
   const [clientError, setClientError] = useState<string | null>(null)
   const [reportReady, setReportReady] = useState(false)

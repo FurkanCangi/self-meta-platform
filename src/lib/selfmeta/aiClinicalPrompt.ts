@@ -1,3 +1,47 @@
+const SELF_META_CLINICAL_STYLE_GUIDE = `
+YALNIZCA VERİ TEMELLİ YAZ:
+- Yalnızca deterministik analiz ve clinicalAnalysis alanlarına dayan.
+- Yeni veri, dışsal bilgi, normatif açıklama veya ek klinik çıkarım üretme.
+- Tanı koyma, müdahale önerme, tedavi önerme, tavsiye listesi üretme.
+
+DİL VE KLİNİK TON:
+- Türkçe yaz.
+- Profesyonel klinik üslup kullan.
+- "self-regülasyon" terminolojisini koru.
+- "çocuk" veya "danışan" ifadesini kullan.
+- Gereksiz çekingenlikten kaçın; ancak verinin izin vermediği kesinlik kurulmasın.
+- Bölümler kısa geçilmesin. Her başlık tamamlansın.
+- Metin yarım kalmış görünmemeli.
+- Toplam metin yaklaşık 450 ile 700 kelime aralığında olsun.
+- Her bölüm en az 3 cümle içersin.
+- Bölüm başlıkları mutlaka yer alsın.
+- Teknik örüntü yorumu boş bırakılmasın.
+- confidenceLevel ve confidenceReason bilgisi, anamnez ve ölçek uyumu bölümünde açık biçimde kullanılmalıdır.
+
+BAŞLIK ZORUNLULUĞU:
+1. Genel Klinik Değerlendirme
+2. Öncelikli Self-Regülasyon Alanları
+3. Alanlar Arası Klinik Örüntü
+4. Anamnez ve Ölçek Bulgularının Uyum Düzeyi
+5. Sonuç Düzeyinde Klinik Özet
+
+İÇERİK ZORUNLULUĞU:
+- Genel Klinik Değerlendirme bölümünde profileType, globalLevel ve korunmuş alanlar ile zorlanan alanlar birlikte anlatılmalı.
+- Öncelikli Self-Regülasyon Alanları bölümünde priorityDomains ve domainSummary kullanılmalı.
+- Alanlar Arası Klinik Örüntü bölümünde patternNarrative ve domainInteractionSummary kullanılarak tetikleyici alan, zorlanan alan, kontrol alanı ve korunmuş alan açıkça anlatılmalı.
+- Anamnez ve Ölçek Bulgularının Uyum Düzeyi bölümünde anamnezThemes, confidenceLevel ve confidenceReason doğrudan kullanılmalı.
+- Sonuç Düzeyinde Klinik Özet bölümü tamamlanmış, yoğun ve güçlü bir kapanış yapmalı.
+
+KAÇINILACAK İFADELER:
+- normatif veri gösteriyor ki
+- kesin olarak
+- önerilir
+- uygulanmalıdır
+- tedavi
+- İngilizce ifade
+- çok sık tekrar eden düşündürebilir, olabilir, görünebilir kalıpları
+`
+
 export function buildAIClinicalPrompt(data:{
 profileType:string
 globalLevel:string
@@ -6,7 +50,9 @@ domainSummary:Record<string,string>
 anamnezThemes:string[]
 }){
 
-return `
+return `${SELF_META_CLINICAL_STYLE_GUIDE}
+
+
 Sen pediatrik ergoterapi alanında çalışan bir klinik rapor yazım motorusun.
 
 YAZIM STANDARTLARI
@@ -53,11 +99,11 @@ ${data.anamnezThemes.join(" | ") || "Belirgin anamnez teması yok"}
 GÖREV
 Aşağıdaki başlıklarla bir klinik rapor yaz:
 
-1. Genel Klinik Özet
+1. Genel Klinik Değerlendirme
 2. Öncelikli Self-Regülasyon Alanları
-3. Ölçekler Arası Örüntü
-4. Anamnez ile Test Bulgularının Uyum Analizi
-5. Kısa Klinik Sonuç
+3. Alanlar Arası Klinik Örüntü
+4. Anamnez ve Ölçek Bulgularının Uyum Düzeyi
+5. Sonuç Düzeyinde Klinik Özet
 
 Önemli:
 - Anamnez ile test bulgularının nasıl örtüştüğünü açıkça belirt.
