@@ -37,7 +37,7 @@ function extractAssessmentDate(row: ReportRow) {
 }
 
 function extractPreview(row: ReportRow) {
-  const text = String(row.report_text || "Alanlar arası teknik örüntü, mevcut skor dağılımı ve anamnez temaları birlikte değerlendirilerek oluşturulmuştur." ).replace(/\s+/g, " ").trim();
+  const text = String(row.report_text || "").replace(/\s+/g, " ").trim();
   if (!text) return "Rapor metni bulunamadı.";
   return text.length > 140 ? text.slice(0, 140) + "..." : text;
 }

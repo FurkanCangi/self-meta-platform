@@ -1,12 +1,13 @@
 "use client"
 
-import { supabase } from "@/lib/supabase/client"
 import { useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { questions } from "@/lib/selfmeta/questions"
 import { calculateAssessment } from "@/lib/assessment/assessmentEngine"
 import { buildAdvancedReport } from "@/lib/selfmeta/reportEngine"
 import { extractAgeMonthsFromAnamnez, parseAgeMonths } from "@/lib/selfmeta/ageUtils"
+import { supabase } from "@/lib/supabase/client"
+
 const likert = [
   { label: "Hiçbir zaman", value: 1 },
   { label: "Nadiren", value: 2 },
@@ -64,6 +65,7 @@ export default function AssessmentWizardClient() {
     }
   }
 
+
   const router = useRouter()
   const searchParams = useSearchParams()
   const clientCode = searchParams.get("client") || ""
@@ -83,6 +85,7 @@ export default function AssessmentWizardClient() {
       void checkExistingReportLock(clientCode)
     }
   }, [clientInfo])
+
 
   const [loadingClient, setLoadingClient] = useState(true)
   const [clientError, setClientError] = useState<string | null>(null)

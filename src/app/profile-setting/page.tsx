@@ -1,160 +1,189 @@
-import React from "react";
-import Link from "next/link";
-import Image from "next/image";
+"use client"
 
-import Footer from "../components/footer";
-import Switcher from "../components/switcher";
-import UserProfileTab from "../components/user-profile-tab";
-import Wrapper from "../components/wrapper";
- 
-import * as Icon from 'react-feather'
+import { useEffect, useState } from "react"
 
-export default function Page(){
+type TherapistSettings = {
+  clinicName: string
+  reportSignatureName: string
+  reportSignatureTitle: string
+  reportFooter: string
+  emailNotifications: boolean
+  reportHistoryVisible: boolean
+}
 
-    return(
-    <Wrapper>
-         <div className="container-fluid relative px-3">
-            <div className="layout-specing">
-                <div className="grid grid-cols-1">
-                    <div className="profile-banner relative text-transparent rounded-md shadow-sm dark:shadow-gray-700 overflow-hidden">
-                        <input id="pro-banner" name="profile-banner" type="file" className="hidden"/>
-                        <div className="relative shrink-0">
-                            <Image src='/images/blog/bg.jpg' width={0} height={0} sizes="100vw" placeholder="blur" blurDataURL="/images/blog/bg.jpg" style={{width:"100%", height:"auto"}} className="!h-80 w-full object-cover" id="profile-banner" alt=""/>
-                            <div className="absolute inset-0 bg-slate-900/70"></div>
-                            <label className="absolute inset-0 cursor-pointer" htmlFor="pro-banner"></label>
-                        </div>
-                    </div>
-                </div>
+const STORAGE_KEY = "selfmeta_therapist_settings"
 
-                <div className="grid md:grid-cols-12 grid-cols-1">
-                   <UserProfileTab/>
-                   <div className="xl:col-span-9 lg:col-span-8 md:col-span-8 mt-6">
-                        <div className="grid grid-cols-1 gap-6">
-                            <div className="p-6 relative rounded-md shadow-sm dark:shadow-gray-700 bg-white dark:bg-slate-900">
-                                <h5 className="text-lg font-semibold mb-4">Personal Detail :</h5>
-                                <form>
-                                    <div className="grid lg:grid-cols-2 grid-cols-1 gap-5">
-                                        <div>
-                                            <label className="form-label font-medium">First Name : <span className="text-red-600">*</span></label>
-                                            <div className="form-icon relative mt-2">
-                                                <Icon.User className="size-4 absolute top-3 start-4"/>
-                                                <input type="text" className="form-input ps-12 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-200 focus:border-primary dark:border-gray-800 dark:focus:border-primary focus:ring-0" placeholder="First Name:" id="firstname" name="name"/>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="form-label font-medium">Last Name : <span className="text-red-600">*</span></label>
-                                            <div className="form-icon relative mt-2">
-                                                <Icon.UserCheck className="size-4 absolute top-3 start-4"/>
-                                                <input type="text" className="form-input ps-12 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-200 focus:border-primary dark:border-gray-800 dark:focus:border-primary focus:ring-0" placeholder="Last Name:" id="lastname" name="name"/>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="form-label font-medium">Your Email : <span className="text-red-600">*</span></label>
-                                            <div className="form-icon relative mt-2">
-                                                <Icon.Mail className="size-4 absolute top-3 start-4"/>
-                                                <input type="email" className="form-input ps-12 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-200 focus:border-primary dark:border-gray-800 dark:focus:border-primary focus:ring-0" placeholder="Email" name="email"/>
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="form-label font-medium">Occupation : </label>
-                                            <div className="form-icon relative mt-2">
-                                                <Icon.Bookmark className="size-4 absolute top-3 start-4"/>
-                                                <input name="name" id="occupation" type="text" className="form-input ps-12 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-200 focus:border-primary dark:border-gray-800 dark:focus:border-primary focus:ring-0" placeholder="Occupation :"/>
-                                            </div>
-                                        </div>
-                                    </div>
+const defaultSettings: TherapistSettings = {
+  clinicName: "",
+  reportSignatureName: "",
+  reportSignatureTitle: "",
+  reportFooter: "",
+  emailNotifications: true,
+  reportHistoryVisible: true,
+}
 
-                                    <div className="grid grid-cols-1">
-                                        <div className="mt-5">
-                                            <label className="form-label font-medium">Description : </label>
-                                            <div className="form-icon relative mt-2">
-                                                <Icon.MessageCircle className="size-4 absolute top-3 start-4"/>
-                                                <textarea name="comments" id="comments" className="form-input ps-11 w-full py-2 px-3 h-28 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-200 focus:border-primary dark:border-gray-800 dark:focus:border-primary focus:ring-0" placeholder="Message :"></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
+export default function ProfileSettingPage() {
+  const [settings, setSettings] = useState<TherapistSettings>(defaultSettings)
+  const [loaded, setLoaded] = useState(false)
+  const [savedAt, setSavedAt] = useState("")
 
-                                    <input type="submit" id="submit" name="send" className="py-2 px-5 inline-block font-semibold tracking-wide border align-middle duration-500 text-base text-center bg-primary hover:bg-primary-700 border-primary hover:border-primary-700 text-white rounded-md mt-5" value="Save Changes"/>
-                                </form>
-                            </div>
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY)
+      if (raw) {
+        setSettings({ ...defaultSettings, ...JSON.parse(raw) })
+      }
+    } catch {}
+    setLoaded(true)
+  }, [])
 
-                            <div className="p-6 relative rounded-md shadow-sm dark:shadow-gray-700 bg-white dark:bg-slate-900">
-                                <div className="grid lg:grid-cols-2 grid-cols-1 gap-6">
-                                    <div>
-                                        <h5 className="text-lg font-semibold mb-4">Contact Info :</h5>
-    
-                                        <form>
-                                            <div className="grid grid-cols-1 gap-5">
-                                                <div>
-                                                    <label className="form-label font-medium">Phone No. :</label>
-                                                    <div className="form-icon relative mt-2">
-                                                        <Icon.Phone className="size-4 absolute top-3 start-4"/>
-                                                        <input name="number" id="number" type="number" className="form-input ps-12 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-200 focus:border-primary dark:border-gray-800 dark:focus:border-primary focus:ring-0" placeholder="Phone :"/>
-                                                    </div>
-                                                </div>
-    
-                                                <div>
-                                                    <label className="form-label font-medium">Website :</label>
-                                                    <div className="form-icon relative mt-2">
-                                                        <Icon.Globe className="size-4 absolute top-3 start-4"/>
-                                                        <input name="url" id="url" type="url" className="form-input ps-12 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-200 focus:border-primary dark:border-gray-800 dark:focus:border-primary focus:ring-0" placeholder="Url :"/>
-                                                    </div>
-                                                </div>
-                                            </div>
-    
-                                            <button className="py-2 px-5 inline-block font-semibold tracking-wide border align-middle duration-500 text-base text-center bg-primary hover:bg-primary-700 border-primary hover:border-primary-700 text-white rounded-md mt-5">Add</button>
-                                        </form>
-                                    </div>
-                                    
-                                    <div> 
-                                        <h5 className="text-lg font-semibold mb-4">Change password :</h5>
-                                        <form>
-                                            <div className="grid grid-cols-1 gap-5">
-                                                <div>
-                                                    <label className="form-label font-medium">Old password :</label>
-                                                    <div className="form-icon relative mt-2">
-                                                        <Icon.Key className="size-4 absolute top-3 start-4"/>
-                                                        <input type="password" className="form-input ps-12 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-200 focus:border-primary dark:border-gray-800 dark:focus:border-primary focus:ring-0" placeholder="Old password"/>
-                                                    </div>
-                                                </div>
-        
-                                                <div>
-                                                    <label className="form-label font-medium">New password :</label>
-                                                    <div className="form-icon relative mt-2">
-                                                        <Icon.Key  className="size-4 absolute top-3 start-4"/>
-                                                        <input type="password" className="form-input ps-12 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-200 focus:border-primary dark:border-gray-800 dark:focus:border-primary focus:ring-0" placeholder="New password"/>
-                                                    </div>
-                                                </div>
-        
-                                                <div>
-                                                    <label className="form-label font-medium">Re-type New password :</label>
-                                                    <div className="form-icon relative mt-2">
-                                                        <Icon.Key  className="size-4 absolute top-3 start-4"/>
-                                                        <input type="password" className="form-input ps-12 w-full py-2 px-3 h-10 bg-transparent dark:bg-slate-900 dark:text-slate-200 rounded outline-none border border-gray-200 focus:border-primary dark:border-gray-800 dark:focus:border-primary focus:ring-0" placeholder="Re-type New password"/>
-                                                    </div>
-                                                </div>
-                                            </div>
-        
-                                            <button className="py-2 px-5 inline-block font-semibold tracking-wide border align-middle duration-500 text-base text-center bg-primary hover:bg-primary-700 border-primary hover:border-primary-700 text-white rounded-md mt-5">Save password</button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
+  const update = (key: keyof TherapistSettings, value: string | boolean) => {
+    setSettings((prev) => ({ ...prev, [key]: value as never }))
+  }
 
-                            <div className="p-6 relative rounded-md shadow-sm dark:shadow-gray-700 bg-white dark:bg-slate-900">
-                                <h5 className="text-lg font-semibold mb-4 text-red-600">Delete Account :</h5>
+  const handleSave = () => {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
+    setSavedAt(new Date().toLocaleString("tr-TR"))
+  }
 
-                                <p className="text-slate-400 mb-4">Do you want to delete the account? Please press below Delete button</p>
-
-                                <Link href="#" className="py-2 px-5 inline-block font-semibold tracking-wide border align-middle duration-500 text-base text-center bg-red-600 hover:bg-red-700 border-red-600 hover:border-red-700 text-white rounded-md">Delete</Link>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
+  if (!loaded) {
+    return (
+      <div className="px-6 py-8">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 text-slate-600">
+          Ayarlar yükleniyor...
         </div>
-        <Footer/>
-        <Switcher/>
-    </Wrapper>
+      </div>
     )
+  }
+
+  return (
+    <div className="px-6 py-8">
+      <div className="mx-auto max-w-5xl">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6">
+          <div className="text-sm font-semibold uppercase tracking-wide text-blue-600">Ayarlar</div>
+          <h1 className="mt-2 text-3xl font-bold text-slate-900">Terapist Paneli Ayarları</h1>
+          <p className="mt-3 max-w-3xl text-slate-600">
+            Bu alan, panel içinde kullanılacak temel terapist ayarlarını ve rapor imzası yapılandırmasını düzenlemek için hazırlanmıştır.
+          </p>
+        </div>
+
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6">
+            <div className="grid gap-5">
+              <label className="block">
+                <div className="mb-2 text-sm font-medium text-slate-700">Kurum / Klinik Adı</div>
+                <input
+                  value={settings.clinicName}
+                  onChange={(e) => update("clinicName", e.target.value)}
+                  className="h-12 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-blue-500"
+                  placeholder="Kurum adı"
+                />
+              </label>
+
+              <label className="block">
+                <div className="mb-2 text-sm font-medium text-slate-700">Rapor İmza Adı</div>
+                <input
+                  value={settings.reportSignatureName}
+                  onChange={(e) => update("reportSignatureName", e.target.value)}
+                  className="h-12 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-blue-500"
+                  placeholder="Ad Soyad"
+                />
+              </label>
+
+              <label className="block">
+                <div className="mb-2 text-sm font-medium text-slate-700">Rapor İmza Unvanı</div>
+                <input
+                  value={settings.reportSignatureTitle}
+                  onChange={(e) => update("reportSignatureTitle", e.target.value)}
+                  className="h-12 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-blue-500"
+                  placeholder="Uzm. Ergoterapist / Dr. / Öğr. Gör."
+                />
+              </label>
+
+              <label className="block">
+                <div className="mb-2 text-sm font-medium text-slate-700">Rapor Alt Notu</div>
+                <textarea
+                  value={settings.reportFooter}
+                  onChange={(e) => update("reportFooter", e.target.value)}
+                  className="min-h-[130px] w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
+                  placeholder="Rapor sonunda görünmesini istediğiniz kısa profesyonel not"
+                />
+              </label>
+
+              <label className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-4">
+                <div>
+                  <div className="font-medium text-slate-900">E-posta bildirimleri</div>
+                  <div className="text-sm text-slate-500">Önemli sistem olayları için bildirimleri açık tut</div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.emailNotifications}
+                  onChange={(e) => update("emailNotifications", e.target.checked)}
+                  className="h-5 w-5"
+                />
+              </label>
+
+              <label className="flex items-center justify-between rounded-2xl border border-slate-200 px-4 py-4">
+                <div>
+                  <div className="font-medium text-slate-900">Rapor geçmişi görünürlüğü</div>
+                  <div className="text-sm text-slate-500">Panelde kayıtlı rapor geçmişini görünür tut</div>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={settings.reportHistoryVisible}
+                  onChange={(e) => update("reportHistoryVisible", e.target.checked)}
+                  className="h-5 w-5"
+                />
+              </label>
+            </div>
+
+            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
+              <button
+                onClick={handleSave}
+                className="inline-flex h-12 items-center justify-center rounded-xl bg-blue-600 px-5 font-semibold text-white transition hover:bg-blue-700"
+              >
+                Ayarları Kaydet
+              </button>
+
+              <button
+                onClick={() => {
+                  setSettings(defaultSettings)
+                  localStorage.removeItem(STORAGE_KEY)
+                  setSavedAt("")
+                }}
+                className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Sıfırla
+              </button>
+
+              {savedAt ? (
+                <div className="text-sm text-emerald-600">Son kayıt: {savedAt}</div>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-6">
+            <h2 className="text-xl font-semibold text-slate-900">Ayar Özeti</h2>
+
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-5">
+              <div className="space-y-3 text-sm text-slate-700">
+                <div><span className="font-medium">Kurum:</span> {settings.clinicName || "-"}</div>
+                <div><span className="font-medium">İmza adı:</span> {settings.reportSignatureName || "-"}</div>
+                <div><span className="font-medium">İmza unvanı:</span> {settings.reportSignatureTitle || "-"}</div>
+                <div><span className="font-medium">E-posta bildirimleri:</span> {settings.emailNotifications ? "Açık" : "Kapalı"}</div>
+                <div><span className="font-medium">Rapor geçmişi:</span> {settings.reportHistoryVisible ? "Görünür" : "Gizli"}</div>
+              </div>
+            </div>
+
+            <div className="mt-5 rounded-2xl border border-slate-200 bg-white p-5">
+              <div className="text-sm font-semibold text-slate-900">Rapor Alt Notu Önizleme</div>
+              <p className="mt-2 whitespace-pre-line text-sm leading-7 text-slate-600">
+                {settings.reportFooter || "Henüz rapor alt notu eklenmedi."}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 }

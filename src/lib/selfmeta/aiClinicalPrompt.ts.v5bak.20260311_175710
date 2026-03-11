@@ -16,7 +16,7 @@ DİL VE KLİNİK TON:
 - Her bölüm en az 3 cümle içersin.
 - Bölüm başlıkları mutlaka yer alsın.
 - Teknik örüntü yorumu boş bırakılmasın.
-- güven düzeyi ve uyum gerekçesi bilgisi, anamnez ve ölçek uyumu bölümünde açık biçimde kullanılmalıdır.
+- confidenceLevel ve confidenceReason bilgisi, anamnez ve ölçek uyumu bölümünde açık biçimde kullanılmalıdır.
 
 BAŞLIK ZORUNLULUĞU:
 1. Genel Klinik Değerlendirme
@@ -29,7 +29,7 @@ BAŞLIK ZORUNLULUĞU:
 - Genel Klinik Değerlendirme bölümünde profileType, globalLevel ve korunmuş alanlar ile zorlanan alanlar birlikte anlatılmalı.
 - Öncelikli Self-Regülasyon Alanları bölümünde priorityDomains ve domainSummary kullanılmalı.
 - Alanlar Arası Klinik Örüntü bölümünde patternNarrative ve domainInteractionSummary kullanılarak tetikleyici alan, zorlanan alan, kontrol alanı ve korunmuş alan açıkça anlatılmalı.
-- Anamnez ve Ölçek Bulgularının Uyum Düzeyi bölümünde anamnezThemes, güven düzeyi ve uyum gerekçesi doğrudan kullanılmalı.
+- Anamnez ve Ölçek Bulgularının Uyum Düzeyi bölümünde anamnezThemes, confidenceLevel ve confidenceReason doğrudan kullanılmalı.
 - Sonuç Düzeyinde Klinik Özet bölümü tamamlanmış, yoğun ve güçlü bir kapanış yapmalı.
 
 KAÇINILACAK İFADELER:

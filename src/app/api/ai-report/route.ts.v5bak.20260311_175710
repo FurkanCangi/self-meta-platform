@@ -1,0 +1,74 @@
+async function checkExistingSelfMetaReportLock(supabase: any, payload: any) {
+  const clientCode = String(
+    payload?.client_code ??
+    payload?.clientCode ??
+    payload?.client?.code ??
+    payload?.client?.client_code ??
+    payload?.client?.id ??
+    payload?.client_id ??
+    payload?.clientId ??
+    ""
+  ).trim()
+
+  if (!clientCode) {
+    return { locked: false, existing: null }
+  }
+
+  const { data, error } = await supabase
+    .from("reports")
+    .select("id, report_text, client_code, created_at")
+    .eq("client_code", clientCode)
+    .not("report_text", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+
+  if (error) {
+    return { locked: false, existing: null }
+  }
+
+  if (data && data.length > 0) {
+    return { locked: true, existing: data[0] }
+  }
+
+  return { locked: false, existing: null }
+}
+
+import { NextResponse } from "next/server"
+import { rewriteClinicalReport } from "@/lib/selfmeta/aiRewrite"
+import { buildAdvancedReport } from "@/lib/selfmeta/reportEngine"
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json()
+
+    const report = buildAdvancedReport({
+      clientCode: body?.clientCode || "",
+      ageMonths: typeof body?.ageMonths === "number" ? body.ageMonths : null,
+      anamnez: body?.anamnez || "",
+      scores: body?.scores || {},
+    })
+
+    if (!report.clinicalAnalysis) {
+      return NextResponse.json(
+        { ok: false, error: "clinicalAnalysis oluşturulamadı." },
+        { status: 400 }
+      )
+    }
+
+    const aiText = await rewriteClinicalReport(report.clinicalAnalysis)
+
+    return NextResponse.json({
+      ok: true,
+      report: aiText,
+      deterministic: report.deterministicReport,
+    })
+  } catch (error: any) {
+    return NextResponse.json(
+      {
+        ok: false,
+        error: error?.message || "AI rapor üretilemedi.",
+      },
+      { status: 500 }
+    )
+  }
+}
