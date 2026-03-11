@@ -1,14 +1,22 @@
 import OpenAI from "openai"
 import { buildAIClinicalPrompt } from "./aiClinicalPrompt"
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  timeout: 180000,
-  maxRetries: 2,
-})
-
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+function getClient() {
+  const apiKey = process.env.OPENAI_API_KEY
+
+  if (!apiKey) {
+    throw new Error("OPENAI_API_KEY tanımlı değil.")
+  }
+
+  return new OpenAI({
+    apiKey,
+    timeout: 180000,
+    maxRetries: 2,
+  })
 }
 
 export async function rewriteClinicalReport(analysis: {
@@ -19,6 +27,7 @@ export async function rewriteClinicalReport(analysis: {
   anamnezThemes: string[]
 }) {
   const prompt = buildAIClinicalPrompt(analysis)
+  const client = getClient()
 
   let lastError: unknown = null
 
