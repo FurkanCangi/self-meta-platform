@@ -45,3 +45,6 @@ next-env.d.ts
 .site_cleanup_archive/
 .env.local
 .env
+src.bak*/
+../selfmeta_safe_backups/
+*.bak

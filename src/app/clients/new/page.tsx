@@ -1,5 +1,6 @@
 "use client";
 
+import { AGE_RANGE_OPTIONS } from "@/lib/selfmeta/ageUtils"
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -15,6 +16,7 @@ type FormState = {
   client_code: string;
   record_date: string;
   age: string;
+  ageRange: string;
   gender: string;
   sibling_count: string;
   birth_order: string;
@@ -138,7 +140,7 @@ function buildAnamnez(form: FormState) {
     `Adı-soyadı: ${form.ad_soyad}`,
     `Danışan Kodu: ${form.client_code}`,
     `Kayıt Tarihi: ${form.record_date || "—"}`,
-    `Yaş: ${form.age}`,
+    `Yaş aralığı: ${form.ageRange}`,
     `Cinsiyet: ${form.gender}`,
     `Kardeş sayısı: ${form.sibling_count}`,
     `Kaçıncı çocuk: ${form.birth_order}`,
@@ -216,6 +218,7 @@ export default function NewClientPage() {
     client_code: "",
     record_date: "",
     age: "",
+  ageRange: "",
     gender: "",
     sibling_count: "",
     birth_order: "",
@@ -281,6 +284,7 @@ export default function NewClientPage() {
       client_code: "",
       record_date: "",
       age: "",
+      ageRange: "",
       gender: "",
       sibling_count: "",
       birth_order: "",
@@ -441,9 +445,31 @@ export default function NewClientPage() {
                   <Field label="Kayıt Tarihi" hint="Boş bırakılabilir (ama zorunlu alan listesinden çıkarmadık)">
                     <input value={form.record_date} onChange={(e) => setVal("record_date", e.target.value)} className={inputBase} type="date" />
                   </Field>
-                  <Field label="Yaş">
+                  
+<div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
+  <div className="text-sm font-semibold text-slate-800">Yaş Aralığı</div>
+  <div className="mt-1 text-xs text-slate-600">
+    Lütfen çocuğun yaş aralığını seçin (zorunlu).
+  </div>
+
+  <div className="mt-3 space-y-2">
+    {["24-35 ay","36-47 ay","48-59 ay","60-71 ay"].map((label) => (
+      <label key={label} className="flex items-center gap-2 text-sm">
+        <input
+          type="radio"
+          name="ageRange"
+          value={label}
+          onChange={(e) => setForm((prev:any)=>({...prev, ageRange:e.target.value}))}
+        />
+        {label}
+      </label>
+    ))}
+  </div>
+</div>
+<Field label="Yaş">
                     <input value={form.age} onChange={(e) => setVal("age", e.target.value)} className={inputBase} placeholder="Ay / yıl" />
                   </Field>
+
                   <Field label="Cinsiyet">
                     <input value={form.gender} onChange={(e) => setVal("gender", e.target.value)} className={inputBase} placeholder="Kız / Erkek" />
                   </Field>

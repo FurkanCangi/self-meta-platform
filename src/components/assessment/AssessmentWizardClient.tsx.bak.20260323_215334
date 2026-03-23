@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { questions } from "@/lib/selfmeta/questions"
 import { calculateAssessment } from "@/lib/assessment/assessmentEngine"
 import { buildAdvancedReport } from "@/lib/selfmeta/reportEngine"
-import { extractAgeMonthsFromAnamnez } from "@/lib/selfmeta/ageUtils"
+import { extractAgeMonthsFromAnamnez, parseAgeMonths } from "@/lib/selfmeta/ageUtils"
 const likert = [
   { label: "Hiçbir zaman", value: 1 },
   { label: "Nadiren", value: 2 },
@@ -35,7 +35,6 @@ type ClientInfo = {
 
 export default function AssessmentWizardClient() {
 
-  
   const [reportLocked, setReportLocked] = useState(false)
   const [reportLockReason, setReportLockReason] = useState("")
   const selfMetaSupabase = supabase
@@ -391,9 +390,7 @@ const [saving, setSaving] = useState(false)
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Danışan</div>
               <div className="mt-2 text-xl font-semibold text-slate-900">{clientInfo.child_code}</div>
               <div className="mt-1 text-sm text-slate-500">Değerlendirme bu vaka kaydı üzerinden ilerler.</div>
-
-            <div className="mt-2 text-sm text-slate-600">Yaş: {agePreview}</div>
-            
+              <div className="mt-2 text-sm text-slate-600">Yaş: {agePreview}</div>
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">

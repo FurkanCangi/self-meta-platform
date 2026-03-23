@@ -210,10 +210,6 @@ function getMeaningfulStrengthWeakness(domainResults: DomainResult[], homogeneou
 }
 
 function selectNarrativelyMatchedDomains(domainResults: DomainResult[], anamnezFlags: string[]): DomainResult[] {
-  if (hasFlatPriorityProfile(domainResults)) {
-    return [];
-  }
-
   const joined = anamnezFlags.join(" ").toLowerCase();
   const matched = domainResults.filter((d) => {
     if (d.key === "sensory") return /duyusal|dokunsal|uyaran|gürültü|kalabalık/.test(joined);
@@ -234,15 +230,6 @@ function selectNarrativelyMatchedDomains(domainResults: DomainResult[], anamnezF
     .filter((d) => d.level !== "Tipik")
     .sort((a, b) => a.score - b.score)
     .slice(0, 3);
-}
-
-function hasFlatPriorityProfile(domainResults: DomainResult[]): boolean {
-  if (!domainResults.length) return false;
-  const scores = domainResults.map((d) => d.score);
-  const levels = domainResults.map((d) => d.level);
-  const spread = Math.max(...scores) - Math.min(...scores);
-  const sameLevel = new Set(levels).size === 1;
-  return spread <= 1 && sameLevel;
 }
 
 function detectProfileType(domainResults: DomainResult[], globalLevel: DomainLevel, homogeneous: boolean): string {
@@ -446,43 +433,12 @@ function buildDeterministicProfileSummary(
   };
 }
 
-function buildInteroCentricComment(domainResults: DomainResult[]): string {
-  const intero = domainResults.find(d => d.key === "interoception");
-  const phys = domainResults.find(d => d.key === "physiological");
-  const emo = domainResults.find(d => d.key === "emotional");
-
-  if (!intero) return "";
-
-  const interoLevel = intero.level;
-
-  // 🔴 DURUM 1: intero atipik → merkez
-  if (interoLevel === "Atipik") {
-    return "İnterosepsiyon alanının atipik düzeyi, profilin bütüncül yorumunda merkezî bir eksen oluşturmaktadır. Bedensel sinyallerin izlenmesi ve düzenleyici yanıtların organize edilmesi süreçlerindeki bu zorlanma, diğer self-regülasyon alanlarıyla birlikte ele alındığında çok alanlı örüntüyü açıklayıcı bir çerçeve sunmaktadır.";
-  }
-
-  // 🔴 DURUM 2: intero riskli + fizyolojik/duygusal eşlik
-  if (
-    interoLevel === "Riskli" &&
-    ((phys && phys.level !== "Tipik") || (emo && emo.level !== "Tipik"))
-  ) {
-    return "İnterosepsiyon alanı, fizyolojik ve/veya duygusal düzenleme süreçleriyle birlikte değerlendirildiğinde, profilin açıklanmasında bütünleştirici bir eksen olarak öne çıkmaktadır.";
-  }
-
-  // 🔴 DURUM 3: intero tipik ama genel problem var
-  return "İnterosepsiyon alanı belirgin birincil yük taşımamakla birlikte, diğer self-regülasyon alanlarıyla birlikte değerlendirildiğinde, profilin bütüncül yorumlanmasında referans bir düzenleyici eksen olarak ele alınmıştır.";
-}
-
 function buildPatternSection(profileType: string, patterns: string[], domainResults: DomainResult[], homogeneous: boolean): string {
   const lines: string[] = [`- Profil sınıflaması: ${profileType}.`];
 
   if (patterns.length > 0) {
     lines.push(...patterns.map((p) => `- ${p}`));
-    
-  const interoComment = buildInteroCentricComment(domainResults);
-  if (interoComment) {
-    lines.push(`- ${interoComment}`);
-  }
-return lines.join("\n");
+    return lines.join("\n");
   }
 
   if (homogeneous) {
@@ -498,7 +454,7 @@ return lines.join("\n");
 }
 
 function buildAnamnezFitSection(
-  anamnezSummary: unknown,
+  anamnezSummary: string,
   anamnezFlags: string[],
   domainResults: DomainResult[],
   profileType: string
@@ -506,14 +462,7 @@ function buildAnamnezFitSection(
   const d = buildDeterministicProfileSummary(domainResults);
   const flagCount = Array.isArray(anamnezFlags) ? anamnezFlags.length : 0;
   const riskText = d.riskLabels.length ? d.riskLabels.join(", ") : "belirgin risk alanı saptanmadı";
-  const summaryText =
-    typeof anamnezSummary === "string"
-      ? anamnezSummary.trim()
-      : Array.isArray(anamnezSummary)
-      ? anamnezSummary.filter(Boolean).join(" ").trim()
-      : anamnezSummary && typeof anamnezSummary === "object"
-      ? JSON.stringify(anamnezSummary).trim()
-      : "";
+  const summaryText = (anamnezSummary || "").trim();
 
   if (flagCount >= 3 && summaryText) {
     return `Anamnezde ${flagCount} klinik tema öne çıkmakta ve bunlar ${riskText} alanlarıyla yönsel olarak uyum göstermektedir. Bu nedenle anamnez-ölçek uyumu yüksek kabul edilebilir. Profil tipi "${profileType}" bu klinik bağlam içinde tutarlı görünmektedir.`;

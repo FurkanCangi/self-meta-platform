@@ -95,7 +95,7 @@ export default function Sidebar(_props: SidebarProps) {
         </div>
         <ul className="space-y-1">
           <Item
-            href="/assessments"
+            href="/clients"
             label="Skor Girişi"
             icon={<AiOutlineFileText />}
             active={pathname === "/assessments" || pathname === "/assessments/new"}

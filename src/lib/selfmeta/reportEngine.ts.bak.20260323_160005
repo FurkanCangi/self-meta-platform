@@ -446,43 +446,12 @@ function buildDeterministicProfileSummary(
   };
 }
 
-function buildInteroCentricComment(domainResults: DomainResult[]): string {
-  const intero = domainResults.find(d => d.key === "interoception");
-  const phys = domainResults.find(d => d.key === "physiological");
-  const emo = domainResults.find(d => d.key === "emotional");
-
-  if (!intero) return "";
-
-  const interoLevel = intero.level;
-
-  // 🔴 DURUM 1: intero atipik → merkez
-  if (interoLevel === "Atipik") {
-    return "İnterosepsiyon alanının atipik düzeyi, profilin bütüncül yorumunda merkezî bir eksen oluşturmaktadır. Bedensel sinyallerin izlenmesi ve düzenleyici yanıtların organize edilmesi süreçlerindeki bu zorlanma, diğer self-regülasyon alanlarıyla birlikte ele alındığında çok alanlı örüntüyü açıklayıcı bir çerçeve sunmaktadır.";
-  }
-
-  // 🔴 DURUM 2: intero riskli + fizyolojik/duygusal eşlik
-  if (
-    interoLevel === "Riskli" &&
-    ((phys && phys.level !== "Tipik") || (emo && emo.level !== "Tipik"))
-  ) {
-    return "İnterosepsiyon alanı, fizyolojik ve/veya duygusal düzenleme süreçleriyle birlikte değerlendirildiğinde, profilin açıklanmasında bütünleştirici bir eksen olarak öne çıkmaktadır.";
-  }
-
-  // 🔴 DURUM 3: intero tipik ama genel problem var
-  return "İnterosepsiyon alanı belirgin birincil yük taşımamakla birlikte, diğer self-regülasyon alanlarıyla birlikte değerlendirildiğinde, profilin bütüncül yorumlanmasında referans bir düzenleyici eksen olarak ele alınmıştır.";
-}
-
 function buildPatternSection(profileType: string, patterns: string[], domainResults: DomainResult[], homogeneous: boolean): string {
   const lines: string[] = [`- Profil sınıflaması: ${profileType}.`];
 
   if (patterns.length > 0) {
     lines.push(...patterns.map((p) => `- ${p}`));
-    
-  const interoComment = buildInteroCentricComment(domainResults);
-  if (interoComment) {
-    lines.push(`- ${interoComment}`);
-  }
-return lines.join("\n");
+    return lines.join("\n");
   }
 
   if (homogeneous) {

@@ -28,17 +28,6 @@ function normalizeReasoningEffort(value: string | undefined): ReasoningEffort {
   return "medium";
 }
 
-function hasAllRequiredSections(text: string): boolean {
-  const required = [
-    "1. Genel Klinik Değerlendirme",
-    "2. Öncelikli Self-Regülasyon Alanları",
-    "3. Alanlar Arası Klinik Örüntü",
-    "4. Anamnez ve Ölçek Bulgularının Uyum Düzeyi",
-    "5. Sonuç Düzeyinde Klinik Özet",
-  ];
-  return required.every((h) => text.includes(h));
-}
-
 export async function generateAIClinicalReport(input: GenerateAIClinicalReportInput) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {

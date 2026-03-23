@@ -36,7 +36,6 @@ async function checkExistingSelfMetaReportLock(supabase: any, payload: any) {
 import { NextResponse } from "next/server"
 import { rewriteClinicalReport } from "@/lib/selfmeta/aiRewrite"
 import { buildAdvancedReport } from "@/lib/selfmeta/reportEngine"
-import { extractAgeMonthsFromAnamnez, isSupportedAgeMonths } from "@/lib/selfmeta/ageUtils"
 
 function hasAllRequiredSections(text: string): boolean {
   const required = [
@@ -107,39 +106,13 @@ function shouldFallbackToDeterministic(
   return false;
 }
 
-function cleanRenderedReport(text: string): string {
-  if (!text) return "";
-
-  return text
-    .replace(/\[\[END_OF_REPORT\]\]/g, "")
-    .replace(/^##\s*/gm, "")
-    .replace(/\*\*/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-}
-
 export async function POST(req: Request) {
   try {
     const body = await req.json()
 
-    const incomingAgeMonths =
-      typeof body?.ageMonths === "number"
-        ? body.ageMonths
-        : extractAgeMonthsFromAnamnez(typeof body?.anamnez === "string" ? body.anamnez : "")
-
-    if (!isSupportedAgeMonths(incomingAgeMonths)) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "Rapor yalnızca desteklenen yaş aralıkları için üretilebilir. Lütfen 24-35 ay, 36-47 ay, 48-59 ay veya 60-71 ay aralığını seçin.",
-        },
-        { status: 400 }
-      )
-    }
-
     const report = buildAdvancedReport({
       clientCode: body?.clientCode || "",
-      ageMonths: incomingAgeMonths,
+      ageMonths: typeof body?.ageMonths === "number" ? body.ageMonths : null,
       anamnez: body?.anamnez || "",
       scores: body?.scores || {},
     })
@@ -152,19 +125,14 @@ export async function POST(req: Request) {
     }
 
     const aiText = await rewriteClinicalReport(report.clinicalAnalysis)
-    const useFallback = shouldFallbackToDeterministic(aiText, report.clinicalAnalysis)
-    const finalText = cleanRenderedReport(useFallback ? report.deterministicReport : aiText)
-    const cleanDeterministic = cleanRenderedReport(report.deterministicReport)
-
-    console.log("[AI-REPORT] ai_length=", aiText?.length || 0)
-    console.log("[AI-REPORT] ai_has_section_5=", aiText?.includes("5. Sonuç Düzeyinde Klinik Özet"))
-    console.log("[AI-REPORT] fallback_used=", useFallback)
-    console.log("[AI-REPORT] final_starts_with=", (finalText || "").slice(0, 60))
+    const finalText = shouldFallbackToDeterministic(aiText, report.clinicalAnalysis)
+      ? report.deterministicReport
+      : aiText
 
     return NextResponse.json({
       ok: true,
       report: finalText,
-      deterministic: cleanDeterministic,
+      deterministic: report.deterministicReport,
     })
   } catch (error: any) {
     return NextResponse.json(

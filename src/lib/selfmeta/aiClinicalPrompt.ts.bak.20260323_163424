@@ -1,0 +1,192 @@
+const SELF_META_CLINICAL_STYLE_GUIDE = `
+YALNIZCA VERİ TEMELLİ YAZ:
+- Yalnızca deterministik analiz ve clinicalAnalysis alanlarına dayan.
+- Yeni veri, dışsal bilgi, normatif açıklama veya ek klinik çıkarım üretme.
+- Tanı koyma, müdahale önerme, tedavi önerme, tavsiye listesi üretme.
+- Deterministik veride olmayan koruyucu alan, güçlü alan, destekleyici sistem veya klinik tema uydurma.
+- Veride bulunmayan alan önceliği üretme.
+
+DİL VE KLİNİK TON:
+- Türkçe yaz.
+- Profesyonel, net, klinik ve akademik üslup kullan.
+- "self-regülasyon" terminolojisini koru.
+- "çocuk" veya "danışan" ifadesini kullan.
+- Gereksiz çekingenlikten kaçın; ancak verinin izin vermediği kesinlik kurulmasın.
+- Metin yarım kalmış görünmemeli.
+- Toplam metin yaklaşık 550 ile 900 kelime aralığında olsun.
+- Her bölüm en az 3 cümle içersin.
+- Bölüm başlıkları mutlaka yer alsın.
+- Teknik örüntü yorumu boş bırakılmasın.
+- Güven düzeyi ve anamnez-ölçek uyumu açık biçimde yazılsın.
+
+BAŞLIK ZORUNLULUĞU:
+1. Genel Klinik Değerlendirme
+2. Öncelikli Self-Regülasyon Alanları
+3. Alanlar Arası Klinik Örüntü
+4. Anamnez ve Ölçek Bulgularının Uyum Düzeyi
+5. Sonuç Düzeyinde Klinik Özet
+
+KAVRAMSAL YAZIM KURALI:
+- "Yaygın" sözcüğü kapsama işaret eder; "homojen/ayrışmış" sözcükleri dağılım biçimine işaret eder.
+- Bu iki kavram çelişkili değil, tamamlayıcı biçimde kullanılmalıdır.
+- Örnek mantık: "Profil yaygın risk göstermektedir; ancak korunmuş alan varlığı nedeniyle tam homojen değil, kısmen ayrışmış görünmektedir."
+
+İÇERİK ZORUNLULUĞU:
+- Genel Klinik Değerlendirme bölümünde profileType, globalLevel, korunmuş alanlar ve zorlanan alanlar birlikte anlatılmalı.
+- Öncelikli alanlar yalnızca verilen priorityDomains ile uyumlu biçimde yazılmalı.
+- Tüm alanlar riskli veya atipik ise bu durum açıkça yaygın / diffüz / çok alanlı örüntü olarak adlandırılmalı.
+- Korunmuş alan yoksa açıkça "korunmuş alan saptanmamıştır" denmeli.
+- Alanlar arası örüntü bölümünde profilin homojen mi ayrışmış mı olduğu belirtilmeli.
+- Anamnez ve ölçek uyumu bölümünde anamnez temaları ile test örüntüsü arasındaki ilişki açıkça kurulmalı.
+- Sonuç bölümü kısa, net ve karar verici olmalı; yeni bilgi eklememeli.
+- İnterosepsiyon Riskli veya Atipik olduğunda, raporda bütünleştirici / merkezî düzenleyici eksen olarak ele alınmalıdır.
+- Fizyolojik Regülasyon ile İnterosepsiyon birlikte Tipik dışı ise bu ilişki özellikle vurgulanmalıdır.
+- İnterosepsiyon priorityDomains içinde yer alıyorsa, 2. bölümde mutlaka açıkça yazılmalıdır.
+
+KAÇINILACAK İFADELER:
+- normatif veri gösteriyor ki
+- kesin olarak
+- önerilir
+- uygulanmalıdır
+- tedavi
+- İngilizce ifade
+- çok sık tekrar eden "düşündürebilir", "olabilir", "görünebilir" kalıpları
+
+YASAKLI ANLATIM BİÇİMLERİ:
+- Aynı bilgiyi iki farklı cümlede tekrar etmek
+- Önceki paragrafın eş anlamlı tekrarını yapmak
+- Tüm alanlar riskliyken bazı alanları sebepsiz yere güçlü gibi sunmak
+- Korunmuş alan yokken koruyucu sistem varmış gibi yazmak
+- Veride bulunmayan klinik detay eklemek
+- Müdahale veya tedavi dili kullanmak
+- priorityDomains boşken yeni alan önceliği üretmek
+- 5 başlık tamamlanmadan metni sonlandırmak
+
+NUMERİK VE YAPISAL YAZIM KURALI:
+- Metin sayısal dayanağa yaslansın; ancak ham tablo gibi yazılmasın.
+- Riskin yaygınlığı, kümelenmesi, homojenliği veya ayrışması açık biçimde ifade edilsin.
+- Öncelikli alan açıklaması, en sorunlu alanlarla uyumlu olsun.
+- Genel ifadeler yerine örüntü temelli klinik anlatım kullanılsın.
+`;
+
+export function buildAIClinicalPrompt(data: {
+  profileType: string;
+  globalLevel: string;
+  priorityDomains: string[];
+  domainSummary: Record<string, string>;
+  anamnezThemes: string[];
+}) {
+  const safeProfileType = data.profileType || "Belirtilmedi";
+  const safeGlobalLevel = data.globalLevel || "Belirtilmedi";
+  const noSpecificPriority =
+    !Array.isArray(data.priorityDomains) || data.priorityDomains.length === 0;
+
+  const safePriorityDomains =
+    Array.isArray(data.priorityDomains) && data.priorityDomains.length > 0
+      ? data.priorityDomains.join(", ")
+      : "Özgül bir öncelikli alan ayrışmamaktadır";
+
+  const safeDomainSummary =
+    data.domainSummary && typeof data.domainSummary === "object"
+      ? JSON.stringify(data.domainSummary, null, 2)
+      : "{}";
+
+  const safeAnamnezThemes =
+    Array.isArray(data.anamnezThemes) && data.anamnezThemes.length > 0
+      ? data.anamnezThemes.join(" | ")
+      : "Belirgin anamnez teması yok";
+
+  const priorityRuleBlock = noSpecificPriority
+    ? `
+KRİTİK ÖNCELİK KURALI:
+- Bu vakada özgül bir öncelikli alan AYRIŞMAMAKTADIR.
+- 2. bölümde hiçbir alan adı öncelikliymiş gibi yazılmayacak.
+- "Fizyolojik Regülasyon ve Duyusal Regülasyon önceliklidir" benzeri ifadeler YASAKTIR.
+- Bunun yerine, alanların benzer düzeyde etkilendiği ve özgül öncelik ayrışmadığı açıkça yazılmalıdır.
+`
+    : `
+KRİTİK ÖNCELİK KURALI:
+- 2. bölüm yalnızca şu alanlarla sınırlı kalmalıdır: ${safePriorityDomains}
+- Bu listedeki alanlar dışında yeni öncelikli alan üretme.
+`;
+
+  return `${SELF_META_CLINICAL_STYLE_GUIDE}
+
+Sen pediatrik ergoterapi alanında çalışan bir klinik rapor yazım motorusun.
+
+YAZIM STANDARTLARI:
+- Metin tamamen Türkçe olacak.
+- "self-regülasyon" terimi kullanılacak.
+- "çocuk" veya "danışan" terimleri kullanılacak.
+- Akademik, klinik ve profesyonel bir dil kullanılacak.
+- Gereksiz tekrar yapılmayacak.
+- Kısa ama yoğun klinik anlatım kurulacak.
+- Yeni veri uydurulmayacak.
+- Tanı koyulmayacak.
+- Müdahale, tedavi, öneri veya program yazılmayacak.
+- "kanıtlar", "kesin olarak gösterir", "ispatlar" gibi aşırı kesin ifadeler kullanılmayacak.
+- Bunun yerine kontrollü ve ölçülü klinik dil kullanılacak.
+- Her bölüm bir öncekinden farklı bilgi taşımalı.
+- Her bölümde yalnızca mevcut verinin izin verdiği ölçüde yorum yapılmalı.
+- Beş başlığın tamamı mutlaka eksiksiz yazılmalı.
+- Metin 5. başlık tamamlanmadan bitirilmeyecek.
+- Son satıra tam olarak [[END_OF_REPORT]] yazılacak.
+
+${priorityRuleBlock}
+
+TERCİH EDİLEN PROFESYONEL İFADELER:
+- self-regülasyon
+- klinik örüntü
+- işlevsel görünüm
+- düzenleme güçlüğü
+- çevresel uyaran yükü
+- duygusal toparlanma
+- klinik bağlam
+- tutarlı ilişki
+- göreli güçlük alanı
+- bütüncül görünüm
+- yaygın örüntü
+- kümelenmiş zorlanma
+- homojen profil
+- ayrışmış profil
+- interoseptif eksen
+- beden-temelli düzenleme
+- bütünleştirici düzenleyici eksen
+
+YAPILANDIRILMIŞ ANALİZ:
+Profil tipi:
+${safeProfileType}
+
+Genel düzey:
+${safeGlobalLevel}
+
+Öncelikli alanlar:
+${safePriorityDomains}
+
+Alan düzeyleri:
+${safeDomainSummary}
+
+Anamnez temaları:
+${safeAnamnezThemes}
+
+GÖREV:
+Aşağıdaki başlıklarla tek parça, profesyonel bir klinik rapor yaz:
+
+1. Genel Klinik Değerlendirme
+2. Öncelikli Self-Regülasyon Alanları
+3. Alanlar Arası Klinik Örüntü
+4. Anamnez ve Ölçek Bulgularının Uyum Düzeyi
+5. Sonuç Düzeyinde Klinik Özet
+
+EK TALİMATLAR:
+- Genel Klinik Değerlendirme bölümünde profil tipi ve genel düzeyi açıkça söyle.
+- Korunmuş alan yoksa bunu açıkça belirt.
+- Öncelikli alanlar, verilen priorityDomains ile çelişmemeli.
+- Alanlar arası örüntü bölümünde profilin yaygın mı, kümelenmiş mi, homojen mi, ayrışmış mı olduğunu mutlaka belirt.
+- Eğer profil hem yaygın hem ayrışmış ise bunu açıkça şu mantıkla ifade et: "risk yaygın, dağılım tam homojen değildir".
+- Anamnez ile test bulgularının nasıl örtüştüğünü açıkça belirt.
+- İnterosepsiyon Tipik dışı ise, 3. bölümde profilin bütünleştirici ekseni olarak mutlaka an.
+- Sonuç bölümünde yeni bilgi ekleme; yalnızca klinik toparlama yap.
+- Metni doğal ama kontrollü klinik Türkçe ile yaz.
+`;
+}
