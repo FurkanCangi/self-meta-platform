@@ -454,7 +454,7 @@ function buildPatternSection(profileType: string, patterns: string[], domainResu
 }
 
 function buildAnamnezFitSection(
-  anamnezSummary: string,
+  anamnezSummary: unknown,
   anamnezFlags: string[],
   domainResults: DomainResult[],
   profileType: string
@@ -462,7 +462,14 @@ function buildAnamnezFitSection(
   const d = buildDeterministicProfileSummary(domainResults);
   const flagCount = Array.isArray(anamnezFlags) ? anamnezFlags.length : 0;
   const riskText = d.riskLabels.length ? d.riskLabels.join(", ") : "belirgin risk alanı saptanmadı";
-  const summaryText = (anamnezSummary || "").trim();
+  const summaryText =
+    typeof anamnezSummary === "string"
+      ? anamnezSummary.trim()
+      : Array.isArray(anamnezSummary)
+      ? anamnezSummary.filter(Boolean).join(" ").trim()
+      : anamnezSummary && typeof anamnezSummary === "object"
+      ? JSON.stringify(anamnezSummary).trim()
+      : "";
 
   if (flagCount >= 3 && summaryText) {
     return `Anamnezde ${flagCount} klinik tema öne çıkmakta ve bunlar ${riskText} alanlarıyla yönsel olarak uyum göstermektedir. Bu nedenle anamnez-ölçek uyumu yüksek kabul edilebilir. Profil tipi "${profileType}" bu klinik bağlam içinde tutarlı görünmektedir.`;
