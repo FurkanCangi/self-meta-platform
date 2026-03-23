@@ -32,7 +32,7 @@ export default function LandingHeroV2() {
                 <Image
                   src="/images/landing-child.jpg"
                   alt="Çocuk aktivitesi"
-                  fill sizes="(max-width: 768px) 100vw, 50vw"
+                  fill
                   priority
                   className={styles.img}
                 />

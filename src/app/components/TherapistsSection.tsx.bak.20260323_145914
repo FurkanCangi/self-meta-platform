@@ -18,7 +18,7 @@ export default function TherapistsSection() {
             <Image
               src="/images/terapist.jpg"
               alt="Terapist görseli"
-              fill sizes="(max-width: 768px) 100vw, 33vw"
+              fill
               className={styles.photoImg}
               priority
             />

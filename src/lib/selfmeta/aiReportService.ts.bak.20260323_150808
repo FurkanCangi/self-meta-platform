@@ -45,7 +45,6 @@ export async function generateAIClinicalReport(input: GenerateAIClinicalReportIn
 
   const response = await client.responses.parse({
     model,
-      reasoning_effort: process.env.OPENAI_REPORT_REASONING_EFFORT || "medium",
     reasoning: { effort: reasoningEffort },
     input: [
       {

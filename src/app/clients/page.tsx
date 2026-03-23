@@ -254,11 +254,11 @@ export default function ClientsPage() {
                         <div className="inline-flex gap-2">
                           <Link
                             href={`/assessments?client=${encodeURIComponent(r.code)}&client_id=${encodeURIComponent(r.id)}`}
-                            className="selfmeta-btn px-3 py-2 text-xs font-semibold"
+                            className="inline-flex items-center justify-center rounded-xl border border-indigo-600 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50"
                           >
                             Skor Gir
                           </Link>
-                          <Link href="/reports" className="selfmeta-btn-ghost px-3 py-2 text-xs font-semibold">
+                          <Link href="/reports" className="inline-flex items-center justify-center rounded-xl border border-indigo-600 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50">
                             Raporlar
                           </Link>
                         </div>

@@ -22,7 +22,7 @@ export default function LandingHero() {
             </p>
 
             <div className={styles.ctaRow}>
-              <Link href="/#paketler" className={styles.btnPrimary}>
+              <Link href="/pricing" className={styles.btnPrimary}>
                 Paketleri incele <span className={styles.arrow}>→</span>
               </Link>
               <Link href="/login" className={styles.btnGhost}>
@@ -43,7 +43,7 @@ export default function LandingHero() {
                 <Image
                   src="/images/landing-child.jpg"
                   alt="Landing visual"
-                  fill sizes="(max-width: 768px) 100vw, 50vw"
+                  fill
                   className={styles.img}
                   priority
                 />

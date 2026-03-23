@@ -35,7 +35,6 @@ export async function rewriteClinicalReport(analysis: {
     try {
       const res = await client.responses.create({
         model: process.env.OPENAI_REPORT_MODEL || "gpt-5",
-      temperature: 0.3,
         input: prompt,
         max_output_tokens: 3200,
       })

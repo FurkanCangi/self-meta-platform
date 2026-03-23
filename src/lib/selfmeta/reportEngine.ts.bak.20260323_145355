@@ -354,85 +354,6 @@ function buildDomainSection(domainResults: DomainResult[], anamnezFlags: string[
     .join("\n");
 }
 
-function getLevelWeight(level: string): number {
-  if (level === "Atipik") return 2;
-  if (level === "Riskli") return 1;
-  return 0;
-}
-
-function mean(nums: number[]): number {
-  if (!nums.length) return 0;
-  return nums.reduce((a, b) => a + b, 0) / nums.length;
-}
-
-function std(nums: number[]): number {
-  if (!nums.length) return 0;
-  const m = mean(nums);
-  const v = nums.reduce((acc, x) => acc + Math.pow(x - m, 2), 0) / nums.length;
-  return Math.sqrt(v);
-}
-
-function buildDeterministicProfileSummary(
-  domainResults: Array<{ label: string; score: number; level: string }>
-) {
-  const sortedAsc = [...domainResults].sort((a, b) => a.score - b.score);
-  const sortedDesc = [...domainResults].sort((a, b) => b.score - a.score);
-  const scores = domainResults.map((d) => d.score);
-  const weights = domainResults.map((d) => getLevelWeight(d.level));
-
-  const riskyCount = domainResults.filter((d) => d.level === "Riskli").length;
-  const atypicalCount = domainResults.filter((d) => d.level === "Atipik").length;
-  const typicalCount = domainResults.filter((d) => d.level === "Tipik").length;
-
-  const scoreStd = std(scores);
-  const weightStd = std(weights);
-  const spread = sortedDesc[0].score - sortedAsc[0].score;
-
-  const lowest = sortedAsc[0];
-  const secondLowest = sortedAsc[1];
-  const highest = sortedDesc[0];
-
-  const weakPair = [lowest?.label, secondLowest?.label].filter(Boolean).join(" ve ");
-  const riskLabels = domainResults
-    .filter((d) => d.level !== "Tipik")
-    .map((d) => d.label);
-
-  let architecture = "dağılmış";
-  if (atypicalCount >= 3) architecture = "yüksek şiddette yaygın";
-  else if (riskyCount + atypicalCount >= Math.max(4, domainResults.length - 1)) architecture = "yaygın";
-  else if (riskyCount + atypicalCount >= 2) architecture = "kümelenmiş";
-  else architecture = "sınırlı";
-
-  let homogeneityText = "alan puanları arasında ayrışma vardır";
-  if (spread <= 3 || weightStd <= 0.35 || scoreStd <= 2) {
-    homogeneityText = "alan puanları birbirine çok yakındır ve profil belirgin biçimde homojendir";
-  } else if (spread <= 7 || scoreStd <= 4.5) {
-    homogeneityText = "alan puanları görece benzerdir ve profil büyük ölçüde homojen görünmektedir";
-  }
-
-  let severityText = "düşük";
-  if (atypicalCount >= 3) severityText = "yüksek";
-  else if (atypicalCount >= 1 || riskyCount >= 4) severityText = "orta-ileri";
-  else if (riskyCount >= 2) severityText = "orta";
-
-  return {
-    riskyCount,
-    atypicalCount,
-    typicalCount,
-    spread,
-    scoreStd,
-    weightStd,
-    lowest,
-    secondLowest,
-    highest,
-    weakPair,
-    riskLabels,
-    architecture,
-    homogeneityText,
-    severityText,
-  };
-}
-
 function buildPatternSection(profileType: string, patterns: string[], domainResults: DomainResult[], homogeneous: boolean): string {
   const lines: string[] = [`- Profil sınıflaması: ${profileType}.`];
 
@@ -454,53 +375,45 @@ function buildPatternSection(profileType: string, patterns: string[], domainResu
 }
 
 function buildAnamnezFitSection(
-  anamnezSummary: string,
+  anamnezSummary: string[],
   anamnezFlags: string[],
   domainResults: DomainResult[],
   profileType: string
 ): string {
-  const d = buildDeterministicProfileSummary(domainResults);
-  const flagCount = Array.isArray(anamnezFlags) ? anamnezFlags.length : 0;
-  const riskText = d.riskLabels.length ? d.riskLabels.join(", ") : "belirgin risk alanı saptanmadı";
-  const summaryText = (anamnezSummary || "").trim();
+  const priorityDomains = selectNarrativelyMatchedDomains(domainResults, anamnezFlags);
+  const priorityText = priorityDomains.map((d) => d.label).join(", ");
 
-  if (flagCount >= 3 && summaryText) {
-    return `Anamnezde ${flagCount} klinik tema öne çıkmakta ve bunlar ${riskText} alanlarıyla yönsel olarak uyum göstermektedir. Bu nedenle anamnez-ölçek uyumu yüksek kabul edilebilir. Profil tipi "${profileType}" bu klinik bağlam içinde tutarlı görünmektedir.`;
-  }
+  const paragraph =
+    anamnezSummary.length > 0
+      ? `${anamnezSummary.slice(0, 2).join(" ")} Test bulgularında öncelikli olarak şu alanlar öne çıkmaktadır: ${priorityText}.`
+      : `Anamnezde "${profileType}" örüntüsünü destekleyen klinik tema sınırlı bulunmuştur. Test bulgularında öncelikli olarak şu alanlar öne çıkmaktadır: ${priorityText}.`;
 
-  if (flagCount >= 1 && summaryText) {
-    return `Anamnezde sınırlı fakat anlamlı klinik tema bulunmaktadır. Bu temalar özellikle ${riskText} alanlarıyla kısmi uyum göstermektedir. Bu nedenle anamnez-ölçek uyumu orta düzeyde değerlendirilebilir.`;
-  }
+  const bullets =
+    anamnezFlags.length > 0
+      ? anamnezFlags.slice(0, 3).map((f) => `- ${f}`).join("\n")
+      : "- Anamnezden çıkarılabilen klinik tema sınırlıdır.";
 
-  return `Anamnezde "${profileType}" örüntüsünü güçlü biçimde destekleyen belirgin tema sınırlıdır. Ölçek sonuçlarında öne çıkan alanlar ${riskText} olarak görünmektedir; bu nedenle klinik yorum doğrudan skor örüntüsüne dayandırılmıştır.`;
+  return [paragraph, bullets].join("\n");
 }
 
 function buildConclusion(
   globalLevel: DomainLevel,
   profileType: string,
-  normSource: string,
-  domainResults?: DomainResult[]
+  normSource?: "age_band_heuristic" | "fallback_fixed"
 ): string {
-  const d = domainResults?.length ? buildDeterministicProfileSummary(domainResults) : null;
-
-  const levelText =
+  const base =
     globalLevel === "Tipik"
-      ? "genel profil büyük ölçüde korunmuş görünmektedir"
+      ? "Sonuçlar genel olarak düzenli bir self-regülasyon görünümüne işaret etmekle birlikte klinik gözlemle birlikte ele alınmalıdır."
       : globalLevel === "Riskli"
-      ? "genel profil yaygın destek gereksinimine işaret etmektedir"
-      : "genel profil belirgin ve yüksek klinik yük düşündürmektedir";
+      ? "Sonuçlar, işlevsel güçlüklerin bağlama göre belirginleşebileceğini ve klinik izlemin yararlı olacağını düşündürmektedir."
+      : "Sonuçlar, çoklu alanlarda belirgin self-regülasyon güçlüğü olasılığını düşündürmekte olup ayrıntılı klinik değerlendirme ile birlikte yorumlanmalıdır.";
 
-  const patternText = d
-    ? ` En düşük alanlar ${d.weakPair || "tanımlanamadı"} olarak görünmektedir. Zorlanma mimarisi ${d.architecture}, şiddeti ise ${d.severityText} düzeydedir.`
-    : "";
+  const normNote =
+    normSource === "age_band_heuristic"
+      ? "Bu yorum yaş-duyarlı geçici klinik bantlar kullanılarak üretilmiştir."
+      : "Bu yorum sabit sistem içi eşiklerle üretilmiştir.";
 
-  const homogeneityText = d
-    ? ` ${d.homogeneityText.charAt(0).toUpperCase() + d.homogeneityText.slice(1)}.`
-    : "";
-
-  const normText = normSource ? ` Kullanılan norm / referans kaynağı: ${normSource}.` : "";
-
-  return `Sonuç olarak profil "${profileType}" başlığı altında ele alınabilir; ${levelText}.${patternText}${homogeneityText}${normText} Bu rapor tek başına tanısal karar amacıyla değil, anamnez ve klinik gözlemle birlikte kullanılmalıdır.`;
+  return `${base} Mevcut örüntü "${profileType}" başlığı altında ele alınabilir. ${normNote} Bu rapor tek başına tanısal karar amacıyla kullanılmamalı, anamnez, klinik gözlem ve diğer değerlendirmelerle birlikte yorumlanmalıdır.`;
 }
 
 export function generateDeterministicReport(input: ReportInput): DeterministicReport {
@@ -566,7 +479,7 @@ export function generateDeterministicReport(input: ReportInput): DeterministicRe
     domains: buildDomainSection(domainResults, anamnezFlags),
     patterns: buildPatternSection(profileType, patterns, domainResults, homogeneousProfile),
     anamnezTestFit: buildAnamnezFitSection(anamnezSummary, anamnezFlags, domainResults, profileType),
-    conclusion: buildConclusion(globalLevel, profileType, normSource, domainResults),
+    conclusion: buildConclusion(globalLevel, profileType, normSource),
   };
 
   const reportText = [
