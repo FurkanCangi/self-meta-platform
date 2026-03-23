@@ -1,42 +1,27 @@
-import React from "react";
-import Link from "next/link";
-import {AiOutlineCheckCircle} from 'react-icons/ai'
+import Link from "next/link"
 
-import Switcher from "../components/switcher";
-import BackButton from "../components/back-button";
-
-export default function Page(){
-    return(
-        <>
-        <section className="relative h-screen flex justify-center items-center bg-slate-50 dark:bg-slate-800">
-            <div className="container relative">
-                <div className="md:flex justify-center">
-                    <div className="lg:w-2/5">
-                        <div className="relative overflow-hidden rounded-md bg-white dark:bg-slate-900 shadow-sm dark:shadow-gray-700">
-                            <div className="px-6 py-12 bg-emerald-600 text-center">
-                                <AiOutlineCheckCircle className=" text-white text-8xl text-center w-full"/>
-                                <h5 className="text-white text-xl tracking-wide uppercase font-semibold mt-2">Success</h5>
-                            </div>
-
-                            <div className="px-6 py-12 text-center">
-                                <p className="text-black font-semibold text-xl dark:text-white">Congratulations! 🎉</p> 
-                                <p className="text-slate-400 mt-4">Your account has been successfully created. <br/> Enjoy your journey. Thank you</p>
-                                
-                                <div className="mt-6">
-                                    <Link href="/" className="py-2 px-5 inline-block tracking-wide border align-middle duration-500 text-base text-center bg-primary hover:bg-primary-700 border-primary hover:border-primary bg-primary-700 text-white rounded-md">Continue</Link>
-                                </div>
-                            </div>
-
-                            <div className="text-center p-6 border-t border-gray-100 dark:border-gray-700">
-                                <p className="mb-0 text-slate-400">© {new Date().getFullYear()} Self Metacognition Institute. Design & Develop with <i className="mdi mdi-heart text-red-600"></i> by <a href="https://shreethemes.in/" target="_blank" className="text-reset">Shreethemes</a>.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        <Switcher/>
-        <BackButton/>
-        </>
-    )
+export default function AuthSignupSuccessPage() {
+  return (
+    <div className="min-h-screen bg-slate-50 px-6 py-12">
+      <div className="mx-auto max-w-xl rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="text-sm font-semibold uppercase tracking-wide text-emerald-600">Doğrulama Gerekli</div>
+        <h1 className="mt-2 text-3xl font-bold text-slate-900">E-posta Doğrulama Gönderildi</h1>
+        <p className="mt-4 text-sm leading-7 text-slate-600">
+          Hesabınız oluşturuldu. Giriş yapmadan önce doğrulama e-postasındaki bağlantıyı açın.
+          Gelen kutunuzu ve spam klasörünü kontrol edin.
+        </p>
+        <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+          Supabase panelinde Email doğrulama ayarı açık olmalıdır.
+        </div>
+        <div className="mt-6 flex flex-wrap gap-3">
+          <Link href="/login" className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-5 font-semibold text-white transition hover:bg-blue-700">
+            Giriş Sayfasına Git
+          </Link>
+          <Link href="/" className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 font-semibold text-slate-700 transition hover:bg-slate-50">
+            Ana Sayfa
+          </Link>
+        </div>
+      </div>
+    </div>
+  )
 }

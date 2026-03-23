@@ -1,150 +1,62 @@
-"use client";
+import Link from "next/link"
 
-import { useEffect, useState } from "react";
-import Link from "next/link";
-import { supabase } from "@/lib/supabase/client";
-
-type Stats = {
-  clients: number;
-  assessments: number;
-  reports: number;
-};
+const cards = [
+  {
+    title: "Danışan Listesi",
+    text: "Kayıtlı danışanları görüntüleyin, vakaları yönetin ve skor girişine güvenli biçimde geçin.",
+    href: "/clients",
+  },
+  {
+    title: "Yeni Danışan Ekle",
+    text: "Yeni bir danışan kaydı oluşturun ve anamnez ile değerlendirme akışını başlatın.",
+    href: "/clients/new",
+  },
+  {
+    title: "Skor Girişi",
+    text: "6 regülasyon alanında değerlendirme yapın ve tek final klinik raporu üretin.",
+    href: "/assessments",
+  },
+  {
+    title: "Rapor Geçmişi",
+    text: "Oluşturulan raporları görüntüleyin, sürümleri inceleyin ve eski raporlara dönün.",
+    href: "/reports",
+  },
+  {
+    title: "Profil",
+    text: "Terapistin profesyonel bilgilerini, mezuniyet ve kurum detaylarını yönetin.",
+    href: "/profile",
+  },
+  {
+    title: "Ayarlar",
+    text: "Rapor imzası, bildirimler, plan ve faturalama tercihlerini düzenleyin.",
+    href: "/profile-setting",
+  },
+]
 
 export default function StarterPage() {
-  const [stats, setStats] = useState<Stats>({
-    clients: 0,
-    assessments: 0,
-    reports: 0,
-  });
-
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState<string | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-
-    async function loadStats() {
-      setLoading(true);
-      setErr(null);
-
-      const { data: userRes, error: userErr } = await supabase.auth.getUser();
-      if (userErr || !userRes?.user?.id) {
-        if (!alive) return;
-        setErr("Oturum bilgisi alınamadı.");
-        setLoading(false);
-        return;
-      }
-
-      const userId = userRes.user.id;
-
-      const { count: clientCount, error: cErr } = await supabase
-        .from("clients")
-        .select("id", { count: "exact", head: true })
-        .eq("owner_id", userId)
-        .is("deleted_at", null);
-
-      const { data: ownedClients } = await supabase
-        .from("clients")
-        .select("id")
-        .eq("owner_id", userId)
-        .is("deleted_at", null);
-
-      const clientIds = (ownedClients || []).map((x: any) => x.id);
-
-      let assessmentCount = 0;
-      let reportCount = 0;
-
-      if (clientIds.length > 0) {
-        const { count: aCount } = await supabase
-          .from("assessments_v2")
-          .select("id", { count: "exact", head: true })
-          .in("client_id", clientIds)
-          .is("deleted_at", null);
-
-        assessmentCount = aCount ?? 0;
-
-        const { data: assessmentsData } = await supabase
-          .from("assessments_v2")
-          .select("id")
-          .in("client_id", clientIds)
-          .is("deleted_at", null);
-
-        const assessmentIds = (assessmentsData || []).map((x: any) => x.id);
-
-        if (assessmentIds.length > 0) {
-          const { count: rCount } = await supabase
-            .from("reports")
-            .select("id", { count: "exact", head: true })
-            .in("assessment_id", assessmentIds);
-
-          reportCount = rCount ?? 0;
-        }
-      }
-
-      if (!alive) return;
-
-      if (cErr) {
-        setErr("Panel verileri alınamadı.");
-      }
-
-      setStats({
-        clients: clientCount ?? 0,
-        assessments: assessmentCount,
-        reports: reportCount,
-      });
-
-      setLoading(false);
-    }
-
-    loadStats();
-    return () => {
-      alive = false;
-    };
-  }, []);
-
   return (
-    <div className="space-y-6">
-      <div className="selfmeta-card p-6">
-        <h1 className="text-2xl font-semibold text-slate-900">Klinik Panel</h1>
-        <p className="mt-2 text-sm text-slate-500">
-          Danışanlar, değerlendirmeler ve raporlar burada yönetilir.
-        </p>
-        {err ? <div className="mt-4 text-sm text-rose-600">{err}</div> : null}
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="text-xs font-semibold uppercase text-slate-500">Toplam Danışan</div>
-          <div className="mt-2 text-3xl font-semibold text-slate-900">{loading ? "..." : stats.clients}</div>
+    <div className="px-6 py-8">
+      <div className="mx-auto max-w-6xl">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6">
+          <div className="text-sm font-semibold uppercase tracking-wide text-blue-600">Self Meta AI</div>
+          <h1 className="mt-2 text-3xl font-bold text-slate-900">Genel Bakış</h1>
+          <p className="mt-3 max-w-3xl text-slate-600">
+            Bu panel, danışan yönetimi, değerlendirme, raporlama ve terapist ayarları için sadeleştirilmiş ana çalışma alanıdır.
+          </p>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="text-xs font-semibold uppercase text-slate-500">Aktif Değerlendirme</div>
-          <div className="mt-2 text-3xl font-semibold text-slate-900">{loading ? "..." : stats.assessments}</div>
+        <div className="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {cards.map((card) => (
+            <Link key={card.href} href={card.href} className="rounded-3xl border border-slate-200 bg-white p-6 transition hover:shadow-md">
+              <div className="text-xl font-semibold text-slate-900">{card.title}</div>
+              <p className="mt-3 text-sm leading-7 text-slate-600">{card.text}</p>
+              <div className="mt-6 inline-flex items-center rounded-xl bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700">
+                Aç
+              </div>
+            </Link>
+          ))}
         </div>
-
-        <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="text-xs font-semibold uppercase text-slate-500">Rapor Sayısı</div>
-          <div className="mt-2 text-3xl font-semibold text-slate-900">{loading ? "..." : stats.reports}</div>
-        </div>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-3">
-        <Link href="/clients/new" className="selfmeta-card p-6 hover:shadow-md transition">
-          <div className="text-lg font-semibold text-slate-900">Yeni Danışan</div>
-          <div className="mt-1 text-sm text-slate-500">Kayıt ve anamnez oluştur</div>
-        </Link>
-
-        <Link href="/assessments" className="selfmeta-card p-6 hover:shadow-md transition">
-          <div className="text-lg font-semibold text-slate-900">Skor Girişi</div>
-          <div className="mt-1 text-sm text-slate-500">Değerlendirme skorlarını gir</div>
-        </Link>
-
-        <Link href="/reports" className="selfmeta-card p-6 hover:shadow-md transition">
-          <div className="text-lg font-semibold text-slate-900">Raporlar</div>
-          <div className="mt-1 text-sm text-slate-500">Rapor geçmişini görüntüle</div>
-        </Link>
       </div>
     </div>
-  );
+  )
 }

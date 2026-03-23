@@ -1,2 +1,5 @@
-import { redirect } from "next/navigation";
-export default function Settings(){redirect("/starter");}
+import { redirect } from "next/navigation"
+
+export default function SettingsPage() {
+  redirect("/profile-setting")
+}

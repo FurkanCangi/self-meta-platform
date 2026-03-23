@@ -15,9 +15,9 @@ export default function FooterContact() {
             <div className={styles.colTitle}>Menü</div>
             <nav className={styles.links}>
               <a href="/self-regulasyon-nedir">SELF AI Nedir?</a>
-              <a href="#terapistler">Terapistler için</a>
-              <a href="#paketler">Fiyatlandırma</a>
-              <a href="#iletisim">İletişim</a>
+              <a href="/#terapistler">Terapistler için</a>
+              <a href="/#paketler">Fiyatlandırma</a>
+              <a href="/#iletisim">İletişim</a>
             </nav>
           </div>
 

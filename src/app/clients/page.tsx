@@ -253,7 +253,7 @@ export default function ClientsPage() {
                       <td className="px-4 py-4 text-right">
                         <div className="inline-flex gap-2">
                           <Link
-                            href={`/assessments?client=${encodeURIComponent(r.code)}&client_id=${encodeURIComponent(r.id)}&client_id=${encodeURIComponent(r.id)}`}
+                            href={`/assessments?client=${encodeURIComponent(r.code)}&client_id=${encodeURIComponent(r.id)}`}
                             className="selfmeta-btn px-3 py-2 text-xs font-semibold"
                           >
                             Skor Gir

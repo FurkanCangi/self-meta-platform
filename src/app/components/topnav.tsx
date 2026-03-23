@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   AiOutlineBell,
   AiOutlineMenu,
@@ -10,15 +11,19 @@ import {
   AiOutlineLogout,
   AiOutlineUser,
 } from "react-icons/ai";
+import { supabase } from "@/lib/supabase/client";
 
 type TopnavProps = {
-  toggle: boolean;
-  setToggle: (value: boolean) => void;
+  toggle?: boolean;
+  setToggle?: (value: boolean) => void;
 };
 
-export default function Topnav({ toggle, setToggle }: TopnavProps) {
+export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
   const [profileOpen, setProfileOpen] = useState(false);
+  const [displayName, setDisplayName] = useState("Terapist Paneli");
+  const [initials, setInitials] = useState("TP");
   const profileRef = useRef<HTMLDivElement | null>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -31,13 +36,35 @@ export default function Topnav({ toggle, setToggle }: TopnavProps) {
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("selfmeta_therapist_profile");
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      const fullName = [parsed?.firstName, parsed?.lastName].filter(Boolean).join(" ").trim();
+      if (fullName) {
+        setDisplayName(fullName);
+        const parts = fullName.split(" ").filter(Boolean);
+        const nextInitials = parts.slice(0, 2).map((x: string) => x[0]?.toUpperCase() || "").join("");
+        if (nextInitials) setInitials(nextInitials);
+      }
+    } catch {}
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch {}
+    router.push("/login");
+  };
+
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="flex items-center justify-between gap-4 px-6 py-4">
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
-            onClick={() => setToggle(!toggle)}
+            onClick={() => setToggle?.(!toggle)}
             className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
             aria-label="Menüyü Aç/Kapat"
           >
@@ -73,11 +100,11 @@ export default function Topnav({ toggle, setToggle }: TopnavProps) {
               aria-label="Profil Menüsü"
             >
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700">
-                CM
+                {initials}
               </div>
               <div className="hidden text-left md:block">
                 <div className="text-sm font-semibold leading-none text-slate-900">
-                  Terapist Paneli
+                  {displayName}
                 </div>
                 <div className="mt-1 text-xs text-slate-500">Hesap Menüsü</div>
               </div>
@@ -92,7 +119,7 @@ export default function Topnav({ toggle, setToggle }: TopnavProps) {
 
                 <div className="p-2">
                   <Link
-                    href="/profile-setting"
+                    href="/profile"
                     className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                   >
                     <AiOutlineUser className="text-lg" />
@@ -100,7 +127,7 @@ export default function Topnav({ toggle, setToggle }: TopnavProps) {
                   </Link>
 
                   <Link
-                    href="/settings"
+                    href="/profile-setting"
                     className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                   >
                     <AiOutlineSetting className="text-lg" />
@@ -109,6 +136,7 @@ export default function Topnav({ toggle, setToggle }: TopnavProps) {
 
                   <button
                     type="button"
+                    onClick={handleLogout}
                     className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50"
                   >
                     <AiOutlineLogout className="text-lg" />

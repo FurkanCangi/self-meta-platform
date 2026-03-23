@@ -331,6 +331,33 @@ const [saving, setSaving] = useState(false)
     clientInfo?.anamnez?.replace(/\n+/g, " ").slice(0, 220) || "Anamnez bilgisi bulunmuyor."
   const agePreview = clientInfo?.ageMonths ? `${clientInfo.ageMonths} ay` : "Belirsiz"
 
+
+  const hasSelectedClient = Boolean(clientInfo)
+
+  if (!loadingClient && !hasSelectedClient) {
+    return (
+      <div className="px-6 py-8">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6">
+          <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
+            Klinik Değerlendirme
+          </div>
+
+          <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-900">
+            Self Meta Değerlendirme Sistemi
+          </h1>
+
+          <p className="mt-4 text-base leading-7 text-slate-500">
+            Terapist değerlendirmesi için 6 alanda toplam 60 soru bulunur. Varsayılan seçim “Bazen” olarak gelir.
+          </p>
+
+          <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-base font-medium text-rose-600">
+            Önce danışan seçilmelidir. Danışan Listesi üzerinden “Skor Gir” ile ilerleyin.
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div className="selfmeta-card p-6">

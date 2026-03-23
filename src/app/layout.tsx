@@ -1,19 +1,20 @@
 import type { Metadata } from "next";
-import type { ReactNode } from "react";
-import "./assets/css/tailwind.css";
-import "./assets/css/materialdesignicons.min.css";
 import "./globals.css";
-import LayoutGate from "@/app/components/layout-gate";
+import LayoutGate from "./components/layout-gate";
 
 export const metadata: Metadata = {
   title: "Self Meta AI",
-  description: "AI destekli klinik değerlendirme, skor girişi ve versiyonlu raporlama platformu",
+  description: "Self Meta AI clinical platform",
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
   return (
-    <html lang="tr" className="scroll-smooth">
-      <body className="bg-[#f8fbfd] text-slate-900 antialiased">
+    <html lang="tr">
+      <body className="min-h-screen bg-slate-50 text-slate-900">
         <LayoutGate>{children}</LayoutGate>
       </body>
     </html>
