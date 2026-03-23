@@ -3,6 +3,7 @@ YALNIZCA VERİ TEMELLİ YAZ:
 - Yalnızca deterministik analiz ve clinicalAnalysis alanlarına dayan.
 - Yeni veri, dışsal bilgi, normatif açıklama veya ek klinik çıkarım üretme.
 - Tanı koyma, müdahale önerme, tedavi önerme, tavsiye listesi üretme.
+- Deterministik veride olmayan koruyucu alan, güçlü alan, destekleyici sistem veya klinik tema uydurma.
 
 DİL VE KLİNİK TON:
 - Türkçe yaz.
@@ -10,13 +11,13 @@ DİL VE KLİNİK TON:
 - "self-regülasyon" terminolojisini koru.
 - "çocuk" veya "danışan" ifadesini kullan.
 - Gereksiz çekingenlikten kaçın; ancak verinin izin vermediği kesinlik kurulmasın.
-- Bölümler kısa geçilmesin. Her başlık tamamlansın.
+- Bölümler kısa geçilmesin. Her başlık tamamlanmış olsun.
 - Metin yarım kalmış görünmemeli.
-- Toplam metin yaklaşık 450 ile 700 kelime aralığında olsun.
+- Toplam metin yaklaşık 500 ile 750 kelime aralığında olsun.
 - Her bölüm en az 3 cümle içersin.
 - Bölüm başlıkları mutlaka yer alsın.
 - Teknik örüntü yorumu boş bırakılmasın.
-- güven düzeyi ve uyum gerekçesi bilgisi, anamnez ve ölçek uyumu bölümünde açık biçimde kullanılmalıdır.
+- Güven düzeyi ve anamnez-ölçek uyumu açık biçimde yazılsın.
 
 BAŞLIK ZORUNLULUĞU:
 1. Genel Klinik Değerlendirme
@@ -26,21 +27,13 @@ BAŞLIK ZORUNLULUĞU:
 5. Sonuç Düzeyinde Klinik Özet
 
 İÇERİK ZORUNLULUĞU:
-- Genel Klinik Değerlendirme bölümünde profileType, globalLevel ve korunmuş alanlar ile zorlanan alanlar birlikte anlatılmalı.
-- Genel Klinik Değerlendirme bölümünde tekrar eden, yuvarlak ve genel ifadeleri azalt.
-- Tüm alanlar riskli ise bunu açıkça "yaygın / diffüz / çok alanlı" örüntü olarak adlandır.
-- Korunmuş alan yoksa açıkça "korunmuş alan saptanmamıştır" de; yapay güçlü alan üretme.
-- Öncelikli alanlar, en düşük / en sorunlu alanlarla uyumlu olmalı; tüm alanlar eşitse bunu gerekçelendir.
-- "işaret edebilir", "düşündürebilir", "tutarlı görünmektedir" gibi kalıpları sürekli tekrar etme.
-- Her bölüm yeni bilgi taşımalı; bir önceki paragrafın eş anlamlı tekrarını yapma.
-- Metin sayısal dayanağa yaslansın; profilin homojen mi ayrışmış mı olduğu belirtilsin.
-- Alanlar arası Klinik Örüntü bölümünde tetikleyici, ikincil ve dengeleyici alan mantığını açıkça kur.
-- Klinik dili güçlü olsun; ancak tanı koyan bir üslup kullanma.
-- Sonuç paragrafında kısa, net ve karar verici bir kapanış yap.
-- Öncelikli Self-Regülasyon Alanları bölümünde priorityDomains ve domainSummary kullanılmalı.
-- Alanlar Arası Klinik Örüntü bölümünde patternNarrative ve domainInteractionSummary kullanılarak tetikleyici alan, zorlanan alan, kontrol alanı ve korunmuş alan açıkça anlatılmalı.
-- Anamnez ve Ölçek Bulgularının Uyum Düzeyi bölümünde anamnezThemes, güven düzeyi ve uyum gerekçesi doğrudan kullanılmalı.
-- Sonuç Düzeyinde Klinik Özet bölümü tamamlanmış, yoğun ve güçlü bir kapanış yapmalı.
+- Genel Klinik Değerlendirme bölümünde profileType, globalLevel, korunmuş alanlar ve zorlanan alanlar birlikte anlatılmalı.
+- Öncelikli alanlar yalnızca verilen priorityDomains ile uyumlu biçimde yazılmalı.
+- Tüm alanlar riskli veya atipik ise bu durum açıkça yaygın / diffüz / çok alanlı örüntü olarak adlandırılmalı.
+- Korunmuş alan yoksa açıkça "korunmuş alan saptanmamıştır" denmeli.
+- Alanlar arası örüntü bölümünde profilin homojen mi ayrışmış mı olduğu belirtilmeli.
+- Anamnez ve ölçek uyumu bölümünde anamnez temaları ile test örüntüsü arasındaki ilişki açıkça kurulmalı.
+- Sonuç bölümü kısa, net ve karar verici olmalı; yeni bilgi eklememeli.
 
 KAÇINILACAK İFADELER:
 - normatif veri gösteriyor ki
@@ -49,24 +42,53 @@ KAÇINILACAK İFADELER:
 - uygulanmalıdır
 - tedavi
 - İngilizce ifade
-- çok sık tekrar eden düşündürebilir, olabilir, görünebilir kalıpları
-`
+- çok sık tekrar eden "düşündürebilir", "olabilir", "görünebilir" kalıpları
 
-export function buildAIClinicalPrompt(data:{
-profileType:string
-globalLevel:string
-priorityDomains:string[]
-domainSummary:Record<string,string>
-anamnezThemes:string[]
-}){
+YASAKLI ANLATIM BİÇİMLERİ:
+- Aynı bilgiyi iki farklı cümlede tekrar etmek
+- Önceki paragrafın eş anlamlı tekrarını yapmak
+- Tüm alanlar riskliyken bazı alanları sebepsiz yere güçlü gibi sunmak
+- Korunmuş alan yokken koruyucu sistem varmış gibi yazmak
+- Veride bulunmayan klinik detay eklemek
+- Müdahale veya tedavi dili kullanmak
 
-return `${SELF_META_CLINICAL_STYLE_GUIDE}
+NUMERİK VE YAPISAL YAZIM KURALI:
+- Metin sayısal dayanağa yaslansın; ancak ham tablo gibi yazılmasın.
+- Alanlar arası farklılık, yaygınlık, kümelenme veya homojenlik açık biçimde ifade edilsin.
+- Öncelikli alan açıklaması, en sorunlu alanlarla uyumlu olsun.
+- Genel ifadeler yerine örüntü temelli klinik anlatım kullanılsın.
+`;
 
+export function buildAIClinicalPrompt(data: {
+  profileType: string;
+  globalLevel: string;
+  priorityDomains: string[];
+  domainSummary: Record<string, string>;
+  anamnezThemes: string[];
+}) {
+  const safeProfileType = data.profileType || "Belirtilmedi";
+  const safeGlobalLevel = data.globalLevel || "Belirtilmedi";
+  const safePriorityDomains =
+    Array.isArray(data.priorityDomains) && data.priorityDomains.length > 0
+      ? data.priorityDomains.join(", ")
+      : "Belirtilmedi";
+
+  const safeDomainSummary =
+    data.domainSummary && typeof data.domainSummary === "object"
+      ? JSON.stringify(data.domainSummary, null, 2)
+      : "{}";
+
+  const safeAnamnezThemes =
+    Array.isArray(data.anamnezThemes) && data.anamnezThemes.length > 0
+      ? data.anamnezThemes.join(" | ")
+      : "Belirgin anamnez teması yok";
+
+  return `${SELF_META_CLINICAL_STYLE_GUIDE}
 
 Sen pediatrik ergoterapi alanında çalışan bir klinik rapor yazım motorusun.
 
-YAZIM STANDARTLARI
-- Metin tamamen TÜRKÇE olacak.
+YAZIM STANDARTLARI:
+- Metin tamamen Türkçe olacak.
 - "self-regülasyon" terimi kullanılacak.
 - "çocuk" veya "danışan" terimleri kullanılacak.
 - Akademik, klinik ve profesyonel bir dil kullanılacak.
@@ -74,11 +96,13 @@ YAZIM STANDARTLARI
 - Kısa ama yoğun klinik anlatım kurulacak.
 - Yeni veri uydurulmayacak.
 - Tanı koyulmayacak.
-- Müdahale, tedavi, öneri, program yazılmayacak.
+- Müdahale, tedavi, öneri veya program yazılmayacak.
 - "kanıtlar", "kesin olarak gösterir", "ispatlar" gibi aşırı kesin ifadeler kullanılmayacak.
-- Bunun yerine "düşündürebilir", "uyumlu görünebilir", "ilişkili olabilir", "işaret edebilir" gibi kontrollü klinik dil kullanılacak.
+- Bunun yerine kontrollü ve ölçülü klinik dil kullanılacak.
+- Her bölüm bir öncekinden farklı bilgi taşımalı.
+- Her bölümde yalnızca mevcut verinin izin verdiği ölçüde yorum yapılmalı.
 
-TERCİH EDİLEN PROFESYONEL İFADELER
+TERCİH EDİLEN PROFESYONEL İFADELER:
 - self-regülasyon
 - klinik örüntü
 - işlevsel görünüm
@@ -89,25 +113,29 @@ TERCİH EDİLEN PROFESYONEL İFADELER
 - tutarlı ilişki
 - göreli güçlük alanı
 - bütüncül görünüm
+- yaygın örüntü
+- kümelenmiş zorlanma
+- homojen profil
+- ayrışmış profil
 
-YAPILANDIRILMIŞ ANALİZ
+YAPILANDIRILMIŞ ANALİZ:
 Profil tipi:
-${data.profileType}
+${safeProfileType}
 
 Genel düzey:
-${data.globalLevel}
+${safeGlobalLevel}
 
 Öncelikli alanlar:
-${data.priorityDomains.join(", ") || "Belirtilmedi"}
+${safePriorityDomains}
 
 Alan düzeyleri:
-${JSON.stringify(data.domainSummary,null,2)}
+${safeDomainSummary}
 
 Anamnez temaları:
-${data.anamnezThemes.join(" | ") || "Belirgin anamnez teması yok"}
+${safeAnamnezThemes}
 
-GÖREV
-Aşağıdaki başlıklarla bir klinik rapor yaz:
+GÖREV:
+Aşağıdaki başlıklarla tek parça, profesyonel bir klinik rapor yaz:
 
 1. Genel Klinik Değerlendirme
 2. Öncelikli Self-Regülasyon Alanları
@@ -115,15 +143,13 @@ Aşağıdaki başlıklarla bir klinik rapor yaz:
 4. Anamnez ve Ölçek Bulgularının Uyum Düzeyi
 5. Sonuç Düzeyinde Klinik Özet
 
-Önemli:
+EK TALİMATLAR:
+- Genel Klinik Değerlendirme bölümünde profil tipi ve genel düzeyi açıkça söyle.
+- Korunmuş alan yoksa bunu açıkça belirt.
+- Öncelikli alanlar, verilen priorityDomains ile çelişmemeli.
+- Alanlar arası örüntü bölümünde profilin yaygın mı, kümelenmiş mi, homojen mi, ayrışmış mı olduğunu mutlaka belirt.
 - Anamnez ile test bulgularının nasıl örtüştüğünü açıkça belirt.
-- Öncelikli alanları kısa ama klinik biçimde açıkla.
-- Metin profesyonel ve doğal Türkçe ile yazılmalı.
-`
+- Sonuç bölümünde yeni bilgi ekleme; yalnızca klinik toparlama yap.
+- Metni doğal ama kontrollü klinik Türkçe ile yaz.
+`;
 }
-
-- Yasaklı anlatım biçimleri:
-  - Aynı bilgiyi iki farklı cümlede tekrar etmek
-  - "Bu durum ... düşündürebilir" kalıbını art arda kullanmak
-  - Tüm alanlar riskliyken bazı alanları sebepsiz yere "güçlü" gibi sunmak
-  - Korunmuş alan yokken koruyucu sistem varmış gibi yazmak
