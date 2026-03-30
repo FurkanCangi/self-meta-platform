@@ -50,7 +50,10 @@ function hasAllRequiredSections(text: string): boolean {
 }
 
 function normalizeLevel(v: string): string {
-  const x = String(v || "").toLowerCase().trim();
+  const x = String(v || "").toLowerCase().trim()
+    .replace(/\.\s*olarak görünmektedir\./g, ".")
+    .replace(/\s{2,}/g, " ")
+    .trim();
   if (x.includes("atipik")) return "Atipik";
   if (x.includes("riskli")) return "Riskli";
   if (x.includes("tipik")) return "Tipik";
@@ -119,6 +122,9 @@ function cleanRenderedReport(text: string): string {
     .replace(/```[\s\S]*?```/g, "")
     .replace(/\n{3,}/g, "\n\n")
     .replace(/[ \t]+\n/g, "\n")
+    .replace(/Kullanılan norm \/ referans kaynağı:\s*\.?/g, "")
+    .replace(/\.\s*olarak görünmektedir\./g, ".")
+    .replace(/\s{2,}/g, " ")
     .trim();
 }
 
@@ -127,7 +133,7 @@ export async function POST(req: Request) {
     const body = await req.json()
 
 
-function validateInputSelfMeta(body) {
+function validateInputSelfMeta(body: any) {
   const errors = []
 
   if (!body) errors.push("body_missing")
