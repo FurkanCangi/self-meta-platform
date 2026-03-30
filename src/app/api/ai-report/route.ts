@@ -112,15 +112,52 @@ function cleanRenderedReport(text: string): string {
 
   return text
     .replace(/\[\[END_OF_REPORT\]\]/g, "")
+    .replace(/age_band_heuristic/g, "")
+    .replace(/fallback_fixed/g, "")
     .replace(/^##\s*/gm, "")
     .replace(/\*\*/g, "")
+    .replace(/```[\s\S]*?```/g, "")
     .replace(/\n{3,}/g, "\n\n")
+    .replace(/[ \t]+\n/g, "\n")
     .trim();
 }
 
 export async function POST(req: Request) {
   try {
     const body = await req.json()
+
+
+function validateInputSelfMeta(body) {
+  const errors = []
+
+  if (!body) errors.push("body_missing")
+
+  const scores = body?.scores || {}
+
+  const domains = [
+    "fizyolojik",
+    "duyusal",
+    "duygusal",
+    "bilissel",
+    "yurutucu",
+    "intero"
+  ]
+
+  for (const d of domains) {
+    const val = scores[d]
+    if (val == null) errors.push(`${d}_missing`)
+    if (typeof val === "number" && (val < 10 || val > 50)) {
+      errors.push(`${d}_out_of_range`)
+    }
+  }
+
+  return errors
+}
+
+const __validationErrors = validateInputSelfMeta(body)
+if (__validationErrors.length > 0) {
+  return new Response(JSON.stringify({ error: 'invalid_input', details: __validationErrors }), { status: 400 })
+}
 
     const incomingAgeMonths =
       typeof body?.ageMonths === "number"
@@ -151,7 +188,16 @@ export async function POST(req: Request) {
       )
     }
 
-    const aiText = await rewriteClinicalReport(report.clinicalAnalysis)
+    let aiText = ""
+    let aiError = null
+
+    try {
+      aiText = await rewriteClinicalReport(report.clinicalAnalysis)
+    } catch (e) {
+      aiError = e
+      console.error("[AI-REPORT] LLM_ERROR:", e)
+      aiText = ""
+    }
     const useFallback = shouldFallbackToDeterministic(aiText, report.clinicalAnalysis)
     const finalText = cleanRenderedReport(useFallback ? report.deterministicReport : aiText)
     const cleanDeterministic = cleanRenderedReport(report.deterministicReport)
