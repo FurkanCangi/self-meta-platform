@@ -542,7 +542,7 @@ function buildConclusion(
       : "genel profil belirgin ve yüksek klinik yük düşündürmektedir";
 
   const patternText = d
-    ? ` En düşük alanlar ${d.weakPair || "tanımlanamadı"} olarak görünmektedir. Zorlanma mimarisi ${d.architecture}, şiddeti ise ${d.severityText} düzeydedir.`
+    ? ` Alt alanlar arasında belirgin bir ayrışma saptanmamıştır. olarak görünmektedir. Zorlanma mimarisi ${d.architecture}, şiddeti ise ${d.severityText} düzeydedir.`
     : "";
 
   const homogeneityText = d

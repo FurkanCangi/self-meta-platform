@@ -34,8 +34,8 @@ export function renderAIReport(
 
   const ageBandNote =
     scores.normSource === "age_band_heuristic"
-      ? `Yaş-duyarlı yorum bandı: ${scores.ageBandLabel}.`
-      : "Yaş-duyarlı norm bandı bulunmadığından sabit sistem içi eşikler kullanılmıştır.";
+      ? `ageBandLabel}.`
+      : "";
 
   return [
     "1. Genel Sonuç",
