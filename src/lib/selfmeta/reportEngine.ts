@@ -45,6 +45,10 @@ export type DeterministicReport = {
     priorityDomains: string[];
     domainSummary: Record<string, string>;
     anamnezThemes: string[];
+    weakDomains: string[];
+    strongDomains: string[];
+    matchedDomains: string[];
+    patternSummary: string;
   };
   totalScore: number;
   globalLevel: DomainLevel;
@@ -236,6 +240,18 @@ function selectNarrativelyMatchedDomains(domainResults: DomainResult[], anamnezF
     .slice(0, 3);
 }
 
+function getRawMatchedDomains(domainResults: DomainResult[], anamnezFlags: string[]): DomainResult[] {
+  const joined = anamnezFlags.join(" ").toLowerCase();
+
+  return domainResults.filter((d) => {
+    if (d.key === "sensory") return /duyusal|dokunsal|uyaran|gürültü|kalabalık/.test(joined);
+    if (d.key === "emotional") return /duygusal|toparlanma|sakinleş|uyaran sonrası/.test(joined);
+    if (d.key === "cognitive" || d.key === "executive") return /dikkat|görev|sürdürme|çok uyaran/.test(joined);
+    if (d.key === "physiological" || d.key === "interoception") return /bedensel|fizyolojik|yorgun|uyku|beslenme|iştah|alerji|kolik|nöbet/.test(joined);
+    return false;
+  });
+}
+
 function hasFlatPriorityProfile(domainResults: DomainResult[]): boolean {
   if (!domainResults.length) return false;
   const scores = domainResults.map((d) => d.score);
@@ -245,15 +261,42 @@ function hasFlatPriorityProfile(domainResults: DomainResult[]): boolean {
   return spread <= 1 && sameLevel;
 }
 
+function getSelectiveProfileName(domain: DomainResult | undefined): string {
+  if (!domain) return "Seçici Regülasyon Kırılganlığı";
+
+  if (domain.key === "interoception") {
+    return "İnterosepsiyon Merkezli Seçici Kırılganlık";
+  }
+
+  return `${domain.label} Alanında Seçici Kırılganlık`;
+}
+
 function detectProfileType(domainResults: DomainResult[], globalLevel: DomainLevel, homogeneous: boolean): string {
   const byKey = Object.fromEntries(domainResults.map((d) => [d.key, d.score])) as Record<DomainKey, number>;
   const values = domainResults.map((d) => d.score);
   const spread = Math.max(...values) - Math.min(...values);
+  const nonTypical = [...domainResults]
+    .filter((d) => d.level !== "Tipik")
+    .sort((a, b) => a.score - b.score);
+  const nonTypicalKeys = new Set(nonTypical.map((d) => d.key));
 
   if (homogeneous) {
     if (globalLevel === "Tipik") return "Dengeli / Korunmuş Profil";
     if (globalLevel === "Riskli") return "Yaygın Orta Düzey Regülasyon Güçlüğü";
     return "Yaygın Çoklu Alan Kırılganlığı";
+  }
+
+  if (nonTypical.length === 1) {
+    return getSelectiveProfileName(nonTypical[0]);
+  }
+
+  if (
+    nonTypicalKeys.has("sensory") &&
+    nonTypicalKeys.has("cognitive") &&
+    nonTypicalKeys.has("executive") &&
+    spread >= MEANINGFUL_SPREAD_THRESHOLD
+  ) {
+    return "Duyusal-Bilişsel-Yürütücü Zorlanma Profili";
   }
 
   if (byKey.sensory <= 25 && byKey.emotional <= 25 && spread >= MEANINGFUL_SPREAD_THRESHOLD) {
@@ -275,7 +318,7 @@ function detectProfileType(domainResults: DomainResult[], globalLevel: DomainLev
     return "Yürütücü İşlev Ağırlıklı Profil";
   }
 
-  return "Karışık Regülasyon Profili";
+  return "Ayrışan Regülasyon Profili";
 }
 
 function analyzePatterns(domainResults: DomainResult[], homogeneous: boolean): string[] {
@@ -343,14 +386,14 @@ function buildGeneralSection(
 
   const summary =
     globalLevel === "Tipik"
-      ? "Genel profil, yaş dönemi açısından görece düzenli ve korunmuş bir örüntü göstermektedir."
+      ? "Genel görünüm, yaş dönemi içinde büyük ölçüde dengeli ve korunmuş seyretmektedir."
       : globalLevel === "Riskli"
-      ? "Genel profil, bazı alanlarda destek gereksinimine işaret eden riskli bir örüntü göstermektedir."
-      : "Genel profil, birden fazla alanda belirgin destek gereksinimi düşündüren atipik bir örüntü göstermektedir.";
+      ? "Genel görünüm, bazı alanlarda belirginleşen destek ihtiyacına işaret etmektedir."
+      : "Genel görünüm, çoklu alanda belirginleşen bir regülasyon yüküne işaret etmektedir.";
 
   const profileSentence = homogeneous
-    ? "Alt alan puanları arasında belirgin bir ayrışma izlenmemiş, profil görece homojen görünmüştür."
-    : `Belirgin klinik örüntü "${profileType}" olarak sınıflanmıştır. En düşük alan ${[...domainResults].sort((a, b) => a.score - b.score)[0]?.label} görünmektedir.`;
+    ? "Alt alan puanları birbirine yakın seyretmiş ve profil görece homojen kalmıştır."
+    : `Belirgin klinik örüntü "${profileType}" ile uyumludur. Görece en kırılgan alan ${[...domainResults].sort((a, b) => a.score - b.score)[0]?.label} olarak öne çıkmaktadır.`;
 
   return [identityLine, `Toplam skor ${totalScore}/${GLOBAL_MAX} olarak hesaplanmıştır ve genel sınıflama ${globalLevel} düzeydedir. ${summary} ${profileSentence} ${normText}`]
     .filter(Boolean)
@@ -406,7 +449,7 @@ function buildDeterministicProfileSummary(
   const highest = sortedDesc[0];
 
   const weakPair = [lowest?.label, secondLowest?.label].filter(Boolean).join(" ve ");
-  const riskLabels = domainResults
+  const riskLabels = sortedAsc
     .filter((d) => d.level !== "Tipik")
     .map((d) => d.label);
 
@@ -450,6 +493,10 @@ function buildInteroCentricComment(domainResults: DomainResult[]): string {
   const intero = domainResults.find(d => d.key === "interoception");
   const phys = domainResults.find(d => d.key === "physiological");
   const emo = domainResults.find(d => d.key === "emotional");
+  const sortedWeak = [...domainResults]
+    .filter((d) => d.level !== "Tipik")
+    .sort((a, b) => a.score - b.score);
+  const interoIsPrimary = sortedWeak[0]?.key === "interoception";
 
   if (!intero) return "";
 
@@ -463,37 +510,71 @@ function buildInteroCentricComment(domainResults: DomainResult[]): string {
   // 🔴 DURUM 2: intero riskli + fizyolojik/duygusal eşlik
   if (
     interoLevel === "Riskli" &&
-    ((phys && phys.level !== "Tipik") || (emo && emo.level !== "Tipik"))
+    (interoIsPrimary || (phys && phys.level !== "Tipik") || (emo && emo.level !== "Tipik"))
   ) {
     return "İnterosepsiyon alanı, fizyolojik ve/veya duygusal düzenleme süreçleriyle birlikte değerlendirildiğinde, profilin açıklanmasında bütünleştirici bir eksen olarak öne çıkmaktadır.";
   }
 
-  // 🔴 DURUM 3: intero tipik ama genel problem var
-  return "İnterosepsiyon alanı belirgin birincil yük taşımamakla birlikte, diğer self-regülasyon alanlarıyla birlikte değerlendirildiğinde, profilin bütüncül yorumlanmasında referans bir düzenleyici eksen olarak ele alınmıştır.";
+  return "";
+}
+
+function buildWeaknessNarrative(domainResults: DomainResult[], homogeneous: boolean): string {
+  const { strengths, weaknesses } = getMeaningfulStrengthWeakness(domainResults, homogeneous);
+  const sortedWeak = [...domainResults]
+    .filter((d) => d.level !== "Tipik")
+    .sort((a, b) => a.score - b.score);
+
+  if (weaknesses.length === 1) {
+    const preserved = strengths.length
+      ? ` ${strengths.map((x) => x.label).join(", ")} alanlarında göreli korunmuşluk izlenmektedir.`
+      : "";
+    return `- Profil, temel olarak ${weaknesses[0].label} alanında seçici bir kırılganlık göstermektedir.${preserved}`;
+  }
+
+  if (sortedWeak.length >= 3) {
+    return `- Kırılganlık öncelikle ${sortedWeak[0].label} alanında belirginleşmekte; ${sortedWeak[1].label} ve ${sortedWeak[2].label} alanları bu örüntüye eşlik etmektedir.`;
+  }
+
+  if (sortedWeak.length === 2) {
+    return `- Kırılganlık ${sortedWeak[0].label} ve ${sortedWeak[1].label} alanlarında birlikte belirginleşmektedir.`;
+  }
+
+  if (strengths.length) {
+    return `- ${strengths.map((x) => x.label).join(", ")} alanlarında göreli korunmuşluk izlenmektedir.`;
+  }
+
+  return "";
 }
 
 function buildPatternSection(profileType: string, patterns: string[], domainResults: DomainResult[], homogeneous: boolean): string {
   const lines: string[] = [`- Profil sınıflaması: ${profileType}.`];
+  const weaknessNarrative = buildWeaknessNarrative(domainResults, homogeneous);
+  const { strengths, weaknesses } = getMeaningfulStrengthWeakness(domainResults, homogeneous);
+
+  if (weaknessNarrative) {
+    lines.push(weaknessNarrative);
+  }
 
   if (patterns.length > 0) {
     lines.push(...patterns.map((p) => `- ${p}`));
-    
-  const interoComment = buildInteroCentricComment(domainResults);
-  if (interoComment) {
-    lines.push(`- ${interoComment}`);
-  }
-return lines.join("\n");
   }
 
   if (homogeneous) {
     lines.push("- Alt alan puanları arasında belirgin bir ayrışma saptanmamıştır. Profil görece homojen görünmektedir.");
-    return lines.join("\n");
+  } else {
+    if (!patterns.length && !weaknessNarrative) {
+      lines.push("- Belirgin klinik örüntü oluşturacak düzeyde ek bir alan kombinasyonu saptanmamıştır.");
+    }
+    if (strengths.length && weaknesses.length !== 1) {
+      lines.push(`- Görece güçlü alan(lar): ${strengths.map((x) => x.label).join(", ")}.`);
+    }
   }
 
-  const { strengths, weaknesses } = getMeaningfulStrengthWeakness(domainResults, homogeneous);
-  lines.push("- Belirgin klinik örüntü oluşturacak düzeyde ek bir alan kombinasyonu saptanmamıştır.");
-  if (strengths.length) lines.push(`- Görece güçlü alan(lar): ${strengths.map((x) => x.label).join(", ")}.`);
-  if (weaknesses.length) lines.push(`- Görece zorlanan alan(lar): ${weaknesses.map((x) => x.label).join(", ")}.`);
+  const interoComment = buildInteroCentricComment(domainResults);
+  if (interoComment) {
+    lines.push(`- ${interoComment}`);
+  }
+
   return lines.join("\n");
 }
 
@@ -505,25 +586,68 @@ function buildAnamnezFitSection(
 ): string {
   const d = buildDeterministicProfileSummary(domainResults);
   const flagCount = Array.isArray(anamnezFlags) ? anamnezFlags.length : 0;
-  const riskText = d.riskLabels.length ? d.riskLabels.join(", ") : "belirgin risk alanı saptanmadı";
-  const summaryText =
+  const rawMatchedDomains = getRawMatchedDomains(domainResults, anamnezFlags).map((x) => x.label);
+  const weakLabels = domainResults
+    .filter((d) => d.level !== "Tipik")
+    .sort((a, b) => a.score - b.score)
+    .map((d) => d.label);
+  const strongLabels = domainResults
+    .filter((d) => d.level === "Tipik")
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 2)
+    .map((d) => d.label);
+  const matchedDomains = selectNarrativelyMatchedDomains(domainResults, anamnezFlags)
+    .map((x) => x.label)
+    .slice(0, 3);
+  const riskText = matchedDomains.length
+    ? matchedDomains.join(", ")
+    : d.weakPair || (d.riskLabels.length ? d.riskLabels.slice(0, 3).join(", ") : "belirgin zorlanma alanı saptanmadı");
+  const summaryParts =
     typeof anamnezSummary === "string"
-      ? anamnezSummary.trim()
+      ? [anamnezSummary.trim()]
       : Array.isArray(anamnezSummary)
-      ? anamnezSummary.filter(Boolean).join(" ").trim()
+      ? anamnezSummary.filter(Boolean).map((x) => String(x).trim())
       : anamnezSummary && typeof anamnezSummary === "object"
-      ? JSON.stringify(anamnezSummary).trim()
-      : "";
+      ? [JSON.stringify(anamnezSummary).trim()]
+      : [];
+  const themePreview = summaryParts
+    .slice(0, 2)
+    .join(" ")
+    .replace(/^Anamnezde\s+/i, "");
 
-  if (flagCount >= 3 && summaryText) {
-    return `Anamnezde ${flagCount} klinik tema öne çıkmakta ve bunlar ${riskText} alanlarıyla yönsel olarak uyum göstermektedir. Bu nedenle anamnez-ölçek uyumu yüksek kabul edilebilir. Profil tipi "${profileType}" bu klinik bağlam içinde tutarlı görünmektedir.`;
+  const alignedDomains = rawMatchedDomains.filter((label) => weakLabels.includes(label)).slice(0, 3);
+  const mismatchDomains = rawMatchedDomains.filter((label) => strongLabels.includes(label)).slice(0, 2);
+  const partialDomains = rawMatchedDomains
+    .filter((label) => !alignedDomains.includes(label) && !mismatchDomains.includes(label))
+    .slice(0, 2);
+
+  if (flagCount >= 1 && themePreview) {
+    const sentences: string[] = [`Anamnezde ${themePreview}`];
+
+    if (alignedDomains.length > 0) {
+      sentences.push(`Ölçekte öne çıkan ${alignedDomains.join(", ")} alanları bu anlatımla doğrudan uyum göstermektedir.`);
+    }
+
+    if (partialDomains.length > 0) {
+      sentences.push(`${partialDomains.join(", ")} alanlarında ise daha sınırlı ama klinik olarak anlamlı bir eşleşme izlenmektedir.`);
+    }
+
+    if (mismatchDomains.length > 0) {
+      sentences.push(`${mismatchDomains.join(", ")} alanlarına ilişkin anamnez vurgusu bulunmasına karşın ölçek bulguları bu alanlarda göreli korunmuş görünmektedir; bu durum bağlama özgü bir ayrışma düşündürebilir.`);
+    }
+
+    if (alignedDomains.length >= 2 && mismatchDomains.length === 0) {
+      sentences.push(`Bu nedenle anamnez-ölçek uyumu yüksek düzeyde ve "${profileType}" yorumu klinik bağlamla tutarlıdır.`);
+    } else if (alignedDomains.length >= 1 || mismatchDomains.length >= 1 || partialDomains.length >= 1) {
+      sentences.push(`Bu nedenle anamnez-ölçek ilişkisi tam örtüşmeden çok, doğrudan uyum ve kısmi ayrışmanın birlikte izlendiği bir örüntü göstermektedir.`);
+    } else {
+      sentences.push(`Bu nedenle klinik yorum ağırlıklı olarak skor örüntüsüne dayandırılmıştır.`);
+    }
+
+    return sentences.join(" ");
   }
 
-  if (flagCount >= 1 && summaryText) {
-    return `Anamnezde sınırlı fakat anlamlı klinik tema bulunmaktadır. Bu temalar özellikle ${riskText} alanlarıyla kısmi uyum göstermektedir. Bu nedenle anamnez-ölçek uyumu orta düzeyde değerlendirilebilir.`;
-  }
-
-  return `Anamnezde "${profileType}" örüntüsünü güçlü biçimde destekleyen belirgin tema sınırlıdır. Ölçek sonuçlarında öne çıkan alanlar ${riskText} olarak görünmektedir; bu nedenle klinik yorum doğrudan skor örüntüsüne dayandırılmıştır.`;
+  return `Anamnezde "${profileType}" örüntüsünü doğrudan güçlendiren belirgin tema sınırlıdır. Ölçekte görece daha çok zorlanan alanlar ${riskText} ekseninde toplanmaktadır. Bu nedenle klinik yorum ağırlıklı olarak skor örüntüsüne dayandırılmıştır.`;
 }
 
 function buildConclusion(
@@ -538,20 +662,27 @@ function buildConclusion(
     globalLevel === "Tipik"
       ? "genel profil büyük ölçüde korunmuş görünmektedir"
       : globalLevel === "Riskli"
-      ? "genel profil yaygın destek gereksinimine işaret etmektedir"
-      : "genel profil belirgin ve yüksek klinik yük düşündürmektedir";
+      ? "genel profil yaygın fakat yönetilebilir bir destek gereksinimine işaret etmektedir"
+      : "genel profil belirgin ve yüksek klinik yük göstermektedir";
 
   const patternText = d
-    ? ` Alt alanlar arasında belirgin bir ayrışma saptanmamıştır. olarak görünmektedir. Zorlanma mimarisi ${d.architecture}, şiddeti ise ${d.severityText} düzeydedir.`
+    ? d.spread <= 3
+      ? ` Zorlanma alanlara yakın düzeyde yayılmış görünmektedir. Örüntü yapısı ${d.architecture} ve klinik yük ${d.severityText} düzeydedir.`
+      : ` Görece en çok zorlanan eksen ${(d.riskLabels.length >= 3 ? d.riskLabels.slice(0, 3).join(", ") : d.weakPair || d.lowest?.label || "öncelikli alanlar")} alanlarında toplanmaktadır. Örüntü yapısı ${d.architecture} ve klinik yük ${d.severityText} düzeydedir.`
     : "";
 
   const homogeneityText = d
     ? ` ${d.homogeneityText.charAt(0).toUpperCase() + d.homogeneityText.slice(1)}.`
     : "";
 
-  const normText = normSource ? ` Kullanılan norm / referans kaynağı: ${normSource}.` : "";
+  const normText =
+    normSource === "age_band_heuristic"
+      ? " Yorum yaş-duyarlı norm bandı ile yapılmıştır."
+      : normSource === "fallback_fixed"
+      ? " Yorum sabit sistem eşikleri ile yapılmıştır."
+      : "";
 
-  return `Sonuç olarak profil "${profileType}" başlığı altında ele alınabilir; ${levelText}.${patternText}${homogeneityText}${normText} Bu rapor tek başına tanısal karar amacıyla değil, anamnez ve klinik gözlemle birlikte kullanılmalıdır.`;
+  return `Sonuç olarak profil "${profileType}" ile uyumludur; ${levelText}.${patternText}${homogeneityText}${normText} Klinik yorumun anamnez ve gözlemle birlikte ele alınması uygundur.`;
 }
 
 export function generateDeterministicReport(input: ReportInput): DeterministicReport {
@@ -621,7 +752,7 @@ export function generateDeterministicReport(input: ReportInput): DeterministicRe
   };
 
   const reportText = [
-    "1. Genel Sonuç",
+    "1. Genel Klinik Değerlendirme",
     sections.general,
     "",
     "2. Sayısal Sonuç Özeti",

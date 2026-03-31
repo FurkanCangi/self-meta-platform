@@ -1,6 +1,21 @@
 import Link from "next/link";
 import { Mail, MapPin, Phone } from "lucide-react";
+import {
+  FaInstagram,
+  FaLinkedinIn,
+  FaTiktok,
+  FaYoutube,
+  FaXTwitter,
+} from "react-icons/fa6";
 import styles from "./FooterContact.module.css";
+
+const socialLinks = [
+  { label: "Instagram", href: "#", icon: FaInstagram },
+  { label: "X", href: "#", icon: FaXTwitter },
+  { label: "LinkedIn", href: "#", icon: FaLinkedinIn },
+  { label: "YouTube", href: "#", icon: FaYoutube },
+  { label: "TikTok", href: "#", icon: FaTiktok },
+];
 
 export default function FooterContact() {
   return (
@@ -8,40 +23,46 @@ export default function FooterContact() {
       <div className={styles.panel}>
         <div className={styles.grid}>
           <div className={styles.brand}>
-            <div className={styles.logoWord}>self<span className={styles.plus}>+</span></div>
+            <div>
+              <div className={styles.logoWord}>self<span className={styles.plus}>+</span></div>
+              <p className={styles.brandText}>
+                Çocuk odaklı self-regülasyon değerlendirmesi için sade, güvenli ve klinik akışa uyumlu dijital platform.
+              </p>
+            </div>
           </div>
 
-          <div>
+          <div className={styles.column}>
             <div className={styles.colTitle}>Menü</div>
             <nav className={styles.links}>
-              <a href="/self-regulasyon-nedir">SELF AI Nedir?</a>
-              <a href="/#terapistler">Terapistler için</a>
+              <a href="/self-regulasyon-nedir">Self AI Nedir?</a>
+              <a href="/#terapistler">Terapistler İçin</a>
               <a href="/#paketler">Fiyatlandırma</a>
               <a href="/#iletisim">İletişim</a>
             </nav>
           </div>
 
-          <div>
+          <div className={styles.column}>
             <div className={styles.colTitle}>Sosyal Medya</div>
             <div className={styles.socialRow}>
-              <a className={styles.sBtn} href="#" aria-label="Instagram">ig</a>
-              <a className={styles.sBtn} href="#" aria-label="X">x</a>
-              <a className={styles.sBtn} href="#" aria-label="LinkedIn">in</a>
-              <a className={styles.sBtn} href="#" aria-label="YouTube">yt</a>
-              <a className={styles.sBtn} href="#" aria-label="TikTok">tt</a>
+              {socialLinks.map(({ label, href, icon: Icon }) => (
+                <a key={label} className={styles.sBtn} href={href} aria-label={label} title={label}>
+                  <Icon size={17} />
+                </a>
+              ))}
             </div>
+            <div className={styles.socialNote}>Bizi sosyal medyada takip edin.</div>
           </div>
 
-          <div>
+          <div className={styles.column}>
             <div className={styles.colTitle}>İletişim</div>
             <div className={styles.contact}>
               <div className={styles.cRow}>
                 <Mail size={18} />
-                <span>self.metacognition.institute@gmail.com</span>
+                <a href="mailto:self.metacognition.institute@gmail.com">self.metacognition.institute@gmail.com</a>
               </div>
               <div className={styles.cRow}>
                 <Phone size={18} />
-                <span>0530 676 6654</span>
+                <a href="tel:+905306766654">0530 676 6654</a>
               </div>
               <div className={styles.cRow}>
                 <MapPin size={18} />
@@ -54,7 +75,7 @@ export default function FooterContact() {
         <div className={styles.hr} />
 
         <div className={styles.bottom}>
-          <div>2025 Tüm Hakları Saklıdır © Self Metacognition Institute</div>
+          <div className={styles.copy}>2025 Tüm Hakları Saklıdır © Self Metacognition Institute</div>
           <div className={styles.mini}>self<span className={styles.plusMini}>+</span></div>
         </div>
       </div>

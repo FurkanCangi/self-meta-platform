@@ -1,4 +1,5 @@
 export type AnamnezRecord = Record<string, unknown>;
+export type AnamnezFieldDefinition = { key: string; label: string }
 
 const PLACEHOLDER_VALUES = new Set([
   "",
@@ -36,8 +37,12 @@ const LABEL_TO_KEY: Record<string, string> = {
   "adı-soyadı": "ad_soyad",
   "danışankodu": "client_code",
   "danisankodu": "client_code",
+  "kayittarihi": "record_date",
+  "kayıttarihi": "record_date",
   "yaş": "age",
   "yas": "age",
+  "yaşaralığı": "age_range",
+  "yasaraligi": "age_range",
   "cinsiyet": "gender",
   "tanı": "diagnosis",
   "tani": "diagnosis",
@@ -77,6 +82,46 @@ const LABEL_TO_KEY: Record<string, string> = {
   "basvurusebebi": "referral_reason",
 };
 
+export const REPORT_INCLUDED_ANAMNEZ_FIELDS: AnamnezFieldDefinition[] = [
+  { key: "age_range", label: "Yaş aralığı" },
+  { key: "diagnosis", label: "Tanı" },
+  { key: "referral_reason", label: "Başvuru sebebi" },
+  { key: "parent_concerns_goals", label: "Birincil endişeler/hedefler" },
+  { key: "strengths", label: "Çocuğun güçlü yanları" },
+  { key: "medical_history", label: "Tıbbi geçmiş" },
+  { key: "allergy_epilepsy_gi_colic_seizure", label: "Alerji/epilepsi/kabızlık-ishal/kolik/nöbet" },
+  { key: "current_therapies", label: "Şu an aldığı tedavi ve terapiler" },
+  { key: "past_therapies", label: "Daha önce aldığı ama bıraktığı tedaviler" },
+  { key: "medications", label: "Medikal tedaviler (ilaçlar ve saatleri)" },
+  { key: "prenatal_story", label: "Doğum öncesi hikâye" },
+  { key: "birth_story", label: "Doğum hikayesi" },
+  { key: "postnatal_story", label: "Doğum sonrası hikâye" },
+  { key: "low_birth_history", label: "Düşük doğum hikayesi var mı" },
+  { key: "feeding_type", label: "Beslenme şekli" },
+  { key: "liked_foods", label: "Sevdiği yemekler" },
+  { key: "rejected_foods", label: "Reddettiği yemekler" },
+]
+
+export const REPORT_EXCLUDED_ANAMNEZ_FIELDS: AnamnezFieldDefinition[] = [
+  { key: "ad_soyad", label: "Adı-soyadı" },
+  { key: "client_code", label: "Danışan Kodu" },
+  { key: "record_date", label: "Kayıt Tarihi" },
+  { key: "gender", label: "Cinsiyet" },
+  { key: "sibling_count", label: "Kardeş sayısı" },
+  { key: "birth_order", label: "Kaçıncı çocuk" },
+  { key: "household_count", label: "Evde kaç kişi kalıyor" },
+  { key: "mother_age_at_birth", label: "Çocuk doğduğunda annenin yaşı" },
+  { key: "mother_education", label: "Annenin eğitim düzeyi" },
+  { key: "mother_job_working", label: "Annenin mesleği / çalışıyor mu?" },
+  { key: "mother_work_hours", label: "Annenin çalışma saatleri" },
+  { key: "caregiver_if_working", label: "Çalışıyorsa, çocuğa kim bakıyor" },
+  { key: "father_education", label: "Babanın eğitim düzeyi" },
+  { key: "father_job", label: "Babanın mesleği" },
+  { key: "father_work_hours", label: "Babanın çalışma saatleri" },
+  { key: "liked_toys", label: "Sevdiği oyuncaklar" },
+  { key: "parent_contact", label: "Ebeveyn iletişim bilgileri" },
+]
+
 function normalizeLabel(value: string): string {
   return value
     .toLowerCase()
@@ -108,6 +153,22 @@ export function cleanMeaningfulText(value: unknown): string {
   if (normalized.length <= 1) return "";
 
   return text;
+}
+
+export function buildReportRelevantAnamnezSection(record: Record<string, unknown>): string {
+  const lines = REPORT_INCLUDED_ANAMNEZ_FIELDS
+    .map(({ key, label }) => {
+      const clean = cleanMeaningfulText(record?.[key]);
+      return clean ? `${label}: ${clean}` : "";
+    })
+    .filter(Boolean)
+
+  if (!lines.length) return ""
+
+  return [
+    "Rapor Yorumu İçin Klinik Anamnez",
+    ...lines,
+  ].join("\n")
 }
 
 function mergeStructured(record: AnamnezRecord): AnamnezRecord {
@@ -177,7 +238,12 @@ function collectClinicalContext(record: AnamnezRecord) {
     .filter(Boolean)
     .join(" | ");
 
-  const allNarrative = [rawSummary, referral, concerns, strengths, medical]
+  const reportRelevantNarrative = REPORT_INCLUDED_ANAMNEZ_FIELDS
+    .map(({ key }) => cleanMeaningfulText(merged[key]))
+    .filter(Boolean)
+    .join(" | ");
+
+  const allNarrative = [reportRelevantNarrative, referral, concerns, strengths, medical]
     .filter(Boolean)
     .join(" | ")
     .toLowerCase();
@@ -279,6 +345,52 @@ export function summarizeAnamnezThemes(record: AnamnezRecord): string[] {
   }
 
   return lines.slice(0, 4);
+}
+
+function truncatePreviewValue(value: string, maxLength: number): string {
+  const clean = cleanMeaningfulText(value);
+  if (!clean) return "";
+  if (clean.length <= maxLength) return clean;
+  return `${clean.slice(0, Math.max(0, maxLength - 1)).trim()}…`;
+}
+
+export function buildAnamnezPreview(
+  value: AnamnezRecord | string | null | undefined,
+  options?: { maxLength?: number }
+): string {
+  const record =
+    typeof value === "string"
+      ? { raw_summary: value }
+      : value && typeof value === "object"
+      ? value
+      : {};
+
+  const merged = mergeStructured(record);
+  const maxLength = options?.maxLength ?? 260;
+
+  const segments = [
+    ["Adı-soyadı", merged.ad_soyad],
+    ["Danışan Kodu", merged.client_code],
+    ["Kayıt Tarihi", merged.record_date],
+    ["Yaş aralığı", merged.age_range || merged.age],
+    ["Tanı", merged.diagnosis],
+    ["Başvuru sebebi", merged.referral_reason],
+    ["Birincil endişeler/hedefler", merged.parent_concerns_goals],
+    ["Çocuğun güçlü yanları", merged.strengths],
+    ["Tıbbi geçmiş", merged.medical_history],
+  ]
+    .map(([label, fieldValue]) => {
+      const clean = truncatePreviewValue(String(fieldValue || ""), 80);
+      return clean ? `${label}: ${clean}` : "";
+    })
+    .filter(Boolean);
+
+  const preview = segments.join(" | ");
+  if (preview && preview.length <= maxLength) return preview;
+  if (preview) return `${preview.slice(0, Math.max(0, maxLength - 1)).trim()}…`;
+
+  const rawFallback = truncatePreviewValue(String(record?.raw_summary || ""), maxLength);
+  return rawFallback || "Anamnez bilgisi bulunmuyor.";
 }
 
 export function extractAnamnezFlags(record: AnamnezRecord): string[] {

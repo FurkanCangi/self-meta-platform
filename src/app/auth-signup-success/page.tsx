@@ -11,7 +11,7 @@ export default function AuthSignupSuccessPage() {
           Gelen kutunuzu ve spam klasörünü kontrol edin.
         </p>
         <div className="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          Supabase panelinde Email doğrulama ayarı açık olmalıdır.
+          Doğrulama bağlantısı birkaç dakika içinde gelmezse spam klasörünü kontrol edin ve ardından giriş ekranına geri dönün.
         </div>
         <div className="mt-6 flex flex-wrap gap-3">
           <Link href="/login" className="inline-flex h-11 items-center justify-center rounded-xl bg-blue-600 px-5 font-semibold text-white transition hover:bg-blue-700">

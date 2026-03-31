@@ -14,10 +14,42 @@ async function checkExistingSelfMetaReportLock(supabase: any, payload: any) {
     return { locked: false, existing: null }
   }
 
+  const { data: userRes, error: userErr } = await supabase.auth.getUser()
+  if (userErr || !userRes?.user?.id) {
+    return { locked: false, existing: null }
+  }
+
+  const { data: clientRow, error: clientError } = await supabase
+    .from("clients")
+    .select("id")
+    .eq("owner_id", userRes.user.id)
+    .eq("child_code", clientCode)
+    .is("deleted_at", null)
+    .maybeSingle()
+
+  if (clientError || !clientRow?.id) {
+    return { locked: false, existing: null }
+  }
+
+  const { data: assessments, error: assessmentsError } = await supabase
+    .from("assessments_v2")
+    .select("id")
+    .eq("client_id", clientRow.id)
+    .is("deleted_at", null)
+
+  if (assessmentsError || !assessments || assessments.length === 0) {
+    return { locked: false, existing: null }
+  }
+
+  const assessmentIds = assessments.map((row: any) => row.id).filter(Boolean)
+  if (assessmentIds.length === 0) {
+    return { locked: false, existing: null }
+  }
+
   const { data, error } = await supabase
     .from("reports")
-    .select("id, report_text, client_code, created_at")
-    .eq("client_code", clientCode)
+    .select("id, report_text, created_at, assessment_id")
+    .in("assessment_id", assessmentIds)
     .not("report_text", "is", null)
     .order("created_at", { ascending: false })
     .limit(1)
@@ -34,19 +66,44 @@ async function checkExistingSelfMetaReportLock(supabase: any, payload: any) {
 }
 
 import { NextResponse } from "next/server"
+import { cookies } from "next/headers"
+import { createServerClient } from "@supabase/ssr"
 import { rewriteClinicalReport } from "@/lib/selfmeta/aiRewrite"
 import { buildAdvancedReport } from "@/lib/selfmeta/reportEngine"
 import { extractAgeMonthsFromAnamnez, isSupportedAgeMonths } from "@/lib/selfmeta/ageUtils"
+import { buildLiteratureAlignedSection } from "@/lib/selfmeta/literatureNote"
+import {
+  getClinicalReportSectionHeadings,
+  hasAllCanonicalReportSections,
+  mergeClinicalReportSections,
+  normalizeClinicalReportText,
+} from "@/lib/selfmeta/reportText"
+
+async function createSupabaseServerClient() {
+  const cookieStore = await cookies()
+
+  return createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll()
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          } catch {}
+        },
+      },
+    }
+  )
+}
 
 function hasAllRequiredSections(text: string): boolean {
-  const required = [
-    "1. Genel Klinik Değerlendirme",
-    "2. Öncelikli Self-Regülasyon Alanları",
-    "3. Alanlar Arası Klinik Örüntü",
-    "4. Anamnez ve Ölçek Bulgularının Uyum Düzeyi",
-    "5. Sonuç Düzeyinde Klinik Özet",
-  ];
-  return required.every((h) => text.includes(h));
+  return hasAllCanonicalReportSections(text)
 }
 
 function normalizeLevel(v: string): string {
@@ -101,8 +158,8 @@ function shouldFallbackToDeterministic(
 ): boolean {
   if (!aiText || !aiText.trim()) return true;
 
-  // Sadece gerçekten eksikse fallback
-  if (!aiText.includes("5. Sonuç Düzeyinde Klinik Özet")) return true;
+  // Bölümler gerçekten eksikse fallback
+  if (!hasAllRequiredSections(aiText)) return true;
 
   // Sadece açık düzey çelişkisi varsa fallback
   if (hasLevelMismatch(aiText, clinicalAnalysis?.domainSummary)) return true;
@@ -111,26 +168,54 @@ function shouldFallbackToDeterministic(
 }
 
 function cleanRenderedReport(text: string): string {
-  if (!text) return "";
+  return normalizeClinicalReportText(text)
+}
 
-  return text
-    .replace(/\[\[END_OF_REPORT\]\]/g, "")
-    .replace(/age_band_heuristic/g, "")
-    .replace(/fallback_fixed/g, "")
-    .replace(/^##\s*/gm, "")
-    .replace(/\*\*/g, "")
-    .replace(/```[\s\S]*?```/g, "")
-    .replace(/\n{3,}/g, "\n\n")
-    .replace(/[ \t]+\n/g, "\n")
-    .replace(/Kullanılan norm \/ referans kaynağı:\s*\.?/g, "")
-    .replace(/\.\s*olarak görünmektedir\./g, ".")
-    .replace(/\s{2,}/g, " ")
-    .trim();
+function appendOptionalSection(baseText: string, optionalSection?: string | null): string {
+  const main = String(baseText || "").trim()
+  const extra = String(optionalSection || "").trim()
+  if (!extra) return main
+  return [main, extra].filter(Boolean).join("\n\n")
 }
 
 export async function POST(req: Request) {
   try {
+    const supabase = await createSupabaseServerClient()
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Unauthorized",
+        },
+        { status: 401 }
+      )
+    }
+
+    if (!user.email_confirmed_at) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Email confirmation required",
+        },
+        { status: 403 }
+      )
+    }
+
     const body = await req.json()
+
+    const existingLock = await checkExistingSelfMetaReportLock(supabase, body)
+    if (existingLock.locked && existingLock.existing?.report_text) {
+      const existingText = cleanRenderedReport(String(existingLock.existing.report_text))
+      return NextResponse.json({
+        ok: true,
+        report: existingText,
+        deterministic: existingText,
+      })
+    }
 
 
 function validateInputSelfMeta(body: any) {
@@ -204,13 +289,22 @@ if (__validationErrors.length > 0) {
       console.error("[AI-REPORT] LLM_ERROR:", e)
       aiText = ""
     }
-    const useFallback = shouldFallbackToDeterministic(aiText, report.clinicalAnalysis)
-    const finalText = cleanRenderedReport(useFallback ? report.deterministicReport : aiText)
-    const cleanDeterministic = cleanRenderedReport(report.deterministicReport)
+    const mergedAiText = mergeClinicalReportSections(aiText, report.deterministicReport)
+    const useFallback = shouldFallbackToDeterministic(mergedAiText, report.clinicalAnalysis)
+    const literatureSection = buildLiteratureAlignedSection(report.clinicalAnalysis)
+    const finalText = cleanRenderedReport(
+      appendOptionalSection(useFallback ? report.deterministicReport : mergedAiText, literatureSection?.text)
+    )
+    const cleanDeterministic = cleanRenderedReport(
+      appendOptionalSection(report.deterministicReport, literatureSection?.text)
+    )
 
     console.log("[AI-REPORT] ai_length=", aiText?.length || 0)
-    console.log("[AI-REPORT] ai_has_section_5=", aiText?.includes("5. Sonuç Düzeyinde Klinik Özet"))
+    console.log("[AI-REPORT] ai_raw_headings=", JSON.stringify(getClinicalReportSectionHeadings(aiText || "")))
+    console.log("[AI-REPORT] ai_merged_headings=", JSON.stringify(getClinicalReportSectionHeadings(mergedAiText || "")))
+    console.log("[AI-REPORT] ai_has_all_sections=", hasAllRequiredSections(mergedAiText || ""))
     console.log("[AI-REPORT] fallback_used=", useFallback)
+    console.log("[AI-REPORT] literature_sources=", JSON.stringify(literatureSection?.sourceIds || []))
     console.log("[AI-REPORT] final_starts_with=", (finalText || "").slice(0, 60))
 
     return NextResponse.json({

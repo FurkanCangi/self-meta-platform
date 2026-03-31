@@ -1,3 +1,4 @@
+import FooterContact from "../components/FooterContact";
 import LandingHeader from "../components/LandingHeader";
 
 export default function Page() {
@@ -193,6 +194,8 @@ export default function Page() {
           </p>
         </section>
       </main>
+
+      <FooterContact />
     </div>
   );
 }

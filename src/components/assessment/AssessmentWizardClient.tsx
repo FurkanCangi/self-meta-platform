@@ -7,6 +7,8 @@ import { questions } from "@/lib/selfmeta/questions"
 import { calculateAssessment } from "@/lib/assessment/assessmentEngine"
 import { buildAdvancedReport } from "@/lib/selfmeta/reportEngine"
 import { extractAgeMonthsFromAnamnez } from "@/lib/selfmeta/ageUtils"
+import { buildAnamnezPreview } from "@/lib/selfmeta/anamnezUtils"
+import ClinicalReportView from "@/components/report/ClinicalReportView"
 const likert = [
   { label: "Hiçbir zaman", value: 1 },
   { label: "Nadiren", value: 2 },
@@ -40,15 +42,34 @@ export default function AssessmentWizardClient() {
   const [reportLockReason, setReportLockReason] = useState("")
   const selfMetaSupabase = supabase
 
-  const checkExistingReportLock = async (clientCode?: string | number | null) => {
+  const checkExistingReportLock = async (clientId?: string | null) => {
     try {
-      const normalized = String(clientCode ?? "").trim()
-      if (!normalized) return
+      const normalizedClientId = String(clientId ?? "").trim()
+      if (!normalizedClientId) return false
+
+      const { data: assessments, error: assessmentsError } = await selfMetaSupabase
+        .from("assessments_v2")
+        .select("id")
+        .eq("client_id", normalizedClientId)
+        .is("deleted_at", null)
+
+      if (assessmentsError || !assessments || assessments.length === 0) {
+        setReportLocked(false)
+        setReportLockReason("")
+        return false
+      }
+
+      const assessmentIds = assessments.map((row) => row.id).filter(Boolean)
+      if (assessmentIds.length === 0) {
+        setReportLocked(false)
+        setReportLockReason("")
+        return false
+      }
 
       const { data, error } = await selfMetaSupabase
         .from("reports")
-        .select("id, report_text, client_code, created_at")
-        .eq("client_code", normalized)
+        .select("id, report_text, assessment_id, created_at")
+        .in("assessment_id", assessmentIds)
         .not("report_text", "is", null)
         .order("created_at", { ascending: false })
         .limit(1)
@@ -56,12 +77,15 @@ export default function AssessmentWizardClient() {
       if (!error && data && data.length > 0) {
         setReportLocked(true)
         setReportLockReason("Bu vaka için rapor daha önce oluşturulmuş. Yeniden rapor alınamaz.")
+        return true
       } else {
         setReportLocked(false)
         setReportLockReason("")
+        return false
       }
     } catch (error) {
       console.error("report lock check failed", error)
+      return false
     }
   }
 
@@ -74,14 +98,10 @@ export default function AssessmentWizardClient() {
   const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null)
 
   useEffect(() => {
-    const clientCode =
-      (clientInfo as any)?.code ??
-      (clientInfo as any)?.client_code ??
-      (clientInfo as any)?.id ??
-      null
+    const clientId = (clientInfo as any)?.id ?? null
 
-    if (clientCode) {
-      void checkExistingReportLock(clientCode)
+    if (clientId) {
+      void checkExistingReportLock(clientId)
     }
   }, [clientInfo])
 
@@ -91,6 +111,7 @@ export default function AssessmentWizardClient() {
 const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
   const [generatedReportText, setGeneratedReportText] = useState<string>("")
+  const [generatedReportDate, setGeneratedReportDate] = useState<string>("")
   useEffect(() => {
     let mounted = true
 
@@ -105,14 +126,15 @@ const [saving, setSaving] = useState(false)
 
       setLoadingClient(true)
       setClientError(null)
+      const normalizedClientCode = clientCode.trim().toUpperCase()
 
       const { data, error } = await supabase
         .from("clients")
         .select("id, child_code, anamnez")
-        .eq("child_code", clientCode)
+        .eq("child_code", normalizedClientCode)
         .is("deleted_at", null)
-        .limit(1)
-        .maybeSingle()
+        .order("created_at", { ascending: false })
+        .limit(2)
 
       if (!mounted) return
 
@@ -123,18 +145,27 @@ const [saving, setSaving] = useState(false)
         return
       }
 
-      if (!data) {
+      if (!data || data.length === 0) {
         setClientInfo(null)
         setClientError("Bu kodla eşleşen danışan bulunamadı.")
         setLoadingClient(false)
         return
       }
 
+      if (data.length > 1) {
+        setClientInfo(null)
+        setClientError("Bu danışan kodu birden fazla kayıtta bulundu. Lütfen farklı bir danışan kodu kullanın.")
+        setLoadingClient(false)
+        return
+      }
+
+      const row = data[0]
+
       setClientInfo({
-        id: data.id,
-        child_code: data.child_code,
-        anamnez: data.anamnez,
-        ageMonths: extractAgeMonthsFromAnamnez(data.anamnez),
+        id: row.id,
+        child_code: row.child_code,
+        anamnez: row.anamnez,
+        ageMonths: extractAgeMonthsFromAnamnez(row.anamnez),
       })
       setLoadingClient(false)
     }
@@ -238,6 +269,13 @@ const [saving, setSaving] = useState(false)
     try {
       setSaving(true)
       setSaveMsg(null)
+      setGeneratedReportDate("")
+
+      const alreadyLocked = await checkExistingReportLock(clientInfo.id)
+      if (alreadyLocked) {
+        setSaveMsg("Bu vaka için rapor daha önce oluşturulmuş. Mevcut raporu Rapor Geçmişi ekranından görüntüleyin.")
+        return
+      }
 
       const today = new Date().toISOString().slice(0, 10)
 
@@ -301,7 +339,7 @@ const [saving, setSaving] = useState(false)
         ai_report_text: aiReportText,
       }
 
-      const { error: reportErr } = await supabase
+      const { data: createdReport, error: reportErr } = await supabase
         .from("reports")
         .insert({
           assessment_id: assessmentId,
@@ -310,9 +348,12 @@ const [saving, setSaving] = useState(false)
           immutable: true,
           snapshot_json: snapshotJson,
         })
+        .select("created_at")
+        .single()
 
       if (reportErr) throw new Error("Rapor kaydı oluşturulamadı: " + reportErr.message)
 
+      setGeneratedReportDate(createdReport?.created_at || new Date().toISOString())
       setReportReady(true)
       setSaveMsg("Rapor başarıyla oluşturuldu ve geçmişe kaydedildi.")
       if (typeof window !== "undefined") {
@@ -328,8 +369,7 @@ const [saving, setSaving] = useState(false)
   }
 
   const isResultPage = page >= totalPages
-  const anamnezPreview =
-    clientInfo?.anamnez?.replace(/\n+/g, " ").slice(0, 220) || "Anamnez bilgisi bulunmuyor."
+  const anamnezPreview = buildAnamnezPreview(clientInfo?.anamnez, { maxLength: 260 })
   const agePreview = clientInfo?.ageMonths ? `${clientInfo.ageMonths} ay` : "Belirsiz"
 
 
@@ -402,6 +442,12 @@ const [saving, setSaving] = useState(false)
             </div>
           </div>
         ) : null}
+
+        {!loadingClient && !clientError && reportLocked && (
+          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
+            {reportLockReason || "Bu vaka için daha önce rapor oluşturulmuş. Mevcut raporu Rapor Geçmişi ekranından görüntüleyebilirsiniz."}
+          </div>
+        )}
 
         <div className="mt-5">
           <div className="mb-2 flex items-center justify-between text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -599,9 +645,11 @@ const [saving, setSaving] = useState(false)
                 <div className="text-xs font-medium text-slate-400">AI Rapor</div>
                 <h3 className="mt-1 text-xl font-semibold text-slate-900">Klinik Yorum</h3>
 
-                <div className="mt-5 whitespace-pre-line rounded-2xl border border-slate-200 bg-white p-5 text-sm leading-7 text-slate-700">
-                  {generatedReportText || advancedReport.deterministicReport}
-                </div>
+                <ClinicalReportView
+                  className="mt-5"
+                  text={generatedReportText || advancedReport.deterministicReport}
+                  reportDate={generatedReportDate || new Date().toISOString()}
+                />
               </div>
             </>
           )}

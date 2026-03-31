@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 
 type Status = "Aktif" | "Bekliyor" | "Arşiv";
@@ -18,6 +19,12 @@ type ClientRow = {
   needsScore: boolean;
   hasReport: boolean;
 };
+
+function progressLabel(row: ClientRow) {
+  if (row.hasReport) return "Rapor oluşturuldu";
+  if (row.lastAssessment !== "—") return "Rapor bekliyor";
+  return "Skor bekliyor";
+}
 
 function badgeStatus(s: Status) {
   if (s === "Aktif") return "bg-emerald-50 text-emerald-700 border-emerald-200";
@@ -48,10 +55,12 @@ function calcRisk(anamnez: string): Risk {
 }
 
 export default function ClientsPage() {
+  const router = useRouter();
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<"Tümü" | Status | "Riskli">("Tümü");
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [rows, setRows] = useState<ClientRow[]>([]);
 
   useEffect(() => {
@@ -60,17 +69,19 @@ export default function ClientsPage() {
     async function load() {
       setLoading(true);
       setErr(null);
+      setNotice(null);
 
       const { data: userRes, error: userErr } = await supabase.auth.getUser();
       if (userErr || !userRes?.user?.id) {
         setLoading(false);
-        setErr("Oturum bulunamadı. Lütfen tekrar giriş yapın.");
+        router.replace("/login");
         return;
       }
 
       const { data, error } = await supabase
         .from("clients")
         .select("id, child_code, anamnez, created_at, deleted_at")
+        .eq("owner_id", userRes.user.id)
         .is("deleted_at", null)
         .order("created_at", { ascending: false });
 
@@ -82,19 +93,71 @@ export default function ClientsPage() {
         return;
       }
 
-      const mapped: ClientRow[] = (data || []).map((c: any) => {
+      const clients = data || [];
+      const clientIds = clients.map((c: any) => c.id);
+
+      const assessmentsByClient = new Map<string, Array<{ id: string; created_at?: string | null }>>();
+      const reportsByAssessment = new Map<string, { created_at?: string | null }>();
+
+      if (clientIds.length > 0) {
+        const { data: assessments } = await supabase
+          .from("assessments_v2")
+          .select("id, client_id, created_at")
+          .in("client_id", clientIds)
+          .is("deleted_at", null);
+
+        for (const assessment of assessments || []) {
+          const list = assessmentsByClient.get(assessment.client_id) || [];
+          list.push({ id: assessment.id, created_at: assessment.created_at });
+          assessmentsByClient.set(assessment.client_id, list);
+        }
+
+        const assessmentIds = (assessments || []).map((a: any) => a.id);
+
+        if (assessmentIds.length > 0) {
+          const { data: reports } = await supabase
+            .from("reports")
+            .select("assessment_id, created_at")
+            .in("assessment_id", assessmentIds);
+
+          for (const report of reports || []) {
+            reportsByAssessment.set(report.assessment_id, { created_at: report.created_at });
+          }
+        }
+      }
+
+      const formatDate = (value?: string | null) => {
+        if (!value) return "—";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "—";
+        return date.toLocaleDateString("tr-TR");
+      };
+
+      const mapped: ClientRow[] = clients.map((c: any) => {
         const risk = calcRisk(c.anamnez || "");
         const status: Status = "Aktif";
+        const clientAssessments = assessmentsByClient.get(c.id) || [];
+        const lastAssessmentAt = clientAssessments
+          .map((item) => item.created_at || "")
+          .sort()
+          .at(-1);
+        const hasReport = clientAssessments.some((item) => reportsByAssessment.has(item.id));
+        const lastReportAt = clientAssessments
+          .map((item) => reportsByAssessment.get(item.id)?.created_at || "")
+          .filter(Boolean)
+          .sort()
+          .at(-1);
+
         return {
           id: c.id,
           code: c.child_code,
           status,
-          lastAssessment: "—",
-          lastReport: "—",
+          lastAssessment: formatDate(lastAssessmentAt),
+          lastReport: formatDate(lastReportAt),
           note: (c.anamnez || "").trim().slice(0, 80) || "—",
           risk,
-          needsScore: true,
-          hasReport: false,
+          needsScore: !hasReport,
+          hasReport,
         };
       });
 
@@ -106,7 +169,7 @@ export default function ClientsPage() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [router]);
 
   const computed = useMemo(() => {
     const all = rows.slice();
@@ -135,6 +198,17 @@ export default function ClientsPage() {
     return { rows: view, riskCount, pendingScore, activeCount, total: all.length };
   }, [rows, q, filter]);
 
+  const onScoreClick = (row: ClientRow) => {
+    setNotice(null);
+
+    if (row.hasReport) {
+      setNotice(`Bu vaka için rapor zaten oluşturulmuş. Her vaka için yalnızca bir kez rapor oluşturabilirsiniz. Lütfen “Raporlar” bölümünü kullanın. (${row.code})`);
+      return;
+    }
+
+    router.push(`/assessments?client=${encodeURIComponent(row.code)}&client_id=${encodeURIComponent(row.id)}`);
+  };
+
   return (
     <div className="space-y-6">
       <div className="selfmeta-card p-5">
@@ -161,6 +235,7 @@ export default function ClientsPage() {
         </div>
 
         {err ? <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{err}</div> : null}
+        {!err && notice ? <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{notice}</div> : null}
 
         <div className="mt-5 grid gap-3 md:grid-cols-4">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -229,7 +304,7 @@ export default function ClientsPage() {
                           <span className={`h-10 w-1 rounded-full ${riskBar(r.risk)}`} />
                           <div>
                             <Link href={`/clients/${r.id}`} className="text-sm font-semibold text-slate-900 hover:underline">{r.code}</Link>
-                            <div className="text-xs text-slate-400">{r.needsScore ? "Skor bekliyor" : "Kayıt hazır"}</div>
+                            <div className="text-xs text-slate-400">{progressLabel(r)}</div>
                           </div>
                         </div>
                       </td>
@@ -252,12 +327,22 @@ export default function ClientsPage() {
 
                       <td className="px-4 py-4 text-right">
                         <div className="inline-flex gap-2">
-                          <Link
-                            href={`/assessments?client=${encodeURIComponent(r.code)}&client_id=${encodeURIComponent(r.id)}`}
-                            className="inline-flex items-center justify-center rounded-xl border border-indigo-600 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50"
+                          <button
+                            type="button"
+                            onClick={() => onScoreClick(r)}
+                            className={`inline-flex items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold transition ${
+                              r.hasReport
+                                ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                                : "border-indigo-600 bg-white text-indigo-700 hover:bg-indigo-50"
+                            }`}
+                            title={
+                              r.hasReport
+                                ? "Bu vaka için rapor zaten oluşturulmuş. Yeniden skor girişine izin verilmez."
+                                : "Bu vaka için skor girişine geç"
+                            }
                           >
-                            Skor Gir
-                          </Link>
+                            {r.hasReport ? "Skor Girişi Kilitli" : "Skor Gir"}
+                          </button>
                           <Link href="/reports" className="inline-flex items-center justify-center rounded-xl border border-indigo-600 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50">
                             Raporlar
                           </Link>

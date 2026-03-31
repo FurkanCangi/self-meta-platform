@@ -5,6 +5,21 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { supabase } from "@/lib/supabase/client"
 
+function formatSignupError(message?: string | null) {
+  const raw = String(message || "").trim()
+  const normalized = raw.toLowerCase()
+
+  if (normalized.includes("user already registered")) {
+    return "Bu e-posta ile zaten bir hesap bulunuyor. Giriş yapmayı deneyin."
+  }
+
+  if (normalized.includes("password")) {
+    return "Şifre gereksinimleri karşılanmadı. Daha güçlü bir şifre deneyin."
+  }
+
+  return raw || "Kayıt sırasında bir hata oluştu."
+}
+
 export default function SelfMetaSignupForm() {
   const router = useRouter()
   const [fullName, setFullName] = useState("")
@@ -79,7 +94,7 @@ export default function SelfMetaSignupForm() {
         router.push("/auth-signup-success")
       }, 800)
     } catch (err: any) {
-      setError(err?.message || "Kayıt sırasında bir hata oluştu.")
+      setError(formatSignupError(err?.message))
     } finally {
       setLoading(false)
     }

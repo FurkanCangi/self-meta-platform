@@ -7,7 +7,7 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint ."
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^44.3.0",

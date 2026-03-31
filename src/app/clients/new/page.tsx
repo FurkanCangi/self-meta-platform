@@ -1,6 +1,11 @@
 "use client";
 
 import { AGE_RANGE_OPTIONS } from "@/lib/selfmeta/ageUtils"
+import {
+  REPORT_EXCLUDED_ANAMNEZ_FIELDS,
+  REPORT_INCLUDED_ANAMNEZ_FIELDS,
+  buildReportRelevantAnamnezSection,
+} from "@/lib/selfmeta/anamnezUtils"
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
@@ -15,7 +20,6 @@ type FormState = {
   ad_soyad: string;
   client_code: string;
   record_date: string;
-  age: string;
   ageRange: string;
   gender: string;
   sibling_count: string;
@@ -96,7 +100,7 @@ function Field({
 const REQUIRED: Array<{ key: keyof FormState; label: string }> = [
   { key: "ad_soyad", label: "Adı-soyadı" },
   { key: "client_code", label: "Danışan Kodu" },
-  { key: "age", label: "Yaş" },
+  { key: "ageRange", label: "Yaş aralığı" },
   { key: "gender", label: "Cinsiyet" },
   { key: "sibling_count", label: "Kardeş sayısı" },
   { key: "birth_order", label: "Kaçıncı çocuk" },
@@ -134,6 +138,47 @@ const REQUIRED: Array<{ key: keyof FormState; label: string }> = [
   { key: "parent_contact", label: "Ebeveyn iletişim bilgileri" },
   { key: "referral_reason", label: "Başvuru sebebi" },
 ];
+
+const TAB_ORDER: TabKey[] = ["demo", "medical", "pregnancy", "daily", "goals"];
+
+const TAB_LABELS: Record<TabKey, string> = {
+  demo: "Demografik",
+  medical: "Tıbbi Geçmiş",
+  pregnancy: "Gebelik & Doğum",
+  daily: "Günlük Yaşam",
+  goals: "Hedefler",
+};
+
+const TAB_REQUIRED: Record<TabKey, Array<keyof FormState>> = {
+  demo: [
+    "ad_soyad",
+    "client_code",
+    "ageRange",
+    "gender",
+    "sibling_count",
+    "birth_order",
+    "household_count",
+    "mother_age_at_birth",
+    "mother_education",
+    "mother_job_working",
+    "mother_work_hours",
+    "caregiver_if_working",
+    "father_education",
+    "father_job",
+    "father_work_hours",
+  ],
+  medical: [
+    "diagnosis",
+    "medical_history",
+    "allergy_epilepsy_gi_colic_seizure",
+    "current_therapies",
+    "past_therapies",
+    "medications",
+  ],
+  pregnancy: ["prenatal_story", "birth_story", "postnatal_story", "low_birth_history"],
+  daily: ["feeding_type", "liked_foods", "rejected_foods", "liked_toys", "strengths"],
+  goals: ["parent_concerns_goals", "parent_contact", "referral_reason"],
+};
 
 function buildAnamnez(form: FormState) {
   const lines = [
@@ -178,7 +223,28 @@ function buildAnamnez(form: FormState) {
     `Ebeveyn iletişim bilgileri: ${form.parent_contact}`,
     `Başvuru sebebi: ${form.referral_reason}`,
   ];
-  return lines.join("\n");
+
+  const reportRelevantSection = buildReportRelevantAnamnezSection({
+    age_range: form.ageRange,
+    diagnosis: form.diagnosis,
+    referral_reason: form.referral_reason,
+    parent_concerns_goals: form.parent_concerns_goals,
+    strengths: form.strengths,
+    medical_history: form.medical_history,
+    allergy_epilepsy_gi_colic_seizure: form.allergy_epilepsy_gi_colic_seizure,
+    current_therapies: form.current_therapies,
+    past_therapies: form.past_therapies,
+    medications: form.medications,
+    prenatal_story: form.prenatal_story,
+    birth_story: form.birth_story,
+    postnatal_story: form.postnatal_story,
+    low_birth_history: form.low_birth_history,
+    feeding_type: form.feeding_type,
+    liked_foods: form.liked_foods,
+    rejected_foods: form.rejected_foods,
+  });
+
+  return [lines.join("\n"), "", reportRelevantSection].filter(Boolean).join("\n");
 }
 
 
@@ -217,8 +283,7 @@ export default function NewClientPage() {
     ad_soyad: "",
     client_code: "",
     record_date: "",
-    age: "",
-  ageRange: "",
+    ageRange: "",
     gender: "",
     sibling_count: "",
     birth_order: "",
@@ -274,7 +339,29 @@ export default function NewClientPage() {
     return Math.round((filled / total) * 100);
   }, [missing]);
 
+  const missingByTab = useMemo(() => {
+    const next = {} as Record<TabKey, string[]>;
+
+    for (const key of TAB_ORDER) {
+      next[key] = TAB_REQUIRED[key]
+        .filter((field) => !String(form[field] ?? "").trim())
+        .map((field) => REQUIRED.find((item) => item.key === field)?.label || String(field));
+    }
+
+    return next;
+  }, [form]);
+
+  const currentTabMissing = missingByTab[tab];
+  const currentTabComplete = currentTabMissing.length === 0;
+  const currentTabIndex = TAB_ORDER.indexOf(tab);
+  const prevTab = currentTabIndex > 0 ? TAB_ORDER[currentTabIndex - 1] : null;
+  const nextTab = currentTabIndex < TAB_ORDER.length - 1 ? TAB_ORDER[currentTabIndex + 1] : null;
+
   const canCreate = useMemo(() => missing.length === 0, [missing]);
+
+  const createButtonClass = canCreate && !saving
+    ? "inline-flex items-center justify-center rounded-2xl border-2 border-blue-500 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100"
+    : "inline-flex items-center justify-center rounded-2xl border-2 border-slate-200 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400 transition disabled:cursor-not-allowed disabled:opacity-100";
 
   const onReset = () => {
     setErr(null);
@@ -283,7 +370,6 @@ export default function NewClientPage() {
       ad_soyad: "",
       client_code: "",
       record_date: "",
-      age: "",
       ageRange: "",
       gender: "",
       sibling_count: "",
@@ -341,9 +427,18 @@ export default function NewClientPage() {
         throw new Error("Oturum bulunamadı. Lütfen tekrar giriş yapın.");
       }
 
+      const normalizedChildCode = form.client_code.trim().toUpperCase();
+      const { code, error: uniqueCodeError } = await ensureUniqueChildCode(supabase, normalizedChildCode);
+      if (uniqueCodeError) {
+        throw new Error("Danışan kodu kontrol edilemedi: " + uniqueCodeError.message);
+      }
+      if (code !== normalizedChildCode) {
+        throw new Error("Bu danışan kodu zaten kullanılıyor. Lütfen farklı bir danışan kodu girin.");
+      }
+
       const payload = {
         owner_id: ures.user.id,
-        child_code: form.client_code.trim(),
+        child_code: normalizedChildCode,
         anamnez: buildAnamnez(form),
       };
 
@@ -396,7 +491,7 @@ export default function NewClientPage() {
               type="button"
               onClick={onCreate}
               disabled={!canCreate || saving}
-              className="selfmeta-btn px-4 py-2 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+              className={createButtonClass}
               title={!canCreate ? `Eksik alanlar: ${missing.join(", ")}` : ""}
             >
               {saving ? "Kaydediliyor..." : "Kaydı Oluştur → Skor Girişi"}
@@ -415,21 +510,37 @@ export default function NewClientPage() {
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="selfmeta-card p-6">
           <div className="flex flex-wrap gap-2">
-            <button className={tabBtn(tab === "demo")} onClick={() => setTab("demo")} type="button">
-              Demografik
-            </button>
-            <button className={tabBtn(tab === "medical")} onClick={() => setTab("medical")} type="button">
-              Tıbbi Geçmiş
-            </button>
-            <button className={tabBtn(tab === "pregnancy")} onClick={() => setTab("pregnancy")} type="button">
-              Gebelik & Doğum
-            </button>
-            <button className={tabBtn(tab === "daily")} onClick={() => setTab("daily")} type="button">
-              Günlük Yaşam
-            </button>
-            <button className={tabBtn(tab === "goals")} onClick={() => setTab("goals")} type="button">
-              Hedefler
-            </button>
+            {TAB_ORDER.map((key) => {
+              const isActive = tab === key;
+              const isComplete = missingByTab[key].length === 0;
+
+              return (
+                <button
+                  key={key}
+                  className={`${tabBtn(isActive)} inline-flex items-center gap-2`}
+                  onClick={() => setTab(key)}
+                  type="button"
+                  title={
+                    isComplete
+                      ? "Bu bölüm tamamlandı"
+                      : `${missingByTab[key].length} alan eksik`
+                  }
+                >
+                  <span>{TAB_LABELS[key]}</span>
+                  <span
+                    className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-bold ${
+                      isActive
+                        ? "bg-white/20 text-white"
+                        : isComplete
+                          ? "bg-emerald-100 text-emerald-700"
+                          : "bg-slate-100 text-slate-500"
+                    }`}
+                  >
+                    {isComplete ? "✓" : missingByTab[key].length}
+                  </span>
+                </button>
+              );
+            })}
           </div>
 
           <div className="mt-6 space-y-6">
@@ -445,30 +556,36 @@ export default function NewClientPage() {
                   <Field label="Kayıt Tarihi" hint="Boş bırakılabilir (ama zorunlu alan listesinden çıkarmadık)">
                     <input value={form.record_date} onChange={(e) => setVal("record_date", e.target.value)} className={inputBase} type="date" />
                   </Field>
-                  
-<div className="mb-4 rounded-xl border border-blue-200 bg-blue-50 p-4">
-  <div className="text-sm font-semibold text-slate-800">Yaş Aralığı</div>
-  <div className="mt-1 text-xs text-slate-600">
-    Lütfen çocuğun yaş aralığını seçin (zorunlu).
-  </div>
-
-  <div className="mt-3 space-y-2">
-    {["24-35 ay","36-47 ay","48-59 ay","60-71 ay"].map((label) => (
-      <label key={label} className="flex items-center gap-2 text-sm">
-        <input
-          type="radio"
-          name="ageRange"
-          value={label}
-          onChange={(e) => setForm((prev:any)=>({...prev, ageRange:e.target.value}))}
-        />
-        {label}
-      </label>
-    ))}
-  </div>
-</div>
-<Field label="Yaş">
-                    <input value={form.age} onChange={(e) => setVal("age", e.target.value)} className={inputBase} placeholder="Ay / yıl" />
-                  </Field>
+                  <div className="md:col-span-2">
+                    <Field label="Yaş aralığı">
+                      <div className="flex flex-wrap gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                        {AGE_RANGE_OPTIONS.map((option) => {
+                          const label = option.label
+                          const isSelected = form.ageRange === label
+                          return (
+                            <label
+                              key={label}
+                              className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition ${
+                                isSelected
+                                  ? "border-indigo-600 bg-indigo-50 text-indigo-700"
+                                  : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
+                              }`}
+                            >
+                              <input
+                                type="radio"
+                                name="ageRange"
+                                value={label}
+                                checked={isSelected}
+                                onChange={(e) => setVal("ageRange", e.target.value)}
+                                className="h-4 w-4 border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                              />
+                              {label}
+                            </label>
+                          )
+                        })}
+                      </div>
+                    </Field>
+                  </div>
 
                   <Field label="Cinsiyet">
                     <input value={form.gender} onChange={(e) => setVal("gender", e.target.value)} className={inputBase} placeholder="Kız / Erkek" />
@@ -586,6 +703,53 @@ export default function NewClientPage() {
               </div>
             )}
           </div>
+
+          <div className="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+            <div className="text-sm text-slate-500">
+              {currentTabComplete
+                ? "Bu bölüm tamamlandı. İsterseniz üst başlıklardan ya da sağ alttaki butondan ilerleyebilirsiniz."
+                : `Bu bölümde ${currentTabMissing.length} zorunlu alan eksik. Bölümü tamamlayınca sonraki adıma geçebilirsiniz.`}
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              {prevTab ? (
+                <button
+                  type="button"
+                  onClick={() => setTab(prevTab)}
+                  className="selfmeta-btn-ghost px-4 py-2 text-sm font-semibold"
+                >
+                  ← Geri: {TAB_LABELS[prevTab]}
+                </button>
+              ) : (
+                <span className="hidden sm:block" />
+              )}
+
+              {nextTab ? (
+                <button
+                  type="button"
+                  onClick={() => setTab(nextTab)}
+                  disabled={!currentTabComplete}
+                  className="selfmeta-btn px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                  title={
+                    currentTabComplete
+                      ? `${TAB_LABELS[nextTab]} bölümüne geç`
+                      : `Önce bu bölümdeki eksikleri tamamlayın: ${currentTabMissing.join(", ")}`
+                  }
+                >
+                  Sonraki Bölüm: {TAB_LABELS[nextTab]} →
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onCreate}
+                  disabled={!canCreate || saving}
+                  className="selfmeta-btn px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                  title={!canCreate ? `Eksik alanlar: ${missing.join(", ")}` : ""}
+                >
+                  {saving ? "Kaydediliyor..." : "Kaydı Oluştur → Skor Girişi"}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="space-y-4">
@@ -601,6 +765,38 @@ export default function NewClientPage() {
                 <div className="h-2 rounded-full bg-indigo-600" style={{ width: `${completion}%` }} />
               </div>
               <div className="mt-3 text-xs text-slate-500">Doluluk oranı yalnızca doldurulan anamnez alanlarına göre hesaplanır.</div>
+            </div>
+          </div>
+          <div className="selfmeta-card p-6">
+            <h2 className="text-lg font-semibold text-slate-900">Rapora Dahil Edilen Klinik Anamnez</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              Rapor motoru klinik yorumu yalnız aşağıdaki alanlardan besler. İletişim ve idari bilgiler kayda alınır ama rapor yorumuna dahil edilmez.
+            </p>
+            <div className="mt-4">
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Dahil Edilen Alanlar</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {REPORT_INCLUDED_ANAMNEZ_FIELDS.map((field) => (
+                  <span
+                    key={field.key}
+                    className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700"
+                  >
+                    {field.label}
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className="mt-5">
+              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Rapora Dahil Edilmeyenler</div>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {REPORT_EXCLUDED_ANAMNEZ_FIELDS.map((field) => (
+                  <span
+                    key={field.key}
+                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600"
+                  >
+                    {field.label}
+                  </span>
+                ))}
+              </div>
             </div>
           </div>
 <div className="selfmeta-card p-6">

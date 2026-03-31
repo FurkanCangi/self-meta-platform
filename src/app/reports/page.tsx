@@ -1,7 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
+import ClinicalReportView from "@/components/report/ClinicalReportView";
+import { normalizeClinicalReportText } from "@/lib/selfmeta/reportText";
 
 type ReportRow = {
   id: string;
@@ -36,13 +39,20 @@ function extractAssessmentDate(row: ReportRow) {
   );
 }
 
+function extractReportDate(row: ReportRow) {
+  return row?.created_at || null;
+}
+
 function extractPreview(row: ReportRow) {
-  const text = String(row.report_text || "Alanlar arası teknik örüntü, mevcut skor dağılımı ve anamnez temaları birlikte değerlendirilerek oluşturulmuştur." ).replace(/\s+/g, " ").trim();
+  const text = normalizeClinicalReportText(
+    String(row.report_text || "Alanlar arası teknik örüntü, mevcut skor dağılımı ve anamnez temaları birlikte değerlendirilerek oluşturulmuştur.")
+  ).replace(/\s+/g, " ").trim();
   if (!text) return "Rapor metni bulunamadı.";
   return text.length > 140 ? text.slice(0, 140) + "..." : text;
 }
 
 export default function ReportsPage() {
+  const router = useRouter();
   const [rows, setRows] = useState<ReportRow[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
   const [loading, setLoading] = useState(true);
@@ -55,9 +65,63 @@ export default function ReportsPage() {
       setLoading(true);
       setErr("");
 
+      const { data: userRes, error: userErr } = await supabase.auth.getUser();
+      if (userErr || !userRes?.user?.id) {
+        setLoading(false);
+        router.replace("/login");
+        return;
+      }
+
+      const { data: ownedClients, error: clientsError } = await supabase
+        .from("clients")
+        .select("id")
+        .eq("owner_id", userRes.user.id)
+        .is("deleted_at", null);
+
+      if (!mounted) return;
+
+      if (clientsError) {
+        setErr("Danışan kayıtları alınamadı: " + clientsError.message);
+        setRows([]);
+        setLoading(false);
+        return;
+      }
+
+      const clientIds = (ownedClients || []).map((row: any) => row.id);
+      if (clientIds.length === 0) {
+        setRows([]);
+        setSelectedId("");
+        setLoading(false);
+        return;
+      }
+
+      const { data: assessments, error: assessmentsError } = await supabase
+        .from("assessments_v2")
+        .select("id")
+        .in("client_id", clientIds)
+        .is("deleted_at", null);
+
+      if (!mounted) return;
+
+      if (assessmentsError) {
+        setErr("Değerlendirmeler alınamadı: " + assessmentsError.message);
+        setRows([]);
+        setLoading(false);
+        return;
+      }
+
+      const assessmentIds = (assessments || []).map((row: any) => row.id);
+      if (assessmentIds.length === 0) {
+        setRows([]);
+        setSelectedId("");
+        setLoading(false);
+        return;
+      }
+
       const { data, error } = await supabase
         .from("reports")
         .select("id, version, report_text, created_at, snapshot_json, assessment_id")
+        .in("assessment_id", assessmentIds)
         .order("created_at", { ascending: false });
 
       if (!mounted) return;
@@ -80,7 +144,7 @@ export default function ReportsPage() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [router]);
 
   const selected = useMemo(
     () => rows.find((x) => x.id === selectedId) || null,
@@ -132,14 +196,24 @@ export default function ReportsPage() {
                     <span className="text-sm font-semibold text-slate-900">
                       v{row.version ?? "?"}
                     </span>
-                    <span className="text-xs text-slate-500">
-                      {formatDate(extractAssessmentDate(row))}
-                    </span>
+                    <div className="text-right">
+                      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+                        Rapor Tarihi
+                      </div>
+                      <div className="text-xs text-slate-600">
+                        {formatDate(extractReportDate(row))}
+                      </div>
+                    </div>
                   </div>
 
                   <div className="mt-2 text-sm text-slate-700">
                     <span className="font-medium">Danışan Kodu:</span>{" "}
                     {extractClientCode(row)}
+                  </div>
+
+                  <div className="mt-1 text-xs text-slate-500">
+                    <span className="font-medium">Değerlendirme Tarihi:</span>{" "}
+                    {formatDate(extractAssessmentDate(row))}
                   </div>
 
                   <p className="mt-2 text-sm leading-6 text-slate-600">
@@ -162,7 +236,7 @@ export default function ReportsPage() {
 
           {selected && (
             <>
-              <div className="mb-4 grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-3">
+              <div className="mb-4 grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-4">
                 <div>
                   <div className="text-xs uppercase tracking-wide text-slate-500">Versiyon</div>
                   <div className="mt-1 text-sm font-medium text-slate-900">v{selected.version ?? "?"}</div>
@@ -172,16 +246,23 @@ export default function ReportsPage() {
                   <div className="mt-1 text-sm font-medium text-slate-900">{extractClientCode(selected)}</div>
                 </div>
                 <div>
-                  <div className="text-xs uppercase tracking-wide text-slate-500">Tarih</div>
+                  <div className="text-xs uppercase tracking-wide text-slate-500">Rapor Tarihi</div>
+                  <div className="mt-1 text-sm font-medium text-slate-900">
+                    {formatDate(extractReportDate(selected))}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs uppercase tracking-wide text-slate-500">Değerlendirme Tarihi</div>
                   <div className="mt-1 text-sm font-medium text-slate-900">
                     {formatDate(extractAssessmentDate(selected))}
                   </div>
                 </div>
               </div>
 
-              <div className="whitespace-pre-line rounded-2xl border border-slate-200 bg-white p-5 text-sm leading-7 text-slate-700">
-                {selected.report_text || "Rapor metni bulunamadı."}
-              </div>
+              <ClinicalReportView
+                text={selected.report_text || "Rapor metni bulunamadı."}
+                reportDate={extractReportDate(selected)}
+              />
             </>
           )}
         </div>

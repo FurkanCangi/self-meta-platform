@@ -55,10 +55,18 @@ export default function ClientDetailPage() {
       return;
     }
 
+    const { data: userRes, error: userErr } = await supabase.auth.getUser();
+    if (userErr || !userRes?.user?.id) {
+      setLoading(false);
+      router.replace("/login");
+      return;
+    }
+
     const { data: c, error: cErr } = await supabase
       .from("clients")
       .select("id, child_code, anamnez, created_at")
       .eq("id", clientId)
+      .eq("owner_id", userRes.user.id)
       .is("deleted_at", null)
       .maybeSingle();
 

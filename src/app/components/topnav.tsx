@@ -13,6 +13,8 @@ import {
 } from "react-icons/ai";
 import { supabase } from "@/lib/supabase/client";
 
+const STORAGE_KEY = "selfmeta_therapist_profile";
+
 type TopnavProps = {
   toggle?: boolean;
   setToggle?: (value: boolean) => void;
@@ -38,7 +40,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem("selfmeta_therapist_profile");
+      const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return;
       const parsed = JSON.parse(raw);
       const fullName = [parsed?.firstName, parsed?.lastName].filter(Boolean).join(" ").trim();
@@ -55,7 +57,14 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
     try {
       await supabase.auth.signOut();
     } catch {}
-    router.push("/login");
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+    } catch {}
+    setDisplayName("Terapist Paneli");
+    setInitials("TP");
+    setProfileOpen(false);
+    router.replace("/login");
+    router.refresh();
   };
 
   return (

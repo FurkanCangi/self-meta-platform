@@ -1,20 +1,20 @@
 .wrap{
-  padding: 70px 18px 90px;
+  padding: 68px 18px 92px;
   background: transparent;
 }
 .panel{
   max-width: 1200px;
   margin: 0 auto;
-  background: #dfeef2;
+  background: linear-gradient(180deg, #e5f2f6 0%, #dff0f4 100%);
   border-radius: 34px;
-  border: 1px solid rgba(15,23,42,.06);
-  box-shadow: 0 22px 70px rgba(15,23,42,.10);
-  padding: 44px 44px 26px;
+  border: 1px solid rgba(43,107,134,.10);
+  box-shadow: 0 20px 55px rgba(15,23,42,.08);
+  padding: 40px 42px 24px;
 }
 .grid{
   display: grid;
-  grid-template-columns: 1.1fr 1fr 1fr 1.1fr;
-  gap: 26px;
+  grid-template-columns: 1.05fr .95fr .95fr 1.25fr;
+  gap: 30px;
   align-items: start;
 }
 .brand{
@@ -23,9 +23,10 @@
 }
 .logoWord{
   font-size: 74px;
-  font-weight: 700;
+  font-weight: 800;
   color: #2b6b86;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.04em;
+  line-height: .92;
 }
 .plus{
   font-size: 18px;
@@ -33,31 +34,44 @@
   margin-left: 2px;
   color: #2b6b86;
 }
+.brandText{
+  max-width: 240px;
+  margin-top: 16px;
+  color: rgba(11,34,48,.72);
+  font-size: 14px;
+  line-height: 1.7;
+  font-weight: 500;
+}
+.column{
+  min-width: 0;
+}
 .colTitle{
   font-weight: 800;
   color: #0b2230;
   font-size: 18px;
-  margin-bottom: 14px;
+  margin-bottom: 16px;
   position: relative;
+  display: flex;
+  align-items: center;
 }
 .colTitle::before{
   content:"";
   display:inline-block;
-  width: 28px;
+  width: 22px;
   height: 2px;
   background: rgba(11,92,131,.55);
   margin-right: 10px;
-  vertical-align: middle;
   border-radius: 999px;
 }
 .links{
   display:grid;
-  gap: 14px;
+  gap: 12px;
 }
 .links a{
   text-decoration:none;
   color: rgba(11,34,48,.85);
   font-weight: 600;
+  line-height: 1.5;
 }
 .links a:hover{
   color:#0b5c83;
@@ -68,36 +82,61 @@
   flex-wrap: wrap;
 }
 .sBtn{
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
   display:grid;
   place-items:center;
   text-decoration:none;
   color:#0b5c83;
-  border: 1px solid rgba(11,92,131,.26);
-  background: rgba(255,255,255,.55);
-  font-weight: 800;
+  border: 1px solid rgba(11,92,131,.18);
+  background: rgba(255,255,255,.78);
+  box-shadow: 0 10px 22px rgba(43,107,134,.08);
+  transition: transform .18s ease, border-color .18s ease, background .18s ease;
 }
 .sBtn:hover{
-  background: rgba(255,255,255,.75);
+  background: rgba(255,255,255,.96);
+  border-color: rgba(11,92,131,.32);
+  transform: translateY(-2px);
+}
+.socialNote{
+  margin-top: 14px;
+  color: rgba(11,34,48,.66);
+  font-size: 13px;
+  line-height: 1.6;
 }
 .contact{
   display:grid;
   gap: 14px;
   color: rgba(11,34,48,.85);
   font-weight: 600;
+  min-width: 0;
 }
 .cRow{
   display:grid;
-  grid-template-columns: 22px 1fr;
+  grid-template-columns: 22px minmax(0,1fr);
   gap: 10px;
   align-items:start;
 }
+.cRow svg{
+  color: #2b6b86;
+  margin-top: 2px;
+}
+.cRow a,
+.cRow span{
+  color: rgba(11,34,48,.85);
+  text-decoration:none;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.cRow a:hover{
+  color:#0b5c83;
+}
 .hr{
   height: 1px;
-  background: rgba(15,23,42,.14);
-  margin: 26px 0 18px;
+  background: rgba(15,23,42,.12);
+  margin: 28px 0 18px;
   opacity: .35;
 }
 .bottom{
@@ -106,9 +145,13 @@
   justify-content: space-between;
   color: rgba(11,34,48,.75);
   font-weight: 600;
+  gap: 16px;
+}
+.copy{
+  line-height: 1.5;
 }
 .mini{
-  font-size: 22px;
+  font-size: 24px;
   color:#2b6b86;
   font-weight: 800;
 }
@@ -120,9 +163,11 @@
 @media (max-width: 1100px){
   .grid{ grid-template-columns: 1fr 1fr; }
   .logoWord{ font-size: 60px; }
+  .brandText{ max-width: 100%; }
 }
 @media (max-width: 600px){
   .panel{ padding: 28px 22px 18px; }
   .grid{ grid-template-columns: 1fr; }
   .bottom{ flex-direction: column; gap: 10px; align-items:flex-start; }
+  .sBtn{ width: 44px; height: 44px; border-radius: 14px; }
 }
