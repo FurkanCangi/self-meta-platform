@@ -1,5 +1,22 @@
+import { findSupportedExternalTestByName } from "./externalTestRegistry";
+
 export type AnamnezRecord = Record<string, unknown>;
 export type AnamnezFieldDefinition = { key: string; label: string }
+export type AnamnezThemeSignals = {
+  sensory: boolean
+  emotional: boolean
+  cognitiveExecutive: boolean
+  bodyIntero: boolean
+  transitionCoregulation: boolean
+  adaptiveDailyLiving: boolean
+  socialPragmatic: boolean
+  languageLoad: boolean
+  motorPraxis: boolean
+  strengths: boolean
+  referralOrConcerns: boolean
+  therapistComments: boolean
+  medical: boolean
+}
 
 const PLACEHOLDER_VALUES = new Set([
   "",
@@ -220,6 +237,10 @@ function hasAny(text: string, patterns: RegExp[]): boolean {
   return patterns.some((p) => p.test(text));
 }
 
+function countMatches(text: string, patterns: RegExp[]): number {
+  return patterns.reduce((count, pattern) => count + (pattern.test(text) ? 1 : 0), 0)
+}
+
 function collectClinicalContext(record: AnamnezRecord) {
   const merged = mergeStructured(record);
 
@@ -251,6 +272,16 @@ function collectClinicalContext(record: AnamnezRecord) {
     .filter(Boolean)
     .join(" | ");
 
+  const themeNarrative = [referral, concerns, therapistComments]
+    .filter(Boolean)
+    .join(" | ")
+    .toLowerCase();
+
+  const bodyNarrative = [medical, referral, therapistComments]
+    .filter(Boolean)
+    .join(" | ")
+    .toLowerCase();
+
   const allNarrative = [reportRelevantNarrative, referral, concerns, therapistComments, strengths, medical]
     .filter(Boolean)
     .join(" | ")
@@ -265,8 +296,165 @@ function collectClinicalContext(record: AnamnezRecord) {
     strengths,
     diagnosis,
     medical,
+    themeNarrative,
+    bodyNarrative,
     allNarrative,
   };
+}
+
+type ExternalFindingEntry = {
+  testName: string
+  result: string
+  interpretation: string
+  notes: string
+}
+
+function parseExternalFindingEntries(rawValue: unknown): ExternalFindingEntry[] {
+  const raw = cleanMeaningfulText(rawValue)
+  if (!raw) return []
+
+  const blocks = raw
+    .split(/\n\s*\n/g)
+    .map((block) => block.trim())
+    .filter(Boolean)
+
+  return blocks
+    .map((block) => {
+      const entry: ExternalFindingEntry = {
+        testName: "",
+        result: "",
+        interpretation: "",
+        notes: "",
+      }
+
+      for (const line of block.split("\n")) {
+        const cleanLine = cleanMeaningfulText(line)
+        if (!cleanLine.includes(":")) continue
+        const [rawLabel, ...rest] = cleanLine.split(":")
+        const label = normalizeLabel(rawLabel)
+        const value = cleanMeaningfulText(rest.join(":"))
+        if (!value) continue
+
+        if (/testadi|testadı/.test(label)) entry.testName = value
+        else if (/puansonuc|puan|sonuc/.test(label)) entry.result = value
+        else if (/klinikyorumresmibulguozeti|klinikyorum|resmibulguozeti/.test(label)) entry.interpretation = value
+        else if (/eknotlar|notlar|eknot/.test(label)) entry.notes = value
+      }
+
+      return entry
+    })
+    .filter((entry) => entry.testName || entry.interpretation || entry.result || entry.notes)
+}
+
+export function getAnamnezThemeSignals(record: AnamnezRecord): AnamnezThemeSignals {
+  const { themeNarrative, bodyNarrative, allNarrative, strengths, referral, concerns, therapistComments, medical } =
+    collectClinicalContext(record)
+
+  const executiveCueCount = countMatches(themeNarrative, [
+    /dikkat|odak/i,
+    /görev|gorev/i,
+    /başlat|baslat/i,
+    /sürdür|surdur|bitir/i,
+    /yönerge|yonerge/i,
+    /oyunda kal|oyunu bırak|oyunu birak/i,
+    /dağıl|dagil|kop/i,
+  ])
+
+  const sensoryCueCount = countMatches(allNarrative, [
+    /gürültü|gurultu|ses/i,
+    /kalabalık|kalabalik/i,
+    /dokun|dokunsal|etiket/i,
+    /saç kes|sac kes|tırnak|tirnak|banyo/i,
+    /duyusal arayış|duyusal arayis|sıçrama|zipla|koşuştur/i,
+  ])
+
+  const transitionCueCount = countMatches(allNarrative, [
+    /geçiş|gecis|bir etkinlikten diğerine/i,
+    /ayrıl|ayril|vedalaş/i,
+    /bekleme|sıra alma|sira alma/i,
+    /bitirirken|oyunu bırak|oyunu birak/i,
+  ])
+
+  const coregCueCount = countMatches(allNarrative, [
+    /anne|baba|ebeveyn|bakımveren|bakimveren/i,
+    /sarıl|saril|teselli|eşlik|eslik/i,
+    /yanına gel|yanina gel|yakın destek|yakin destek/i,
+    /birlikte sakin|ko-?reg/i,
+  ])
+
+  const adaptiveCueCount = countMatches(allNarrative, [
+    /öz bakım|oz bakim|özbakım|ozbakim/i,
+    /giyin|fermuar|düğme|dugme|ayakkabı|ayakkabi/i,
+    /tuvalet|diş fırça|dis firca|kaşık|kasik|çatal|catal/i,
+    /masa düzeni|masa duzeni|kendi kendine yemek|kendi kendine yeme/i,
+  ])
+
+  const languageCueCount = countMatches(allNarrative, [
+    /yönerge|yonerge/i,
+    /anlama|sözel yük|sozel yuk|dilsel talep/i,
+    /ifad[ea]|konuş|konus/i,
+    /soru sorulduğunda|soru soruldugunda|anlatmakta/i,
+  ])
+
+  const socialCueCount = countMatches(allNarrative, [
+    /akran|arkadaş|arkadas/i,
+    /sıra alma|sira alma|karşılıklılık|karsiliklilik/i,
+    /ortak dikkat|sosyal ipucu|pragmatik/i,
+    /sohbete katıl|oyuna katıl|oyuna katil|esneklik/i,
+  ])
+
+  const praxisCueCount = countMatches(allNarrative, [
+    /praksi|somatodispraks|somatodysprax/i,
+    /motor plan|sekans|sırala|sirala/i,
+    /iki taraflı|iki tarafli koordinasyon/i,
+    /beden organizasyon|araç gereç|arac gerec/i,
+  ])
+
+  const sensory =
+    sensoryCueCount >= 1 ||
+    hasAny(String(referral).toLowerCase(), [/duyusal yük|duyusal hassas|duyusal arayış|duyusal arayis/i])
+
+  const emotional =
+    hasAny(themeNarrative, [
+      /ağla|agla|öfke|ofke|sinir|kriz|sakinleş|sakinles|toparlan|taşma|tasma|duygusal/i,
+    ])
+
+  const cognitiveExecutive =
+    executiveCueCount >= 2 ||
+    hasAny(themeNarrative, [/çok uyaran|cok uyaran/i]) &&
+      hasAny(themeNarrative, [/kop|dağıl|dagil|zorlan|takip|başlat|baslat|sürdür|surdur/i])
+
+  const bodyIntero =
+    hasAny(bodyNarrative, [
+      /uyku|iştah|istah|beslen|açlık|aclik|susama|yorgun|tuvalet|kabız|kabiz|ishal|kolik|nöbet|nobet|epilepsi|alerji/i,
+    ])
+
+  const transitionCoregulation = transitionCueCount >= 1 && coregCueCount >= 1
+  const adaptiveDailyLiving =
+    adaptiveCueCount >= 2 ||
+    hasAny(allNarrative, [
+      /öz bakım|oz bakim|özbakım|ozbakim/i,
+      /giyinme|tuvalet rutini|bagimsiz baslatma|bağımsız başlatma/i,
+    ])
+  const socialPragmatic = socialCueCount >= 1
+  const languageLoad = languageCueCount >= 1
+  const motorPraxis = praxisCueCount >= 1
+
+  return {
+    sensory,
+    emotional,
+    cognitiveExecutive,
+    bodyIntero,
+    transitionCoregulation,
+    adaptiveDailyLiving,
+    socialPragmatic,
+    languageLoad,
+    motorPraxis,
+    strengths: Boolean(strengths),
+    referralOrConcerns: Boolean(referral || concerns),
+    therapistComments: Boolean(therapistComments),
+    medical: Boolean(medical),
+  }
 }
 
 export function extractTherapistInsights(record: AnamnezRecord): string[] {
@@ -323,70 +511,85 @@ export function extractVisibleCaseInfo(
 }
 
 export function summarizeAnamnezThemes(record: AnamnezRecord): string[] {
-  const { referral, concerns, strengths, medical, therapistComments, allNarrative } = collectClinicalContext(record);
+  const { strengths, medical, therapistComments } = collectClinicalContext(record);
   const lines: string[] = [];
   const externalClinicalFindings = extractExternalClinicalFindings(record)
   const therapistInsights = extractTherapistInsights(record)
+  const themeSignals = getAnamnezThemeSignals(record)
 
-  if (
-    hasAny(allNarrative, [
-      /gürültü|ses|kalabalık|dokun|dokunsal|saç kes|tırnak|yüz yık|etiket|banyo/i,
-    ])
-  ) {
+  if (themeSignals.transitionCoregulation) {
     lines.push(
-      "Anamnezde çevresel ve dokunsal uyaranlara duyarlılık tarif edilmektedir; bu bağlam duyusal regülasyon bulgularını klinik olarak anlamlandıran bir zemin sunmaktadır."
+      "Geçişler, ayrılma anları veya bakımveren desteği gerektiren bağlamlarda regülasyon kırılganlığının belirginleştiği tarif edilmektedir."
     );
   }
 
-  if (
-    hasAny(allNarrative, [
-      /ağla|öfke|sinir|kriz|sakinleş|sakinles|duygu değiş|ani duygu|taşma|tasma/i,
-    ])
-  ) {
+  if (themeSignals.adaptiveDailyLiving) {
+    lines.push(
+      "Öz bakım, günlük rutinleri başlatma veya sıralı günlük yaşam görevlerini sürdürme alanında işlevsel sürtünme tarif edilmektedir."
+    );
+  }
+
+  if (themeSignals.languageLoad) {
+    lines.push(
+      "Sözel yük ve yönerge karmaşıklığı arttığında performansın, görevde kalmanın veya frustrasyon toleransının bozulabildiği bildirilmektedir."
+    );
+  }
+
+  if (themeSignals.socialPragmatic) {
+    lines.push(
+      "Sosyal karşılıklılık, akran etkileşimi veya bağlama göre esneme talepleri arttığında düzenleyici yükün belirginleştiği tarif edilmektedir."
+    );
+  }
+
+  if (themeSignals.motorPraxis) {
+    lines.push(
+      "Motor planlama, sekanslama veya beden organizasyonu yükünün günlük performansı zorlayabildiğine ilişkin klinik ipuçları bulunmaktadır."
+    );
+  }
+
+  if (themeSignals.sensory) {
+    lines.push(
+      "Anamnezde çevresel veya dokunsal uyaran altında belirgin duyusal hassasiyet/arayış örüntüsü tarif edilmektedir."
+    );
+  }
+
+  if (themeSignals.emotional) {
     lines.push(
       "Anamnezde yoğun uyaran veya zorlayıcı durumlar sonrası duygusal toparlanmanın uzayabildiği bildirilmektedir; bu durum duygusal regülasyon alanıyla ilişkili olabilir."
     );
   }
 
-  if (
-    hasAny(allNarrative, [
-      /dikkat|oyunda kal|oyunu bırak|dagil|dağıl|yönerge|yonerge|görev|gorev|odak/i,
-    ])
-  ) {
+  if (themeSignals.cognitiveExecutive) {
     lines.push(
-      "Çok uyaranlı bağlamlarda dikkat sürdürme ve görevde kalma güçlüğü tarif edilmektedir; bu örüntü bilişsel ve yürütücü alanlarla birlikte ele alınmalıdır."
+      "Görevi başlatma, sürdürme veya çok basamaklı talepleri organize etme ekseninde yürütücü yük tarif edilmektedir."
     );
   }
 
-  if (
-    hasAny(allNarrative, [
-      /uyku|iştah|istah|beslen|açlık|aclik|yorgun|tuvalet|kabız|kabiz|ishal|kolik|nöbet|nobet|epilepsi|alerji/i,
-    ])
-  ) {
+  if (themeSignals.bodyIntero) {
     lines.push(
       "Bedensel/fizyolojik bağlama ilişkin anamnez verileri mevcuttur; bu bilgiler fizyolojik regülasyon ve interosepsiyon yorumuna destekleyici bağlam sağlayabilir."
     );
   }
 
-  if (strengths) {
+  if (themeSignals.strengths) {
     lines.push(
       "Anamnezde korunmuş veya destekleyici olabilecek güçlü yönler tarif edilmektedir; bunlar test sonuçlarıyla birlikte yorumlandığında profile denge kazandırabilir."
     );
   }
 
-  if (referral || concerns) {
+  if (themeSignals.referralOrConcerns) {
     lines.push(
       "Başvuru nedeni ve birincil ebeveyn endişeleri, testte öne çıkan alanların günlük yaşam karşılığını anlamlandırmak açısından yüksek değerli klinik veri sunmaktadır."
     );
   }
 
-  if (therapistComments && therapistInsights.length > 0 && lines.length < 5) {
+  if (themeSignals.therapistComments && therapistInsights.length > 0 && lines.length < 5) {
     lines.push(
       "Terapist gözlemleri, sorun örüntüsünün hangi bağlamda belirginleştiğini ve hangi alanların günlük performansta daha çok yük taşıdığını görünür kılmaktadır."
     );
   }
 
-  if (medical && lines.length < 4) {
+  if (themeSignals.medical && lines.length < 4) {
     lines.push(
       "Gelişimsel ve medikal öykü, regülasyon görünümünü bağlamsallaştıran ek bilgi sağlamaktadır; ancak bu veriler doğrudan neden-sonuç ilişkisi olarak ele alınmamalıdır."
     );
@@ -458,77 +661,79 @@ function truncateClinicalSupport(value: string, maxLength = 360): string {
 export function extractExternalClinicalFindings(record: AnamnezRecord): string[] {
   const merged = mergeStructured(record)
   const raw = truncateClinicalSupport(String(merged.external_clinical_findings || ""))
-
   if (!raw) return []
 
-  const lowered = raw.toLowerCase()
-  const lines = [`Ek klinik değerlendirme bildirimi: ${raw}`]
-
-  if (/sipt|somatodispraks|somatodysprax|dispraks|dysprax|praksi|praxi|motor plan|motor planning/i.test(lowered)) {
-    lines.push("Ek klinik bulguda praksi, motor planlama veya beden organizasyonu alanına ilişkin anlamlı bir zorlanma bildirilmektedir.")
+  const entries = parseExternalFindingEntries(merged.external_clinical_findings)
+  if (entries.length > 0) {
+    return entries
+      .map((entry) => {
+        const test = findSupportedExternalTestByName(entry.testName)
+        const lead = test ? test.name : entry.testName || "Ek test"
+        const body = entry.interpretation || entry.result || entry.notes
+        return body ? `${lead}: ${truncateClinicalSupport(body, 220)}` : ""
+      })
+      .filter(Boolean)
+      .slice(0, 3)
   }
 
-  if (/duyusal işlem|duyusal islem|sensory processing|sensory profile|duyusal mod[üu]l|modulation|sor\b/i.test(lowered)) {
-    lines.push("Ek klinik bulguda duyusal işlemleme ya da modülasyon teması bildirilmektedir.")
-  }
-
-  if (/brief|conners|dikkat|executive|yürütücü|yurutucu|inhibisyon|çalışma belleği|calisma bellegi/i.test(lowered)) {
-    lines.push("Ek klinik bulguda dikkat, yürütücü işlev veya davranış düzenleme eksenine ilişkin destekleyici veri bulunmaktadır.")
-  }
-
-  return lines.slice(0, 3)
+  return [`Ek klinik değerlendirme bildirimi: ${truncateClinicalSupport(raw, 220)}`]
 }
 
 export function extractAnamnezFlags(record: AnamnezRecord): string[] {
-  const { referral, concerns, strengths, medical, therapistComments, allNarrative } = collectClinicalContext(record);
+  const { strengths, medical, therapistComments } = collectClinicalContext(record);
   const flags: string[] = [];
   const externalClinicalFindings = extractExternalClinicalFindings(record)
+  const themeSignals = getAnamnezThemeSignals(record)
 
-  if (
-    hasAny(allNarrative, [
-      /gürültü|ses|kalabalık|dokun|dokunsal|saç kes|tırnak|yüz yık|etiket|banyo/i,
-    ])
-  ) {
+  if (themeSignals.transitionCoregulation) {
+    flags.push("Geçiş, ayrılma ve ko-regülasyon gerektiren anlarda kırılganlık tarif edilmektedir.");
+  }
+
+  if (themeSignals.adaptiveDailyLiving) {
+    flags.push("Öz bakım ve günlük rutinleri sürdürme alanında işlevsel sürtünme bildirilmektedir.");
+  }
+
+  if (themeSignals.languageLoad) {
+    flags.push("Sözel yük ve yönerge karmaşıklığı arttığında performansın bozulabildiği bildirilmektedir.");
+  }
+
+  if (themeSignals.socialPragmatic) {
+    flags.push("Sosyal karşılıklılık ve esneklik taleplerinde zorlanma bildirilmektedir.");
+  }
+
+  if (themeSignals.motorPraxis) {
+    flags.push("Motor planlama, sekanslama veya beden organizasyonu yükü tarif edilmektedir.");
+  }
+
+  if (themeSignals.sensory) {
     flags.push("Duyusal yüklenme ve tetikleyici çevresel uyaran teması bildirilmektedir.");
   }
 
-  if (
-    hasAny(allNarrative, [
-      /ağla|öfke|sinir|kriz|sakinleş|sakinles|duygu değiş|ani duygu|taşma|tasma/i,
-    ])
-  ) {
+  if (themeSignals.emotional) {
     flags.push("Yoğun uyaran sonrası duygusal toparlanma güçlüğü tarif edilmektedir.");
   }
 
-  if (
-    hasAny(allNarrative, [
-      /dikkat|oyunda kal|oyunu bırak|dagil|dağıl|yönerge|yonerge|görev|gorev|odak/i,
-    ])
-  ) {
+  if (themeSignals.cognitiveExecutive) {
     flags.push("Çok uyaranlı bağlamlarda dikkat ve görev sürdürme güçlüğü bildirilmektedir.");
   }
 
-  if (
-    hasAny(allNarrative, [
-      /uyku|iştah|istah|beslen|açlık|aclik|yorgun|tuvalet|kabız|kabiz|ishal|kolik|nöbet|nobet|epilepsi|alerji/i,
-    ])
-  ) {
+  if (themeSignals.bodyIntero) {
     flags.push("Bedensel/fizyolojik bağlamın regülasyon görünümünü etkileyebileceği düşünülmektedir.");
   }
 
-  if (strengths) {
+  if (themeSignals.strengths) {
     flags.push("Anamnezde korunmuş/güçlü işlev alanları tarif edilmektedir.");
   }
 
-  if (referral || concerns) {
+  if (themeSignals.referralOrConcerns) {
     flags.push("Başvuru nedeni ve ebeveyn öncelikleri klinik yorum için yüksek değerli bağlam sunmaktadır.");
   }
 
-  if (therapistComments) {
+  if (themeSignals.therapistComments) {
     flags.push("Terapist gözlem notları, günlük performansta hangi alt sistemlerin yük taşıdığını netleştiren ek klinik bağlam sunmaktadır.");
   }
 
-  if (medical) {
+  if (themeSignals.medical) {
     flags.push("Gelişimsel/medikal öykü bağlamsal yorumda dikkate alınmalıdır.");
   }
 

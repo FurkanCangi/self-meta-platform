@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIX-NEW-03",
+  "clientName": "Mira",
+  "ageMonths": 58,
+  "anamnez": {
+    "ad_soyad": "Mira Ornek",
+    "client_code": "FIX-NEW-03",
+    "record_date": "2026-04-01",
+    "age_range": "48-59 ay",
+    "diagnosis": "Otizm spektrum bozuklugu",
+    "referral_reason": "Aile ve terapist, kalabalik, gurultulu ve hizli gecisli ortamlarda hizla yukselen, oyundan kopan ve duygusal olarak uzun sure yatismakta zorlanan bir profil tarif etmektedir. Evde daha ongorulebilir ve sakin baglamda katilim korunurken, duyusal yuk arttiginda zorlanma belirginlesmektedir.",
+    "parent_concerns_goals": "Duyusal yuklenme anlarinda tasma oncesi erken isaretleri tanimlamak, toparlanma suresini kisaltmak ve grup etkinliklerinde katilimi daha surdurulebilir hale getirmek hedeflenmektedir.",
+    "therapist_comments": "Bire bir odada is birligi belirgin derecede artiyor. Ses, hareket ve beklenmeyen degisiklik bir araya geldiginde duygusal esik hizla dusuyor. Yetiskin yapilandirmasi toparlanmada etkili fakat her zaman yeterli olmuyor.",
+    "strengths": "Gorsel rutinlere iyi yanit, tanidik oyunda derinlesebilme, bire bir oyunda sosyal yakinlik ve yapilandirilmis materyalde iyi performans.",
+    "medical_history": "Uykuya gecis zaman zaman zorlasiyor. Kabizlik donemsel olarak bildiriliyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Nobet yok. GIS tarafinda kabizlik ve secici beslenme oykusu var.",
+    "current_therapies": "Ergoterapi, dil-konusma terapisi ve ozel egitim destegi aliyor.",
+    "past_therapies": "Duyu butunleme odakli grup denemesinde uyaran yukunden dolayi zorlandigi bildirildi.",
+    "medications": "Duzensiz melatonin kullanimi oykusu var.",
+    "prenatal_story": "Gebelikte belirgin komplikasyon yok.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Erken donemde uyku ve yatistirma guclukleri tarif edilmisti.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Belirgin secici beslenme ve doku hassasiyeti mevcut.",
+    "liked_foods": "Citir ve kuru yiyecekleri tercih ediyor.",
+    "rejected_foods": "Sulu ve karisik dokulu yiyecekleri reddediyor.",
+    "external_clinical_findings": "Test adi: Sensory Profile 2\nPuan / sonuc: Isitsel hassasiyet, hareket duyarliligi ve davranissal duyusal arayis alanlarinda klinik yukseklik.\nKlinik yorum / resmi bulgu ozeti: Duyusal yukun duygusal ve davranissal duzenleme uzerindeki etkisi belirgin gorunmektedir.\nEk notlar: Kalabalik grup etkinlikleri sonrasi toparlanma suresi uzamaktadir.\n\nTest adi: SPM-2\nPuan / sonuc: Isitsel filtreleme ve sosyal katilim alt alanlarinda anlamli zorlanma.\nKlinik yorum / resmi bulgu ozeti: Cevresel uyaran yuku arttiginda islevsel katilim dusmektedir.\nEk notlar: Sessiz ve ongorulebilir ortamda performans belirgin sekilde iyilesmektedir."
+  },
+  "scores": {
+    "physiological": 39,
+    "sensory": 20,
+    "emotional": 25,
+    "cognitive": 32,
+    "executive": 31,
+    "interoception": 29
+  }
+}

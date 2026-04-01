@@ -84,6 +84,40 @@ YASAKLI İFADELER:
 - Metin, deneyimli bir klinisyenin sentezleyici karar diliyle yazılmış gibi görünmelidir.
 - Gerekirse kısa işlevsel örnekler verilebilir; ancak bunlar yalnız skor, anamnez, terapist gözlemi veya seçilmiş klinik bağlam ile açıkça destekleniyorsa kullanılmalıdır.
 - Bir alan Tipik değilse o alan "korunmuş", "tampon" veya "güçlü" diye yazılamaz.
+
+LOW-PATHOLOGY KURALI:
+- Eğer genel düzey Tipik ise ve yalnızca 0-1 alan Tipik dışıysa dili düşük patoloji çerçevesinde tut.
+- Bu durumda "yaygın yük", "çok alanlı güçlük", "belirgin destek ihtiyacı", "yüksek klinik yük" dili kullanma.
+- Tipik alanlar için anamnez temasını doğrudan bozulma gibi yazma; "bağlama duyarlı hassasiyet", "korunmuş zemin üzerinde sınırlı zorlanma" gibi daha temkinli dil kullan.
+- Tüm alanlar tipikse sorun odağı kurma; yalnız bağlama duyarlı hassasiyet varsa bunu sınırlı ve nötr biçimde yaz.
+`;
+
+const SELF_META_CLINICAL_STYLE_GUIDE_LEAN = `
+YALNIZCA VERİ TEMELLİ YAZ:
+- Yalnızca verilen klinik analiz, seçilmiş kanıt satırları ve ek klinik bağlama dayan.
+- Yeni vaka verisi, tanı, müdahale ya da tedavi önerisi üretme.
+- Domain düzeylerini ve skorları asla değiştirme.
+- Ek klinik testleri ana skor tablosunu değiştirmeden yalnız destekleyici bağlam olarak kullan.
+
+FORMAT:
+- Yalnızca düz metin yaz.
+- Sadece şu 6 başlığı kullan:
+1. Genel Klinik Değerlendirme
+2. Sayısal Sonuç Özeti
+3. Alan Bazlı Klinik Yorum
+4. Örüntü Analizi
+5. Anamnez – Test Uyum Değerlendirmesi
+6. Kısa Sonuç
+
+YAZIM TARZI:
+- Kısa, net ve profesyonel yaz.
+- Gereksiz tekrar yapma.
+- Her bölüm klinik karar cümlesi içersin.
+- Özellikle Anamnez – Test Uyum bölümünde doğrudan uyum, kısmi ayrışma ve dış test desteğini açıkça ayır.
+- Genel düzey Tipik ve yalnız 0-1 alan Tipik dışıysa düşük patoloji dili kullan; yaygın ya da ağır yük anlatısı kurma.
+- Eğer ek testlerde SIPT, MABC-3, PDMS-3, Beery VMI ya da motor planlama/praksi ifadesi varsa, bu bölümde yükün günlük işlevde nasıl görünürleştiğini açıkça söyle:
+  görevi başlatma, hareket dizisini kurma, giyinme, araç gereç kullanma, iki taraflı koordinasyon, oyun akışını sürdürme gibi örnekler yalnız veride destekleniyorsa kullanılabilir.
+- Eğer uyumsal testler varsa, günlük işlevsellik cümlesini yalnız kapasite diliyle değil; öz bakım, rutin başlatma, görevi sürdürme ve tamamlamadaki tutarlılık üzerinden kur.
 `;
 
 export function buildAIClinicalPrompt(data: {
@@ -119,6 +153,7 @@ export function buildAIClinicalPrompt(data: {
   ragPatternContext?: string[];
   ragAnamnezContext?: string[];
   ragSummaryContext?: string[];
+  compactMode?: "standard" | "lean";
 }) {
   const safeProfileType = data.profileType || "Belirtilmedi";
   const safeGlobalLevel = data.globalLevel || "Belirtilmedi";
@@ -272,12 +307,95 @@ export function buildAIClinicalPrompt(data: {
     Array.isArray(data.ragSummaryContext) && data.ragSummaryContext.length > 0
       ? data.ragSummaryContext.join("\n")
       : "Ek sonuç klinik bağlamı kullanılmayacak";
+  const styleGuide =
+    data.compactMode === "lean" ? SELF_META_CLINICAL_STYLE_GUIDE_LEAN : SELF_META_CLINICAL_STYLE_GUIDE;
 
-  return `${SELF_META_CLINICAL_STYLE_GUIDE}
+  if (data.compactMode === "lean") {
+    return `${styleGuide}
+
+Sen pediatrik ergoterapi alanında çalışan bir klinik rapor yazım motorusun.
+
+KAPANIŞ KURALI:
+- Son bölüm en fazla 3 cümle olacak.
+- Profil tipi, temel sorun ve genel sonucu net söyleyecek.
+
+YAPILANDIRILMIŞ ANALİZ:
+Profil tipi:
+${safeProfileType}
+
+Genel düzey:
+${safeGlobalLevel}
+
+Toplam skor:
+${safeTotalScore}
+
+Yaş bandı:
+${safeAgeBandLabel}
+
+Alan skorları:
+${safeDomainScoreSummary}
+
+Birincil kırılgan alan:
+${safePrimaryWeakDomain}
+
+Örüntü özeti:
+${safePatternSummary}
+
+Anamnez-ölçek tutarlılık özeti:
+${safeAnamnezConsistency}
+
+Terapist gözlem / yorum notları:
+${safeTherapistInsights}
+
+Ek klinik test / bulgular:
+${safeExternalClinicalFindings}
+
+Ek klinik test uyarı / sınırlar:
+${safeExternalClinicalWarnings}
+
+Madde düzeyinde dikkat çeken bulgular:
+${safeCriticalItemLines}
+
+Anamnezle güçlü örtüşen maddeler:
+${safeAlignedItemLines}
+
+Birincil kanıt satırları:
+${safeQualityPrimaryEvidenceLines}
+
+Destekleyici kanıt satırları:
+${safeQualitySupportingEvidenceLines}
+
+Anlatı kısıtları:
+${safeQualityRestraintLines}
+
+Ek temkin notları:
+${safeQualityCautionLines}
+
+Seçilmiş klinik bağlam - örüntü analizi:
+${safeRagPatternContext}
+
+Seçilmiş klinik bağlam - anamnez / test uyumu:
+${safeRagAnamnezContext}
+
+Seçilmiş klinik bağlam - kısa sonuç:
+${safeRagSummaryContext}
+
+GÖREV:
+Aşağıdaki 6 başlıkla temiz, kısa ve profesyonel bir klinik rapor yaz.
+Özellikle motor planlama, praksi ve günlük işlevsellik bağlamı varsa bunu dikkat sorunu gibi genellemeden açıkça belirt.`;
+  }
+
+  return `${styleGuide}
 
 Sen pediatrik ergoterapi alanında çalışan bir klinik rapor yazım motorusun.
 
 YAZIM STANDARTLARI:
+
+ANAMNEZ – TEST UYUM KURALI:
+- Bu bölümde yalnız "uyum vardır" deme; anamnez temasının hangi alt sistem üzerinden ölçekte karşılık bulduğunu açıkça söyle.
+- Eğer praksi / motor planlama bulgusu varsa, zorlanmayı salt dikkat sorunu gibi genelleme.
+- Yükün günlük işlevde nasıl göründüğünü; hareket dizisini kurma, görevi başlatma, giyinme, araç kullanma, öz bakım ve oyun akışında sürdürme ekseninde açıkla.
+- Eğer uyumsal test verisi varsa, günlük yaşam etkisini özellikle başlatma, sıra koruma, sürdürme ve tamamlama üzerinden formüle et.
 
 SONUÇ PARAGRAFI KURALI:
 - En fazla 3 cümle olacak

@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIX-NEW-04",
+  "clientName": "Kaan",
+  "ageMonths": 67,
+  "anamnez": {
+    "ad_soyad": "Kaan Ornek",
+    "client_code": "FIX-NEW-04",
+    "record_date": "2026-04-01",
+    "age_range": "60-71 ay",
+    "diagnosis": "DEHB klinik izlemi",
+    "referral_reason": "Ev ve okul oncesi ortaminda dikkati surdurme, gorev baslatma, gorev tamamlama ve kuralli etkinlikte kalma basliklarinda belirgin zorlanma tarif edilmektedir. Duygusal yukselme ikincil olarak gorulebilmekte, temel sorun daha cok dikkat-yurutucu organizasyon ekseninde toplanmaktadir.",
+    "parent_concerns_goals": "Goreve baslama suresini kisaltmak, bir etkinlikte kalma suresini artirmak, yonergeleri takip etmeyi guclendirmek ve gunluk rutinlerde daha az hatirlatma ile ilerlemek hedeflenmektedir.",
+    "therapist_comments": "Yeni gorevde hizli baslayabiliyor ancak ayni hizla kopabiliyor. Cok basamakli etkinlikte dis yapilandirma ihtiyaci yuksek. Duygusal zorlanma daha cok gorev talepleri biriktiginde ikincil olarak goze carpiyor.",
+    "strengths": "Yuksek enerji, hizli ilgilenme, yeni materyale aciklik, sozlu pekistirece iyi yanit ve bire bir motivasyonla iyi performans.",
+    "medical_history": "Belirgin tibbi risk yok. Uyku duzeni zaman zaman degisken.",
+    "allergy_epilepsy_gi_colic_seizure": "Belirgin bir eslik eden durum bildirilmedi.",
+    "current_therapies": "Oyun temelli dikkat ve yurutücü islev destegi aliyor.",
+    "past_therapies": "Kisa sureli davranis duzenleme grubu denemesi oldu.",
+    "medications": "Ilac baslangici degerlendiriliyor, duzenli kullanim yok.",
+    "prenatal_story": "Gebelik ve dogum oykusu olağan.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Bebeklikte hareketlilik ve kisa uyku bloklari tarif edilmisti.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Genel olarak iyi.",
+    "liked_foods": "Meyve, pilav, tavuk.",
+    "rejected_foods": "Belirgin reddi yok.",
+    "external_clinical_findings": "Test adi: Conners Early Childhood (Conners EC)\nPuan / sonuc: Dikkat, hiperaktivite ve davranissal kontrol alt alanlarinda klinik yukseklik.\nKlinik yorum / resmi bulgu ozeti: Dikkat surdurme ve davranissal inhibisyon zorlanmasi anamnezle uyumludur.\nEk notlar: Okul ve ev formlari buyuk olcude benzer yonelim gostermektedir.\n\nTest adi: BRIEF-P\nPuan / sonuc: Inhibisyon, calisma belleği ve planlama/organizasyon alt alanlarinda anlamli yukselme.\nKlinik yorum / resmi bulgu ozeti: Cekirdek zorlanma yurutucu islev omurgasinda toplanmaktadir.\nEk notlar: Duygusal kontrol yukselmesi daha ikincil duzeyde gorunmektedir."
+  },
+  "scores": {
+    "physiological": 38,
+    "sensory": 35,
+    "emotional": 32,
+    "cognitive": 24,
+    "executive": 22,
+    "interoception": 31
+  }
+}

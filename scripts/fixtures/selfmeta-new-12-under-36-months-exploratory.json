@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIX-NEW-12",
+  "clientName": "Ada",
+  "ageMonths": 32,
+  "anamnez": {
+    "ad_soyad": "Ada Ornek",
+    "client_code": "FIX-NEW-12",
+    "record_date": "2026-04-01",
+    "age_range": "24-35 ay",
+    "diagnosis": "Erken cocukluk gelisim izlemi",
+    "referral_reason": "Aile ayrilma, yeni ortama giris ve oyuna baslama sirasinda yogun ebeveyn yakini arama, kisa sureli duygusal yukselme ve destek olmadan oyuna donuste zorlanma tarif etmektedir. Bu yas grubunda yorumun daha cok ko-regülasyon ve toparlanma penceresi uzerinden yapilmasi beklenmektedir.",
+    "parent_concerns_goals": "Ayrilma ve yeni ortama giriste ebeveyn destegiyle daha hizli organize olabilme, oyuna gecis suresinin kisalmasi ve kisa frustrasyonlar sonrasi toparlanmanin desteklenmesi hedeflenmektedir.",
+    "therapist_comments": "Bu yas grubunda profil daha exploratuvar yorumlanmali. Cocuk ebeveyn yakinligiyla hizla yatismakta ancak destegin cekildigi anlarda oyuna donus gecikebilmektedir.",
+    "strengths": "Ebeveynle sosyal bag iyi, ilgi cekici oyuncaga yonelim var ve destek alindiginda hizla duzenlenebiliyor.",
+    "medical_history": "Belirgin tibbi risk yok.",
+    "allergy_epilepsy_gi_colic_seizure": "Kolik oykusu bebeklikte tarif edilmis, aktif sorun yok.",
+    "current_therapies": "Erken cocukluk gelişim takibi.",
+    "past_therapies": "Yok.",
+    "medications": "Yok.",
+    "prenatal_story": "Olagan.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Bebeklikte ebeveynle yatismaya daha cok ihtiyac duydugu bildiriliyor.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Yasina uygun, secicilik sinirli.",
+    "liked_foods": "Meyve, yogurt, makarna.",
+    "rejected_foods": "Belirgin reddi yok.",
+    "external_clinical_findings": "Test adi: DAYC-2\nPuan / sonuc: Genel gelisim alanlarinda dusuk-normal ile ortalama arasi dagilim; sosyal-duygusal alanda baglama duyarlı degiskenlik.\nKlinik yorum / resmi bulgu ozeti: Bu yas grubunda destekle organize olma ve baglamsal duzenleme daha belirgin bir odak olarak gorulmektedir.\nEk notlar: Yorumlar exploratuvar duzeyde ele alinmalidir.\n\nTest adi: Vineland-3\nPuan / sonuc: Yasina uygun genel adaptif profil; ayri baglamlarda ebeveyn destegine duyarlilik.\nKlinik yorum / resmi bulgu ozeti: Ko-regülasyon penceresi belirgin oneme sahiptir.\nEk notlar: Bagimsiz regülasyon hakkinda kesin yorum yaparken temkin gerekir."
+  },
+  "scores": {
+    "physiological": 35,
+    "sensory": 33,
+    "emotional": 29,
+    "cognitive": 32,
+    "executive": 30,
+    "interoception": 31
+  }
+}

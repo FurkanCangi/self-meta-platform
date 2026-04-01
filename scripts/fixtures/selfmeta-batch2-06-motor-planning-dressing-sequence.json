@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-B2-06-PRAXIS",
+  "clientName": "Deniz",
+  "ageMonths": 62,
+  "anamnez": {
+    "ad_soyad": "Deniz Ornek",
+    "client_code": "FIXTURE-B2-06-PRAXIS",
+    "record_date": "2026-04-01",
+    "age_range": "60-71 ay",
+    "diagnosis": "Motor planlama / duyusal butunleme izlem",
+    "referral_reason": "Aile dugme ilikleme, corap ayarlama, mont giyme, makas kullanma ve yeni hareket dizisi gerektiren oyunlarda cocugun ne yapacagini bildigi halde harekete gecmekte zorlandigini bildirmektedir. Gorev uzadikca sirayi kaybetme ve bedeni organize edememe belirginlesmektedir.",
+    "parent_concerns_goals": "Giyinme, ince motor gerektiren okul gorevleri ve yeni oyun hareketlerinde daha bagimsiz sekilde planlama yapabilmesi hedeflenmektedir.",
+    "therapist_comments": "Model alma ile basliyor ancak model ortadan kalktiginda hareket dizisini surdurmekte zorlanıyor. Bedenin orta hatti etrafinda organizasyon, iki tarafli koordinasyon ve hareketi zamaninda baslatma yuksek destek gerektiriyor.",
+    "strengths": "Sosyal motivasyon yuksek, dili iyi, gorsel model ve fiziksel yerlesim ipucundan hizli yararlaniyor.",
+    "medical_history": "Belirgin kronik hastalik yok.",
+    "allergy_epilepsy_gi_colic_seizure": "Ek tibbi risk yok.",
+    "current_therapies": "Ergoterapi ve ince motor destek calismasi.",
+    "past_therapies": "Daha once oyun grubu deneyimi var.",
+    "medications": "Yok.",
+    "prenatal_story": "Belirgin komplikasyon yok.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Erken donemde kaba motor gecislerde yavaslik bildirildi.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Catal-kasik gecislerinde yavaslik oykusu var.",
+    "liked_foods": "Parca yapili yiyeceklerde daha rahat.",
+    "rejected_foods": "Yogun alet kullanimi gerektiren duzenlerde yemekten kopabiliyor.",
+    "external_clinical_findings": "Test adi: SIPT\nPuan / sonuc: Praxis alt testlerinde belirgin dusuk performans; somatodispraksi lehine bulgular.\nKlinik yorum / resmi bulgu ozeti: Motor planlama, beden organizasyonu ve yeni hareket oruntusu kurma tarafinda anlamli kirilganlik var.\nEk notlar: Modelden bagimsiz yeni hareket kurma zor.\n\nTest adi: PDMS-3\nPuan / sonuc: Ince motor ve gorsel-motor butunleme alanlarinda yas beklentisinin altinda.\nKlinik yorum / resmi bulgu ozeti: Giyinme, kesme-cizme ve arac gerec kullanma gibi gorevlerde hareket sekanslama zorlugu oldugunu destekliyor.\n\nTest adi: MABC-3\nPuan / sonuc: El becerileri ve denge alaninda dusuk ortalama.\nKlinik yorum / resmi bulgu ozeti: Motor koordinasyon ve hareket uygulama kalitesinde ek yuk oldugunu gosteriyor."
+  },
+  "scores": {
+    "physiological": 33,
+    "sensory": 29,
+    "emotional": 35,
+    "cognitive": 27,
+    "executive": 23,
+    "interoception": 31
+  }
+}

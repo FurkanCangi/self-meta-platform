@@ -25,6 +25,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
   const [profileOpen, setProfileOpen] = useState(false);
   const [displayName, setDisplayName] = useState("Terapist Paneli");
   const [initials, setInitials] = useState("TP");
+  const [showOwnerAudit, setShowOwnerAudit] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
   const { theme, setTheme } = useTheme();
@@ -53,6 +54,26 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
         if (nextInitials) setInitials(nextInitials);
       }
     } catch {}
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadOwnerStatus = async () => {
+      try {
+        const res = await fetch("/api/owner-audit/status", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (isMounted) {
+          setShowOwnerAudit(Boolean(data?.allowed));
+        }
+      } catch {}
+    };
+
+    loadOwnerStatus();
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleLogout = async () => {
@@ -168,6 +189,18 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
                     <AiOutlineUser className="text-lg" />
                     Profil
                   </Link>
+
+                  {showOwnerAudit ? (
+                    <Link
+                      href="/owner-audit"
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    >
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-700">
+                        OA
+                      </span>
+                      Owner Paneli
+                    </Link>
+                  ) : null}
 
                   <Link
                     href="/profile-setting"

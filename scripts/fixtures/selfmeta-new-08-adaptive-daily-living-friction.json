@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIX-NEW-08",
+  "clientName": "Ege",
+  "ageMonths": 63,
+  "anamnez": {
+    "ad_soyad": "Ege Ornek",
+    "client_code": "FIX-NEW-08",
+    "record_date": "2026-04-01",
+    "age_range": "60-71 ay",
+    "diagnosis": "Tanilanmis bozukluk bildirilmiyor",
+    "referral_reason": "Aile temel duygusal ve duyusal profilin buyuk olcude korundugunu, ancak gunluk rutinleri baslatma, oz-bakim basamaklarini surdurme ve sorumluluk gecislerinde dagilma oldugunu bildirmektedir. Klinik sorusu, gorunen sorunun duygusal mi yoksa daha cok adaptif-yurutücü organizasyon mu oldugudur.",
+    "parent_concerns_goals": "Sabah rutini, giyinme, esya toplama ve gunluk gecislerde daha az hatirlatma ile ilerleyebilmesi hedeflenmektedir.",
+    "therapist_comments": "Dikkat temel olarak korunmus gorunuyor; ancak rutin davranisi baslatma ve kendi kendine devam ettirme noktasinda yetiskin organizasyonu ihtiyaci belirgin. Duygusal yukselme ikincil ve durumsal.",
+    "strengths": "Sosyal iliski iyi, bire bir etkinlikte is birligi var, kurali anlama kapasitesi iyi ve ogretildiginde gorevi yapabiliyor.",
+    "medical_history": "Belirgin tibbi risk yok.",
+    "allergy_epilepsy_gi_colic_seizure": "Yok.",
+    "current_therapies": "Su an terapi almiyor, danismanlik basvurusu.",
+    "past_therapies": "Yok.",
+    "medications": "Yok.",
+    "prenatal_story": "Olagan.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Erken donemde temel rutinleri hatirlatmayla daha iyi surdurdugu bildirildi.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Yeterli ve esnek.",
+    "liked_foods": "Yogurt, sebze corbasi, makarna.",
+    "rejected_foods": "Belirgin reddi yok.",
+    "external_clinical_findings": "Test adi: Vineland-3\nPuan / sonuc: Iletisim korunmus; gunluk yasam becerileri alt alaninda goreli dusukluk.\nKlinik yorum / resmi bulgu ozeti: Adaptif islevsellikteki zorluk daha cok gunluk uygulama ve surdurmede toplanmaktadir.\nEk notlar: Sosyalizasyon ve iletisim alanlari daha korunmus gorunmektedir.\n\nTest adi: ABAS-3\nPuan / sonuc: Pratik beceriler alt alaninda ortalamanin alt sinirinda performans.\nKlinik yorum / resmi bulgu ozeti: Klinik tablo, genel yetiden cok gunluk yurutucu organizasyon zorlugu dusunduruyor.\nEk notlar: Hatirlatma ve gorsel rutinlerle performans belirgin artmaktadir."
+  },
+  "scores": {
+    "physiological": 38,
+    "sensory": 37,
+    "emotional": 34,
+    "cognitive": 31,
+    "executive": 29,
+    "interoception": 34
+  }
+}

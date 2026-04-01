@@ -2,14 +2,16 @@ import {
   cleanMeaningfulText,
   extractAnamnezFlags,
   extractExternalClinicalFindings,
+  getAnamnezThemeSignals,
   extractTherapistInsights,
   summarizeAnamnezThemes,
   extractVisibleCaseInfo,
   type AnamnezRecord,
+  type AnamnezThemeSignals,
 } from "./anamnezUtils";
 import { classifyDomainScore, classifyTotalScore, findAgeNormBand, getNormSource } from "./normativeBands";
 import { buildClinicalAnalysis } from "./clinicalAnalysis";
-import { analyzeExternalClinicalTests } from "./externalTestRegistry";
+import { analyzeExternalClinicalTests, type ExternalTestAnalysis, type ExternalTestCategory } from "./externalTestRegistry";
 import { analyzeItemLevelSignals } from "./itemSignals";
 import { buildQualityGuidance } from "./reportQuality";
 
@@ -58,6 +60,9 @@ export type DeterministicReport = {
     strongDomains: string[];
     matchedDomains: string[];
     patternSummary: string;
+    externalTestIds?: string[];
+    externalTestCategories?: ExternalTestCategory[];
+    primaryExternalTestCategory?: ExternalTestCategory | null;
     therapistInsights?: string[];
     criticalItemLines?: string[];
     alignedItemLines?: string[];
@@ -237,13 +242,7 @@ function selectNarrativelyMatchedDomains(domainResults: DomainResult[], anamnezF
   }
 
   const joined = anamnezFlags.join(" ").toLowerCase();
-  const matched = domainResults.filter((d) => {
-    if (d.key === "sensory") return /duyusal|dokunsal|uyaran|gürültü|kalabalık/.test(joined);
-    if (d.key === "emotional") return /duygusal|toparlanma|sakinleş|uyaran sonrası/.test(joined);
-    if (d.key === "cognitive" || d.key === "executive") return /dikkat|görev|sürdürme|çok uyaran/.test(joined);
-    if (d.key === "physiological" || d.key === "interoception") return /bedensel|fizyolojik|yorgun|uyku|beslenme|iştah|alerji|kolik|nöbet/.test(joined);
-    return false;
-  });
+  const matched = domainResults.filter((d) => matchesNarrativeDomain(d.key as DomainKey, joined));
 
   const prioritized = matched
     .filter((d) => d.level !== "Tipik")
@@ -261,13 +260,31 @@ function selectNarrativelyMatchedDomains(domainResults: DomainResult[], anamnezF
 function getRawMatchedDomains(domainResults: DomainResult[], anamnezFlags: string[]): DomainResult[] {
   const joined = anamnezFlags.join(" ").toLowerCase();
 
-  return domainResults.filter((d) => {
-    if (d.key === "sensory") return /duyusal|dokunsal|uyaran|gürültü|kalabalık/.test(joined);
-    if (d.key === "emotional") return /duygusal|toparlanma|sakinleş|uyaran sonrası/.test(joined);
-    if (d.key === "cognitive" || d.key === "executive") return /dikkat|görev|sürdürme|çok uyaran/.test(joined);
-    if (d.key === "physiological" || d.key === "interoception") return /bedensel|fizyolojik|yorgun|uyku|beslenme|iştah|alerji|kolik|nöbet/.test(joined);
-    return false;
-  });
+  return domainResults.filter((d) => matchesNarrativeDomain(d.key as DomainKey, joined));
+}
+
+function matchesNarrativeDomain(domainKey: DomainKey, joinedFlags: string): boolean {
+  if (domainKey === "sensory") {
+    return /duyusal|dokunsal|uyaran|gürültü|kalabalık|beden organizasyonu/.test(joinedFlags);
+  }
+
+  if (domainKey === "emotional") {
+    return /duygusal|toparlanma|sakinleş|frustrasyon|ko-regülasyon|ko-reg|ayrılma|geçiş/.test(joinedFlags);
+  }
+
+  if (domainKey === "cognitive") {
+    return /dilsel|yönerge|sözel|siral|sekans|görev|başlatma|sürdürme|sosyal karşılıklılık/.test(joinedFlags);
+  }
+
+  if (domainKey === "executive") {
+    return /görev|başlatma|sürdürme|esneklik|ko-regülasyon|ko-reg|motor planlama|praksi|öz bakım|günlük rutin/.test(joinedFlags);
+  }
+
+  if (domainKey === "physiological" || domainKey === "interoception") {
+    return /bedensel|fizyolojik|yorgun|uyku|beslenme|iştah|alerji|kolik|nöbet|öz bakım|tuvalet/.test(joinedFlags);
+  }
+
+  return false;
 }
 
 function hasFlatPriorityProfile(domainResults: DomainResult[]): boolean {
@@ -294,7 +311,156 @@ function getWidespreadProfileName(primaryDomain: DomainResult | undefined): stri
   return `${primaryDomain.label} Merkezli Yaygın Regülasyon Yükü`;
 }
 
-function detectProfileType(domainResults: DomainResult[], globalLevel: DomainLevel, homogeneous: boolean): string {
+function buildProfileDomainWeights(
+  domainResults: DomainResult[],
+  anamnezSignals: AnamnezThemeSignals,
+  externalTestAnalysis?: ExternalTestAnalysis
+) {
+  const compatibleCategories = new Set(externalTestAnalysis?.compatibleCategories || []);
+
+  const domainWeights = domainResults.map((domain) => {
+    let weight =
+      (domain.level === "Atipik" ? 4 : domain.level === "Riskli" ? 2 : 0) +
+      Math.max(0, (34 - domain.score) / 5);
+
+    if (domain.key === "sensory") {
+      if (anamnezSignals.sensory) weight += 1.4;
+      if (anamnezSignals.motorPraxis) weight += 0.5;
+      if (compatibleCategories.has("sensory_processing")) weight += 1.4;
+      if (compatibleCategories.has("motor_praxis")) weight += 0.6;
+    }
+
+    if (domain.key === "emotional") {
+      if (anamnezSignals.emotional) weight += 1.3;
+      if (anamnezSignals.transitionCoregulation) weight += 1.4;
+      if (anamnezSignals.socialPragmatic) weight += 0.6;
+      if (compatibleCategories.has("social_pragmatic")) weight += 1.0;
+      if (compatibleCategories.has("executive_behavior")) weight += 0.7;
+      if (compatibleCategories.has("language_communication")) weight += 0.5;
+    }
+
+    if (domain.key === "cognitive") {
+      if (anamnezSignals.cognitiveExecutive) weight += 1.0;
+      if (anamnezSignals.languageLoad) weight += 1.2;
+      if (anamnezSignals.motorPraxis) weight += 0.6;
+      if (compatibleCategories.has("language_communication")) weight += 1.3;
+      if (compatibleCategories.has("social_pragmatic")) weight += 0.6;
+      if (compatibleCategories.has("motor_praxis")) weight += 0.6;
+      if (compatibleCategories.has("executive_behavior")) weight += 0.5;
+    }
+
+    if (domain.key === "executive") {
+      if (anamnezSignals.cognitiveExecutive) weight += 1.2;
+      if (anamnezSignals.transitionCoregulation) weight += 1.3;
+      if (anamnezSignals.adaptiveDailyLiving) weight += 1.0;
+      if (anamnezSignals.socialPragmatic) weight += 0.8;
+      if (anamnezSignals.motorPraxis) weight += 1.0;
+      if (compatibleCategories.has("executive_behavior")) weight += 1.4;
+      if (compatibleCategories.has("adaptive_daily_living")) weight += 1.0;
+      if (compatibleCategories.has("motor_praxis")) weight += 1.1;
+      if (compatibleCategories.has("social_pragmatic")) weight += 0.8;
+      if (compatibleCategories.has("language_communication")) weight += 0.7;
+    }
+
+    if (domain.key === "physiological") {
+      if (anamnezSignals.bodyIntero) weight += 1.3;
+      if (anamnezSignals.adaptiveDailyLiving) weight += 0.6;
+      if (compatibleCategories.has("adaptive_daily_living")) weight += 0.8;
+    }
+
+    if (domain.key === "interoception") {
+      if (anamnezSignals.bodyIntero) weight += 1.5;
+      if (anamnezSignals.adaptiveDailyLiving) weight += 0.9;
+      if (compatibleCategories.has("adaptive_daily_living")) weight += 1.0;
+    }
+
+    return { ...domain, weight };
+  });
+
+  return domainWeights.sort((a, b) => b.weight - a.weight || a.score - b.score);
+}
+
+function detectExternalTestProfileType(
+  domainResults: DomainResult[],
+  anamnezSignals: AnamnezThemeSignals,
+  externalTestAnalysis?: ExternalTestAnalysis
+): string | null {
+  if (!externalTestAnalysis || externalTestAnalysis.compatible.length === 0) return null;
+
+  const compatibleIds = new Set(externalTestAnalysis.compatibleIds || []);
+  const compatibleCategories = new Set(externalTestAnalysis.compatibleCategories || []);
+  const nonTypical = [...domainResults].filter((d) => d.level !== "Tipik").sort((a, b) => a.score - b.score);
+  const nonTypicalKeys = new Set(nonTypical.map((d) => d.key));
+
+  const hasPraxisSignal = compatibleCategories.has("motor_praxis");
+  const hasSiptSignal = compatibleIds.has("sipt");
+  const hasSensorySignal = compatibleCategories.has("sensory_processing");
+
+  if (hasPraxisSignal) {
+    if (hasSiptSignal && (nonTypicalKeys.has("executive") || nonTypicalKeys.has("cognitive"))) {
+      if (nonTypical.length >= 3) {
+        return "Praksi ve Motor Planlama ile İlişkili Regülasyon Yükü";
+      }
+      return "Praksi ve Motor Planlama ile İlişkili Seçici Kırılganlık";
+    }
+
+    if (compatibleIds.has("mabc3") || compatibleIds.has("pdms3") || compatibleIds.has("bot2") || compatibleIds.has("mfun")) {
+      if (nonTypical.length >= 3) {
+        return "Motor Planlama ve Beden Organizasyonu ile İlişkili Regülasyon Yükü";
+      }
+      return "Motor Planlama ile İlişkili Seçici Kırılganlık";
+    }
+  }
+
+  if (hasSensorySignal && (nonTypicalKeys.has("sensory") || nonTypical[0]?.key === "sensory")) {
+    if (nonTypicalKeys.has("emotional") && nonTypical.length >= 2) {
+      return "Duyusal-Duygusal Regülasyon Profili";
+    }
+
+    if (nonTypical.length >= 3) {
+      return "Duyusal Merkezli Yaygın Regülasyon Yükü";
+    }
+
+    return "Duyusal Alanda Seçici Kırılganlık";
+  }
+
+  if (compatibleCategories.has("adaptive_daily_living")) {
+    if (nonTypical.length >= 3 || nonTypicalKeys.has("executive") || nonTypicalKeys.has("interoception")) {
+      return "Günlük Yaşam ve Öz Bakım Akışında Regülasyon Yükü";
+    }
+    if (anamnezSignals.adaptiveDailyLiving) {
+      return "Günlük Yaşam Akışında Seçici Kırılganlık";
+    }
+  }
+
+  if (compatibleCategories.has("social_pragmatic")) {
+    if (nonTypical.length >= 2 || nonTypicalKeys.has("emotional") || nonTypicalKeys.has("executive")) {
+      return "Sosyal-Pragmatik Esneklikle İlişkili Regülasyon Yükü";
+    }
+    if (anamnezSignals.socialPragmatic) {
+      return "Sosyal-Pragmatik Esneklikte Seçici Kırılganlık";
+    }
+  }
+
+  if (compatibleCategories.has("language_communication")) {
+    if (nonTypical.length >= 2 || nonTypicalKeys.has("cognitive") || nonTypicalKeys.has("executive")) {
+      return "Dilsel Talep Altında Regülasyon Yükü";
+    }
+    if (anamnezSignals.languageLoad) {
+      return "Dilsel Talep Altında Seçici Kırılganlık";
+    }
+  }
+
+  return null;
+}
+
+function detectProfileType(
+  domainResults: DomainResult[],
+  globalLevel: DomainLevel,
+  homogeneous: boolean,
+  anamnezSignals: AnamnezThemeSignals,
+  externalTestAnalysis?: ExternalTestAnalysis
+): string {
   const byKey = Object.fromEntries(domainResults.map((d) => [d.key, d.score])) as Record<DomainKey, number>;
   const values = domainResults.map((d) => d.score);
   const spread = Math.max(...values) - Math.min(...values);
@@ -318,8 +484,38 @@ function detectProfileType(domainResults: DomainResult[], globalLevel: DomainLev
     return getSelectiveProfileName(nonTypical[0]);
   }
 
+  const externalTestProfileType = detectExternalTestProfileType(domainResults, anamnezSignals, externalTestAnalysis);
+  if (externalTestProfileType) {
+    return externalTestProfileType;
+  }
+
+  const weightedDomains = buildProfileDomainWeights(domainResults, anamnezSignals, externalTestAnalysis);
+  const weightedKeys = new Set(weightedDomains.slice(0, 2).map((domain) => domain.key as DomainKey));
+
+  if (anamnezSignals.transitionCoregulation && weightedKeys.has("emotional") && weightedKeys.has("executive")) {
+    return nonTypical.length >= 3 ? "Geçiş ve Ko-Regülasyon Yükü" : "Geçiş ve Ko-Regülasyon Kırılganlığı";
+  }
+
+  if (anamnezSignals.bodyIntero && weightedKeys.has("physiological") && weightedKeys.has("interoception")) {
+    return nonTypical.length >= 2
+      ? "Fizyolojik Toparlanma ve Beden Temelli Regülasyon Yükü"
+      : "Fizyolojik Toparlanma Ekseninde Seçici Kırılganlık";
+  }
+
+  if (anamnezSignals.socialPragmatic && weightedKeys.has("executive") && weightedKeys.has("emotional")) {
+    return nonTypical.length >= 2
+      ? "Sosyal-Pragmatik Esneklikle İlişkili Regülasyon Yükü"
+      : "Sosyal-Pragmatik Esneklikte Seçici Kırılganlık";
+  }
+
+  if (anamnezSignals.adaptiveDailyLiving && (weightedKeys.has("executive") || weightedKeys.has("interoception"))) {
+    return nonTypical.length >= 2
+      ? "Günlük Yaşam ve Öz Bakım Akışında Regülasyon Yükü"
+      : "Günlük Yaşam Akışında Seçici Kırılganlık";
+  }
+
   if (nonTypical.length >= 5 && spread >= 4) {
-    return getWidespreadProfileName(primaryNonTypical);
+    return getWidespreadProfileName(weightedDomains[0] || primaryNonTypical);
   }
 
   if (
@@ -449,9 +645,12 @@ function buildGeneralSection(
     : `Belirgin klinik örüntü "${profileType}" ile uyumludur. Görece en kırılgan alan ${[...domainResults].sort((a, b) => a.score - b.score)[0]?.label} olarak öne çıkmaktadır.`;
 
   const nonTypicalCount = domainResults.filter((d) => d.level !== "Tipik").length;
+  const lowPathologyMode = globalLevel === "Tipik" && nonTypicalCount <= 1;
   const safeProfileSentence =
     nonTypicalCount === 0
       ? "Tüm alanlar tipik aralıkta seyretmiş ve klinik açıdan belirgin bir kırılganlık odağı izlenmemiştir."
+      : lowPathologyMode
+      ? `Genel zemin korunmuş görünmekle birlikte, ${[...domainResults].sort((a, b) => a.score - b.score)[0]?.label} alanında bağlama duyarlı bir hassasiyet izlenmektedir.`
       : profileSentence;
 
   return [identityLine, `Toplam skor ${totalScore}/${GLOBAL_MAX} olarak hesaplanmıştır ve genel sınıflama ${globalLevel} düzeydedir. ${summary} ${safeProfileSentence} ${normText}`]
@@ -463,9 +662,96 @@ function buildNumericalSection(domainResults: DomainResult[]): string {
   return domainResults.map((d) => `- ${d.label}: ${d.score}/${DOMAIN_MAX} (${d.level})`).join("\n");
 }
 
-function buildDomainSection(domainResults: DomainResult[], anamnezFlags: string[]): string {
+function formatNamedTests(names: string[]): string {
+  if (names.length <= 1) return names[0] || ""
+  if (names.length === 2) return `${names[0]} ve ${names[1]}`
+  return `${names.slice(0, -1).join(", ")} ve ${names[names.length - 1]}`
+}
+
+function getExternalDomainCommentHint(
+  domainKey: DomainKey,
+  externalTestAnalysis?: ExternalTestAnalysis
+): string {
+  if (!externalTestAnalysis?.compatible.length) return ""
+
+  const compatibleCategories = new Set(externalTestAnalysis.compatibleCategories || [])
+  const primaryCategory = externalTestAnalysis.primaryCompatibleCategory || null
+  const namesByCategory = (category: ExternalTestCategory) =>
+    externalTestAnalysis.compatible
+      .filter((match) => match.category === category)
+      .map((match) => match.name)
+      .slice(0, 2)
+  const praxisNames = namesByCategory("motor_praxis")
+  const adaptiveNames = namesByCategory("adaptive_daily_living")
+  const languageNames = namesByCategory("language_communication")
+  const socialNames = namesByCategory("social_pragmatic")
+
+  if (compatibleCategories.has("motor_praxis")) {
+    const testText = formatNamedTests(praxisNames)
+    if (domainKey === "executive" && testText) {
+      return ` ${testText} bulguları, bu alandaki zorlanmanın yalnız inhibisyon ya da dikkatle değil, hareketi sıralama, motor planı uygulama ve davranışı organize etme yüküyle de ilişkili olabileceğini düşündürmektedir.`
+    }
+    if (domainKey === "cognitive" && testText) {
+      return ` ${testText} bulguları, görevin zihinsel olarak planlanması ve adım adım sürdürülmesi sırasında praksi ve sekanslama yükünün bilişsel organizasyonu artırabileceğini düşündürmektedir.`
+    }
+    if (domainKey === "sensory" && testText) {
+      return ` ${testText} bulguları, beden organizasyonu ve duyusal bütünleme taleplerinin çevresel uyaran altında performans dalgalanmasını artırabileceğini düşündürmektedir.`
+    }
+  }
+
+  if (primaryCategory === "adaptive_daily_living") {
+    const testText = formatNamedTests(adaptiveNames)
+    if (domainKey === "executive" && testText) {
+      return ` ${testText} bulguları, bu alandaki zorlanmanın günlük rutinleri başlatma, sıralama ve sürdürme üzerindeki işlevsel karşılığını görünür kılmaktadır.`
+    }
+    if ((domainKey === "physiological" || domainKey === "interoception") && testText) {
+      return ` ${testText} bulguları, beden sinyallerini fark etme ve öz bakım akışını düzenleme yükünün günlük yaşamda nasıl karşılık bulduğunu görünür kılmaktadır.`
+    }
+  }
+
+  if (primaryCategory === "language_communication") {
+    const testText = formatNamedTests(languageNames)
+    if (domainKey === "cognitive" && testText) {
+      return ` ${testText} bulguları, sözel talep ve yönerge karmaşıklığı arttığında bilgiyi işleme, zihinsel olarak tutma ve görevde kalma yükünün arttığını düşündürmektedir.`
+    }
+    if (domainKey === "executive" && testText) {
+      return ` ${testText} bulguları, çok basamaklı sözel taleplerde geçiş yapma, sıralama ve görevi tamamlama yükünün belirginleşebileceğini düşündürmektedir.`
+    }
+    if (domainKey === "emotional" && testText) {
+      return ` ${testText} bulguları, iletişimsel talep ve anlaşılmama anlarında frustrasyon eşiğinin düşebileceğini düşündürmektedir.`
+    }
+  }
+
+  if (primaryCategory === "social_pragmatic") {
+    const testText = formatNamedTests(socialNames)
+    if (domainKey === "emotional" && testText) {
+      return ` ${testText} bulguları, karşılıklılık ve sosyal belirsizlik arttığında duygusal regülasyon yükünün neden daha görünür hale geldiğini açıklamaya yardımcı olmaktadır.`
+    }
+    if (domainKey === "executive" && testText) {
+      return ` ${testText} bulguları, sosyal bağlam hızlı değiştiğinde esneklik, yanıtı ayarlama ve davranışı bağlama göre düzenleme yükünü görünür kılmaktadır.`
+    }
+    if (domainKey === "cognitive" && testText) {
+      return ` ${testText} bulguları, sosyal ipuçlarını izleme ve eşzamanlı görev taleplerini sürdürme yükünün bilişsel organizasyonu zorlayabildiğini düşündürmektedir.`
+    }
+  }
+
+  return ""
+}
+
+function buildDomainSection(
+  domainResults: DomainResult[],
+  anamnezFlags: string[],
+  externalTestAnalysis?: ExternalTestAnalysis
+): string {
+  const allTypical = domainResults.every((d) => d.level === "Tipik");
   return domainResults
-    .map((d) => `- ${d.label}: ${d.comment}${getAnamnezMatchHint(d.key as DomainKey, anamnezFlags)}`)
+    .map(
+      (d) =>
+        `- ${d.label}: ${d.comment}${allTypical ? "" : getAnamnezMatchHint(d.key as DomainKey, anamnezFlags)}${allTypical ? "" : getExternalDomainCommentHint(
+          d.key as DomainKey,
+          externalTestAnalysis
+        )}`
+    )
     .join("\n");
 }
 
@@ -660,7 +946,8 @@ function buildAnamnezFitSection(
   anamnezFlags: string[],
   domainResults: DomainResult[],
   profileType: string,
-  externalTestDecisionNote?: string
+  externalTestDecisionNotes: string[] = [],
+  externalTestAnalysis?: ExternalTestAnalysis
 ): string {
   const d = buildDeterministicProfileSummary(domainResults);
   const flagCount = Array.isArray(anamnezFlags) ? anamnezFlags.length : 0;
@@ -698,12 +985,49 @@ function buildAnamnezFitSection(
   const partialDomains = rawMatchedDomains
     .filter((label) => !alignedDomains.includes(label) && !mismatchDomains.includes(label))
     .slice(0, 2);
+  const compatibleTests = externalTestAnalysis?.compatible || [];
+  const compatibleCategories = new Set(externalTestAnalysis?.compatibleCategories || []);
+  const compatibleTestNames = compatibleTests.map((test) => test.name);
+  const externalTestNamesText =
+    compatibleTestNames.length >= 3
+      ? `${compatibleTestNames.slice(0, 2).join(", ")} ve ${compatibleTestNames[2]}`
+      : compatibleTestNames.length === 2
+      ? compatibleTestNames.join(" ve ")
+      : compatibleTestNames[0] || "";
+  const externalCautionNotes = externalTestDecisionNotes.filter((note) => /yaş aralığı|ana klinik karar|temkin/i.test(note));
+  const externalFitSynthesis: string[] = [];
+
+  if (compatibleCategories.has("motor_praxis")) {
+    externalFitSynthesis.push(
+      `${externalTestNamesText || "Motor planlama testleri"} bulguları, zorlanmanın yalnız dikkat ya da genel davranış kontrolünde değil; görevi başlatma, hareket dizisini kurma, beden organizasyonunu sürdürme ve çok basamaklı eylemi tamamlama ekseninde taşındığını göstermektedir.`
+    );
+
+    if (compatibleCategories.has("adaptive_daily_living")) {
+      externalFitSynthesis.push(
+        "Praksi ve günlük yaşam verileri birlikte ele alındığında, motor planlama yükünün işlevsel karşılığının özellikle öz bakım, araç gereç kullanımı, sıraya dayalı görevler ve günlük rutini sürdürebilme alanlarında görünürleştiği anlaşılmaktadır."
+      );
+    } else {
+      externalFitSynthesis.push(
+        "Bu nedenle anamnezde tarif edilen dağılma ve görevden kopma, salt dikkat azalmasından çok motor planlama yükü arttığında davranış organizasyonunun çözülmesi şeklinde okunmalıdır."
+      );
+    }
+  }
+
+  if (compatibleCategories.has("adaptive_daily_living")) {
+    externalFitSynthesis.push(
+      `${externalTestNamesText || "Uyumsal işlev testleri"} verileri, güçlüğün kapasitenin tümden kaybından çok günlük öz bakım, rutin başlatma, sıralı görevi sürdürme ve tamamlamada tutarlılık sorunu olarak görünür hale geldiğini düşündürmektedir.`
+    );
+  }
+
+  const externalFitNotesToAppend = externalFitSynthesis.length > 0
+    ? [...externalFitSynthesis.slice(0, 2), ...externalCautionNotes.slice(0, 1)]
+    : externalTestDecisionNotes.slice(0, 2);
 
   if (weakLabels.length === 0) {
     const sentences: string[] = []
 
-    if (flagCount >= 1 && themePreview) {
-      sentences.push(`Anamnezde ${themePreview}`)
+    if (flagCount >= 1) {
+      sentences.push("Anamnezde bağlama duyarlı bazı zorluklar ve destek gerektiren anlar tarif edilmektedir.")
     } else {
       sentences.push("Anamnezde bildirilen bağlamsal zorluklar ölçek bulgularıyla birlikte ele alınmıştır.")
     }
@@ -716,8 +1040,8 @@ function buildAnamnezFitSection(
 
     sentences.push("Bu nedenle anamnez ile ölçek arasında doğrudan patolojik uyumdan çok, bağlama duyarlı ancak genel olarak korunmuş bir işleyiş örüntüsü izlenmektedir.")
 
-    if (externalTestDecisionNote) {
-      sentences.push(externalTestDecisionNote)
+    if (externalFitNotesToAppend.length > 0) {
+      sentences.push(...externalFitNotesToAppend)
     }
 
     return sentences.join(" ")
@@ -746,14 +1070,15 @@ function buildAnamnezFitSection(
       sentences.push(`Bu nedenle klinik yorum ağırlıklı olarak skor örüntüsüne dayandırılmıştır.`);
     }
 
-    if (externalTestDecisionNote) {
-      sentences.push(externalTestDecisionNote);
+    if (externalFitNotesToAppend.length > 0) {
+      sentences.push(...externalFitNotesToAppend);
     }
 
     return sentences.join(" ");
   }
 
-  return `Anamnezde "${profileType}" örüntüsünü doğrudan güçlendiren belirgin tema sınırlıdır. Ölçekte görece daha çok zorlanan alanlar ${riskText} ekseninde toplanmaktadır. Bu nedenle klinik yorum ağırlıklı olarak skor örüntüsüne dayandırılmıştır.${externalTestDecisionNote ? ` ${externalTestDecisionNote}` : ""}`;
+  const noteText = externalFitNotesToAppend.length > 0 ? ` ${externalFitNotesToAppend.join(" ")}` : ""
+  return `Anamnezde "${profileType}" örüntüsünü doğrudan güçlendiren belirgin tema sınırlıdır. Ölçekte görece daha çok zorlanan alanlar ${riskText} ekseninde toplanmaktadır. Bu nedenle klinik yorum ağırlıklı olarak skor örüntüsüne dayandırılmıştır.${noteText}`;
 }
 
 function buildConclusion(
@@ -814,10 +1139,29 @@ export function generateDeterministicReport(input: ReportInput): DeterministicRe
 
   const anamnezSummary = summarizeAnamnezThemes(cleanedAnamnez);
   const anamnezFlags = extractAnamnezFlags(cleanedAnamnez);
+  const anamnezSignals = getAnamnezThemeSignals(cleanedAnamnez);
   const therapistInsights = extractTherapistInsights(cleanedAnamnez);
   const externalClinicalFindings = extractExternalClinicalFindings(cleanedAnamnez);
   const externalTestAnalysis = analyzeExternalClinicalTests(cleanedAnamnez.external_clinical_findings, input.ageMonths);
-  const externalTestDecisionNote = externalTestAnalysis.warningLines[0] || externalTestAnalysis.validatedSupportLines[0] || "";
+  const rawExternalNarrativeLines =
+    externalTestAnalysis.matches.length === 0 ? externalClinicalFindings : [];
+  const externalNarrativeLines = [
+    ...rawExternalNarrativeLines,
+    ...externalTestAnalysis.specificNarrativeLines,
+    ...externalTestAnalysis.conciseSupportLines,
+    ...externalTestAnalysis.synthesisLines,
+    ...externalTestAnalysis.decisionLines,
+  ].slice(0, 5);
+  const externalWarningLines = externalTestAnalysis.warningLines.slice(0, 2);
+  const externalTestDecisionNotes = externalTestAnalysis.decisionLines.length
+    ? [...externalTestAnalysis.decisionLines, ...externalWarningLines].slice(0, 2)
+    : externalWarningLines.length
+    ? externalWarningLines
+    : [
+        ...externalTestAnalysis.specificNarrativeLines,
+        ...externalTestAnalysis.synthesisLines,
+        ...externalTestAnalysis.conciseSupportLines,
+      ].slice(0, 2);
 
   const orderedKeys = Object.keys(DOMAIN_META) as DomainKey[];
   const domainResults: DomainResult[] = orderedKeys.map((key) => {
@@ -837,15 +1181,21 @@ export function generateDeterministicReport(input: ReportInput): DeterministicRe
   const safeTotal = Math.max(GLOBAL_MIN, Math.min(GLOBAL_MAX, totalScore));
   const globalLevel = classifyTotalScore(safeTotal, { ageMonths: input.ageMonths });
   const homogeneousProfile = getHomogeneousProfile(domainResults);
-  const profileType = detectProfileType(domainResults, globalLevel, homogeneousProfile);
-  const patterns = analyzePatterns(domainResults, homogeneousProfile);
   const normSource = getNormSource(input.ageMonths);
   const ageBandLabel = findAgeNormBand(input.ageMonths)?.label ?? null;
+  const profileType = detectProfileType(
+    domainResults,
+    globalLevel,
+    homogeneousProfile,
+    anamnezSignals,
+    externalTestAnalysis
+  );
+  const patterns = analyzePatterns(domainResults, homogeneousProfile);
   const itemLevelAnalysis = analyzeItemLevelSignals({
     answers: input.answers,
     anamnezRecord: cleanedAnamnez,
     therapistInsights,
-    externalClinicalFindings: [...externalClinicalFindings, ...externalTestAnalysis.validatedSupportLines].slice(0, 4),
+    externalClinicalFindings: externalNarrativeLines,
     domainResults,
   });
 
@@ -857,8 +1207,11 @@ export function generateDeterministicReport(input: ReportInput): DeterministicRe
     anamnezFlags,
     therapistInsights,
     ageBandLabel,
-    [...externalClinicalFindings, ...externalTestAnalysis.validatedSupportLines].slice(0, 3),
-    externalTestAnalysis.warningLines,
+    externalNarrativeLines.slice(0, 3),
+    externalWarningLines,
+    externalTestAnalysis.compatibleIds,
+    externalTestAnalysis.compatibleCategories,
+    externalTestAnalysis.primaryCompatibleCategory,
     itemLevelAnalysis || undefined
   );
 
@@ -869,8 +1222,8 @@ export function generateDeterministicReport(input: ReportInput): DeterministicRe
     anamnezThemes: anamnezFlags,
     matchedDomains: clinicalAnalysis.matchedDomains,
     therapistInsights,
-    externalClinicalFindings: [...externalClinicalFindings, ...externalTestAnalysis.validatedSupportLines].slice(0, 3),
-    externalClinicalWarnings: externalTestAnalysis.warningLines,
+    externalClinicalFindings: externalNarrativeLines.slice(0, 3),
+    externalClinicalWarnings: externalWarningLines,
     criticalItemLines: itemLevelAnalysis?.criticalLines,
     alignedItemLines: itemLevelAnalysis?.alignedLines,
   });
@@ -886,6 +1239,7 @@ export function generateDeterministicReport(input: ReportInput): DeterministicRe
     ageMonths: input.ageMonths,
   });
 
+  const allTypicalProfile = domainResults.every((d) => d.level === "Tipik");
   const sections = {
     general: buildGeneralSection(
       safeTotal,
@@ -898,9 +1252,19 @@ export function generateDeterministicReport(input: ReportInput): DeterministicRe
       visibleInfo
     ),
     numerical: buildNumericalSection(domainResults),
-    domains: buildDomainSection(domainResults, anamnezFlags),
+    domains: buildDomainSection(domainResults, anamnezFlags, externalTestAnalysis),
     patterns: [
       buildPatternSection(profileType, patterns, domainResults, homogeneousProfile),
+      ...(allTypicalProfile
+        ? []
+        : externalTestAnalysis.specificNarrativeLines.length
+        ? externalTestAnalysis.specificNarrativeLines.slice(0, 2).map((line) => `- ${line}`)
+        : []),
+      ...(allTypicalProfile
+        ? []
+        : externalTestAnalysis.synthesisLines.length
+        ? externalTestAnalysis.synthesisLines.slice(0, 2).map((line) => `- ${line}`)
+        : []),
       ...(itemLevelAnalysis?.criticalLines.length
         ? [`- Madde düzeyinde dikkat çeken bulgular: ${itemLevelAnalysis.criticalLines.join(" ")}`]
         : []),
@@ -908,7 +1272,14 @@ export function generateDeterministicReport(input: ReportInput): DeterministicRe
       .filter(Boolean)
       .join("\n"),
     anamnezTestFit: [
-      buildAnamnezFitSection(anamnezSummary, anamnezFlags, domainResults, profileType, externalTestDecisionNote),
+      buildAnamnezFitSection(
+        anamnezSummary,
+        anamnezFlags,
+        domainResults,
+        profileType,
+        externalTestDecisionNotes,
+        externalTestAnalysis
+      ),
       ...(itemLevelAnalysis?.alignedLines.length
         ? [`Anamnezle en güçlü örtüşen maddeler: ${itemLevelAnalysis.alignedLines.join(" ")}`]
         : []),

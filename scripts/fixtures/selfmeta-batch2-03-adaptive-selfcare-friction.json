@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-B2-03-ADAPTIVE",
+  "clientName": "Lina",
+  "ageMonths": 70,
+  "anamnez": {
+    "ad_soyad": "Lina Ornek",
+    "client_code": "FIXTURE-B2-03-ADAPTIVE",
+    "record_date": "2026-04-01",
+    "age_range": "60-71 ay",
+    "diagnosis": "Gelisimsel koordinasyon guclugu izlem",
+    "referral_reason": "Aile giyinme, tuvalet rutini, dis fircalama ve okul cikisi hazirliklarinda cocugun ne yapacagini bildigi halde sureci kendi basina baslatmakta ve sira ile surdurmekte zorlandigini bildirmektedir. Yardim almadan basladiginda adim atlama ve kolayca dagilma gorulmektedir.",
+    "parent_concerns_goals": "Ozbakim rutinlerinde daha bagimsiz baslatma, sirayi koruma ve yardim ihtiyacini azaltma hedeflenmektedir.",
+    "therapist_comments": "Gozlemde tek tek adimlar ogretildiginde uygulayabiliyor; ancak cok basamakli rutinde baslatma ve surdurme bozuluyor. Ozellikle beden sinyali, malzeme sirasi ve gorevi bitirme arasinda kopmalar dikkat cekiyor.",
+    "strengths": "Dil anlama guclu, sosyal iliski surdurme iyi, gorsel cizelge ile hizli toparlaniyor.",
+    "medical_history": "Belirgin tibbi hastalik yok. Donemsel kabizlik ve tuvaleti erteleme bildiriliyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Donemsel kabizlik disinda risk yok.",
+    "current_therapies": "Haftada 1 ergoterapi.",
+    "past_therapies": "Kisa sureli duyusal oyun grubu deneyimi oldu.",
+    "medications": "Duzenli ilac yok.",
+    "prenatal_story": "Belirgin komplikasyon bildirilmedi.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Erken gelisim basamaklari genel olarak zamaninda ancak ozbakim bagimsizligi yasitlarina gore daha gec ilerledi.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Yemek oncesi-sonrasi rutin gecislerinde yetiskin hatirlatmasi gerekiyor.",
+    "liked_foods": "Yapilandirilmis tabak duzenini seviyor.",
+    "rejected_foods": "Dagilan ya da karmasik tabak duzenlerinde yemekten kopabiliyor.",
+    "external_clinical_findings": "Test adi: Vineland-3\nPuan / sonuc: Gunluk yasam becerileri alaninda yas beklentisinin altinda, iletisim ve sosyallesme korunmus.\nKlinik yorum / resmi bulgu ozeti: Ozbakim ve rutin surdurmede tutarlilik sorunu oldugunu gosteriyor.\nEk notlar: Baslatma ve bitirme adimlarinda yardim ihtiyaci belirgin.\n\nTest adi: ABAS-3\nPuan / sonuc: Pratik alan kavramsal ve sosyal alana gore daha dusuk.\nKlinik yorum / resmi bulgu ozeti: Gunluk sorumluluk, ozbakim ve ev ici gorevlerde performans dagilimi goruluyor.\n\nTest adi: PEDI-CAT\nPuan / sonuc: Gunluk aktivite ve sorumluluk yonetiminde dusuk ortalama.\nKlinik yorum / resmi bulgu ozeti: Ozbakim ve rutinlerin dogal ortamda surdurulmesinin kapasiteden daha cok organizasyon ve devam ettirme ekseninde zorlandigini destekliyor."
+  },
+  "scores": {
+    "physiological": 31,
+    "sensory": 35,
+    "emotional": 37,
+    "cognitive": 34,
+    "executive": 30,
+    "interoception": 29
+  }
+}

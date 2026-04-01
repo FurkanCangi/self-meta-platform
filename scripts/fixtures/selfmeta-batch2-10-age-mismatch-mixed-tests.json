@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-B2-10-MISMATCH",
+  "clientName": "Asya",
+  "ageMonths": 38,
+  "anamnez": {
+    "ad_soyad": "Asya Ornek",
+    "client_code": "FIXTURE-B2-10-MISMATCH",
+    "record_date": "2026-04-01",
+    "age_range": "36-47 ay",
+    "diagnosis": "Tani yok / okul oncesi izlemi",
+    "referral_reason": "Aile yeni grup ortamina gecis sonrasi cocugun hareketli oldugunu, bazen sirada beklerken zorlandigini ve kalabalik gunlerde oyundan daha cabuk koptugunu bildirmektedir. Evde genel isleyis korunmus, okul baglaminda degisken zorlanma tarif edilmektedir.",
+    "parent_concerns_goals": "Gercek bir dikkat/yurutuucu risk olup olmadiginin ayirt edilmesi ve baglama duyarlilik ile suregen guclugun ayrilmasi hedeflenmektedir.",
+    "therapist_comments": "Bire bir iliskide iyi organize, ancak yeni ortam ve grup talepleri arttiginda hareket duzeyi yukseliyor. Yetiskinle birlikte sinir koyma ve tekrar baslatma duzene girmeyi kolaylastiriyor.",
+    "strengths": "Sosyal motivasyon guclu, ortak oyun baslatma istegi yuksek, kisa yapilandirma ile hizli toparliyor.",
+    "medical_history": "Belirgin tibbi risk yok.",
+    "allergy_epilepsy_gi_colic_seizure": "Yok.",
+    "current_therapies": "Yok.",
+    "past_therapies": "Yok.",
+    "medications": "Yok.",
+    "prenatal_story": "Belirgin komplikasyon yok.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Erken gelisim basamaklari zamaninda.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Yasina uygun.",
+    "liked_foods": "Belirgin tercihleri var.",
+    "rejected_foods": "Belirgin klinik secicilik yok.",
+    "external_clinical_findings": "Test adi: BRIEF2\nPuan / sonuc: Yurutucu islevlerde yukselme bildirildi.\nKlinik yorum / resmi bulgu ozeti: Ogretmen raporuna gore planlama ve inhibisyonda zorlanma oldugu dusunuldu.\nEk notlar: Test yasi tekrar gozden gecirilmeli.\n\nTest adi: Conners 4\nPuan / sonuc: Dikkat ve hiperaktivite alanlarinda yuksek skor.\nKlinik yorum / resmi bulgu ozeti: Grup baglaminda belirgin dikkat yukunden suphelenildi.\nEk notlar: Yas uyumu belirsiz olabilir.\n\nTest adi: BRIEF-P\nPuan / sonuc: Klinik olmayan sinir altinda yukselme.\nKlinik yorum / resmi bulgu ozeti: Baglama duyarli ama suregen olmayan yurutuucu yuk olasiligini destekliyor.\n\nTest adi: Sensory Profile 2\nPuan / sonuc: Kalabalik ve hareketli ortamlarda duyusal yukselme.\nKlinik yorum / resmi bulgu ozeti: Grup ortami karmasiklastiginda performans dalgalanmasina duyusal katkisi olabilecegini destekliyor."
+  },
+  "scores": {
+    "physiological": 38,
+    "sensory": 33,
+    "emotional": 30,
+    "cognitive": 34,
+    "executive": 31,
+    "interoception": 36
+  }
+}

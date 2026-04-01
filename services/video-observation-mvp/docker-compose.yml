@@ -1,0 +1,40 @@
+version: "3.9"
+
+services:
+  video-observation-api:
+    build: .
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8091 --reload
+    working_dir: /app
+    environment:
+      VIDEO_OBS_DATABASE_URL: postgresql+psycopg://postgres:postgres@postgres:5432/video_obs
+      VIDEO_OBS_STORAGE_DIR: /data/storage
+      VIDEO_OBS_NORMALIZED_DIR: /data/normalized
+      VIDEO_OBS_REPORT_DIR: /data/reports
+      VIDEO_OBS_QUEUE_MODE: inline
+    volumes:
+      - .:/app
+      - ./data:/data
+    ports:
+      - "8091:8091"
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: video_obs
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+    ports:
+      - "54329:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports:
+      - "6380:6379"
+
+volumes:
+  postgres_data:

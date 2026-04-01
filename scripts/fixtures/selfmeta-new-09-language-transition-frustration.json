@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIX-NEW-09",
+  "clientName": "Nehir",
+  "ageMonths": 50,
+  "anamnez": {
+    "ad_soyad": "Nehir Ornek",
+    "client_code": "FIX-NEW-09",
+    "record_date": "2026-04-01",
+    "age_range": "48-59 ay",
+    "diagnosis": "Dil gelisimi ve gecis zorlanmalari nedeniyle izlem",
+    "referral_reason": "Aile ve ogretmen, dilsel talep arttiginda ve beklenmeyen gecisler oldugunda gorevden kopma, huzursuzluk ve aglama ile sonuclanan zorlanma tarif etmektedir. Basit ve tanidik oyunda katilim korunurken dilsel ve bilişsel yuk bindiginde duygusal tolerans dusmektedir.",
+    "parent_concerns_goals": "Dil yukunun arttigi baglamlarda frustrasyonu azaltmak, gecisleri daha yumusak yonetmek ve yeni goreve giriste destek ihtiyacini azaltmak hedeflenmektedir.",
+    "therapist_comments": "Sozel yuk arttiginda gorev baslatma yavasliyor, hata yapma algisiyla birlikte duygusal esik dusuyor. Gorsel destekle performans toparlaniyor.",
+    "strengths": "Gorsel destekten iyi yararlaniyor, bire bir sosyal iliski iyi ve tanidik materyalde katilim suruyor.",
+    "medical_history": "Belirgin tibbi risk yok.",
+    "allergy_epilepsy_gi_colic_seizure": "Yok.",
+    "current_therapies": "Dil-konusma terapisi devam ediyor.",
+    "past_therapies": "Kisa sureli ozel egitim destegi almisti.",
+    "medications": "Yok.",
+    "prenatal_story": "Olagan.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Konusma baslangici akranlarina gore biraz gec tarif edildi.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Genel olarak uygun.",
+    "liked_foods": "Makarna, muz, kofte.",
+    "rejected_foods": "Bazi karisik yiyecekleri reddediyor.",
+    "external_clinical_findings": "Test adi: CELF Preschool-3\nPuan / sonuc: Dil anlama ve ifadelendirme gerektiren kompleks gorevlerde yas beklentisinin altinda performans.\nKlinik yorum / resmi bulgu ozeti: Dilsel talep arttiginda bilişsel organizasyon ve duygusal tolerans ikincil olarak zorlanmaktadir.\nEk notlar: Gorsel destekle performans anlamli artiyor.\n\nTest adi: PLS-5\nPuan / sonuc: Alici dilde goreli korunmusluk, ifade edici dil ve dilsel gecislerde zorlanma.\nKlinik yorum / resmi bulgu ozeti: Gecislerdeki davranissal zorlanma, dilsel yukle birlikte artabiliyor.\nEk notlar: Yeni kuralli oyunda sozel yuklenme belirgin etkili."
+  },
+  "scores": {
+    "physiological": 36,
+    "sensory": 35,
+    "emotional": 24,
+    "cognitive": 25,
+    "executive": 27,
+    "interoception": 34
+  }
+}

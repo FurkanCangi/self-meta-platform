@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-B2-01-TRANSITION",
+  "clientName": "Mila",
+  "ageMonths": 50,
+  "anamnez": {
+    "ad_soyad": "Mila Ornek",
+    "client_code": "FIXTURE-B2-01-TRANSITION",
+    "record_date": "2026-04-01",
+    "age_range": "48-59 ay",
+    "diagnosis": "Tani yok / gecis zorlanmasi izlem",
+    "referral_reason": "Aile ozellikle oyun bitimi, kiyafet degisimi, evden cikis ve beklenmeyen plan degisikliklerinde cocugun hizla gerildigini, aglama ve itiraz davranisinin arttigini bildirmektedir. Serbest oyunda uzun sure keyifli kalabilmesine ragmen etkinlikten cikmasi istendiginde belirgin ko-regulasyon ihtiyaci ortaya cikmaktadir.",
+    "parent_concerns_goals": "Gecislerde daha kisa surede toparlanma, yetiskin destegiyle birlikte degisime uyum saglama ve hayal kirikligi sonrasinda yeniden goreve donebilme becerisinin artmasi hedeflenmektedir.",
+    "therapist_comments": "Serbest oyunda iliski kurma ve ortak dikkat yeterliydi. Ancak etkinlik sonlandirildiginda bedensel gerginlik, ses yukselmesi ve kacma davranisi artti. Yapilandirilmis sozel sinirlama ve net rutin hatirlatmasi ile yeniden duzenlenebildi.",
+    "strengths": "Sembolik oyun cesitli, dil anlama iyi, sevilen etkinliklerde dikkati surdurme yeterli. Iliski kurma istegi yuksek ve yetiskinle ortak aktiviteye acik.",
+    "medical_history": "Belirgin kronik hastalik, uyku bozuklugu veya nobet oykusu yok.",
+    "allergy_epilepsy_gi_colic_seizure": "Ek tibbi risk bildirilmiyor.",
+    "current_therapies": "Duzenli terapi almiyor.",
+    "past_therapies": "Daha once kisa sureli oyun grubu deneyimi olmus.",
+    "medications": "Duzenli ilac kullanimi yok.",
+    "prenatal_story": "Belirgin gebelik komplikasyonu bildirilmedi.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Erken gelisim basamaklari yasla uyumlu.",
+    "low_birth_history": "Dusuk dogum agirligi yok.",
+    "feeding_type": "Beslenme duzeni korunmus.",
+    "liked_foods": "Makarna, kofte, yogurt ve meyve seviyor.",
+    "rejected_foods": "Belirgin secici reddetme yok.",
+    "external_clinical_findings": "Test adi: BASC-3\nPuan / sonuc: Duygusal oz-denetim ve gecislerde hafif-yukselmis zorlanma.\nKlinik yorum / resmi bulgu ozeti: Hayal kirikligi sonrasi yeniden duzenlenme ve davranissal toparlanma suresinde yasitlarina gore kirilganlik gorunuyor.\nEk notlar: Serbest oyunda belirgin bir sorun bildirilmedi.\n\nTest adi: Conners Early Childhood (Conners EC)\nPuan / sonuc: Duygusal labilite ve degisime uyum alt olceklerinde sinir ustu performans.\nKlinik yorum / resmi bulgu ozeti: Cekirdek dikkat bozuklugundan cok gecis, bekleme ve duygusal toparlanma ekseninde yuk oldugunu destekliyor."
+  },
+  "scores": {
+    "physiological": 37,
+    "sensory": 34,
+    "emotional": 26,
+    "cognitive": 35,
+    "executive": 29,
+    "interoception": 36
+  }
+}

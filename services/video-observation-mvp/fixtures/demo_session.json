@@ -1,0 +1,86 @@
+{
+  "session": {
+    "child_label": "Demo Cocuk",
+    "child_external_ref": "demo-001",
+    "age_months": 54,
+    "created_by": "therapist@example.com",
+    "consent_flags": {
+      "clinical_processing": true,
+      "training_opt_in": false
+    },
+    "anamnesis_summary": "Cok uyaranli ortamlarda oyunda kalma ve gecislerde zorlanma tarif edilmektedir.",
+    "therapist_comments": "Destek verildiginde oyuna geri donus daha iyi gorunur.",
+    "clinical_focus_areas": [
+      "dikkat",
+      "toparlanma",
+      "ko-regulasyon"
+    ],
+    "self_meta_context": {
+      "history_summary": "Gecislerde zorlanma ve frustrasyon sonrasi yatismada gecikme bildirilmektedir.",
+      "scales": [
+        { "domain": "Duygusal Regülasyon", "score": 44, "label": "Riskli" },
+        { "domain": "Yürütücü İşlev", "score": 48, "label": "Riskli" },
+        { "domain": "Bilişsel Regülasyon", "score": 52, "label": "Tipik" }
+      ],
+      "clinical_targets": ["oyunda kalma", "destekle toparlanma"]
+    }
+  },
+  "segments": [
+    {
+      "segment_type": "solo",
+      "duration_sec": 150,
+      "signal_hints": {
+        "child_visibility_ratio": 0.92,
+        "face_visibility_ratio": 0.78,
+        "camera_stability_score": 0.89,
+        "audio_quality_score": 0.82,
+        "feature_coverage": 0.92,
+        "engaged_play_ratio": 0.48,
+        "disengagement_count": 4,
+        "self_reengagement_ratio": 0.52,
+        "center_orientation_ratio": 0.58,
+        "long_uninterrupted_play_bout_sec": 18,
+        "abrupt_switching_rate": 0.46,
+        "movement_variability": 0.55,
+        "organized_play_bout_length_sec": 20
+      }
+    },
+    {
+      "segment_type": "dyadic",
+      "duration_sec": 150,
+      "signal_hints": {
+        "child_visibility_ratio": 0.91,
+        "caregiver_visibility_ratio": 0.88,
+        "face_visibility_ratio": 0.73,
+        "camera_stability_score": 0.87,
+        "audio_quality_score": 0.80,
+        "feature_coverage": 0.90,
+        "caregiver_orientation_ratio": 0.71,
+        "support_uptake_latency_sec": 6,
+        "joint_engagement_ratio": 0.64,
+        "contingent_response_pairing": 0.61,
+        "support_after_recovery_ratio": 0.70,
+        "prompt_dependency_index": 0.45
+      }
+    },
+    {
+      "segment_type": "transition",
+      "duration_sec": 105,
+      "signal_hints": {
+        "child_visibility_ratio": 0.90,
+        "caregiver_visibility_ratio": 0.86,
+        "face_visibility_ratio": 0.71,
+        "camera_stability_score": 0.84,
+        "audio_quality_score": 0.79,
+        "feature_coverage": 0.88,
+        "high_activation_episode_count": 2,
+        "escalation_intensity": 0.62,
+        "recovery_latency_sec": 34,
+        "reengagement_success": 0.48,
+        "adult_support_needed": 0.78,
+        "toy_change_withdrawal_count": 1,
+        "audio_reactivity_spikes": 1
+      }
+    }
+  ]
+}

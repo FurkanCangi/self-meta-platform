@@ -1,31 +1,7 @@
 import { NextResponse } from "next/server"
-import { cookies } from "next/headers"
-import { createServerClient } from "@supabase/ssr"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { assertOwnerAuditAccess } from "@/lib/owner/ownerAccess"
-
-async function createSupabaseServerClient() {
-  const cookieStore = await cookies()
-
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll()
-        },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options)
-            })
-          } catch {}
-        },
-      },
-    }
-  )
-}
+import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 function flattenObject(
   input: Record<string, unknown>,
@@ -96,6 +72,7 @@ export async function GET(req: Request) {
 
     const url = new URL(req.url)
     const sourceTable = String(url.searchParams.get("table") || "").trim()
+    const operation = String(url.searchParams.get("operation") || "").trim()
     const format = String(url.searchParams.get("format") || "csv").trim().toLowerCase()
     const ownerId = String(url.searchParams.get("owner_id") || "").trim()
     const from = String(url.searchParams.get("from") || "").trim()
@@ -111,6 +88,7 @@ export async function GET(req: Request) {
       .limit(limit)
 
     if (sourceTable) query = query.eq("source_table", sourceTable)
+    if (operation) query = query.eq("operation", operation)
     if (ownerId) query = query.eq("member_owner_id", ownerId)
     if (from) query = query.gte("captured_at", from)
     if (to) query = query.lte("captured_at", to)

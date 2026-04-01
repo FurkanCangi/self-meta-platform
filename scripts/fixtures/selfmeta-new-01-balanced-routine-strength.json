@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIX-NEW-01",
+  "clientName": "Ela",
+  "ageMonths": 46,
+  "anamnez": {
+    "ad_soyad": "Ela Ornek",
+    "client_code": "FIX-NEW-01",
+    "record_date": "2026-04-01",
+    "age_range": "36-47 ay",
+    "diagnosis": "Tanilanmis gelisimsel bozukluk bildirilmedi",
+    "referral_reason": "Aile genel olarak iyi giden bir gelisim oldugunu, ancak krese yeni baslanan donemde gun sonuna dogru kisa sureli huzursuzluklar ve kalabalik gunlerde yorulma sonrasi oyundan cekilme gozlediklerini bildirmektedir. Klinik basvuru daha cok temel profilin yapilandirilmasi ve korunmus alanlarin netlestirilmesi amaciyla yapilmistir.",
+    "parent_concerns_goals": "Gecis gunlerinde yorulma sonrasi kisa sureli zorlanmalarin tipik gelisim icindeki yerini anlamak, guclu alanlari belirlemek ve aileye duzenleyici rutinler konusunda net bir yol haritasi sunmak hedeflenmektedir.",
+    "therapist_comments": "Bire bir etkilesimde hizli is birligi kuruyor, oyunu surdurebiliyor ve yeni etkinliklere ilgi gosterebiliyor. Zorlanma oldugunda yetiskin destegiyle kisa surede tekrar organize olabiliyor.",
+    "strengths": "Yapilandirilmis oyunda uzun sure katilim, sembolik oyuna giris, akranlara ilgi, yeni materyali denemeye aciklik ve yetiskinle es zamanli oyun surdurme becerisi.",
+    "medical_history": "Onemli tibbi hastalik, nobet oykusu veya yogun uyku sorunu bildirilmedi.",
+    "allergy_epilepsy_gi_colic_seizure": "Belirgin alerji ya da GIS problemi yok.",
+    "current_therapies": "Duzenli terapi almiyor.",
+    "past_therapies": "Gecmiste terapi oykusu yok.",
+    "medications": "Surekli kullandigi ilac yok.",
+    "prenatal_story": "Gebelik sureci genel olarak olağan seyretmis.",
+    "birth_story": "Term dogum, komplikasyon bildirilmedi.",
+    "postnatal_story": "Bebeklikte temel rutinler duzenli tarif edildi.",
+    "low_birth_history": "Dusuk dogum agirligi yok.",
+    "feeding_type": "Yasina uygun ve esnek beslenme.",
+    "liked_foods": "Meyve, makarna, corba ve yumurta seviyor.",
+    "rejected_foods": "Belirgin reddettigi bir besin grubu yok.",
+    "external_clinical_findings": "Test adi: Vineland-3\nPuan / sonuc: Iletisim, gunluk yasam becerileri ve sosyalizasyon alanlarinda yas beklentisi icinde performans.\nKlinik yorum / resmi bulgu ozeti: Adaptif islevsellik genel olarak dengeli ve yasla uyumlu gorunmektedir.\nEk notlar: Grup baglaminda yeni rutinler ilk gunlerde biraz daha fazla yetiskin hatirlatmasi gerektirebilir.\n\nTest adi: ABAS-3\nPuan / sonuc: Kavramsal, sosyal ve pratik alt alanlar genel olarak ortalama bandinda.\nKlinik yorum / resmi bulgu ozeti: Korunmus giden uyum becerileri genel regülasyon gorunumunu desteklemektedir.\nEk notlar: Yorulma oldugunda aksam saatlerinde baglama duyarlı hafif dusus olabilir."
+  },
+  "scores": {
+    "physiological": 42,
+    "sensory": 40,
+    "emotional": 41,
+    "cognitive": 39,
+    "executive": 38,
+    "interoception": 40
+  }
+}

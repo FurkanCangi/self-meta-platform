@@ -51,3 +51,4 @@ src.bak*/
 .tmp/
 src.zip
 ai/
+services/video-observation-mvp/data/models/

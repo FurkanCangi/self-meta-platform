@@ -1,5 +1,10 @@
 export const LITERATURE_SECTION_HEADING = "7. Literatürle Uyumlu Klinik Not"
 
+import {
+  getExternalTestDefinitionById,
+  type ExternalTestCategory,
+} from "./externalTestRegistry"
+
 type ClinicalAnalysis = {
   globalLevel: string
   profileType: string
@@ -11,6 +16,9 @@ type ClinicalAnalysis = {
   contrastSummary?: string
   therapistInsights?: string[]
   externalClinicalFindings?: string[]
+  externalTestIds?: string[]
+  externalTestCategories?: ExternalTestCategory[]
+  primaryExternalTestCategory?: ExternalTestCategory | null
 }
 
 type LiteratureSource = {
@@ -61,6 +69,12 @@ const VERIFIED_LITERATURE_SOURCES: Record<string, LiteratureSource> = {
     apaReference:
       "Pinna, T., & Edwards, D. J. (2020). A systematic review of associations between interoception, vagal tone, and emotional regulation: Potential applications for mental health, wellbeing, psychological flexibility, and chronic conditions. Frontiers in Psychology, 11, 1792. https://doi.org/10.3389/fpsyg.2020.01792",
   },
+  FOGEL_ET_AL_2023: {
+    id: "FOGEL_ET_AL_2023",
+    inlineCitation: "(Fogel et al., 2023)",
+    apaReference:
+      "Fogel, Y., Stuart, N., Joyce, T., & Barnett, A. L. (2023). Relationships between motor skills and executive functions in developmental coordination disorder (DCD): A systematic review. Scandinavian Journal of Occupational Therapy, 30(3), 344-356. https://doi.org/10.1080/11038128.2021.2019306",
+  },
 }
 
 function includesDomain(domains: string[] | undefined, value: string) {
@@ -83,6 +97,39 @@ function uniqueNonEmpty(items: Array<string | null | undefined>) {
 
 function hasPattern(texts: string[] | undefined, pattern: RegExp) {
   return Array.isArray(texts) && texts.some((text) => pattern.test(String(text || "")))
+}
+
+function hasExternalTestCategory(analysis: ClinicalAnalysis, category: ExternalTestCategory) {
+  return Array.isArray(analysis.externalTestCategories) && analysis.externalTestCategories.includes(category)
+}
+
+function getCategoryTestNames(
+  analysis: ClinicalAnalysis,
+  category: ExternalTestCategory
+): string[] {
+  return uniqueNonEmpty(
+    (analysis.externalTestIds || [])
+      .map((testId) => {
+        const definition = getExternalTestDefinitionById(testId)
+        if (!definition) return null
+        return category === "adaptive_daily_living" && ["abas3", "vineland3", "pedi_cat"].includes(testId)
+          ? definition.name
+          : category === "language_communication" && ["celf_preschool3", "pls5"].includes(testId)
+          ? definition.name
+          : category === "social_pragmatic" && ["ccc2", "srs2"].includes(testId)
+          ? definition.name
+          : category === "motor_praxis" && ["sipt", "pdms3", "bot2", "mabc3", "mfun", "dcdq07", "beery_vmi"].includes(testId)
+          ? definition.name
+          : null
+      })
+      .filter(Boolean)
+  )
+}
+
+function joinTestNames(names: string[]): string {
+  if (names.length <= 1) return names[0] || ""
+  if (names.length === 2) return `${names[0]} ve ${names[1]}`
+  return `${names.slice(0, -1).join(", ")} ve ${names[names.length - 1]}`
 }
 
 function buildRegulationParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
@@ -111,23 +158,43 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
   const matchedDomains = analysis.matchedDomains || []
   const therapistInsights = analysis.therapistInsights || []
   const externalClinicalFindings = analysis.externalClinicalFindings || []
+  const primaryExternalTestCategory = analysis.primaryExternalTestCategory || null
+  const adaptiveTestNames = getCategoryTestNames(analysis, "adaptive_daily_living")
+  const socialTestNames = getCategoryTestNames(analysis, "social_pragmatic")
+  const languageTestNames = getCategoryTestNames(analysis, "language_communication")
+  const praxisTestNames = getCategoryTestNames(analysis, "motor_praxis")
   const balancedProfile = String(analysis.globalLevel || "").toLowerCase() === "tipik" && weakDomains.length === 0
+  const selectiveProfile = String(analysis.globalLevel || "").toLowerCase() === "tipik" && weakDomains.length === 1
   const explicitInteroContext =
     hasPattern(externalClinicalFindings, /intero|fizyolojik|bedensel|yorgunluk|huzursuzluk|susama|açlık|aclik|tuvalet/i) ||
     hasPattern(therapistInsights, /bedensel|yorgunluk|huzursuzluk|susama|açlık|aclik|tuvalet|ritim|mola/i)
+  const sensoryInWeakDomains = hasAnyDomain(weakDomains, ["Duyusal Regülasyon"])
   const supportsSensoryContext =
-    hasAnyDomain(weakDomains, ["Duyusal Regülasyon"]) ||
-    (!balancedProfile && hasAnyDomain(matchedDomains, ["Duyusal Regülasyon"])) ||
+    sensoryInWeakDomains ||
+    (primaryExternalTestCategory !== "adaptive_daily_living" &&
+      primaryExternalTestCategory !== "language_communication" &&
+      primaryExternalTestCategory !== "social_pragmatic" &&
+      !balancedProfile &&
+      hasAnyDomain(matchedDomains, ["Duyusal Regülasyon"])) ||
+    hasExternalTestCategory(analysis, "sensory_processing") ||
     hasPattern(externalClinicalFindings, /sensory profile|spm|duyusal/i)
   const supportsExecutiveContext =
     hasAnyDomain(weakDomains, ["Bilişsel Regülasyon", "Yürütücü İşlev"]) ||
     hasPattern(externalClinicalFindings, /brief|conners|basc|yürütücü|yurutucu|dikkat/i) ||
     hasPattern(therapistInsights, /gorev|görev|dikkat|plan|baslat|başlat|sirala|sırala/i)
   const supportsAdaptiveContext =
+    hasExternalTestCategory(analysis, "adaptive_daily_living") ||
     hasPattern(externalClinicalFindings, /abas|vineland|pedi-cat|uyumsal|gunluk yasam|günlük yaşam|özbakim|ozbakim/i)
   const supportsSocialCommunicationContext =
+    hasExternalTestCategory(analysis, "social_pragmatic") ||
     hasPattern(externalClinicalFindings, /srs-?2|ccc-?2|pragmatik|sosyal iletişim|sosyal iletisim/i) ||
     hasPattern(therapistInsights, /grup|akran|sosyal|karsilikli|karşılıklı/i)
+  const supportsLanguageContext =
+    hasExternalTestCategory(analysis, "language_communication") ||
+    hasPattern(externalClinicalFindings, /celf|pls|dilsel|alici|ifade edici|yönerge|yonerge/i)
+  const supportsMotorPraxisContext =
+    hasExternalTestCategory(analysis, "motor_praxis") ||
+    hasPattern(externalClinicalFindings, /sipt|praksi|somatodispraksi|motor planlama|mabc|pdms|beery|koordinasyon/i)
   const sourceIds: string[] = []
 
   const sensorySentence = supportsSensoryContext
@@ -147,15 +214,32 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
       : ""
 
   const adaptiveSentence = supportsAdaptiveContext
-    ? `Uyumsal davranış ve günlük yaşam becerilerinin göreli korunmuş ya da yapılandırılmış biçimde sürdürülebilmesi, öz-düzenleme kapasitesinin gündelik işlevselliğe nasıl yansıdığını görünür kılar ve bu tür verilerin klinik yoruma katılması gelişimsel öz-düzenleme çerçevesiyle uyumludur ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
+    ? balancedProfile
+      ? `${joinTestNames(adaptiveTestNames) || "Uyumsal davranış ve günlük yaşam testleri"} gibi kaynaklardan gelen işlevsel veri, korunmuş ya da sınırda hassasiyet gösteren günlük yaşam akışının hangi bağlamlarda desteklendiğini ve işlevselliğin nasıl sürdürüldüğünü görünür kılar ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
+      : `${joinTestNames(adaptiveTestNames) || "Uyumsal davranış ve günlük yaşam testleri"} gibi kaynaklardan gelen işlevsel veri, regülasyon yükünün yalnız kapasite düzeyinde değil öz bakım, rutinleri başlatma, sorumluluk alma ve günlük akışta sürdürülebilirlik düzeyinde nasıl karşılık bulduğunu görünür kılar; bu tür verilerin klinik yoruma katılması gelişimsel öz-düzenleme çerçevesiyle uyumludur ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
     : ""
 
   const socialCommunicationSentence = supportsSocialCommunicationContext
-    ? `Sosyal iletişim, karşılıklılık ve pragmatik işlevselliğe ilişkin ek bulguların bağlama duyarlı biçimde ele alınması, regülasyon örüntüsünün yalnız test skorlarıyla değil bakımveren ve terapist gözlemleriyle birlikte okunması gerektiğini vurgulayan yaklaşım ile tutarlıdır ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`
+    ? `${joinTestNames(socialTestNames) || "Sosyal-pragmatik iletişim testleri"} ile elde edilen karşılıklılık, pragmatik esneklik ve sosyal bağlamı sürdürme bulgularının yorum içine alınması, regülasyon örüntüsünün yalnız bireysel performans değil etkileşimsel talep altında da değerlendirilmesi gerektiğini vurgulayan yaklaşım ile tutarlıdır ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`
+    : ""
+
+  const languageSentence = supportsLanguageContext
+    ? `${joinTestNames(languageTestNames) || "Dil testleri"} ile görünür hale gelen alıcı-ifade edici dil yükü, sözel talep ve yönerge karmaşıklığı arttığında anlama, zihinsel olarak tutma ve görevi sürdürme süreçlerinin birlikte zorlanabileceğini düşündürür; bu durum regülasyonun talep ve bağlam düzeyinde ele alınması gerektiğini vurgulayan gelişimsel çerçeveyle uyumludur ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
+    : ""
+
+  const motorPraxisSentence = supportsMotorPraxisContext
+    ? `${joinTestNames(praxisTestNames) || "Praksi ve motor planlama testleri"} ile ortaya konan praksi, sekanslama ve beden organizasyonu bulguları, motor beceriler ile yürütücü işlev süreçlerinin birlikte ele alınması gerektiğini gösteren derlemelerle uyumludur; bu tür bulgular davranış organizasyonu, görev sürdürme ve katılım örüntüsüyle birlikte yorumlanmalıdır ${VERIFIED_LITERATURE_SOURCES.FOGEL_ET_AL_2023.inlineCitation}.`
     : ""
 
   const balancedNeutralSentence =
-    balancedProfile && !sensorySentence && !emotionSentence && !interoSentence && !adaptiveSentence && !socialCommunicationSentence
+    balancedProfile &&
+    !sensorySentence &&
+    !emotionSentence &&
+    !interoSentence &&
+    !adaptiveSentence &&
+    !socialCommunicationSentence &&
+    !languageSentence &&
+    !motorPraxisSentence
       ? `Alanların genel olarak tipik aralıkta kalması, dikkat, duygu düzenleme ve davranış kontrolü süreçlerinin yaşa uygun sınırlar içinde birlikte işleyebildiğini düşündürür; bu görünüm, öz-düzenlemenin koruyucu gelişimsel yönlerini vurgulayan yazınla uyumludur ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}.`
       : ""
 
@@ -164,19 +248,30 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
   if (interoSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.PINNA_EDWARDS_2020.id)
   if (adaptiveSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.id)
   if (socialCommunicationSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.id)
+  if (languageSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.id)
+  if (motorPraxisSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.FOGEL_ET_AL_2023.id)
   if (balancedNeutralSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.id)
 
+  const orderedSentences =
+    primaryExternalTestCategory === "motor_praxis"
+      ? [motorPraxisSentence, sensorySentence, emotionSentence, interoSentence, adaptiveSentence, socialCommunicationSentence, languageSentence, balancedNeutralSentence]
+      : primaryExternalTestCategory === "language_communication"
+      ? [languageSentence, emotionSentence, sensorySentence, adaptiveSentence, socialCommunicationSentence, interoSentence, motorPraxisSentence, balancedNeutralSentence]
+      : primaryExternalTestCategory === "adaptive_daily_living"
+      ? [adaptiveSentence, interoSentence, emotionSentence, sensorySentence, socialCommunicationSentence, languageSentence, motorPraxisSentence, balancedNeutralSentence]
+      : primaryExternalTestCategory === "social_pragmatic"
+      ? [socialCommunicationSentence, emotionSentence, adaptiveSentence, sensorySentence, languageSentence, interoSentence, motorPraxisSentence, balancedNeutralSentence]
+      : [sensorySentence, emotionSentence, interoSentence, adaptiveSentence, socialCommunicationSentence, languageSentence, motorPraxisSentence, balancedNeutralSentence]
+
+  const selectedSentences =
+    balancedProfile
+      ? orderedSentences.filter(Boolean).slice(0, 2)
+      : selectiveProfile
+      ? orderedSentences.filter(Boolean).slice(0, 3)
+      : orderedSentences.filter(Boolean)
+
   return {
-    text: [
-      sensorySentence,
-      emotionSentence,
-      interoSentence,
-      adaptiveSentence,
-      socialCommunicationSentence,
-      balancedNeutralSentence,
-    ]
-      .filter(Boolean)
-      .join(" "),
+    text: selectedSentences.join(" "),
     sourceIds,
   }
 }
@@ -185,6 +280,7 @@ function buildIntegrationParagraph(analysis: ClinicalAnalysis): LiteratureBlock 
   const therapistInsights = analysis.therapistInsights || []
   const externalClinicalFindings = analysis.externalClinicalFindings || []
   const balancedProfile = String(analysis.globalLevel || "").toLowerCase() === "tipik" && (analysis.weakDomains || []).length === 0
+  const primaryExternalTestCategory = analysis.primaryExternalTestCategory || null
   const contrastSentence =
     analysis.strongDomains && analysis.strongDomains.length > 0
       ? `Ayrıca korunmuş alanların açıkça belirtilmesi önemlidir; çünkü erken öz-düzenleme yazınında göreli güçlü sistemlerin günlük işlevsellik üzerinde dengeleyici rol oynayabileceği vurgulanır ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
@@ -192,6 +288,12 @@ function buildIntegrationParagraph(analysis: ClinicalAnalysis): LiteratureBlock 
 
   const caseSentence = balancedProfile
     ? `Korunmuş profillerde dikkat, davranış ve beden temelli düzenleme süreçlerinin yaşa uygun sınırlar içinde birlikte işleyebilmesi, erken çocuklukta öz-düzenlemenin koruyucu yönlerini görünür kılan gelişimsel çerçeveyle uyumludur ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}.`
+    : primaryExternalTestCategory === "adaptive_daily_living"
+    ? `Uyumsal işlev verileriyle birlikte okunan profillerde, düzenleyici yükün genel kapasiteden çok bu kapasitenin günlük yaşam, öz bakım ve sorumluluk akışına ne ölçüde taşınabildiği üzerinden yorumlanması daha isabetli görünmektedir ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`
+    : primaryExternalTestCategory === "social_pragmatic"
+    ? `Sosyal-pragmatik verilerle desteklenen profillerde, düzenleyici yük yalnız bireysel performans değil sosyal bağlamı izleme, karşılıklılığı sürdürme ve bağlama uygun yanıt üretme düzleminde de ele alınmalıdır ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`
+    : primaryExternalTestCategory === "language_communication"
+    ? `Dil testleriyle desteklenen profillerde, düzenleyici yükün sözel talep arttığında nasıl görünür hale geldiğini ele almak; anlama, görevi zihinde tutma ve davranışı sürdürme süreçleri arasındaki ilişkiyi daha doğru okumayı sağlar ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}.`
     : hasAnyDomain(analysis.weakDomains, ["Bilişsel Regülasyon", "Yürütücü İşlev"])
     ? `Bilişsel ve yürütücü alanlara yayılan kırılganlıkların birlikte ele alınması, dikkat, çalışma belleği, inhibisyon ve esnekliğin aynı düzenleyici sistem içinde işlendiğini gösteren yürütücü işlev literatürüyle desteklenir ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}.`
     : `Skor örüntüsünün tek bir alanda görünse bile diğer düzenleyici sistemlerle birlikte yorumlanması, erken çocuklukta öz-düzenleme süreçlerinin parçalı değil etkileşimli işlediğini gösteren yazınla uyumludur ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}.`

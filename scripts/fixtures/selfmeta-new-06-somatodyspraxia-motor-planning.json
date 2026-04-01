@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIX-NEW-06",
+  "clientName": "Yaman",
+  "ageMonths": 57,
+  "anamnez": {
+    "ad_soyad": "Yaman Ornek",
+    "client_code": "FIX-NEW-06",
+    "record_date": "2026-04-01",
+    "age_range": "48-59 ay",
+    "diagnosis": "Gelisimsel koordinasyon guclugu supheleri ile izlem",
+    "referral_reason": "Aile yeni hareket oruntulerini kurma, bedenini organize etme, cok basamakli motor oyuna girme ve yeni materyalde baslangic yapma basliklarinda zorlanma tarif etmektedir. Bu durum davranissal organizasyon ve gorevden kopma ile birlikte goze carpiyor.",
+    "parent_concerns_goals": "Motor planlama gerektiren oyunda daha az cekinme, yeni hareketlere giriste daha az model ihtiyaci ve beden organizasyonunun duygusal zorlanmayi ikincil olarak tetiklemeyecegi bir profile yaklasmak hedeflenmektedir.",
+    "therapist_comments": "Motor planlama ve beden organizasyonu zorlugu arttiginda gorevde kalis, dikkat ve davranissal duzenleme de bozuluyor. Basaramadigini hissettigi anda duygusal esik hizla dusebiliyor.",
+    "strengths": "Dilsel olarak iyi anliyor, model ile gosterdigin etkinligi tekrar etmeye acik, sosyal yakinlik iyi ve basardigi rutin oyunda devam ediyor.",
+    "medical_history": "Belirgin tibbi hastalik yok.",
+    "allergy_epilepsy_gi_colic_seizure": "Ek risk bildirilmedi.",
+    "current_therapies": "Ergoterapi odakli motor planlama ve postural organizasyon calismalari suruyor.",
+    "past_therapies": "Fizyoterapi degerlendirmesi yapilmis.",
+    "medications": "Ilac kullanmiyor.",
+    "prenatal_story": "Gebelik olağan.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Erken kaba motor basamaklarda hafif gecikme bildirildi.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Genel olarak uygun.",
+    "liked_foods": "Kofte, pilav, meyve.",
+    "rejected_foods": "Belirgin reddi yok.",
+    "external_clinical_findings": "Test adi: SIPT\nPuan / sonuc: Praxis alt testlerinde belirgin dusuk performans.\nKlinik yorum / resmi bulgu ozeti: Somatodispraksi ve motor planlama guclugu ile uyumlu bulgular goruldu.\nEk notlar: Yeni hareket ve beden organizasyonu gerektiren durumlarda belirgin model alma ihtiyaci var.\n\nTest adi: PDMS-3\nPuan / sonuc: Goz-el koordinasyonu ve motor sekanslama gerektiren alanlarda yas beklentisinin altinda performans.\nKlinik yorum / resmi bulgu ozeti: Motor organizasyon zorlanmasi gorev surdurme ve davranissal organizasyonla birlikte dusunulmelidir.\nEk notlar: Yapilandirilmis destek ile performans belirgin artiyor."
+  },
+  "scores": {
+    "physiological": 37,
+    "sensory": 31,
+    "emotional": 30,
+    "cognitive": 27,
+    "executive": 25,
+    "interoception": 30
+  }
+}

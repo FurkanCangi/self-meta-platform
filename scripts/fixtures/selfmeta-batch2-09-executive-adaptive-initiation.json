@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-B2-09-EXEC-ADAPTIVE",
+  "clientName": "Kuzey",
+  "ageMonths": 71,
+  "anamnez": {
+    "ad_soyad": "Kuzey Ornek",
+    "client_code": "FIXTURE-B2-09-EXEC-ADAPTIVE",
+    "record_date": "2026-04-01",
+    "age_range": "60-71 ay",
+    "diagnosis": "DEHB izlem",
+    "referral_reason": "Aile ve ogretmen, cocugun ne yapmasi gerektigini bildigi halde masa basi goreve baslamakta, evi toplamakta, okul cantasi hazirlamakta ve is bitirmekte belirgin sekilde geciktigini bildirmektedir. Hareketli oldugu kadar baslama ve bitirme davranisinda da zorlanma vardir.",
+    "parent_concerns_goals": "Goreve baslama, sirayi koruma, tamamlamayi surdurme ve gunluk sorumluluklarda daha az hatirlatma ile ilerleme hedeflenmektedir.",
+    "therapist_comments": "Oturumda ilgi cekici goreve hizli girdi; ancak daha az motive eden etaplarda gecikme, malzeme duzeni kaybi ve sik yonlendirme ihtiyaci oldu. Dur demeden cok, neye once baslayacagini secme ve surdurme basamaklarinda zorlandi.",
+    "strengths": "Sosyal iletisim, mizah ve sozlu ifade guclu. Yuz yuze destek ve kisa gorsel plan ile hizla toparlayabiliyor.",
+    "medical_history": "Belirgin tibbi risk yok.",
+    "allergy_epilepsy_gi_colic_seizure": "Yok.",
+    "current_therapies": "Davranissal destek programi ve ergoterapi.",
+    "past_therapies": "Okul destek gorusmeleri yapildi.",
+    "medications": "Duzenli ilac bilgisi paylasilmadi.",
+    "prenatal_story": "Belirgin komplikasyon yok.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Erken donemden itibaren hareketli mizac bildiriliyor.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Ogun baslangicinda sik hatirlatma gerekiyor.",
+    "liked_foods": "Belirgin tercihleri var.",
+    "rejected_foods": "Hizli gecislerde yemegi yarim birakabiliyor.",
+    "external_clinical_findings": "Test adi: BRIEF-P\nPuan / sonuc: Inisiyasyon, planlama/organizasyon ve calisma belleginde klinik yukselme.\nKlinik yorum / resmi bulgu ozeti: Gorevi baslatma ve surdurme guclugunun yurutuucu islev ekseninde oldugunu destekliyor.\n\nTest adi: ABAS-3\nPuan / sonuc: Pratik alan kavramsal ve sosyal alana gore daha dusuk.\nKlinik yorum / resmi bulgu ozeti: Gunluk sorumluluklari kendi basina organize etme ve tamamlamada ek destek gerektigini gosteriyor."
+  },
+  "scores": {
+    "physiological": 37,
+    "sensory": 38,
+    "emotional": 33,
+    "cognitive": 29,
+    "executive": 25,
+    "interoception": 35
+  }
+}

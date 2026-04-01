@@ -70,7 +70,7 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
     fixturePath: fixture("selfmeta-adaptive-daily-living.json"),
     mode: "widespread",
     expectedGlobalLevel: "Riskli",
-    expectedProfileIncludes: ["Yürütücü İşlev", "Yükü"],
+    expectedProfileIncludes: ["Günlük Yaşam", "Yükü"],
     forbiddenPhrases: ["seçici bir kırılganlık"],
     minLiteratureParagraphs: 3,
     minApaReferences: 4,

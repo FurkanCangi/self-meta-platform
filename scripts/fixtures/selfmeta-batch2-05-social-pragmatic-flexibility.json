@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-B2-05-SOCIAL",
+  "clientName": "Nehir",
+  "ageMonths": 67,
+  "anamnez": {
+    "ad_soyad": "Nehir Ornek",
+    "client_code": "FIXTURE-B2-05-SOCIAL",
+    "record_date": "2026-04-01",
+    "age_range": "60-71 ay",
+    "diagnosis": "Sosyal-pragmatik iletisim guclugu izlem",
+    "referral_reason": "Aile akran oyununda kurallarin degismesi, ortak oyunun baska cocuk tarafindan yonlendirilmesi ve mizah/ima iceren iletisimlerde cocugun hizla gerildigini, oyundan cekildigini ya da sert karsilik verdigini bildirmektedir. Bire bir iliskide daha dengeli, grup etkilesiminde ise esneklik yukunun arttigi gorulmektedir.",
+    "parent_concerns_goals": "Akran etkileşiminde esneklik, karsiliklilik ve sosyal degisime uyumun artmasi; duygusal yukselmeden sonra oyuna geri donebilme becerisinin guclenmesi hedeflenmektedir.",
+    "therapist_comments": "Yapilandirilmis bire bir iletisimde guclu, ancak kural degistiginde ya da beklenmeyen sosyal tepki geldiginde yavasliyor ve gozlenebilir duygusal yuklenme oluyor. Kendi kurdugu duzeni surdurmek istiyor; sosyal esneklik talebi artikca davranissal kontrol zorlasiyor.",
+    "strengths": "Yetiskinle iliski kurma, bilgi paylasma ve tanidik rutinleri surdurme guclu. Gorsel destekten iyi yararlaniyor.",
+    "medical_history": "Belirgin tibbi risk yok.",
+    "allergy_epilepsy_gi_colic_seizure": "Yok.",
+    "current_therapies": "Sosyal iletisim odakli grup calismasi ve ergoterapi.",
+    "past_therapies": "Dil-konuşma terapisi gecmiste uygulandi.",
+    "medications": "Yok.",
+    "prenatal_story": "Belirgin komplikasyon yok.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Erken gelisim basamaklari genel olarak zamaninda.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Beslenme duzeni korunmus.",
+    "liked_foods": "Belirgin tercihleri var ancak bu alan basvuru nedeni degil.",
+    "rejected_foods": "Belirgin klinik secicilik yok.",
+    "external_clinical_findings": "Test adi: CCC-2\nPuan / sonuc: Pragmatik dil ve toplumsal kullanim alanlarinda dusuk performans.\nKlinik yorum / resmi bulgu ozeti: Sosyal durumda dilin esnek kullanimi ve karsiliklilikte zorlanma oldugunu destekliyor.\nEk notlar: Literal anlama baskin.\n\nTest adi: SRS-2\nPuan / sonuc: Sosyal farkindalik ve sosyal motivasyonda sinir ustu yuk.\nKlinik yorum / resmi bulgu ozeti: Sosyal ortam karmasiklastikca duzenleyici yukun arttigini destekliyor."
+  },
+  "scores": {
+    "physiological": 38,
+    "sensory": 35,
+    "emotional": 30,
+    "cognitive": 32,
+    "executive": 29,
+    "interoception": 34
+  }
+}

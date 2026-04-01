@@ -7,6 +7,7 @@ import {
   AiOutlineEdit,
   AiOutlineFileText,
   AiOutlineHome,
+  AiOutlinePlayCircle,
   AiOutlineSetting,
   AiOutlineUser,
 } from "react-icons/ai";
@@ -99,6 +100,12 @@ export default function Sidebar(_props: SidebarProps) {
             label="Skor Girişi"
             icon={<AiOutlineFileText />}
             active={pathname === "/assessments" || pathname === "/assessments/new"}
+          />
+          <Item
+            href="/video-observation"
+            label="Video Gözlem"
+            icon={<AiOutlinePlayCircle />}
+            active={pathname === "/video-observation"}
           />
           <Item
             href="/reports"

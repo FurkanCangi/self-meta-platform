@@ -17,6 +17,11 @@ const cards = [
     href: "/assessments",
   },
   {
+    title: "Video Gözlem",
+    text: "Serbest oyun video oturumları için evidence timeline, domain skorları ve deterministik yorumu görüntüleyin.",
+    href: "/video-observation",
+  },
+  {
     title: "Rapor Geçmişi",
     text: "Oluşturulan raporları görüntüleyin, sürümleri inceleyin ve eski raporlara dönün.",
     href: "/reports",

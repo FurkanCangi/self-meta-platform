@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIX-NEW-07",
+  "clientName": "Lina",
+  "ageMonths": 55,
+  "anamnez": {
+    "ad_soyad": "Lina Ornek",
+    "client_code": "FIX-NEW-07",
+    "record_date": "2026-04-01",
+    "age_range": "48-59 ay",
+    "diagnosis": "Sosyal iletisim guclukleri nedeniyle izlem",
+    "referral_reason": "Aile ortak oyuna girme, akran oyununu surdurme, sosyal ipucuna hizli yanit verme ve beklenmeyen sosyal degisimlerde duygusal olarak dagilma basliklarinda zorlanma tarif etmektedir. Cekirdek sorun tek basina dikkat eksikligi gibi degil, sosyal-baglasimsal talepler arttiginda bilişsel ve duygusal duzenlemenin birlikte zorlanmasi seklinde gorunmektedir.",
+    "parent_concerns_goals": "Sosyal oyunda kalma, sosyal ipucuna yanit ve sosyal belirsizlik sonrasi toparlanma surelerinin guclenmesi hedeflenmektedir.",
+    "therapist_comments": "Yapilandirilmis bire bir oyunda is birligi iyi; ancak ortak sembolik oyuna genisleme ve sosyal ipucunu takip etme gerektiginde duraksama artiyor. Bu durum bazen duygusal cekilme ya da frustrasyona donuyor.",
+    "strengths": "Tanidik yetiskinle yakinlik kuruyor, gorsel destekle hizli anliyor ve rutin yapilar icinde iyi performans gosteriyor.",
+    "medical_history": "Belirgin tibbi ek risk yok.",
+    "allergy_epilepsy_gi_colic_seizure": "Ek durum yok.",
+    "current_therapies": "Dil-konusma terapisi ve sosyal iletisim odakli oyun terapisi aliyor.",
+    "past_therapies": "Grup oyunu denemeleri olmus, zorlayici bulunmus.",
+    "medications": "Yok.",
+    "prenatal_story": "Olagan.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Erken donemde tek basina oyuna daha cok yoneldigi tarif ediliyor.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Genel olarak iyi.",
+    "liked_foods": "Meyve, makarna, tavuk.",
+    "rejected_foods": "Belirgin reddi yok.",
+    "external_clinical_findings": "Test adi: CCC-2\nPuan / sonuc: Pragmatik iletisim ve sozel olmayan baglamsal kullanim alanlarinda belirgin dusus.\nKlinik yorum / resmi bulgu ozeti: Sosyal-pragmatik talepler arttiginda iletisimsel organizasyon zorlanmaktadir.\nEk notlar: Yapilandirilmis bire bir baglamda performans daha iyi gorunmektedir.\n\nTest adi: SRS-2\nPuan / sonuc: Sosyal fark etme ve sosyal motivasyon alt alanlarinda hafif-orta duzey yukselme.\nKlinik yorum / resmi bulgu ozeti: Sosyal baglam yuklendikce regülasyon ve iletisim birbirini etkilemektedir.\nEk notlar: Tanisal yorum amacli degil, baglamsal islevsellik destekleyici veri olarak ele alinmalidir."
+  },
+  "scores": {
+    "physiological": 39,
+    "sensory": 34,
+    "emotional": 28,
+    "cognitive": 26,
+    "executive": 29,
+    "interoception": 33
+  }
+}

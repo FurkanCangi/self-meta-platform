@@ -1,0 +1,9 @@
+fastapi<1,>=0.116
+pydantic<3,>=2.11
+sqlalchemy<3,>=2.0
+uvicorn<1,>=0.35
+pyyaml<7,>=6.0
+httpx<1,>=0.28
+
+[dev]
+pytest<9,>=8.4

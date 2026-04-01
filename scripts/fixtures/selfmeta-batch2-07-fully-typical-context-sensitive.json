@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-B2-07-TYPICAL-CONTEXT",
+  "clientName": "Ada",
+  "ageMonths": 46,
+  "anamnez": {
+    "ad_soyad": "Ada Ornek",
+    "client_code": "FIXTURE-B2-07-TYPICAL-CONTEXT",
+    "record_date": "2026-04-01",
+    "age_range": "36-47 ay",
+    "diagnosis": "Tani yok / okul oncesi tarama",
+    "referral_reason": "Aile yeni okula baslamadan once dikkat, duygusal toparlanma ve sosyal uyumun genel olarak yasina uygun olup olmadigini gormek istemektedir. Ev ortaminda belirgin bir sorun tarif edilmemektedir.",
+    "parent_concerns_goals": "Korunmus alanlarin belirlenmesi ve ileride dikkat edilmesi gereken bir risk olup olmadiginin netlestirilmesi.",
+    "therapist_comments": "Serbest oyunda ve yapilandirilmis gorevde iliski kurma, baslama, surdurme ve sonlandirma yeterliydi. Kisa sureli bekleme ve kural degisikligi tolere edildi. Yalnizca yeni ortami gozleme ihtiyaci nedeniyle baslangicta kisa cekingenlik izlendi.",
+    "strengths": "Iletisim, ortak dikkat, akran ilgisi, oyun cesitliligi ve yonerge takibi guclu.",
+    "medical_history": "Belirgin tibbi hastalik yok.",
+    "allergy_epilepsy_gi_colic_seizure": "Yok.",
+    "current_therapies": "Yok.",
+    "past_therapies": "Yok.",
+    "medications": "Yok.",
+    "prenatal_story": "Belirgin komplikasyon yok.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Gelisim basamaklari zamaninda.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Yasina uygun ve duzenli.",
+    "liked_foods": "Cesitli gida tuketiyor.",
+    "rejected_foods": "Belirgin secicilik yok.",
+    "external_clinical_findings": "Test adi: Vineland-3\nPuan / sonuc: Iletisim, gunluk yasam becerileri ve sosyallesme alanlarinda yas beklentisiyle uyumlu.\nKlinik yorum / resmi bulgu ozeti: Genel uyumsal islevsellik korunmus.\n\nTest adi: BRIEF-P\nPuan / sonuc: Klinik olmayan duzey; inhibitasyon ve calisma belleigi alanlarinda yas beklentisiyle uyumlu.\nKlinik yorum / resmi bulgu ozeti: Baglama duyarlilik olabilir ancak suregen bir yurutuucu yuk gostermiyor."
+  },
+  "scores": {
+    "physiological": 41,
+    "sensory": 39,
+    "emotional": 38,
+    "cognitive": 40,
+    "executive": 39,
+    "interoception": 37
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIX-NEW-05",
+  "clientName": "Defne",
+  "ageMonths": 62,
+  "anamnez": {
+    "ad_soyad": "Defne Ornek",
+    "client_code": "FIX-NEW-05",
+    "record_date": "2026-04-01",
+    "age_range": "60-71 ay",
+    "diagnosis": "Tanilanmis bozukluk bildirilmiyor",
+    "referral_reason": "Aile gun icinde ozellikle okul sonrasi saatlerde belirgin yorulma, huzursuzluk, bedensel rahatsizlik fark etmede gecikme ve acikma/yorgunluk sonrasi davranissal duzensizlik tarif etmektedir. Duyusal alan birincil sorun gibi gorunmemekte; zorlanma daha cok beden sinyalleri ve fizyolojik toparlanma tarafinda toplanmaktadir.",
+    "parent_concerns_goals": "Acikma, susama, yorgunluk ve tuvalet ihtiyaci gibi sinyalleri daha erken fark etmesini desteklemek, gun sonu cokuslerini azaltmak ve fizyolojik stres birikimini daha erken yonetmek hedeflenmektedir.",
+    "therapist_comments": "Oturumun ilk yarisi oldukca iyi giderken enerji dustugunde katilim ve duygusal esik belirgin sekilde degisiyor. Bedensel rahatsizligi adlandirma ve yardim isteme daha gec geliyor.",
+    "strengths": "Sakin ve iyi dinlenmis oldugu saatlerde dikkat, is birligi ve oyun surekliligi iyi. Yetiskinle calismada motive ve yapilandirmaya acik.",
+    "medical_history": "Fonksiyonel kabizlik oykusu, secici su tuketimi ve duzensiz acikma fark etme bildiriliyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Nobet yok. GIS tarafinda kabizlik ve karin agrisi ataklari var.",
+    "current_therapies": "Ergoterapi icinde beden farkindaligi ve rutin duzenleme calismalari yapiliyor.",
+    "past_therapies": "Gecmiste fiziksel bir terapi oykusu yok.",
+    "medications": "Duzensiz probiyotik kullanimi var.",
+    "prenatal_story": "Gebelik olağan.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Bebeklikte beslenme araliklarini kendi ihtiyacina gore duzenlemede zorluk tarif edilmisti.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Acikligini her zaman belirgin ifade etmiyor; ogun atlamaya meyilli.",
+    "liked_foods": "Tost, yoğurt, muz.",
+    "rejected_foods": "Yogun kokulu yiyeceklerden kaciniyor.",
+    "external_clinical_findings": "Test adi: Sensory Profile 2\nPuan / sonuc: Duyusal alanlarda sinirli yukselme; belirgin primer duyu sorunu saptanmadi.\nKlinik yorum / resmi bulgu ozeti: Cekirdek zorlanma duyusaldan cok beden durumuna ve toparlanma zamanlamasina bagli gorunmektedir.\nEk notlar: Yorulma ve acikma sonrasinda davranis duzenleme daha belirgin bozuluyor.\n\nTest adi: PEDI-CAT\nPuan / sonuc: Gunluk rutin surdurme ve oz-bakim zamanlamasinda yas beklentisinin altinda performans.\nKlinik yorum / resmi bulgu ozeti: Beden durumu ve gunluk duzenleyici rutinler arasindaki bagin zayif oldugunu dusunduruyor.\nEk notlar: Yetiskin hatirlatmasi olmadan tuvalet ve sivi alimi zamanlamasi kacabiliyor."
+  },
+  "scores": {
+    "physiological": 24,
+    "sensory": 36,
+    "emotional": 29,
+    "cognitive": 35,
+    "executive": 31,
+    "interoception": 22
+  }
+}

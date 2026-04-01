@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIX-NEW-11",
+  "clientName": "Bora",
+  "ageMonths": 59,
+  "anamnez": {
+    "ad_soyad": "Bora Ornek",
+    "client_code": "FIX-NEW-11",
+    "record_date": "2026-04-01",
+    "age_range": "48-59 ay",
+    "diagnosis": "Tanilanmis bozukluk bildirilmiyor",
+    "referral_reason": "Aile cocugun bire bir destekle iyi organize oldugunu, ancak bagimsiz bir gorevi surdurme, bir isi bitirene kadar devam etme ve kendi kendine planlama basliklarinda zorlandigini bildirmektedir. Yetiskin destegi oldugunda performans belirgin iyilesmektedir.",
+    "parent_concerns_goals": "Bagimsiz etkinlik surdurme, gorev tamamlama ve yetiskin ipucu olmadan rutini yurutme becerisinin artmasi hedeflenmektedir.",
+    "therapist_comments": "Ko-regülasyona acik, yardimi hizla aliyor ve destekten yararlaniyor. Temel zorlanma destegin cekildigi anlarda gorev organizasyonunun dagilmasi seklinde goruluyor.",
+    "strengths": "Sosyal yakinlik iyi, yardimi kabul ediyor, duygusal toparlanmasi hizli ve yeni oyuna ilgi var.",
+    "medical_history": "Belirgin tibbi risk yok.",
+    "allergy_epilepsy_gi_colic_seizure": "Yok.",
+    "current_therapies": "Danismanlik ve ebeveyn rehberligi aliyor.",
+    "past_therapies": "Yok.",
+    "medications": "Yok.",
+    "prenatal_story": "Olagan.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Bebeklikten beri yetiskin yakinligiyla daha iyi regüle oldugu ifade edilmektedir.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Uygun.",
+    "liked_foods": "Pilav, tavuk, meyve.",
+    "rejected_foods": "Belirgin reddi yok.",
+    "external_clinical_findings": "Test adi: BRIEF-P\nPuan / sonuc: Planlama/organizasyon ve calisma belleği alt alanlarinda yukselme; duygusal kontrol daha iyi korunmus.\nKlinik yorum / resmi bulgu ozeti: Temel zorlanma bagimsiz yurutucu organizasyon omurgasinda toplanmaktadir.\nEk notlar: Yetiskin ipucu verildiginde performans hizla toparliyor.\n\nTest adi: Vineland-3\nPuan / sonuc: Sosyalizasyon ve iletisim korunmus; gunluk yasam becerilerinde bagimsiz uygulamada goreli dusukluk.\nKlinik yorum / resmi bulgu ozeti: Ko-regülasyon gucu yuksek, bagimsiz organizasyon daha kirilgan.\nEk notlar: Hatirlatma ve modelleme ile belirgin duzelme olur."
+  },
+  "scores": {
+    "physiological": 40,
+    "sensory": 37,
+    "emotional": 35,
+    "cognitive": 30,
+    "executive": 25,
+    "interoception": 34
+  }
+}

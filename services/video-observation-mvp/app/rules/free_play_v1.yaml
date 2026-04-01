@@ -1,0 +1,205 @@
+metadata:
+  protocol_version: free_play_v1
+  rules_version: free_play_rules_v1
+  narrative_version: deterministic_report_v1
+
+quality:
+  segment_duration_targets:
+    solo: { min_sec: 120, max_sec: 180, ideal_sec: 150 }
+    dyadic: { min_sec: 120, max_sec: 180, ideal_sec: 150 }
+    transition: { min_sec: 75, max_sec: 135, ideal_sec: 105 }
+  confidence_thresholds:
+    high: 0.80
+    medium: 0.60
+    limited: 0.40
+  age_support_factor:
+    primary_supported: 1.00
+    exploratory_under_36_months: 0.70
+    exploratory_over_8_years: 0.75
+  labels:
+    high: yuksek_guven
+    medium: orta_guven
+    limited: sinirli_guven
+    insufficient: yetersiz_guven
+
+fusion:
+  weights:
+    primary_supported:
+      scale_score: 0.45
+      video_score: 0.35
+      history_score: 0.20
+    exploratory_under_36_months:
+      scale_score: 0.35
+      video_score: 0.45
+      history_score: 0.20
+    exploratory_over_8_years:
+      scale_score: 0.50
+      video_score: 0.20
+      history_score: 0.30
+
+labels:
+  normal: "olagan"
+  mild: "hafif zorlanma isaretleri"
+  marked: "belirgin zorlanma isaretleri"
+  limited: "yorum sinirli"
+  insufficient: "yetersiz kalite"
+  sensory_none: "none"
+  sensory_possible: "possible"
+  sensory_notable: "notable"
+
+domains:
+  attention_engagement:
+    thresholds:
+      normal_min: 70
+      mild_min: 45
+    inputs:
+      - key: solo.engaged_play_ratio
+        weight: 0.28
+        mode: ratio
+      - key: solo.self_reengagement_ratio
+        weight: 0.22
+        mode: ratio
+      - key: solo.center_orientation_ratio
+        weight: 0.20
+        mode: ratio
+      - key: solo.long_uninterrupted_play_bout_sec
+        weight: 0.15
+        mode: duration_ratio
+        ideal: 45
+      - key: solo.disengagement_count
+        weight: 0.15
+        mode: inverse_count
+        max_bad: 8
+  behavioral_organization:
+    thresholds:
+      normal_min: 70
+      mild_min: 45
+    inputs:
+      - key: solo.abrupt_switching_rate
+        weight: 0.22
+        mode: inverse_ratio
+      - key: solo.movement_variability
+        weight: 0.20
+        mode: inverse_ratio
+      - key: dyadic.prompt_dependency_index
+        weight: 0.20
+        mode: inverse_ratio
+      - key: solo.organized_play_bout_length_sec
+        weight: 0.18
+        mode: duration_ratio
+        ideal: 40
+      - key: transition.segment_abort_flag
+        weight: 0.20
+        mode: inverse_binary
+  emotional_recovery:
+    thresholds:
+      normal_min: 70
+      mild_min: 45
+    inputs:
+      - key: transition.high_activation_episode_count
+        weight: 0.22
+        mode: inverse_count
+        max_bad: 5
+      - key: transition.escalation_intensity
+        weight: 0.20
+        mode: inverse_ratio
+      - key: transition.recovery_latency_sec
+        weight: 0.25
+        mode: inverse_duration
+        max_bad: 60
+      - key: transition.reengagement_success
+        weight: 0.18
+        mode: ratio
+      - key: transition.adult_support_needed
+        weight: 0.15
+        mode: inverse_ratio
+  co_regulation_openness:
+    thresholds:
+      normal_min: 70
+      mild_min: 45
+    inputs:
+      - key: dyadic.caregiver_orientation_ratio
+        weight: 0.25
+        mode: ratio
+      - key: dyadic.support_uptake_latency_sec
+        weight: 0.20
+        mode: inverse_duration
+        max_bad: 30
+      - key: dyadic.joint_engagement_ratio
+        weight: 0.20
+        mode: ratio
+      - key: dyadic.contingent_response_pairing
+        weight: 0.15
+        mode: ratio
+      - key: dyadic.support_after_recovery_ratio
+        weight: 0.20
+        mode: ratio
+  sensory_reactivity_markers:
+    thresholds:
+      possible_min: 40
+      notable_min: 65
+    inputs:
+      - key: transition.toy_change_withdrawal_count
+        weight: 0.30
+        mode: count_ratio
+        max_bad: 4
+      - key: transition.audio_reactivity_spikes
+        weight: 0.30
+        mode: count_ratio
+        max_bad: 4
+      - key: transition.avoidance_after_touch_ratio
+        weight: 0.20
+        mode: ratio
+      - key: solo.repeated_retreat_count
+        weight: 0.20
+        mode: count_ratio
+        max_bad: 4
+
+rules:
+  - rule_id: EMO_RECOVERY_MARKED
+    version: 1
+    domain: emotional_recovery
+    severity: marked
+    if:
+      all:
+        - { feature: transition.recovery_latency_sec, op: gt, value: 30 }
+        - { feature: transition.high_activation_episode_count, op: gte, value: 2 }
+        - { feature: quality.overall_confidence, op: gte, value: 0.60 }
+    evidence:
+      - transition.recovery_latency_sec
+      - transition.high_activation_episode_count
+  - rule_id: ATTN_ENGAGEMENT_LOW
+    version: 1
+    domain: attention_engagement
+    severity: mild
+    if:
+      all:
+        - { feature: solo.engaged_play_ratio, op: lt, value: 0.50 }
+        - { feature: solo.disengagement_count, op: gte, value: 3 }
+    evidence:
+      - solo.engaged_play_ratio
+      - solo.disengagement_count
+  - rule_id: COREG_SUPPORT_GOOD
+    version: 1
+    domain: co_regulation_openness
+    severity: protective
+    if:
+      all:
+        - { feature: dyadic.support_uptake_latency_sec, op: lte, value: 8 }
+        - { feature: dyadic.joint_engagement_ratio, op: gte, value: 0.55 }
+    evidence:
+      - dyadic.support_uptake_latency_sec
+      - dyadic.joint_engagement_ratio
+  - rule_id: SENSORY_MARKERS_NOTABLE
+    version: 1
+    domain: sensory_reactivity_markers
+    severity: marked
+    if:
+      any:
+        - { feature: transition.toy_change_withdrawal_count, op: gte, value: 2 }
+        - { feature: transition.audio_reactivity_spikes, op: gte, value: 2 }
+        - { feature: transition.avoidance_after_touch_ratio, op: gt, value: 0.45 }
+    evidence:
+      - transition.toy_change_withdrawal_count
+      - transition.audio_reactivity_spikes
+      - transition.avoidance_after_touch_ratio

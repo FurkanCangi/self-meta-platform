@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIX-NEW-02",
+  "clientName": "Arda",
+  "ageMonths": 45,
+  "anamnez": {
+    "ad_soyad": "Arda Ornek",
+    "client_code": "FIX-NEW-02",
+    "record_date": "2026-04-01",
+    "age_range": "36-47 ay",
+    "diagnosis": "Tanilanmis bozukluk bildirilmiyor",
+    "referral_reason": "Aile ozellikle bekleme, engellenme ve istenen etkinligin ertelenmesi durumlarinda ani duygusal yukselme, aglama ve uzun sure yatismakta zorlanma tarif etmektedir. Gunun geri kalaninda katilim genellikle korunmakta; zorlanma daha cok duygusal yuklenme ve toparlanma basliginda toplanmaktadir.",
+    "parent_concerns_goals": "Hayal kirikligi sonrasi yatismayi hizlandirmak, beklemeye toleransi artirmak ve gunluk kucuk engeller karsisinda duygusal esigi daha yönetilebilir hale getirmek hedeflenmektedir.",
+    "therapist_comments": "Dikkat ve gorev surdurme genel olarak yasina uygun; ancak istedigi seyin kesildigi veya kurala donuldugu anlarda duygusal yukselme hizli oluyor. Yetiskin destegiyle toparlaniyor fakat bu sure bazi gunler uzuyor.",
+    "strengths": "Oyun baslatma iyi, sembolik oyuna acik, yeni materyale ilgi var ve bire bir dikkat gerektiren etkinliklerde katilim korunuyor.",
+    "medical_history": "Belirgin tibbi risk bildirilmedi. Uykuya gecis bazen gecikebiliyor ancak suregen bir bozukluk tarif edilmiyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Alerji ve nobet oykusu yok.",
+    "current_therapies": "Aile danismanligi ve ebeveyn egitim destegi aliyor.",
+    "past_therapies": "Kisa sureli oyun terapisi denemesi olmus.",
+    "medications": "Ilac kullanimi yok.",
+    "prenatal_story": "Gebelikte belirgin komplikasyon yok.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Bebeklikten beri duygusal yatistirma icin yetiskin yakinligi aradigi bildiriliyor.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Genel olarak iyi, secicilik sinirli.",
+    "liked_foods": "Makarna, kofte, yogurt.",
+    "rejected_foods": "Bazi sebzeleri reddediyor.",
+    "external_clinical_findings": "Test adi: BASC-3\nPuan / sonuc: Duygusal kontrol ve negatif duygulanima iliskin alt alanlarda hafif-orta yukselme.\nKlinik yorum / resmi bulgu ozeti: Zorlayici durumlarda duygusal regülasyon kirilganligi desteklenmektedir.\nEk notlar: Dikkat ve sosyal girisim basliklarinda belirgin bir dusus izlenmedi.\n\nTest adi: BRIEF-P\nPuan / sonuc: Duygusal kontrol alt alaninda yukselme, diger yurutücü alanlarda sinirli etkilenim.\nKlinik yorum / resmi bulgu ozeti: Cekirdek zorlanmanin daha cok duygusal yukselme ve yatismada toplandigini dusunduruyor.\nEk notlar: Planlama ve calisma belleği alanlari daha korunmus gorunuyor."
+  },
+  "scores": {
+    "physiological": 40,
+    "sensory": 38,
+    "emotional": 24,
+    "cognitive": 37,
+    "executive": 35,
+    "interoception": 36
+  }
+}

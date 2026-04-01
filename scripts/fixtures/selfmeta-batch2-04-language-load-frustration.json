@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-B2-04-LANGUAGE",
+  "clientName": "Kerem",
+  "ageMonths": 55,
+  "anamnez": {
+    "ad_soyad": "Kerem Ornek",
+    "client_code": "FIXTURE-B2-04-LANGUAGE",
+    "record_date": "2026-04-01",
+    "age_range": "48-59 ay",
+    "diagnosis": "Gelisimsel dil guclugu izlem",
+    "referral_reason": "Aile ve okul, kisa ve net yonergelerde iyi performans gostermesine ragmen dilsel talep arttiginda cocugun hizla gerildigini, gorevden koptugunu ve bazen aglayarak yardim aradigini bildirmektedir. Sohbet, hikaye anlatma ve sirali yonerge takip etme durumlarinda zorlanma belirginlesmektedir.",
+    "parent_concerns_goals": "Dilsel yuk arttiginda gorevde kalma, anladigini gosterebilme ve frustrasyon sonrasinda yeniden denemeye donebilme becerisinin guclenmesi hedeflenmektedir.",
+    "therapist_comments": "Tek adimli yonergelerde performans iyi, ancak iki-uc basamakli sozel beklenti geldiginde duraksama, goz temasi kesilmesi ve pasiflesme izlendi. Zorlandiginda sozel degil bedensel geri cekilme ve yardim arama daha belirgin oldu.",
+    "strengths": "Gorsel ipucu ile hizli ogreniyor, taklit becerileri iyi, iliski kurma istegi yuksek, yapilandirilmis oyunlarda motivasyonu korunuyor.",
+    "medical_history": "Belirgin tibbi risk yok.",
+    "allergy_epilepsy_gi_colic_seizure": "Yok.",
+    "current_therapies": "Dil ve konusma terapisi devam ediyor.",
+    "past_therapies": "Erken donemde oyun grubu katilimi oldu.",
+    "medications": "Yok.",
+    "prenatal_story": "Belirgin komplikasyon yok.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Erken jest kullanimi uygun, ancak ifade edici dilde gecikme bildirildi.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Beslenme rutini korunmus.",
+    "liked_foods": "Belirgin tercihleri var ama secicilik klinik duzeyde degil.",
+    "rejected_foods": "Belirgin reddetme yok.",
+    "external_clinical_findings": "Test adi: CELF Preschool-3\nPuan / sonuc: Alici dil ve cumle duzeyinde anlama alt testlerinde dusuk ortalama.\nKlinik yorum / resmi bulgu ozeti: Dilsel talep arttiginda bilgiyi isleme ve gorevi surdurme yukunun arttigini destekliyor.\nEk notlar: Sirali yonerge takibinde belirgin dusus var.\n\nTest adi: PLS-5\nPuan / sonuc: Ifade edici dil alici dilden daha kirilgan.\nKlinik yorum / resmi bulgu ozeti: Anlama zorlugu ile birlikte ifade etme baskisinin arttigi durumlarda frustrasyon toleransinin dustugunu destekliyor."
+  },
+  "scores": {
+    "physiological": 37,
+    "sensory": 36,
+    "emotional": 29,
+    "cognitive": 27,
+    "executive": 31,
+    "interoception": 35
+  }
+}

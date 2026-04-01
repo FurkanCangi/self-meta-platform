@@ -1,3 +1,4 @@
+import type { ExternalTestCategory } from "./externalTestRegistry"
 import { DomainResult } from "./reportEngine"
 
 export type ClinicalAnalysis = {
@@ -20,6 +21,9 @@ export type ClinicalAnalysis = {
   therapistInsights?: string[]
   externalClinicalFindings?: string[]
   externalClinicalWarnings?: string[]
+  externalTestIds?: string[]
+  externalTestCategories?: ExternalTestCategory[]
+  primaryExternalTestCategory?: ExternalTestCategory | null
   criticalItemLines?: string[]
   alignedItemLines?: string[]
   itemSignalSummary?: string
@@ -70,10 +74,11 @@ function getMatchedDomainLabels(
 
   return domainResults
     .filter((d) => {
-      if (d.key === "sensory") return /duyusal|dokunsal|uyaran|gürültü|kalabalık/.test(joined)
-      if (d.key === "emotional") return /duygusal|toparlanma|sakinleş|uyaran sonrası/.test(joined)
-      if (d.key === "cognitive" || d.key === "executive") return /dikkat|görev|sürdürme|çok uyaran/.test(joined)
-      if (d.key === "physiological" || d.key === "interoception") return /bedensel|fizyolojik|yorgun|uyku|beslenme|iştah|alerji|kolik|nöbet/.test(joined)
+      if (d.key === "sensory") return /duyusal|dokunsal|uyaran|gürültü|kalabalık|sensory profile|spm/.test(joined)
+      if (d.key === "emotional") return /duygusal|toparlanma|sakinleş|uyaran sonrası|öfke|frustrasyon|kriz/.test(joined)
+      if (d.key === "cognitive") return /dikkat|görev|sürdürme|çok uyaran|dilsel talep|yönerge|celf|pls/.test(joined)
+      if (d.key === "executive") return /dikkat|görev|sürdürme|çok uyaran|brief|conners|inhibisyon|planlama|organizasyon|motor planlama|praksi|somatodispraks/.test(joined)
+      if (d.key === "physiological" || d.key === "interoception") return /bedensel|fizyolojik|yorgun|uyku|beslenme|iştah|alerji|kolik|nöbet|açlık|susama|tuvalet|özbakım|ozbakim|pedi-cat|vineland|abas/.test(joined)
       return false
     })
     .sort((a, b) => a.score - b.score)
@@ -192,6 +197,9 @@ export function buildClinicalAnalysis(
   ageBandLabel?: string | null,
   externalClinicalFindings:string[] = [],
   externalClinicalWarnings:string[] = [],
+  externalTestIds:string[] = [],
+  externalTestCategories:ExternalTestCategory[] = [],
+  primaryExternalTestCategory:ExternalTestCategory | null = null,
   itemLevelAnalysis?: {
     criticalLines?: string[]
     alignedLines?: string[]
@@ -240,6 +248,9 @@ anamnezConsistency: buildAnamnezConsistency(matchedDomains, weakDomains, strongD
 therapistInsights: therapistInsights.slice(0, 3),
 externalClinicalFindings: externalClinicalFindings.slice(0, 3),
 externalClinicalWarnings: externalClinicalWarnings.slice(0, 3),
+externalTestIds: externalTestIds.slice(0, 6),
+externalTestCategories: externalTestCategories.slice(0, 4),
+primaryExternalTestCategory,
 criticalItemLines: itemLevelAnalysis?.criticalLines?.slice(0, 3) || [],
 alignedItemLines: itemLevelAnalysis?.alignedLines?.slice(0, 3) || [],
 itemSignalSummary: itemLevelAnalysis?.signalSummary || "",

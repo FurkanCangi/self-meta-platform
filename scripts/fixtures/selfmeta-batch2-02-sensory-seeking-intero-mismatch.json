@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-B2-02-SENSORY-INTERO",
+  "clientName": "Aras",
+  "ageMonths": 63,
+  "anamnez": {
+    "ad_soyad": "Aras Ornek",
+    "client_code": "FIXTURE-B2-02-SENSORY-INTERO",
+    "record_date": "2026-04-01",
+    "age_range": "60-71 ay",
+    "diagnosis": "Tani yok / duyusal-islevsel izlem",
+    "referral_reason": "Aile cocugun hareketli oyunlara asiri yoneldigini, beden sinyallerini gec fark ettigini ve aclik, susuzluk ya da tuvalet ihtiyacini yogunlastiginda fark ettigini bildirmektedir. Kalabalik ve hizli ortamlarda performans artip sonra ani dagilma gorulebilmektedir.",
+    "parent_concerns_goals": "Beden sinyallerini daha erken fark etme, duyusal yuk arttiginda kendini duzenleme ve oyunda kopmadan kalabilme becerisinin guclenmesi hedeflenmektedir.",
+    "therapist_comments": "Gozlemde hizli hareketli oyuna yuksek ilgi, yogun proprioseptif arayis ve bedensel geri bildirimi gec kullanma goruldu. Aktivite hizli basliyor ancak beden yorgunlugu ya da tuvalet ihtiyaci fark edilmediginde ani dagilma oluyor.",
+    "strengths": "Yuksek motivasyon, yeni etkinlige cabuk katilim, sosyal iliskiye aciklik ve gorsel modellemeden hizli yararlanma.",
+    "medical_history": "Belirgin tibbi hastalik yok. Kabizlik donemsel olarak bildiriliyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Donemsel kabizlik disinda anlamli risk bildirilmiyor.",
+    "current_therapies": "Duzenli terapi almiyor.",
+    "past_therapies": "Gecmis terapi oykusu yok.",
+    "medications": "Duzenli ilac yok.",
+    "prenatal_story": "Belirgin komplikasyon yok.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Erken motor gelisim yasla uyumlu ama hareketli oyun ilgisi erken donemden beri yuksek.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Yemek aralarini kendi istegiyle takip etmekte zorlanabiliyor.",
+    "liked_foods": "Cig ve kitir yiyecekleri seviyor.",
+    "rejected_foods": "Sulu ve yumusak gidalarla ilgisi daha dusuk.",
+    "external_clinical_findings": "Test adi: Sensory Profile 2\nPuan / sonuc: Hareket arayisi ve beden farkindaligi alanlarinda yukselme; duyusal kayit degisken.\nKlinik yorum / resmi bulgu ozeti: Duyusal girdiyi arama ve beden geri bildirimini gec kullanma oruntusu gunluk performansi etkiliyor.\nEk notlar: Yogun hareket sonrasi dagilma artiyor.\n\nTest adi: SPM-2\nPuan / sonuc: Beden farkindaligi ve planlama alanlarinda sinir ustu zorlanma.\nKlinik yorum / resmi bulgu ozeti: Duyusal yuk altinda davranis organizasyonunun bozuldugunu ve interoseptif/fizyolojik takibin gec devreye girdigini destekliyor."
+  },
+  "scores": {
+    "physiological": 31,
+    "sensory": 27,
+    "emotional": 35,
+    "cognitive": 36,
+    "executive": 34,
+    "interoception": 25
+  }
+}

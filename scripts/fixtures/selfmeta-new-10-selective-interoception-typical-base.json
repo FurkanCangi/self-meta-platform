@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIX-NEW-10",
+  "clientName": "Iris",
+  "ageMonths": 43,
+  "anamnez": {
+    "ad_soyad": "Iris Ornek",
+    "client_code": "FIX-NEW-10",
+    "record_date": "2026-04-01",
+    "age_range": "36-47 ay",
+    "diagnosis": "Tanilanmis bozukluk bildirilmiyor",
+    "referral_reason": "Aile genel gelisimin tipik seyrettiğini, ancak acikma, susama, tuvalet ve yorgunluk gibi beden sinyallerini gec fark ettigini, bu nedenle bazen birden huzursuzlasip nedenini soylemekte zorlandigini bildirmektedir. Diger alanlar buyuk olcude korunmustur.",
+    "parent_concerns_goals": "Beden sinyallerini daha erken fark etme, yardim isteme ve ani huzursuzluk anlarini azaltma hedeflenmektedir.",
+    "therapist_comments": "Dikkat, oyun surdurme ve sosyal katilim yasina uygun. Zorlanma daha cok beden sinyalini gec fark etme ve bu nedenle duygusal esigi gecikmeli olarak dusme seklinde hissediliyor.",
+    "strengths": "Sembolik oyuna aciklik, sosyal ilgi, dikkat surdurme ve yeni etkinlikte katilim iyi.",
+    "medical_history": "Donemsel kabizlik ve su icmeyi kendiliginden hatirlama guclugu bildiriliyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Nobet yok. Donemsel kabizlik mevcut.",
+    "current_therapies": "Terapi almiyor.",
+    "past_therapies": "Yok.",
+    "medications": "Yok.",
+    "prenatal_story": "Olagan.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Bebeklikte aciktigini gec belli ettigi ifade edilmisti.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Genel olarak uygun ancak aciklik isaretleri gec geliyor.",
+    "liked_foods": "Meyve, pilav, yogurt.",
+    "rejected_foods": "Belirgin reddi yok.",
+    "external_clinical_findings": "Test adi: PEDI-CAT\nPuan / sonuc: Genel islevsellik korunmus; oz-bakim zamanlamasinda goreli dusukluk.\nKlinik yorum / resmi bulgu ozeti: Beden ihtiyacinin zamaninda fark edilmemesi gunluk oz-bakim akisini etkileyebilmektedir.\nEk notlar: Yetiskin hatirlatmasi ile isleyis belirgin sekilde duzeliyor.\n\nTest adi: Vineland-3\nPuan / sonuc: Iletisim ve sosyalizasyon tipik; gunluk yasam becerilerinde hafif goreli dusukluk.\nKlinik yorum / resmi bulgu ozeti: Genel gelisim korunmus tabanda, secici beden-farkindalik guclugu gunluk rutinlere yansiyor olabilir.\nEk notlar: Sosyal ve oyun profili belirgin guclu."
+  },
+  "scores": {
+    "physiological": 41,
+    "sensory": 40,
+    "emotional": 38,
+    "cognitive": 36,
+    "executive": 35,
+    "interoception": 24
+  }
+}

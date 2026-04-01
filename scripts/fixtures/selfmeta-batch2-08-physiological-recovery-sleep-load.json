@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-B2-08-PHYSIO",
+  "clientName": "Yigit",
+  "ageMonths": 59,
+  "anamnez": {
+    "ad_soyad": "Yigit Ornek",
+    "client_code": "FIXTURE-B2-08-PHYSIO",
+    "record_date": "2026-04-01",
+    "age_range": "48-59 ay",
+    "diagnosis": "Tani yok / bedensel toparlanma izlemi",
+    "referral_reason": "Aile cocugun ozellikle uykusuz kaldigi, gun ici hareketi arttigi veya ogun arasi uzadigi gunlerde hizla gerildigini, etkinlikten koptugunu ve aksam saatlerine dogru bedensel olarak daha zor duzenlendigini bildirmektedir. Sorun belirli bir davranistan cok enerji-duzen kaybi sonrasi performans dususu seklinde tarif edilmektedir.",
+    "parent_concerns_goals": "Yorgunluk, acikma ve bedensel rahatsizlik sinyallerini daha erken fark etmesi ve bu durumlar arttiginda duzenini koruyabilmesi hedeflenmektedir.",
+    "therapist_comments": "Oturumun ilk yarisi duzenliydi; sure uzadikca postur kalitesi dustu, hareket etme ihtiyaci artti ve dikkat dagilimi belirginlesti. Bedensel toparlanma suresi uzun gorundu.",
+    "strengths": "Baslangic performansi iyi, iliski kurma ve oyuna katilim guclu, yapilandirilmis ipucu ile yeniden organize olabiliyor.",
+    "medical_history": "Uyku duzeni degisken, donemsel kabizlik ve ogun atlama oykusu bildiriliyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Kabizlik ve duzensiz aclik fark etme oykusu var, nobet/alergi yok.",
+    "current_therapies": "Yok.",
+    "past_therapies": "Yok.",
+    "medications": "Yok.",
+    "prenatal_story": "Belirgin komplikasyon yok.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Bebeklikten beri uykuya geciste zorlanma bildiriliyor.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Acikma sinyalini gec fark ettigi icin ogun gecikmeleri olabiliyor.",
+    "liked_foods": "Belirgin tercihleri var.",
+    "rejected_foods": "Yogun yorgunlukta yemekten kopabiliyor.",
+    "external_clinical_findings": "Test adi: Vineland-3\nPuan / sonuc: Genel uyum alanlari korunmus; gunluk yasam becerilerinde gun ici tutarlilik degisken.\nKlinik yorum / resmi bulgu ozeti: Kapasite korunmus olsa da bedensel durum bozuldugunda rutini surdurmede dusus olabiliyor.\n\nTest adi: PEDI-CAT\nPuan / sonuc: Gunluk aktivite ve sorumluluk alaninda sinir alti degiskenlik.\nKlinik yorum / resmi bulgu ozeti: Enerji ve beden durumu degistiginde islevselligin ayni kalmadigini destekliyor."
+  },
+  "scores": {
+    "physiological": 25,
+    "sensory": 36,
+    "emotional": 31,
+    "cognitive": 35,
+    "executive": 34,
+    "interoception": 26
+  }
+}
