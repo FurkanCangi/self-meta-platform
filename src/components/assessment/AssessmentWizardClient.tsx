@@ -45,7 +45,11 @@ export default function AssessmentWizardClient() {
   const checkExistingReportLock = async (clientId?: string | null) => {
     try {
       const normalizedClientId = String(clientId ?? "").trim()
-      if (!normalizedClientId) return false
+      if (!normalizedClientId) {
+        setReportLocked(false)
+        setReportLockReason("")
+        return false
+      }
 
       const { data: assessments, error: assessmentsError } = await selfMetaSupabase
         .from("assessments_v2")
@@ -92,6 +96,7 @@ export default function AssessmentWizardClient() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const clientCode = searchParams.get("client") || ""
+  const clientIdParam = searchParams.get("client_id") || ""
 
   const [answers, setAnswers] = useState<number[]>(Array(questions.length).fill(3))
   const [page, setPage] = useState(0)
@@ -112,11 +117,29 @@ const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
   const [generatedReportText, setGeneratedReportText] = useState<string>("")
   const [generatedReportDate, setGeneratedReportDate] = useState<string>("")
+
+  useEffect(() => {
+    setClientInfo(null)
+    setClientError(null)
+    setLoadingClient(true)
+    setReportLocked(false)
+    setReportLockReason("")
+    setReportReady(false)
+    setSaveMsg(null)
+    setGeneratedReportText("")
+    setGeneratedReportDate("")
+    setPage(0)
+    setAnswers(Array(questions.length).fill(3))
+  }, [clientCode, clientIdParam])
+
   useEffect(() => {
     let mounted = true
 
     async function loadClient() {
-      if (!clientCode) {
+      const normalizedClientCode = clientCode.trim().toUpperCase()
+      const normalizedClientId = clientIdParam.trim()
+
+      if (!normalizedClientCode && !normalizedClientId) {
         if (!mounted) return
         setClientInfo(null)
         setClientError("Önce danışan seçilmelidir. Danışan Listesi üzerinden “Skor Gir” ile ilerleyin.")
@@ -126,15 +149,31 @@ const [saving, setSaving] = useState(false)
 
       setLoadingClient(true)
       setClientError(null)
-      const normalizedClientCode = clientCode.trim().toUpperCase()
+      let data: Array<{ id: string; child_code: string; anamnez: string | null }> | null = null
+      let error: any = null
 
-      const { data, error } = await supabase
-        .from("clients")
-        .select("id, child_code, anamnez")
-        .eq("child_code", normalizedClientCode)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false })
-        .limit(2)
+      if (normalizedClientId) {
+        const response = await supabase
+          .from("clients")
+          .select("id, child_code, anamnez")
+          .eq("id", normalizedClientId)
+          .is("deleted_at", null)
+          .limit(1)
+
+        data = response.data
+        error = response.error
+      } else {
+        const response = await supabase
+          .from("clients")
+          .select("id, child_code, anamnez")
+          .eq("child_code", normalizedClientCode)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false })
+          .limit(2)
+
+        data = response.data
+        error = response.error
+      }
 
       if (!mounted) return
 
@@ -175,7 +214,7 @@ const [saving, setSaving] = useState(false)
     return () => {
       mounted = false
     }
-  }, [clientCode])
+  }, [clientCode, clientIdParam])
 
   const totalPages = Math.ceil(questions.length / perPage)
   const start = page * perPage
@@ -199,6 +238,7 @@ const [saving, setSaving] = useState(false)
       clientCode: clientInfo.child_code,
       anamnez: clientInfo.anamnez || "",
       ageMonths: clientInfo.ageMonths,
+      answers,
       scores: {
         fizyolojik: result.fizyolojik,
         duyusal: result.duyusal,
@@ -214,6 +254,7 @@ const [saving, setSaving] = useState(false)
   async function generateAIReport(payload: {
     clientCode: string
     anamnez: string
+    answers: number[]
     scores: Record<string, unknown>
     deterministicReport: string
   }) {
@@ -296,6 +337,7 @@ const [saving, setSaving] = useState(false)
       const aiReportText = await generateAIReport({
         clientCode: clientInfo.child_code,
         anamnez: String(clientInfo.anamnez || ""),
+        answers,
         scores: {
           fizyolojik: result.fizyolojik,
           duyusal: result.duyusal,

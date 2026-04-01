@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-LANG-PRAG-63",
+  "clientName": "Mina",
+  "ageMonths": 63,
+  "anamnez": {
+    "ad_soyad": "Mina Ornek",
+    "client_code": "FIXTURE-LANG-PRAG-63",
+    "record_date": "2026-04-01",
+    "age_range": "60-71 ay",
+    "diagnosis": "Dil-pragmatik gelisim izlemi",
+    "referral_reason": "Grup icinde sozlu yonerge arttiginda dagilma, soruya gec yanit verme, sosyal ipucunu kacirma ve oyunun kuralini surdurmede zorlanma bildiriliyor. Bire bir ve gorsel destekli yapida performans belirgin olarak daha iyi.",
+    "parent_concerns_goals": "Grup icinde dili daha hizli isleme, sosyal ipuclarini kacirmama, kuralli oyunda kalma ve yeni sozlu taleplerde dagilmadan devam etme hedeflenmektedir.",
+    "therapist_comments": "Bire bir yapida dili iyi takip ediyor. Ancak grup icinde ust uste sozlu talep geldiginde once yavasliyor, sonra izleme ve yanit planlama bozuluyor. Sosyal dil talepleri arttiginda dikkat daginligi belirginlesiyor.",
+    "strengths": "Gorsel rutinle calismayi seviyor, bire bir etkilesimde is birligi iyi, motivasyonu genel olarak korunuyor.",
+    "medical_history": "Belirgin medikal yuk yok.",
+    "allergy_epilepsy_gi_colic_seizure": "Yok.",
+    "current_therapies": "Dil-konusma terapisi ve ergoterapi birlikte devam ediyor.",
+    "past_therapies": "Okul destek programi gecmisi mevcut.",
+    "medications": "Yok.",
+    "prenatal_story": "Olagan.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Erken donemde alici dil ve ortak dikkat tarafinda destek ihtiyaci olmus.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Normal.",
+    "liked_foods": "Normal.",
+    "rejected_foods": "Belirgin yok.",
+    "external_clinical_findings": "Test adi: CELF Preschool-3\nPuan / sonuc: Sozlu yonerge takibi ve dil icerikli isleme alt alanlarinda dusuk ortalama.\nKlinik yorum / resmi bulgu ozeti: Dil talebi arttiginda bilişsel yuk ve gorev izleme zorlugu artiyor.\nEk notlar: Gorsel destek varken performans belirgin duzeliyor.\n\nTest adi: CCC-2\nPuan / sonuc: Pragmatik dil ve baglamsal iletisim alt alanlarinda dusuk performans.\nKlinik yorum / resmi bulgu ozeti: Sosyal dil ve baglama uygun iletisim ayarlama tarafinda kirilganlik destekleniyor.\nEk notlar: Grup icinde daha belirgin.\n\nTest adi: SRS-2\nPuan / sonuc: Sosyal farkindalik ve karsilikli sosyal iletisim alanlarinda yukseklik.\nKlinik yorum / resmi bulgu ozeti: Sosyal talep artinca dikkat ve sosyal biliş yuklenmesi birlikte belirginlesiyor."
+  },
+  "scores": {
+    "physiological": 37,
+    "sensory": 36,
+    "emotional": 31,
+    "cognitive": 24,
+    "executive": 27,
+    "interoception": 35
+  }
+}

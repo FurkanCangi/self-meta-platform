@@ -1,10 +1,13 @@
 import { DomainResult } from "./reportEngine"
 
 export type ClinicalAnalysis = {
+  totalScore:number
+  ageBandLabel?: string | null
   profileType:string
   globalLevel:string
   priorityDomains:string[]
   domainSummary:Record<string,string>
+  domainScoreSummary: Record<string, { score: number; level: string }>
   anamnezThemes:string[]
   weakDomains:string[]
   strongDomains:string[]
@@ -14,6 +17,17 @@ export type ClinicalAnalysis = {
   preservedDomainSummary:string
   contrastSummary:string
   anamnezConsistency:string
+  therapistInsights?: string[]
+  externalClinicalFindings?: string[]
+  externalClinicalWarnings?: string[]
+  criticalItemLines?: string[]
+  alignedItemLines?: string[]
+  itemSignalSummary?: string
+  qualityFocusMode?: "balanced" | "selective" | "paired" | "widespread"
+  qualityPrimaryEvidenceLines?: string[]
+  qualitySupportingEvidenceLines?: string[]
+  qualityRestraintLines?: string[]
+  qualityCautionLines?: string[]
 }
 
 function applyInteroPriorityBias(domainResults: any[], priorityDomains: string[]): string[] {
@@ -46,8 +60,13 @@ function applyInteroPriorityBias(domainResults: any[], priorityDomains: string[]
   return [interoLabel, priorityDomains[0]];
 }
 
-function getMatchedDomainLabels(domainResults: DomainResult[], anamnezFlags: string[]): string[] {
-  const joined = anamnezFlags.join(" ").toLowerCase()
+function getMatchedDomainLabels(
+  domainResults: DomainResult[],
+  anamnezFlags: string[],
+  therapistInsights: string[] = [],
+  externalClinicalFindings: string[] = []
+): string[] {
+  const joined = [...anamnezFlags, ...therapistInsights, ...externalClinicalFindings].join(" ").toLowerCase()
 
   return domainResults
     .filter((d) => {
@@ -65,6 +84,10 @@ function getMatchedDomainLabels(domainResults: DomainResult[], anamnezFlags: str
 function buildPatternSummary(domainResults: DomainResult[], globalLevel: string, weakDomains: string[]): string {
   if (!domainResults.length) {
     return `${globalLevel} düzeyinde, ek örüntü ayrıntısı üretilemedi.`
+  }
+
+  if (weakDomains.length === 0) {
+    return "Tüm alanlar tipik aralıktadır; belirgin klinik risk odağı veya anlamlı bir ayrışma izlenmemektedir."
   }
 
   const values = domainResults.map((d) => d.score)
@@ -104,6 +127,10 @@ function buildPreservedDomainSummary(strongDomains: string[]): string {
 function buildContrastSummary(weakDomains: string[], strongDomains: string[]): string {
   if (weakDomains.length === 0 && strongDomains.length === 0) {
     return "Belirgin bir alanlar arası karşıtlık izlenmemektedir."
+  }
+
+  if (weakDomains.length === 0) {
+    return "Tüm alanlar tipik aralıkta olup belirgin bir kırılganlık-karşıtlık örüntüsü izlenmemektedir."
   }
 
   if (weakDomains.length > 0 && strongDomains.length > 0) {
@@ -157,43 +184,65 @@ function buildAnamnezConsistency(
 
 export function buildClinicalAnalysis(
   domainResults:DomainResult[],
+  totalScore:number,
   profileType:string,
   globalLevel:string,
-  anamnezFlags:string[]
+  anamnezFlags:string[],
+  therapistInsights:string[] = [],
+  ageBandLabel?: string | null,
+  externalClinicalFindings:string[] = [],
+  externalClinicalWarnings:string[] = [],
+  itemLevelAnalysis?: {
+    criticalLines?: string[]
+    alignedLines?: string[]
+    signalSummary?: string
+  }
 ):ClinicalAnalysis{
 const sortedAsc = [...domainResults].sort((a,b)=>a.score-b.score)
 const nonTypicalSorted = sortedAsc.filter(d => d.level !== "Tipik")
-const weakDomains = (nonTypicalSorted.length ? nonTypicalSorted : sortedAsc)
+const weakDomains = nonTypicalSorted
   .slice(0,3)
   .map(d=>d.label)
-const strongDomains = [...domainResults]
+const typicalDomains = domainResults.filter((d) => d.level === "Tipik")
+const strongDomains = [...(typicalDomains.length ? typicalDomains : [])]
   .sort((a,b)=>b.score-a.score)
   .slice(0,2)
   .map(d=>d.label)
 const priority = weakDomains.slice(0,2)
 
 const domainSummary:Record<string,string> = {}
+const domainScoreSummary: Record<string, { score: number; level: string }> = {}
 
 for(const d of domainResults){
 domainSummary[d.label] = d.level
+domainScoreSummary[d.label] = { score: d.score, level: d.level }
 }
 
-const matchedDomains = getMatchedDomainLabels(domainResults, anamnezFlags)
+const matchedDomains = getMatchedDomainLabels(domainResults, anamnezFlags, therapistInsights, externalClinicalFindings)
 
 return{
+totalScore,
+ageBandLabel,
 profileType,
 globalLevel,
 priorityDomains: applyInteroPriorityBias(domainResults, priority),
 domainSummary,
+domainScoreSummary,
 anamnezThemes:anamnezFlags.slice(0,3),
 weakDomains,
 strongDomains,
 matchedDomains,
 patternSummary: buildPatternSummary(domainResults, globalLevel, weakDomains),
-primaryWeakDomain: weakDomains[0] || "Belirgin birincil kırılgan alan ayrışmıyor",
+primaryWeakDomain: weakDomains[0] || "Tipik aralıkta belirgin birincil kırılgan alan ayrışmıyor",
 preservedDomainSummary: buildPreservedDomainSummary(strongDomains),
 contrastSummary: buildContrastSummary(weakDomains, strongDomains),
-anamnezConsistency: buildAnamnezConsistency(matchedDomains, weakDomains, strongDomains)
+anamnezConsistency: buildAnamnezConsistency(matchedDomains, weakDomains, strongDomains),
+therapistInsights: therapistInsights.slice(0, 3),
+externalClinicalFindings: externalClinicalFindings.slice(0, 3),
+externalClinicalWarnings: externalClinicalWarnings.slice(0, 3),
+criticalItemLines: itemLevelAnalysis?.criticalLines?.slice(0, 3) || [],
+alignedItemLines: itemLevelAnalysis?.alignedLines?.slice(0, 3) || [],
+itemSignalSummary: itemLevelAnalysis?.signalSummary || "",
 }
 
 }

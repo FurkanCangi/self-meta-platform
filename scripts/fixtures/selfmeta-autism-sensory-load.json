@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-ASD-SENS-54",
+  "clientName": "Atlas",
+  "ageMonths": 54,
+  "anamnez": {
+    "ad_soyad": "Atlas Ornek",
+    "client_code": "FIXTURE-ASD-SENS-54",
+    "record_date": "2026-04-01",
+    "age_range": "48-59 ay",
+    "diagnosis": "Otizm spektrum bozuklugu",
+    "referral_reason": "Aile ozellikle kalabalik, gurultulu ve hizli gecisli ortamlarda belirgin zorlanma bildirmektedir. Ses ve hareket yukunun arttigi durumlarda cocuk kulaklarini kapatma, ortamdan uzaklasma, aglama ve etkinlikten kopma egilimi gostermektedir.",
+    "parent_concerns_goals": "Toplu ortamlarda daha uzun sure kalabilme, ses ve hareket yukune daha tolere yanit verebilme, etkinlikten kopmadan gorevde kalma ve duyusal yuklenme sonrasi toparlanma suresinin kisalmasi hedeflenmektedir.",
+    "therapist_comments": "Gozlemde bire bir yapilandirilmis etkilesimde katilim yuksek; ancak beklenmedik ses, grup hareketi veya gecis sinyali oldugunda bedensel gerilim, goz kacirma, sakinlesmek icin uzaklasma ve davranissal kopma belirginlesmektedir.",
+    "strengths": "Gorsel destekle sunulan etkinliklerde hizli kavrama, eslestirme ve yapilandirma becerileri iyi. Tahmin edilebilir rutinlerde is birligi yukseliyor ve masa basi gorevlerde ilgi korunabiliyor.",
+    "medical_history": "Bilinen nobet veya kronik hastalik oykusu yok. Zaman zaman kabizlik ve aksam saatlerinde yorulmayla birlikte davranissal yuklenme artisi bildiriliyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Belirgin alerji yok. Bebeklikte kolik oykusu tarif edilmis. Donemsel kabizlik suruyor.",
+    "current_therapies": "Haftada 2 seans ergoterapi ve haftada 2 seans ozel egitim almaktadir.",
+    "past_therapies": "Daha once kisa sureli grup oyunu calismasi denenmis ancak yuksek uyaran nedeniyle surdurulememistir.",
+    "medications": "Duzenli ilac kullanimi yok.",
+    "prenatal_story": "Gebelikte ciddi tibbi komplikasyon yok, anne son trimesterde yogun stresli oldugunu ifade ediyor.",
+    "birth_story": "Term dogum, yogun bakim oykusu yok.",
+    "postnatal_story": "Erken donemde uykuya gecis ve gece uyanmalari belirginmis.",
+    "low_birth_history": "Dusuk dogum agirligi bildirilmedi.",
+    "feeding_type": "Secici beslenme mevcut; doku ve kokuya duyarli.",
+    "liked_foods": "Kuru ve citir yiyecekler, sade makarna, kraker ve patates seviyor.",
+    "rejected_foods": "Sulu, karisik ve kokusu belirgin yemekleri sik reddediyor.",
+    "external_clinical_findings": "Test adi: Sensory Profile 2\nPuan / sonuc: Isitsel hassasiyet, hareket duyarliligi ve davranissal duyusal arayis alanlarinda klinik yukseklik.\nKlinik yorum / resmi bulgu ozeti: Cevresel uyaran yukunun davranissal duzenleme ve katilim uzerinde belirgin etkisi oldugu goruluyor.\nEk notlar: Grup etkinliklerinde ses ve hareket arttiginda toparlanma suresi uzuyor.\n\nTest adi: SRS-2\nPuan / sonuc: Sosyal farkindalik ve sosyal motivasyon alanlarinda klinik yukseklik.\nKlinik yorum / resmi bulgu ozeti: Sosyal iletisim yukunun artisinin regülasyon zorlanmasini ikincil olarak arttirdigi dusunuluyor.\nEk notlar: Kalabalik ortamlarda sosyal talep arttiginda davranissal kopma belirginlesiyor.\n\nTest adi: Vineland-3\nPuan / sonuc: Gunluk yasam becerileri dusuk ortalama, iletisim alaninda sinir performans.\nKlinik yorum / resmi bulgu ozeti: Duyusal yuk artisi gunluk yasam duzenlemelerinde bagimsizligi azaltabiliyor."
+  },
+  "scores": {
+    "physiological": 30,
+    "sensory": 20,
+    "emotional": 24,
+    "cognitive": 28,
+    "executive": 27,
+    "interoception": 31
+  }
+}

@@ -6,6 +6,8 @@ type Analysis = {
   weakDomains?: string[]
   strongDomains?: string[]
   matchedDomains?: string[]
+  therapistInsights?: string[]
+  externalClinicalFindings?: string[]
 }
 
 type RagGroups = {
@@ -91,6 +93,12 @@ function chunkSignals(chunk: ProRagChunk): string[] {
   if (chunk.tags.includes("pattern")) {
     ;["örüntü", "eksen", "birlikte", "karşıtlık", "korunmuş"].forEach((x) => signals.add(x))
   }
+  if (chunk.tags.includes("therapist")) {
+    ;["terapist", "gözlem", "performans", "bağlam", "model alma"].forEach((x) => signals.add(x))
+  }
+  if (chunk.tags.includes("external")) {
+    ;["test", "bulgu", "destekleyici", "ek klinik", "yorum"].forEach((x) => signals.add(x))
+  }
   if (chunk.tags.includes("risk")) {
     ;["yaygın", "çoklu", "seçici", "koruyucu", "yük"].forEach((x) => signals.add(x))
   }
@@ -153,6 +161,12 @@ export function selectProRagContext(analysis: Analysis): SelectedProRagContext {
   }
 
   const weakSet = new Set(weakKeys)
+  const extraContext = [
+    ...(analysis.therapistInsights || []),
+    ...(analysis.externalClinicalFindings || []),
+  ]
+    .join(" \n ")
+    .toLowerCase()
 
   if (weakSet.has("sensory") && weakSet.has("emotional")) addChunk(selectedIds, "CROSS_SCALE_SENSORY_EMOTIONAL")
   if (weakSet.has("physiological") && weakSet.has("emotional")) addChunk(selectedIds, "CROSS_SCALE_PHYSIOLOGICAL_EMOTIONAL")
@@ -170,6 +184,30 @@ export function selectProRagContext(analysis: Analysis): SelectedProRagContext {
   if (matchedSet.has("physiological")) addChunk(selectedIds, "ANAMNESIS_SLEEP_AND_ROUTINE")
   if (matchedSet.has("interoception")) addChunk(selectedIds, "ANAMNESIS_INTEROCEPTIVE_CONTEXT")
   if (matchedKeys.some((key) => strongKeys.includes(key))) addChunk(selectedIds, "ANAMNESIS_CONTRADICTION_RULE")
+  if (analysis.therapistInsights && analysis.therapistInsights.length > 0) {
+    addChunk(selectedIds, "THERAPIST_OBSERVATION_CONTEXT")
+  }
+  if (/model alma|performans|baglam|bağlam|surdur|sürdür|sekans|dagil|dağıl/.test(extraContext)) {
+    addChunk(selectedIds, "THERAPIST_PERFORMANCE_VARIABILITY")
+  }
+  if (/sipt|somatodispraks|somatodysprax|praksi|motor plan|mabc|beery vmi|gorsel-motor|görsel-motor/.test(extraContext)) {
+    addChunk(selectedIds, "EXTERNAL_TEST_PRAXIS_MOTOR_PLANNING")
+  }
+  if (/brief|conners|basc|inhibisyon|calisma bellegi|çalışma belleği|dürt|durtu/.test(extraContext)) {
+    addChunk(selectedIds, "EXTERNAL_TEST_EXECUTIVE_RATINGS")
+  }
+  if (/sensory profile|spm|duyusal işlem|duyusal islem|hassasiyet|arayis|arayış/.test(extraContext)) {
+    addChunk(selectedIds, "EXTERNAL_TEST_SENSORY_PROCESSING")
+  }
+  if (/abas|vineland|pedi-cat|uyumsal|gunluk yasam|günlük yaşam|katilim|katılım/.test(extraContext)) {
+    addChunk(selectedIds, "EXTERNAL_TEST_ADAPTIVE_FUNCTIONING")
+  }
+  if (/srs-?2|ccc-?2|sosyal iletisim|sosyal iletişim|pragmatik/.test(extraContext)) {
+    addChunk(selectedIds, "EXTERNAL_TEST_SOCIAL_COMMUNICATION")
+  }
+  if (/celf|pls-?5|alici|ifade edici|ifade edici|yönerge|yonerge|dil/.test(extraContext)) {
+    addChunk(selectedIds, "EXTERNAL_TEST_LANGUAGE_CONTEXT")
+  }
 
   addChunk(selectedIds, "REPORT_FINAL_SUMMARY_TEMPLATE")
 

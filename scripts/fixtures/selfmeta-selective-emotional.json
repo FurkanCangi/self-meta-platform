@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-EMO-42",
+  "clientName": "Ece",
+  "ageMonths": 42,
+  "anamnez": {
+    "ad_soyad": "Ece Ornek",
+    "client_code": "FIXTURE-EMO-42",
+    "record_date": "2026-04-01",
+    "age_range": "36-47 ay",
+    "diagnosis": "Gelisimsel izlem",
+    "referral_reason": "Aile gecis anlarinda, bekleme gerektiren durumlarda ve yorgunlugun arttigi aksam saatlerinde hizli duygusal yukselme, aglama ve yatismada gecikme bildirmektedir. Gunluk temel beceriler ve bire bir etkilesim genel olarak korunmustur.",
+    "parent_concerns_goals": "Gecislerde daha yumusak duygusal tepki, hayal kirikligina tolerans, bekleme suresinde dusuk yardimla kalabilme ve yuksek uyaran sonrasi toparlanma suresinin kisalmasi hedeflenmektedir.",
+    "therapist_comments": "Gozlemde yapilandirilmis bire bir etkinliklerde katilim iyi, gorevde kalma suresi yasa uygun. Ancak tercih edilen etkinlik sonlandirildiginda duygu yukselmesi ve tekrar dengeye gelme suresi uzuyor.",
+    "strengths": "Sosyal olarak yetiskine yonelimi iyi, taklit becerileri guclu, masa basi etkinlikte motivasyon yuksek, dil anlama becerileri gunluk rutinlerde yeterli.",
+    "medical_history": "Belirgin tibbi hastalik ya da nobet oykusu yok. Uykuya geciste zaman zaman zorlanma tarif ediliyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Belirgin alerji ya da gastrointestinal hastalik oykusu bildirilmedi.",
+    "current_therapies": "Haftada 1 seans oyun temelli gelisimsel destek almaktadir.",
+    "past_therapies": "Daha once duzenli terapi gecmisi yok.",
+    "medications": "Surekli kullandigi ilac yok.",
+    "prenatal_story": "Gebelikte ciddi komplikasyon bildirilmedi.",
+    "birth_story": "Term dogum, yenidogan yogun bakim oykusu yok.",
+    "postnatal_story": "Erken donemde yatistirma guclugu zaman zaman tarif edilmis.",
+    "low_birth_history": "Dusuk dogum agirligi yok.",
+    "feeding_type": "Beslenme genel olarak yeterli, secici ozellik sinirli.",
+    "liked_foods": "Meyve, makarna ve kofteli yemekleri seviyor.",
+    "rejected_foods": "Bazi yesil sebzeleri reddediyor.",
+    "external_clinical_findings": "Test adi: BASC-3\nPuan / sonuc: Duygusal kontrol ve uyum alt alanlarinda sinir yuksekligi.\nKlinik yorum / resmi bulgu ozeti: Duygu yogunlugu arttiginda davranissal duzenlemenin bozulabildigi bildirimi destekleniyor.\nEk notlar: Ebeveyn bildirimi terapi gozlemiyle uyumlu.\n\nTest adi: Sensory Profile 2\nPuan / sonuc: Genel profil buyuk olcude beklenen aralikta; yuksek gurultude hassasiyet sinirda.\nKlinik yorum / resmi bulgu ozeti: Duyusal sistemde yaygin bozulmadan cok baglama duyarli yuklenme izlenimi veriyor.\nEk notlar: Ev disi kalabalik ortamlarda zorlanma daha belirgin.\n\nTest adi: Vineland-3\nPuan / sonuc: Gunluk yasam becerileri ve iletisim alanlari yas beklentisine yakin, duygu-davranis duzenleme bagimsizlikta sinirli etki yaratiyor.\nKlinik yorum / resmi bulgu ozeti: Genel uyumsal islevsellik korunmus, kirilganlik daha cok duygusal toparlanma ve gecis anlarinda gorunuyor."
+  },
+  "scores": {
+    "physiological": 41,
+    "sensory": 38,
+    "emotional": 24,
+    "cognitive": 36,
+    "executive": 34,
+    "interoception": 36
+  }
+}

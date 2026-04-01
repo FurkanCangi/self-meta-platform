@@ -36,7 +36,7 @@ export default function LayoutGate({ children }: LayoutGateProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900">
+    <div className="selfmeta-shell min-h-screen bg-slate-50 text-slate-900">
       <div className="flex min-h-screen">
         <Sidebar toggle={toggle} setToggle={setToggle} />
 

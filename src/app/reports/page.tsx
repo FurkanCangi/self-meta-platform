@@ -57,6 +57,8 @@ export default function ReportsPage() {
   const [selectedId, setSelectedId] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string>("");
+  const [notice, setNotice] = useState<string>("");
+  const [deletingReportId, setDeletingReportId] = useState<string>("");
 
   useEffect(() => {
     let mounted = true;
@@ -64,6 +66,7 @@ export default function ReportsPage() {
     async function load() {
       setLoading(true);
       setErr("");
+      setNotice("");
 
       const { data: userRes, error: userErr } = await supabase.auth.getUser();
       if (userErr || !userRes?.user?.id) {
@@ -151,6 +154,40 @@ export default function ReportsPage() {
     [rows, selectedId]
   );
 
+  async function handleDeleteReport(row: ReportRow) {
+    const ok = confirm(`"${extractClientCode(row)}" danışanına ait seçili raporu silmek istiyor musunuz?`);
+    if (!ok) return;
+
+    try {
+      setDeletingReportId(row.id);
+      setErr("");
+      setNotice("");
+
+      const { error } = await supabase
+        .from("reports")
+        .delete()
+        .eq("id", row.id);
+
+      if (error) {
+        throw new Error("Rapor silinemedi: " + error.message);
+      }
+
+      setRows((prev) => {
+        const next = prev.filter((item) => item.id !== row.id);
+        if (row.id === selectedId) {
+          setSelectedId(next[0]?.id || "");
+        }
+        return next;
+      });
+      setNotice("Rapor silindi.");
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Rapor silinirken beklenmeyen bir hata oluştu.";
+      setErr(message);
+    } finally {
+      setDeletingReportId("");
+    }
+  }
+
   return (
     <div className="mx-auto max-w-7xl px-4 py-8">
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -169,6 +206,12 @@ export default function ReportsPage() {
           {!loading && err && (
             <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
               {err}
+            </div>
+          )}
+
+          {!loading && !err && notice && (
+            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+              {notice}
             </div>
           )}
 
@@ -226,7 +269,19 @@ export default function ReportsPage() {
         </div>
 
         <div className="lg:col-span-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">Seçilen Rapor</h2>
+          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <h2 className="text-lg font-semibold text-slate-900">Seçilen Rapor</h2>
+            {selected ? (
+              <button
+                type="button"
+                onClick={() => handleDeleteReport(selected)}
+                disabled={deletingReportId === selected.id}
+                className="inline-flex items-center justify-center rounded-xl border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {deletingReportId === selected.id ? "Siliniyor..." : "Raporu Sil"}
+              </button>
+            ) : null}
+          </div>
 
           {!selected && (
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">

@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-BODY-66",
+  "clientName": "Mert",
+  "ageMonths": 66,
+  "anamnez": {
+    "ad_soyad": "Mert Ornek",
+    "client_code": "FIXTURE-BODY-66",
+    "record_date": "2026-04-01",
+    "age_range": "60-71 ay",
+    "diagnosis": "DEHB suphe / gelisimsel koordinasyon guclugu izlem",
+    "referral_reason": "Aile okul hazirlik sureclerinde gorevi surdurme, sabit kalma, tuvalet-aclik-yorgunluk gibi beden sinyallerini gec fark etme ve gun icinde yuk biriktikce davranissal dagilmanin artmasi nedeniyle basvurmaktadir.",
+    "parent_concerns_goals": "Beden sinyallerini daha erken fark etme, goreve baslama ve bitirme suresinin duzelmesi, cok basamakli yonergelerde daha az kopma ve okul benzeri etkinliklerde dayanikliligin artmasi hedeflenmektedir.",
+    "therapist_comments": "Gozlemde ilk 10-15 dakika performans iyi, ardindan bedensel huzursuzluk, yer degistirme ve gorevden ayrisma artiyor. Molaya erisince ve beden durumu duzenlenince yeniden katilim toparlaniyor.",
+    "strengths": "Gorsel kurallar oldugunda uyum artiyor, yapilandirilmis masa basi etkinliklerde baslangic performansi iyi, bire bir motivasyon kurulabiliyor.",
+    "medical_history": "Kronik hastalik yok. Kabizlik ve duzensiz tuvalet farkindaligi zaman zaman bildiriliyor. Aksam saatlerinde yorgunlukla birlikte davranissal dagilma artiyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Epilepsi ya da belirgin alerji oykusu yok. Kabizlik donemsel olarak suruyor.",
+    "current_therapies": "Haftada 2 seans ergoterapi, okulda destek egitim sinif gozlemi mevcut.",
+    "past_therapies": "Daha once kisa sureli dikkat egitimi odakli grup denemesi yapilmis ancak surdurulememis.",
+    "medications": "Duzenli ilac kullanimi yok.",
+    "prenatal_story": "Gebelik son doneminde annenin yogun yorgunluk ve stres bildirdigi aktariliyor.",
+    "birth_story": "Term dogum, ciddi dogum komplikasyonu yok.",
+    "postnatal_story": "Bebeklikte uykuya gecis zor, huzursuzluk ve ritim kurmada gucluk tarif edilmis.",
+    "low_birth_history": "Dusuk dogum agirligi yok.",
+    "feeding_type": "Yemek saatlerini fark etmede gecikme oluyor; acikinca davranissal huzursuzluk artabiliyor.",
+    "liked_foods": "Tuzlu atistirmaliklar, makarna ve kofteyi seviyor.",
+    "rejected_foods": "Karisik tabaklari ve sulu yiyecekleri sik reddediyor.",
+    "external_clinical_findings": "Test adi: BRIEF-P\nPuan / sonuc: Inhibisyon, calisma bellegi ve planlama alt alanlarinda klinik yukseklik.\nKlinik yorum / resmi bulgu ozeti: Yurutucu islevlerde davranissal kontrol ve gorev yonetimi tarafinda belirgin kirilganlik dusunduruyor.\nEk notlar: Ebeveyn ve ogretmen bildirimi benzer.\n\nTest adi: MABC-3\nPuan / sonuc: Denge ve top becerilerinde sinir alti performans, el becerilerinde dusuk ortalama.\nKlinik yorum / resmi bulgu ozeti: Beden organizasyonu ve motor koordinasyon tarafinda ikincil yuk olabilecegini destekliyor.\nEk notlar: Hareketli ortamlarda performans daha da dusuyor.\n\nTest adi: ABAS-3\nPuan / sonuc: Pratik alan gunluk yasam becerilerinde dusuk ortalama.\nKlinik yorum / resmi bulgu ozeti: Oz-bakim ve gunluk rutinlerin surdurulmesinde yardim ihtiyacinin arttigini gosteriyor.\nEk notlar: Tuvalet, rutin takibi ve kendi kendini organize etmede destek gerekebiliyor."
+  },
+  "scores": {
+    "physiological": 24,
+    "sensory": 38,
+    "emotional": 30,
+    "cognitive": 26,
+    "executive": 24,
+    "interoception": 23
+  }
+}

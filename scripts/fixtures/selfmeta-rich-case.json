@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-OTIZM-54",
+  "clientName": "Deniz",
+  "ageMonths": 54,
+  "anamnez": {
+    "ad_soyad": "Deniz Ornek",
+    "client_code": "FIXTURE-OTIZM-54",
+    "record_date": "2026-04-01",
+    "age_range": "48-59 ay",
+    "diagnosis": "Otizm spektrum bozuklugu",
+    "referral_reason": "Aile ozellikle kalabalik ve gurultulu ortamlarda hizla yukselme, etkinlikten kopma, gun sonuna dogru toparlanamama ve gecislerde yogun zorlanma bildirmektedir. Yapilandirilmis ortamda katilim korunurken duyusal yuk arttiginda duygusal ve davranissal tasma belirginlesmektedir.",
+    "parent_concerns_goals": "Duyusal yuklenme anlarinda toparlanma suresinin kisalmasi, gecislerde daha az direnme, tuvalet-aclik-yorgunluk gibi beden sinyallerini daha erken fark etme ve grup etkinliklerinde gorevde kalma suresinin artmasi hedeflenmektedir.",
+    "therapist_comments": "Gozlemde bire bir yapilandirilmis etkilesimde is birligi yuksek; ancak ses ve hareket yuku arttiginda bedensel gerilim, hareketlenme ve gorevden kopma belirginlesiyor. Dis test bulgulari beden organizasyonu ve motor planlama tarafinda ek kirilganliga isaret ediyor olabilir.",
+    "strengths": "Gorsel olarak sunulan gorevlerde hizli kavrama, yapboz ve blok yapilandirma etkinliklerinde uzun sureli katilim, yetiskinle bire bir oyunda iyi eslesme ve rutinler ongorulebilir oldugunda uyumlu davranis.",
+    "medical_history": "Bilinen nobet oykusu yok. Sik enfeksiyon yok. Zaman zaman kabizlik ve aksam saatlerinde belirgin yorulma sonrasi huzursuzluk tarif edilmektedir.",
+    "allergy_epilepsy_gi_colic_seizure": "Besin alerjisi bildirilmedi. Bebeklik doneminde kolik tarif edilmis. Donemsel kabizlik oykusu bulunuyor.",
+    "current_therapies": "Haftada 2 seans ergoterapi ve haftada 1 seans dil-konusma terapisi almaktadir.",
+    "past_therapies": "Daha once kisa sureli duyu butunleme odakli grup calismasina katilmis, grup ortaminin yuksek uyaranli olmasi nedeniyle ara verilmistir.",
+    "medications": "Surekli kullandigi ilac yok.",
+    "prenatal_story": "Gebelikte ciddi tibbi komplikasyon bildirilmedi; anne yogun stresli bir donem gecirdigini ifade ediyor.",
+    "birth_story": "Term dogum, yogun bakim oykusu yok.",
+    "postnatal_story": "Erken donemde uykuya gecis guclugu ve duzensiz yatismalar tarif edilmis.",
+    "low_birth_history": "Dusuk dogum agirligi oykusu yok.",
+    "feeding_type": "Secici beslenme oykusu mevcut; dokusal farkliliga duyarli.",
+    "liked_foods": "Kuru ve citir yiyecekleri tercih ediyor, tahilli atistirmaliklar ve makarna seviyor.",
+    "rejected_foods": "Sulu, karisik ve yumusak dokulu yiyecekleri sik reddediyor.",
+    "external_clinical_findings": "Test adi: Sensory Profile 2\nPuan / sonuc: Isitsel hassasiyet ve davranissal duyusal arayis alanlarinda klinik olarak anlamli yukseklik.\nKlinik yorum / resmi bulgu ozeti: Cevresel uyaran yukunun davranissal ve duygusal regülasyon uzerinden belirgin etki yarattigi goruldu.\nEk notlar: Grup etkinliklerinde ses ve hareket arttiginda toparlanma suresi uzuyor.\n\nTest adi: PDMS-3\nPuan / sonuc: Motor planlama ve goz-el koordinasyonu gerektiren gorevlerde yas beklentisinin altinda performans.\nKlinik yorum / resmi bulgu ozeti: Motor organizasyon ve beden planlamasi tarafinda destek gereksinimi dusunduruyor.\nEk notlar: Yeni hareket oruntulerini kurarken model alma ihtiyaci artiyor.\n\nTest adi: Conners Early Childhood (Conners EC)\nPuan / sonuc: Dikkat surdurme ve duygu-davranis duzenleme alt alanlarinda yukselme.\nKlinik yorum / resmi bulgu ozeti: Ozellikle yuksek talepli ve uyaranli baglamlarda dikkat ve davranissal kontrol zorlanmasi destekleniyor.\nEk notlar: Ev ve terapi ortami gozcumleri buyuk olcude uyumlu."
+  },
+  "scores": {
+    "physiological": 27,
+    "sensory": 24,
+    "emotional": 27,
+    "cognitive": 25,
+    "executive": 25,
+    "interoception": 28
+  }
+}

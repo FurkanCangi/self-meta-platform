@@ -7,7 +7,11 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "report:fixture": "tsc -p tsconfig.report-runner.json && node .tmp/report-runner/scripts/run-selfmeta-report.js",
+    "report:quality": "tsc -p tsconfig.report-runner.json && node .tmp/report-runner/scripts/run-report-quality-tests.js",
+    "report:quality:ai": "tsc -p tsconfig.report-runner.json && node .tmp/report-runner/scripts/run-report-quality-tests.js --with-ai",
+    "report:quality:ai-smoke": "tsc -p tsconfig.report-runner.json && node .tmp/report-runner/scripts/run-report-quality-tests.js --with-ai --smoke-only"
   },
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^44.3.0",

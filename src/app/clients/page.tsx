@@ -62,6 +62,7 @@ export default function ClientsPage() {
   const [err, setErr] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [rows, setRows] = useState<ClientRow[]>([]);
+  const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -209,6 +210,80 @@ export default function ClientsPage() {
     router.push(`/assessments?client=${encodeURIComponent(row.code)}&client_id=${encodeURIComponent(row.id)}`);
   };
 
+  const onDeleteClient = async (row: ClientRow) => {
+    const ok = confirm(`"${row.code}" danışanını silmek istiyor musunuz? Bu işlem danışana bağlı raporları da kaldırır.`);
+    if (!ok) return;
+
+    try {
+      setDeletingClientId(row.id);
+      setErr(null);
+      setNotice(null);
+
+      const { data: assessments, error: assessmentError } = await supabase
+        .from("assessments_v2")
+        .select("id")
+        .eq("client_id", row.id)
+        .is("deleted_at", null);
+
+      if (assessmentError) {
+        throw new Error("Danışana bağlı değerlendirmeler alınamadı: " + assessmentError.message);
+      }
+
+      const assessmentIds = (assessments || []).map((item: any) => item.id).filter(Boolean);
+
+      if (assessmentIds.length > 0) {
+        const { error: reportsDeleteError } = await supabase
+          .from("reports")
+          .delete()
+          .in("assessment_id", assessmentIds);
+
+        if (reportsDeleteError) {
+          throw new Error("Danışana bağlı raporlar silinemedi: " + reportsDeleteError.message);
+        }
+
+        const { error: assessmentsDeleteError } = await supabase
+          .from("assessments_v2")
+          .delete()
+          .in("id", assessmentIds);
+
+        if (assessmentsDeleteError) {
+          const { error: assessmentsArchiveError } = await supabase
+            .from("assessments_v2")
+            .update({ deleted_at: new Date().toISOString() })
+            .in("id", assessmentIds);
+
+          if (assessmentsArchiveError) {
+            throw new Error("Danışana bağlı değerlendirmeler kaldırılamadı: " + assessmentsArchiveError.message);
+          }
+        }
+      }
+
+      const { error: clientDeleteError } = await supabase
+        .from("clients")
+        .delete()
+        .eq("id", row.id);
+
+      if (clientDeleteError) {
+        const { error: clientArchiveError } = await supabase
+        .from("clients")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", row.id);
+
+        if (clientArchiveError) {
+          throw new Error("Danışan silinemedi: " + clientArchiveError.message);
+        }
+      }
+
+      setRows((prev) => prev.filter((item) => item.id !== row.id));
+      setNotice(`"${row.code}" danışanı ve bağlı raporları kaldırıldı.`);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Danışan silinirken beklenmeyen bir hata oluştu.";
+      setErr(message);
+    } finally {
+      setDeletingClientId(null);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="selfmeta-card p-5">
@@ -346,6 +421,15 @@ export default function ClientsPage() {
                           <Link href="/reports" className="inline-flex items-center justify-center rounded-xl border border-indigo-600 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50">
                             Raporlar
                           </Link>
+                          <button
+                            type="button"
+                            onClick={() => onDeleteClient(r)}
+                            disabled={deletingClientId === r.id}
+                            className="inline-flex items-center justify-center rounded-xl border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            title="Danışanı ve bağlı raporları sil"
+                          >
+                            {deletingClientId === r.id ? "Siliniyor..." : "Sil"}
+                          </button>
                         </div>
                       </td>
                     </tr>

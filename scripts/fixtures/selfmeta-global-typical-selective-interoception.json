@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-INTERO-46",
+  "clientName": "Lina",
+  "ageMonths": 46,
+  "anamnez": {
+    "ad_soyad": "Lina Ornek",
+    "client_code": "FIXTURE-INTERO-46",
+    "record_date": "2026-04-01",
+    "age_range": "36-47 ay",
+    "diagnosis": "Gelisimsel izlem",
+    "referral_reason": "Aile, genel uyum ve oyun becerilerinin iyi oldugunu; ancak acikma, tuvalet ihtiyaci, yorulma ve ic huzursuzluk gibi beden sinyallerini gec fark ettigini bildirmektedir. Bu gec fark etme ozellikle aksam saatlerinde ani huzursuzluk ve aglama olarak belirginlesmektedir.",
+    "parent_concerns_goals": "Acilma, tuvalet ihtiyaci ve yorgunluk gibi beden ipuclarini daha erken fark etmesi; huzursuzluk buyumeden yardim isteyebilmesi; gun icinde duzenli beden farkindaligi kazanmasi hedeflenmektedir.",
+    "therapist_comments": "Gozlemde masa basi ve oyun etkileşiminde katilim iyi. Ancak su, tuvalet ya da yorgunluk ihtiyaci belirginlestiginde once dikkat dagiliyor, sonra ani geri cekilme ve huzursuzluk oluyor. Beden sinyali fark edilince hizli toparlaniyor.",
+    "strengths": "Dil anlama, sembolik oyun, ortak dikkat ve gorevde kalma becerileri yasa uygundur. Rutin gecisleri genel olarak iyi tolere eder.",
+    "medical_history": "Belirgin kronik hastalik yok. Kabizlik donemsel olarak olabiliyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Nobet oykusu yok, donemsel kabizlik mevcut.",
+    "current_therapies": "Duzenli terapi almiyor; aile egitimi ve izlem suruyor.",
+    "past_therapies": "Gecmiste kisa sureli oyun temelli destek aldi.",
+    "medications": "Duzenli ilac kullanimi yok.",
+    "prenatal_story": "Belirgin komplikasyon yok.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Bebeklikte aciklik ve uykuya gecis ipuclarini anlamak zor oluyordu.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Beslenme genel olarak iyi.",
+    "liked_foods": "Corba, makarna, yogurt seviyor.",
+    "rejected_foods": "Bazi sebzeleri istemiyor.",
+    "external_clinical_findings": "Test adi: Vineland-3\nPuan / sonuc: Gunluk yasam becerileri genel olarak yas beklentisine yakin; ozbakim rutininin zamanlanmasinda sinirli destek ihtiyaci.\nKlinik yorum / resmi bulgu ozeti: Genel uyumsal islevsellik korunmus, beden ihtiyacini fark etme ve zamaninda bildirme tarafinda secici kirilganlik olabilir.\nEk notlar: Sosyallesme ve iletisim alanlari goreli guclu."
+  },
+  "scores": {
+    "physiological": 39,
+    "sensory": 41,
+    "emotional": 38,
+    "cognitive": 39,
+    "executive": 37,
+    "interoception": 29
+  }
+}

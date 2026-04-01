@@ -2,18 +2,34 @@
 
 import { AGE_RANGE_OPTIONS } from "@/lib/selfmeta/ageUtils"
 import {
-  REPORT_EXCLUDED_ANAMNEZ_FIELDS,
-  REPORT_INCLUDED_ANAMNEZ_FIELDS,
   buildReportRelevantAnamnezSection,
 } from "@/lib/selfmeta/anamnezUtils"
+import {
+  SUPPORTED_EXTERNAL_TESTS,
+  analyzeExternalClinicalTests,
+  findSupportedExternalTestByName,
+  formatExternalTestAgeRange,
+  getExternalTestInterpretationHint,
+  getExternalTestResultHint,
+} from "@/lib/selfmeta/externalTestRegistry"
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { AiOutlineDown } from "react-icons/ai";
 
 const makeChildCode = () => `SM-${Math.floor(100000 + Math.random() * 900000)}`;
+const makeExternalTestId = () => `ext-${Math.random().toString(36).slice(2, 10)}`;
 import { supabase } from "@/lib/supabase/client";
 
-type TabKey = "demo" | "medical" | "pregnancy" | "daily" | "goals";
+type TabKey = "demo" | "medical" | "pregnancy" | "daily" | "goals" | "external";
+
+type ExternalTestEntry = {
+  id: string;
+  testName: string;
+  result: string;
+  interpretation: string;
+  notes: string;
+};
 
 type FormState = {
   // Kimlik / Demografik
@@ -63,6 +79,13 @@ type FormState = {
   parent_concerns_goals: string;
   parent_contact: string;
   referral_reason: string;
+  therapist_comments: string;
+
+  // Ek klinik bağlam
+  external_test_name: string;
+  external_test_score: string;
+  external_test_interpretation: string;
+  external_clinical_findings: string;
 };
 
 const inputBase =
@@ -80,16 +103,19 @@ const tabBtn = (active: boolean) =>
 function Field({
   label,
   hint,
+  required = true,
   children,
 }: {
   label: string;
   hint?: string;
+  required?: boolean;
   children: React.ReactNode;
 }) {
   return (
     <div>
       <label className="mb-2 block text-sm font-medium text-slate-700">
-        {label} <span className="text-rose-600">*</span>
+        {label}{" "}
+        {required ? <span className="text-rose-600">*</span> : <span className="text-slate-400">(Opsiyonel)</span>}
       </label>
       {children}
       {hint ? <div className="mt-2 text-xs text-slate-400">{hint}</div> : null}
@@ -111,6 +137,7 @@ const REQUIRED: Array<{ key: keyof FormState; label: string }> = [
   { key: "mother_job_working", label: "Annenin mesleği / çalışıyor mu?" },
   { key: "mother_work_hours", label: "Annenin çalışma saatleri" },
   { key: "caregiver_if_working", label: "Çalışıyorsa, çocuğa kim bakıyor" },
+  { key: "parent_contact", label: "Ebeveyn iletişim bilgileri" },
 
   { key: "father_education", label: "Babanın eğitim düzeyi" },
   { key: "father_job", label: "Babanın mesleği" },
@@ -139,7 +166,7 @@ const REQUIRED: Array<{ key: keyof FormState; label: string }> = [
   { key: "referral_reason", label: "Başvuru sebebi" },
 ];
 
-const TAB_ORDER: TabKey[] = ["demo", "medical", "pregnancy", "daily", "goals"];
+const TAB_ORDER: TabKey[] = ["demo", "medical", "pregnancy", "daily", "goals", "external"];
 
 const TAB_LABELS: Record<TabKey, string> = {
   demo: "Demografik",
@@ -147,6 +174,7 @@ const TAB_LABELS: Record<TabKey, string> = {
   pregnancy: "Gebelik & Doğum",
   daily: "Günlük Yaşam",
   goals: "Hedefler",
+  external: "Ek Bulgular",
 };
 
 const TAB_REQUIRED: Record<TabKey, Array<keyof FormState>> = {
@@ -163,6 +191,7 @@ const TAB_REQUIRED: Record<TabKey, Array<keyof FormState>> = {
     "mother_job_working",
     "mother_work_hours",
     "caregiver_if_working",
+    "parent_contact",
     "father_education",
     "father_job",
     "father_work_hours",
@@ -177,10 +206,34 @@ const TAB_REQUIRED: Record<TabKey, Array<keyof FormState>> = {
   ],
   pregnancy: ["prenatal_story", "birth_story", "postnatal_story", "low_birth_history"],
   daily: ["feeding_type", "liked_foods", "rejected_foods", "liked_toys", "strengths"],
-  goals: ["parent_concerns_goals", "parent_contact", "referral_reason"],
+  goals: ["parent_concerns_goals", "referral_reason"],
+  external: [],
 };
 
-function buildAnamnez(form: FormState) {
+function hasExternalTestContent(entry: Pick<ExternalTestEntry, "testName" | "result" | "interpretation" | "notes">): boolean {
+  return Boolean(entry.testName.trim() || entry.result.trim() || entry.interpretation.trim() || entry.notes.trim())
+}
+
+function buildExternalClinicalEntry(entry: Pick<ExternalTestEntry, "testName" | "result" | "interpretation" | "notes">): string {
+  const parts = [
+    entry.testName.trim() ? `Test adı: ${entry.testName.trim()}` : "",
+    entry.result.trim() ? `Puan / sonuç: ${entry.result.trim()}` : "",
+    entry.interpretation.trim() ? `Klinik yorum: ${entry.interpretation.trim()}` : "",
+    entry.notes.trim() ? `Ek notlar: ${entry.notes.trim()}` : "",
+  ].filter(Boolean)
+
+  return parts.join(" | ")
+}
+
+function buildExternalClinicalFindings(entries: ExternalTestEntry[]): string {
+  return entries
+    .filter(hasExternalTestContent)
+    .map((entry, index) => `Test ${index + 1}: ${buildExternalClinicalEntry(entry)}`)
+    .join("\n")
+}
+
+function buildAnamnez(form: FormState, externalTests: ExternalTestEntry[]) {
+  const externalClinicalBlock = buildExternalClinicalFindings(externalTests);
   const lines = [
     `Adı-soyadı: ${form.ad_soyad}`,
     `Danışan Kodu: ${form.client_code}`,
@@ -222,6 +275,10 @@ function buildAnamnez(form: FormState) {
     `Birincil endişeler/hedefler: ${form.parent_concerns_goals}`,
     `Ebeveyn iletişim bilgileri: ${form.parent_contact}`,
     `Başvuru sebebi: ${form.referral_reason}`,
+    `Terapist yorumları: ${form.therapist_comments}`,
+    ...(externalClinicalBlock
+      ? ["", `Ek klinik test / bulgular: ${externalClinicalBlock}`]
+      : []),
   ];
 
   const reportRelevantSection = buildReportRelevantAnamnezSection({
@@ -230,6 +287,7 @@ function buildAnamnez(form: FormState) {
     referral_reason: form.referral_reason,
     parent_concerns_goals: form.parent_concerns_goals,
     strengths: form.strengths,
+    therapist_comments: form.therapist_comments,
     medical_history: form.medical_history,
     allergy_epilepsy_gi_colic_seizure: form.allergy_epilepsy_gi_colic_seizure,
     current_therapies: form.current_therapies,
@@ -242,6 +300,7 @@ function buildAnamnez(form: FormState) {
     feeding_type: form.feeding_type,
     liked_foods: form.liked_foods,
     rejected_foods: form.rejected_foods,
+    external_clinical_findings: externalClinicalBlock,
   });
 
   return [lines.join("\n"), "", reportRelevantSection].filter(Boolean).join("\n");
@@ -278,6 +337,8 @@ export default function NewClientPage() {
   const [tab, setTab] = useState<TabKey>("demo");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [externalTests, setExternalTests] = useState<ExternalTestEntry[]>([]);
+  const [externalTestMode, setExternalTestMode] = useState<"preset" | "custom">("preset");
 
   const [form, setForm] = useState<FormState>({
     ad_soyad: "",
@@ -320,6 +381,11 @@ export default function NewClientPage() {
     parent_concerns_goals: "",
     parent_contact: "",
     referral_reason: "",
+    therapist_comments: "",
+    external_test_name: "",
+    external_test_score: "",
+    external_test_interpretation: "",
+    external_clinical_findings: "",
   });
 
   const setVal = (k: keyof FormState, v: string) => setForm((p) => ({ ...p, [k]: v }));
@@ -338,6 +404,53 @@ export default function NewClientPage() {
     const filled = total - missing.length;
     return Math.round((filled / total) * 100);
   }, [missing]);
+
+  const externalDraft: ExternalTestEntry = useMemo(
+    () => ({
+      id: "draft",
+      testName: form.external_test_name,
+      result: form.external_test_score,
+      interpretation: form.external_test_interpretation,
+      notes: form.external_clinical_findings,
+    }),
+    [form.external_test_name, form.external_test_score, form.external_test_interpretation, form.external_clinical_findings]
+  );
+
+  const selectedAgeMonths = useMemo(
+    () => AGE_RANGE_OPTIONS.find((option) => option.label === form.ageRange)?.valueMonths ?? null,
+    [form.ageRange]
+  );
+
+  const externalTestAnalysis = useMemo(
+    () => analyzeExternalClinicalTests(buildExternalClinicalEntry(externalDraft), selectedAgeMonths),
+    [externalDraft, selectedAgeMonths]
+  );
+  const selectedExternalTest = useMemo(
+    () => findSupportedExternalTestByName(form.external_test_name),
+    [form.external_test_name]
+  );
+
+  const externalScoreNeedsInterpretation = useMemo(() => {
+    const hasScore = Boolean(externalDraft.result.trim())
+    const hasName = Boolean(externalDraft.testName.trim())
+    const hasInterpretation = Boolean(externalDraft.interpretation.trim())
+    return hasName && hasScore && !hasInterpretation
+  }, [externalDraft])
+
+  const externalDraftHasContent = useMemo(() => hasExternalTestContent(externalDraft), [externalDraft])
+
+  const externalPreviewEntries = useMemo(() => {
+    if (!externalDraftHasContent) {
+      return externalTests
+    }
+
+    return [...externalTests, externalDraft]
+  }, [externalDraft, externalDraftHasContent, externalTests])
+
+  const externalPreviewText = useMemo(
+    () => buildExternalClinicalFindings(externalPreviewEntries),
+    [externalPreviewEntries]
+  )
 
   const missingByTab = useMemo(() => {
     const next = {} as Record<TabKey, string[]>;
@@ -363,9 +476,59 @@ export default function NewClientPage() {
     ? "inline-flex items-center justify-center rounded-2xl border-2 border-blue-500 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100"
     : "inline-flex items-center justify-center rounded-2xl border-2 border-slate-200 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400 transition disabled:cursor-not-allowed disabled:opacity-100";
 
+  const clearExternalDraft = () => {
+    setExternalTestMode("preset")
+    setForm((prev) => ({
+      ...prev,
+      external_test_name: "",
+      external_test_score: "",
+      external_test_interpretation: "",
+      external_clinical_findings: "",
+    }))
+  }
+
+  const addExternalTestDraft = (): ExternalTestEntry[] | null => {
+    const hasDraft = hasExternalTestContent(externalDraft)
+
+    if (!hasDraft) {
+      return externalTests
+    }
+
+    if (!externalDraft.testName.trim()) {
+      setErr("Ek test eklemek için önce test adını girin.")
+      setTab("external")
+      return null
+    }
+
+    if (externalScoreNeedsInterpretation) {
+      setErr("Ham puan tek başına kaydedilmez. Lütfen kısa klinik yorumu da ekleyin.")
+      setTab("external")
+      return null
+    }
+
+    const nextEntry: ExternalTestEntry = {
+      id: makeExternalTestId(),
+      testName: externalDraft.testName.trim(),
+      result: externalDraft.result.trim(),
+      interpretation: externalDraft.interpretation.trim(),
+      notes: externalDraft.notes.trim(),
+    }
+
+    const nextList = [...externalTests, nextEntry]
+    setExternalTests(nextList)
+    clearExternalDraft()
+    return nextList
+  }
+
+  const removeExternalTest = (id: string) => {
+    setExternalTests((prev) => prev.filter((entry) => entry.id !== id))
+  }
+
   const onReset = () => {
     setErr(null);
     setSaving(false);
+    setExternalTests([]);
+    setExternalTestMode("preset");
     setForm({
       ad_soyad: "",
       client_code: "",
@@ -407,12 +570,22 @@ export default function NewClientPage() {
       parent_concerns_goals: "",
       parent_contact: "",
       referral_reason: "",
+      therapist_comments: "",
+      external_test_name: "",
+      external_test_score: "",
+      external_test_interpretation: "",
+      external_clinical_findings: "",
     });
     setTab("demo");
   };
 
   const onCreate = async () => {
     setErr(null);
+
+    const finalExternalTests = addExternalTestDraft()
+    if (finalExternalTests === null) {
+      return
+    }
 
     if (!canCreate) {
       setErr("Zorunlu alanlar eksik: " + missing.join(", "));
@@ -439,7 +612,7 @@ export default function NewClientPage() {
       const payload = {
         owner_id: ures.user.id,
         child_code: normalizedChildCode,
-        anamnez: buildAnamnez(form),
+        anamnez: buildAnamnez(form, finalExternalTests || externalTests),
       };
 
       const { data, error } = await supabase
@@ -474,7 +647,7 @@ export default function NewClientPage() {
           <div>
             <h1 className="text-2xl font-semibold text-slate-900">Yeni Danışan Ekle</h1>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-500">
-              Tüm anamnez alanları zorunludur. Kayıt oluşturulduktan sonra değerlendirme ve skor girişine geçilir.
+              Ek klinik test alanı dışında tüm anamnez alanları zorunludur. Kayıt oluşturulduktan sonra değerlendirme ve skor girişine geçilir.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -553,7 +726,7 @@ export default function NewClientPage() {
                   <Field label="Danışan Kodu" hint="Örn: Oluşturulurken benzersiz kod verilir">
                     <input value={form.client_code} onChange={(e) => setVal("client_code", e.target.value)} className={inputBase} placeholder="SM-014" />
                   </Field>
-                  <Field label="Kayıt Tarihi" hint="Boş bırakılabilir (ama zorunlu alan listesinden çıkarmadık)">
+                  <Field label="Kayıt Tarihi" hint="Boş bırakılabilir" required={false}>
                     <input value={form.record_date} onChange={(e) => setVal("record_date", e.target.value)} className={inputBase} type="date" />
                   </Field>
                   <div className="md:col-span-2">
@@ -614,6 +787,9 @@ export default function NewClientPage() {
                   </Field>
                   <Field label="Çalışıyorsa, çocuğa kim bakıyor">
                     <input value={form.caregiver_if_working} onChange={(e) => setVal("caregiver_if_working", e.target.value)} className={inputBase} placeholder="Anneanne/bakıcı..." />
+                  </Field>
+                  <Field label="Ebeveyn iletişim bilgileri">
+                    <textarea value={form.parent_contact} onChange={(e) => setVal("parent_contact", e.target.value)} className={textareaBase} rows={3} placeholder="Telefon / e-posta" />
                   </Field>
 
                   <Field label="Babanın eğitim düzeyi">
@@ -694,12 +870,315 @@ export default function NewClientPage() {
                 <Field label="Çocuğunuzla ilgili birincil endişeleriniz/hedefleriniz nelerdir?">
                   <textarea value={form.parent_concerns_goals} onChange={(e) => setVal("parent_concerns_goals", e.target.value)} className={textareaBase} rows={6}  />
                 </Field>
-                <Field label="Ebeveyn iletişim bilgileri">
-                  <textarea value={form.parent_contact} onChange={(e) => setVal("parent_contact", e.target.value)} className={textareaBase} rows={3} placeholder="Telefon/e-posta" />
-                </Field>
                 <Field label="Başvuru sebebi">
                   <textarea value={form.referral_reason} onChange={(e) => setVal("referral_reason", e.target.value)} className={textareaBase} rows={4}  />
                 </Field>
+                <Field
+                  label="Terapist yorumları"
+                  required={false}
+                  hint="Gözlem, klinik izlenim veya rapora yansımasını istediğin kısa profesyonel notları buraya ekleyebilirsin."
+                >
+                  <textarea
+                    value={form.therapist_comments}
+                    onChange={(e) => setVal("therapist_comments", e.target.value)}
+                    className={textareaBase}
+                    rows={4}
+                    placeholder="Örn. Seans içinde geçişlerde zorlandı, yapılandırılmış yönlendirmeden belirgin fayda gördü."
+                  />
+                </Field>
+              </div>
+            )}
+
+            {tab === "external" && (
+              <div className="space-y-6">
+                <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 text-sm leading-6 text-slate-600">
+                  Ek bir değerlendirme varsa burada kısaca ekle. Test adı, sonuç ve kısa klinik yorum yeterli.
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Field label="Test adı" required={false} hint="Listeden seç veya özel test gir.">
+                    <div className="space-y-3">
+                      <div className="relative">
+                        <select
+                          value={
+                            selectedExternalTest?.id ??
+                            (externalTestMode === "custom" ? "__custom__" : "")
+                          }
+                          onChange={(e) => {
+                            const value = e.target.value
+                            if (!value) {
+                              setExternalTestMode("preset")
+                              setVal("external_test_name", "")
+                              return
+                            }
+                            if (value === "__custom__") {
+                              setExternalTestMode("custom")
+                              setVal("external_test_name", "")
+                              return
+                            }
+                            const test = SUPPORTED_EXTERNAL_TESTS.find((item) => item.id === value)
+                            setExternalTestMode("preset")
+                            setVal("external_test_name", test?.name || "")
+                          }}
+                          className={`${inputBase} appearance-none pr-11`}
+                        >
+                          <option value="">Desteklenen test seç</option>
+                          {SUPPORTED_EXTERNAL_TESTS.map((test) => (
+                            <option key={test.id} value={test.id}>
+                              {test.name}
+                            </option>
+                          ))}
+                          <option value="__custom__">Başka bir test gir</option>
+                        </select>
+                        <AiOutlineDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
+                      </div>
+
+                      {externalTestMode === "custom" ? (
+                        <input
+                          value={form.external_test_name}
+                          onChange={(e) => setVal("external_test_name", e.target.value)}
+                          className={inputBase}
+                          placeholder="Özel test adı"
+                        />
+                      ) : null}
+                    </div>
+                  </Field>
+
+                  <Field
+                    label="Puan / sonuç"
+                    required={false}
+                    hint={selectedExternalTest ? getExternalTestResultHint(selectedExternalTest.id) : undefined}
+                  >
+                    <input
+                      value={form.external_test_score}
+                      onChange={(e) => setVal("external_test_score", e.target.value)}
+                      className={inputBase}
+                      placeholder={
+                        selectedExternalTest?.id === "brief_p" || selectedExternalTest?.id === "brief2"
+                          ? "Örn. Emosyonel kontrol T=72, klinik yüksek"
+                          : selectedExternalTest?.id === "sipt"
+                          ? "Örn. Praxis alt testlerinde düşük performans"
+                          : "Örn. 30 puan / düşük / sınırda / percentile 12"
+                      }
+                    />
+                  </Field>
+                </div>
+
+                <Field
+                  label="Klinik yorum / resmi bulgu özeti"
+                  required={false}
+                  hint={selectedExternalTest ? getExternalTestInterpretationHint(selectedExternalTest.id) : "Sonucun kısa klinik anlamını yaz."}
+                >
+                  <textarea
+                    value={form.external_test_interpretation}
+                    onChange={(e) => setVal("external_test_interpretation", e.target.value)}
+                    className={textareaBase}
+                    rows={4}
+                    placeholder={
+                      selectedExternalTest?.id === "sipt"
+                        ? "Örn. Somatodispraksi ile uyumlu bulgular gözlendi. Motor planlama ve beden organizasyonu zorlanıyor."
+                        : "Testin yorum kısmı, resmi rapor özeti veya klinik anlamı"
+                    }
+                  />
+                </Field>
+
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <div className="text-sm text-slate-600">
+                    {externalTests.length > 0 ? (
+                      <>
+                        Listede <span className="font-semibold text-slate-900">{externalTests.length}</span> ek test var.
+                        {externalDraftHasContent ? " Mevcut taslak da rapora eklenmeye hazır." : ""}
+                      </>
+                    ) : externalDraftHasContent ? (
+                      "Taslak hazır. İstersen önce listeye ekle, istersen kayıt oluştururken otomatik eklensin."
+                    ) : (
+                      "Henüz eklenmiş dış test yok. Bu alan tamamen opsiyonel."
+                    )}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setErr(null)
+                        addExternalTestDraft()
+                      }}
+                      className="selfmeta-btn px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={!externalDraftHasContent}
+                    >
+                      Testi Listeye Ekle
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setErr(null)
+                        clearExternalDraft()
+                      }}
+                      className="selfmeta-btn-ghost px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={!externalDraftHasContent}
+                    >
+                      Taslağı Temizle
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="text-sm font-semibold text-slate-900">Eklenen testler</div>
+                  {externalTests.length === 0 ? (
+                    <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-4 py-5 text-sm leading-6 text-slate-500">
+                      Henüz listeye eklenmiş dış test yok. Bir test doldurup <b>Testi Listeye Ekle</b> ile sabitleyebilirsin.
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {externalTests.map((entry, index) => {
+                        const entryAnalysis = analyzeExternalClinicalTests(buildExternalClinicalEntry(entry), selectedAgeMonths)
+                        const isCompatible = entryAnalysis.compatible.length > 0
+                        const isIncompatible = entryAnalysis.incompatible.length > 0
+                        const isUnknown = entryAnalysis.hasUnrecognizedContent
+
+                        return (
+                          <div key={entry.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+                              <div className="space-y-2">
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <span className="inline-flex rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                                    Test {index + 1}
+                                  </span>
+                                  <span className="text-sm font-semibold text-slate-900">{entry.testName || "Adsız test"}</span>
+                                  {isCompatible ? (
+                                    <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                                      Yaşa uygun
+                                    </span>
+                                  ) : null}
+                                  {isIncompatible ? (
+                                    <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                                      Yaş uyumsuz
+                                    </span>
+                                  ) : null}
+                                  {isUnknown ? (
+                                    <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                                      Tanınmayan test
+                                    </span>
+                                  ) : null}
+                                </div>
+
+                                {entry.result ? (
+                                  <div className="text-sm leading-6 text-slate-700">
+                                    <span className="font-medium text-slate-900">Puan / sonuç:</span> {entry.result}
+                                  </div>
+                                ) : null}
+                                {entry.interpretation ? (
+                                  <div className="text-sm leading-6 text-slate-700">
+                                    <span className="font-medium text-slate-900">Klinik yorum:</span> {entry.interpretation}
+                                  </div>
+                                ) : null}
+                                {entry.notes ? (
+                                  <div className="text-sm leading-6 text-slate-700">
+                                    <span className="font-medium text-slate-900">Ek notlar:</span> {entry.notes}
+                                  </div>
+                                ) : null}
+
+                                {entryAnalysis.warningLines.length > 0 ? (
+                                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
+                                    {entryAnalysis.warningLines[0]}
+                                  </div>
+                                ) : null}
+
+                                {entryAnalysis.validatedSupportLines.length > 0 ? (
+                                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-5 text-emerald-900">
+                                    {entryAnalysis.validatedSupportLines[0]}
+                                  </div>
+                                ) : null}
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => removeExternalTest(entry.id)}
+                                className="selfmeta-btn-ghost px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50"
+                              >
+                                Testi Sil
+                              </button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {selectedExternalTest ? (
+                  <div className="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4 text-sm leading-6 text-slate-700">
+                    <div className="font-semibold text-slate-900">{selectedExternalTest.name}</div>
+                    <div className="mt-1">
+                      Yaş: {formatExternalTestAgeRange(selectedExternalTest)}{" "}
+                      <span className="text-slate-400">•</span> {selectedExternalTest.supportedUse}
+                    </div>
+                  </div>
+                ) : null}
+
+                <Field
+                  label="Ek notlar"
+                  required={false}
+                  hint="İstersen tarih, uygulama koşulu veya terapistin kısa notunu ekleyebilirsin."
+                >
+                  <textarea
+                    value={form.external_clinical_findings}
+                    onChange={(e) => setVal("external_clinical_findings", e.target.value)}
+                    className={textareaBase}
+                    rows={4}
+                    placeholder="Örn. Test gürültüsüz ortamda uygulandı. Bulgular aile gözlemiyle de uyumluydu."
+                  />
+                </Field>
+
+                {externalPreviewEntries.length > 0 ? (
+                  <div className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="text-sm font-semibold text-slate-900">Rapora gidecek standart özet</div>
+                    <div className="mt-2 text-sm leading-6 text-slate-700">
+                      {externalPreviewText || "Henüz rapora gidecek yapılandırılmış veri oluşmadı."}
+                    </div>
+                  </div>
+                ) : null}
+
+                {externalScoreNeedsInterpretation ? (
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+                    Ham puan tek başına rapora karar girdisi olarak alınmayacak. Lütfen bu puanın kısa klinik anlamını da yaz.
+                  </div>
+                ) : null}
+
+                {externalTestAnalysis.compatible.length > 0 ? (
+                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
+                    <div className="text-sm font-semibold text-emerald-900">Yaşla uyumlu tanınan dış testler</div>
+                    <div className="mt-2 space-y-2 text-sm leading-6 text-emerald-800">
+                      {externalTestAnalysis.compatible.map((test) => (
+                        <div key={test.id}>
+                          <div className="font-medium">{test.name}</div>
+                          <div>{formatExternalTestAgeRange(test)}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                {externalTestAnalysis.incompatible.length > 0 ? (
+                  <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                    <div className="text-sm font-semibold text-amber-900">Yaş uyumsuzluğu uyarısı</div>
+                    <div className="mt-2 space-y-3 text-sm leading-6 text-amber-900">
+                      {externalTestAnalysis.incompatible.map((test) => (
+                        <div key={test.id}>
+                          <div className="font-medium">{test.name}</div>
+                          <div>
+                            Bu testin resmi yaş aralığı {formatExternalTestAgeRange(test)}. Seçili vaka yaş aralığı ile uyumlu görünmediği için rapor karar mekanizmasına dahil edilmeyecek.
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                {externalTestAnalysis.hasUnrecognizedContent ? (
+                  <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
+                    Girilen dış test adı mevcut doğrulama kataloğunda tanınmadı. Bu nedenle sistem yaş uygunluğu kontrolü yapmadan yalnız serbest klinik bağlam olarak değerlendirecektir.
+                  </div>
+                ) : null}
               </div>
             )}
           </div>
@@ -765,38 +1244,6 @@ export default function NewClientPage() {
                 <div className="h-2 rounded-full bg-indigo-600" style={{ width: `${completion}%` }} />
               </div>
               <div className="mt-3 text-xs text-slate-500">Doluluk oranı yalnızca doldurulan anamnez alanlarına göre hesaplanır.</div>
-            </div>
-          </div>
-          <div className="selfmeta-card p-6">
-            <h2 className="text-lg font-semibold text-slate-900">Rapora Dahil Edilen Klinik Anamnez</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-500">
-              Rapor motoru klinik yorumu yalnız aşağıdaki alanlardan besler. İletişim ve idari bilgiler kayda alınır ama rapor yorumuna dahil edilmez.
-            </p>
-            <div className="mt-4">
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Dahil Edilen Alanlar</div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {REPORT_INCLUDED_ANAMNEZ_FIELDS.map((field) => (
-                  <span
-                    key={field.key}
-                    className="rounded-full border border-indigo-200 bg-indigo-50 px-3 py-1 text-xs font-medium text-indigo-700"
-                  >
-                    {field.label}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div className="mt-5">
-              <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Rapora Dahil Edilmeyenler</div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {REPORT_EXCLUDED_ANAMNEZ_FIELDS.map((field) => (
-                  <span
-                    key={field.key}
-                    className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-medium text-slate-600"
-                  >
-                    {field.label}
-                  </span>
-                ))}
-              </div>
             </div>
           </div>
 <div className="selfmeta-card p-6">

@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-BODY-REC-68",
+  "clientName": "Yagiz",
+  "ageMonths": 68,
+  "anamnez": {
+    "ad_soyad": "Yagiz Ornek",
+    "client_code": "FIXTURE-BODY-REC-68",
+    "record_date": "2026-04-01",
+    "age_range": "60-71 ay",
+    "diagnosis": "Toparlanma ve beden farkindaligi izlemi",
+    "referral_reason": "Gun icinde ilk saatlerde iyi giden performans, yorulma ve ic huzursuzluk arttikca hizla bozuluyor. Aile acikligi, tuvalet ihtiyaci ve yorgunluk fark edilmeden once dikkatin dagildigini, sonra duygusal yuklenme geldigini belirtiyor.",
+    "parent_concerns_goals": "Yorgunluk ve beden ihtiyaclarini daha erken fark etmesi, mola isteme, gun icinde performansi daha istikrarli surdurme ve yuklenme sonrasi daha hizli toparlanma hedeflenmektedir.",
+    "therapist_comments": "Ilk 15 dakikada katilim iyi. Sonra bedensel huzursuzluk, pozisyon degistirme ve goz temasi azalmasi geliyor. Kisa hareket molasi ve su verildiginde performans belirgin toparliyor.",
+    "strengths": "Yapilandirilmis etkinlikte katilim ve dil anlama iyi.",
+    "medical_history": "Cabuk yorulma ve kabizlik donemleri bildiriliyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Donemsel kabizlik var, nobet yok.",
+    "current_therapies": "Ergoterapi takibi suruyor.",
+    "past_therapies": "Yok.",
+    "medications": "Yok.",
+    "prenatal_story": "Olagan.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Uykuya gecis ve yatismada zorluk gecmisi var.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Acilik fark etmedigi zaman aniden huzursuzlasiyor.",
+    "liked_foods": "Normal.",
+    "rejected_foods": "Belirgin yok.",
+    "external_clinical_findings": "Test adi: PEDI-CAT\nPuan / sonuc: Gunluk etkinlik ve sorumlulukta beklenti alti performans.\nKlinik yorum / resmi bulgu ozeti: Beden ihtiyaci ve enerji duzeyi duzenlenmediginde gunluk katilim ve sorumluluk performansi dusuyor.\nEk notlar: Mola ve beden duzenleme destegi ile toparlanma artiyor.\n\nTest adi: Vineland-3\nPuan / sonuc: Gunluk yasam becerileri alani sinirli dusuk ortalama.\nKlinik yorum / resmi bulgu ozeti: Ozbakim ve rutin surdurmede bedensel durum degiskenligi performansi etkiliyor."
+  },
+  "scores": {
+    "physiological": 23,
+    "sensory": 38,
+    "emotional": 29,
+    "cognitive": 33,
+    "executive": 31,
+    "interoception": 24
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-SIPT-SOMA-66",
+  "clientName": "Defne",
+  "ageMonths": 66,
+  "anamnez": {
+    "ad_soyad": "Defne Ornek",
+    "client_code": "FIXTURE-SIPT-SOMA-66",
+    "record_date": "2026-04-01",
+    "age_range": "60-71 ay",
+    "diagnosis": "Motor planlama guclugu / duyusal butunleme izlem",
+    "referral_reason": "Aile giyinme, alet kullanma, yeni hareket oruntusunu kurma, iki tarafli koordinasyon ve beden organizasyonu gerektiren etkinliklerde belirgin yavaslik ve dagilma bildirmektedir. Cocuk ne yapacagini anlamasina ragmen hareketi planlamakta ve surdurmekte zorlanmaktadir.",
+    "parent_concerns_goals": "Motor planlama, beden farkindaligi, giyinme ve oyun icinde yeni hareket sekillerini olusturma becerilerinin artmasi; gorevde kalma ve hareket dizisini surdurme suresinin uzamasi hedeflenmektedir.",
+    "therapist_comments": "Gozlemde model alma ile basliyor ancak yeni hareket oruntusunu kendi basina surdurmede zorlaniyor. Bedenini uzayda organize etme, hareket baslatma ve sekanslama zorlugu gorev surecini uzatiyor; basarisizlik hissi arttiginda ikincil duygusal cekilme gorulebiliyor.",
+    "strengths": "Sosyal katilim iyi, dil anlama yeterli, gorsel ipucu ile goreve baslama kolaylasiyor. Tekrarli ve ogrenilmis hareketlerde performans belirgin olarak artiyor.",
+    "medical_history": "Belirgin kronik hastalik yok. Erken donemde gec kaba motor kilometre tasi bildirilmis. Cabuk yorulma ve uzun sureli postur gerektiren etkinliklerde dusme kalitesinde bozulma tarif ediliyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Belirgin alerji veya nobet oykusu yok.",
+    "current_therapies": "Haftada 2 seans ergoterapi ve okulda beden farkindaligi destekli hareket calismalari uygulanmaktadir.",
+    "past_therapies": "Daha once genel fiziksel oyun gruplarina katilim olmus; hareket planlama gerektiren oyunlarda geri cekilme gozlenmis.",
+    "medications": "Duzenli ilac kullanimi yok.",
+    "prenatal_story": "Gebelikte ciddi tibbi komplikasyon yok.",
+    "birth_story": "Term dogum, yenidogan yogun bakim oykusu yok.",
+    "postnatal_story": "Bebeklikte yuzustu pozisyonda kalma suresi kisa, hareket gecisleri destekle baslamis.",
+    "low_birth_history": "Dusuk dogum agirligi yok.",
+    "feeding_type": "Kendi kendine kasik kullanma ogrenimi gecikmis, ince motor yorgunluk cabuk artabiliyor.",
+    "liked_foods": "Catalla kolay alinabilen belirgin parca yapili yiyecekleri seviyor.",
+    "rejected_foods": "Yogun karistirma ve ince motor kontrol gerektiren masa duzenlerinde yemekten kopabiliyor.",
+    "external_clinical_findings": "Test adi: SIPT\nPuan / sonuc: Praxis alt testlerinde dusuk performans; somatodispraksi lehine oruntu.\nKlinik yorum / resmi bulgu ozeti: Motor planlama, beden organizasyonu ve yeni hareket oruntusu kurma tarafinda belirgin kirilganlik bulgulari mevcut.\nEk notlar: Iki tarafli koordinasyon ve postural temelde ek yuk izleniyor.\n\nTest adi: MABC-3\nPuan / sonuc: El becerileri ve denge alanlarinda dusuk ortalama ile sinir alti performans.\nKlinik yorum / resmi bulgu ozeti: Motor koordinasyon ve hareketi uygulama kalitesinde ek zorluk oldugunu destekliyor.\nEk notlar: Hareket dizisi uzadikca hata sayisi artiyor.\n\nTest adi: Beery VMI\nPuan / sonuc: Gorsel-motor butunleme dusuk ortalama.\nKlinik yorum / resmi bulgu ozeti: Motor planlama ve gorsel geri bildirimi birlikte kullanma kapasitesinde sinirli performans oldugunu destekliyor."
+  },
+  "scores": {
+    "physiological": 29,
+    "sensory": 31,
+    "emotional": 36,
+    "cognitive": 28,
+    "executive": 24,
+    "interoception": 27
+  }
+}

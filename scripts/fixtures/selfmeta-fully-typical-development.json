@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-TYPICAL-58",
+  "clientName": "Ece",
+  "ageMonths": 58,
+  "anamnez": {
+    "ad_soyad": "Ece Ornek",
+    "client_code": "FIXTURE-TYPICAL-58",
+    "record_date": "2026-04-01",
+    "age_range": "48-59 ay",
+    "diagnosis": "Tani yok / tipik gelisim izlemi",
+    "referral_reason": "Aile, cocugun genel gelisimini ve okula hazirlik surecini guvence altina almak amaciyla degerlendirme talep etmektedir. Gunluk yasam, oyun, akran etkilesimi, gecisler ve rutinlere uyum acisindan belirgin bir zorlanma tarif edilmemektedir.",
+    "parent_concerns_goals": "Ailenin temel hedefi, cocugun mevcut guclu yonlerini ve okula hazirlik acisindan destek gerektiren bir alan olup olmadigini netlestirmektir. Ozellikle dikkat, duygu duzenleme, akran iliskileri ve gunluk rutinleri surdurme kapasitesinin yasina uygun olup olmadigi gorulmek istenmektedir.",
+    "therapist_comments": "Gozlem boyunca iliski kurma, ortak dikkat, goreve baslama, etkinlikte kalma ve gecis yapma becerileri genel olarak duzenli izlendi. Yeni etkinlige geciste kisa sozel yonlendirme yeterli oldu. Bekleme, sira alma, hata sonrasi yeniden deneme ve etkinlik sonlandirma becerileri yas duzeyine uygun gorundu.",
+    "strengths": "Sosyal iletisim guclu, akran oyununa kolay katiliyor, sembolik oyun cesitli, gorsel ve sozel yonergeleri takip ediyor. Dikkatini yapilandirilmis ve serbest oyunda yeterli sure koruyabiliyor. Degisiklikleri genellikle tolere ediyor.",
+    "medical_history": "Belirgin tibbi hastalik, sik enfeksiyon, uyku bozuklugu ya da gastrointestinal sorun bildirilmiyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Bilinen alerji, nobet, epilepsi, kolik ya da suregen GI sorun oykusu yok.",
+    "current_therapies": "Duzenli terapi almiyor.",
+    "past_therapies": "Gecmis terapi oykusu yok.",
+    "medications": "Duzenli ilac kullanimi yok.",
+    "prenatal_story": "Gebelikte belirgin komplikasyon bildirilmedi.",
+    "birth_story": "Term dogum, dogum sonrasi yogun bakim ihtiyaci olmadi.",
+    "postnatal_story": "Erken gelisim basamaklari genel olarak zamaninda izlenmis.",
+    "low_birth_history": "Dusuk dogum agirligi oykusu yok.",
+    "feeding_type": "Beslenme duzenli ve cesitlidir.",
+    "liked_foods": "Sebze yemekleri, yogurt, meyve ve kuru baklagilleri tuketmektedir.",
+    "rejected_foods": "Belirgin secici reddetme yok; yalnizca bazi baharatli tatlari tercih etmiyor.",
+    "external_clinical_findings": "Test adi: Vineland-3\nPuan / sonuc: Iletisim, gunluk yasam becerileri ve sosyallesme alanlarinda yas beklentisiyle uyumlu performans.\nKlinik yorum / resmi bulgu ozeti: Genel uyumsal islevsellik korunmus; belirgin destek gerektiren bir alt alan izlenmedi.\nEk notlar: Ozbakim, iletisim ve toplumsal katilim becerileri tutarli.\n\nTest adi: ABAS-3\nPuan / sonuc: Uyum becerileri genel indeksi yas duzeyi ile uyumlu, kavramsal, sosyal ve pratik alanlar dengeli.\nKlinik yorum / resmi bulgu ozeti: Gunluk sorumluluk, iletisim ve kendi kendini yonetme becerileri genel olarak beklenen duzeydedir.\nEk notlar: Ek klinik risk gosteren bir alt profil yok."
+  },
+  "scores": {
+    "physiological": 42,
+    "sensory": 40,
+    "emotional": 39,
+    "cognitive": 41,
+    "executive": 40,
+    "interoception": 38
+  }
+}

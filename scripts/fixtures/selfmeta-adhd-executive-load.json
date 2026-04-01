@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-ADHD-EXEC-66",
+  "clientName": "Kuzey",
+  "ageMonths": 66,
+  "anamnez": {
+    "ad_soyad": "Kuzey Ornek",
+    "client_code": "FIXTURE-ADHD-EXEC-66",
+    "record_date": "2026-04-01",
+    "age_range": "60-71 ay",
+    "diagnosis": "DEHB suphe",
+    "referral_reason": "Aile ve ogretmen, etkinlige baslama, gorevde kalma, sirali yonergeyi takip etme ve davranisi durdurma alanlarinda belirgin zorlanma bildirmektedir. Hareketlilik ve durtusellik ozellikle grup kurali olan ortamlarda artmaktadir.",
+    "parent_concerns_goals": "Kuralli etkinliklerde gorevde kalma suresinin artmasi, gecislerde direnme ve durtusellikte azalma, cok basamakli yonergeleri daha tutarli izleme ve kendi davranisini daha iyi durdurabilme hedeflenmektedir.",
+    "therapist_comments": "Gozlemde motivasyon baslangici iyi ancak kisa sure sonra yer degistirme, gorevi yarim birakma ve dis uyaranlara kolay kayma belirgin. Duygusal patlama baskin degil; asil zorluk davranisi organize etme ve surdurmede.",
+    "strengths": "Gorsel olarak acik sunulan, kisa ve tek adimli gorevlerde hizli cevap veriyor. Motor enerjisi yuksek, yeni etkinlige merakli, ilgi cekici materyalle hizli katiliyor.",
+    "medical_history": "Belirgin kronik hastalik yok. Uyku suresi sinirli, sabah kalkis zor ama gun icinde temel fizyolojik ritim buyuk olcude korunmus.",
+    "allergy_epilepsy_gi_colic_seizure": "Belirgin alerji, nobet veya GIS oykusu yok.",
+    "current_therapies": "Haftada 1 seans dikkat-yurutucu islev odakli ergoterapi ve okul ici sinif uyarlamalari mevcut.",
+    "past_therapies": "Daha once oyun grubu ve spor etkinliklerine katilim olmus; yapilandirma olmadiginda surdurmekte zorlanmis.",
+    "medications": "Duzenli ilac kullanimi yok.",
+    "prenatal_story": "Gebelikte ciddi tibbi komplikasyon bildirilmedi.",
+    "birth_story": "Term dogum, komplikasyon yok.",
+    "postnatal_story": "Erken donemde hareketli mizac ve dusuk yatismislik seviyesi tarif edilmis.",
+    "low_birth_history": "Dusuk dogum agirligi yok.",
+    "feeding_type": "Beslenme buyuk olcude yeterli; masa basinda oturarak yemegi surdurme zorlugu zaman zaman var.",
+    "liked_foods": "Tuzlu atistirmaliklar, kofte, pilav ve makarna seviyor.",
+    "rejected_foods": "Yavas yenen ve dokusu degisken yiyecekleri cabuk birakabiliyor.",
+    "external_clinical_findings": "Test adi: BRIEF-P\nPuan / sonuc: Inhibisyon, calisma bellegi ve planlama alt alanlarinda klinik yukseklik.\nKlinik yorum / resmi bulgu ozeti: Yurutucu islevlerde davranissal kontrol, gorev yonetimi ve zihinsel organizasyon tarafinda belirgin kirilganlik dusunduruyor.\nEk notlar: Ebeveyn ve ogretmen bildirimleri benzer.\n\nTest adi: Conners Early Childhood (Conners EC)\nPuan / sonuc: Dikkat sureci, hiperaktivite/durtusellik ve ogrenme ile iliskili davranis alt alanlarinda yukselme.\nKlinik yorum / resmi bulgu ozeti: Dikkat surdurme ve davranisi durdurma guclukleri cok kaynakli bildirimle destekleniyor.\nEk notlar: Sinifta masa basi etkinliklerde zorlanma daha belirgin.\n\nTest adi: BASC-3\nPuan / sonuc: Davranissal semptom indeksinde sinir yukseklik, duygusal alanda belirgin primer yuk yok.\nKlinik yorum / resmi bulgu ozeti: Profilin daha cok davranissal kontrol ve yurutucu islev ekseninde toplandigini destekliyor."
+  },
+  "scores": {
+    "physiological": 36,
+    "sensory": 38,
+    "emotional": 31,
+    "cognitive": 22,
+    "executive": 21,
+    "interoception": 34
+  }
+}

@@ -72,11 +72,13 @@ import { rewriteClinicalReport } from "@/lib/selfmeta/aiRewrite"
 import { buildAdvancedReport } from "@/lib/selfmeta/reportEngine"
 import { extractAgeMonthsFromAnamnez, isSupportedAgeMonths } from "@/lib/selfmeta/ageUtils"
 import { buildLiteratureAlignedSection } from "@/lib/selfmeta/literatureNote"
+import { hasCriticalNarrativeGuardViolation } from "@/lib/selfmeta/reportQuality"
 import {
   getClinicalReportSectionHeadings,
   hasAllCanonicalReportSections,
   mergeClinicalReportSections,
   normalizeClinicalReportText,
+  splitClinicalReportSections,
 } from "@/lib/selfmeta/reportText"
 
 async function createSupabaseServerClient() {
@@ -128,14 +130,26 @@ function hasLevelMismatch(
   if (!text || !domainSummary) return false;
 
   const allLevels = ["Tipik", "Riskli", "Atipik"];
-  const lines = text.split(/\n+/);
+  const relevantSections = splitClinicalReportSections(text).filter((section) =>
+    section.heading === "2. Sayısal Sonuç Özeti" || section.heading === "3. Alan Bazlı Klinik Yorum"
+  );
+  const lines = relevantSections.flatMap((section) => section.body.split(/\n+/));
 
   for (const [domain, rawLevel] of Object.entries(domainSummary)) {
     const expected = normalizeLevel(rawLevel);
     if (!domain || !expected) continue;
 
     const domainRe = new RegExp(escapeRegex(domain), "i");
-    const matchingLines = lines.filter((ln) => domainRe.test(ln));
+    const matchingLines = lines.filter((ln) => {
+      const line = String(ln || "").trim()
+      if (!line || !domainRe.test(line)) return false
+      return (
+        line.startsWith(`- ${domain}:`) ||
+        line.startsWith(`${domain}:`) ||
+        line.startsWith(`${domain} `) ||
+        line === domain
+      )
+    });
 
     for (const ln of matchingLines) {
       const foundLevels = allLevels.filter((lvl) => ln.includes(lvl));
@@ -154,7 +168,12 @@ function shouldFallbackToDeterministic(
   aiText: string,
   clinicalAnalysis: {
     domainSummary?: Record<string, string>;
-  } | undefined
+  } | undefined,
+  reportMeta?: {
+    domainResults?: Array<{ key: string; label: string; score: number; level: string }>
+    globalLevel?: string
+    profileType?: string
+  }
 ): boolean {
   if (!aiText || !aiText.trim()) return true;
 
@@ -163,6 +182,20 @@ function shouldFallbackToDeterministic(
 
   // Sadece açık düzey çelişkisi varsa fallback
   if (hasLevelMismatch(aiText, clinicalAnalysis?.domainSummary)) return true;
+
+  if (
+    reportMeta?.domainResults?.length &&
+    reportMeta.globalLevel &&
+    reportMeta.profileType &&
+    hasCriticalNarrativeGuardViolation({
+      text: aiText,
+      domainResults: reportMeta.domainResults,
+      globalLevel: reportMeta.globalLevel,
+      profileType: reportMeta.profileType,
+    })
+  ) {
+    return true;
+  }
 
   return false;
 }
@@ -242,6 +275,14 @@ function validateInputSelfMeta(body: any) {
     }
   }
 
+  if (body?.answers != null) {
+    if (!Array.isArray(body.answers) || body.answers.length !== 60) {
+      errors.push("answers_invalid")
+    } else if (body.answers.some((value: unknown) => !Number.isFinite(Number(value)) || Number(value) < 1 || Number(value) > 5)) {
+      errors.push("answers_out_of_range")
+    }
+  }
+
   return errors
 }
 
@@ -269,6 +310,7 @@ if (__validationErrors.length > 0) {
       clientCode: body?.clientCode || "",
       ageMonths: incomingAgeMonths,
       anamnez: body?.anamnez || "",
+      answers: Array.isArray(body?.answers) ? body.answers : undefined,
       scores: body?.scores || {},
     })
 
@@ -290,7 +332,11 @@ if (__validationErrors.length > 0) {
       aiText = ""
     }
     const mergedAiText = mergeClinicalReportSections(aiText, report.deterministicReport)
-    const useFallback = shouldFallbackToDeterministic(mergedAiText, report.clinicalAnalysis)
+    const useFallback = shouldFallbackToDeterministic(mergedAiText, report.clinicalAnalysis, {
+      domainResults: report.domainResults,
+      globalLevel: report.globalLevel,
+      profileType: report.profileType,
+    })
     const literatureSection = buildLiteratureAlignedSection(report.clinicalAnalysis)
     const finalText = cleanRenderedReport(
       appendOptionalSection(useFallback ? report.deterministicReport : mergedAiText, literatureSection?.text)

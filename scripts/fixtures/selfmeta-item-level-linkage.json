@@ -1,0 +1,44 @@
+{
+  "clientCode": "FIXTURE-ITEM-LINK-54",
+  "clientName": "Mert",
+  "ageMonths": 54,
+  "anamnez": {
+    "ad_soyad": "Mert Ornek",
+    "client_code": "FIXTURE-ITEM-LINK-54",
+    "record_date": "2026-04-01",
+    "age_range": "48-59 ay",
+    "diagnosis": "Otizm spektrum bozuklugu",
+    "referral_reason": "Aile özellikle kalabalık ve gürültülü ortamlarda hızla yükselme, etkinlikten kopma, sıra beklerken zorlanma ve yoğun uyaran sonrası uzun süren sakinleşme güçlüğü bildirmektedir. Yemek seçiciliği ve dokunsal hassasiyet de günlük yaşamda belirgindir.",
+    "parent_concerns_goals": "Ses yükü arttığında görevde kalma süresinin uzaması, yeni yemek deneme toleransının artması, öfke sonrası daha hızlı sakinleşme ve çok basamaklı yönergelerde kopmadan kalabilmesi hedeflenmektedir.",
+    "therapist_comments": "Seans içinde ses arttığında başını çevirme, bedensel gerilim ve görevi bırakma görülüyor. Bekleme ve sıra alma gerektiren durumlarda huzursuzluk artıyor. Yapılandırılmış bire bir ortamda daha iyi sürüyor.",
+    "strengths": "Bire bir yapılandırılmış görevlerde yetişkinle iyi eşleşiyor, görsel ipucunu hızlı kullanıyor ve tanıdık rutinde iş birliği yüksek.",
+    "medical_history": "Belirgin nöbet öyküsü yok. Zaman zaman kabızlık ve yorulunca düzenleme güçlüğü bildiriliyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Dönemsel kabızlık ve iştah dalgalanması öyküsü var.",
+    "current_therapies": "Haftada 2 seans ergoterapi ve haftada 1 seans dil-konuşma terapisi alıyor.",
+    "past_therapies": "Daha önce kısa süreli grup ergoterapiye katıldı; yüksek uyaran nedeniyle zorlandığı için bireysel seansa geçildi.",
+    "medications": "Sürekli ilaç kullanımı yok.",
+    "prenatal_story": "Gebelikte belirgin tıbbi komplikasyon bildirilmedi.",
+    "birth_story": "Term doğum, yoğun bakım öyküsü yok.",
+    "postnatal_story": "Erken dönemde uykuya geçişte zorlanma ve zor sakinleşme tarif edilmiş.",
+    "feeding_type": "Yemek seçiciliği mevcut, özellikle yeni ve yumuşak dokularda reddetme belirgin.",
+    "liked_foods": "Kıtır ve tahmin edilebilir dokulu yiyecekleri tercih ediyor.",
+    "rejected_foods": "Yumuşak, karışık ve yoğun kokulu yiyecekleri reddediyor.",
+    "external_clinical_findings": "Test adı: Sensory Profile 2\nPuan / sonuc: İşitsel hassasiyet ve oral duyusal seçicilik alanlarında belirgin yükselme.\nKlinik yorum / resmi bulgu ozeti: Ses yükü ve yemek dokusu ile ilişkili duyusal zorlanma günlük katılımı etkiliyor.\nEk notlar: Grup içinde toparlanma süresi uzuyor.\n\nTest adı: BRIEF-P\nPuan / sonuc: Inhibisyon ve çalışma belleği alanlarında klinik eşik üzerinde puanlar.\nKlinik yorum / resmi bulgu ozeti: Bekleme, sıra alma ve görevi sürdürmede düzenleme yükü destekleniyor."
+  },
+  "scores": {
+    "physiological": 27,
+    "sensory": 24,
+    "emotional": 27,
+    "cognitive": 25,
+    "executive": 25,
+    "interoception": 28
+  },
+  "answers": [
+    2,2,2,3,3,3,3,3,3,3,
+    2,2,2,3,1,2,1,3,4,4,
+    2,2,1,2,3,3,3,3,4,4,
+    2,2,3,2,1,2,3,3,3,4,
+    2,3,2,1,2,2,2,3,4,4,
+    3,3,4,2,4,4,4,2,1,1
+  ]
+}

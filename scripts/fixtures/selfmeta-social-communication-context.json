@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-SOCIAL-COMM-58",
+  "clientName": "Kerem",
+  "ageMonths": 58,
+  "anamnez": {
+    "ad_soyad": "Kerem Ornek",
+    "client_code": "FIXTURE-SOCIAL-COMM-58",
+    "record_date": "2026-04-01",
+    "age_range": "48-59 ay",
+    "diagnosis": "Otizm spektrum bozuklugu izlemi",
+    "referral_reason": "Aile, grup oyununda oyuna girme, akranin niyetini anlama, sira alma ve ani sosyal taleplerde toparlanma guclugu bildirmektedir. Kalabalik ve sesli ortamlarda hem sosyal iletisim hem de gorevde kalma suresi belirgin bicimde dusmektedir.",
+    "parent_concerns_goals": "Sosyal ipuclarini daha iyi okuma, sira alma, grup etkinligine daha uzun katilma ve sosyal yuklenme oldugunda dagilmadan oyunda kalma becerilerinin artmasi hedeflenmektedir.",
+    "therapist_comments": "Gozlemde bire bir yapida daha iyi organize oluyor; ancak grup icine girdiginde hem sozsuz ipuclarini kaciriyor hem de yeni sosyal talep geldikce dagiliyor. Sosyal yuk artinca dikkatini toparlamakta ve cevabi zamaninda planlamakta zorlandigi goruluyor.",
+    "strengths": "Gorsel rutinlerle calismayi seviyor, bire bir etkilesimde is birligi iyi, tanidik yapida dili islevsel kullanabiliyor.",
+    "medical_history": "Belirgin kronik hastalik yok. Uyku genel olarak duzenli ancak kalabalik gunlerin sonunda belirgin yorgunluk ve geri cekilme bildiriliyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Nobet veya epilepsi oykusu yok.",
+    "current_therapies": "Haftada 2 seans ergoterapi, haftada 1 seans dil-konusma terapisi, okulda kucuk grup sosyal iletisim calismalari.",
+    "past_therapies": "Daha once kisa sureli duyusal oyun grubu deneyimi olmus.",
+    "medications": "Duzenli ilac kullanimi yok.",
+    "prenatal_story": "Gebelikte belirgin komplikasyon bildirilmedi.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Ilk yillarda sosyal bakis ve ortak dikkat alaninda destek ihtiyaci tarif edilmis.",
+    "low_birth_history": "Dusuk dogum agirligi yok.",
+    "feeding_type": "Yemek seciciligi donemsel olarak artabiliyor.",
+    "liked_foods": "Tahmin edilebilir dokulu yiyecekleri tercih ediyor.",
+    "rejected_foods": "Yeni ve karisik dokulari denemekte zorlanabiliyor.",
+    "external_clinical_findings": "Test adi: SRS-2\nPuan / sonuc: Toplam skorda klinik yukseklik.\nKlinik yorum / resmi bulgu ozeti: Sosyal farkindalik, sosyal bilissel yuk ve karsilikli sosyal iletisimde belirgin zorlanma bildirilmektedir.\nEk notlar: Kalabalik ve ozetlenmemis sosyal baglamlarda zorlanma artiyor.\n\nTest adi: CCC-2\nPuan / sonuc: Pragmatik dil ve baglamsal iletisim alt alanlarinda dusuk performans.\nKlinik yorum / resmi bulgu ozeti: Sosyal dilin baglama gore ayarlanmasinda ve iletisim ipuclarinin kullanilmasinda kirilganlik bulunuyor.\nEk notlar: Grup icinde yanit verme hizi dusuyor."
+  },
+  "scores": {
+    "physiological": 33,
+    "sensory": 31,
+    "emotional": 29,
+    "cognitive": 28,
+    "executive": 29,
+    "interoception": 32
+  }
+}

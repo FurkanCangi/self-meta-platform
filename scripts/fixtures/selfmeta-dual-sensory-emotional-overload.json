@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-SENS-EMO-52",
+  "clientName": "Arda",
+  "ageMonths": 52,
+  "anamnez": {
+    "ad_soyad": "Arda Ornek",
+    "client_code": "FIXTURE-SENS-EMO-52",
+    "record_date": "2026-04-01",
+    "age_range": "48-59 ay",
+    "diagnosis": "Duyusal yuklenme izlemi",
+    "referral_reason": "Kalabalik, yankili ve hizli gecisli ortamlarda gerilme, kulak kapama, aglama ve uzun sureli yatismama bildirilmektedir. Ev icinde sakin yapida daha iyi, disarida ve grup etkinliklerinde tasma hizli artmaktadir.",
+    "parent_concerns_goals": "Duyusal yuklendigi ortamlarda daha hizli toparlamasi, kulak kapama ve geri cekilmenin azalmasi, gecislerde daha dusuk destekle kalabilmesi hedeflenmektedir.",
+    "therapist_comments": "Seans basinda iliski iyi. Ancak ses ve hareket arttiginda once bedenini kasar, sonra oyundan kopar ve yetiskine yapisir. Sakin alan verildiginde toparlanma var ama sure uzuyor.",
+    "strengths": "Bire bir oyunda iliski iyi, masa basi yapilandirilmis gorevlerde katilim korunuyor.",
+    "medical_history": "Belirgin medikal hastalik yok.",
+    "allergy_epilepsy_gi_colic_seizure": "Belirgin nobet/alergi oykusu yok.",
+    "current_therapies": "Haftada 2 seans ergoterapi.",
+    "past_therapies": "Yok.",
+    "medications": "Yok.",
+    "prenatal_story": "Olagan.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Bebeklikten beri ses ve hareketli ortamda zorlanma tarif edilmis.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Secici beslenme orta duzey.",
+    "liked_foods": "Kuru ve citir yiyecekler.",
+    "rejected_foods": "Karışık ve yumuşak dokular.",
+    "external_clinical_findings": "Test adi: Sensory Profile 2\nPuan / sonuc: Isitsel hassasiyet ve hareket duyarliliginda klinik yukseklik.\nKlinik yorum / resmi bulgu ozeti: Cevresel uyaran yuku arttiginda duyusal sistemin hizla yuklendigi ve duygusal tasmanin arttigi destekleniyor.\nEk notlar: Davranissal duyusal kacinma profili belirgin.\n\nTest adi: BASC-3\nPuan / sonuc: Duygusal kontrol ve uyum alt alanlarinda yukseklik.\nKlinik yorum / resmi bulgu ozeti: Yüklenme aninda duygu duzenleme ve davranissal toparlanma zorlugu destekleniyor."
+  },
+  "scores": {
+    "physiological": 34,
+    "sensory": 21,
+    "emotional": 24,
+    "cognitive": 36,
+    "executive": 34,
+    "interoception": 35
+  }
+}

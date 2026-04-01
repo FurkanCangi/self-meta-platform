@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-AGE-WARN-42",
+  "clientName": "Duru",
+  "ageMonths": 42,
+  "anamnez": {
+    "ad_soyad": "Duru Ornek",
+    "client_code": "FIXTURE-AGE-WARN-42",
+    "record_date": "2026-04-01",
+    "age_range": "36-47 ay",
+    "diagnosis": "Erken cocukluk dikkat-davranis izlemi",
+    "referral_reason": "Aile gecislerde, bekleme anlarinda ve uzun sozel yonergelerde dagilma bildirmektedir. Ancak bire bir kisa etkinliklerde katilim genel olarak korunmaktadir.",
+    "parent_concerns_goals": "Gecislerde daha sakin kalma, kisa yonergeyi tamamlayabilme ve bekleme suresinde daha az dagilma hedeflenmektedir.",
+    "therapist_comments": "Seans icinde kisa gorevlerde iyi, uzayan yonergede ve bekleme gerektiren anda hareketlenme artiyor. Ancak genel is birligi korunuyor.",
+    "strengths": "Sosyal iliski kuruyor, masa basi kisa sureli etkinlikte iyi.",
+    "medical_history": "Belirgin medikal yuk yok.",
+    "allergy_epilepsy_gi_colic_seizure": "Yok.",
+    "current_therapies": "Gelisimsel destek takibi var.",
+    "past_therapies": "Yok.",
+    "medications": "Yok.",
+    "prenatal_story": "Olagan.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Erken donemde hareketlilik yuksek olarak tarif edilmis.",
+    "low_birth_history": "Yok.",
+    "feeding_type": "Normal.",
+    "liked_foods": "Normal.",
+    "rejected_foods": "Belirgin yok.",
+    "external_clinical_findings": "Test adi: BRIEF2\nPuan / sonuc: Global Executive Composite yuksek.\nKlinik yorum / resmi bulgu ozeti: Yurutucu islevlerde belirgin zorlanma bildirildigi not edilmis.\nEk notlar: Bu test daha buyuk yas grubu icin uygulanmis olabilir.\n\nTest adi: Conners 4\nPuan / sonuc: Dikkat ve durtu alaninda yukseklik.\nKlinik yorum / resmi bulgu ozeti: Okul cagi tipinde dikkat zorlugu dusunduruyor.\nEk notlar: Yas uyumu supheli.\n\nTest adi: BRIEF-P\nPuan / sonuc: Inhibisyon ve planlama alanlarinda sinir yukseklik.\nKlinik yorum / resmi bulgu ozeti: Okul oncesi yurutucu islev zorlanmasi icin daha uygun bir destekleyici veri sunuyor."
+  },
+  "scores": {
+    "physiological": 38,
+    "sensory": 39,
+    "emotional": 34,
+    "cognitive": 35,
+    "executive": 29,
+    "interoception": 37
+  }
+}

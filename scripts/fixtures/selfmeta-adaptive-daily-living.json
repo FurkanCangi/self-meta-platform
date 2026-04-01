@@ -1,0 +1,37 @@
+{
+  "clientCode": "FIXTURE-ADAPTIVE-54",
+  "clientName": "Ece",
+  "ageMonths": 54,
+  "anamnez": {
+    "ad_soyad": "Ece Ornek",
+    "client_code": "FIXTURE-ADAPTIVE-54",
+    "record_date": "2026-04-01",
+    "age_range": "48-59 ay",
+    "diagnosis": "Gelisimsel koordinasyon ve gunluk yasam becerileri izlemi",
+    "referral_reason": "Aile, giyinme, tuvalet rutini, masa duzeni ve kendi kendine baslatilan gunluk islerde yavaslik, yarim birakma ve fazla dis destek ihtiyaci bildirmektedir. Yapilandirilmis ortamda daha iyi giderken gecislerde ve yeni rutinde belirgin dagilma goze carpiyor.",
+    "parent_concerns_goals": "Giyinme, ozbakim, gunluk rutine bagli kalma, gorevi baslatma ve yardim istemeden kisa gorevleri surdurme becerilerinin artmasi hedeflenmektedir.",
+    "therapist_comments": "Gozlemde gorsel program ile daha iyi organize oluyor ancak gorsel destek azaldiginda siralama, baslatma ve tamamlamada zorlanma belirginlesiyor. Yardim beklentisi yuksek; yapabildigi becerilerde bile bagimsiz baslatma dusuk.",
+    "strengths": "Tanidik rutinde is birligi iyi, sosyal iliski kuruyor, model alma ile beceri kazaniyor.",
+    "medical_history": "Belirgin norolojik hastalik yok. Yoruldugunda performans ve bagimsizlik hizla dusuyor.",
+    "allergy_epilepsy_gi_colic_seizure": "Belirgin medikal nobet/alergi yuk yok.",
+    "current_therapies": "Haftada 2 seans ergoterapi ve evde gorsel rutin takibi kullaniliyor.",
+    "past_therapies": "Daha once kisa sureli ozbakim becerisi odakli destek almis.",
+    "medications": "Duzenli ilac kullanmiyor.",
+    "prenatal_story": "Gebelik oykusu olağan.",
+    "birth_story": "Term dogum.",
+    "postnatal_story": "Erken donemde kendi kendine giyinme ve masa basi etkinliklerde gelisimsel destek ihtiyaci bildirilmistir.",
+    "low_birth_history": "Belirgin dusuk dogum agirligi yok.",
+    "feeding_type": "Kendi kendine yeme genelde var ancak daginik ortamda yardim talebi artiyor.",
+    "liked_foods": "Rutin duzende sunulan tanidik yiyecekleri seviyor.",
+    "rejected_foods": "Yeni duzen ve yeni servis bicimlerinde dagilabiliyor.",
+    "external_clinical_findings": "Test adi: ABAS-3\nPuan / sonuc: Pratik alan ve ozbakim alaninda dusuk aralik.\nKlinik yorum / resmi bulgu ozeti: Gunluk yasam becerileri ve bagimsiz rutin surdurmede belirgin destek ihtiyaci gosteriyor.\nEk notlar: Kavramsal alan pratik alana gore daha iyi.\n\nTest adi: Vineland-3\nPuan / sonuc: Gunluk yasam becerileri alaninda dusuk ortalama.\nKlinik yorum / resmi bulgu ozeti: Ozbakim ve ev ici rutinleri bagimsiz surdurme kapasitesi yas akranlarina gore sinirli.\nEk notlar: Sosyallesme alaninda goreli korunmusluk var.\n\nTest adi: PEDI-CAT\nPuan / sonuc: Gunluk etkinlik ve sorumluluk alaninda beklenti alti performans.\nKlinik yorum / resmi bulgu ozeti: Katilim ve rutin tamamlama tarafinda bagimsiz baslatma ve surdurme zorlugu destekleniyor."
+  },
+  "scores": {
+    "physiological": 30,
+    "sensory": 35,
+    "emotional": 31,
+    "cognitive": 29,
+    "executive": 27,
+    "interoception": 29
+  }
+}

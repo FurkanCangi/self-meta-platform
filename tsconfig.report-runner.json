@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp/report-runner",
+    "rootDir": ".",
+    "module": "commonjs",
+    "target": "ES2020",
+    "incremental": false,
+    "isolatedModules": false
+  },
+  "include": [
+    "scripts/run-selfmeta-report.ts",
+    "scripts/run-report-quality-tests.ts",
+    "scripts/report-quality-cases.ts",
+    "src/lib/selfmeta/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
+}

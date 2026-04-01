@@ -1,12 +1,17 @@
 import {
   cleanMeaningfulText,
   extractAnamnezFlags,
+  extractExternalClinicalFindings,
+  extractTherapistInsights,
   summarizeAnamnezThemes,
   extractVisibleCaseInfo,
   type AnamnezRecord,
 } from "./anamnezUtils";
 import { classifyDomainScore, classifyTotalScore, findAgeNormBand, getNormSource } from "./normativeBands";
 import { buildClinicalAnalysis } from "./clinicalAnalysis";
+import { analyzeExternalClinicalTests } from "./externalTestRegistry";
+import { analyzeItemLevelSignals } from "./itemSignals";
+import { buildQualityGuidance } from "./reportQuality";
 
 export type DomainKey =
   | "physiological"
@@ -25,6 +30,7 @@ export type ReportInput = {
   anamnez?: AnamnezRecord | string;
   ageMonths?: number | null;
   scores: DomainScoreMap;
+  answers?: number[] | null;
 };
 
 export type DomainResult = {
@@ -40,15 +46,27 @@ export type DeterministicReport = {
   normSource?: "age_band_heuristic" | "fallback_fixed";
   ageBandLabel?: string | null;
   clinicalAnalysis?: {
+    totalScore: number;
+    ageBandLabel?: string | null;
     profileType: string;
     globalLevel: string;
     priorityDomains: string[];
     domainSummary: Record<string, string>;
+    domainScoreSummary: Record<string, { score: number; level: string }>;
     anamnezThemes: string[];
     weakDomains: string[];
     strongDomains: string[];
     matchedDomains: string[];
     patternSummary: string;
+    therapistInsights?: string[];
+    criticalItemLines?: string[];
+    alignedItemLines?: string[];
+    itemSignalSummary?: string;
+    qualityFocusMode?: "balanced" | "selective" | "paired" | "widespread";
+    qualityPrimaryEvidenceLines?: string[];
+    qualitySupportingEvidenceLines?: string[];
+    qualityRestraintLines?: string[];
+    qualityCautionLines?: string[];
   };
   totalScore: number;
   globalLevel: DomainLevel;
@@ -271,6 +289,11 @@ function getSelectiveProfileName(domain: DomainResult | undefined): string {
   return `${domain.label} Alanında Seçici Kırılganlık`;
 }
 
+function getWidespreadProfileName(primaryDomain: DomainResult | undefined): string {
+  if (!primaryDomain) return "Yaygın Çoklu Alan Regülasyon Yükü";
+  return `${primaryDomain.label} Merkezli Yaygın Regülasyon Yükü`;
+}
+
 function detectProfileType(domainResults: DomainResult[], globalLevel: DomainLevel, homogeneous: boolean): string {
   const byKey = Object.fromEntries(domainResults.map((d) => [d.key, d.score])) as Record<DomainKey, number>;
   const values = domainResults.map((d) => d.score);
@@ -279,6 +302,11 @@ function detectProfileType(domainResults: DomainResult[], globalLevel: DomainLev
     .filter((d) => d.level !== "Tipik")
     .sort((a, b) => a.score - b.score);
   const nonTypicalKeys = new Set(nonTypical.map((d) => d.key));
+  const primaryNonTypical = nonTypical[0];
+
+  if (nonTypical.length === 0) {
+    return "Dengeli / Korunmuş Profil";
+  }
 
   if (homogeneous) {
     if (globalLevel === "Tipik") return "Dengeli / Korunmuş Profil";
@@ -288,6 +316,28 @@ function detectProfileType(domainResults: DomainResult[], globalLevel: DomainLev
 
   if (nonTypical.length === 1) {
     return getSelectiveProfileName(nonTypical[0]);
+  }
+
+  if (nonTypical.length >= 5 && spread >= 4) {
+    return getWidespreadProfileName(primaryNonTypical);
+  }
+
+  if (
+    nonTypicalKeys.has("executive") &&
+    nonTypicalKeys.has("cognitive") &&
+    (nonTypicalKeys.has("physiological") || nonTypicalKeys.has("interoception")) &&
+    spread >= MEANINGFUL_SPREAD_THRESHOLD - 1
+  ) {
+    return "Yürütücü-Beden Temelli Regülasyon Yükü";
+  }
+
+  if (
+    nonTypicalKeys.has("cognitive") &&
+    nonTypicalKeys.has("executive") &&
+    nonTypicalKeys.has("emotional") &&
+    spread >= MEANINGFUL_SPREAD_THRESHOLD - 1
+  ) {
+    return "Bilişsel-Yürütücü-Duygusal Yüklenme Profili";
   }
 
   if (
@@ -304,6 +354,9 @@ function detectProfileType(domainResults: DomainResult[], globalLevel: DomainLev
   }
   if (byKey.cognitive <= 25 && byKey.executive <= 25 && spread >= MEANINGFUL_SPREAD_THRESHOLD) {
     return "Bilişsel-Yürütücü Zorlanma Profili";
+  }
+  if (byKey.cognitive <= 26 && byKey.executive <= 31 && spread >= MEANINGFUL_SPREAD_THRESHOLD - 1) {
+    return "Bilişsel-Yürütücü Yüklenme Profili";
   }
   if (byKey.physiological <= 25 && byKey.interoception <= 25 && spread >= MEANINGFUL_SPREAD_THRESHOLD) {
     return "Bedensel Farkındalık ve Toparlanma Profili";
@@ -395,7 +448,13 @@ function buildGeneralSection(
     ? "Alt alan puanları birbirine yakın seyretmiş ve profil görece homojen kalmıştır."
     : `Belirgin klinik örüntü "${profileType}" ile uyumludur. Görece en kırılgan alan ${[...domainResults].sort((a, b) => a.score - b.score)[0]?.label} olarak öne çıkmaktadır.`;
 
-  return [identityLine, `Toplam skor ${totalScore}/${GLOBAL_MAX} olarak hesaplanmıştır ve genel sınıflama ${globalLevel} düzeydedir. ${summary} ${profileSentence} ${normText}`]
+  const nonTypicalCount = domainResults.filter((d) => d.level !== "Tipik").length;
+  const safeProfileSentence =
+    nonTypicalCount === 0
+      ? "Tüm alanlar tipik aralıkta seyretmiş ve klinik açıdan belirgin bir kırılganlık odağı izlenmemiştir."
+      : profileSentence;
+
+  return [identityLine, `Toplam skor ${totalScore}/${GLOBAL_MAX} olarak hesaplanmıştır ve genel sınıflama ${globalLevel} düzeydedir. ${summary} ${safeProfileSentence} ${normText}`]
     .filter(Boolean)
     .join("\n");
 }
@@ -519,24 +578,37 @@ function buildInteroCentricComment(domainResults: DomainResult[]): string {
 }
 
 function buildWeaknessNarrative(domainResults: DomainResult[], homogeneous: boolean): string {
-  const { strengths, weaknesses } = getMeaningfulStrengthWeakness(domainResults, homogeneous);
+  const { strengths } = getMeaningfulStrengthWeakness(domainResults, homogeneous);
   const sortedWeak = [...domainResults]
     .filter((d) => d.level !== "Tipik")
     .sort((a, b) => a.score - b.score);
 
-  if (weaknesses.length === 1) {
+  if (sortedWeak.length === 0) {
+    return strengths.length
+      ? `- Tüm alanlar tipik aralıktadır; ${strengths.map((x) => x.label).join(", ")} alanlarında göreli korunmuşluk izlenmektedir.`
+      : "- Tüm alanlar tipik aralıktadır ve belirgin bir kırılganlık odağı izlenmemektedir.";
+  }
+
+  if (sortedWeak.length === 1) {
     const preserved = strengths.length
       ? ` ${strengths.map((x) => x.label).join(", ")} alanlarında göreli korunmuşluk izlenmektedir.`
       : "";
-    return `- Profil, temel olarak ${weaknesses[0].label} alanında seçici bir kırılganlık göstermektedir.${preserved}`;
+    return `- Profil, temel olarak ${sortedWeak[0].label} alanında seçici bir kırılganlık göstermektedir.${preserved}`;
   }
 
   if (sortedWeak.length >= 3) {
-    return `- Kırılganlık öncelikle ${sortedWeak[0].label} alanında belirginleşmekte; ${sortedWeak[1].label} ve ${sortedWeak[2].label} alanları bu örüntüye eşlik etmektedir.`;
+    const secondaryLabels = sortedWeak.slice(1, 3).map((domain) => domain.label).join(" ve ");
+    const preserved = strengths.length
+      ? ` ${strengths.map((x) => x.label).join(", ")} alanlarında göreli korunmuşluk izlenmektedir.`
+      : "";
+    return `- Kırılganlık öncelikle ${sortedWeak[0].label} alanında belirginleşmekte; ${secondaryLabels} alanları bu örüntüye eşlik etmektedir.${preserved}`;
   }
 
   if (sortedWeak.length === 2) {
-    return `- Kırılganlık ${sortedWeak[0].label} ve ${sortedWeak[1].label} alanlarında birlikte belirginleşmektedir.`;
+    const preserved = strengths.length
+      ? ` ${strengths.map((x) => x.label).join(", ")} alanlarında göreli korunmuşluk izlenmektedir.`
+      : "";
+    return `- Kırılganlık ${sortedWeak[0].label} ve ${sortedWeak[1].label} alanlarında birlikte belirginleşmektedir.${preserved}`;
   }
 
   if (strengths.length) {
@@ -550,9 +622,14 @@ function buildPatternSection(profileType: string, patterns: string[], domainResu
   const lines: string[] = [`- Profil sınıflaması: ${profileType}.`];
   const weaknessNarrative = buildWeaknessNarrative(domainResults, homogeneous);
   const { strengths, weaknesses } = getMeaningfulStrengthWeakness(domainResults, homogeneous);
+  const nonTypicalCount = domainResults.filter((d) => d.level !== "Tipik").length;
 
   if (weaknessNarrative) {
     lines.push(weaknessNarrative);
+  }
+
+  if (nonTypicalCount === 0) {
+    lines.push("- Alt alanların tümü tipik aralıkta seyrettiği için klinik olarak anlamlı bir risk kümesi ya da yaygın yük örüntüsü izlenmemektedir.");
   }
 
   if (patterns.length > 0) {
@@ -582,7 +659,8 @@ function buildAnamnezFitSection(
   anamnezSummary: unknown,
   anamnezFlags: string[],
   domainResults: DomainResult[],
-  profileType: string
+  profileType: string,
+  externalTestDecisionNote?: string
 ): string {
   const d = buildDeterministicProfileSummary(domainResults);
   const flagCount = Array.isArray(anamnezFlags) ? anamnezFlags.length : 0;
@@ -621,6 +699,30 @@ function buildAnamnezFitSection(
     .filter((label) => !alignedDomains.includes(label) && !mismatchDomains.includes(label))
     .slice(0, 2);
 
+  if (weakLabels.length === 0) {
+    const sentences: string[] = []
+
+    if (flagCount >= 1 && themePreview) {
+      sentences.push(`Anamnezde ${themePreview}`)
+    } else {
+      sentences.push("Anamnezde bildirilen bağlamsal zorluklar ölçek bulgularıyla birlikte ele alınmıştır.")
+    }
+
+    if (rawMatchedDomains.length > 0) {
+      sentences.push(`Bu temalar özellikle ${rawMatchedDomains.slice(0, 2).join(", ")} alanlarıyla birlikte okunmuş; ancak ölçek sonuçları bu alanlarda yaygın ya da kalıcı bir kırılganlık kümelenmesine işaret etmemiştir.`)
+    } else {
+      sentences.push("Bildirilen güçlükler ölçek üzerinde belirgin bir risk kümesine dönüşmemiştir.")
+    }
+
+    sentences.push("Bu nedenle anamnez ile ölçek arasında doğrudan patolojik uyumdan çok, bağlama duyarlı ancak genel olarak korunmuş bir işleyiş örüntüsü izlenmektedir.")
+
+    if (externalTestDecisionNote) {
+      sentences.push(externalTestDecisionNote)
+    }
+
+    return sentences.join(" ")
+  }
+
   if (flagCount >= 1 && themePreview) {
     const sentences: string[] = [`Anamnezde ${themePreview}`];
 
@@ -644,10 +746,14 @@ function buildAnamnezFitSection(
       sentences.push(`Bu nedenle klinik yorum ağırlıklı olarak skor örüntüsüne dayandırılmıştır.`);
     }
 
+    if (externalTestDecisionNote) {
+      sentences.push(externalTestDecisionNote);
+    }
+
     return sentences.join(" ");
   }
 
-  return `Anamnezde "${profileType}" örüntüsünü doğrudan güçlendiren belirgin tema sınırlıdır. Ölçekte görece daha çok zorlanan alanlar ${riskText} ekseninde toplanmaktadır. Bu nedenle klinik yorum ağırlıklı olarak skor örüntüsüne dayandırılmıştır.`;
+  return `Anamnezde "${profileType}" örüntüsünü doğrudan güçlendiren belirgin tema sınırlıdır. Ölçekte görece daha çok zorlanan alanlar ${riskText} ekseninde toplanmaktadır. Bu nedenle klinik yorum ağırlıklı olarak skor örüntüsüne dayandırılmıştır.${externalTestDecisionNote ? ` ${externalTestDecisionNote}` : ""}`;
 }
 
 function buildConclusion(
@@ -657,6 +763,15 @@ function buildConclusion(
   domainResults?: DomainResult[]
 ): string {
   const d = domainResults?.length ? buildDeterministicProfileSummary(domainResults) : null;
+  const sortedNonTypical = domainResults?.length
+    ? [...domainResults].filter((domain) => domain.level !== "Tipik").sort((a, b) => a.score - b.score)
+    : [];
+  const focusLabels =
+    sortedNonTypical.length >= 3
+      ? sortedNonTypical.slice(0, 3).map((domain) => domain.label).join(", ")
+      : sortedNonTypical.length === 2
+      ? sortedNonTypical.map((domain) => domain.label).join(" ve ")
+      : sortedNonTypical[0]?.label || "";
 
   const levelText =
     globalLevel === "Tipik"
@@ -666,9 +781,11 @@ function buildConclusion(
       : "genel profil belirgin ve yüksek klinik yük göstermektedir";
 
   const patternText = d
-    ? d.spread <= 3
+    ? d.riskyCount === 0 && d.atypicalCount === 0
+      ? " Klinik olarak anlamlı bir risk kümesi izlenmemekte; alanlar tipik aralıkta ve genel işlevsellik korunmuş görünmektedir."
+      : d.spread <= 3
       ? ` Zorlanma alanlara yakın düzeyde yayılmış görünmektedir. Örüntü yapısı ${d.architecture} ve klinik yük ${d.severityText} düzeydedir.`
-      : ` Görece en çok zorlanan eksen ${(d.riskLabels.length >= 3 ? d.riskLabels.slice(0, 3).join(", ") : d.weakPair || d.lowest?.label || "öncelikli alanlar")} alanlarında toplanmaktadır. Örüntü yapısı ${d.architecture} ve klinik yük ${d.severityText} düzeydedir.`
+      : ` Görece en çok zorlanan eksen ${(focusLabels || d.lowest?.label || "öncelikli alanlar")} alanlarında toplanmaktadır. Örüntü yapısı ${d.architecture} ve klinik yük ${d.severityText} düzeydedir.`
     : "";
 
   const homogeneityText = d
@@ -697,6 +814,10 @@ export function generateDeterministicReport(input: ReportInput): DeterministicRe
 
   const anamnezSummary = summarizeAnamnezThemes(cleanedAnamnez);
   const anamnezFlags = extractAnamnezFlags(cleanedAnamnez);
+  const therapistInsights = extractTherapistInsights(cleanedAnamnez);
+  const externalClinicalFindings = extractExternalClinicalFindings(cleanedAnamnez);
+  const externalTestAnalysis = analyzeExternalClinicalTests(cleanedAnamnez.external_clinical_findings, input.ageMonths);
+  const externalTestDecisionNote = externalTestAnalysis.warningLines[0] || externalTestAnalysis.validatedSupportLines[0] || "";
 
   const orderedKeys = Object.keys(DOMAIN_META) as DomainKey[];
   const domainResults: DomainResult[] = orderedKeys.map((key) => {
@@ -720,13 +841,45 @@ export function generateDeterministicReport(input: ReportInput): DeterministicRe
   const patterns = analyzePatterns(domainResults, homogeneousProfile);
   const normSource = getNormSource(input.ageMonths);
   const ageBandLabel = findAgeNormBand(input.ageMonths)?.label ?? null;
+  const itemLevelAnalysis = analyzeItemLevelSignals({
+    answers: input.answers,
+    anamnezRecord: cleanedAnamnez,
+    therapistInsights,
+    externalClinicalFindings: [...externalClinicalFindings, ...externalTestAnalysis.validatedSupportLines].slice(0, 4),
+    domainResults,
+  });
 
   const clinicalAnalysis = buildClinicalAnalysis(
     domainResults,
+    safeTotal,
     profileType,
     globalLevel,
-    anamnezFlags
+    anamnezFlags,
+    therapistInsights,
+    ageBandLabel,
+    [...externalClinicalFindings, ...externalTestAnalysis.validatedSupportLines].slice(0, 3),
+    externalTestAnalysis.warningLines,
+    itemLevelAnalysis || undefined
   );
+
+  const qualityGuidance = buildQualityGuidance({
+    domainResults,
+    globalLevel,
+    profileType,
+    anamnezThemes: anamnezFlags,
+    matchedDomains: clinicalAnalysis.matchedDomains,
+    therapistInsights,
+    externalClinicalFindings: [...externalClinicalFindings, ...externalTestAnalysis.validatedSupportLines].slice(0, 3),
+    externalClinicalWarnings: externalTestAnalysis.warningLines,
+    criticalItemLines: itemLevelAnalysis?.criticalLines,
+    alignedItemLines: itemLevelAnalysis?.alignedLines,
+  });
+
+  clinicalAnalysis.qualityFocusMode = qualityGuidance.focusMode;
+  clinicalAnalysis.qualityPrimaryEvidenceLines = qualityGuidance.primaryEvidenceLines;
+  clinicalAnalysis.qualitySupportingEvidenceLines = qualityGuidance.supportingEvidenceLines;
+  clinicalAnalysis.qualityRestraintLines = qualityGuidance.restraintLines;
+  clinicalAnalysis.qualityCautionLines = qualityGuidance.cautionLines;
 
   const visibleInfo = extractVisibleCaseInfo(cleanedAnamnez, {
     clientCode: input.clientCode,
@@ -746,8 +899,22 @@ export function generateDeterministicReport(input: ReportInput): DeterministicRe
     ),
     numerical: buildNumericalSection(domainResults),
     domains: buildDomainSection(domainResults, anamnezFlags),
-    patterns: buildPatternSection(profileType, patterns, domainResults, homogeneousProfile),
-    anamnezTestFit: buildAnamnezFitSection(anamnezSummary, anamnezFlags, domainResults, profileType),
+    patterns: [
+      buildPatternSection(profileType, patterns, domainResults, homogeneousProfile),
+      ...(itemLevelAnalysis?.criticalLines.length
+        ? [`- Madde düzeyinde dikkat çeken bulgular: ${itemLevelAnalysis.criticalLines.join(" ")}`]
+        : []),
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    anamnezTestFit: [
+      buildAnamnezFitSection(anamnezSummary, anamnezFlags, domainResults, profileType, externalTestDecisionNote),
+      ...(itemLevelAnalysis?.alignedLines.length
+        ? [`Anamnezle en güçlü örtüşen maddeler: ${itemLevelAnalysis.alignedLines.join(" ")}`]
+        : []),
+    ]
+      .filter(Boolean)
+      .join(" "),
     conclusion: buildConclusion(globalLevel, profileType, normSource, domainResults),
   };
 

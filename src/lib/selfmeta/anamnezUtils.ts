@@ -80,6 +80,11 @@ const LABEL_TO_KEY: Record<string, string> = {
   "ebeveyniletisimbilgileri": "parent_contact",
   "başvurusebebi": "referral_reason",
   "basvurusebebi": "referral_reason",
+  "terapistyorumlari": "therapist_comments",
+  "terapistyorumu": "therapist_comments",
+  "ekkliniktestbulgular": "external_clinical_findings",
+  "ekkliniktestbulgusu": "external_clinical_findings",
+  "ekklinikbulgular": "external_clinical_findings",
 };
 
 export const REPORT_INCLUDED_ANAMNEZ_FIELDS: AnamnezFieldDefinition[] = [
@@ -87,6 +92,7 @@ export const REPORT_INCLUDED_ANAMNEZ_FIELDS: AnamnezFieldDefinition[] = [
   { key: "diagnosis", label: "Tanı" },
   { key: "referral_reason", label: "Başvuru sebebi" },
   { key: "parent_concerns_goals", label: "Birincil endişeler/hedefler" },
+  { key: "therapist_comments", label: "Terapist yorumları" },
   { key: "strengths", label: "Çocuğun güçlü yanları" },
   { key: "medical_history", label: "Tıbbi geçmiş" },
   { key: "allergy_epilepsy_gi_colic_seizure", label: "Alerji/epilepsi/kabızlık-ishal/kolik/nöbet" },
@@ -100,6 +106,7 @@ export const REPORT_INCLUDED_ANAMNEZ_FIELDS: AnamnezFieldDefinition[] = [
   { key: "feeding_type", label: "Beslenme şekli" },
   { key: "liked_foods", label: "Sevdiği yemekler" },
   { key: "rejected_foods", label: "Reddettiği yemekler" },
+  { key: "external_clinical_findings", label: "Ek klinik test / bulgular" },
 ]
 
 export const REPORT_EXCLUDED_ANAMNEZ_FIELDS: AnamnezFieldDefinition[] = [
@@ -219,6 +226,7 @@ function collectClinicalContext(record: AnamnezRecord) {
   const rawSummary = cleanMeaningfulText(record?.raw_summary);
   const referral = cleanMeaningfulText(merged.referral_reason);
   const concerns = cleanMeaningfulText(merged.parent_concerns_goals);
+  const therapistComments = cleanMeaningfulText(merged.therapist_comments);
   const strengths = cleanMeaningfulText(merged.strengths);
   const diagnosis = cleanMeaningfulText(merged.diagnosis);
   const medical = [
@@ -243,7 +251,7 @@ function collectClinicalContext(record: AnamnezRecord) {
     .filter(Boolean)
     .join(" | ");
 
-  const allNarrative = [reportRelevantNarrative, referral, concerns, strengths, medical]
+  const allNarrative = [reportRelevantNarrative, referral, concerns, therapistComments, strengths, medical]
     .filter(Boolean)
     .join(" | ")
     .toLowerCase();
@@ -253,11 +261,43 @@ function collectClinicalContext(record: AnamnezRecord) {
     rawSummary,
     referral,
     concerns,
+    therapistComments,
     strengths,
     diagnosis,
     medical,
     allNarrative,
   };
+}
+
+export function extractTherapistInsights(record: AnamnezRecord): string[] {
+  const { therapistComments } = collectClinicalContext(record);
+  const clean = cleanMeaningfulText(therapistComments);
+  if (!clean) return [];
+
+  const lowered = clean.toLowerCase();
+  const lines = [`Terapist gözlemi: ${truncateClinicalSupport(clean, 240)}`];
+
+  if (/praksi|praxi|somatodispraks|somatodysprax|motor plan|sekans|siralama|iki tarafli koordinasyon|beden organizasyon/i.test(lowered)) {
+    lines.push("Terapist gözleminde praksi, motor planlama veya beden organizasyonu alanına ilişkin klinik ipucu bulunmaktadır.");
+  }
+
+  if (/dikkat|gorev|görev|odak|surdur|sürdür|durdur|inhibisyon|esnek/i.test(lowered)) {
+    lines.push("Terapist gözleminde dikkat, görev sürdürme veya yürütücü kontrol eksenini destekleyen bulgular tarif edilmektedir.");
+  }
+
+  if (/duyusal|uyaran|kalabalik|kalabalık|ses|dokun|tetikleyici/i.test(lowered)) {
+    lines.push("Terapist gözleminde çevresel uyaran yükünün performans üzerindeki etkisine ilişkin klinik not bulunmaktadır.");
+  }
+
+  if (/duygu|ofke|öfke|sakinles|sakinleş|toparlan|cekilme|taşma|tasma/i.test(lowered)) {
+    lines.push("Terapist gözleminde duygusal toparlanma veya yüklenme sonrası davranışsal dalgalanmaya ilişkin ipucu bulunmaktadır.");
+  }
+
+  if (/yorgun|uyku|aclik|açlık|beden|fizyolojik|tuvalet|huzursuz/i.test(lowered)) {
+    lines.push("Terapist gözleminde beden-temelli düzenleme veya içsel durum değişimlerinin performansı etkilediği düşünülmektedir.");
+  }
+
+  return lines.slice(0, 3);
 }
 
 export function extractVisibleCaseInfo(
@@ -283,8 +323,10 @@ export function extractVisibleCaseInfo(
 }
 
 export function summarizeAnamnezThemes(record: AnamnezRecord): string[] {
-  const { referral, concerns, strengths, medical, allNarrative } = collectClinicalContext(record);
+  const { referral, concerns, strengths, medical, therapistComments, allNarrative } = collectClinicalContext(record);
   const lines: string[] = [];
+  const externalClinicalFindings = extractExternalClinicalFindings(record)
+  const therapistInsights = extractTherapistInsights(record)
 
   if (
     hasAny(allNarrative, [
@@ -338,9 +380,21 @@ export function summarizeAnamnezThemes(record: AnamnezRecord): string[] {
     );
   }
 
+  if (therapistComments && therapistInsights.length > 0 && lines.length < 5) {
+    lines.push(
+      "Terapist gözlemleri, sorun örüntüsünün hangi bağlamda belirginleştiğini ve hangi alanların günlük performansta daha çok yük taşıdığını görünür kılmaktadır."
+    );
+  }
+
   if (medical && lines.length < 4) {
     lines.push(
       "Gelişimsel ve medikal öykü, regülasyon görünümünü bağlamsallaştıran ek bilgi sağlamaktadır; ancak bu veriler doğrudan neden-sonuç ilişkisi olarak ele alınmamalıdır."
+    );
+  }
+
+  if (externalClinicalFindings.length > 0 && lines.length < 4) {
+    lines.push(
+      "Ek klinik değerlendirme bulguları da bildirilmiştir; bu veriler ana skor tablosunu değiştirmeden alt alan yorumlarına destekleyici bağlam sağlayabilir."
     );
   }
 
@@ -376,6 +430,7 @@ export function buildAnamnezPreview(
     ["Tanı", merged.diagnosis],
     ["Başvuru sebebi", merged.referral_reason],
     ["Birincil endişeler/hedefler", merged.parent_concerns_goals],
+    ["Ek klinik test / bulgular", merged.external_clinical_findings],
     ["Çocuğun güçlü yanları", merged.strengths],
     ["Tıbbi geçmiş", merged.medical_history],
   ]
@@ -393,9 +448,41 @@ export function buildAnamnezPreview(
   return rawFallback || "Anamnez bilgisi bulunmuyor.";
 }
 
+function truncateClinicalSupport(value: string, maxLength = 360): string {
+  const clean = cleanMeaningfulText(value)
+  if (!clean) return ""
+  if (clean.length <= maxLength) return clean
+  return `${clean.slice(0, Math.max(0, maxLength - 1)).trim()}…`
+}
+
+export function extractExternalClinicalFindings(record: AnamnezRecord): string[] {
+  const merged = mergeStructured(record)
+  const raw = truncateClinicalSupport(String(merged.external_clinical_findings || ""))
+
+  if (!raw) return []
+
+  const lowered = raw.toLowerCase()
+  const lines = [`Ek klinik değerlendirme bildirimi: ${raw}`]
+
+  if (/sipt|somatodispraks|somatodysprax|dispraks|dysprax|praksi|praxi|motor plan|motor planning/i.test(lowered)) {
+    lines.push("Ek klinik bulguda praksi, motor planlama veya beden organizasyonu alanına ilişkin anlamlı bir zorlanma bildirilmektedir.")
+  }
+
+  if (/duyusal işlem|duyusal islem|sensory processing|sensory profile|duyusal mod[üu]l|modulation|sor\b/i.test(lowered)) {
+    lines.push("Ek klinik bulguda duyusal işlemleme ya da modülasyon teması bildirilmektedir.")
+  }
+
+  if (/brief|conners|dikkat|executive|yürütücü|yurutucu|inhibisyon|çalışma belleği|calisma bellegi/i.test(lowered)) {
+    lines.push("Ek klinik bulguda dikkat, yürütücü işlev veya davranış düzenleme eksenine ilişkin destekleyici veri bulunmaktadır.")
+  }
+
+  return lines.slice(0, 3)
+}
+
 export function extractAnamnezFlags(record: AnamnezRecord): string[] {
-  const { referral, concerns, strengths, medical, allNarrative } = collectClinicalContext(record);
+  const { referral, concerns, strengths, medical, therapistComments, allNarrative } = collectClinicalContext(record);
   const flags: string[] = [];
+  const externalClinicalFindings = extractExternalClinicalFindings(record)
 
   if (
     hasAny(allNarrative, [
@@ -437,8 +524,16 @@ export function extractAnamnezFlags(record: AnamnezRecord): string[] {
     flags.push("Başvuru nedeni ve ebeveyn öncelikleri klinik yorum için yüksek değerli bağlam sunmaktadır.");
   }
 
+  if (therapistComments) {
+    flags.push("Terapist gözlem notları, günlük performansta hangi alt sistemlerin yük taşıdığını netleştiren ek klinik bağlam sunmaktadır.");
+  }
+
   if (medical) {
     flags.push("Gelişimsel/medikal öykü bağlamsal yorumda dikkate alınmalıdır.");
+  }
+
+  if (externalClinicalFindings.length > 0 && flags.length < 5) {
+    flags.push("Ek klinik değerlendirme bulguları klinik yorumu derinleştiren destekleyici bağlam sunmaktadır.");
   }
 
   return flags.slice(0, 5);

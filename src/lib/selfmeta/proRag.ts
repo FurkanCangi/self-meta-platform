@@ -166,6 +166,46 @@ export const PRO_RAG_CHUNKS: ProRagChunk[] = [
     text: "Anamnez belirli bir alana güçlü vurgu yapmasına rağmen ölçekte o alan göreli korunmuş görünüyorsa, bu durum çelişki değil bağlam farkı veya durumsallık olarak dikkatle not edilmelidir.",
   },
   {
+    id: "THERAPIST_OBSERVATION_CONTEXT",
+    tags: ["anamnesis", "therapist"],
+    text: "Terapist gözlemi, bakımveren anlatısının hangi bağlamda görünür hale geldiğini ve çocuğun performans örüntüsünün görev sırasında nasıl şekillendiğini netleştiren yüksek değerli klinik bağlamdır. Bu veri skorları değiştirmez; ancak örüntünün günlük işlevsellikteki karşılığını görünür kılar.",
+  },
+  {
+    id: "THERAPIST_PERFORMANCE_VARIABILITY",
+    tags: ["anamnesis", "therapist", "pattern"],
+    text: "Terapist notlarında model alma ile başlayıp bağımsız sürdürmede zorlanma, yük arttıkça dağılma ya da performansın bağlama göre değişmesi tarif ediliyorsa, bu durum skor örüntüsünün sahadaki işlevsel karşılığını güçlendiren önemli bir ipucudur.",
+  },
+  {
+    id: "EXTERNAL_TEST_PRAXIS_MOTOR_PLANNING",
+    tags: ["domain", "pattern", "external", "cognitive", "executive"],
+    text: "SIPT, MABC veya benzeri testlerde praksi, motor planlama, beden organizasyonu ya da hareket sekanslama güçlüğü bildiriliyorsa, bu veri yürütücü işlev, bilişsel organizasyon ve beden-temelli düzenleme yükünü açıklayan destekleyici klinik bağlam olarak kullanılabilir.",
+  },
+  {
+    id: "EXTERNAL_TEST_EXECUTIVE_RATINGS",
+    tags: ["domain", "pattern", "external", "cognitive", "executive", "emotional"],
+    text: "BRIEF, Conners veya BASC gibi derecelendirme ölçeklerinde yürütücü işlev, dikkat ya da davranış düzenleme yükü bildiriliyorsa, bu bulgular özellikle bilişsel-yürütücü örüntüyü çok kaynaklı veriyle destekleyen ek klinik kanıt niteliği taşır.",
+  },
+  {
+    id: "EXTERNAL_TEST_SENSORY_PROCESSING",
+    tags: ["domain", "pattern", "external", "sensory", "emotional"],
+    text: "Sensory Profile veya SPM gibi duyusal işlemleme testlerinde hassasiyet, arayış, kaçınma ya da beden farkındalığı temaları bildiriliyorsa, bu veriler duyusal yükün günlük katılım ve duygusal toparlanma üzerindeki etkisini daha somut açıklamak için kullanılabilir.",
+  },
+  {
+    id: "EXTERNAL_TEST_ADAPTIVE_FUNCTIONING",
+    tags: ["anamnesis", "external", "overview"],
+    text: "ABAS, Vineland veya PEDI-CAT gibi uyumsal işlev testleri, günlük yaşam becerileri ve katılım düzeyinin regülasyon yüküyle nasıl etkileştiğini görünür kılar. Bu tür veriler ana skor tablosunu değiştirmeden, profilin işlevsel sonuçlarını bağlamsallaştırmak için kullanılmalıdır.",
+  },
+  {
+    id: "EXTERNAL_TEST_SOCIAL_COMMUNICATION",
+    tags: ["anamnesis", "external", "overview"],
+    text: "SRS-2, CCC-2 veya benzeri sosyal iletişim testlerinden gelen bulgular, özellikle sosyal yüklenme, pragmatik dil ve ilişkisel düzenleme bağlamında anamnez yorumunu derinleştirebilir. Bu veriler doğrudan regülasyon skoru yerine bağlamsal anlam katmalıdır.",
+  },
+  {
+    id: "EXTERNAL_TEST_LANGUAGE_CONTEXT",
+    tags: ["anamnesis", "external", "cognitive"],
+    text: "CELF veya PLS gibi dil testlerinde alıcı-ifade edici dil ya da yönerge takibine ilişkin güçlük bildiriliyorsa, bilişsel ve yürütücü alanlarda görülen zorlanmanın görev anındaki dil talepleriyle etkileşimi dikkatle not edilmelidir.",
+  },
+  {
     id: "REPORT_FINAL_SUMMARY_TEMPLATE",
     tags: ["style", "summary"],
     text: "Kısa sonuç bölümü profil tipi, temel zorlanma ekseni, korunmuş alan ve genel klinik yükü kısa ama net bir sentez halinde vermelidir. Aynı bilgi tekrar edilmemeli, tanısal ya da müdahale öneren dil kullanılmamalıdır.",

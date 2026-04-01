@@ -149,21 +149,73 @@ export default function ClientDetailPage() {
 
   async function softDeleteClient() {
     if (!clientId) return;
-    const ok = confirm("Bu danışan arşive alınacak (silinmeyecek). Devam?");
+    const ok = confirm("Bu danışan ve bağlı rapor/değerlendirme kayıtları kaldırılacak. Devam?");
     if (!ok) return;
 
     setBusy(true);
     setErr(null);
 
-    const { error } = await supabase
+    const { data: assessments, error: assessmentsError } = await supabase
+      .from("assessments_v2")
+      .select("id")
+      .eq("client_id", clientId)
+      .is("deleted_at", null);
+
+    if (assessmentsError) {
+      setBusy(false);
+      setErr("Danışana bağlı değerlendirmeler alınamadı: " + assessmentsError.message);
+      return;
+    }
+
+    const assessmentIds = (assessments || []).map((item: any) => item.id).filter(Boolean);
+
+    if (assessmentIds.length > 0) {
+      const { error: reportsDeleteError } = await supabase
+        .from("reports")
+        .delete()
+        .in("assessment_id", assessmentIds);
+
+      if (reportsDeleteError) {
+        setBusy(false);
+        setErr("Danışana bağlı raporlar silinemedi: " + reportsDeleteError.message);
+        return;
+      }
+
+      const { error: assessmentsDeleteError } = await supabase
+        .from("assessments_v2")
+        .delete()
+        .in("id", assessmentIds);
+
+      if (assessmentsDeleteError) {
+        const { error: assessmentsArchiveError } = await supabase
+          .from("assessments_v2")
+          .update({ deleted_at: new Date().toISOString() })
+          .in("id", assessmentIds);
+
+        if (assessmentsArchiveError) {
+          setBusy(false);
+          setErr("Değerlendirmeler kaldırılamadı: " + assessmentsArchiveError.message);
+          return;
+        }
+      }
+    }
+
+    const { error: deleteError } = await supabase
       .from("clients")
-      .update({ deleted_at: new Date().toISOString() })
+      .delete()
       .eq("id", clientId);
 
-    if (error) {
-      setBusy(false);
-      setErr("Arşivlenemedi: " + error.message);
-      return;
+    if (deleteError) {
+      const { error: archiveError } = await supabase
+        .from("clients")
+        .update({ deleted_at: new Date().toISOString() })
+        .eq("id", clientId);
+
+      if (archiveError) {
+        setBusy(false);
+        setErr("Arşivlenemedi: " + archiveError.message);
+        return;
+      }
     }
 
     setBusy(false);
@@ -202,7 +254,7 @@ export default function ClientDetailPage() {
               disabled={busy || loading}
               className="selfmeta-btn-ghost px-4 py-2 text-sm font-semibold disabled:opacity-60"
             >
-              Arşivle
+              Kaldır
             </button>
           </div>
         </div>

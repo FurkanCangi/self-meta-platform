@@ -41,10 +41,13 @@ function normalizeMaxOutputTokens(value?: string) {
 }
 
 export async function rewriteClinicalReport(analysis: {
+  totalScore?: number
+  ageBandLabel?: string | null
   profileType: string
   globalLevel: string
   priorityDomains: string[]
   domainSummary: Record<string, string>
+  domainScoreSummary?: Record<string, { score: number; level: string }>
   anamnezThemes: string[]
   weakDomains?: string[]
   strongDomains?: string[]
@@ -54,15 +57,26 @@ export async function rewriteClinicalReport(analysis: {
   preservedDomainSummary?: string
   contrastSummary?: string
   anamnezConsistency?: string
+  therapistInsights?: string[]
+  externalClinicalFindings?: string[]
+  externalClinicalWarnings?: string[]
+  criticalItemLines?: string[]
+  alignedItemLines?: string[]
+  itemSignalSummary?: string
+  qualityFocusMode?: "balanced" | "selective" | "paired" | "widespread"
+  qualityPrimaryEvidenceLines?: string[]
+  qualitySupportingEvidenceLines?: string[]
+  qualityRestraintLines?: string[]
+  qualityCautionLines?: string[]
 }) {
   const ragContext = selectProRagContext(analysis)
   const prompt = buildAIClinicalPrompt({
     ...analysis,
-    ragGeneralContext: ragContext.grouped.general.map((chunk) => `${chunk.id}: ${chunk.text}`),
-    ragDomainContext: ragContext.grouped.domain.map((chunk) => `${chunk.id}: ${chunk.text}`),
-    ragPatternContext: ragContext.grouped.pattern.map((chunk) => `${chunk.id}: ${chunk.text}`),
-    ragAnamnezContext: ragContext.grouped.anamnesis.map((chunk) => `${chunk.id}: ${chunk.text}`),
-    ragSummaryContext: ragContext.grouped.summary.map((chunk) => `${chunk.id}: ${chunk.text}`),
+    ragGeneralContext: ragContext.grouped.general.map((chunk) => chunk.text),
+    ragDomainContext: ragContext.grouped.domain.map((chunk) => chunk.text),
+    ragPatternContext: ragContext.grouped.pattern.map((chunk) => chunk.text),
+    ragAnamnezContext: ragContext.grouped.anamnesis.map((chunk) => chunk.text),
+    ragSummaryContext: ragContext.grouped.summary.map((chunk) => chunk.text),
   })
   const client = getClient()
   const reasoningEffort = normalizeReasoningEffort(process.env.OPENAI_REPORT_REASONING_EFFORT)

@@ -12,6 +12,7 @@ import {
   AiOutlineUser,
 } from "react-icons/ai";
 import { supabase } from "@/lib/supabase/client";
+import { useTheme } from "./theme-provider";
 
 const STORAGE_KEY = "selfmeta_therapist_profile";
 
@@ -26,6 +27,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
   const [initials, setInitials] = useState("TP");
   const profileRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -68,7 +70,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <header className="selfmeta-topnav sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="flex items-center justify-between gap-4 px-6 py-4">
         <div className="flex min-w-0 items-center gap-3">
           <button
@@ -127,6 +129,38 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
                 </div>
 
                 <div className="p-2">
+                  <div className="mb-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
+                    <div className="px-1 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                      Tema
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setTheme("light")}
+                        className={[
+                          "rounded-xl px-3 py-2 text-sm font-medium transition",
+                          theme === "light"
+                            ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
+                            : "bg-transparent text-slate-600 hover:bg-white/70",
+                        ].join(" ")}
+                      >
+                        Aydınlık
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setTheme("dark")}
+                        className={[
+                          "rounded-xl px-3 py-2 text-sm font-medium transition",
+                          theme === "dark"
+                            ? "bg-slate-900 text-white shadow-sm ring-1 ring-slate-900"
+                            : "bg-transparent text-slate-600 hover:bg-white/70",
+                        ].join(" ")}
+                      >
+                        Karanlık
+                      </button>
+                    </div>
+                  </div>
+
                   <Link
                     href="/profile"
                     className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
