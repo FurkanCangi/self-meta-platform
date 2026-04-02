@@ -174,10 +174,43 @@ function getDomainCommentByLevel(key: DomainKey, level: DomainLevel): string {
   return meta.low;
 }
 
-function getAnamnezMatchHint(key: DomainKey, anamnezFlags: string[]): string {
+function hasExplicitSensoryNarrative(text: string): boolean {
+  return /duyusal|dokunsal|gürültü|gurultu|kalabalık|kalabalik|ses|çevresel uyaran|cevresel uyaran|tetikleyici çevresel|tetikleyici cevresel|sensory profile|spm/.test(
+    text
+  );
+}
+
+function shouldShowAnamnezHintForDomain(
+  key: DomainKey,
+  level: DomainLevel | undefined,
+  profileType: string | undefined
+) {
+  if (level && level !== "Tipik") return true;
+
+  const profile = String(profileType || "").toLowerCase()
+
+  if (key === "sensory") return /duyusal/.test(profile)
+  if (key === "emotional") return /duygusal/.test(profile)
+  if (key === "cognitive") return /bilişsel|dilsel/.test(profile)
+  if (key === "executive") return /yürütücü|günlük yaşam|öz bakım/.test(profile)
+  if (key === "physiological") return /fizyolojik|beden/.test(profile)
+  if (key === "interoception") return /interosepsiyon|fizyolojik|beden/.test(profile)
+
+  return false
+}
+
+function getAnamnezMatchHint(
+  key: DomainKey,
+  anamnezFlags: string[],
+  params?: { level?: DomainLevel; profileType?: string }
+): string {
+  if (!shouldShowAnamnezHintForDomain(key, params?.level, params?.profileType)) {
+    return ""
+  }
+
   const joined = anamnezFlags.join(" ").toLowerCase();
 
-  if (key === "sensory" && /duyusal|dokunsal|uyaran|gürültü|kalabalık/.test(joined)) {
+  if (key === "sensory" && hasExplicitSensoryNarrative(joined)) {
     return " Anamnezde tarif edilen çevresel ve dokunsal hassasiyet bu alanla uyumludur.";
   }
   if (key === "emotional" && /duygusal|toparlanma|sakinleş|uyaran sonrası/.test(joined)) {
@@ -265,7 +298,7 @@ function getRawMatchedDomains(domainResults: DomainResult[], anamnezFlags: strin
 
 function matchesNarrativeDomain(domainKey: DomainKey, joinedFlags: string): boolean {
   if (domainKey === "sensory") {
-    return /duyusal|dokunsal|uyaran|gürültü|kalabalık|beden organizasyonu/.test(joinedFlags);
+    return hasExplicitSensoryNarrative(joinedFlags);
   }
 
   if (domainKey === "emotional") {
@@ -281,7 +314,9 @@ function matchesNarrativeDomain(domainKey: DomainKey, joinedFlags: string): bool
   }
 
   if (domainKey === "physiological" || domainKey === "interoception") {
-    return /bedensel|fizyolojik|yorgun|uyku|beslenme|iştah|alerji|kolik|nöbet|öz bakım|tuvalet/.test(joinedFlags);
+    return /bedensel|fizyolojik|yorgun|uyku|beslenme|iştah|alerji|kolik|nöbet|tuvalet|açlık|aclik|susama|susuz/.test(
+      joinedFlags
+    );
   }
 
   return false;
@@ -389,14 +424,82 @@ function detectExternalTestProfileType(
 
   const compatibleIds = new Set(externalTestAnalysis.compatibleIds || []);
   const compatibleCategories = new Set(externalTestAnalysis.compatibleCategories || []);
+  const primaryCategory = externalTestAnalysis.primaryCompatibleCategory;
   const nonTypical = [...domainResults].filter((d) => d.level !== "Tipik").sort((a, b) => a.score - b.score);
   const nonTypicalKeys = new Set(nonTypical.map((d) => d.key));
 
   const hasPraxisSignal = compatibleCategories.has("motor_praxis");
   const hasSiptSignal = compatibleIds.has("sipt");
   const hasSensorySignal = compatibleCategories.has("sensory_processing");
+  const hasAdaptiveSignal = compatibleCategories.has("adaptive_daily_living");
+  const hasExecutiveSignal = compatibleCategories.has("executive_behavior");
+  const hasLanguageSignal = compatibleCategories.has("language_communication");
+  const hasSocialSignal = compatibleCategories.has("social_pragmatic");
+  const hasBodyDrivenWeakness =
+    nonTypicalKeys.has("physiological") || nonTypicalKeys.has("interoception") || anamnezSignals.bodyIntero;
+  const hasExecutiveDrivenWeakness =
+    nonTypicalKeys.has("executive") || nonTypicalKeys.has("cognitive") || anamnezSignals.cognitiveExecutive;
 
-  if (hasPraxisSignal) {
+  if (primaryCategory === "language_communication") {
+    if (hasSocialSignal && (nonTypical.length >= 2 || hasExecutiveDrivenWeakness)) {
+      return "Dilsel ve Sosyal-Pragmatik Talep Altında Regülasyon Yükü";
+    }
+    if (nonTypical.length >= 2 || nonTypicalKeys.has("cognitive") || nonTypicalKeys.has("executive")) {
+      return "Dilsel Talep Altında Regülasyon Yükü";
+    }
+    if (anamnezSignals.languageLoad) {
+      return "Dilsel Talep Altında Seçici Kırılganlık";
+    }
+  }
+
+  if (primaryCategory === "social_pragmatic") {
+    if (hasLanguageSignal && (nonTypical.length >= 2 || hasExecutiveDrivenWeakness)) {
+      return "Dilsel ve Sosyal-Pragmatik Talep Altında Regülasyon Yükü";
+    }
+    if (nonTypical.length >= 2 || nonTypicalKeys.has("emotional") || nonTypicalKeys.has("executive")) {
+      return "Sosyal-Pragmatik Esneklikle İlişkili Regülasyon Yükü";
+    }
+    if (anamnezSignals.socialPragmatic) {
+      return "Sosyal-Pragmatik Esneklikte Seçici Kırılganlık";
+    }
+  }
+
+  if (primaryCategory === "executive_behavior") {
+    if (nonTypicalKeys.has("executive") && nonTypicalKeys.has("emotional")) {
+      return nonTypical.length >= 3
+        ? "Yürütücü-Duygusal Regülasyon Yükü"
+        : "Yürütücü-Duygusal Regülasyon Kırılganlığı";
+    }
+    if (hasBodyDrivenWeakness && hasAdaptiveSignal) {
+      return nonTypical.length >= 3
+        ? "Yürütücü-Beden Temelli Regülasyon Yükü"
+        : "Yürütücü-Beden Temelli Seçici Kırılganlık";
+    }
+    if (hasAdaptiveSignal && (nonTypical.length >= 2 || nonTypicalKeys.has("executive") || nonTypicalKeys.has("cognitive"))) {
+      return "Yürütücü İşlev ve Günlük Yaşam Akışında Regülasyon Yükü";
+    }
+    if (hasPraxisSignal && hasBodyDrivenWeakness) {
+      return nonTypical.length >= 3
+        ? "Yürütücü-Beden Temelli Regülasyon Yükü"
+        : "Yürütücü-Beden Temelli Seçici Kırılganlık";
+    }
+  }
+
+  if (primaryCategory === "adaptive_daily_living") {
+    if (hasBodyDrivenWeakness && nonTypicalKeys.has("physiological") && nonTypicalKeys.has("interoception")) {
+      return nonTypical.length >= 3
+        ? "Fizyolojik Toparlanma ve Beden Temelli Regülasyon Yükü"
+        : "Fizyolojik Toparlanma Ekseninde Seçici Kırılganlık";
+    }
+    if (nonTypical.length >= 3 || nonTypicalKeys.has("executive") || nonTypicalKeys.has("interoception")) {
+      return "Günlük Yaşam ve Öz Bakım Akışında Regülasyon Yükü";
+    }
+    if (anamnezSignals.adaptiveDailyLiving) {
+      return "Günlük Yaşam Akışında Seçici Kırılganlık";
+    }
+  }
+
+  if (primaryCategory === "motor_praxis" || (hasPraxisSignal && !hasExecutiveSignal && !hasAdaptiveSignal)) {
     if (hasSiptSignal && (nonTypicalKeys.has("executive") || nonTypicalKeys.has("cognitive"))) {
       if (nonTypical.length >= 3) {
         return "Praksi ve Motor Planlama ile İlişkili Regülasyon Yükü";
@@ -412,7 +515,7 @@ function detectExternalTestProfileType(
     }
   }
 
-  if (hasSensorySignal && (nonTypicalKeys.has("sensory") || nonTypical[0]?.key === "sensory")) {
+  if (primaryCategory === "sensory_processing" && (nonTypicalKeys.has("sensory") || nonTypical[0]?.key === "sensory")) {
     if (nonTypicalKeys.has("emotional") && nonTypical.length >= 2) {
       return "Duyusal-Duygusal Regülasyon Profili";
     }
@@ -424,7 +527,7 @@ function detectExternalTestProfileType(
     return "Duyusal Alanda Seçici Kırılganlık";
   }
 
-  if (compatibleCategories.has("adaptive_daily_living")) {
+  if (!primaryCategory && hasAdaptiveSignal) {
     if (nonTypical.length >= 3 || nonTypicalKeys.has("executive") || nonTypicalKeys.has("interoception")) {
       return "Günlük Yaşam ve Öz Bakım Akışında Regülasyon Yükü";
     }
@@ -433,7 +536,7 @@ function detectExternalTestProfileType(
     }
   }
 
-  if (compatibleCategories.has("social_pragmatic")) {
+  if (!primaryCategory && hasSocialSignal) {
     if (nonTypical.length >= 2 || nonTypicalKeys.has("emotional") || nonTypicalKeys.has("executive")) {
       return "Sosyal-Pragmatik Esneklikle İlişkili Regülasyon Yükü";
     }
@@ -442,7 +545,7 @@ function detectExternalTestProfileType(
     }
   }
 
-  if (compatibleCategories.has("language_communication")) {
+  if (!primaryCategory && hasLanguageSignal) {
     if (nonTypical.length >= 2 || nonTypicalKeys.has("cognitive") || nonTypicalKeys.has("executive")) {
       return "Dilsel Talep Altında Regülasyon Yükü";
     }
@@ -534,6 +637,12 @@ function detectProfileType(
     spread >= MEANINGFUL_SPREAD_THRESHOLD - 1
   ) {
     return "Bilişsel-Yürütücü-Duygusal Yüklenme Profili";
+  }
+
+  if (nonTypicalKeys.has("executive") && nonTypicalKeys.has("emotional")) {
+    return nonTypical.length >= 3
+      ? "Yürütücü-Duygusal Regülasyon Yükü"
+      : "Yürütücü-Duygusal Regülasyon Kırılganlığı";
   }
 
   if (
@@ -741,13 +850,17 @@ function getExternalDomainCommentHint(
 function buildDomainSection(
   domainResults: DomainResult[],
   anamnezFlags: string[],
+  profileType: string,
   externalTestAnalysis?: ExternalTestAnalysis
 ): string {
   const allTypical = domainResults.every((d) => d.level === "Tipik");
   return domainResults
     .map(
       (d) =>
-        `- ${d.label}: ${d.comment}${allTypical ? "" : getAnamnezMatchHint(d.key as DomainKey, anamnezFlags)}${allTypical ? "" : getExternalDomainCommentHint(
+        `- ${d.label}: ${d.comment}${getAnamnezMatchHint(d.key as DomainKey, anamnezFlags, {
+          level: d.level as DomainLevel,
+          profileType,
+        })}${allTypical ? "" : getExternalDomainCommentHint(
           d.key as DomainKey,
           externalTestAnalysis
         )}`
@@ -834,7 +947,11 @@ function buildDeterministicProfileSummary(
   };
 }
 
-function buildInteroCentricComment(domainResults: DomainResult[]): string {
+function buildInteroCentricComment(
+  domainResults: DomainResult[],
+  anamnezSignals?: AnamnezThemeSignals,
+  externalTestAnalysis?: ExternalTestAnalysis
+): string {
   const intero = domainResults.find(d => d.key === "interoception");
   const phys = domainResults.find(d => d.key === "physiological");
   const emo = domainResults.find(d => d.key === "emotional");
@@ -846,16 +963,25 @@ function buildInteroCentricComment(domainResults: DomainResult[]): string {
   if (!intero) return "";
 
   const interoLevel = intero.level;
+  const hasBodyContext = Boolean(anamnezSignals?.bodyIntero);
+  const primaryCategory = externalTestAnalysis?.primaryCompatibleCategory ?? null;
+  const hasAdaptiveBodySupport =
+    primaryCategory === "adaptive_daily_living" ||
+    (externalTestAnalysis?.compatibleCategories || []).includes("adaptive_daily_living");
+
+  if (!hasBodyContext && !hasAdaptiveBodySupport) {
+    return "";
+  }
 
   // 🔴 DURUM 1: intero atipik → merkez
-  if (interoLevel === "Atipik") {
+  if (interoLevel === "Atipik" && ((phys && phys.level !== "Tipik") || hasBodyContext)) {
     return "İnterosepsiyon alanının atipik düzeyi, profilin bütüncül yorumunda merkezî bir eksen oluşturmaktadır. Bedensel sinyallerin izlenmesi ve düzenleyici yanıtların organize edilmesi süreçlerindeki bu zorlanma, diğer self-regülasyon alanlarıyla birlikte ele alındığında çok alanlı örüntüyü açıklayıcı bir çerçeve sunmaktadır.";
   }
 
   // 🔴 DURUM 2: intero riskli + fizyolojik/duygusal eşlik
   if (
     interoLevel === "Riskli" &&
-    (interoIsPrimary || (phys && phys.level !== "Tipik") || (emo && emo.level !== "Tipik"))
+    ((interoIsPrimary && hasBodyContext) || (phys && phys.level !== "Tipik") || ((emo && emo.level !== "Tipik") && hasBodyContext))
   ) {
     return "İnterosepsiyon alanı, fizyolojik ve/veya duygusal düzenleme süreçleriyle birlikte değerlendirildiğinde, profilin açıklanmasında bütünleştirici bir eksen olarak öne çıkmaktadır.";
   }
@@ -904,7 +1030,14 @@ function buildWeaknessNarrative(domainResults: DomainResult[], homogeneous: bool
   return "";
 }
 
-function buildPatternSection(profileType: string, patterns: string[], domainResults: DomainResult[], homogeneous: boolean): string {
+function buildPatternSection(
+  profileType: string,
+  patterns: string[],
+  domainResults: DomainResult[],
+  homogeneous: boolean,
+  anamnezSignals?: AnamnezThemeSignals,
+  externalTestAnalysis?: ExternalTestAnalysis
+): string {
   const lines: string[] = [`- Profil sınıflaması: ${profileType}.`];
   const weaknessNarrative = buildWeaknessNarrative(domainResults, homogeneous);
   const { strengths, weaknesses } = getMeaningfulStrengthWeakness(domainResults, homogeneous);
@@ -933,7 +1066,7 @@ function buildPatternSection(profileType: string, patterns: string[], domainResu
     }
   }
 
-  const interoComment = buildInteroCentricComment(domainResults);
+  const interoComment = buildInteroCentricComment(domainResults, anamnezSignals, externalTestAnalysis);
   if (interoComment) {
     lines.push(`- ${interoComment}`);
   }
@@ -1252,9 +1385,9 @@ export function generateDeterministicReport(input: ReportInput): DeterministicRe
       visibleInfo
     ),
     numerical: buildNumericalSection(domainResults),
-    domains: buildDomainSection(domainResults, anamnezFlags, externalTestAnalysis),
+    domains: buildDomainSection(domainResults, anamnezFlags, profileType, externalTestAnalysis),
     patterns: [
-      buildPatternSection(profileType, patterns, domainResults, homogeneousProfile),
+      buildPatternSection(profileType, patterns, domainResults, homogeneousProfile, anamnezSignals, externalTestAnalysis),
       ...(allTypicalProfile
         ? []
         : externalTestAnalysis.specificNarrativeLines.length

@@ -225,8 +225,13 @@ function buildExternalClinicalEntry(entry: Pick<ExternalTestEntry, "testName" | 
   return parts.join(" | ")
 }
 
+function isSupportedExternalTestEntry(entry: Pick<ExternalTestEntry, "testName">): boolean {
+  return Boolean(findSupportedExternalTestByName(entry.testName))
+}
+
 function buildExternalClinicalFindings(entries: ExternalTestEntry[]): string {
   return entries
+    .filter(isSupportedExternalTestEntry)
     .filter(hasExternalTestContent)
     .map((entry, index) => `Test ${index + 1}: ${buildExternalClinicalEntry(entry)}`)
     .join("\n")
@@ -338,7 +343,6 @@ export default function NewClientPage() {
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [externalTests, setExternalTests] = useState<ExternalTestEntry[]>([]);
-  const [externalTestMode, setExternalTestMode] = useState<"preset" | "custom">("preset");
 
   const [form, setForm] = useState<FormState>({
     ad_soyad: "",
@@ -477,7 +481,6 @@ export default function NewClientPage() {
     : "inline-flex items-center justify-center rounded-2xl border-2 border-slate-200 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400 transition disabled:cursor-not-allowed disabled:opacity-100";
 
   const clearExternalDraft = () => {
-    setExternalTestMode("preset")
     setForm((prev) => ({
       ...prev,
       external_test_name: "",
@@ -500,6 +503,12 @@ export default function NewClientPage() {
       return null
     }
 
+    if (!selectedExternalTest) {
+      setErr("Yalnız desteklenen testler eklenebilir. Lütfen listeden bir test seçin.")
+      setTab("external")
+      return null
+    }
+
     if (externalScoreNeedsInterpretation) {
       setErr("Ham puan tek başına kaydedilmez. Lütfen kısa klinik yorumu da ekleyin.")
       setTab("external")
@@ -508,7 +517,7 @@ export default function NewClientPage() {
 
     const nextEntry: ExternalTestEntry = {
       id: makeExternalTestId(),
-      testName: externalDraft.testName.trim(),
+      testName: selectedExternalTest.name,
       result: externalDraft.result.trim(),
       interpretation: externalDraft.interpretation.trim(),
       notes: externalDraft.notes.trim(),
@@ -528,7 +537,6 @@ export default function NewClientPage() {
     setErr(null);
     setSaving(false);
     setExternalTests([]);
-    setExternalTestMode("preset");
     setForm({
       ad_soyad: "",
       client_code: "",
@@ -896,51 +904,29 @@ export default function NewClientPage() {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-2">
-                  <Field label="Test adı" required={false} hint="Listeden seç veya özel test gir.">
-                    <div className="space-y-3">
-                      <div className="relative">
-                        <select
-                          value={
-                            selectedExternalTest?.id ??
-                            (externalTestMode === "custom" ? "__custom__" : "")
+                  <Field label="Test adı" required={false} hint="Yalnız desteklenen testler eklenebilir.">
+                    <div className="relative">
+                      <select
+                        value={selectedExternalTest?.id ?? ""}
+                        onChange={(e) => {
+                          const value = e.target.value
+                          if (!value) {
+                            setVal("external_test_name", "")
+                            return
                           }
-                          onChange={(e) => {
-                            const value = e.target.value
-                            if (!value) {
-                              setExternalTestMode("preset")
-                              setVal("external_test_name", "")
-                              return
-                            }
-                            if (value === "__custom__") {
-                              setExternalTestMode("custom")
-                              setVal("external_test_name", "")
-                              return
-                            }
-                            const test = SUPPORTED_EXTERNAL_TESTS.find((item) => item.id === value)
-                            setExternalTestMode("preset")
-                            setVal("external_test_name", test?.name || "")
-                          }}
-                          className={`${inputBase} appearance-none pr-11`}
-                        >
-                          <option value="">Desteklenen test seç</option>
-                          {SUPPORTED_EXTERNAL_TESTS.map((test) => (
-                            <option key={test.id} value={test.id}>
-                              {test.name}
-                            </option>
-                          ))}
-                          <option value="__custom__">Başka bir test gir</option>
-                        </select>
-                        <AiOutlineDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                      </div>
-
-                      {externalTestMode === "custom" ? (
-                        <input
-                          value={form.external_test_name}
-                          onChange={(e) => setVal("external_test_name", e.target.value)}
-                          className={inputBase}
-                          placeholder="Özel test adı"
-                        />
-                      ) : null}
+                          const test = SUPPORTED_EXTERNAL_TESTS.find((item) => item.id === value)
+                          setVal("external_test_name", test?.name || "")
+                        }}
+                        className={`${inputBase} appearance-none pr-11`}
+                      >
+                        <option value="">Desteklenen test seç</option>
+                        {SUPPORTED_EXTERNAL_TESTS.map((test) => (
+                          <option key={test.id} value={test.id}>
+                            {test.name}
+                          </option>
+                        ))}
+                      </select>
+                      <AiOutlineDown className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-slate-400" />
                     </div>
                   </Field>
 
@@ -1055,8 +1041,8 @@ export default function NewClientPage() {
                                     </span>
                                   ) : null}
                                   {isUnknown ? (
-                                    <span className="inline-flex rounded-full border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
-                                      Tanınmayan test
+                                    <span className="inline-flex rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700">
+                                      Desteklenmeyen test
                                     </span>
                                   ) : null}
                                 </div>

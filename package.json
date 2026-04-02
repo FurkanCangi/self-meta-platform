@@ -10,6 +10,7 @@
     "lint": "tsc --noEmit",
     "report:fixture": "tsc -p tsconfig.report-runner.json && node .tmp/report-runner/scripts/run-selfmeta-report.js",
     "report:quality": "tsc -p tsconfig.report-runner.json && node .tmp/report-runner/scripts/run-report-quality-tests.js",
+    "report:audit": "tsc -p tsconfig.report-runner.json && node .tmp/report-runner/scripts/run-report-deterministic-audit.js",
     "report:quality:ai": "tsc -p tsconfig.report-runner.json && node .tmp/report-runner/scripts/run-report-quality-tests.js --with-ai",
     "report:quality:ai-smoke": "tsc -p tsconfig.report-runner.json && node .tmp/report-runner/scripts/run-report-quality-tests.js --with-ai --smoke-only"
   },

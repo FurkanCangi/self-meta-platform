@@ -181,17 +181,7 @@ async function writeSummary(results: QualityResult[], label: string) {
 
 async function runQualityFixture(spec: QualityCaseSpec, withAi: boolean) {
   const deterministicOnly = !withAi;
-  let result = await runSingleFixture(spec.fixturePath, deterministicOnly);
-
-  if (
-    withAi &&
-    result.aiError &&
-    /timed out/i.test(result.aiError)
-  ) {
-    result = await runSingleFixture(spec.fixturePath, deterministicOnly);
-  }
-
-  return result;
+  return runSingleFixture(spec.fixturePath, deterministicOnly);
 }
 
 async function main() {

@@ -90,6 +90,13 @@ LOW-PATHOLOGY KURALI:
 - Bu durumda "yaygın yük", "çok alanlı güçlük", "belirgin destek ihtiyacı", "yüksek klinik yük" dili kullanma.
 - Tipik alanlar için anamnez temasını doğrudan bozulma gibi yazma; "bağlama duyarlı hassasiyet", "korunmuş zemin üzerinde sınırlı zorlanma" gibi daha temkinli dil kullan.
 - Tüm alanlar tipikse sorun odağı kurma; yalnız bağlama duyarlı hassasiyet varsa bunu sınırlı ve nötr biçimde yaz.
+
+DETERMİNİSTİK ÇAPA KURALI:
+- Profil tipi sabit çapa olarak korunacaktır; başka bir merkez eksen uydurulmayacaktır.
+- Görece zorlanan ve korunmuş alanların önceliği değiştirilmeyecektir.
+- Örüntü Analizi, Anamnez – Test Uyum Değerlendirmesi ve Kısa Sonuç bölümlerinde aynı klinik eksen korunacaktır.
+- İnterosepsiyon ya da duyusal eksen yalnız gerçekten birincil kanıt satırları, profil tipi ve örüntü özeti birlikte destekliyorsa merkezileştirilebilir.
+- Profil tipi motor/praksi, dilsel/iletişimsel, sosyal-pragmatik veya günlük yaşam/öz bakım ekseninde ise metin bu ekseni görünür kılacak; daha genel başka bir alana kaydırmayacaktır.
 `;
 
 const SELF_META_CLINICAL_STYLE_GUIDE_LEAN = `
@@ -118,6 +125,7 @@ YAZIM TARZI:
 - Eğer ek testlerde SIPT, MABC-3, PDMS-3, Beery VMI ya da motor planlama/praksi ifadesi varsa, bu bölümde yükün günlük işlevde nasıl görünürleştiğini açıkça söyle:
   görevi başlatma, hareket dizisini kurma, giyinme, araç gereç kullanma, iki taraflı koordinasyon, oyun akışını sürdürme gibi örnekler yalnız veride destekleniyorsa kullanılabilir.
 - Eğer uyumsal testler varsa, günlük işlevsellik cümlesini yalnız kapasite diliyle değil; öz bakım, rutin başlatma, görevi sürdürme ve tamamlamadaki tutarlılık üzerinden kur.
+- Profil tipi ve birincil örüntü sabit çapalardır; alternatif merkez eksen üretme.
 `;
 
 export function buildAIClinicalPrompt(data: {
@@ -315,6 +323,12 @@ export function buildAIClinicalPrompt(data: {
 
 Sen pediatrik ergoterapi alanında çalışan bir klinik rapor yazım motorusun.
 
+KRİTİK ÇAPA KURALI:
+- Profil tipi aynen korunacak: ${safeProfileType}
+- Anlatının merkezi ekseni profil tipinden farklı bir alana kaydırılmayacak.
+- Birincil kanıt satırları ve anlatı kısıtları serbest yorumdan daha yüksek önceliğe sahiptir.
+- Metin, deterministik klinik omurgayı güçlendirecek; yeniden karar vermeyecek.
+
 KAPANIŞ KURALI:
 - Son bölüm en fazla 3 cümle olacak.
 - Profil tipi, temel sorun ve genel sonucu net söyleyecek.
@@ -385,9 +399,16 @@ Aşağıdaki 6 başlıkla temiz, kısa ve profesyonel bir klinik rapor yaz.
 Özellikle motor planlama, praksi ve günlük işlevsellik bağlamı varsa bunu dikkat sorunu gibi genellemeden açıkça belirt.`;
   }
 
-  return `${styleGuide}
+return `${styleGuide}
 
 Sen pediatrik ergoterapi alanında çalışan bir klinik rapor yazım motorusun.
+
+KRİTİK ÇAPA KURALI:
+- Profil tipi aynen korunacak: ${safeProfileType}
+- Görece zorlanan alanlar, korunmuş alanlar ve örüntü özeti serbestçe yeniden önceliklendirilmeyecek.
+- Örüntü Analizi, Anamnez – Test Uyum Değerlendirmesi ve Kısa Sonuç bölümlerinde aynı klinik eksen korunacak.
+- Birincil kanıt satırları ve anlatı kısıtları serbest yorumdan daha yüksek önceliğe sahiptir.
+- Metin, deterministik klinik omurgayı güçlendirecek; yeni bir karar mimarisi kurmayacaktır.
 
 YAZIM STANDARTLARI:
 
@@ -540,6 +561,11 @@ Aşağıdaki başlıklarla anlaşılır, kısa, profesyonel bir klinik rapor yaz
 4. Örüntü Analizi
 5. Anamnez – Test Uyum Değerlendirmesi
 6. Kısa Sonuç
+
+SABİT ÇAPA HATIRLATMASI:
+- Profil tipi değişmeyecek ve eşanlamlı başka bir profil adıyla yeniden yazılmayacak.
+- Duyusal ya da interoseptif eksen, ancak profil tipi, zayıf alanlar ve birincil kanıt satırları birlikte bunu destekliyorsa merkezileştirilebilecek.
+- Motor/praksi, dilsel/iletişimsel, sosyal-pragmatik veya günlük yaşam/öz bakım profilleri daha genel başka bir alana indirgenmeyecek.
 
 BÖLÜM KURALLARI:
 - 1. Genel Klinik Değerlendirme bölümünde toplam skor, genel düzey, profil tipi ve birincil kırılgan alan birlikte klinik bir çerçevede özetlenmeli.

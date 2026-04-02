@@ -241,6 +241,17 @@ function countMatches(text: string, patterns: RegExp[]): number {
   return patterns.reduce((count, pattern) => count + (pattern.test(text) ? 1 : 0), 0)
 }
 
+function hasExplicitSensoryCue(text: string): boolean {
+  return hasAny(text, [
+    /duyusal/i,
+    /dokun|dokunsal|etiket/i,
+    /gürültü|gurultu|ses/i,
+    /kalabalık|kalabalik/i,
+    /çevresel uyaran|cevresel uyaran|tetikleyici çevresel|tetikleyici cevresel/i,
+    /sensory profile|spm|sensory processing/i,
+  ])
+}
+
 function collectClinicalContext(record: AnamnezRecord) {
   const merged = mergeStructured(record);
 
@@ -473,7 +484,7 @@ export function extractTherapistInsights(record: AnamnezRecord): string[] {
     lines.push("Terapist gözleminde dikkat, görev sürdürme veya yürütücü kontrol eksenini destekleyen bulgular tarif edilmektedir.");
   }
 
-  if (/duyusal|uyaran|kalabalik|kalabalık|ses|dokun|tetikleyici/i.test(lowered)) {
+  if (hasExplicitSensoryCue(lowered)) {
     lines.push("Terapist gözleminde çevresel uyaran yükünün performans üzerindeki etkisine ilişkin klinik not bulunmaktadır.");
   }
 

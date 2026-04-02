@@ -19,6 +19,16 @@ export type NarrativeGuardViolation = {
   message: string
 }
 
+function profileIncludes(profileType: string, patterns: RegExp[]) {
+  const text = normalizeText(profileType)
+  return patterns.some((pattern) => pattern.test(text))
+}
+
+function hasNonTypicalDomain(domainResults: QualityDomain[], keys: string[]) {
+  const keySet = new Set(keys)
+  return domainResults.some((domain) => keySet.has(domain.key) && domain.level !== "Tipik")
+}
+
 function normalizeText(value: string): string {
   return String(value || "")
     .toLocaleLowerCase("tr-TR")
@@ -118,6 +128,33 @@ export function buildQualityGuidance(params: {
     restraintLines.push("Genel düzey tipikse dili temkinli tut; belirgin destek ihtiyacı, yüksek klinik yük veya yaygın güçlük dili kurma.")
   }
 
+  if (profileIncludes(params.profileType, [/praksi/, /motor planlama/, /motor/])) {
+    restraintLines.push("Profil eksenini praksi, motor planlama, sekanslama ve günlük işlev üzerinden koru; bunu salt dikkat ya da genel duyusal sorun gibi yeniden merkezleme.")
+  }
+
+  if (profileIncludes(params.profileType, [/günlük yaşam/, /öz bakım/])) {
+    restraintLines.push("Profil eksenini günlük yaşam, öz bakım, rutin başlatma ve sürdürme hattında tut; anlatıyı gereksiz beden sinyali eksenine kaydırma.")
+  }
+
+  if (profileIncludes(params.profileType, [/dilsel/, /iletişim/])) {
+    restraintLines.push("Dilsel ve iletişimsel yük varsa anlatıyı sözel talep, anlama yükü ve iletişimsel işlemleme çevresinde tut; bunu genel dikkat sorunu gibi yazma.")
+  }
+
+  if (profileIncludes(params.profileType, [/sosyal-pragmatik/, /sosyal/])) {
+    restraintLines.push("Sosyal-pragmatik profil varsa sosyal karşılıklılık, pragmatik esneklik ve etkileşim bağlamını görünür tut.")
+  }
+
+  if (!profileIncludes(params.profileType, [/duyusal/]) && !hasNonTypicalDomain(params.domainResults, ["sensory"])) {
+    restraintLines.push("Açık kanıt yoksa çevresel ve dokunsal hassasiyet ya da duyusal yük ekseni üretme.")
+  }
+
+  if (
+    !profileIncludes(params.profileType, [/interosepsiyon/, /fizyolojik/, /beden/]) &&
+    !hasNonTypicalDomain(params.domainResults, ["interoception", "physiological"])
+  ) {
+    restraintLines.push("Açık beden-temelli kanıt yoksa interosepsiyonu ya da fizyolojik ekseni merkezileştirme.")
+  }
+
   if (Array.isArray(params.externalClinicalWarnings) && params.externalClinicalWarnings.length > 0) {
     cautionLines.push(...params.externalClinicalWarnings.slice(0, 2))
     restraintLines.push("Yaş uyumsuz veya temkin gerektiren dış testleri ana karar eksenine taşıma.")
@@ -140,7 +177,7 @@ export function buildQualityGuidance(params: {
     focusMode,
     primaryEvidenceLines: primaryEvidenceLines.slice(0, 4),
     supportingEvidenceLines: supportingEvidenceLines.slice(0, 4),
-    restraintLines: restraintLines.slice(0, 5),
+    restraintLines: restraintLines.slice(0, 8),
     cautionLines: cautionLines.slice(0, 3),
   }
 }
@@ -222,6 +259,89 @@ export function getNarrativeGuardViolations(params: {
       code: "paired_profile_not_explained",
       severity: "medium",
       message: "İki alanlı profil adı anlatıda yeterince açıklanmıyor.",
+    })
+  }
+
+  const profileTypeText = normalizeText(params.profileType)
+  const hasSensoryText = hasAny([
+    /çevresel ve dokunsal hassasiyet/,
+    /duyusal yüklenme/,
+    /görece en çok zorlanan eksen[^.]{0,80}duyusal/,
+    /duyusal regülasyon alanında belirginleş/,
+    /duyusal regülasyon[^.]{0,60}merkez/,
+  ])
+  const hasInteroCentralization = hasAny([
+    /interosepsiyon alanı[, ]+[^.]{0,80}bütünleştirici bir eksen/,
+    /interosepsiyon alanı[, ]+[^.]{0,80}merkez/,
+    /interosepsiyon[^.]{0,60}merkez/,
+    /görece en çok zorlanan eksen[^.]{0,80}interosepsiyon/,
+  ])
+
+  if (
+    !/duyusal/.test(profileTypeText) &&
+    !hasNonTypicalDomain(params.domainResults, ["sensory"]) &&
+    hasSensoryText
+  ) {
+    violations.push({
+      code: "sensory_axis_invented",
+      severity: "high",
+      message: "Profil ve skorlar duyusal ekseni merkezlemiyorken anlatı gereksiz duyusal yük kuruyor.",
+    })
+  }
+
+  if (
+    !/interosepsiyon|fizyolojik|beden/.test(profileTypeText) &&
+    !hasNonTypicalDomain(params.domainResults, ["interoception", "physiological"]) &&
+    hasInteroCentralization
+  ) {
+    violations.push({
+      code: "intero_axis_invented",
+      severity: "high",
+      message: "Profil ve skorlar desteklemiyorken anlatı interosepsiyonu merkez eksen yapıyor.",
+    })
+  }
+
+  if (
+    /praksi|motor planlama|motor/.test(profileTypeText) &&
+    !hasAny([/praksi/, /motor planlama/, /sekans/, /koordinasyon/, /giyinme/, /beden organizasyonu/])
+  ) {
+    violations.push({
+      code: "motor_profile_not_explained",
+      severity: "medium",
+      message: "Motor/praksi profili anlatıda yeterince açılmıyor.",
+    })
+  }
+
+  if (
+    /dilsel|iletişim/.test(profileTypeText) &&
+    !hasAny([/dilsel/, /sözel/, /iletişim/, /yönerge/, /anlama yükü/])
+  ) {
+    violations.push({
+      code: "language_profile_not_explained",
+      severity: "medium",
+      message: "Dilsel/iletişimsel profil anlatıda yeterince açılmıyor.",
+    })
+  }
+
+  if (
+    /sosyal-pragmatik|sosyal/.test(profileTypeText) &&
+    !hasAny([/sosyal/, /pragmatik/, /etkileşim/, /karşılıklılık/])
+  ) {
+    violations.push({
+      code: "social_profile_not_explained",
+      severity: "medium",
+      message: "Sosyal-pragmatik profil anlatıda yeterince açılmıyor.",
+    })
+  }
+
+  if (
+    /günlük yaşam|öz bakım/.test(profileTypeText) &&
+    !hasAny([/günlük yaşam/, /öz bakım/, /rutin/, /giyinme/, /başlatma/, /sürdürme/])
+  ) {
+    violations.push({
+      code: "adaptive_profile_not_explained",
+      severity: "medium",
+      message: "Günlük yaşam/öz bakım profili anlatıda yeterince açılmıyor.",
     })
   }
 

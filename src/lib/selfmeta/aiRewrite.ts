@@ -38,10 +38,17 @@ function normalizeVerbosity(value?: string): VerbosityLevel | undefined {
   return undefined
 }
 
-function normalizeMaxOutputTokens(value?: string) {
+function normalizeBudgetUsd(value?: string) {
   const parsed = Number(value)
-  if (!Number.isFinite(parsed) || parsed <= 0) return 3200
-  return Math.floor(parsed)
+  if (!Number.isFinite(parsed) || parsed <= 0) return 0.05
+  return Math.min(0.05, Math.max(0.01, parsed))
+}
+
+function normalizeMaxOutputTokens(value?: string, tightBudget = true) {
+  const parsed = Number(value)
+  const ceiling = tightBudget ? 3000 : 3200
+  if (!Number.isFinite(parsed) || parsed <= 0) return ceiling
+  return Math.floor(Math.min(parsed, ceiling))
 }
 
 type RewriteAnalysis = Parameters<typeof rewriteClinicalReport>[0]
@@ -54,6 +61,12 @@ type AttemptPlan = {
   ragContext: SelectedProRagContext
   prompt: string
   label: string
+}
+
+function normalizeMaxAttempts(value?: string) {
+  const parsed = Number(value)
+  if (!Number.isFinite(parsed) || parsed <= 0) return 2
+  return Math.max(1, Math.min(2, Math.floor(parsed)))
 }
 
 function normalizeLineKey(value: string) {
@@ -150,7 +163,34 @@ function selectRagSubset(
   }
 }
 
-function getAttemptLimits(analysis: RewriteAnalysis, attempt: 1 | 2 | 3) {
+function applyBudgetTightening(
+  limits: ReturnType<typeof getAttemptLimitsBase>,
+  attempt: 1 | 2 | 3,
+  tightBudget: boolean
+) {
+  if (!tightBudget) return limits
+
+  return {
+    therapist: Math.min(limits.therapist, 1),
+    external: Math.min(limits.external, attempt === 1 ? 2 : 1),
+    warnings: Math.min(limits.warnings, 1),
+    critical: Math.min(limits.critical, 1),
+    aligned: Math.min(limits.aligned, 1),
+    evidencePrimary: Math.min(limits.evidencePrimary, attempt === 1 ? 2 : 1),
+    evidenceSupporting: Math.min(limits.evidenceSupporting, 1),
+    restraints: Math.min(limits.restraints, 2),
+    cautions: Math.min(limits.cautions, 1),
+    rag: {
+      general: 0,
+      domain: Math.min(limits.rag.domain, 1),
+      pattern: Math.min(limits.rag.pattern, 1),
+      anamnesis: Math.min(limits.rag.anamnesis, attempt === 1 ? 1 : 0),
+      summary: Math.min(limits.rag.summary, 1),
+    },
+  }
+}
+
+function getAttemptLimitsBase(analysis: RewriteAnalysis, attempt: 1 | 2 | 3) {
   const focusMode = analysis.qualityFocusMode
   const isBalanced = focusMode === "balanced"
   const isBroad = focusMode === "widespread"
@@ -239,15 +279,20 @@ function getAttemptLimits(analysis: RewriteAnalysis, attempt: 1 | 2 | 3) {
   }
 }
 
+function getAttemptLimits(analysis: RewriteAnalysis, attempt: 1 | 2 | 3, tightBudget: boolean) {
+  return applyBudgetTightening(getAttemptLimitsBase(analysis, attempt), attempt, tightBudget)
+}
+
 function buildAttemptPlan(
   analysis: RewriteAnalysis,
   baseRagContext: SelectedProRagContext,
   attempt: 1 | 2 | 3,
+  tightBudget: boolean,
   baseReasoningEffort?: ReasoningEffort,
   baseVerbosity?: VerbosityLevel,
   baseMaxOutputTokens = 3200
 ): AttemptPlan {
-  const limits = getAttemptLimits(analysis, attempt)
+  const limits = getAttemptLimits(analysis, attempt, tightBudget)
   const ragContext = selectRagSubset(baseRagContext, limits.rag)
   const praxisCase = hasMotorPraxisFocus(analysis)
   const balancedCase = analysis.qualityFocusMode === "balanced"
@@ -271,38 +316,52 @@ function buildAttemptPlan(
     ragPatternContext: ragContext.grouped.pattern.map((chunk) => chunk.text),
     ragAnamnezContext: ragContext.grouped.anamnesis.map((chunk) => chunk.text),
     ragSummaryContext: ragContext.grouped.summary.map((chunk) => chunk.text),
-    compactMode: praxisCase && attempt >= 2 ? "lean" : attempt === 3 ? "lean" : "standard",
+    compactMode: attempt === 1 ? "standard" : "lean",
   })
 
   const broadCase = analysis.qualityFocusMode === "widespread"
   const pairedCase = analysis.qualityFocusMode === "paired"
-  const attemptTokenCap =
-    attempt === 3
-      ? balancedCase
-        ? 1400
-        : 1800
-      :
-    attempt === 1
+  const attemptTokenCap = tightBudget
+    ? attempt === 1
       ? praxisCase
-        ? 3400
+        ? 2800
         : balancedCase
         ? 2400
         : broadCase
-        ? 5200
+        ? 2800
         : pairedCase
-        ? 4500
-        : 3800
-      : praxisCase
-      ? 2200
-      : broadCase
-      ? 3800
-      : pairedCase
+        ? 2600
+        : 2500
+      : balancedCase
+      ? 2000
+      : 2200
+    : attempt === 3
+    ? balancedCase
+      ? 1400
+      : 1800
+    : attempt === 1
+    ? praxisCase
       ? 3400
-      : 3000
+      : balancedCase
+      ? 2400
+      : broadCase
+      ? 5200
+      : pairedCase
+      ? 4500
+      : 3800
+    : praxisCase
+    ? 2200
+    : broadCase
+    ? 3800
+    : pairedCase
+    ? 3400
+    : 3000
 
   return {
     timeoutMs:
-      attempt === 3
+      tightBudget && attempt === 2
+        ? 18000
+        : attempt === 3
         ? 18000
         : praxisCase
         ? attempt === 1
@@ -373,14 +432,22 @@ export async function rewriteClinicalReport(analysis: {
   qualityCautionLines?: string[]
 }) {
   const baseRagContext = selectProRagContext(analysis)
+  const budgetUsd = normalizeBudgetUsd(process.env.SELF_META_REPORT_BUDGET_USD)
+  const tightBudget = budgetUsd <= 0.05
   const reasoningEffort = normalizeReasoningEffort(process.env.OPENAI_REPORT_REASONING_EFFORT)
   const verbosity = normalizeVerbosity(process.env.OPENAI_REPORT_VERBOSITY)
-  const maxOutputTokens = normalizeMaxOutputTokens(process.env.OPENAI_REPORT_MAX_OUTPUT_TOKENS)
-  const attempts: AttemptPlan[] = [
-    buildAttemptPlan(analysis, baseRagContext, 1, reasoningEffort, verbosity, maxOutputTokens),
-    buildAttemptPlan(analysis, baseRagContext, 2, reasoningEffort, verbosity, maxOutputTokens),
-    buildAttemptPlan(analysis, baseRagContext, 3, reasoningEffort, verbosity, maxOutputTokens),
+  const maxOutputTokens = normalizeMaxOutputTokens(process.env.OPENAI_REPORT_MAX_OUTPUT_TOKENS, tightBudget)
+  const maxAttempts = normalizeMaxAttempts(process.env.OPENAI_REPORT_MAX_ATTEMPTS)
+  const attemptPool: AttemptPlan[] = [
+    buildAttemptPlan(analysis, baseRagContext, 1, tightBudget, reasoningEffort, verbosity, maxOutputTokens),
+    buildAttemptPlan(analysis, baseRagContext, 2, tightBudget, reasoningEffort, verbosity, maxOutputTokens),
+    buildAttemptPlan(analysis, baseRagContext, 3, tightBudget, reasoningEffort, verbosity, maxOutputTokens),
   ]
+  const attempts = attemptPool.slice(0, maxAttempts)
+
+  console.log("[AI-REPORT] request_budget_per_case=", maxAttempts)
+  console.log("[AI-REPORT] usd_budget_per_case=", budgetUsd.toFixed(2))
+  console.log("[AI-REPORT] tight_budget_mode=", tightBudget ? "on" : "off")
 
   let lastError: unknown = null
 

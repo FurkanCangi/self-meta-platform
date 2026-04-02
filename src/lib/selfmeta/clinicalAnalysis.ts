@@ -34,9 +34,16 @@ export type ClinicalAnalysis = {
   qualityCautionLines?: string[]
 }
 
-function applyInteroPriorityBias(domainResults: any[], priorityDomains: string[]): string[] {
+function applyInteroPriorityBias(
+  domainResults: any[],
+  priorityDomains: string[],
+  params?: { hasBodyContext?: boolean; primaryExternalTestCategory?: ExternalTestCategory | null }
+): string[] {
   const intero = domainResults.find((d) => d.key === "interoception");
   if (!intero) return priorityDomains;
+  if (!params?.hasBodyContext && params?.primaryExternalTestCategory !== "adaptive_daily_living") {
+    return priorityDomains;
+  }
 
   const interoIsRelevant = intero.level === "Riskli" || intero.level === "Atipik";
   const otherNonTypicalExists = domainResults.some(
@@ -71,14 +78,17 @@ function getMatchedDomainLabels(
   externalClinicalFindings: string[] = []
 ): string[] {
   const joined = [...anamnezFlags, ...therapistInsights, ...externalClinicalFindings].join(" ").toLowerCase()
+  const hasExplicitSensoryCue = /duyusal|dokunsal|gürültü|gurultu|kalabalık|kalabalik|ses|çevresel uyaran|cevresel uyaran|tetikleyici çevresel|tetikleyici cevresel|sensory profile|spm|sensory processing/.test(
+    joined
+  )
 
   return domainResults
     .filter((d) => {
-      if (d.key === "sensory") return /duyusal|dokunsal|uyaran|gürültü|kalabalık|sensory profile|spm/.test(joined)
+      if (d.key === "sensory") return hasExplicitSensoryCue
       if (d.key === "emotional") return /duygusal|toparlanma|sakinleş|uyaran sonrası|öfke|frustrasyon|kriz/.test(joined)
       if (d.key === "cognitive") return /dikkat|görev|sürdürme|çok uyaran|dilsel talep|yönerge|celf|pls/.test(joined)
       if (d.key === "executive") return /dikkat|görev|sürdürme|çok uyaran|brief|conners|inhibisyon|planlama|organizasyon|motor planlama|praksi|somatodispraks/.test(joined)
-      if (d.key === "physiological" || d.key === "interoception") return /bedensel|fizyolojik|yorgun|uyku|beslenme|iştah|alerji|kolik|nöbet|açlık|susama|tuvalet|özbakım|ozbakim|pedi-cat|vineland|abas/.test(joined)
+      if (d.key === "physiological" || d.key === "interoception") return /bedensel|fizyolojik|yorgun|uyku|beslenme|iştah|alerji|kolik|nöbet|açlık|aclik|susama|susuz|tuvalet/.test(joined)
       return false
     })
     .sort((a, b) => a.score - b.score)
@@ -233,7 +243,12 @@ totalScore,
 ageBandLabel,
 profileType,
 globalLevel,
-priorityDomains: applyInteroPriorityBias(domainResults, priority),
+priorityDomains: applyInteroPriorityBias(domainResults, priority, {
+  hasBodyContext: /bedensel|fizyolojik|yorgun|uyku|beslenme|iştah|açlık|aclik|susama|susuz|tuvalet/.test(
+    [...anamnezFlags, ...therapistInsights, ...externalClinicalFindings].join(" ").toLowerCase()
+  ),
+  primaryExternalTestCategory,
+}),
 domainSummary,
 domainScoreSummary,
 anamnezThemes:anamnezFlags.slice(0,3),
