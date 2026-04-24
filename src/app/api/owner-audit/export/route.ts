@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { assertOwnerAuditAccess } from "@/lib/owner/ownerAccess"
+import { fetchOwnerDossierRows } from "@/lib/owner/ownerAudit"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 function flattenObject(
@@ -74,10 +75,36 @@ export async function GET(req: Request) {
     const sourceTable = String(url.searchParams.get("table") || "").trim()
     const operation = String(url.searchParams.get("operation") || "").trim()
     const format = String(url.searchParams.get("format") || "csv").trim().toLowerCase()
+    const kind = String(url.searchParams.get("kind") || "raw").trim().toLowerCase()
     const ownerId = String(url.searchParams.get("owner_id") || "").trim()
     const from = String(url.searchParams.get("from") || "").trim()
     const to = String(url.searchParams.get("to") || "").trim()
     const limit = Math.max(1, Math.min(50000, Number(url.searchParams.get("limit") || 5000)))
+
+    if (kind === "dossier") {
+      const rows = await fetchOwnerDossierRows(ownerId)
+
+      if (format === "json") {
+        return NextResponse.json({
+          ok: true,
+          kind: "dossier",
+          count: rows.length,
+          rows,
+        })
+      }
+
+      const csv = toCsv(rows)
+      const filenameParts = ["owner-dossier", ownerId || "all-members", new Date().toISOString().slice(0, 10)]
+      const filename = `${filenameParts.join("-")}.csv`
+
+      return new NextResponse(csv, {
+        status: 200,
+        headers: {
+          "content-type": "text/csv; charset=utf-8",
+          "content-disposition": `attachment; filename="${filename}"`,
+        },
+      })
+    }
 
     const admin = createSupabaseAdminClient()
     let query = admin
@@ -104,13 +131,14 @@ export async function GET(req: Request) {
     if (format === "json") {
       return NextResponse.json({
         ok: true,
+        kind: "raw",
         count: rows.length,
         rows,
       })
     }
 
     const csv = toCsv(rows)
-    const filenameParts = ["owner-audit", sourceTable || "all", new Date().toISOString().slice(0, 10)]
+    const filenameParts = ["owner-audit-raw", sourceTable || "all", new Date().toISOString().slice(0, 10)]
     const filename = `${filenameParts.join("-")}.csv`
 
     return new NextResponse(csv, {
