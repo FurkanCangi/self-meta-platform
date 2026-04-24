@@ -20,6 +20,7 @@ const PUBLIC_ROUTES = new Set([
   "/pricing",
   "/privacy",
   "/terms",
+  "/clearroll/privacy",
 ]);
 
 export default function LayoutGate({ children }: LayoutGateProps) {
