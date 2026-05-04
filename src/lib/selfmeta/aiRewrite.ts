@@ -456,7 +456,7 @@ export async function rewriteClinicalReport(analysis: {
     const client = getClient(attempt.timeoutMs)
     try {
       const res = await client.responses.create({
-        model: process.env.OPENAI_REPORT_MODEL || "gpt-5.1",
+        model: process.env.OPENAI_REPORT_MODEL || "gpt-5.4",
         input: attempt.prompt,
         max_output_tokens: attempt.maxOutputTokens,
         ...(attempt.reasoningEffort
