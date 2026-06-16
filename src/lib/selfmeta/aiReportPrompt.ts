@@ -81,29 +81,35 @@ STRICT RULES
 2. Do NOT invent symptoms.
 3. Do NOT create diagnoses.
 4. Do NOT give therapy advice.
-5. Use probabilistic language such as: "düşündürebilir", "uyumlu görünüyor", "ilişkili olabilir".
-6. Avoid causal claims.
+5. Use strong clinical hypothesis language without turning it into diagnosis or treatment judgment.
+6. Avoid causal claims and avoid inventing etiological explanations.
 7. If anamnesis is weak, explicitly say this.
 8. Avoid repeating numeric information.
 9. Avoid long explanations.
 10. IMPORTANT: In this system, lower scores reflect more difficulty, higher scores reflect relatively stronger performance.
 11. Respect the provided age-sensitive bands first; base the interpretation primarily on the supplied classifications.
+12. Do NOT write citations, author names, DOI, URL, APA references, or literature lists.
+13. Keep the deterministic baseline's section structure and clinical axis.
 
 REPORT STRUCTURE
 The output must contain exactly these sections:
-1. Genel Sonuç
-2. Sayısal Sonuç Özeti
+1. Klinik Karar Özeti
+2. Kanıt Temelli Profil Özeti
 3. Alan Bazlı Klinik Yorum
-4. Ölçekler Arası Örüntü Analizi
-5. Anamnez – Test Uyum Değerlendirmesi
-6. Kısa Klinik Özet
+4. Klinik Örüntü ve Formülasyon
+5. Anamnez, Gözlem ve Test Uyumunun Değerlendirilmesi
+6. Klinik Önceliklendirme Notu
+7. Klinik Sonuç
 
 STYLE
 • concise
-• clinical
+• professor-level pediatric occupational therapy clinical report tone
 • avoid repetition
 • avoid speculation
-• highlight the most abnormal domains first
+• state the main clinical hypothesis in the first section
+• move scores into the evidence profile, not a separate technical section
+• highlight the deterministic clinical mechanism first; do not reduce the case to the lowest score when anamnesis or external tests identify a stronger mechanism
+• write "Klinik karar cümlesi:" when giving the main decision sentence
 `;
 }
 
@@ -153,14 +159,17 @@ DETERMINISTIC BASELINE
 ${payload.deterministicReport || "Yok"}
 
 TASK
-Analyze the regulation profile.
+Analyze the regulation profile and produce the 7 clinical sections only.
 
 Focus on:
-• the lowest-scoring / most impaired domains first
+• the deterministic baseline's clinical mechanism and primary axis first
 • cross-domain patterns
 • anamnesis consistency
 • age-sensitive classification context
+• the primary clinical axis, secondary axes, evidence confidence, and limitations
+• if motor/praxis tests or anamnesis are present, keep praxis and motor planning as the clinical mechanism instead of rewriting the case as only executive-function centered
 
 Do NOT invent additional data.
+Do NOT write the literature section; the system appends verified registry literature separately.
 `;
 }

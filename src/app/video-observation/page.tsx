@@ -161,7 +161,7 @@ export default async function VideoObservationPage({
 
         <div className="rounded-3xl border border-slate-200 bg-white px-5 py-4 text-sm text-slate-600 shadow-sm">
           <div className="font-semibold text-slate-900">Bağlı servis</div>
-          <div className="mt-1 break-all">{bundle?.baseUrl || process.env.VIDEO_OBS_API_BASE_URL || "http://127.0.0.1:8091"}</div>
+          <div className="mt-1">{bundle || process.env.VIDEO_OBS_API_BASE_URL ? "Güvenli proxy üzerinden bağlı" : "Hazır değil"}</div>
         </div>
       </div>
 
@@ -399,7 +399,7 @@ export default async function VideoObservationPage({
 
               <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
-                  Self Meta Füzyon
+                  DNA Intelligence Füzyon
                 </div>
                 <div className="mt-5 space-y-3">
                   {bundle.fusion.length === 0 ? (

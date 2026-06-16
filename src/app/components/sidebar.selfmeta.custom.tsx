@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   AiOutlineBarChart,
+  AiOutlinePlayCircle,
   AiOutlineEdit,
   AiOutlineFileText,
   AiOutlineHome,
@@ -55,7 +56,7 @@ export default function Sidebar(_props: SidebarProps) {
           href="/"
           className="flex h-[58px] items-center rounded-[20px] bg-[#0b7bb2] px-5 text-[15px] font-semibold tracking-[0.2px] text-white shadow-[0_10px_30px_rgba(11,123,178,0.35)]"
         >
-          Self Metacognition Institute
+          DNA Intelligence
         </Link>
       </div>
 
@@ -105,6 +106,12 @@ export default function Sidebar(_props: SidebarProps) {
             label="Rapor Geçmişi"
             icon={<AiOutlineBarChart />}
             active={pathname === "/reports"}
+          />
+          <Item
+            href="/education"
+            label="Eğitimler"
+            icon={<AiOutlinePlayCircle />}
+            active={pathname === "/education"}
           />
         </ul>
 

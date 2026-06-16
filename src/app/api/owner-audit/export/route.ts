@@ -2,6 +2,9 @@ import { NextResponse } from "next/server"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { assertOwnerAuditAccess } from "@/lib/owner/ownerAccess"
 import { fetchOwnerDossierRows } from "@/lib/owner/ownerAudit"
+import { evaluateAccountRisk, recordAccountSecurityEvent } from "@/lib/security/anomalyDetection"
+import { getPrivacyAuditContext, recordDataAccessAuditEvent } from "@/lib/security/privacyOps"
+import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 function flattenObject(
@@ -34,7 +37,8 @@ function flattenObject(
 }
 
 function escapeCsv(value: string) {
-  const safe = String(value ?? "")
+  const raw = String(value ?? "")
+  const safe = /^[=+\-@\t\r]/.test(raw) ? `'${raw}` : raw
   if (/[",\n]/.test(safe)) {
     return `"${safe.replace(/"/g, "\"\"")}"`
   }
@@ -71,6 +75,21 @@ export async function GET(req: Request) {
 
     assertOwnerAuditAccess(user.email)
 
+    const rateLimit = checkRateLimit({
+      key: `owner-audit-export:${user.id}`,
+      limit: 20,
+      windowMs: 60 * 60 * 1000,
+    })
+    if (!rateLimit.ok) {
+      await recordAccountSecurityEvent({
+        userId: user.id,
+        eventType: "api_rate_limited",
+        metadata: { route: "/api/owner-audit/export" },
+      })
+      await evaluateAccountRisk(user.id)
+      return rateLimitResponse(rateLimit.resetAt)
+    }
+
     const url = new URL(req.url)
     const sourceTable = String(url.searchParams.get("table") || "").trim()
     const operation = String(url.searchParams.get("operation") || "").trim()
@@ -80,9 +99,23 @@ export async function GET(req: Request) {
     const from = String(url.searchParams.get("from") || "").trim()
     const to = String(url.searchParams.get("to") || "").trim()
     const limit = Math.max(1, Math.min(50000, Number(url.searchParams.get("limit") || 5000)))
+    const admin = createSupabaseAdminClient()
+    const auditContext = await getPrivacyAuditContext()
 
     if (kind === "dossier") {
       const rows = await fetchOwnerDossierRows(ownerId)
+      await recordDataAccessAuditEvent({
+        admin,
+        actorUserId: user.id,
+        subjectUserId: ownerId || null,
+        action: "owner_audit_export",
+        resourceType: "owner_dossier",
+        resourceId: ownerId || "all-members",
+        legalBasis: "security_audit_and_legal_obligation",
+        ipAddress: auditContext.ipAddress,
+        userAgent: auditContext.userAgent,
+        metadata: { format, count: rows.length },
+      })
 
       if (format === "json") {
         return NextResponse.json({
@@ -106,7 +139,6 @@ export async function GET(req: Request) {
       })
     }
 
-    const admin = createSupabaseAdminClient()
     let query = admin
       .schema("owner_audit")
       .from("audit_events")
@@ -127,6 +159,18 @@ export async function GET(req: Request) {
     }
 
     const rows = data || []
+    await recordDataAccessAuditEvent({
+      admin,
+      actorUserId: user.id,
+      subjectUserId: ownerId || null,
+      action: "owner_audit_export",
+      resourceType: "owner_audit_raw",
+      resourceId: sourceTable || "all",
+      legalBasis: "security_audit_and_legal_obligation",
+      ipAddress: auditContext.ipAddress,
+      userAgent: auditContext.userAgent,
+      metadata: { format, source_table: sourceTable || null, operation: operation || null, count: rows.length },
+    })
 
     if (format === "json") {
       return NextResponse.json({

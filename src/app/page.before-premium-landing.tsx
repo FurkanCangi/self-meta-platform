@@ -222,7 +222,7 @@ export default function Home() {
           <div className="lpShell lpHeaderInner">
             <a href="#ust" className="lpBrand">
               <span className="lpBrandMark">self</span>
-              <span className="lpBrandText">Self Meta AI</span>
+              <span className="lpBrandText">DNA Intelligence</span>
             </a>
 
             <nav className="lpNav">
@@ -239,7 +239,7 @@ export default function Home() {
                 Panele Giriş
               </Link>
               <Link href="/starter" className="lpPrimaryBtn lpHeaderBtn">
-                Terapist Paneli
+                Giriş Yap
               </Link>
             </div>
           </div>
@@ -258,7 +258,7 @@ export default function Home() {
                   raporlama çekirdeği
                 </h1>
                 <p>
-                  Self Meta AI; yapılandırılmış anamnez, alt boyut skor girişi,
+                  DNA Intelligence; yapılandırılmış anamnez, alt boyut skor girişi,
                   deterministik risk bayraklama ve versiyonlu rapor üretimini
                   tek panel içinde birleştiren modern bir klinik SaaS
                   altyapısıdır.
@@ -293,7 +293,7 @@ export default function Home() {
                       <i />
                       <i />
                     </span>
-                    <strong>Self Meta Engine</strong>
+                    <strong>DNA Intelligence Engine</strong>
                     <span className="lpWindowState">Stabil</span>
                   </div>
 
@@ -378,7 +378,7 @@ export default function Home() {
                 <span>Klinik operasyon katmanı</span>
                 <strong>Tek panel</strong>
                 <p>
-                  Self Meta AI, klinik değerlendirmenin en kritik bölümlerini
+                  DNA Intelligence, klinik değerlendirmenin en kritik bölümlerini
                   yapılandırılmış veri toplama, skor kontrollü karar desteği ve
                   versiyonlu raporlama ile tek bir operasyon katmanına taşır.
                 </p>
@@ -438,7 +438,7 @@ export default function Home() {
                 <span>Teknik Mimari</span>
                 <h2>Klinik AI karar desteğinde kontrol kaybı olmadan otomasyon</h2>
                 <p>
-                  Üretken AI tek başına karar vermez. Self Meta AI; skor
+                  Üretken AI tek başına karar vermez. DNA Intelligence; skor
                   doğrulama, sınıflama, risk işaretleme ve rapor iskeletini
                   deterministik katmanda tutar. LLM varsa, yalnızca klinik dilin
                   akıcılığını iyileştirir.
@@ -509,7 +509,7 @@ export default function Home() {
 
                 <div className="lpOpsFeatureList">
                   <div className="lpOpsFeature">
-                    <strong>Terapist Paneli</strong>
+                    <strong>DNA Intelligence paneli</strong>
                     <span>Günlük operasyon görünümü</span>
                   </div>
                   <div className="lpOpsFeature">
@@ -680,7 +680,7 @@ export default function Home() {
                 <span>İletişim</span>
                 <h2>Klinik akışı sadeleştiren bir platforma ihtiyacın varsa, başlangıç burası</h2>
                 <p>
-                  Self Meta AI; özellikle teknopark sunumu, pilot klinik kurulum
+                  DNA Intelligence; özellikle teknopark sunumu, pilot klinik kurulum
                   ve uzman odaklı değerlendirme akışları için tasarlandı. Danışan
                   listesi, skor girişi ve rapor ekranı aynı ürün omurgasında
                   gösterilir.
@@ -705,7 +705,7 @@ export default function Home() {
 
         <footer className="lpFooter">
           <div className="lpShell lpFooterInner">
-            <div className="lpFooterBrand">Self Meta AI</div>
+            <div className="lpFooterBrand">DNA Intelligence</div>
             <div className="lpFooterText">
               Klinik değerlendirme, skor girişi ve versiyonlu raporlama altyapısı
             </div>

@@ -1,5 +1,32 @@
 import type { ExternalTestCategory } from "./externalTestRegistry"
-import { DomainResult } from "./reportEngine"
+import type { DomainResult } from "./reportEngine"
+
+export type ClinicalMechanismType =
+  | "motor_praxis"
+  | "adaptive_daily_living"
+  | "social_pragmatic"
+  | "language_communication"
+  | "language_social_pragmatic"
+  | "physiological_interoceptive"
+  | "default"
+
+export type ClinicalEvidenceMap = {
+  globalClassificationNote: string
+  primaryClinicalHypothesis: string
+  primaryAxis: string
+  primaryAxisKind?: "domain" | "mechanism" | "balanced"
+  clinicalMechanism?: ClinicalMechanismType
+  mechanismLabel?: string
+  mechanismSummary?: string
+  secondaryAxes: string[]
+  anamnesisEvidence: string[]
+  therapistObservationEvidence: string[]
+  externalTestSupport: string[]
+  caseEvidenceLines: string[]
+  dataLimitations: string[]
+  confidenceLevel: "yüksek" | "orta" | "sınırlı"
+  confidenceRationale: string
+}
 
 export type ClinicalAnalysis = {
   totalScore:number
@@ -32,6 +59,15 @@ export type ClinicalAnalysis = {
   qualitySupportingEvidenceLines?: string[]
   qualityRestraintLines?: string[]
   qualityCautionLines?: string[]
+  evidenceMap?: ClinicalEvidenceMap
+  classificationNote?: string
+  primaryClinicalHypothesis?: string
+  primaryClinicalAxis?: string
+  secondaryClinicalAxes?: string[]
+  caseEvidenceLines?: string[]
+  dataLimitations?: string[]
+  dataConfidenceLevel?: ClinicalEvidenceMap["confidenceLevel"]
+  dataConfidenceRationale?: string
 }
 
 function applyInteroPriorityBias(

@@ -6,8 +6,10 @@ import { useRouter } from "next/navigation";
 import {
   AiOutlineBell,
   AiOutlineMenu,
+  AiOutlineMoon,
   AiOutlineSearch,
   AiOutlineSetting,
+  AiOutlineSun,
   AiOutlineLogout,
   AiOutlineUser,
 } from "react-icons/ai";
@@ -22,13 +24,13 @@ type TopnavProps = {
 };
 
 export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
+  const { theme, toggleTheme } = useTheme();
   const [profileOpen, setProfileOpen] = useState(false);
-  const [displayName, setDisplayName] = useState("Terapist Paneli");
-  const [initials, setInitials] = useState("TP");
+  const [displayName, setDisplayName] = useState("DNA Intelligence");
+  const [initials, setInitials] = useState("DNA");
   const [showOwnerAudit, setShowOwnerAudit] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -83,22 +85,24 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {}
-    setDisplayName("Terapist Paneli");
-    setInitials("TP");
+    setDisplayName("DNA Intelligence");
+    setInitials("DNA");
     setProfileOpen(false);
     router.replace("/login");
     router.refresh();
   };
 
   return (
-    <header className="selfmeta-topnav sticky top-0 z-30 border-b border-slate-200 bg-white/95 backdrop-blur">
+    <header className="selfmeta-topnav sticky top-0 z-30 border-b border-slate-200/80 bg-white/88 shadow-[0_10px_34px_rgba(7,27,58,0.04)] backdrop-blur-xl">
       <div className="flex items-center justify-between gap-4 px-6 py-4">
         <div className="flex min-w-0 items-center gap-3">
           <button
             type="button"
             onClick={() => setToggle?.(!toggle)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
             aria-label="Menüyü Aç/Kapat"
+            aria-expanded={toggle}
+            title={toggle ? "Sol menüyü kapat" : "Sol menüyü aç"}
           >
             <AiOutlineMenu className="text-xl" />
           </button>
@@ -108,7 +112,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
             <input
               type="text"
               placeholder="Ara..."
-              className="h-11 w-[260px] rounded-full border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+              className="h-11 w-[280px] rounded-2xl border border-slate-200 bg-white/90 pl-11 pr-4 text-sm font-medium text-slate-700 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100/70"
             />
           </div>
         </div>
@@ -116,7 +120,21 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
         <div className="flex items-center gap-3">
           <button
             type="button"
-            className="relative inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+            onClick={toggleTheme}
+            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+            aria-label={theme === "dark" ? "Açık temaya geç" : "Koyu temaya geç"}
+            title={theme === "dark" ? "Açık tema" : "Koyu tema"}
+          >
+            {theme === "dark" ? (
+              <AiOutlineSun className="text-[22px]" />
+            ) : (
+              <AiOutlineMoon className="text-[22px]" />
+            )}
+          </button>
+
+          <button
+            type="button"
+            className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
             aria-label="Bildirimler"
             title="Bildirimler"
           >
@@ -128,60 +146,28 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
             <button
               type="button"
               onClick={() => setProfileOpen((v) => !v)}
-              className="flex items-center gap-3 rounded-full border border-slate-200 bg-white px-2 py-1.5 transition hover:bg-slate-50"
+              className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-2 py-1.5 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/40"
               aria-label="Profil Menüsü"
             >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-100 text-sm font-semibold text-indigo-700">
+              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-100 via-blue-100 to-violet-100 text-xs font-black text-blue-700">
                 {initials}
               </div>
               <div className="hidden text-left md:block">
                 <div className="text-sm font-semibold leading-none text-slate-900">
                   {displayName}
                 </div>
-                <div className="mt-1 text-xs text-slate-500">Hesap Menüsü</div>
+                <div className="mt-1 text-xs text-slate-500">Klinik çalışma alanı</div>
               </div>
             </button>
 
             {profileOpen && (
-              <div className="absolute right-0 mt-3 w-56 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl">
+              <div className="absolute right-0 mt-3 w-60 overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_28px_70px_rgba(7,27,58,0.16)]">
                 <div className="border-b border-slate-100 px-4 py-3">
                   <div className="text-sm font-semibold text-slate-900">Hesap</div>
-                  <div className="mt-1 text-xs text-slate-500">Self Meta AI</div>
+                  <div className="mt-1 text-xs text-slate-500">DNA Intelligence</div>
                 </div>
 
                 <div className="p-2">
-                  <div className="mb-2 rounded-xl border border-slate-200 bg-slate-50 p-2">
-                    <div className="px-1 pb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                      Tema
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setTheme("light")}
-                        className={[
-                          "rounded-xl px-3 py-2 text-sm font-medium transition",
-                          theme === "light"
-                            ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200"
-                            : "bg-transparent text-slate-600 hover:bg-white/70",
-                        ].join(" ")}
-                      >
-                        Aydınlık
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setTheme("dark")}
-                        className={[
-                          "rounded-xl px-3 py-2 text-sm font-medium transition",
-                          theme === "dark"
-                            ? "bg-slate-900 text-white shadow-sm ring-1 ring-slate-900"
-                            : "bg-transparent text-slate-600 hover:bg-white/70",
-                        ].join(" ")}
-                      >
-                        Karanlık
-                      </button>
-                    </div>
-                  </div>
-
                   <Link
                     href="/profile"
                     className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"

@@ -1,6 +1,12 @@
 import styles from "./PricingSection.module.css";
+import Link from "next/link";
 
-const cols = ["Öğrenci Paketi", "Mezun Paketi", "Gelişmiş (Profesyonel) Paket", "Kurumsal Paket"];
+const plans = [
+  { code: "student", label: "Öğrenci Paketi", price: "500 TL / Ay" },
+  { code: "graduate", label: "Mezun Paketi", price: "1500 TL / Ay" },
+  { code: "professional", label: "Gelişmiş (Profesyonel) Paket", price: "3000 TL / Ay" },
+  { code: "enterprise", label: "Kurumsal Paket", price: "10.000 TL / Ay" },
+];
 
 const rows = [
   { name: "Teorik Eğitimler", v: ["Aylık 15 Saat", "Aylık 10 Saat", "Aylık 25 Saat", "Sınırsız Erişim"] },
@@ -13,21 +19,19 @@ const rows = [
   { name: "Paylaşım Hakkı", v: ["✗", "✗", "✗", "Bu paketi 5 kişiyle paylaşma imkanı."] },
 ];
 
-const prices = ["500 TL / Ay", "1500 TL / Ay", "3000 TL / Ay", "10.000 TL / Ay"];
-
 export default function PricingSection() {
   return (
     <section className={styles.wrap} id="paketler">
       <div className={styles.inner}>
-        <h2 className={styles.h2}>Fiyatlandırma</h2>
+        <h2 className={styles.h2}>Paket Karşılaştırması</h2>
 
         <div className={styles.tableWrap}>
           <table className={styles.table}>
             <thead>
               <tr>
                 <th className={styles.leftHead}> </th>
-                {cols.map((c) => (
-                  <th key={c} className={styles.head}>{c}</th>
+                {plans.map((plan) => (
+                  <th key={plan.code} className={styles.head}>{plan.label}</th>
                 ))}
               </tr>
             </thead>
@@ -46,10 +50,12 @@ export default function PricingSection() {
 
               <tr>
                 <td className={styles.leftPrice}>Fiyat</td>
-                {prices.map((p, i) => (
-                  <td key={i} className={styles.priceCell}>
-                    <div className={styles.price}>{p}</div>
-                    <button className={styles.buy}>Satın Al</button>
+                {plans.map((plan) => (
+                  <td key={plan.code} className={styles.priceCell}>
+                    <div className={styles.price}>{plan.price}</div>
+                    <Link href="/signup" className={styles.buy}>
+                      Satın Al
+                    </Link>
                   </td>
                 ))}
               </tr>

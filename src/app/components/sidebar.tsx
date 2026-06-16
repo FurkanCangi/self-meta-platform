@@ -9,8 +9,10 @@ import {
   AiOutlineHome,
   AiOutlinePlayCircle,
   AiOutlineSetting,
+  AiOutlineShoppingCart,
   AiOutlineUser,
 } from "react-icons/ai";
+import BrandLogo from "./BrandLogo";
 
 type SidebarProps = {
   toggle?: boolean;
@@ -33,35 +35,50 @@ function Item({
       <Link
         href={href}
         className={[
-          "group flex items-center gap-3 rounded-xl px-4 py-3 text-[15px] font-medium transition",
+          "group flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold transition",
           active
-            ? "bg-white/10 text-white"
-            : "text-slate-200 hover:bg-white/6 hover:text-white",
+            ? "bg-gradient-to-r from-cyan-50 via-blue-50 to-violet-50 text-[#071b3a] shadow-[0_14px_34px_rgba(37,99,235,0.12)] ring-1 ring-blue-100"
+            : "text-slate-600 hover:bg-white hover:text-[#071b3a] hover:shadow-[0_10px_24px_rgba(37,99,235,0.08)]",
         ].join(" ")}
       >
-        <span className="shrink-0 text-[18px]">{icon}</span>
+        <span
+          className={[
+            "grid h-8 w-8 shrink-0 place-items-center rounded-xl text-[18px] transition",
+            active
+              ? "bg-white text-blue-700 shadow-sm"
+              : "bg-slate-50 text-slate-500 group-hover:bg-gradient-to-br group-hover:from-cyan-50 group-hover:via-blue-50 group-hover:to-violet-50 group-hover:text-blue-700",
+          ].join(" ")}
+        >
+          {icon}
+        </span>
         <span className="leading-none">{label}</span>
       </Link>
     </li>
   );
 }
 
-export default function Sidebar(_props: SidebarProps) {
+export default function Sidebar({ toggle = true }: SidebarProps) {
   const pathname = usePathname() || "";
 
   return (
-    <aside className="hidden md:flex md:w-[304px] md:min-w-[304px] md:flex-col border-r border-slate-800 bg-[#06133d] text-white">
-      <div className="px-5 pt-5 pb-4">
-        <Link
-          href="/"
-          className="flex h-[58px] items-center rounded-[20px] bg-[#0b7bb2] px-5 text-[15px] font-semibold tracking-[0.2px] text-white shadow-[0_10px_30px_rgba(11,123,178,0.35)]"
-        >
-          Self Metacognition Institute
+    <aside
+      aria-hidden={!toggle}
+      className={[
+        "hidden overflow-hidden md:flex md:flex-col border-r bg-white/94 text-[#071b3a] backdrop-blur-xl transition-[width,min-width,opacity,transform,border-color,box-shadow] duration-300 ease-out",
+        toggle
+          ? "md:w-[304px] md:min-w-[304px] border-slate-200/80 opacity-100 shadow-[18px_0_60px_rgba(7,27,58,0.08)]"
+          : "pointer-events-none md:w-0 md:min-w-0 -translate-x-3 border-transparent opacity-0 shadow-none",
+      ].join(" ")}
+    >
+      <div className="flex h-full w-[304px] min-w-[304px] flex-col">
+      <div className="relative border-b border-slate-100 bg-white px-3 pt-4 pb-4">
+        <Link href="/" className="relative flex min-h-[134px] items-center justify-center px-0 py-1" aria-label="DNA Intelligence ana sayfa">
+          <BrandLogo variant="panel" />
         </Link>
       </div>
 
       <div className="overflow-y-auto px-3 pb-6">
-        <div className="px-3 pb-2 pt-2 text-[13px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+        <div className="px-3 pb-2 pt-2 text-[12px] font-black uppercase tracking-[0.18em] text-slate-400">
           Gösterge Paneli
         </div>
         <ul className="space-y-1">
@@ -73,7 +90,7 @@ export default function Sidebar(_props: SidebarProps) {
           />
         </ul>
 
-        <div className="px-3 pb-2 pt-6 text-[13px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+        <div className="px-3 pb-2 pt-6 text-[12px] font-black uppercase tracking-[0.18em] text-slate-400">
           Danışan Yönetimi
         </div>
         <ul className="space-y-1">
@@ -91,12 +108,18 @@ export default function Sidebar(_props: SidebarProps) {
           />
         </ul>
 
-        <div className="px-3 pb-2 pt-6 text-[13px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+        <div className="px-3 pb-2 pt-6 text-[12px] font-black uppercase tracking-[0.18em] text-slate-400">
           Klinik Değerlendirme
         </div>
         <ul className="space-y-1">
           <Item
-            href="/clients"
+            href="/education"
+            label="Eğitimler"
+            icon={<AiOutlinePlayCircle />}
+            active={pathname === "/education"}
+          />
+          <Item
+            href="/assessments"
             label="Skor Girişi"
             icon={<AiOutlineFileText />}
             active={pathname === "/assessments" || pathname === "/assessments/new"}
@@ -113,9 +136,15 @@ export default function Sidebar(_props: SidebarProps) {
             icon={<AiOutlineBarChart />}
             active={pathname === "/reports"}
           />
+          <Item
+            href="/report-packages"
+            label="Rapor Paketleri"
+            icon={<AiOutlineShoppingCart />}
+            active={pathname === "/report-packages"}
+          />
         </ul>
 
-        <div className="px-3 pb-2 pt-6 text-[13px] font-semibold uppercase tracking-[0.14em] text-slate-400">
+        <div className="px-3 pb-2 pt-6 text-[12px] font-black uppercase tracking-[0.18em] text-slate-400">
           Hesap
         </div>
         <ul className="space-y-1">
@@ -132,6 +161,7 @@ export default function Sidebar(_props: SidebarProps) {
             active={pathname === "/profile-setting" || pathname === "/settings"}
           />
         </ul>
+      </div>
       </div>
     </aside>
   );

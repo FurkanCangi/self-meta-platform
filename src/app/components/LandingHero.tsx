@@ -17,16 +17,16 @@ export default function LandingHero() {
             </h1>
 
             <p className={styles.p}>
-              Self Meta AI; yapılandırılmış anamnez, alt boyut skor girişi ve versiyonlu klinik
+              DNA Intelligence; yapılandırılmış anamnez, alt boyut skor girişi ve versiyonlu klinik
               raporlamayı terapist odaklı sade bir akışta birleştirir.
             </p>
 
             <div className={styles.ctaRow}>
-              <Link href="/#paketler" className={styles.btnPrimary}>
+              <Link href="/fiyatlandirma" className={styles.btnPrimary}>
                 Paketleri incele <span className={styles.arrow}>→</span>
               </Link>
               <Link href="/login" className={styles.btnGhost}>
-                Terapist Panelini Gör
+                Giriş Yap
               </Link>
             </div>
 

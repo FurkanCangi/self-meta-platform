@@ -34,26 +34,34 @@ export function renderAIReport(
 
   const ageBandNote =
     scores.normSource === "age_band_heuristic"
-      ? `ageBandLabel}.`
+      ? `Yorum ${scores.ageBandLabel || "yaş-duyarlı"} norm bandı üzerinden yapılmıştır.`
       : "";
 
   return [
-    "1. Genel Sonuç",
-    `${nonEmpty(analysis.generalSummary)} ${ageBandNote}`,
+    "1. Klinik Karar Özeti",
+    `${nonEmpty(analysis.generalSummary)} Klinik karar cümlesi: ${nonEmpty(analysis.conclusion)}`,
     "",
-    "2. Sayısal Sonuç Özeti",
-    numerical,
+    "2. Kanıt Temelli Profil Özeti",
+    [`Toplam skor ${scores.toplam}/300 ve genel düzey ${scores.globalLevel} olarak sınıflanmıştır.`, ageBandNote, "Alan puanları:", numerical].filter(Boolean).join("\n"),
     "",
     "3. Alan Bazlı Klinik Yorum",
     domains,
     "",
-    "4. Ölçekler Arası Örüntü Analizi",
-    patterns,
+    "4. Klinik Örüntü ve Formülasyon",
+    [patterns, `Klinik formülasyon: ${nonEmpty(analysis.patternSummary)}`].filter(Boolean).join("\n"),
     "",
-    "5. Anamnez – Test Uyum Değerlendirmesi",
+    "5. Anamnez, Gözlem ve Test Uyumunun Değerlendirilmesi",
     anamnez,
     "",
-    "6. Kısa Klinik Özet",
+    "6. Klinik Önceliklendirme Notu",
+    [
+      `Klinik karar cümlesi: ${nonEmpty(analysis.conclusion)}`,
+      `Klinik formülasyon: ${nonEmpty(analysis.patternSummary)}`,
+      "Klinik öncelik sırası:",
+      nonEmpty(analysis.homogeneityStatement),
+    ].join("\n"),
+    "",
+    "7. Klinik Sonuç",
     nonEmpty(analysis.conclusion),
   ].join("\n");
 }

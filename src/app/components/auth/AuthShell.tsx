@@ -33,7 +33,7 @@ export default function AuthShell({ title, subtitle, children, rightTop }: Props
           <div className="w-full max-w-md">
             <div className="mb-6 text-center">
               <div className="mx-auto mb-4 text-5xl font-semibold tracking-tight text-slate-800">
-                self<span className="align-super text-xs text-teal-600">+</span>
+                DNA Intelligence
               </div>
               <div className="text-base font-semibold text-slate-800">{title}</div>
               {subtitle ? <div className="mt-1 text-sm text-slate-500">{subtitle}</div> : null}
@@ -43,7 +43,7 @@ export default function AuthShell({ title, subtitle, children, rightTop }: Props
             {children}
 
             <div className="mt-10 flex items-center justify-between text-xs text-slate-400">
-              <div>Telif Hakkı © 2024 Self Metacognition Institute. Tüm Hakları Saklıdır.</div>
+              <div>Telif Hakkı © 2024 DNA Intelligence. Tüm Hakları Saklıdır.</div>
               <Link href="#" className="text-slate-500 hover:text-slate-700">Şartlar &amp; Koşullar</Link>
             </div>
           </div>

@@ -3,8 +3,10 @@ import React,{useEffect} from 'react'
 import Link from 'next/link';
 import { PiMoon } from 'react-icons/pi';
 import { LiaSun } from 'react-icons/lia';
+import { useTheme } from './theme-provider';
 
 export default function Switcher() {
+    const { theme, toggleTheme } = useTheme();
     
     useEffect(() => {
         if (typeof window !== "undefined"){
@@ -12,15 +14,8 @@ export default function Switcher() {
         }
       }, [])
 
-      function changeMode(mode: 'mode' | 'layout', event?: React.MouseEvent<HTMLElement>) {
+      function changeMode(mode: 'layout', event?: React.MouseEvent<HTMLElement>) {
         switch (mode) {
-            case 'mode':
-                if (document.documentElement.classList.contains("dark")) {
-                    document.documentElement.className = 'light';
-                } else {
-                    document.documentElement.className = 'dark';
-                }
-                break;
             case 'layout':
                 if (event?.currentTarget.innerText === "LTR") {
                     document.documentElement.dir = "ltr";
@@ -38,7 +33,7 @@ export default function Switcher() {
         <>
             <div className="fixed top-[30%] -end-3 z-50">
                 <span className="relative inline-block rotate-90">
-                    <input type="checkbox" className="checkbox opacity-0 absolute" id="chk" onClick={(event) => changeMode('mode', event)} />
+                    <input type="checkbox" className="checkbox opacity-0 absolute" id="chk" checked={theme === "dark"} onChange={toggleTheme} />
                     <label className="label bg-slate-900 dark:bg-white shadow-sm dark:shadow-gray-800 cursor-pointer rounded-full flex justify-between items-center p-1 w-14 h-8" htmlFor="chk">
                         <PiMoon className="text-[20px] text-yellow-500"/>
                         <LiaSun className="text-[20px] text-yellow-500"/>

@@ -19,6 +19,41 @@ export type NarrativeGuardViolation = {
   message: string
 }
 
+const FORBIDDEN_CLINICAL_SOURCE_PATTERNS = [
+  /https?:\/\//i,
+  /doi\.org/i,
+  /\bdoi\s*:/i,
+  /\b10\.\d{4,9}\/[-._;()/:a-z0-9]+/i,
+  /Kaynaklar\s*\(APA\s*7\)\s*:/i,
+  /\bAPA\s*7\b/i,
+  /\bAnnual Review\b/i,
+  /\bJournal of\b/i,
+  /\bFrontiers in\b/i,
+  /\bDevelopment and Psychopathology\b/i,
+  /\bScandinavian Journal\b/i,
+  /\bPubMed\b/i,
+  /\bPMC\b/i,
+  /\([A-ZÇĞİÖŞÜ][A-Za-zÇĞİÖŞÜçğıöşü'’-]+(?:\s+(?:&|and)\s+[A-ZÇĞİÖŞÜ][A-Za-zÇĞİÖŞÜçğıöşü'’-]+|\s+et al\.)?,\s*(?:19|20)\d{2}\)/,
+]
+
+const WEAK_HEDGE_PATTERN = /\b(düşündürebilir|olabilir|işaret edebilir|gösterebilir|gerektirebilir|yorumlanabilir|ele alınabilir)\b/gi
+
+export function hasForbiddenClinicalCitation(text: string): boolean {
+  const value = String(text || "")
+  return FORBIDDEN_CLINICAL_SOURCE_PATTERNS.some((pattern) => pattern.test(value))
+}
+
+export function countWeakHedges(text: string): number {
+  return String(text || "").match(WEAK_HEDGE_PATTERN)?.length || 0
+}
+
+export function hasForbiddenClinicalDetermination(text: string): boolean {
+  const normalized = normalizeText(text)
+  return /tanı konur|tanısı konur|tanı koy|tedavi edilmelidir|tedavi planı|müdahale planı|kesin olarak|mutlaka uygulanmalıdır|ilaç tedavisi|terapi önerilir|haftada \d+ seans/.test(
+    normalized
+  )
+}
+
 function profileIncludes(profileType: string, patterns: RegExp[]) {
   const text = normalizeText(profileType)
   return patterns.some((pattern) => pattern.test(text))
@@ -32,6 +67,15 @@ function hasNonTypicalDomain(domainResults: QualityDomain[], keys: string[]) {
 function normalizeText(value: string): string {
   return String(value || "")
     .toLocaleLowerCase("tr-TR")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function removeNegatedRiskPhrases(value: string): string {
+  return String(value || "")
+    .replace(/yaygın(?: bir)?(?: ve)?(?: çok alanlı)?[^.]{0,90}(?:göstermemektedir|okunmaz|değildir|izlenmemektedir|oluşturmamaktadır)/gi, " ")
+    .replace(/çok alanlı[^.]{0,90}(?:göstermemektedir|okunmaz|değildir|izlenmemektedir|oluşturmamaktadır)/gi, " ")
+    .replace(/birden fazla alan[^.]{0,90}(?:göstermemektedir|okunmaz|değildir|izlenmemektedir|oluşturmamaktadır)/gi, " ")
     .replace(/\s+/g, " ")
     .trim()
 }
@@ -189,10 +233,12 @@ export function getNarrativeGuardViolations(params: {
   profileType: string
 }): NarrativeGuardViolation[] {
   const text = normalizeText(params.text)
+  const assertionText = removeNegatedRiskPhrases(text)
   const nonTypical = params.domainResults.filter((domain) => domain.level !== "Tipik")
   const violations: NarrativeGuardViolation[] = []
 
   const hasAny = (patterns: RegExp[]) => patterns.some((pattern) => pattern.test(text))
+  const hasAnyAsserted = (patterns: RegExp[]) => patterns.some((pattern) => pattern.test(assertionText))
 
   if (nonTypical.length === 0) {
     if (hasAny([/birincil kırılgan/, /risk ekseni/, /yaygın regülasyon yük/, /çok alanlı güçlük/, /yüksek klinik yük/])) {
@@ -215,7 +261,7 @@ export function getNarrativeGuardViolations(params: {
   }
 
   if (nonTypical.length === 1) {
-    if (hasAny([/çok alanlı/, /yaygın regülasyon yük/, /yaygın güçlük/, /birden fazla alan/, /çoklu alan/, /genişleyen/])) {
+    if (hasAnyAsserted([/çok alanlı/, /yaygın regülasyon yük/, /yaygın güçlük/, /birden fazla alan/, /çoklu alan/, /genişleyen/])) {
       violations.push({
         code: "selective_profile_written_as_widespread",
         severity: "high",

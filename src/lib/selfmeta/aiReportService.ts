@@ -30,11 +30,13 @@ function normalizeReasoningEffort(value: string | undefined): ReasoningEffort {
 
 function hasAllRequiredSections(text: string): boolean {
   const required = [
-    "1. Genel Klinik Değerlendirme",
-    "2. Öncelikli Self-Regülasyon Alanları",
-    "3. Alanlar Arası Klinik Örüntü",
-    "4. Anamnez ve Ölçek Bulgularının Uyum Düzeyi",
-    "5. Sonuç Düzeyinde Klinik Özet",
+    "1. Klinik Karar Özeti",
+    "2. Kanıt Temelli Profil Özeti",
+    "3. Alan Bazlı Klinik Yorum",
+    "4. Klinik Örüntü ve Formülasyon",
+    "5. Anamnez, Gözlem ve Test Uyumunun Değerlendirilmesi",
+    "6. Klinik Önceliklendirme Notu",
+    "7. Klinik Sonuç",
   ];
   return required.every((h) => text.includes(h));
 }

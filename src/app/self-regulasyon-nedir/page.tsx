@@ -149,11 +149,11 @@ export default function Page() {
 
         <section className="mt-12 space-y-6 text-slate-700 leading-8">
           <h2 className="text-2xl font-semibold text-slate-900">
-            Self Meta AI Bu Sürece Nasıl Katkı Sağlar?
+            DNA Intelligence Platform Bu Sürece Nasıl Katkı Sağlar?
           </h2>
 
           <p>
-            Self Meta AI, self-regülasyonun farklı bileşenlerini birlikte ele
+            DNA Intelligence Platform, self-regülasyonun farklı bileşenlerini birlikte ele
             alan yapay zeka destekli bir klinik karar destek platformudur.
             Sistem, farklı alanlardan gelen puanları yalnızca toplamaz; aynı
             zamanda bunlar arasındaki örüntüyü analiz ederek klinik açıdan anlamlı
@@ -187,7 +187,7 @@ export default function Page() {
             Fizyolojik, duyusal, duygusal, bilişsel ve yürütücü süreçlerin
             birbirinden bağımsız değil; sürekli etkileşim içinde işlediği kabul
             edildiğinde, değerlendirme yaklaşımının da bu karmaşıklığı
-            yansıtması gerekir. Self Meta AI bu ihtiyaca yanıt vermek için,
+            yansıtması gerekir. DNA Intelligence Platform bu ihtiyaca yanıt vermek için,
             self-regülasyon alanlarını bütüncül biçimde analiz eden ve klinik
             karar destek mantığıyla çalışan yeni nesil bir değerlendirme zemini
             sunar.

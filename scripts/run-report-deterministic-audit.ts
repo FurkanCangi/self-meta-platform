@@ -1,9 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { execFileSync } from "node:child_process";
 
 import { listFixturePaths, runSingleFixture, type FixturePayload } from "./run-selfmeta-report";
 import { extractExternalClinicalFindings, getAnamnezThemeSignals, type AnamnezRecord } from "../src/lib/selfmeta/anamnezUtils";
 import { analyzeExternalClinicalTests } from "../src/lib/selfmeta/externalTestRegistry";
+import { CLINICAL_KNOWLEDGE_CHUNKS, WORD_RAG_SOURCE } from "../src/lib/selfmeta/clinicalKnowledgeBase";
 import { splitClinicalReportSections } from "../src/lib/selfmeta/reportText";
 
 const OUTPUT_DIR = "/tmp/selfmeta-report-output/deterministic-audit";
@@ -15,6 +17,11 @@ type AuditIssueCode =
   | "adaptive_daily_living_underweighted"
   | "language_communication_underweighted"
   | "social_pragmatic_underweighted"
+  | "adaptive_mechanism_weak"
+  | "language_mechanism_weak"
+  | "social_mechanism_weak"
+  | "physiological_mechanism_weak"
+  | "mechanism_lowest_score_leak"
   | "age_mismatch_warning_weak"
   | "sensory_theme_leakage"
   | "attention_theme_leakage"
@@ -39,6 +46,11 @@ const ISSUE_LABELS: Record<AuditIssueCode, string> = {
   adaptive_daily_living_underweighted: "Uyumsal/günlük yaşam hattı yeterince baskın değil",
   language_communication_underweighted: "Dilsel yük hattı metinde zayıf kalıyor",
   social_pragmatic_underweighted: "Sosyal-pragmatik hat metinde zayıf kalıyor",
+  adaptive_mechanism_weak: "Günlük yaşam/öz bakım mekanizması yeterince açık değil",
+  language_mechanism_weak: "Dilsel mekanizma yeterince açık değil",
+  social_mechanism_weak: "Sosyal-pragmatik mekanizma yeterince açık değil",
+  physiological_mechanism_weak: "Beden-temelli toparlanma mekanizması yeterince açık değil",
+  mechanism_lowest_score_leak: "Ana klinik bölümlerde lowest-score mekanizması sızıyor",
   age_mismatch_warning_weak: "Yaş uyumsuz dış test uyarısı zayıf",
   sensory_theme_leakage: "Duyusal tema sızıntısı var",
   attention_theme_leakage: "Dikkat/görev sürdürme tema sızıntısı var",
@@ -81,12 +93,22 @@ function profileMentionsCategory(profileText: string, category: string): boolean
 
 function getSectionBodies(text: string) {
   const sections = new Map(splitClinicalReportSections(text).map((section) => [section.heading, section.body]));
+  const getFirst = (headings: string[]) => {
+    for (const heading of headings) {
+      const body = sections.get(heading);
+      if (body) return String(body);
+    }
+    return "";
+  };
   return {
-    domains: String(sections.get("3. Alan Bazlı Klinik Yorum") || ""),
-    pattern: String(sections.get("4. Örüntü Analizi") || ""),
-    fit: String(sections.get("5. Anamnez – Test Uyum Değerlendirmesi") || ""),
-    conclusion: String(sections.get("6. Kısa Sonuç") || ""),
-    literature: String(sections.get("7. Literatürle Uyumlu Klinik Not") || ""),
+    domains: getFirst(["3. Alan Bazlı Klinik Yorum"]),
+    pattern: getFirst(["4. Klinik Örüntü ve Formülasyon", "4. Örüntü Analizi"]),
+    fit: getFirst([
+      "5. Anamnez, Gözlem ve Test Uyumunun Değerlendirilmesi",
+      "5. Anamnez – Test Uyum Değerlendirmesi",
+    ]),
+    conclusion: getFirst(["7. Klinik Sonuç", "6. Kısa Sonuç"]),
+    literature: getFirst(["8. Literatürle Uyumlu Klinik Dayanak"]),
   };
 }
 
@@ -112,8 +134,30 @@ function getIssueCodes(params: {
   const normalizedProfile = normalizeText(params.profileType);
   const normalizedReport = normalizeText(params.finalText);
   const sectionBodies = getSectionBodies(params.finalText);
+  const decisionSummaryBody = splitClinicalReportSections(params.finalText).find((section) => section.heading.startsWith("1."))?.body || "";
+  const prioritizationBody = splitClinicalReportSections(params.finalText).find((section) => section.heading.startsWith("6."))?.body || "";
   const coreText = normalizeText(
     [sectionBodies.domains, sectionBodies.pattern, sectionBodies.fit, sectionBodies.conclusion].join("\n")
+  );
+  const mechanismText = normalizeText(
+    splitClinicalReportSections(params.finalText)
+      .filter((section) => ["1.", "4.", "6."].some((prefix) => section.heading.startsWith(prefix)))
+      .map((section) => `${section.heading}\n${section.body}`)
+      .join("\n")
+  );
+  const formulationAnchors = normalizeText(
+    [sectionBodies.pattern, prioritizationBody]
+      .map((body) => {
+        const match = body.match(/Klinik formülasyon:\s*[^.\n!?]+[.!?]?/i);
+        return match?.[0] || "";
+      })
+      .join("\n")
+  );
+  const decisionAnchor = normalizeText(
+    decisionSummaryBody
+      .split(/\n+/)
+      .slice(0, 4)
+      .join(" ")
   );
   const interoFocusText = normalizeText([sectionBodies.pattern, sectionBodies.fit, sectionBodies.conclusion].join("\n"));
   const anamnezSignals = getAnamnezThemeSignals(params.anamnezRecord);
@@ -162,9 +206,17 @@ function getIssueCodes(params: {
     }
   }
 
+  const profileIsAdaptive = /günlük yaşam|gunluk yasam|öz bakım|oz bakim/.test(normalizedProfile);
+  const profileIsLanguage = /dilsel|sözel|sozel/.test(normalizedProfile);
+  const profileIsSocial = /sosyal-pragmatik|pragmatik|karşılıklılık|karsiliklilik/.test(normalizedProfile);
+  const profileIsPhysioIntero = /fizyolojik toparlanma|beden temelli|interosepsiyon/.test(normalizedProfile);
+
   if (compatibleCategories.has("adaptive_daily_living")) {
     if (!hasAny(coreText, [/öz bakım/, /günlük yaşam/, /rutin/, /tuvalet/, /giyin/, /katılım/, /başlatma/, /tamamlama/])) {
       issueCodes.push("adaptive_daily_living_underweighted");
+    }
+    if (profileIsAdaptive && !hasAny(mechanismText, [/öz bakım ve günlük yaşam akışını başlatma/, /öz bakım ve günlük yaşam akışı/, /günlük yaşam ve öz bakım akışını sürdürme yükü/])) {
+      issueCodes.push("adaptive_mechanism_weak");
     }
   }
 
@@ -172,12 +224,25 @@ function getIssueCodes(params: {
     if (!hasAny(coreText, [/dil/, /yönerge/, /sözel/, /anlama/, /ifade/])) {
       issueCodes.push("language_communication_underweighted");
     }
+    if (profileIsLanguage && !hasAny(mechanismText, [/sözel talep ve yönerge karmaşıklığı/, /dilsel yük ile sosyal-pragmatik talep/, /dilsel talep ve sözel işleme yükü/])) {
+      issueCodes.push("language_mechanism_weak");
+    }
   }
 
   if (compatibleCategories.has("social_pragmatic")) {
     if (!hasAny(coreText, [/sosyal/, /pragmatik/, /karşılıklılık/, /etkileşim/, /akran/])) {
       issueCodes.push("social_pragmatic_underweighted");
     }
+    if (profileIsSocial && !hasAny(mechanismText, [/sosyal karşılıklılık/, /pragmatik esneklik/, /sosyal-pragmatik talep/])) {
+      issueCodes.push("social_mechanism_weak");
+    }
+  }
+
+  if (
+    profileIsPhysioIntero &&
+    !hasAny(mechanismText, [/beden-temelli toparlanma/, /interoseptif düzenleme/, /içsel sinyalleri düzenlemeye katma/])
+  ) {
+    issueCodes.push("physiological_mechanism_weak");
   }
 
   if (externalAnalysis.incompatible.length > 0) {
@@ -215,11 +280,50 @@ function getIssueCodes(params: {
     issueCodes.push("narrative_guard_violation");
   }
 
+  if (
+    (profileIsAdaptive || profileIsLanguage || profileIsSocial || profileIsPhysioIntero) &&
+    (hasAny(formulationAnchors, [/klinik formülasyon:\s*.*en düşük alan/i]) ||
+      hasAny(decisionAnchor, [/en düşük alan/i]))
+  ) {
+    issueCodes.push("mechanism_lowest_score_leak");
+  }
+
   return {
     issueCodes: Array.from(new Set(issueCodes)),
     compatibleCategories: Array.from(compatibleCategories),
     incompatibleCount: externalAnalysis.incompatible.length,
   };
+}
+
+function readWordRagChunkIds(): string[] {
+  const script = `
+import re, sys, zipfile
+from xml.etree import ElementTree as ET
+p = sys.argv[1]
+z = zipfile.ZipFile(p)
+xml = z.read('word/document.xml')
+z.close()
+root = ET.fromstring(xml)
+ns = {'w':'http://schemas.openxmlformats.org/wordprocessingml/2006/main'}
+text = '\\n'.join(''.join(t.text or '' for t in para.findall('.//w:t', ns)) for para in root.findall('.//w:p', ns))
+ids = re.findall(r'CHUNK_ID:\\s*([A-Z0-9_]+)', text)
+print('\\n'.join(ids))
+`.trim();
+  const output = execFileSync("python3", ["-c", script, path.resolve(process.cwd(), WORD_RAG_SOURCE.primary)], {
+    encoding: "utf8",
+  });
+  return output.split(/\n+/).map((line) => line.trim()).filter(Boolean);
+}
+
+function assertKnowledgeBaseCoverage() {
+  const ragIds = new Set(readWordRagChunkIds());
+  const kbIds = new Set(CLINICAL_KNOWLEDGE_CHUNKS.map((chunk) => chunk.id));
+  const missing = Array.from(ragIds).filter((id) => !kbIds.has(id)).sort();
+  if (missing.length > 0 || ragIds.size !== WORD_RAG_SOURCE.sourceChunkCount) {
+    throw new Error(
+      `Word RAG coverage failed. expected=${WORD_RAG_SOURCE.sourceChunkCount} actual=${ragIds.size} missing=${missing.join(", ")}`
+    );
+  }
 }
 
 function buildMarkdownSummary(results: FixtureAudit[]) {
@@ -262,6 +366,7 @@ function buildMarkdownSummary(results: FixtureAudit[]) {
 }
 
 async function main() {
+  assertKnowledgeBaseCoverage();
   const fixturePaths = await listFixturePaths();
   const results: FixtureAudit[] = [];
 

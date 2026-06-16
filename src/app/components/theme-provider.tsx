@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 export type ThemeMode = "light" | "dark";
 
@@ -15,32 +15,49 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function applyTheme(theme: ThemeMode) {
-  document.documentElement.setAttribute("data-theme", theme);
+  const root = document.documentElement;
+  root.setAttribute("data-theme", theme);
+  root.classList.remove("light", "dark");
+  root.classList.add(theme);
+}
+
+function readStoredTheme(): ThemeMode | null {
+  try {
+    const storedTheme = localStorage.getItem(STORAGE_KEY);
+    return storedTheme === "dark" || storedTheme === "light" ? storedTheme : null;
+  } catch {
+    return null;
+  }
+}
+
+function getInitialTheme(): ThemeMode {
+  const storedTheme = readStoredTheme();
+  if (storedTheme) return storedTheme;
+
+  const root = document.documentElement;
+  const currentTheme = root.getAttribute("data-theme");
+  if (currentTheme === "dark" || currentTheme === "light") return currentTheme;
+  if (root.classList.contains("dark")) return "dark";
+
+  return "light";
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<ThemeMode>("light");
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored === "dark" || stored === "light") {
-        setThemeState(stored);
-        applyTheme(stored);
-        return;
-      }
-    } catch {}
-
-    applyTheme("light");
+    const initialTheme = getInitialTheme();
+    setThemeState(initialTheme);
+    applyTheme(initialTheme);
   }, []);
 
-  const setTheme = (nextTheme: ThemeMode) => {
+  const setTheme = useCallback((nextTheme: ThemeMode) => {
     setThemeState(nextTheme);
     applyTheme(nextTheme);
     try {
       localStorage.setItem(STORAGE_KEY, nextTheme);
     } catch {}
-  };
+  }, []);
 
   const value = useMemo<ThemeContextValue>(
     () => ({
@@ -48,7 +65,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       setTheme,
       toggleTheme: () => setTheme(theme === "light" ? "dark" : "light"),
     }),
-    [theme]
+    [setTheme, theme]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

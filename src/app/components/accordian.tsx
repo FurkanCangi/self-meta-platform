@@ -56,7 +56,7 @@ export default function Accordion(){
                 <h5 className="text-lg font-semibold">Frequently Asked Questions</h5>
 
                     <ul className="tracking-[0.5px] inline-flex items-center mt-2">
-                        <li className="inline-block capitalize text-[14px] font-bold duration-500 dark:text-white/70 hover:text-primary dark:hover:text-white"><Link href="/">Self Metacognition Institute</Link></li>
+                        <li className="inline-block capitalize text-[14px] font-bold duration-500 dark:text-white/70 hover:text-primary dark:hover:text-white"><Link href="/">DNA Intelligence</Link></li>
                         <li className="inline-block text-base text-slate-950 dark:text-white/70 mx-0.5 ltr:rotate-0 rtl:rotate-180"><MdKeyboardArrowRight/></li>
                         <li className="inline-block capitalize text-[14px] font-bold text-primary dark:text-white" aria-current="page">FAQs</li>
                     </ul>

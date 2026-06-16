@@ -9,6 +9,9 @@ function sanitizeNextPath(value: string | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
     return "/starter";
   }
+  if (value.startsWith("/legal/accept")) {
+    return "/starter";
+  }
   return value;
 }
 
@@ -31,6 +34,66 @@ function formatLoginError(message?: string | null) {
   return raw || "Giriş sırasında bir hata oluştu.";
 }
 
+function resolvePostLoginPath(plan: string, nextPath: string) {
+  if (plan === "none") return "/fiyatlandirma";
+  return nextPath;
+}
+
+function getOrCreateDeviceId() {
+  const key = "selfmeta_device_id";
+  const existing = window.localStorage.getItem(key);
+  if (existing && existing.length >= 16) return existing;
+
+  const next =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+
+  window.localStorage.setItem(key, next);
+  return next;
+}
+
+function detectDeviceType() {
+  const ua = navigator.userAgent || "";
+  if (/ipad|tablet|playbook|silk/i.test(ua)) return "tablet";
+  if (/mobi|iphone|android/i.test(ua)) return "mobile";
+  return "desktop";
+}
+
+async function registerAppSession() {
+  const response = await fetch("/api/security/session/register", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    credentials: "same-origin",
+    body: JSON.stringify({
+      deviceId: getOrCreateDeviceId(),
+      deviceType: detectDeviceType(),
+    }),
+  });
+
+  const payload = await response.json().catch(() => null);
+
+  if (!response.ok || !payload?.ok) {
+    const code = String(payload?.error || "");
+    if (code === "device_limit_exceeded") {
+      throw new Error("Bu hesap için en fazla 2 cihaz kullanılabilir. Yeni cihaz eklemek için önce mevcut cihazlardan biri kaldırılmalıdır.");
+    }
+    if (code === "device_slot_unavailable") {
+      throw new Error(payload?.message || "Bu cihaz türü için hesap limiti dolu.");
+    }
+    if (code === "device_revoked") {
+      throw new Error("Bu cihaz için erişim kapatılmış görünüyor. Lütfen farklı bir cihazla giriş yapın veya destek isteyin.");
+    }
+    if (code === "account_temporarily_locked") {
+      throw new Error(payload?.message || "Şüpheli kullanım nedeniyle hesap geçici olarak kilitlendi. Lütfen daha sonra tekrar deneyin.");
+    }
+    if (code === "account_suspended") {
+      throw new Error("Hesap güvenlik nedeniyle askıya alınmış görünüyor. Lütfen destek ile iletişime geçin.");
+    }
+    throw new Error("Oturum güvenlik kaydı oluşturulamadı. Lütfen tekrar deneyin.");
+  }
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const sp = useSearchParams();
@@ -43,38 +106,39 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [debugStatus, setDebugStatus] = useState<string | null>(null);
 
   useEffect(() => {
-    setDebugStatus("Mevcut oturum kontrol ediliyor...");
     supabase.auth.getSession().then(async ({ data }: { data: any }) => {
       if (data.session?.user?.id) {
-        setDebugStatus("Mevcut oturum bulundu. Hesap planı kontrol ediliyor...");
+        try {
+          await registerAppSession();
+        } catch (error) {
+          await supabase.auth.signOut();
+          setErr(error instanceof Error ? error.message : "Oturum güvenlik kaydı oluşturulamadı.");
+          return;
+        }
+
         const { data: profile } = await supabase
           .from("profiles")
           .select("plan")
           .eq("user_id", data.session.user.id)
           .maybeSingle();
         const plan = profile?.plan ?? "none";
-        setDebugStatus("Yönlendiriliyor...");
-        router.replace(plan === "none" ? "/pricing#paketler" : nextPath);
+        router.replace(resolvePostLoginPath(plan, nextPath));
         return;
       }
-      setDebugStatus(null);
     });
   }, [router, nextPath]);
 
   async function performLogin(submittedEmail: string, submittedPassword: string) {
     setErr(null);
     setLoading(true);
-    setDebugStatus("Giriş isteği hazırlanıyor...");
     try {
       if (!submittedEmail || !submittedPassword) {
         setErr("E-posta ve şifre alanlarını doldurun.");
         return;
       }
 
-      setDebugStatus("Supabase oturum isteği gönderildi...");
       const { data, error } = await supabase.auth.signInWithPassword({
         email: submittedEmail,
         password: submittedPassword,
@@ -82,18 +146,23 @@ export default function LoginPage() {
 
       if (error) {
         setErr(formatLoginError(error.message));
-        setDebugStatus("Giriş reddedildi.");
         return;
       }
 
       const uid = data.user?.id;
       if (!uid) {
         setErr("Giriş yapılamadı.");
-        setDebugStatus("Kullanıcı bilgisi alınamadı.");
         return;
       }
 
-      setDebugStatus("Oturum açıldı. Hesap planı kontrol ediliyor...");
+      try {
+        await registerAppSession();
+      } catch (error) {
+        await supabase.auth.signOut();
+        setErr(error instanceof Error ? error.message : "Oturum güvenlik kaydı oluşturulamadı.");
+        return;
+      }
+
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("plan")
@@ -102,17 +171,14 @@ export default function LoginPage() {
 
       if (profileError) {
         setErr("Hesap bilgileri alınamadı. Lütfen tekrar deneyin.");
-        setDebugStatus("Profil bilgisi alınamadı.");
         return;
       }
 
       const plan = profile?.plan ?? "none";
-      setDebugStatus(plan === "none" ? "Plan bulunamadı. Fiyatlandırma sayfasına yönlendiriliyor..." : "Terapist paneline yönlendiriliyor...");
-      router.replace(plan === "none" ? "/pricing#paketler" : nextPath);
+      router.replace(resolvePostLoginPath(plan, nextPath));
     } catch (error: any) {
       console.error("[login] signIn failed", error);
       setErr("Giriş isteği tamamlanamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.");
-      setDebugStatus("Giriş isteği hata ile sonlandı.");
     } finally {
       setLoading(false);
     }
@@ -136,7 +202,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md">
         <form ref={formRef} className="mt-3 space-y-3" onSubmit={onSubmit}>
           {sp.get("next") ? (
-            <div className="rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-700">
+            <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
               Devam etmek istediğiniz sayfaya geçmek için giriş yapın.
             </div>
           ) : null}
@@ -148,8 +214,8 @@ export default function LoginPage() {
             onChange={(e) => setEmail(e.target.value)}
             type="email"
             autoComplete="email"
-            placeholder="E-Posta"
-            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-500 focus:border-sky-400 focus:ring-4 focus:ring-sky-100 focus:outline-none"
+            placeholder="E-posta adresiniz"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-4 text-sm font-medium text-slate-900 shadow-sm shadow-slate-200/40 placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 focus:outline-none"
           />
           <input
             ref={passwordRef}
@@ -158,29 +224,23 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             type="password"
             autoComplete="current-password"
-            placeholder="Şifre"
-            className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 placeholder:text-slate-500 focus:border-sky-400 focus:ring-4 focus:ring-sky-100 focus:outline-none"
+            placeholder="Şifreniz"
+            className="w-full rounded-xl border border-slate-200 bg-white px-4 py-4 text-sm font-medium text-slate-900 shadow-sm shadow-slate-200/40 placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 focus:outline-none"
           />
 
-          {err ? <div className="text-sm text-rose-600">{err}</div> : null}
-
-          {debugStatus ? (
-            <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-              Durum: {debugStatus}
-            </div>
-          ) : null}
+          {err ? <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">{err}</div> : null}
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-sky-600 px-4 py-3 text-sm font-semibold text-white shadow-sm hover:bg-sky-700 disabled:opacity-60"
+            className="w-full rounded-xl bg-gradient-to-r from-cyan-400 via-blue-600 to-violet-600 px-4 py-4 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 hover:shadow-blue-600/30 disabled:translate-y-0 disabled:opacity-60"
           >
-            {loading ? "Giriş Yapılıyor..." : "Giriş Yap"}
+            Giriş Yap
           </button>
 
-          <div className="text-center text-xs text-slate-500">
+          <div className="pt-2 text-center text-sm font-medium text-slate-500">
             Hesabınız yok mu?{" "}
-            <a className="text-sky-600 hover:text-sky-700" href="/signup">
+            <a className="font-bold text-blue-700 hover:text-violet-700" href="/signup">
               Kayıt olun.
             </a>
           </div>

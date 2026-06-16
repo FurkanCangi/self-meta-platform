@@ -1,62 +1,58 @@
-import React from "react";
-import Link from "next/link";
+import LegalDocumentPage from "../components/legal/LegalDocumentPage"
 
-import Footer from "../components/footer";
-import Switcher from "../components/switcher";
-import Wrapper from "../components/wrapper";
-import { MdKeyboardArrowRight } from "react-icons/md";
-import { FiArrowRight } from "react-icons/fi";
-
-
-export default function Page() {
+export default function PrivacyPage() {
   return (
-    <Wrapper>
-       <div className="container-fluid relative px-3">
-            <div className="layout-specing">
-                <div className="md:flex justify-between items-center">
-                    <h5 className="text-lg font-semibold">Privacy Policy</h5>
-
-                    <ul className="tracking-[0.5px] inline-flex items-center sm:mt-0 mt-3">
-                        <li className="inline-block capitalize text-[14px] font-bold duration-500 dark:text-white/70 hover:text-primary dark:hover:text-white"><Link href="/">Self Metacognition Institute</Link></li>
-                        <li className="inline-block text-base text-slate-950 dark:text-white mx-0.5 ltr:rotate-0 rtl:rotate-180"><MdKeyboardArrowRight/></li>
-                        <li className="inline-block capitalize text-[14px] font-bold text-primary dark:text-white" aria-current="page">Privacy</li>
-                    </ul>
-                </div>
-
-                <div className="container relative mt-6">
-                    <div className="md:flex justify-center">
-                        <div className="lg:w-4/5 w-full">
-                            <div className="p-6 bg-white dark:bg-slate-900 shadow-sm dark:shadow-gray-700 rounded-md">
-                                <h5 className="text-lg font-semibold mb-4">Overview :</h5>
-                                <p className="text-slate-400">It seems that only fragments of the original text remain in the Lorem Ipsum texts used today. One may speculate that over the course of time certain letters were added or deleted at various positions within the text.</p>
-                                <p className="text-slate-400">In the 1960s, the text suddenly became known beyond the professional circle of typesetters and layout designers when it was used for Letraset sheets (adhesive letters on transparent film, popular until the 1980s) Versions of the text were subsequently included in DTP programmes such as PageMaker etc.</p>
-                                <p className="text-slate-400">There is now an abundance of readable dummy texts. These are usually used when a text is required purely to fill a space. These alternatives to the classic Lorem Ipsum texts are often amusing and tell short, funny or nonsensical stories.</p>
-                            
-                                <h5 className="text-lg font-semibold mb-4 mt-6">We use your information to :</h5>
-                                <ul className="list-none text-slate-400 mt-4">
-                                    <li className="flex mt-2 items-center"><FiArrowRight className="text-primary text-sm align-middle me-2"/>Digital Marketing Solutions for Tomorrow</li>
-                                    <li className="flex mt-2 items-center"><FiArrowRight className="text-primary text-sm align-middle me-2"/>Our Talented & Experienced Marketing Agency</li>
-                                    <li className="flex mt-2 items-center"><FiArrowRight className="text-primary text-sm align-middle me-2"/>Create your own skin to match your brand</li>
-                                    <li className="flex mt-2 items-center"><FiArrowRight className="text-primary text-sm align-middle me-2"/>Digital Marketing Solutions for Tomorrow</li>
-                                    <li className="flex mt-2 items-center"><FiArrowRight className="text-primary text-sm align-middle me-2"/>Our Talented & Experienced Marketing Agency</li>
-                                    <li className="flex mt-2 items-center"><FiArrowRight className="text-primary text-sm align-middle me-2"/>Create your own skin to match your brand</li>
-                                </ul>
-    
-                                <h5 className="text-lg font-semibold mb-4 mt-6">Information Provided Voluntarily :</h5>
-                                <p className="text-slate-400">In the 1960s, the text suddenly became known beyond the professional circle of typesetters and layout designers when it was used for Letraset sheets (adhesive letters on transparent film, popular until the 1980s) Versions of the text were subsequently included in DTP programmes such as PageMaker etc.</p>
-    
-                                <div className="mt-6">
-                                    <Link href="#" className="py-2 px-5 inline-block font-semibold tracking-wide border align-middle duration-500 text-base text-center bg-primary hover:bg-primary-700 border-primary hover:border-primary-700 text-white rounded-md">Print</Link>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <Footer/>
-        <Switcher/>
-    </Wrapper>
-   
+    <LegalDocumentPage
+      title="Gizlilik Politikası"
+      description="DNA Intelligence platformunun hesap, klinik değerlendirme, rapor üretimi, yapay zeka destekli çıktı, denetim ve destek süreçlerinde kişisel verileri nasıl işlediğini açıklar."
+      sections={[
+        {
+          title: "1. Kapsam",
+          body: [
+            "Bu politika, DNA Intelligence web uygulamasını, değerlendirme formlarını, rapor üretim araçlarını, owner/admin denetim panelini, destek süreçlerini ve varsa video gözlem MVP modülünü kapsar.",
+            "Platform uzmanlara karar destek aracı sunar. Platform çıktıları tek başına tanı, tedavi, terapi planı veya tıbbi karar yerine geçmez; nihai mesleki değerlendirme uzman kullanıcıya aittir.",
+          ],
+        },
+        {
+          title: "2. İşlenen Veri Kategorileri",
+          body: [
+            "Hesap verileri: ad soyad, e-posta, parola doğrulama bilgisi, oturum bilgisi, plan/paket bilgisi ve iletişim kayıtları.",
+            "Danışan/çocuk verileri: uzman tarafından girilen çocuk/danışan kodu, yaş/ay bilgisi, anamnez, gözlem notları, değerlendirme cevapları, ölçek skorları, klinik bağlam ve rapor çıktıları.",
+            "Teknik veriler: IP adresi, cihaz/tarayıcı bilgisi, işlem zamanı, güvenlik logları, hata kayıtları ve clickwrap kabul kanıtları.",
+            "Video gözlem modülü kullanılırsa video segmentleri, kalite ölçümleri, çıkarılan hareket/kanıt sinyalleri, rapor özetleri ve klinisyen inceleme kayıtları işlenebilir.",
+          ],
+        },
+        {
+          title: "3. Kullanım Amaçları",
+          body: [
+            "Veriler; hesap açma, kimlik doğrulama, paket kullanımını yönetme, değerlendirme ve rapor üretme, destek sağlama, güvenliği koruma, kötüye kullanımı önleme, yasal saklama yükümlülüklerini yerine getirme ve uyuşmazlıkları yönetme amaçlarıyla işlenir.",
+            "Owner/admin yetkilileri kimlikli verilere yalnız hizmet sunumu, teknik destek, güvenlik, denetim, yasal saklama, ödeme ve uyuşmazlık yönetimi amaçlarıyla erişebilir.",
+            "Ürün geliştirme, kalite ölçümü, rapor doğruluğu analizi, istatistik ve akademik/operasyonel değerlendirme için veriler mümkün olan ölçüde anonimleştirilmiş veya toplulaştırılmış şekilde kullanılır. Kimlikli çocuk/danışan verisi pazarlama amacıyla satılmaz veya üçüncü kişilere bu amaçla verilmez.",
+          ],
+        },
+        {
+          title: "4. Yapay Zeka ve Altyapı Sağlayıcıları",
+          body: [
+            "Rapor üretiminde OpenAI veya benzeri LLM/API sağlayıcıları kullanılabilir. Bu durumda rapor üretimi için gerekli sınırlı içerik API sağlayıcısına aktarılabilir ve çıktı uzman kullanıcıya karar destek metni olarak sunulur.",
+            "Veriler Supabase gibi veritabanı, kimlik doğrulama ve depolama sağlayıcıları; Vercel gibi barındırma/dağıtım sağlayıcıları; ileride entegre edilecek ödeme/fatura sağlayıcıları ve güvenlik/monitoring araçlarıyla işlenebilir.",
+            "Sağlayıcı seçimi yapılırken erişim yetkileri, güvenlik, saklama ve aktarım riskleri gözetilir. Yurt dışı aktarım gerektiren süreçler açık rıza ve ilgili mevzuat çerçevesinde ayrıca ele alınır.",
+          ],
+        },
+        {
+          title: "5. Saklama, Silme ve Owner Audit",
+          body: [
+            "Kullanıcı arayüzünde silinen kayıtlar günlük kullanım görünürlüğünden kaldırılabilir. Ancak denetim, veri bütünlüğü, uyuşmazlık, yasal saklama ve güvenlik amaçlarıyla sınırlı snapshot kayıtları owner audit katmanında saklanabilir.",
+            "Saklama süreleri veri kategorisine, hukuki sebebe, sözleşme ilişkisine, yasal yükümlülüklere ve teknik güvenlik ihtiyacına göre belirlenir. Süresi dolan veriler silinir, yok edilir veya anonim hale getirilir.",
+          ],
+        },
+        {
+          title: "6. Kullanıcı Hakları ve İletişim",
+          body: [
+            "İlgili kişiler KVKK kapsamındaki başvuru haklarını kullanmak için [ILETISIM_EPOSTA] adresine başvurabilir. Başvuruda kimlik doğrulama ve talebin hangi veriyle ilgili olduğunun açıklanması istenebilir.",
+            "Uzman kullanıcı, platforma girdiği danışan/çocuk verileri için gerekli bilgilendirme ve izinleri aldığını; yetkisiz veri girmeyeceğini kabul eder.",
+          ],
+        },
+      ]}
+    />
   )
 }

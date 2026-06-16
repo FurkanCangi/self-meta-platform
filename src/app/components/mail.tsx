@@ -256,7 +256,7 @@ export default function Mail(){
                                                 <Link href="#" className="font-semibold hover:text-primary" data-modal-toggle="emailpreview">Calvin Carlo</Link>
                                             </td>
                                             <td className="text-start border-t border-gray-100 dark:border-gray-800 p-4">
-                                                <span className="text-slate-400">Self Metacognition Institute Customization</span>
+                                                <span className="text-slate-400">DNA Intelligence Customization</span>
                                             </td>
                                             <td className="text-end border-t border-gray-100 dark:border-gray-800 p-4">
                                                 <span className="text-slate-400">03:05PM</span>

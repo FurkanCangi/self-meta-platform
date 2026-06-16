@@ -34,11 +34,11 @@ const DOMAIN_TO_KEY: Record<string, string> = {
 }
 
 const SECTION_BY_GROUP: Record<keyof RagGroups, string[]> = {
-  general: ["1. Genel Klinik Değerlendirme"],
+  general: ["1. Klinik Karar Özeti"],
   domain: ["3. Alan Bazlı Klinik Yorum"],
-  pattern: ["4. Örüntü Analizi"],
-  anamnesis: ["5. Anamnez – Test Uyum Değerlendirmesi"],
-  summary: ["6. Kısa Sonuç"],
+  pattern: ["4. Klinik Örüntü ve Formülasyon"],
+  anamnesis: ["5. Anamnez, Gözlem ve Test Uyumunun Değerlendirilmesi"],
+  summary: ["7. Klinik Sonuç"],
 }
 
 function mapDomain(domain: string): string {

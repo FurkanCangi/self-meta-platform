@@ -5,6 +5,7 @@
     "outDir": ".tmp/report-runner",
     "rootDir": ".",
     "module": "commonjs",
+    "moduleResolution": "node",
     "target": "ES2020",
     "incremental": false,
     "isolatedModules": false

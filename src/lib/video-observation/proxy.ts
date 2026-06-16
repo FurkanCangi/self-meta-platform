@@ -1,15 +1,6 @@
 import "server-only"
 
-const DEFAULT_BASE_URL = "http://127.0.0.1:8091"
-
-function getVideoObservationApiBaseUrl() {
-  const raw =
-    process.env.VIDEO_OBS_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_VIDEO_OBS_API_BASE_URL ||
-    DEFAULT_BASE_URL
-
-  return raw.replace(/\/+$/, "")
-}
+import { getVideoObservationApiBaseUrl } from "./config"
 
 export async function proxyVideoObservationRequest(
   pathname: string,

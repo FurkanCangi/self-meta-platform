@@ -1,4 +1,4 @@
-export const LITERATURE_SECTION_HEADING = "7. Literatürle Uyumlu Klinik Not"
+export const LITERATURE_SECTION_HEADING = "8. Literatürle Uyumlu Klinik Dayanak"
 
 import {
   getExternalTestDefinitionById,
@@ -21,10 +21,17 @@ type ClinicalAnalysis = {
   primaryExternalTestCategory?: ExternalTestCategory | null
 }
 
-type LiteratureSource = {
+export type LiteratureSource = {
   id: string
   inlineCitation: string
   apaReference: string
+  doi: string | null
+  url: string
+  evidenceDomain: string
+  claimBoundary: string
+  verifiedAt: string
+  catalogArea?: string
+  catalogTier?: "core" | "supporting"
 }
 
 type LiteratureBlock = {
@@ -32,50 +39,282 @@ type LiteratureBlock = {
   sourceIds: string[]
 }
 
-const VERIFIED_LITERATURE_SOURCES: Record<string, LiteratureSource> = {
+export const VERIFIED_LITERATURE_SOURCES: Record<string, LiteratureSource> = {
   BLAIR_RAVER_2015: {
     id: "BLAIR_RAVER_2015",
     inlineCitation: "(Blair & Raver, 2015)",
     apaReference:
       "Blair, C., & Raver, C. C. (2015). School readiness and self-regulation: A developmental psychobiological approach. Annual Review of Psychology, 66, 711-731. https://doi.org/10.1146/annurev-psych-010814-015221",
+    doi: "10.1146/annurev-psych-010814-015221",
+    url: "https://doi.org/10.1146/annurev-psych-010814-015221",
+    evidenceDomain: "developmental_self_regulation",
+    claimBoundary:
+      "Self-regülasyonun çok bileşenli gelişimsel yapı olarak yorumlanmasını destekler; tek vaka için tanı veya tedavi protokolü çıkarımı sağlamaz.",
+    verifiedAt: "2026-06-01",
   },
   CARPENTER_ET_AL_2019: {
     id: "CARPENTER_ET_AL_2019",
     inlineCitation: "(Carpenter et al., 2019)",
     apaReference:
       "Carpenter, K. L. H., Baranek, G. T., Copeland, W. E., Compton, S., Zucker, N., Dawson, G., & Egger, H. L. (2019). Sensory over-responsivity: An early risk factor for anxiety and behavioral challenges in young children. Journal of Abnormal Child Psychology, 47(6), 1075-1088. https://doi.org/10.1007/s10802-018-0502-y",
+    doi: "10.1007/s10802-018-0502-y",
+    url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC6508996/",
+    evidenceDomain: "sensory_over_responsivity",
+    claimBoundary:
+      "Duyusal aşırı yanıtlılık ile davranışsal/duygusal zorluk ilişkisini genel düzeyde destekler; duyusal tanı veya nedensellik hükmü üretmez.",
+    verifiedAt: "2026-06-01",
+    catalogArea: "Duyusal Regülasyon",
+    catalogTier: "core",
+  },
+  BEN_SASSON_ET_AL_2009: {
+    id: "BEN_SASSON_ET_AL_2009",
+    inlineCitation: "(Ben-Sasson et al., 2009)",
+    apaReference:
+      "Ben-Sasson, A., Hen, L., Fluss, R., Cermak, S. A., Engel-Yeger, B., & Gal, E. (2009). A meta-analysis of sensory modulation symptoms in individuals with autism spectrum disorders. Journal of Autism and Developmental Disorders, 39, 1-11. https://doi.org/10.1007/s10803-008-0593-3",
+    doi: "10.1007/s10803-008-0593-3",
+    url: "https://doi.org/10.1007/s10803-008-0593-3",
+    evidenceDomain: "sensory_modulation_autism",
+    claimBoundary:
+      "Duyusal modülasyon belirtilerinin otizm bağlamında heterojen ve sık görülebileceğini destekler; duyusal tanı veya otizm tanısı üretmez.",
+    verifiedAt: "2026-06-16",
+    catalogArea: "Duyusal Regülasyon",
+    catalogTier: "core",
+  },
+  CASE_SMITH_ET_AL_2015: {
+    id: "CASE_SMITH_ET_AL_2015",
+    inlineCitation: "(Case-Smith et al., 2015)",
+    apaReference:
+      "Case-Smith, J., Weaver, L. L., & Fristad, M. A. (2015). A systematic review of sensory processing interventions for children with autism spectrum disorders. Autism, 19(2), 133-148. https://doi.org/10.1177/1362361313517762",
+    doi: "10.1177/1362361313517762",
+    url: "https://doi.org/10.1177/1362361313517762",
+    evidenceDomain: "sensory_processing_interventions_review",
+    claimBoundary:
+      "Duyusal işlemleme müdahale literatürünün kanıt sınırlarını gösterir; raporda müdahale önerisi veya protokol çıkarımı sağlamaz.",
+    verifiedAt: "2026-06-16",
+    catalogArea: "Duyusal Regülasyon",
+    catalogTier: "supporting",
   },
   THOMPSON_2019: {
     id: "THOMPSON_2019",
     inlineCitation: "(Thompson, 2019)",
     apaReference:
       "Thompson, R. A. (2019). Emotion dysregulation: A theme in search of definition. Development and Psychopathology, 31(3), 805-815. https://doi.org/10.1017/S0954579419000282",
+    doi: "10.1017/S0954579419000282",
+    url: "https://doi.org/10.1017/S0954579419000282",
+    evidenceDomain: "emotion_regulation",
+    claimBoundary:
+      "Duygusal düzenleme kavramının dikkatli ve işlevsel yorumlanmasını destekler; psikiyatrik tanı sınırı çizmez.",
+    verifiedAt: "2026-06-01",
+    catalogArea: "Duygusal Regülasyon",
+    catalogTier: "core",
+  },
+  EISENBERG_ET_AL_2010: {
+    id: "EISENBERG_ET_AL_2010",
+    inlineCitation: "(Eisenberg et al., 2010)",
+    apaReference:
+      "Eisenberg, N., Spinrad, T. L., & Eggum, N. D. (2010). Emotion-related self-regulation and its relation to children's maladjustment. Annual Review of Clinical Psychology, 6, 495-525. https://doi.org/10.1146/annurev.clinpsy.121208.131208",
+    doi: "10.1146/annurev.clinpsy.121208.131208",
+    url: "https://doi.org/10.1146/annurev.clinpsy.121208.131208",
+    evidenceDomain: "emotion_related_self_regulation",
+    claimBoundary:
+      "Duygu ilişkili self-regülasyon ile uyum sorunları arasındaki genel ilişkiyi destekler; psikiyatrik tanı veya nedensellik hükmü üretmez.",
+    verifiedAt: "2026-06-16",
+    catalogArea: "Duygusal Regülasyon",
+    catalogTier: "core",
+  },
+  COLE_ET_AL_2004: {
+    id: "COLE_ET_AL_2004",
+    inlineCitation: "(Cole et al., 2004)",
+    apaReference:
+      "Cole, P. M., Martin, S. E., & Dennis, T. A. (2004). Emotion regulation as a scientific construct: Methodological challenges and directions for child development research. Child Development, 75(2), 317-333. https://doi.org/10.1111/j.1467-8624.2004.00673.x",
+    doi: "10.1111/j.1467-8624.2004.00673.x",
+    url: "https://doi.org/10.1111/j.1467-8624.2004.00673.x",
+    evidenceDomain: "emotion_regulation_construct",
+    claimBoundary:
+      "Duygu düzenleme kavramının ölçüm ve yorum sınırlarını destekler; tek vaka için kesin klinik sınıflama sağlamaz.",
+    verifiedAt: "2026-06-16",
+    catalogArea: "Duygusal Regülasyon",
+    catalogTier: "supporting",
   },
   ROSANBALM_MURRAY_2017: {
     id: "ROSANBALM_MURRAY_2017",
     inlineCitation: "(Rosanbalm & Murray, 2017)",
     apaReference:
       "Rosanbalm, K. D., & Murray, D. W. (2017). Co-regulation from birth through young adulthood: A practice brief. Office of Planning, Research, and Evaluation, Administration for Children and Families, U.S. Department of Health and Human Services.",
+    doi: null,
+    url: "https://fpg.unc.edu/sites/fpg.unc.edu/files/resources/reports-and-policy-briefs/Co-RegulationFromBirthThroughYoungAdulthood.pdf",
+    evidenceDomain: "co_regulation_context",
+    claimBoundary:
+      "Ko-regülasyon ve bağlamsal destek çerçevesini destekler; doğrudan müdahale planı veya tedavi reçetesi değildir.",
+    verifiedAt: "2026-06-01",
+    catalogArea: "Çapraz Alan",
+    catalogTier: "core",
   },
   DIAMOND_2013: {
     id: "DIAMOND_2013",
     inlineCitation: "(Diamond, 2013)",
     apaReference:
       "Diamond, A. (2013). Executive functions. Annual Review of Psychology, 64, 135-168. https://doi.org/10.1146/annurev-psych-113011-143750",
+    doi: "10.1146/annurev-psych-113011-143750",
+    url: "https://doi.org/10.1146/annurev-psych-113011-143750",
+    evidenceDomain: "executive_functions",
+    claimBoundary:
+      "Yürütücü işlevlerin bileşenlerini klinik yorum düzeyinde destekler; dikkat bozukluğu tanısı veya tedavi kararı üretmez.",
+    verifiedAt: "2026-06-01",
+    catalogArea: "Yürütücü İşlev",
+    catalogTier: "core",
+  },
+  BEST_MILLER_2010: {
+    id: "BEST_MILLER_2010",
+    inlineCitation: "(Best & Miller, 2010)",
+    apaReference:
+      "Best, J. R., & Miller, P. H. (2010). A developmental perspective on executive function. Child Development, 81(6), 1641-1660. https://doi.org/10.1111/j.1467-8624.2010.01499.x",
+    doi: "10.1111/j.1467-8624.2010.01499.x",
+    url: "https://doi.org/10.1111/j.1467-8624.2010.01499.x",
+    evidenceDomain: "executive_function_development",
+    claimBoundary:
+      "Yürütücü işlevin gelişimsel doğasını destekler; yaş bandı ve vaka verisi olmadan klinik tanı çıkarımı sağlamaz.",
+    verifiedAt: "2026-06-16",
+    catalogArea: "Yürütücü İşlev",
+    catalogTier: "core",
+  },
+  GARON_ET_AL_2008: {
+    id: "GARON_ET_AL_2008",
+    inlineCitation: "(Garon et al., 2008)",
+    apaReference:
+      "Garon, N., Bryson, S. E., & Smith, I. M. (2008). Executive function in preschoolers: A review using an integrative framework. Psychological Bulletin, 134(1), 31-60. https://doi.org/10.1037/0033-2909.134.1.31",
+    doi: "10.1037/0033-2909.134.1.31",
+    url: "https://doi.org/10.1037/0033-2909.134.1.31",
+    evidenceDomain: "preschool_executive_function_review",
+    claimBoundary:
+      "Okul öncesi yürütücü işlevi integratif gelişimsel çerçevede destekler; tek başına klinik karar üretmez.",
+    verifiedAt: "2026-06-16",
+    catalogArea: "Yürütücü İşlev",
+    catalogTier: "core",
+  },
+  MCCLELLAND_ET_AL_2007: {
+    id: "MCCLELLAND_ET_AL_2007",
+    inlineCitation: "(McClelland et al., 2007)",
+    apaReference:
+      "McClelland, M. M., Cameron, C. E., Connor, C. M., Farris, C. L., Jewkes, A. M., & Morrison, F. J. (2007). Links between behavioral regulation and preschoolers' literacy, vocabulary, and math skills. Developmental Psychology, 43(4), 947-959. https://doi.org/10.1037/0012-1649.43.4.947",
+    doi: "10.1037/0012-1649.43.4.947",
+    url: "https://doi.org/10.1037/0012-1649.43.4.947",
+    evidenceDomain: "preschool_behavioral_cognitive_regulation",
+    claimBoundary:
+      "Okul öncesi davranışsal/bilişsel regülasyonun öğrenme becerileriyle ilişkisini destekler; akademik performans hükmü üretmez.",
+    verifiedAt: "2026-06-16",
+    catalogArea: "Bilişsel Regülasyon",
+    catalogTier: "core",
+  },
+  MONTROY_ET_AL_2016: {
+    id: "MONTROY_ET_AL_2016",
+    inlineCitation: "(Montroy et al., 2016)",
+    apaReference:
+      "Montroy, J. J., Bowles, R. P., Skibbe, L. E., McClelland, M. M., & Morrison, F. J. (2016). The development of self-regulation across early childhood. Developmental Psychology, 52(11), 1744-1762. https://doi.org/10.1037/dev0000159",
+    doi: "10.1037/dev0000159",
+    url: "https://doi.org/10.1037/dev0000159",
+    evidenceDomain: "early_childhood_self_regulation_development",
+    claimBoundary:
+      "Erken çocuklukta self-regülasyonun gelişimsel seyrini destekler; tek değerlendirmeden gelişimsel gidiş tahmini üretmez.",
+    verifiedAt: "2026-06-16",
+    catalogArea: "Bilişsel Regülasyon",
+    catalogTier: "core",
   },
   PINNA_EDWARDS_2020: {
     id: "PINNA_EDWARDS_2020",
     inlineCitation: "(Pinna & Edwards, 2020)",
     apaReference:
       "Pinna, T., & Edwards, D. J. (2020). A systematic review of associations between interoception, vagal tone, and emotional regulation: Potential applications for mental health, wellbeing, psychological flexibility, and chronic conditions. Frontiers in Psychology, 11, 1792. https://doi.org/10.3389/fpsyg.2020.01792",
+    doi: "10.3389/fpsyg.2020.01792",
+    url: "https://pubmed.ncbi.nlm.nih.gov/32849058/",
+    evidenceDomain: "interoception_emotion_regulation",
+    claimBoundary:
+      "İnterosepsiyon ile duygu düzenleme ilişkisini temkinli klinik eksen olarak destekler; bedensel hastalık veya psikiyatrik tanı çıkarımı sağlamaz.",
+    verifiedAt: "2026-06-01",
+    catalogArea: "İnterosepsiyon",
+    catalogTier: "core",
+  },
+  CLARK_ET_AL_2025: {
+    id: "CLARK_ET_AL_2025",
+    inlineCitation: "(Clark et al., 2025)",
+    apaReference:
+      "Clark, E., Brown, T., & Yu, M. L. (2025). Interoception and its application to paediatric occupational therapy: A scoping review. Australian Occupational Therapy Journal, 72(1), Article e12997. https://doi.org/10.1111/1440-1630.12997",
+    doi: "10.1111/1440-1630.12997",
+    url: "https://doi.org/10.1111/1440-1630.12997",
+    evidenceDomain: "paediatric_occupational_therapy_interoception",
+    claimBoundary:
+      "Pediatrik ergoterapi pratiğinde interosepsiyonun kullanım alanını özetler; scoping review olduğu için kesin klinik etki veya reçete üretmez.",
+    verifiedAt: "2026-06-16",
+    catalogArea: "İnterosepsiyon",
+    catalogTier: "core",
+  },
+  DUBOIS_ET_AL_2016: {
+    id: "DUBOIS_ET_AL_2016",
+    inlineCitation: "(DuBois et al., 2016)",
+    apaReference:
+      "DuBois, D., Ameis, S. H., Lai, M. C., Casanova, M. F., & Desarkar, P. (2016). Interoception in autism spectrum disorder: A review. International Journal of Developmental Neuroscience, 52, 104-111. https://doi.org/10.1016/j.ijdevneu.2016.05.001",
+    doi: "10.1016/j.ijdevneu.2016.05.001",
+    url: "https://doi.org/10.1016/j.ijdevneu.2016.05.001",
+    evidenceDomain: "interoception_autism_review",
+    claimBoundary:
+      "Otizm bağlamında interosepsiyon literatürünü destekler; otizm tanısı veya genel interosepsiyon nedenselliği üretmez.",
+    verifiedAt: "2026-06-16",
+    catalogArea: "İnterosepsiyon",
+    catalogTier: "supporting",
+  },
+  KAHLE_ET_AL_2018: {
+    id: "KAHLE_ET_AL_2018",
+    inlineCitation: "(Kahle et al., 2018)",
+    apaReference:
+      "Kahle, S., Miller, J. G., Helm, J. L., & Hastings, P. D. (2018). Linking autonomic physiology and emotion regulation in preschoolers: The role of reactivity and recovery. Developmental Psychobiology, 60(7), 775-788. https://doi.org/10.1002/dev.21746",
+    doi: "10.1002/dev.21746",
+    url: "https://doi.org/10.1002/dev.21746",
+    evidenceDomain: "physiological_reactivity_recovery",
+    claimBoundary:
+      "Okul öncesi otonom reaktivite/toparlanma ile duygu düzenleme ilişkisini destekler; fizyolojik hastalık veya tedavi çıkarımı sağlamaz.",
+    verifiedAt: "2026-06-16",
+    catalogArea: "Fizyolojik Regülasyon",
+    catalogTier: "core",
+  },
+  GRAZIANO_DEREFINKO_2013: {
+    id: "GRAZIANO_DEREFINKO_2013",
+    inlineCitation: "(Graziano & Derefinko, 2013)",
+    apaReference:
+      "Graziano, P., & Derefinko, K. (2013). Cardiac vagal control and children's adaptive functioning: A meta-analysis. Biological Psychology, 94(1), 22-37. https://doi.org/10.1016/j.biopsycho.2013.04.011",
+    doi: "10.1016/j.biopsycho.2013.04.011",
+    url: "https://doi.org/10.1016/j.biopsycho.2013.04.011",
+    evidenceDomain: "cardiac_vagal_control_adaptive_functioning",
+    claimBoundary:
+      "Vagal kontrol ve adaptif işlev ilişkisini genel düzeyde destekler; HRV ölçümü yoksa doğrudan fizyolojik bulgu gibi yazılmamalıdır.",
+    verifiedAt: "2026-06-16",
+    catalogArea: "Fizyolojik Regülasyon",
+    catalogTier: "core",
   },
   FOGEL_ET_AL_2023: {
     id: "FOGEL_ET_AL_2023",
     inlineCitation: "(Fogel et al., 2023)",
     apaReference:
       "Fogel, Y., Stuart, N., Joyce, T., & Barnett, A. L. (2023). Relationships between motor skills and executive functions in developmental coordination disorder (DCD): A systematic review. Scandinavian Journal of Occupational Therapy, 30(3), 344-356. https://doi.org/10.1080/11038128.2021.2019306",
+    doi: "10.1080/11038128.2021.2019306",
+    url: "https://www.tandfonline.com/doi/abs/10.1080/11038128.2021.2019306",
+    evidenceDomain: "motor_praxis_executive_functions",
+    claimBoundary:
+      "Motor beceri ve yürütücü işlev ilişkisini genel klinik yorumda destekler; DCD tanısı veya müdahale planı üretmez.",
+    verifiedAt: "2026-06-01",
+    catalogArea: "Yürütücü İşlev",
+    catalogTier: "core",
   },
 }
+
+export const CATALOG_LITERATURE_SELECTIONS = {
+  "Fizyolojik Regülasyon": ["KAHLE_ET_AL_2018", "GRAZIANO_DEREFINKO_2013", "BLAIR_RAVER_2015"],
+  "Duyusal Regülasyon": ["CARPENTER_ET_AL_2019", "BEN_SASSON_ET_AL_2009", "CASE_SMITH_ET_AL_2015"],
+  "Duygusal Regülasyon": ["EISENBERG_ET_AL_2010", "THOMPSON_2019", "COLE_ET_AL_2004"],
+  "Bilişsel Regülasyon": ["MCCLELLAND_ET_AL_2007", "MONTROY_ET_AL_2016", "BLAIR_RAVER_2015"],
+  "Yürütücü İşlev": ["DIAMOND_2013", "BEST_MILLER_2010", "GARON_ET_AL_2008", "FOGEL_ET_AL_2023"],
+  "İnterosepsiyon": ["PINNA_EDWARDS_2020", "CLARK_ET_AL_2025", "DUBOIS_ET_AL_2016"],
+  "Çapraz Alan": ["BLAIR_RAVER_2015", "ROSANBALM_MURRAY_2017", "DIAMOND_2013"],
+} as const
 
 function includesDomain(domains: string[] | undefined, value: string) {
   return Array.isArray(domains) && domains.includes(value)
@@ -168,6 +407,11 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
   const explicitInteroContext =
     hasPattern(externalClinicalFindings, /intero|fizyolojik|bedensel|yorgunluk|huzursuzluk|susama|açlık|aclik|tuvalet/i) ||
     hasPattern(therapistInsights, /bedensel|yorgunluk|huzursuzluk|susama|açlık|aclik|tuvalet|ritim|mola/i)
+  const supportsPhysiologicalContext =
+    hasAnyDomain(weakDomains, ["Fizyolojik Regülasyon"]) ||
+    analysis.primaryWeakDomain === "Fizyolojik Regülasyon" ||
+    hasPattern(externalClinicalFindings, /uyku|arousal|otonom|fizyolojik|yorgunluk|toparlanma|vagal|kalp/i) ||
+    hasPattern(therapistInsights, /uyku|arousal|otonom|fizyolojik|yorgunluk|toparlanma|bedensel gerilim/i)
   const sensoryInWeakDomains = hasAnyDomain(weakDomains, ["Duyusal Regülasyon"])
   const supportsSensoryContext =
     sensoryInWeakDomains ||
@@ -182,6 +426,10 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
     hasAnyDomain(weakDomains, ["Bilişsel Regülasyon", "Yürütücü İşlev"]) ||
     hasPattern(externalClinicalFindings, /brief|conners|basc|yürütücü|yurutucu|dikkat/i) ||
     hasPattern(therapistInsights, /gorev|görev|dikkat|plan|baslat|başlat|sirala|sırala/i)
+  const supportsCognitiveContext =
+    hasAnyDomain(weakDomains, ["Bilişsel Regülasyon"]) ||
+    hasPattern(externalClinicalFindings, /dilsel|yönerge|yonerge|çalışma belleği|calisma bellegi|dikkat|öğrenme|ogrenme/i) ||
+    hasPattern(therapistInsights, /dilsel|yönerge|yonerge|dikkat|zihinsel|görevde kal|gorevde kal/i)
   const supportsAdaptiveContext =
     hasExternalTestCategory(analysis, "adaptive_daily_living") ||
     hasPattern(externalClinicalFindings, /abas|vineland|pedi-cat|uyumsal|gunluk yasam|günlük yaşam|özbakim|ozbakim/i)
@@ -198,11 +446,15 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
   const sourceIds: string[] = []
 
   const sensorySentence = supportsSensoryContext
-    ? `Bu vakada duyusal yük ve çevresel tetikleyicilerin görünür olması, erken çocuklukta duyusal aşırı yanıtlılığın davranışsal ve duygusal zorlanmalarla ilişkili olabileceğini gösteren bulgularla örtüşmektedir ${VERIFIED_LITERATURE_SOURCES.CARPENTER_ET_AL_2019.inlineCitation}.`
+    ? `Bu vakada duyusal yük ve çevresel tetikleyicilerin görünür olması, erken çocuklukta duyusal aşırı yanıtlılığın davranışsal ve duygusal zorlanmalarla ilişkili olabileceğini gösteren bulgularla örtüşmektedir ${VERIFIED_LITERATURE_SOURCES.CARPENTER_ET_AL_2019.inlineCitation}; duyusal modülasyon belirtilerinin özellikle nörogelişimsel profillerde heterojen seyredebileceği de vurgulanmaktadır ${VERIFIED_LITERATURE_SOURCES.BEN_SASSON_ET_AL_2009.inlineCitation}.`
     : ""
 
   const emotionSentence = hasAnyDomain(weakDomains, ["Duygusal Regülasyon"]) || (!balancedProfile && hasAnyDomain(matchedDomains, ["Duygusal Regülasyon"]))
-    ? `Duygusal toparlanma, yoğunluk ve yatışma hızının bir düzenleyici süreç olarak ele alınması, duygusal zorlanmanın tanı değil işlevsel regülasyon ekseni olarak yorumlanması gerektiğini vurgulayan kuramsal çerçeveyle tutarlıdır ${VERIFIED_LITERATURE_SOURCES.THOMPSON_2019.inlineCitation}.`
+    ? `Duygusal toparlanma, yoğunluk ve yatışma hızının bir düzenleyici süreç olarak ele alınması, duygusal zorlanmanın tanı değil işlevsel regülasyon ekseni olarak yorumlanması gerektiğini vurgulayan kuramsal çerçeveyle tutarlıdır ${VERIFIED_LITERATURE_SOURCES.THOMPSON_2019.inlineCitation}; duygu ilişkili self-regülasyonun çocukların uyum süreçleriyle ilişkili olduğu da geniş derleme düzeyinde desteklenmektedir ${VERIFIED_LITERATURE_SOURCES.EISENBERG_ET_AL_2010.inlineCitation}.`
+    : ""
+
+  const physiologicalSentence = supportsPhysiologicalContext
+    ? `Fizyolojik regülasyon ve toparlanma hattı öne çıktığında, okul öncesi dönemde otonom reaktivite ve toparlanmanın duygu düzenleme süreçleriyle ilişkili olabileceğini gösteren bulgular klinik yoruma arka plan sağlar ${VERIFIED_LITERATURE_SOURCES.KAHLE_ET_AL_2018.inlineCitation}; vagal kontrol ile çocukların adaptif işlevleri arasındaki ilişkiye dair meta-analitik kanıt da bu beden-temelli okumanın sınırlarını destekler ${VERIFIED_LITERATURE_SOURCES.GRAZIANO_DEREFINKO_2013.inlineCitation}.`
     : ""
 
   const interoSentence = hasAnyDomain(weakDomains, ["İnterosepsiyon", "Fizyolojik Regülasyon"]) ||
@@ -210,7 +462,7 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
     analysis.primaryWeakDomain === "İnterosepsiyon" ||
     analysis.primaryWeakDomain === "Fizyolojik Regülasyon" ||
     explicitInteroContext
-      ? `Bedensel sinyallerin fark edilmesi ve bu sinyallerin duygusal düzenleme ile ilişkisi üzerine yapılan sistematik derlemeler, interoseptif süreçlerin klinik yorumda temkinli ama anlamlı bir eksen olarak ele alınabileceğini düşündürmektedir ${VERIFIED_LITERATURE_SOURCES.PINNA_EDWARDS_2020.inlineCitation}.`
+      ? `Bedensel sinyallerin fark edilmesi ve bu sinyallerin duygusal düzenleme ile ilişkisi üzerine yapılan sistematik derlemeler, interoseptif süreçlerin klinik yorumda temkinli ama anlamlı bir eksen olarak ele alınabileceğini düşündürmektedir ${VERIFIED_LITERATURE_SOURCES.PINNA_EDWARDS_2020.inlineCitation}. Pediatrik ergoterapi literatüründe interosepsiyonun günlük katılım, duygu düzenleme ve beden sinyali farkındalığıyla birlikte ele alınması gerektiği ayrıca vurgulanmaktadır ${VERIFIED_LITERATURE_SOURCES.CLARK_ET_AL_2025.inlineCitation}.`
       : ""
 
   const adaptiveSentence = supportsAdaptiveContext
@@ -227,6 +479,14 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
     ? `${joinTestNames(languageTestNames) || "Dil testleri"} ile görünür hale gelen alıcı-ifade edici dil yükü, sözel talep ve yönerge karmaşıklığı arttığında anlama, zihinsel olarak tutma ve görevi sürdürme süreçlerinin birlikte zorlanabileceğini düşündürür; bu durum regülasyonun talep ve bağlam düzeyinde ele alınması gerektiğini vurgulayan gelişimsel çerçeveyle uyumludur ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
     : ""
 
+  const cognitiveSentence = supportsCognitiveContext && !supportsLanguageContext
+    ? `Bilişsel regülasyon alanı dikkat, görevde kalma ve zihinsel organizasyon üzerinden öne çıktığında, okul öncesi davranışsal/bilişsel regülasyonun öğrenme ve görev performansıyla ilişkili olabileceğini gösteren bulgular klinik yorumu destekler ${VERIFIED_LITERATURE_SOURCES.MCCLELLAND_ET_AL_2007.inlineCitation}; erken çocuklukta self-regülasyonun gelişimsel olarak değişen bir yapı olduğu da göz önünde tutulmalıdır ${VERIFIED_LITERATURE_SOURCES.MONTROY_ET_AL_2016.inlineCitation}.`
+    : ""
+
+  const executiveSentence = supportsExecutiveContext
+    ? `Yürütücü işlev ekseni belirginleştiğinde, inhibisyon, çalışma belleği, esneklik ve hedefe yönelik davranışın birlikte örgütlenen gelişimsel beceriler olarak ele alınması gerekir ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}; okul öncesi yürütücü işlev literatürü de bu alanın tek bir davranış belirtisine indirgenmemesi gerektiğini destekler ${VERIFIED_LITERATURE_SOURCES.GARON_ET_AL_2008.inlineCitation}.`
+    : ""
+
   const motorPraxisSentence = supportsMotorPraxisContext
     ? `${joinTestNames(praxisTestNames) || "Praksi ve motor planlama testleri"} ile ortaya konan praksi, sekanslama ve beden organizasyonu bulguları, motor beceriler ile yürütücü işlev süreçlerinin birlikte ele alınması gerektiğini gösteren derlemelerle uyumludur; bu tür bulgular davranış organizasyonu, görev sürdürme ve katılım örüntüsüyle birlikte yorumlanmalıdır ${VERIFIED_LITERATURE_SOURCES.FOGEL_ET_AL_2023.inlineCitation}.`
     : ""
@@ -235,33 +495,39 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
     balancedProfile &&
     !sensorySentence &&
     !emotionSentence &&
+    !physiologicalSentence &&
     !interoSentence &&
     !adaptiveSentence &&
     !socialCommunicationSentence &&
     !languageSentence &&
+    !cognitiveSentence &&
+    !executiveSentence &&
     !motorPraxisSentence
       ? `Alanların genel olarak tipik aralıkta kalması, dikkat, duygu düzenleme ve davranış kontrolü süreçlerinin yaşa uygun sınırlar içinde birlikte işleyebildiğini düşündürür; bu görünüm, öz-düzenlemenin koruyucu gelişimsel yönlerini vurgulayan yazınla uyumludur ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}.`
       : ""
 
-  if (sensorySentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.CARPENTER_ET_AL_2019.id)
-  if (emotionSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.THOMPSON_2019.id)
-  if (interoSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.PINNA_EDWARDS_2020.id)
+  if (sensorySentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.CARPENTER_ET_AL_2019.id, VERIFIED_LITERATURE_SOURCES.BEN_SASSON_ET_AL_2009.id)
+  if (emotionSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.THOMPSON_2019.id, VERIFIED_LITERATURE_SOURCES.EISENBERG_ET_AL_2010.id)
+  if (physiologicalSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.KAHLE_ET_AL_2018.id, VERIFIED_LITERATURE_SOURCES.GRAZIANO_DEREFINKO_2013.id)
+  if (interoSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.PINNA_EDWARDS_2020.id, VERIFIED_LITERATURE_SOURCES.CLARK_ET_AL_2025.id)
   if (adaptiveSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.id)
   if (socialCommunicationSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.id)
   if (languageSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.id)
+  if (cognitiveSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.MCCLELLAND_ET_AL_2007.id, VERIFIED_LITERATURE_SOURCES.MONTROY_ET_AL_2016.id)
+  if (executiveSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.id, VERIFIED_LITERATURE_SOURCES.GARON_ET_AL_2008.id)
   if (motorPraxisSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.FOGEL_ET_AL_2023.id)
   if (balancedNeutralSentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.id)
 
   const orderedSentences =
     primaryExternalTestCategory === "motor_praxis"
-      ? [motorPraxisSentence, sensorySentence, emotionSentence, interoSentence, adaptiveSentence, socialCommunicationSentence, languageSentence, balancedNeutralSentence]
+      ? [motorPraxisSentence, executiveSentence, sensorySentence, emotionSentence, physiologicalSentence, interoSentence, adaptiveSentence, socialCommunicationSentence, languageSentence, cognitiveSentence, balancedNeutralSentence]
       : primaryExternalTestCategory === "language_communication"
-      ? [languageSentence, emotionSentence, sensorySentence, adaptiveSentence, socialCommunicationSentence, interoSentence, motorPraxisSentence, balancedNeutralSentence]
+      ? [languageSentence, cognitiveSentence, executiveSentence, emotionSentence, sensorySentence, adaptiveSentence, socialCommunicationSentence, physiologicalSentence, interoSentence, motorPraxisSentence, balancedNeutralSentence]
       : primaryExternalTestCategory === "adaptive_daily_living"
-      ? [adaptiveSentence, interoSentence, emotionSentence, sensorySentence, socialCommunicationSentence, languageSentence, motorPraxisSentence, balancedNeutralSentence]
+      ? [adaptiveSentence, interoSentence, physiologicalSentence, emotionSentence, sensorySentence, executiveSentence, cognitiveSentence, socialCommunicationSentence, languageSentence, motorPraxisSentence, balancedNeutralSentence]
       : primaryExternalTestCategory === "social_pragmatic"
-      ? [socialCommunicationSentence, emotionSentence, adaptiveSentence, sensorySentence, languageSentence, interoSentence, motorPraxisSentence, balancedNeutralSentence]
-      : [sensorySentence, emotionSentence, interoSentence, adaptiveSentence, socialCommunicationSentence, languageSentence, motorPraxisSentence, balancedNeutralSentence]
+      ? [socialCommunicationSentence, emotionSentence, executiveSentence, adaptiveSentence, sensorySentence, languageSentence, cognitiveSentence, physiologicalSentence, interoSentence, motorPraxisSentence, balancedNeutralSentence]
+      : [sensorySentence, emotionSentence, physiologicalSentence, interoSentence, executiveSentence, cognitiveSentence, adaptiveSentence, socialCommunicationSentence, languageSentence, motorPraxisSentence, balancedNeutralSentence]
 
   const selectedSentences =
     balancedProfile
@@ -300,21 +566,36 @@ function buildIntegrationParagraph(analysis: ClinicalAnalysis): LiteratureBlock 
 
   const observationSentence =
     therapistInsights.length > 0 || externalClinicalFindings.length > 0
-      ? `Bakımveren anlatısına terapist gözlemi ve yaşa uygun ek test bulgularının eklenmesi, profilin bağlamsal anlamını güçlendirir ve klinik kararın yalnız bir kaynağa dayanmamasını sağlar ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`
+      ? `Bakımveren anlatısına terapist gözlemi ve yaşa uygun ek test bulgularının eklenmesi, profilin bağlamsal anlamını güçlendirir ve klinik hipotezin yalnız bir kaynağa dayanmamasını sağlar ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`
       : `Bakımveren gözlemlerinin tek başına değil, klinik bağlamla birlikte okunması öz-düzenleme yorumunu daha güvenilir hale getirir ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`
 
   return {
     text: [
-    observationSentence,
-    caseSentence,
-    contrastSentence,
-  ].join(" "),
+      observationSentence,
+      caseSentence,
+      contrastSentence,
+    ].join(" "),
     sourceIds: [
       VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.id,
       VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.id,
       VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.id,
     ],
   }
+}
+
+function buildLiteratureBoundaryParagraph(sourceIds: string[]): string {
+  const boundaries = uniqueNonEmpty(
+    sourceIds
+      .map((sourceId) => VERIFIED_LITERATURE_SOURCES[sourceId]?.claimBoundary)
+      .filter(Boolean)
+      .slice(0, 4)
+  )
+
+  const boundaryText = boundaries.length
+    ? `Bu bölümde kullanılan kaynakların yorum sınırı şudur: ${boundaries.join(" ")}`
+    : "Bu bölümde kullanılan kaynaklar yalnız klinik yorum çerçevesini destekler."
+
+  return `${boundaryText} Literatür desteği, vaka verisini açıklayıcı çerçeveye yerleştirir; tanı, nedensellik veya müdahale reçetesi üretmez.`
 }
 
 export function buildLiteratureAlignedSection(
@@ -328,21 +609,30 @@ export function buildLiteratureAlignedSection(
   const paragraph1 = buildRegulationParagraph(analysis)
   const paragraph2 = buildDomainParagraph(analysis)
   const paragraph3 = buildIntegrationParagraph(analysis)
+  const bodyParagraphs =
+    analysis.primaryExternalTestCategory === "motor_praxis"
+      ? [paragraph2.text, paragraph1.text, paragraph3.text]
+      : [paragraph1.text, paragraph2.text, paragraph3.text]
 
-  const sourceIds = uniqueNonEmpty([
-    ...paragraph1.sourceIds,
-    ...paragraph2.sourceIds,
-    ...paragraph3.sourceIds,
-  ])
+  const sourceIds =
+    analysis.primaryExternalTestCategory === "motor_praxis"
+      ? uniqueNonEmpty([
+          VERIFIED_LITERATURE_SOURCES.FOGEL_ET_AL_2023.id,
+          VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.id,
+          VERIFIED_LITERATURE_SOURCES.GARON_ET_AL_2008.id,
+          ...paragraph2.sourceIds,
+          ...paragraph1.sourceIds,
+          ...paragraph3.sourceIds,
+        ])
+      : uniqueNonEmpty([...paragraph1.sourceIds, ...paragraph2.sourceIds, ...paragraph3.sourceIds])
 
   const references = uniqueNonEmpty(
     sourceIds.map((sourceId) => VERIFIED_LITERATURE_SOURCES[sourceId]?.apaReference)
   )
 
   const body = [
-    paragraph1.text,
-    paragraph2.text,
-    paragraph3.text,
+    ...bodyParagraphs,
+    buildLiteratureBoundaryParagraph(sourceIds),
     "Kaynaklar (APA 7):",
     ...references,
   ]

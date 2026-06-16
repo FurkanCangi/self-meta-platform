@@ -1,6 +1,6 @@
 import Link from "next/link";
-import Image from "next/image";
 import type { ReactNode } from "react";
+import styles from "./AuthLayout.module.css";
 
 export default function AuthLayout({
   mode,
@@ -12,56 +12,47 @@ export default function AuthLayout({
   const isLogin = mode === "login";
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
-      <div className="grid flex-1 grid-cols-1 lg:grid-cols-2">
-        <div className="relative hidden lg:block">
-          <Image
-            src="/images/sign.png"
-            alt="Auth visual"
-            fill
-            priority
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-sky-900/10" />
-        </div>
-
-        <div className="relative flex items-center justify-center px-6 py-10">
-          <div className="absolute right-6 top-6">
-            <button
-              type="button"
-              className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 text-slate-500 hover:bg-slate-100"
-              aria-label="Yardım"
-            >
-              ?
-            </button>
+    <div className={styles.page}>
+      <div className={styles.shell}>
+        <div className={styles.visualPane} aria-hidden="true">
+          <div className={styles.pattern} />
+          <div className={styles.orbit}>
+            <span />
+            <span />
+            <span />
+            <span />
+            <span />
+            <span />
           </div>
 
-          <div className="w-full max-w-md">
-            <div className="mb-6 text-center">
-              <div className="mx-auto mb-5 flex items-center justify-center">
-                <Image
-                  src="/images/logo.png"
-                  alt="Self Metacognition Institute"
-                  width={190}
-                  height={80}
-                  priority
-                  className="h-auto w-auto"
-                />
-              </div>
+          <div className={styles.brandCenter}>
+            <div className={styles.brandName}>DNA</div>
+            <div className={styles.brandWord} lang="en">INTELLIGENCE</div>
+            <div className={styles.brandSubtitle}>Dynamic Neuro-Regulation Approach</div>
+          </div>
+        </div>
 
-              <div className="text-slate-900">
-                <div className="text-lg font-medium">Self Metacognition Institute</div>
-                <div className="text-2xl font-semibold mt-1">
-                  {isLogin ? "Hoş geldin." : "Kayıt ol."}
+        <div className={`${styles.formPane} ${!isLogin ? styles.signupPane : ""}`}>
+          <div className={styles.formCard}>
+            <div className={styles.header}>
+              <div className={styles.titleBlock}>
+                {!isLogin ? <div className={styles.kicker}>Kayıt Ol</div> : null}
+                <div className={styles.title}>
+                  {isLogin ? "Hoş geldiniz." : "Terapist Hesabı Oluştur"}
                 </div>
+                {isLogin ? (
+                  <p className={styles.subtitle}>
+                    Klinik değerlendirme, analiz ve raporlama platformuna giriş yapın.
+                  </p>
+                ) : null}
               </div>
             </div>
 
             {children}
 
-            <div className="pt-12 flex items-center justify-between text-[11px] text-slate-400">
-              <div>Telif Hakkı © 2024 Self Metacognition Institute. Tüm Hakları Saklıdır.</div>
-              <Link href="#" className="text-slate-500 hover:text-slate-700">
+            <div className={`${styles.bottom} ${!isLogin ? styles.signupBottom : ""}`}>
+              <div>Telif Hakkı © 2024 DNA Intelligence. Tüm Hakları Saklıdır.</div>
+              <Link href="#" className={styles.termsLink}>
                 Şartlar &amp; Koşullar
               </Link>
             </div>

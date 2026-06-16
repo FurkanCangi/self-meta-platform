@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp/security-runner",
+    "rootDir": ".",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2020",
+    "incremental": false,
+    "isolatedModules": false
+  },
+  "include": [
+    "scripts/security-smoke-tests.ts",
+    "scripts/security-readiness-check.ts",
+    "src/lib/selfmeta/reportLogger.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
+}

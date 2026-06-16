@@ -3,6 +3,12 @@ import path from "node:path";
 
 import { QUALITY_CASE_SPECS, type QualityCaseSpec } from "./report-quality-cases";
 import { runSingleFixture } from "./run-selfmeta-report";
+import { VERIFIED_LITERATURE_SOURCES } from "../src/lib/selfmeta/literatureNote";
+import {
+  countWeakHedges,
+  hasForbiddenClinicalCitation,
+  hasForbiddenClinicalDetermination,
+} from "../src/lib/selfmeta/reportQuality";
 import { hasAllCanonicalReportSections, splitClinicalReportSections } from "../src/lib/selfmeta/reportText";
 
 const OUTPUT_DIR = "/tmp/selfmeta-report-output/quality-gates";
@@ -45,7 +51,7 @@ function getRawSectionText(text: string, headingPrefix: string): string {
 
 function countLiteratureParagraphs(rawSectionText: string): number {
   const beforeReferences = rawSectionText.split(/Kaynaklar\s*\(APA 7\)\s*:/i)[0] || "";
-  const withoutHeading = beforeReferences.replace(/^7\.\s*Literatürle Uyumlu Klinik Not\s*/i, "").trim();
+  const withoutHeading = beforeReferences.replace(/^8\.\s*Literatürle Uyumlu Klinik Dayanak\s*/i, "").trim();
   if (!withoutHeading) return 0;
   return withoutHeading
     .split(/\n\s*\n/)
@@ -71,16 +77,181 @@ function includesAny(text: string, phrases: string[]): boolean {
   return phrases.some((phrase) => normalized.includes(phrase.toLocaleLowerCase("tr-TR")));
 }
 
+function getClinicalMainText(text: string): string {
+  return splitClinicalReportSections(text)
+    .filter((section) => !section.heading.startsWith("8."))
+    .map((section) => `${section.heading}\n${section.body}`)
+    .join("\n\n");
+}
+
+function collectInlineCitations(text: string): string[] {
+  return Array.from(
+    new Set(
+      Array.from(
+        String(text || "").matchAll(
+          /\([A-ZÇĞİÖŞÜ][A-Za-zÇĞİÖŞÜçğıöşü'’-]+(?:\s+(?:&|and)\s+[A-ZÇĞİÖŞÜ][A-Za-zÇĞİÖŞÜçğıöşü'’-]+|\s+et al\.)?,\s*(?:19|20)\d{2}\)/g
+        )
+      ).map((match) => match[0])
+    )
+  );
+}
+
+function listApaReferences(rawSectionText: string): string[] {
+  const afterReferences = rawSectionText.split(/Kaynaklar\s*\(APA 7\)\s*:/i)[1] || "";
+  return afterReferences
+    .split(/\n\s*\n/)
+    .map((entry) => entry.trim())
+    .filter((entry) => /^[A-ZÇĞİÖŞÜ]/.test(entry) && /\(\d{4}\)/.test(entry));
+}
+
+function validateRegistryOnlyLiterature(rawSectionText: string): string[] {
+  const failures: string[] = [];
+  const allowedInline = new Set(Object.values(VERIFIED_LITERATURE_SOURCES).map((source) => source.inlineCitation));
+  const allowedReferences = new Set(Object.values(VERIFIED_LITERATURE_SOURCES).map((source) => source.apaReference));
+  const inlineCitations = collectInlineCitations(rawSectionText);
+  const references = listApaReferences(rawSectionText);
+  const externalInline = inlineCitations.filter((citation) => !allowedInline.has(citation));
+  const externalReferences = references.filter((reference) => !allowedReferences.has(reference));
+
+  if (!rawSectionText.trim()) {
+    failures.push("Literatür bölümü bulunamadı.");
+  }
+  if (externalInline.length > 0) {
+    failures.push(`Registry dışı inline citation bulundu: ${externalInline.join(", ")}`);
+  }
+  if (externalReferences.length > 0) {
+    failures.push(`Registry dışı APA kaynak bulundu: ${externalReferences.join(" | ")}`);
+  }
+  if (inlineCitations.length === 0 || references.length === 0) {
+    failures.push("Literatür bölümünde registry citation/reference çifti görünmüyor.");
+  }
+
+  return failures;
+}
+
+function requiresClassificationExplanation(
+  result: Awaited<ReturnType<typeof runSingleFixture>>
+): boolean {
+  const levels = new Set((result.domainResults || []).map((domain) => domain.level));
+  return levels.size > 0 && (levels.size > 1 || !levels.has(result.globalLevel));
+}
+
+function hasClassificationExplanation(decisionSection: string): boolean {
+  return /toplam skor/i.test(decisionSection) && /alan.*(kendi|50 puanlık|puan eşi|eşiğ|eşi)/i.test(decisionSection);
+}
+
+function hasDecisionSynthesis(sectionBody: string): boolean {
+  return /(öncelikli klinik hipotez|en güçlü klinik hipotez|mevcut verilerle en güçlü klinik eksen|temel klinik eksen|temel sorun|klinik eksen|karar|sentez|profil sınıflaması|sonuç olarak|sonuç|bu nedenle|dolayısıyla|genel sınıflama|örüntü|işaret etmektedir|işaret eder|göstermektedir|uyumludur|yoğunlaşmaktadır|doğrudan uyum|açık uyum|örtüşmektedir|düşündürmektedir)/i.test(
+    sectionBody
+  );
+}
+
+function countCaseSpecificEvidenceSentences(text: string): number {
+  const evidencePatterns = [
+    /ses|gürültü|gurultu|hareket yükü|hareket yuku|uyaran/i,
+    /görevden kop|gorevden kop|görevde kal|gorevde kal|toparlanma süresi|toparlanma suresi/i,
+    /motor planlama|praksi|sekans|beden organizasyonu|koordinasyon/i,
+    /öz bakım|oz bakim|giyinme|rutin|başlatma|baslatma|sürdürme|surdurme/i,
+    /terapist gözlemi|terapist gozlemi|anamnez|dış test|dis test|madde düzeyinde/i,
+  ];
+
+  return String(text || "")
+    .split(/(?<=[.!?])\s+/)
+    .filter((sentence) => evidencePatterns.some((pattern) => pattern.test(sentence))).length;
+}
+
+function getKnownExternalTestNames(text: string): string[] {
+  const known = [
+    "Sensory Profile 2",
+    "BRIEF-P",
+    "BRIEF2",
+    "Conners 4",
+    "Conners Early Childhood",
+    "Conners EC",
+    "SIPT",
+    "PDMS-3",
+    "MABC-3",
+    "BOT-2",
+    "MFUN",
+    "Beery VMI",
+    "Vineland-3",
+    "ABAS-3",
+    "PEDI-CAT",
+    "CELF Preschool-3",
+    "PLS-5",
+    "CCC-2",
+    "SRS-2",
+  ];
+  const haystack = String(text || "").toLocaleLowerCase("tr-TR");
+  return known.filter((name) => haystack.includes(name.toLocaleLowerCase("tr-TR")));
+}
+
 function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof runSingleFixture>>, withAi: boolean) {
   const failures: string[] = [];
   const finalText = result.finalText;
+  const clinicalMainText = getClinicalMainText(finalText);
+  const decisionSummarySection = getSectionBody(finalText, "1.");
+  const evidenceProfileSection = getSectionBody(finalText, "2.");
   const patternSection = getSectionBody(finalText, "4.");
   const fitSection = getSectionBody(finalText, "5.");
-  const conclusionSection = getSectionBody(finalText, "6.");
-  const literatureSection = getRawSectionText(finalText, "7.");
+  const prioritizationSection = getSectionBody(finalText, "6.");
+  const conclusionSection = getSectionBody(finalText, "7.");
+  const literatureSection = getRawSectionText(finalText, "8.");
 
   if (!hasAllCanonicalReportSections(finalText)) {
     failures.push("Final rapor canonical section setini taşımıyor.");
+  }
+
+  const mainSections = splitClinicalReportSections(finalText).filter((section) =>
+    /^[1-7]\.\s/.test(section.heading)
+  );
+  for (const section of mainSections) {
+    if (!hasDecisionSynthesis(section.body)) {
+      failures.push(`${section.heading} bölümünde karar/sentez cümlesi zayıf.`);
+    }
+  }
+
+  if (!/Klinik karar cümlesi:|öncelikli klinik hipotez|en güçlü klinik hipotez|mevcut verilerle en güçlü klinik eksen|temel klinik eksen|ana klinik eksen/i.test(decisionSummarySection)) {
+    failures.push("1. Klinik Karar Özeti beklenen hipotez/karar dilini taşımıyor.");
+  }
+
+  if (!/öncelikli klinik hipotez|en güçlü klinik hipotez|(?:mevcut verilerle\s*)?en güçlü klinik eksen|veri güven(?: düzeyi)?|karar güveni/i.test(prioritizationSection)) {
+    failures.push("6. Klinik Önceliklendirme Notu beklenen hipotez/eksen/güven dilini taşımıyor.");
+  }
+
+  if (!/Klinik karar cümlesi:/i.test(prioritizationSection) || !/Klinik formülasyon:/i.test(prioritizationSection)) {
+    failures.push("6. Klinik Önceliklendirme Notu profesör düzeyi karar/formülasyon cümlesini taşımıyor.");
+  }
+
+  if (!/Klinik öncelik sırası:/i.test(prioritizationSection)) {
+    failures.push("6. Klinik Önceliklendirme Notu klinik öncelik sırası üretmiyor.");
+  }
+
+  if (requiresClassificationExplanation(result) && !hasClassificationExplanation(`${evidenceProfileSection}\n${prioritizationSection}`)) {
+    failures.push("Global/domain sınıflama farkı kanıt profili veya karar notunda toplam skor ve alan eşiği farkıyla açıklanmıyor.");
+  }
+
+  if (hasForbiddenClinicalCitation(clinicalMainText)) {
+    failures.push("Klinik ana bölümlerde AI/rapor kaynak, DOI, APA veya inline citation üretmiş.");
+  }
+
+  if (hasForbiddenClinicalDetermination(clinicalMainText)) {
+    failures.push("Klinik ana bölümlerde tanı/tedavi/kesin müdahale hükmü dili bulundu.");
+  }
+
+  if (countWeakHedges(clinicalMainText) > 10) {
+    failures.push("Zayıf hedge kalıpları fazla; karar/sentez dili yeterince net değil.");
+  }
+
+  if (countCaseSpecificEvidenceSentences(clinicalMainText) < 2) {
+    failures.push("Vaka-özel kanıt cümlesi sayısı düşük.");
+  }
+
+  const sourceExternalTests = new Set(getKnownExternalTestNames(result.sourceExternalClinicalFindings || ""));
+  const reportExternalTests = getKnownExternalTestNames(clinicalMainText);
+  const inventedTests = reportExternalTests.filter((testName) => !sourceExternalTests.has(testName));
+  if (inventedTests.length > 0) {
+    failures.push(`Inputta olmayan dış test adı rapora girmiş: ${inventedTests.join(", ")}`);
   }
 
   if (result.globalLevel !== spec.expectedGlobalLevel) {
@@ -130,10 +301,16 @@ function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof r
     failures.push(`Literatür paragrafı az: ${literatureParagraphCount}`);
   }
 
+  if (!/yorum sınırı|tanı, nedensellik veya müdahale reçetesi üretmez/i.test(literatureSection)) {
+    failures.push("Literatür bölümü kaynak kullanım sınırını açıkça yazmıyor.");
+  }
+
   const apaReferenceCount = countApaReferences(literatureSection);
   if (apaReferenceCount < (spec.minApaReferences || 0)) {
     failures.push(`APA kaynak sayısı az: ${apaReferenceCount}`);
   }
+
+  failures.push(...validateRegistryOnlyLiterature(literatureSection));
 
   if (withAi && typeof spec.expectedAiMinContributionPct === "number") {
     if (result.finalAiContributionPct < spec.expectedAiMinContributionPct) {

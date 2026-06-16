@@ -345,7 +345,7 @@ export const inboxData = [
     {
         star : false,
         name : 'Calvin Carlo',
-        subject : 'Self Metacognition Institute Customization',
+        subject : 'DNA Intelligence Customization',
         time : '03:05PM'
     },
     {
@@ -409,7 +409,7 @@ export const accordionData = [
         contant:"There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form."
     },
     {
-        title:"Do I need a designer to use Self Metacognition Institute ?",
+        title:"Do I need a designer to use DNA Intelligence ?",
         contant:"There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form."
     },
     {
@@ -773,7 +773,7 @@ export const orderData = [
 ]
 export const topProductData = [
     {
-        title:'Self Metacognition Institute',
+        title:'DNA Intelligence',
         earnings:'$4120',
         Progress:'5.5%'
     },
@@ -793,7 +793,7 @@ export const topProductData = [
         loss:'1.54%'
     },
     {
-        title:'Self Metacognition Institute',
+        title:'DNA Intelligence',
         earnings:'$124',
         loss:'8.5%'
     },
@@ -1204,7 +1204,7 @@ export const clientData = [
         image:'/images/client/01.jpg',
         name:'Christa Smith',
         title:'Manager',
-        desc:`"Self Metacognition Institute instantly increased the amount of interest and ultimately saved us over $10,000. "`
+        desc:`"DNA Intelligence instantly increased the amount of interest and ultimately saved us over $10,000. "`
     },
     {
         image:'/images/client/02.jpg',
@@ -1228,12 +1228,12 @@ export const clientData = [
         image:'/images/client/05.jpg',
         name:'Christa Smith',
         title:'Manager',
-        desc:`" Self Metacognition Institute made selling my home easy and stress free. They went above and beyond what is expected. "`
+        desc:`" DNA Intelligence made selling my home easy and stress free. They went above and beyond what is expected. "`
     },
     {
         image:'/images/client/06.jpg',
         name:'Christa Smith',
         title:'Manager',
-        desc:`"Self Metacognition Institute is fair priced, quick to respond, and easy to use. I highly recommend their services! "`
+        desc:`"DNA Intelligence is fair priced, quick to respond, and easy to use. I highly recommend their services! "`
     },
 ]

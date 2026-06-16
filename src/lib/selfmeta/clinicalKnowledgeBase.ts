@@ -1,0 +1,535 @@
+import type { ClinicalMechanismType } from "./clinicalAnalysis";
+import type { DomainKey } from "./reportEngine";
+
+export type ClinicalKnowledgePurpose =
+  | "construct"
+  | "level_comment"
+  | "anamnesis"
+  | "cross_scale"
+  | "risk_profile"
+  | "report_language"
+  | "safety";
+
+export type ClinicalKnowledgeLevel = "relative_weakness" | "watch_range" | "relative_strength";
+
+export type ClinicalKnowledgeUse =
+  | "decision"
+  | "evidence_profile"
+  | "domain_comment"
+  | "formulation"
+  | "anamnesis_fit"
+  | "prioritization"
+  | "conclusion";
+
+export type ClinicalKnowledgeChunk = {
+  id: string;
+  domain?: DomainKey;
+  mechanism?: ClinicalMechanismType[];
+  purpose: ClinicalKnowledgePurpose;
+  level?: ClinicalKnowledgeLevel;
+  text: string;
+  useIn: ClinicalKnowledgeUse[];
+};
+
+export const WORD_RAG_SOURCE = {
+  primary: "RAG/Pro RAG.docx",
+  guide: "RAG/Derin Araştırma RAG.docx",
+  sourceChunkCount: 71,
+} as const;
+
+const domainConstructs: ClinicalKnowledgeChunk[] = [
+  {
+    id: "PHYSIOLOGICAL_REGULATION_CONSTRUCT",
+    domain: "physiological",
+    purpose: "construct",
+    text: "Fizyolojik regülasyon; uyku, yeme-iştah örüntüsü, yorgunluğa tolerans, stres sonrası bedensel toparlanma ve genel uyarılma dengesinin günlük işlevselliğe nasıl yansıdığını açıklar.",
+    useIn: ["domain_comment", "formulation", "anamnesis_fit"],
+  },
+  {
+    id: "SENSORY_REGULATION_CONSTRUCT",
+    domain: "sensory",
+    purpose: "construct",
+    text: "Duyusal regülasyon; işitsel, görsel, taktil, vestibüler, oral, koku ve tat temelli uyaranların filtrelenmesi ve bu uyaranlara işlevsel yanıt üretme kapasitesidir.",
+    useIn: ["domain_comment", "formulation", "anamnesis_fit"],
+  },
+  {
+    id: "EMOTIONAL_REGULATION_CONSTRUCT",
+    domain: "emotional",
+    purpose: "construct",
+    text: "Duygusal regülasyon; zorlanma, geçiş, engellenme ve beklenmeyen değişikliklerden sonra duygusal yoğunluğun düzenlenmesi ve yeniden dengeye dönüş sürecidir.",
+    useIn: ["domain_comment", "formulation", "anamnesis_fit"],
+  },
+  {
+    id: "COGNITIVE_REGULATION_CONSTRUCT",
+    domain: "cognitive",
+    purpose: "construct",
+    text: "Bilişsel regülasyon; dikkati sürdürme, bilgiyi zihinde tutma, yönergeyi işleme ve görev talebi arttığında zihinsel organizasyonu koruma kapasitesidir.",
+    useIn: ["domain_comment", "formulation", "anamnesis_fit"],
+  },
+  {
+    id: "EXECUTIVE_FUNCTION_CONSTRUCT",
+    domain: "executive",
+    purpose: "construct",
+    text: "Yürütücü işlev; başlatma, durdurma, esneklik, sıra koruma, çok basamaklı akışı yönetme ve davranışı hedefe göre organize etme süreçlerini kapsar.",
+    useIn: ["domain_comment", "formulation", "anamnesis_fit"],
+  },
+  {
+    id: "INTEROCEPTION_CONSTRUCT",
+    domain: "interoception",
+    purpose: "construct",
+    text: "İnterosepsiyon; açlık, susuzluk, tuvalet ihtiyacı, ağrı, yorgunluk ve içsel gerilim gibi beden sinyallerini fark etme ve bu sinyalleri düzenleme sürecine katma kapasitesidir.",
+    useIn: ["domain_comment", "formulation", "anamnesis_fit"],
+  },
+];
+
+const levelComments: ClinicalKnowledgeChunk[] = [
+  {
+    id: "PHYSIOLOGICAL_REGULATION_RELATIVE_WEAKNESS",
+    domain: "physiological",
+    purpose: "level_comment",
+    level: "relative_weakness",
+    text: "Bu alandaki kırılganlık, bedensel ritimlerin ve stres sonrası toparlanmanın günlük işlevselliği daha belirgin etkileyebileceğini düşündürür; tıbbi ya da otonom sinir sistemi hükmü üretilmemelidir.",
+    useIn: ["domain_comment", "formulation"],
+  },
+  {
+    id: "PHYSIOLOGICAL_REGULATION_WATCH_RANGE",
+    domain: "physiological",
+    purpose: "level_comment",
+    level: "watch_range",
+    text: "Bu alan belirli koşullarda, özellikle uyku kalitesi, rutin değişimi, yorgunluk veya hastalık dönemlerinde daha görünür hale gelebilecek bağlamsal bir hassasiyet olarak yazılmalıdır.",
+    useIn: ["domain_comment", "anamnesis_fit"],
+  },
+  {
+    id: "PHYSIOLOGICAL_REGULATION_RELATIVE_STRENGTH",
+    domain: "physiological",
+    purpose: "level_comment",
+    level: "relative_strength",
+    text: "Göreli korunmuşluk, günlük biyolojik ritimlerin ve toparlanma zemininin daha dengeli olabileceğini gösterir; ancak bu, diğer alanlardaki zorlanmaları ortadan kaldıran bir güvence gibi yazılmamalıdır.",
+    useIn: ["domain_comment", "formulation", "conclusion"],
+  },
+  {
+    id: "SENSORY_REGULATION_RELATIVE_WEAKNESS",
+    domain: "sensory",
+    purpose: "level_comment",
+    level: "relative_weakness",
+    text: "Bu alandaki kırılganlık, çevresel uyaran yükü arttığında düzenlenme kapasitesinin düşebileceğini; ses, dokunma, kalabalık, ışık, hareket veya oral uyaranların katılımı dalgalandırabileceğini düşündürür.",
+    useIn: ["domain_comment", "formulation", "anamnesis_fit"],
+  },
+  {
+    id: "SENSORY_REGULATION_WATCH_RANGE",
+    domain: "sensory",
+    purpose: "level_comment",
+    level: "watch_range",
+    text: "Duyusal watch range, çocuğun her ortamda değil; kalabalık, yeni mekan, beklenmeyen ses, temas/giyim veya yoğun hareket koşullarında daha belirgin zorlanabileceğini ifade eder.",
+    useIn: ["domain_comment", "anamnesis_fit"],
+  },
+  {
+    id: "SENSORY_REGULATION_RELATIVE_STRENGTH",
+    domain: "sensory",
+    purpose: "level_comment",
+    level: "relative_strength",
+    text: "Göreli duyusal korunmuşluk, çevresel uyaranlara daha esnek yanıt verilebildiğini ve bu alanın mevcut profil içinde klinik öncelik oluşturmadığını düşündürür.",
+    useIn: ["domain_comment", "conclusion"],
+  },
+  {
+    id: "EMOTIONAL_REGULATION_RELATIVE_WEAKNESS",
+    domain: "emotional",
+    purpose: "level_comment",
+    level: "relative_weakness",
+    text: "Bu alandaki kırılganlık, duygusal yoğunluğun hızlı yükselmesi, toparlanmanın uzaması ve dış düzenleme ihtiyacının artması üzerinden yazılmalıdır; kişilik etiketi veya psikiyatrik hüküm kurulmaz.",
+    useIn: ["domain_comment", "formulation", "anamnesis_fit"],
+  },
+  {
+    id: "EMOTIONAL_REGULATION_WATCH_RANGE",
+    domain: "emotional",
+    purpose: "level_comment",
+    level: "watch_range",
+    text: "Duygusal watch range, geçiş, engellenme, belirsizlik, ayrılma veya yüksek uyaranlı bağlamlarda toparlanmanın değişkenleşebileceği anlamına gelir.",
+    useIn: ["domain_comment", "anamnesis_fit"],
+  },
+  {
+    id: "EMOTIONAL_REGULATION_RELATIVE_STRENGTH",
+    domain: "emotional",
+    purpose: "level_comment",
+    level: "relative_strength",
+    text: "Göreli duygusal korunmuşluk, bazı zorlayıcı durumlarda yeniden dengeye dönüşün daha yönetilebilir olabileceğini düşündürür; bu alan, diğer regülasyon yüklerini dengeleyen bir bağlam olarak yazılabilir.",
+    useIn: ["domain_comment", "conclusion"],
+  },
+  {
+    id: "COGNITIVE_REGULATION_RELATIVE_WEAKNESS",
+    domain: "cognitive",
+    purpose: "level_comment",
+    level: "relative_weakness",
+    text: "Bu alandaki kırılganlık, dikkat sürdürme, bilgiyi zihinde tutma, yönerge karmaşıklığı ve görev talebi arttığında zihinsel organizasyonu koruma güçlüğü üzerinden yazılmalıdır.",
+    useIn: ["domain_comment", "formulation", "anamnesis_fit"],
+  },
+  {
+    id: "COGNITIVE_REGULATION_WATCH_RANGE",
+    domain: "cognitive",
+    purpose: "level_comment",
+    level: "watch_range",
+    text: "Bilişsel watch range, düşük talepli veya yapılandırılmış bağlamlarda kapasitenin daha iyi görünebileceğini; sözel yük ve görev karmaşıklığı arttığında kırılganlığın belirginleşebileceğini anlatır.",
+    useIn: ["domain_comment", "anamnesis_fit"],
+  },
+  {
+    id: "COGNITIVE_REGULATION_RELATIVE_STRENGTH",
+    domain: "cognitive",
+    purpose: "level_comment",
+    level: "relative_strength",
+    text: "Göreli bilişsel korunmuşluk, dikkat odağını sürdürme ve yapılandırılmış etkinlikte kalma kapasitesinin daha istikrarlı olabileceğini düşündürür.",
+    useIn: ["domain_comment", "conclusion"],
+  },
+  {
+    id: "EXECUTIVE_FUNCTION_RELATIVE_WEAKNESS",
+    domain: "executive",
+    purpose: "level_comment",
+    level: "relative_weakness",
+    text: "Bu alandaki kırılganlık, başlatma, durdurma, bekleme, sıra koruma, esneklik ve çok basamaklı görev akışını organize etme süreçlerinde yük artışı olarak yazılmalıdır.",
+    useIn: ["domain_comment", "formulation", "anamnesis_fit"],
+  },
+  {
+    id: "EXECUTIVE_FUNCTION_WATCH_RANGE",
+    domain: "executive",
+    purpose: "level_comment",
+    level: "watch_range",
+    text: "Yürütücü watch range, yapılandırma ve dış düzenleme olduğunda performansın toparlanabildiğini; geçiş, bekleme, çok basamaklı görev veya belirsizlikte zorlanmanın belirginleşebildiğini anlatır.",
+    useIn: ["domain_comment", "anamnesis_fit"],
+  },
+  {
+    id: "EXECUTIVE_FUNCTION_RELATIVE_STRENGTH",
+    domain: "executive",
+    purpose: "level_comment",
+    level: "relative_strength",
+    text: "Göreli yürütücü korunmuşluk, davranışı hedefe göre ayarlama ve geri bildirime göre düzenleme kapasitesinin daha dengeli olabileceğini düşündürür.",
+    useIn: ["domain_comment", "conclusion"],
+  },
+  {
+    id: "INTEROCEPTION_RELATIVE_WEAKNESS",
+    domain: "interoception",
+    purpose: "level_comment",
+    level: "relative_weakness",
+    text: "Bu alandaki kırılganlık, iç beden sinyallerini erken fark etme ve bu sinyalleri davranışsal düzenlemeye katma sürecinde zorlanma olarak yazılmalıdır; erken çocuklukta ölçüm sınırı nedeniyle temkinli dil korunur.",
+    useIn: ["domain_comment", "formulation", "anamnesis_fit"],
+  },
+  {
+    id: "INTEROCEPTION_WATCH_RANGE",
+    domain: "interoception",
+    purpose: "level_comment",
+    level: "watch_range",
+    text: "İnterosepsiyon watch range, açlık, susuzluk, tuvalet, ağrı veya yorgunluk sinyallerinin bazı bağlamlarda gecikmeli fark edilebileceğini ve toparlanmayı etkileyebileceğini anlatır.",
+    useIn: ["domain_comment", "anamnesis_fit"],
+  },
+  {
+    id: "INTEROCEPTION_RELATIVE_STRENGTH",
+    domain: "interoception",
+    purpose: "level_comment",
+    level: "relative_strength",
+    text: "Göreli interoseptif korunmuşluk, iç bedensel ihtiyaçları fark etme ve günlük işlevsellik içinde kullanma kapasitesinin daha düzenli olabileceğini düşündürür.",
+    useIn: ["domain_comment", "conclusion"],
+  },
+];
+
+export const CLINICAL_KNOWLEDGE_CHUNKS: ClinicalKnowledgeChunk[] = [
+  {
+    id: "REGULATION_OVERVIEW",
+    purpose: "construct",
+    text: "Regülasyon erken çocuklukta fizyolojik uyarılma, duyusal yanıt, duygu, dikkat ve davranışın bağlama göre birlikte ayarlanmasıdır; tek bir davranış belirtisine indirgenmemelidir.",
+    useIn: ["decision", "formulation", "conclusion"],
+  },
+  {
+    id: "REGULATION_EARLY_CHILDHOOD_FRAME",
+    purpose: "construct",
+    text: "2-5 yaş döneminde self-regülasyon henüz gelişmekte olduğu için çevresel yapı, bakımveren eş-regülasyonu, günlük rutin ve bağlam değişkenleri yorumun merkezinde tutulmalıdır.",
+    useIn: ["decision", "anamnesis_fit", "conclusion"],
+  },
+  {
+    id: "REGULATION_INTERPRETATION_BOUNDARY",
+    purpose: "safety",
+    text: "Regülasyon skoru tek başına bozukluk, tanı, neden veya tedavi gerekliliği göstermez; rapor betimleyici, bağlamsal ve klinik hipotez düzeyinde kalmalıdır.",
+    useIn: ["decision", "prioritization", "conclusion"],
+  },
+  {
+    id: "REGULATION_REPORT_STYLE",
+    purpose: "report_language",
+    text: "Rapor dili skor ile günlük yaşam arasındaki köprüyü kurmalı; çocuğu sabit etiketlerle tanımlamadan örüntüyü, bağlamı ve işlevsel karşılığı görünür kılmalıdır.",
+    useIn: ["decision", "formulation", "conclusion"],
+  },
+  {
+    id: "PHYSIOLOGICAL_REGULATION_ANAMNESIS_INTEGRATION",
+    domain: "physiological",
+    purpose: "anamnesis",
+    text: "Uyku kalitesi, yeme düzeni, yorgunluk eşiği, hastalık dönemleri ve stres sonrası toparlanma gözlemleri fizyolojik regülasyon yorumuna doğrudan bağlamsal ağırlık kazandırır.",
+    useIn: ["domain_comment", "anamnesis_fit"],
+  },
+  {
+    id: "PHYSIOLOGICAL_REGULATION_REPORT_LANGUAGE",
+    domain: "physiological",
+    mechanism: ["physiological_interoceptive", "adaptive_daily_living"],
+    purpose: "report_language",
+    text: "Fizyolojik regülasyon öne çıktığında rapor, bedensel toparlanma zemininin günlük akışta ne zaman kırılganlaştığını anlatmalı; tıbbi nedensellik veya otonom bozukluk dili kurmamalıdır.",
+    useIn: ["decision", "formulation", "conclusion"],
+  },
+  {
+    id: "SENSORY_REGULATION_ANAMNESIS_INTEGRATION",
+    domain: "sensory",
+    purpose: "anamnesis",
+    text: "Ses, dokunma, giyim, banyo, oral seçicilik, kalabalık ortam ve yeni mekan zorlanmaları duyusal regülasyonun günlük yaşam karşılığını güçlendiren temel anamnez verileridir.",
+    useIn: ["domain_comment", "anamnesis_fit"],
+  },
+  {
+    id: "SENSORY_REGULATION_REPORT_LANGUAGE",
+    domain: "sensory",
+    mechanism: ["default"],
+    purpose: "report_language",
+    text: "Duyusal regülasyon öne çıktığında rapor, çevresel uyaran yükünün işlevsel performansı nasıl dalgalandırdığını açıklamalı; sorunu yalnız davranış etiketiyle tanımlamamalıdır.",
+    useIn: ["decision", "formulation", "conclusion"],
+  },
+  {
+    id: "EMOTIONAL_REGULATION_ANAMNESIS_INTEGRATION",
+    domain: "emotional",
+    purpose: "anamnesis",
+    text: "Geçişlerde taşma, yoğun ağlama, engellenme sonrası toparlanma süresi ve dış düzenleme ihtiyacı duygusal regülasyonun vaka içi karşılığını açık biçimde gösterir.",
+    useIn: ["domain_comment", "anamnesis_fit"],
+  },
+  {
+    id: "EMOTIONAL_REGULATION_REPORT_LANGUAGE",
+    domain: "emotional",
+    mechanism: ["social_pragmatic", "language_social_pragmatic", "adaptive_daily_living", "motor_praxis", "default"],
+    purpose: "report_language",
+    text: "Duygusal regülasyon dili, yoğunluğun ne zaman yükseldiğini ve toparlanmanın hangi bağlamlarda zorlandığını anlatmalı; psikiyatrik etiket ya da kişilik çıkarımı yapmamalıdır.",
+    useIn: ["decision", "formulation", "conclusion"],
+  },
+  {
+    id: "COGNITIVE_REGULATION_ANAMNESIS_INTEGRATION",
+    domain: "cognitive",
+    purpose: "anamnesis",
+    text: "Sözel yük, yönerge karmaşıklığı, etkinliği sürdürme ve görevde kalma güçlüğü bildirimleri bilişsel regülasyon yorumuna doğrudan klinik değer katar.",
+    useIn: ["domain_comment", "anamnesis_fit"],
+  },
+  {
+    id: "COGNITIVE_REGULATION_REPORT_LANGUAGE",
+    domain: "cognitive",
+    mechanism: ["language_communication", "language_social_pragmatic", "social_pragmatic", "motor_praxis", "default"],
+    purpose: "report_language",
+    text: "Bilişsel regülasyon öne çıktığında rapor, sözel talep veya eşzamanlı görev yükü altında zihinsel organizasyonun nasıl zorlandığını anlatmalı; genel zeka veya öğrenme kapasitesi hükmüne gitmemelidir.",
+    useIn: ["decision", "formulation", "conclusion"],
+  },
+  {
+    id: "EXECUTIVE_FUNCTION_ANAMNESIS_INTEGRATION",
+    domain: "executive",
+    purpose: "anamnesis",
+    text: "Rutin başlatma, sırayı koruma, çok basamaklı akışı sürdürme, öz bakım görevini tamamlama ve dış organizasyon ihtiyacı yürütücü işlev yükünün günlük yaşam görünümünü belirginleştirir.",
+    useIn: ["domain_comment", "anamnesis_fit"],
+  },
+  {
+    id: "EXECUTIVE_FUNCTION_REPORT_LANGUAGE",
+    domain: "executive",
+    mechanism: ["adaptive_daily_living", "social_pragmatic", "language_communication", "language_social_pragmatic", "motor_praxis", "default"],
+    purpose: "report_language",
+    text: "Yürütücü işlev dili, davranış organizasyonunun görev akışı içinde nasıl çözüldüğünü göstermeli; sorunu yalnız uyumsuzluk veya itaat eksikliği gibi sunmamalıdır.",
+    useIn: ["decision", "formulation", "conclusion"],
+  },
+  {
+    id: "INTEROCEPTION_ANAMNESIS_INTEGRATION",
+    domain: "interoception",
+    purpose: "anamnesis",
+    text: "Açlık, susuzluk, tuvalet, ağrı, yorgunluk ve içsel gerilim sinyallerini geç fark etme ya da bunları günlük akışa katamama bildirimleri interosepsiyon yorumunu güçlendirir.",
+    useIn: ["domain_comment", "anamnesis_fit"],
+  },
+  {
+    id: "INTEROCEPTION_REPORT_LANGUAGE",
+    domain: "interoception",
+    mechanism: ["physiological_interoceptive", "adaptive_daily_living"],
+    purpose: "report_language",
+    text: "İnterosepsiyon öne çıktığında rapor, iç beden sinyallerinin günlük öz bakım ve toparlanma akışına nasıl katılamadığını anlatmalı; tek başına medikal açıklama üretmemelidir.",
+    useIn: ["decision", "formulation", "conclusion"],
+  },
+  ...domainConstructs,
+  ...levelComments,
+  {
+    id: "CROSS_SCALE_SENSORY_EMOTIONAL",
+    purpose: "cross_scale",
+    text: "Duyusal ve duygusal alanlar birlikte zorlandığında, çevresel uyaran yükünün duygusal toparlanmayı zorlaştırdığı bir klinik örüntü kurulabilir; bu ilişki nedensellik değil, anlamlı birliktelik olarak yazılmalıdır.",
+    useIn: ["decision", "formulation", "prioritization", "conclusion"],
+  },
+  {
+    id: "CROSS_SCALE_PHYSIOLOGICAL_EMOTIONAL",
+    purpose: "cross_scale",
+    text: "Fizyolojik ve duygusal alanlar birlikte zorlandığında, uyku, yorgunluk, açlık veya bedensel dengenin duygusal eşikleri düşürebilen bağlamsal bir zemin oluşturabileceği yazılabilir.",
+    useIn: ["formulation", "anamnesis_fit", "conclusion"],
+  },
+  {
+    id: "CROSS_SCALE_INTEROCEPTION_PHYSIOLOGICAL",
+    purpose: "cross_scale",
+    text: "İnterosepsiyon ve fizyolojik regülasyon birlikte zorlandığında, iç beden sinyallerini fark etme ve temel ritimleri düzenleme aynı beden-temelli eksende ele alınmalıdır.",
+    useIn: ["decision", "formulation", "prioritization"],
+  },
+  {
+    id: "CROSS_SCALE_INTEROCEPTION_EMOTIONAL",
+    purpose: "cross_scale",
+    text: "İnterosepsiyon ve duygusal regülasyon birlikte zorlandığında, içsel gerilimi erken fark etme güçlüğü duygusal yükselme ve toparlanma sürecini anlamlandıran ikincil bir zemin olarak yazılabilir.",
+    useIn: ["formulation", "anamnesis_fit", "prioritization"],
+  },
+  {
+    id: "CROSS_SCALE_COGNITIVE_EXECUTIVE",
+    purpose: "cross_scale",
+    text: "Bilişsel ve yürütücü alanlar birlikte zorlandığında, dikkat sürdürme, görev organizasyonu ve davranışı hedefe göre düzenleme süreçlerinde bütüncül bir görev yükü oluşabilir.",
+    useIn: ["decision", "formulation", "prioritization"],
+  },
+  {
+    id: "CROSS_SCALE_EMOTIONAL_EXECUTIVE",
+    purpose: "cross_scale",
+    text: "Duygusal ve yürütücü alanlar birlikte zorlandığında, duygusal yükselme anlarında davranışı durdurma, bekleme, esneme ve yeniden düzenleme kapasitesi daha kırılgan hale gelebilir.",
+    useIn: ["formulation", "prioritization", "conclusion"],
+  },
+  {
+    id: "CROSS_SCALE_WIDESPREAD_PATTERN",
+    purpose: "cross_scale",
+    text: "Üç veya daha fazla alanda zorlanma varsa rapor, bunu ağırlaştırıcı tanısal etiket gibi değil; birden fazla düzenleme sisteminde genişleyen işlevsel yük olarak yazmalıdır.",
+    useIn: ["decision", "formulation", "conclusion"],
+  },
+  {
+    id: "CROSS_SCALE_ASYMMETRICAL_PROFILE",
+    purpose: "cross_scale",
+    text: "Asimetrik profillerde belirgin zorlanan alan ile korunmuş alanlar arasındaki fark klinik yorumun merkezine alınmalı; güçlü alanlar işlevsel denge sağlayan bağlam olarak görünür kılınmalıdır.",
+    useIn: ["evidence_profile", "formulation", "conclusion"],
+  },
+  {
+    id: "RISK_PROFILE_GENERAL_RULE",
+    purpose: "risk_profile",
+    text: "Risk profili yorumu, alan puanlarını yalnız sıralamak yerine ana klinik ekseni, ikincil yayılımı ve korunmuş dengeleyici alanları birlikte göstermelidir.",
+    useIn: ["evidence_profile", "prioritization", "conclusion"],
+  },
+  {
+    id: "RISK_PROFILE_SINGLE_DOMAIN",
+    purpose: "risk_profile",
+    text: "Tek alanda belirgin zorlanma varsa rapor seçici kırılganlığı açıklar, günlük yaşam görünümünü anlatır ve tek alan zorluğunu genel patoloji gibi genişletmez.",
+    useIn: ["decision", "formulation", "conclusion"],
+  },
+  {
+    id: "RISK_PROFILE_DUAL_DOMAIN",
+    purpose: "risk_profile",
+    text: "İki alanda birlikte zorlanma varsa rapor iki skoru ayrı ayrı saymak yerine alanların birbirini nasıl etkileyebileceğini açık ve temkinli biçimde anlatmalıdır.",
+    useIn: ["decision", "formulation", "prioritization"],
+  },
+  {
+    id: "RISK_PROFILE_MULTI_DOMAIN",
+    purpose: "risk_profile",
+    text: "Üç veya daha fazla alanda zorlanma varsa rapor çoklu alanlarda eşzamanlı kırılganlık ve genişleyen düzenleme yükü dilini kullanabilir; tanısal ya da ağırlaştırıcı etiket üretmez.",
+    useIn: ["decision", "formulation", "conclusion"],
+  },
+  {
+    id: "RISK_PROFILE_CONTEXT_MODIFIERS",
+    purpose: "risk_profile",
+    text: "Aynı skor örüntüsü farklı çocuklarda farklı anlam taşıyabilir; uyku, rutin, bakımveren eş-regülasyonu, çevresel stres, tıbbi geçmiş ve ortamlar arası farklılık yorum ağırlığını değiştiren bağlamlardır.",
+    useIn: ["anamnesis_fit", "prioritization", "conclusion"],
+  },
+  {
+    id: "RISK_PROFILE_PROTECTIVE_FACTORS",
+    purpose: "risk_profile",
+    text: "Rapor yalnız kırılganlık haritası değil, işlevsel denge haritası da sunmalıdır; korunmuş alanlar ve iyi işleyen bağlamlar kısa ama açık biçimde belirtilmelidir.",
+    useIn: ["evidence_profile", "formulation", "conclusion"],
+  },
+  {
+    id: "RISK_PROFILE_SUMMARY_RULE",
+    purpose: "risk_profile",
+    text: "Kanıt özeti ve sonuç bölümleri, baskın risk örüntüsünü kısa ama karar verici biçimde özetlemeli; teknik skor listesini klinik sentezin önüne geçirmemelidir.",
+    useIn: ["evidence_profile", "prioritization", "conclusion"],
+  },
+  {
+    id: "ANAMNESIS_INTEGRATION_GENERAL_RULE",
+    purpose: "anamnesis",
+    text: "Anamnez skoru açıklayan neden gibi değil, skorun günlük yaşamdaki görünümünü bağlamsallaştıran veri olarak kullanılmalıdır.",
+    useIn: ["anamnesis_fit", "prioritization"],
+  },
+  {
+    id: "ANAMNESIS_SLEEP_AND_ROUTINE",
+    purpose: "anamnesis",
+    text: "Uyku, yeme, tuvalet, geçişler ve rutin istikrarı özellikle fizyolojik, duygusal ve yürütücü yorumlarda yüksek değerli bağlam verisidir; nedensellik kurulmadan ilişkilendirilmelidir.",
+    useIn: ["anamnesis_fit", "formulation"],
+  },
+  {
+    id: "ANAMNESIS_SENSORY_CONTEXT",
+    purpose: "anamnesis",
+    text: "Gürültü, dokunsal kaçınma, oral seçicilik, kalabalık ortam zorlanması, hareket arayışı, saç/banyo/giyim direnci ve yeni mekanlarda taşma duyusal regülasyon yorumuna doğrudan bağlamsal değer katar.",
+    useIn: ["domain_comment", "anamnesis_fit"],
+  },
+  {
+    id: "ANAMNESIS_EMOTIONAL_CONTEXT",
+    purpose: "anamnesis",
+    text: "Zor sakinleşme, yoğun ağlama, öfkeyi toparlayamama, değişiklikte zorlanma veya rutin bozulunca taşma bildirimleri duygusal regülasyonun günlük yaşam karşılığını görünür kılar.",
+    useIn: ["domain_comment", "anamnesis_fit"],
+  },
+  {
+    id: "ANAMNESIS_ATTENTION_AND_TASK_BEHAVIOR",
+    purpose: "anamnesis",
+    text: "Dikkat, oyunda kalma, etkinliği tamamlama, yönergeyi sürdürme ve dürtü kontrolü bildirimleri bilişsel regülasyon ile yürütücü işlev arasında ayrıştırılarak yazılmalıdır.",
+    useIn: ["domain_comment", "anamnesis_fit"],
+  },
+  {
+    id: "ANAMNESIS_INTEROCEPTIVE_CONTEXT",
+    purpose: "anamnesis",
+    text: "Tuvaleti geç söyleme, açlık/susuzluğu geç fark etme, ağrı veya rahatsızlığı anlatamama ve yorgunluğu geç fark etme interosepsiyon yorumuna yüksek değerli bağlam sağlar.",
+    useIn: ["domain_comment", "anamnesis_fit"],
+  },
+  {
+    id: "ANAMNESIS_PARENTING_AND_CO_REGULATION",
+    purpose: "anamnesis",
+    text: "Bakımverenle eş-regülasyon, özellikle duygusal regülasyon, fizyolojik toparlanma ve yürütücü işlev görünümünü etkileyen bağlamsal bir değişkendir; ebeveyn kaynaklı nedensellik kurulmaz.",
+    useIn: ["anamnesis_fit", "conclusion"],
+  },
+  {
+    id: "ANAMNESIS_MEDICAL_AND_DEVELOPMENTAL_HISTORY",
+    purpose: "anamnesis",
+    text: "Tıbbi geçmiş, gebelik-doğum hikayesi ve erken gelişim bilgileri yalnız bağlamsal olarak kullanılmalı; mevcut regülasyon profilinin doğrudan nedeni gibi yazılmamalıdır.",
+    useIn: ["anamnesis_fit"],
+  },
+  {
+    id: "ANAMNESIS_CONTRADICTION_RULE",
+    purpose: "anamnesis",
+    text: "Skor ve anamnez ayrışıyorsa bu çelişki değil, bağlam farkı veya veri sınırlılığı olarak not edilmelidir; yorumun güven düzeyi buna göre temkinli tutulur.",
+    useIn: ["anamnesis_fit", "prioritization"],
+  },
+  {
+    id: "ANAMNESIS_PROTECTIVE_CONTEXT",
+    purpose: "anamnesis",
+    text: "Düzenli rutin, destekleyici eş-regülasyon, belirli ortamlarda iyi uyum, oyunda veya sosyal ilişkide korunmuşluk gibi veriler raporu aşırı sorun odaklı olmaktan korur.",
+    useIn: ["anamnesis_fit", "conclusion"],
+  },
+  {
+    id: "REPORT_OUTPUT_STRUCTURE",
+    purpose: "report_language",
+    text: "Rapor akışı klinik karar özeti, kanıt profili, alan yorumu, formülasyon, anamnez uyumu, önceliklendirme ve sonuç sırasını korumalı; aynı hipotezi farklı başlıklarda tekrara düşürmemelidir.",
+    useIn: ["decision", "evidence_profile", "formulation", "prioritization", "conclusion"],
+  },
+  {
+    id: "REPORT_TONE_RULE",
+    purpose: "report_language",
+    text: "Rapor objektif, klinik, betimleyici, kısa ama bilgi yoğun, nedensellikten kaçınan, tanısal olmayan ve müdahale önermeyen bir dil taşımalıdır.",
+    useIn: ["decision", "formulation", "conclusion"],
+  },
+  {
+    id: "REPORT_LANGUAGE_RULE",
+    purpose: "report_language",
+    text: "Rapor 'uyumlu görünmektedir', 'bağlamsal olarak anlam kazanmaktadır', 'eşlik edebilir' ve 'günlük işlevsellikte görünür hale gelebilir' gibi klinik hipotez dilini tercih etmeli; 'kesindir', 'kanıtlar', 'mutlaka' ve 'gerektirir' dilinden kaçınmalıdır.",
+    useIn: ["decision", "formulation", "prioritization", "conclusion"],
+  },
+  {
+    id: "REPORT_PRIORITY_RULE",
+    purpose: "report_language",
+    text: "Rapor her şeyi yazmamalı; ana alan, ikinci belirgin alan, en anlamlı ölçekler arası ilişki, bu ilişkiyi güçlendiren anamnez ve korunmuş alan sırasını izlemelidir.",
+    useIn: ["decision", "prioritization", "conclusion"],
+  },
+  {
+    id: "REPORT_SAFETY_RULE",
+    purpose: "safety",
+    text: "Rapor tanı önerisi, terapi planı, seans sıklığı, ilaç/medikal yorum, aileye direkt tavsiye listesi veya kesin neden-sonuç açıklaması üretmemelidir.",
+    useIn: ["prioritization", "conclusion"],
+  },
+  {
+    id: "REPORT_FINAL_SUMMARY_TEMPLATE",
+    purpose: "report_language",
+    text: "Final özet; baskın 2-3 tema, varsa alanlar arası ilişki, anamnezle güçlenen bağlam, korunmuş alanlar ve tanısal olmayan açıklayıcı sonuç cümlesini kısa biçimde birleştirmelidir.",
+    useIn: ["conclusion"],
+  },
+];

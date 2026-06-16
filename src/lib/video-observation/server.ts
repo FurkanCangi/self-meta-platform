@@ -1,6 +1,6 @@
 import "server-only"
 
-const DEFAULT_BASE_URL = "http://127.0.0.1:8091"
+import { getVideoObservationApiBaseUrl, videoObservationPathSegment } from "./config"
 
 export type VideoObservationBundle = {
   baseUrl: string
@@ -30,17 +30,8 @@ export type VideoObservationSessionListItem = {
   has_report: boolean
 }
 
-function getBaseUrl() {
-  const raw =
-    process.env.VIDEO_OBS_API_BASE_URL ||
-    process.env.NEXT_PUBLIC_VIDEO_OBS_API_BASE_URL ||
-    DEFAULT_BASE_URL
-
-  return raw.replace(/\/+$/, "")
-}
-
 async function fetchJson(pathname: string) {
-  const response = await fetch(`${getBaseUrl()}${pathname}`, {
+  const response = await fetch(`${getVideoObservationApiBaseUrl()}${pathname}`, {
     cache: "no-store",
     signal: AbortSignal.timeout(8000),
   })
@@ -71,13 +62,13 @@ export async function fetchVideoObservationSessions(
   try {
     const sessions = await fetchJson(pathname)
     return {
-      baseUrl: getBaseUrl(),
+      baseUrl: getVideoObservationApiBaseUrl(),
       sessions: Array.isArray(sessions) ? sessions : [],
       error: null,
     }
   } catch (error) {
     return {
-      baseUrl: getBaseUrl(),
+      baseUrl: getVideoObservationApiBaseUrl(),
       sessions: [],
       error: error instanceof Error ? error.message : String(error),
     }
@@ -88,16 +79,17 @@ export async function fetchVideoObservationBundle(
   sessionId: string
 ): Promise<VideoObservationBundle> {
   const errors: string[] = []
+  const safeSessionId = videoObservationPathSegment(sessionId)
 
   const [serviceInfoResult, summaryResult, domainsResult, timelineResult, evidenceResult, reportResult, fusionResult] =
     await Promise.allSettled([
       fetchJson("/"),
-      fetchJson(`/sessions/${sessionId}/summary`),
-      fetchJson(`/sessions/${sessionId}/domains`),
-      fetchJson(`/sessions/${sessionId}/timeline`),
-      fetchJson(`/sessions/${sessionId}/evidence`),
-      fetchJson(`/sessions/${sessionId}/report`),
-      fetchJson(`/sessions/${sessionId}/fusion`),
+      fetchJson(`/sessions/${safeSessionId}/summary`),
+      fetchJson(`/sessions/${safeSessionId}/domains`),
+      fetchJson(`/sessions/${safeSessionId}/timeline`),
+      fetchJson(`/sessions/${safeSessionId}/evidence`),
+      fetchJson(`/sessions/${safeSessionId}/report`),
+      fetchJson(`/sessions/${safeSessionId}/fusion`),
     ])
 
   function pickResult<T>(result: PromiseSettledResult<T>, label: string, fallback: T): T {
@@ -107,7 +99,7 @@ export async function fetchVideoObservationBundle(
   }
 
   return {
-    baseUrl: getBaseUrl(),
+    baseUrl: getVideoObservationApiBaseUrl(),
     serviceInfo: pickResult(serviceInfoResult, "service", null),
     summary: pickResult(summaryResult, "summary", null),
     domains: pickResult(domainsResult, "domains", []),

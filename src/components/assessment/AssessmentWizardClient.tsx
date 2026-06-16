@@ -324,7 +324,7 @@ const [saving, setSaving] = useState(false)
         .from("assessments_v2")
         .insert({
           client_id: clientInfo.id,
-          label: "Self Meta Değerlendirme",
+          label: "DNA Intelligence Değerlendirme",
           assessment_date: today,
         })
         .select("id")
@@ -426,7 +426,7 @@ const [saving, setSaving] = useState(false)
           </div>
 
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-900">
-            Self Meta Değerlendirme Sistemi
+            DNA Intelligence Değerlendirme Sistemi
           </h1>
 
           <p className="mt-4 text-base leading-7 text-slate-500">
@@ -448,7 +448,7 @@ const [saving, setSaving] = useState(false)
 
         <div className="mt-2 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Self Meta Değerlendirme Sistemi</h1>
+            <h1 className="text-2xl font-semibold text-slate-900">DNA Intelligence Değerlendirme Sistemi</h1>
             <p className="mt-2 text-sm leading-6 text-slate-500">
               Terapist değerlendirmesi için 6 alanda toplam 60 soru bulunur. Varsayılan seçim “Bazen” olarak gelir.
             </p>

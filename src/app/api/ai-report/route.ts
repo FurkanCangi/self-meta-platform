@@ -65,21 +65,51 @@ async function checkExistingSelfMetaReportLock(supabase: any, payload: any) {
   return { locked: false, existing: null }
 }
 
+async function assertOwnedSelfMetaClient(supabase: any, userId: string, payload: any) {
+  const clientCode = String(
+    payload?.client_code ??
+    payload?.clientCode ??
+    payload?.client?.code ??
+    payload?.client?.client_code ??
+    ""
+  ).trim()
+
+  if (!clientCode) {
+    return { ok: false, error: "client_code_required" }
+  }
+
+  const { data, error } = await supabase
+    .from("clients")
+    .select("id, child_code")
+    .eq("owner_id", userId)
+    .eq("child_code", clientCode)
+    .is("deleted_at", null)
+    .maybeSingle()
+
+  if (error) {
+    return { ok: false, error: "client_lookup_failed" }
+  }
+
+  if (!data?.id) {
+    return { ok: false, error: "client_not_found" }
+  }
+
+  return { ok: true, client: data }
+}
+
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
-import { rewriteClinicalReport } from "@/lib/selfmeta/aiRewrite"
+import { requireTrustedMutation } from "@/lib/security/apiGuards"
+import { rejectServerControlledFields } from "@/lib/security/payloadGuards"
+import { evaluateAccountRisk, recordAccountSecurityEvent } from "@/lib/security/anomalyDetection"
+import { getPrivacyAuditContext, recordDataAccessAuditEvent } from "@/lib/security/privacyOps"
+import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
+import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { buildAdvancedReport } from "@/lib/selfmeta/reportEngine"
 import { extractAgeMonthsFromAnamnez, isSupportedAgeMonths } from "@/lib/selfmeta/ageUtils"
 import { buildLiteratureAlignedSection } from "@/lib/selfmeta/literatureNote"
-import { hasCriticalNarrativeGuardViolation } from "@/lib/selfmeta/reportQuality"
-import {
-  getClinicalReportSectionHeadings,
-  hasAllCanonicalReportSections,
-  mergeClinicalReportSections,
-  normalizeClinicalReportText,
-  splitClinicalReportSections,
-} from "@/lib/selfmeta/reportText"
+import { normalizeClinicalReportText } from "@/lib/selfmeta/reportText"
 
 async function createSupabaseServerClient() {
   const cookieStore = await cookies()
@@ -104,102 +134,6 @@ async function createSupabaseServerClient() {
   )
 }
 
-function hasAllRequiredSections(text: string): boolean {
-  return hasAllCanonicalReportSections(text)
-}
-
-function normalizeLevel(v: string): string {
-  const x = String(v || "").toLowerCase().trim()
-    .replace(/\.\s*olarak görünmektedir\./g, ".")
-    .replace(/\s{2,}/g, " ")
-    .trim();
-  if (x.includes("atipik")) return "Atipik";
-  if (x.includes("riskli")) return "Riskli";
-  if (x.includes("tipik")) return "Tipik";
-  return "";
-}
-
-function escapeRegex(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function hasLevelMismatch(
-  text: string,
-  domainSummary: Record<string, string> | undefined
-): boolean {
-  if (!text || !domainSummary) return false;
-
-  const allLevels = ["Tipik", "Riskli", "Atipik"];
-  const relevantSections = splitClinicalReportSections(text).filter((section) =>
-    section.heading === "2. Sayısal Sonuç Özeti" || section.heading === "3. Alan Bazlı Klinik Yorum"
-  );
-  const lines = relevantSections.flatMap((section) => section.body.split(/\n+/));
-
-  for (const [domain, rawLevel] of Object.entries(domainSummary)) {
-    const expected = normalizeLevel(rawLevel);
-    if (!domain || !expected) continue;
-
-    const domainRe = new RegExp(escapeRegex(domain), "i");
-    const matchingLines = lines.filter((ln) => {
-      const line = String(ln || "").trim()
-      if (!line || !domainRe.test(line)) return false
-      return (
-        line.startsWith(`- ${domain}:`) ||
-        line.startsWith(`${domain}:`) ||
-        line.startsWith(`${domain} `) ||
-        line === domain
-      )
-    });
-
-    for (const ln of matchingLines) {
-      const foundLevels = allLevels.filter((lvl) => ln.includes(lvl));
-
-      // Sadece aynı satırda alan adı + farklı düzey varsa mismatch
-      if (foundLevels.length > 0 && !foundLevels.includes(expected)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-function shouldFallbackToDeterministic(
-  aiText: string,
-  clinicalAnalysis: {
-    domainSummary?: Record<string, string>;
-  } | undefined,
-  reportMeta?: {
-    domainResults?: Array<{ key: string; label: string; score: number; level: string }>
-    globalLevel?: string
-    profileType?: string
-  }
-): boolean {
-  if (!aiText || !aiText.trim()) return true;
-
-  // Bölümler gerçekten eksikse fallback
-  if (!hasAllRequiredSections(aiText)) return true;
-
-  // Sadece açık düzey çelişkisi varsa fallback
-  if (hasLevelMismatch(aiText, clinicalAnalysis?.domainSummary)) return true;
-
-  if (
-    reportMeta?.domainResults?.length &&
-    reportMeta.globalLevel &&
-    reportMeta.profileType &&
-    hasCriticalNarrativeGuardViolation({
-      text: aiText,
-      domainResults: reportMeta.domainResults,
-      globalLevel: reportMeta.globalLevel,
-      profileType: reportMeta.profileType,
-    })
-  ) {
-    return true;
-  }
-
-  return false;
-}
-
 function cleanRenderedReport(text: string): string {
   return normalizeClinicalReportText(text)
 }
@@ -213,6 +147,9 @@ function appendOptionalSection(baseText: string, optionalSection?: string | null
 
 export async function POST(req: Request) {
   try {
+    const originError = await requireTrustedMutation(req)
+    if (originError) return originError
+
     const supabase = await createSupabaseServerClient()
     const {
       data: { user },
@@ -238,7 +175,54 @@ export async function POST(req: Request) {
       )
     }
 
+    const rateLimit = checkRateLimit({
+      key: `ai-report:${user.id}`,
+      limit: 8,
+      windowMs: 60 * 60 * 1000,
+    })
+    if (!rateLimit.ok) {
+      await recordAccountSecurityEvent({
+        userId: user.id,
+        eventType: "api_rate_limited",
+        metadata: { route: "/api/ai-report" },
+      })
+      await evaluateAccountRisk(user.id)
+      return rateLimitResponse(rateLimit.resetAt)
+    }
+
     const body = await req.json()
+    const payloadGuard = rejectServerControlledFields(body)
+    if (!payloadGuard.ok) {
+      return NextResponse.json(
+        { ok: false, error: "server_controlled_fields_present", fields: payloadGuard.fields },
+        { status: 400 }
+      )
+    }
+
+    const ownedClient = await assertOwnedSelfMetaClient(supabase, user.id, body)
+    if (!ownedClient.ok) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Danışan kaydı doğrulanamadı.",
+        },
+        { status: 403 }
+      )
+    }
+
+    const auditContext = await getPrivacyAuditContext()
+    await recordDataAccessAuditEvent({
+      admin: createSupabaseAdminClient(),
+      actorUserId: user.id,
+      subjectUserId: user.id,
+      action: "ai_report_generate",
+      resourceType: "client",
+      resourceId: String((ownedClient as any).client?.id || ""),
+      legalBasis: "explicit_consent_and_service_delivery",
+      ipAddress: auditContext.ipAddress,
+      userAgent: auditContext.userAgent,
+      metadata: { route: "/api/ai-report" },
+    })
 
     const existingLock = await checkExistingSelfMetaReportLock(supabase, body)
     if (existingLock.locked && existingLock.existing?.report_text) {
@@ -321,37 +305,13 @@ if (__validationErrors.length > 0) {
       )
     }
 
-    let aiText = ""
-    let aiError = null
-
-    try {
-      aiText = await rewriteClinicalReport(report.clinicalAnalysis)
-    } catch (e) {
-      aiError = e
-      console.error("[AI-REPORT] LLM_ERROR:", e)
-      aiText = ""
-    }
-    const mergedAiText = mergeClinicalReportSections(aiText, report.deterministicReport)
-    const useFallback = shouldFallbackToDeterministic(mergedAiText, report.clinicalAnalysis, {
-      domainResults: report.domainResults,
-      globalLevel: report.globalLevel,
-      profileType: report.profileType,
-    })
     const literatureSection = buildLiteratureAlignedSection(report.clinicalAnalysis)
     const finalText = cleanRenderedReport(
-      appendOptionalSection(useFallback ? report.deterministicReport : mergedAiText, literatureSection?.text)
+      appendOptionalSection(report.deterministicReport, literatureSection?.text)
     )
     const cleanDeterministic = cleanRenderedReport(
       appendOptionalSection(report.deterministicReport, literatureSection?.text)
     )
-
-    console.log("[AI-REPORT] ai_length=", aiText?.length || 0)
-    console.log("[AI-REPORT] ai_raw_headings=", JSON.stringify(getClinicalReportSectionHeadings(aiText || "")))
-    console.log("[AI-REPORT] ai_merged_headings=", JSON.stringify(getClinicalReportSectionHeadings(mergedAiText || "")))
-    console.log("[AI-REPORT] ai_has_all_sections=", hasAllRequiredSections(mergedAiText || ""))
-    console.log("[AI-REPORT] fallback_used=", useFallback)
-    console.log("[AI-REPORT] literature_sources=", JSON.stringify(literatureSection?.sourceIds || []))
-    console.log("[AI-REPORT] final_starts_with=", (finalText || "").slice(0, 60))
 
     return NextResponse.json({
       ok: true,

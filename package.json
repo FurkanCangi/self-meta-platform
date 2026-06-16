@@ -12,7 +12,9 @@
     "report:quality": "tsc -p tsconfig.report-runner.json && node .tmp/report-runner/scripts/run-report-quality-tests.js",
     "report:audit": "tsc -p tsconfig.report-runner.json && node .tmp/report-runner/scripts/run-report-deterministic-audit.js",
     "report:quality:ai": "tsc -p tsconfig.report-runner.json && node .tmp/report-runner/scripts/run-report-quality-tests.js --with-ai",
-    "report:quality:ai-smoke": "tsc -p tsconfig.report-runner.json && node .tmp/report-runner/scripts/run-report-quality-tests.js --with-ai --smoke-only"
+    "report:quality:ai-smoke": "tsc -p tsconfig.report-runner.json && node .tmp/report-runner/scripts/run-report-quality-tests.js --with-ai --smoke-only",
+    "security:smoke": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/security-smoke-tests.js",
+    "security:readiness": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/security-readiness-check.js"
   },
   "dependencies": {
     "@ckeditor/ckeditor5-build-classic": "^44.3.0",
@@ -25,7 +27,7 @@
     "dotenv": "^17.3.1",
     "jsvectormap": "^1.7.0",
     "lucide-react": "^0.576.0",
-    "next": "^16.1.1",
+    "next": "^16.2.9",
     "openai": "^6.27.0",
     "react": "^19.2.3",
     "react-apexcharts": "^1.9.0",
@@ -48,8 +50,13 @@
     "@types/swiper": "^6.0.0",
     "@types/tiny-slider-react": "^0.3.8",
     "autoprefixer": "^10.4.27",
-    "postcss": "^8.5.8",
+    "postcss": "^8.5.15",
     "tailwindcss": "^4.2.2",
     "typescript": "^5.9.3"
+  },
+  "overrides": {
+    "lodash": "^4.18.1",
+    "lodash-es": "^4.18.1",
+    "ws": "^8.21.0"
   }
 }

@@ -1,6 +1,7 @@
 import OpenAI from "openai"
 import { buildAIClinicalPrompt } from "./aiClinicalPrompt"
 import type { ExternalTestCategory } from "./externalTestRegistry"
+import { logAiReportDebug, logAiReportError } from "./reportLogger"
 import { estimateRagCoverage, selectProRagContext, type SelectedProRagContext } from "./ragSelector"
 
 type ReasoningEffort = "none" | "minimal" | "low" | "medium" | "high" | "xhigh"
@@ -360,18 +361,18 @@ function buildAttemptPlan(
   return {
     timeoutMs:
       tightBudget && attempt === 2
-        ? 18000
+        ? 35000
         : attempt === 3
-        ? 18000
+        ? 30000
         : praxisCase
         ? attempt === 1
-          ? 26000
-          : 22000
+          ? 42000
+          : 35000
         : attempt === 1
         ? balancedCase
-          ? 22000
-          : 30000
-        : 24000,
+          ? 32000
+          : 45000
+        : 35000,
     maxOutputTokens: Math.min(baseMaxOutputTokens, attemptTokenCap),
     reasoningEffort:
       attempt === 3
@@ -430,6 +431,14 @@ export async function rewriteClinicalReport(analysis: {
   qualitySupportingEvidenceLines?: string[]
   qualityRestraintLines?: string[]
   qualityCautionLines?: string[]
+  classificationNote?: string
+  primaryClinicalHypothesis?: string
+  primaryClinicalAxis?: string
+  secondaryClinicalAxes?: string[]
+  caseEvidenceLines?: string[]
+  dataLimitations?: string[]
+  dataConfidenceLevel?: string
+  dataConfidenceRationale?: string
 }) {
   const baseRagContext = selectProRagContext(analysis)
   const budgetUsd = normalizeBudgetUsd(process.env.SELF_META_REPORT_BUDGET_USD)
@@ -445,9 +454,11 @@ export async function rewriteClinicalReport(analysis: {
   ]
   const attempts = attemptPool.slice(0, maxAttempts)
 
-  console.log("[AI-REPORT] request_budget_per_case=", maxAttempts)
-  console.log("[AI-REPORT] usd_budget_per_case=", budgetUsd.toFixed(2))
-  console.log("[AI-REPORT] tight_budget_mode=", tightBudget ? "on" : "off")
+  logAiReportDebug("rewrite_budget", {
+    requestBudgetPerCase: maxAttempts,
+    usdBudgetPerCase: budgetUsd.toFixed(2),
+    tightBudgetMode: tightBudget ? "on" : "off",
+  })
 
   let lastError: unknown = null
 
@@ -482,16 +493,21 @@ export async function rewriteClinicalReport(analysis: {
       }
 
       const ragCoverage = estimateRagCoverage(text, attempt.ragContext)
-      console.log("[AI-REPORT] rewrite_attempt=", attempt.label)
-      console.log("[AI-REPORT] rag_selected_ids=", attempt.ragContext.ids.join(","))
-      console.log("[AI-REPORT] rag_estimated_coverage=", `${ragCoverage.overall}%`)
-      console.log("[AI-REPORT] rag_coverage_by_group=", JSON.stringify(ragCoverage.byGroup))
+      logAiReportDebug("rewrite_attempt_success", {
+        attempt: attempt.label,
+        ragSelectedIds: attempt.ragContext.ids,
+        ragEstimatedCoverage: `${ragCoverage.overall}%`,
+        ragCoverageByGroup: ragCoverage.byGroup,
+      })
 
       return text
     } catch (err) {
       lastError = err
       const retryable = isRetryableRewriteError(err)
-      console.error("[AI-REPORT] rewrite_attempt_failed=", attempt.label, err)
+      logAiReportError("rewrite_attempt_failed", err, {
+        attempt: attempt.label,
+        retryable,
+      })
       if (index < attempts.length - 1 && retryable) {
         await sleep(1200 * (index + 1))
         continue
