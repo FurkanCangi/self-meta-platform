@@ -76,13 +76,15 @@ function StatCard({
 function SessionListCard({
   session,
   active,
+  appSurface,
 }: {
   session: VideoObservationSessionListItem
   active: boolean
+  appSurface: boolean
 }) {
   return (
     <Link
-      href={`/video-observation?session_id=${session.session_id}`}
+      href={`/video-observation?session_id=${session.session_id}${appSurface ? "&surface=app" : ""}`}
       className={`block rounded-3xl border p-5 transition ${
         active
           ? "border-indigo-300 bg-indigo-50 shadow-sm"
@@ -139,17 +141,18 @@ export default async function VideoObservationPage({
   const params = await searchParams
   const sessionId = pickQueryValue(params.session_id).trim()
   const sessionQuery = pickQueryValue(params.q).trim()
+  const appSurface = pickQueryValue(params.surface).trim() === "app"
   const bundle = sessionId ? await fetchVideoObservationBundle(sessionId) : null
   const sessionList = await fetchVideoObservationSessions({ limit: 12, query: sessionQuery })
 
   return (
-    <div className="mx-auto flex max-w-7xl flex-col gap-8">
+    <div className="mx-auto flex max-w-7xl flex-col gap-6 md:gap-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div className="text-sm font-semibold uppercase tracking-[0.22em] text-indigo-500">
             Video Gözlem
           </div>
-          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-slate-950">
+          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-950 md:text-4xl">
             Evidence Viewer MVP
           </h1>
           <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
@@ -165,8 +168,9 @@ export default async function VideoObservationPage({
         </div>
       </div>
 
-      <form className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+      <form className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto_auto]">
+          {appSurface ? <input type="hidden" name="surface" value="app" /> : null}
           <label className="grid gap-2 text-sm text-slate-600">
             <span className="font-medium text-slate-800">Session ID</span>
             <input
@@ -174,7 +178,7 @@ export default async function VideoObservationPage({
               name="session_id"
               defaultValue={sessionId}
               placeholder="örn. 4d9d8f1b-..."
-              className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+              className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-base text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 md:text-sm"
             />
           </label>
 
@@ -186,7 +190,7 @@ export default async function VideoObservationPage({
           </button>
 
           <Link
-            href="/video-observation"
+            href={`/video-observation${appSurface ? "?surface=app" : ""}`}
             className="inline-flex h-12 items-center justify-center rounded-2xl border border-slate-200 bg-white px-5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Temizle
@@ -199,7 +203,7 @@ export default async function VideoObservationPage({
         </div>
       </form>
 
-      <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
@@ -215,12 +219,13 @@ export default async function VideoObservationPage({
           </div>
 
           <form className="grid gap-3 lg:grid-cols-[minmax(18rem,24rem)_auto]">
+            {appSurface ? <input type="hidden" name="surface" value="app" /> : null}
             <input
               type="text"
               name="q"
               defaultValue={sessionQuery}
               placeholder="Çocuk etiketi ile ara"
-              className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+              className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-base text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 md:text-sm"
             />
             <button
               type="submit"
@@ -242,7 +247,7 @@ export default async function VideoObservationPage({
         ) : (
           <div className="mt-5 grid gap-4 xl:grid-cols-2">
             {sessionList.sessions.map((session) => (
-              <SessionListCard key={session.session_id} session={session} active={session.session_id === sessionId} />
+              <SessionListCard key={session.session_id} session={session} active={session.session_id === sessionId} appSurface={appSurface} />
             ))}
           </div>
         )}
@@ -251,7 +256,7 @@ export default async function VideoObservationPage({
       <VideoObservationWorkflow initialSessionId={sessionId} />
 
       {!sessionId ? (
-        <div className="rounded-[2rem] border border-dashed border-slate-300 bg-slate-50 p-8 text-sm leading-7 text-slate-600">
+        <div className="rounded-[2rem] border border-dashed border-slate-300 bg-slate-50 p-5 text-sm leading-7 text-slate-600 md:p-8">
           Henüz bir session açılmadı. Video observation servisinde oluşturulmuş bir `session_id`
           girerek ilk evidence viewer akışını test edebilirsin.
         </div>
@@ -270,7 +275,7 @@ export default async function VideoObservationPage({
 
       {bundle?.summary ? (
         <>
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <StatCard label="Durum" value={String(bundle.summary.status || "—")} accent="text-slate-500" />
             <StatCard label="Güven" value={formatConfidence(bundle.summary.overall_confidence)} accent="text-indigo-600" />
             <StatCard label="Kalite" value={String(bundle.summary.quality_label || "—")} accent="text-emerald-600" />
@@ -279,13 +284,13 @@ export default async function VideoObservationPage({
 
           <div className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
             <div className="flex flex-col gap-6">
-              <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="flex items-start justify-between gap-4">
+              <section className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
+                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                   <div>
                     <div className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
                       Oturum Özeti
                     </div>
-                    <h2 className="mt-2 text-2xl font-semibold text-slate-900">
+                    <h2 className="mt-2 text-xl font-semibold text-slate-900 md:text-2xl">
                       {bundle.summary.child_label}
                     </h2>
                   </div>
@@ -308,7 +313,7 @@ export default async function VideoObservationPage({
                 ) : null}
               </section>
 
-              <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <section className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
                 <div className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
                   Domain Skorları
                 </div>
@@ -336,7 +341,7 @@ export default async function VideoObservationPage({
                 </div>
               </section>
 
-              <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <section className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
                 <div className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
                   Evidence Timeline
                 </div>
@@ -371,7 +376,7 @@ export default async function VideoObservationPage({
             </div>
 
             <div className="flex flex-col gap-6">
-              <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <section className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
                 <div className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
                   Domain Evidence
                 </div>
@@ -397,7 +402,7 @@ export default async function VideoObservationPage({
                 </div>
               </section>
 
-              <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <section className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
                 <div className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
                   DNA Intelligence Füzyon
                 </div>
@@ -423,7 +428,7 @@ export default async function VideoObservationPage({
                 </div>
               </section>
 
-              <section className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+              <section className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
                 <div className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
                   Deterministik Klinik Yorum
                 </div>

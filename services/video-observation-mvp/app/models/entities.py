@@ -34,7 +34,7 @@ class ObservationSession(Base):
     anamnesis_summary: Mapped[str | None] = mapped_column(Text, nullable=True)
     therapist_comments: Mapped[str | None] = mapped_column(Text, nullable=True)
     clinical_focus_areas: Mapped[list[str]] = mapped_column(JSON, default=list)
-    self_meta_payload_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
+    dna_payload_json: Mapped[dict[str, Any]] = mapped_column(JSON, default=dict)
     support_age_band: Mapped[str] = mapped_column(String(64), default="primary_supported")
     overall_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     quality_label: Mapped[str | None] = mapped_column(String(64), nullable=True)

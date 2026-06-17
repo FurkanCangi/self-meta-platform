@@ -15,7 +15,7 @@ type TherapistSettings = {
   teamAccessEnabled: boolean
 }
 
-const STORAGE_KEY = "selfmeta_therapist_settings"
+const STORAGE_KEY = "dna_therapist_settings"
 
 const defaultSettings: TherapistSettings = {
   clinicName: "",

@@ -23,7 +23,7 @@ function fixture(name: string): string {
 export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
   {
     key: "fully-typical",
-    fixturePath: fixture("selfmeta-fully-typical-development.json"),
+    fixturePath: fixture("dna-fully-typical-development.json"),
     mode: "balanced",
     expectedGlobalLevel: "Tipik",
     expectedProfileIncludes: ["Dengeli / Korunmuş Profil"],
@@ -33,7 +33,7 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
   },
   {
     key: "selective-interoception",
-    fixturePath: fixture("selfmeta-global-typical-selective-interoception.json"),
+    fixturePath: fixture("dna-global-typical-selective-interoception.json"),
     mode: "selective",
     expectedGlobalLevel: "Tipik",
     expectedProfileIncludes: ["İnterosepsiyon", "Seçici"],
@@ -45,7 +45,7 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
   },
   {
     key: "paired-sensory-emotional",
-    fixturePath: fixture("selfmeta-dual-sensory-emotional-overload.json"),
+    fixturePath: fixture("dna-dual-sensory-emotional-overload.json"),
     mode: "paired",
     expectedGlobalLevel: "Riskli",
     expectedProfileIncludes: ["Duyusal-Duygusal"],
@@ -56,7 +56,7 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
   },
   {
     key: "widespread-executive",
-    fixturePath: fixture("selfmeta-adhd-executive-load.json"),
+    fixturePath: fixture("dna-adhd-executive-load.json"),
     mode: "widespread",
     expectedGlobalLevel: "Riskli",
     expectedProfileIncludes: ["Yürütücü-Duygusal", "Yükü"],
@@ -67,7 +67,7 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
   },
   {
     key: "widespread-adaptive",
-    fixturePath: fixture("selfmeta-adaptive-daily-living.json"),
+    fixturePath: fixture("dna-adaptive-daily-living.json"),
     mode: "widespread",
     expectedGlobalLevel: "Riskli",
     expectedProfileIncludes: ["Fizyolojik Toparlanma", "Yükü"],
@@ -77,7 +77,7 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
   },
   {
     key: "age-mismatch-warning",
-    fixturePath: fixture("selfmeta-age-mismatch-warning.json"),
+    fixturePath: fixture("dna-age-mismatch-warning.json"),
     mode: "selective",
     expectedGlobalLevel: "Tipik",
     expectedProfileIncludes: ["Yürütücü İşlev", "Seçici"],
@@ -88,7 +88,7 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
   },
   {
     key: "item-linkage",
-    fixturePath: fixture("selfmeta-item-level-linkage.json"),
+    fixturePath: fixture("dna-item-level-linkage.json"),
     mode: "paired",
     expectedGlobalLevel: "Atipik",
     expectedProfileIncludes: ["Duyusal"],
@@ -98,7 +98,7 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
   },
   {
     key: "motor-praxis-supported",
-    fixturePath: fixture("selfmeta-new-06-somatodyspraxia-motor-planning.json"),
+    fixturePath: fixture("dna-new-06-somatodyspraxia-motor-planning.json"),
     mode: "widespread",
     expectedGlobalLevel: "Riskli",
     expectedProfileIncludes: ["Praksi", "Motor Planlama", "Yükü"],
@@ -108,7 +108,7 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
   },
   {
     key: "multi-test-single-axis",
-    fixturePath: fixture("selfmeta-language-pragmatic-load.json"),
+    fixturePath: fixture("dna-language-pragmatic-load.json"),
     mode: "widespread",
     expectedGlobalLevel: "Riskli",
     expectedProfileIncludes: ["Dilsel", "Sosyal-Pragmatik", "Yükü"],
@@ -118,7 +118,7 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
   },
   {
     key: "format-tscore-briefp",
-    fixturePath: fixture("selfmeta-format-briefp-tscore-clinical.json"),
+    fixturePath: fixture("dna-format-briefp-tscore-clinical.json"),
     mode: "widespread",
     expectedGlobalLevel: "Riskli",
     expectedProfileIncludes: ["Yürütücü", "Yükü"],
@@ -128,7 +128,7 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
   },
   {
     key: "format-percentile-adaptive",
-    fixturePath: fixture("selfmeta-format-pedicat-percentile-adaptive.json"),
+    fixturePath: fixture("dna-format-pedicat-percentile-adaptive.json"),
     mode: "widespread",
     expectedGlobalLevel: "Riskli",
     expectedProfileIncludes: ["Günlük Yaşam", "Öz Bakım", "Yükü"],
@@ -138,7 +138,7 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
   },
   {
     key: "format-standard-score-motor",
-    fixturePath: fixture("selfmeta-format-pdms3-standard-score-motor.json"),
+    fixturePath: fixture("dna-format-pdms3-standard-score-motor.json"),
     mode: "widespread",
     expectedGlobalLevel: "Riskli",
     expectedProfileIncludes: ["Motor", "Regülasyon Yükü"],
@@ -148,7 +148,7 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
   },
   {
     key: "format-age-equivalent-language",
-    fixturePath: fixture("selfmeta-format-pls-age-equivalent-language.json"),
+    fixturePath: fixture("dna-format-pls-age-equivalent-language.json"),
     mode: "paired",
     expectedGlobalLevel: "Riskli",
     expectedProfileIncludes: ["Dilsel", "Yükü"],
@@ -158,7 +158,7 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
   },
   {
     key: "format-preserved-adaptive",
-    fixturePath: fixture("selfmeta-format-preserved-vineland-abas.json"),
+    fixturePath: fixture("dna-format-preserved-vineland-abas.json"),
     mode: "balanced",
     expectedGlobalLevel: "Tipik",
     expectedProfileIncludes: ["Dengeli / Korunmuş Profil"],
@@ -168,8 +168,25 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
     minApaReferences: 3,
   },
   {
+    key: "evidence-limited-mixed-raw-preserved",
+    fixturePath: fixture("dna-evidence-limited-mixed-raw-preserved.json"),
+    mode: "paired",
+    expectedGlobalLevel: "Riskli",
+    expectedProfileIncludes: ["Geçiş", "Ko-Regülasyon"],
+    requiredPhrases: [
+      "kanıt-sınırlı",
+      "Bakımveren anlatısı",
+      "Terapist gözlemi",
+      "Ham puan tek başına yorum gücünü sınırlar",
+      "Korunmuş/yaş uyumlu sonuç"
+    ],
+    forbiddenPhrases: ["Beden-temelli toparlanma ve interoseptif düzenleme yükü", "Günlük yaşam ve öz bakım akışını sürdürme yükü"],
+    minLiteratureParagraphs: 3,
+    minApaReferences: 4,
+  },
+  {
     key: "format-mixed-language-social",
-    fixturePath: fixture("selfmeta-format-mixed-multi-test.json"),
+    fixturePath: fixture("dna-format-mixed-multi-test.json"),
     mode: "widespread",
     expectedGlobalLevel: "Riskli",
     expectedProfileIncludes: ["Dilsel", "Sosyal-Pragmatik", "Yükü"],

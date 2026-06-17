@@ -1,4 +1,4 @@
-async function checkExistingSelfMetaReportLock(supabase: any, payload: any) {
+async function checkExistingDnaReportLock(supabase: any, payload: any) {
   const clientCode = String(
     payload?.client_code ??
     payload?.clientCode ??
@@ -65,7 +65,7 @@ async function checkExistingSelfMetaReportLock(supabase: any, payload: any) {
   return { locked: false, existing: null }
 }
 
-async function assertOwnedSelfMetaClient(supabase: any, userId: string, payload: any) {
+async function assertOwnedDnaClient(supabase: any, userId: string, payload: any) {
   const clientCode = String(
     payload?.client_code ??
     payload?.clientCode ??
@@ -106,10 +106,10 @@ import { evaluateAccountRisk, recordAccountSecurityEvent } from "@/lib/security/
 import { getPrivacyAuditContext, recordDataAccessAuditEvent } from "@/lib/security/privacyOps"
 import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
-import { buildAdvancedReport } from "@/lib/selfmeta/reportEngine"
-import { extractAgeMonthsFromAnamnez, isSupportedAgeMonths } from "@/lib/selfmeta/ageUtils"
-import { buildLiteratureAlignedSection } from "@/lib/selfmeta/literatureNote"
-import { normalizeClinicalReportText } from "@/lib/selfmeta/reportText"
+import { buildAdvancedReport } from "@/lib/dna/reportEngine"
+import { extractAgeMonthsFromAnamnez, isSupportedAgeMonths } from "@/lib/dna/ageUtils"
+import { buildLiteratureAlignedSection } from "@/lib/dna/literatureNote"
+import { normalizeClinicalReportText } from "@/lib/dna/reportText"
 
 async function createSupabaseServerClient() {
   const cookieStore = await cookies()
@@ -199,7 +199,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const ownedClient = await assertOwnedSelfMetaClient(supabase, user.id, body)
+    const ownedClient = await assertOwnedDnaClient(supabase, user.id, body)
     if (!ownedClient.ok) {
       return NextResponse.json(
         {
@@ -224,7 +224,7 @@ export async function POST(req: Request) {
       metadata: { route: "/api/ai-report" },
     })
 
-    const existingLock = await checkExistingSelfMetaReportLock(supabase, body)
+    const existingLock = await checkExistingDnaReportLock(supabase, body)
     if (existingLock.locked && existingLock.existing?.report_text) {
       const existingText = cleanRenderedReport(String(existingLock.existing.report_text))
       return NextResponse.json({
@@ -235,7 +235,7 @@ export async function POST(req: Request) {
     }
 
 
-function validateInputSelfMeta(body: any) {
+function validateInputDna(body: any) {
   const errors = []
 
   if (!body) errors.push("body_missing")
@@ -270,7 +270,7 @@ function validateInputSelfMeta(body: any) {
   return errors
 }
 
-const __validationErrors = validateInputSelfMeta(body)
+const __validationErrors = validateInputDna(body)
 if (__validationErrors.length > 0) {
   return new Response(JSON.stringify({ error: 'invalid_input', details: __validationErrors }), { status: 400 })
 }

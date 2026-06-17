@@ -1,5 +1,5 @@
-import { buildAdvancedReport } from "./src/lib/selfmeta/reportEngine"
-import { rewriteClinicalReport } from "./src/lib/selfmeta/aiRewrite"
+import { buildAdvancedReport } from "./src/lib/dna/reportEngine"
+import { rewriteClinicalReport } from "./src/lib/dna/aiRewrite"
 
 async function run() {
   const report = buildAdvancedReport({

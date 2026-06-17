@@ -323,7 +323,7 @@ export async function createEducationVideoPlaybackAccess(params: {
       access: {
         provider,
         playbackToken: `mock-playback-${params.asset.id}-${expiresAtUnix}`,
-        playbackUrl: `https://mock.selfmeta.local/video/${params.asset.id}/playlist.m3u8`,
+        playbackUrl: `https://mock.dna-intelligence.local/video/${params.asset.id}/playlist.m3u8`,
         embedUrl: null,
         expiresAt: expiresAtIso,
         playerConfig: {

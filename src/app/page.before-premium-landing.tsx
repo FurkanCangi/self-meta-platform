@@ -696,7 +696,7 @@ export default function Home() {
                 </Link>
                 <div className="lpContactBox">
                   <FiMail />
-                  <span>selfmeta.ai.demo@gmail.com</span>
+                  <span>dna.intelligence.demo@gmail.com</span>
                 </div>
               </div>
             </div>

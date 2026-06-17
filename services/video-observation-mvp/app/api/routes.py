@@ -61,7 +61,7 @@ def _session_or_404(db: Session, session_id: str):
 
 @router.get("/")
 def healthcheck() -> dict[str, str]:
-    return {"status": "ok", "service": "selfmeta-video-observation-mvp"}
+    return {"status": "ok", "service": "dna-video-observation-mvp"}
 
 
 @router.post("/sessions", response_model=SessionCreateResponse)

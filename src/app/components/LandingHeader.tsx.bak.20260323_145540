@@ -8,7 +8,7 @@ export default function LandingHeader() {
       <div className="smiHeaderInner">
         <div className="smiHeaderLeft">
           <Link href="/" className="smiLeftPill">
-            Self Metacognition Institute
+            DNA Intelligencecognition Institute
           </Link>
         </div>
 

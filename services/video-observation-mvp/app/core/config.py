@@ -21,7 +21,7 @@ def _resolve_model_path(env_key: str, default_name: str) -> str | None:
 
 @dataclass(frozen=True)
 class Settings:
-    app_name: str = "Self Meta Video Observation MVP"
+    app_name: str = "DNA Intelligence Video Observation MVP"
     app_version: str = "0.1.0"
     protocol_version: str = "free_play_v1"
     pipeline_version: str = "video_obs_pipeline_v1"

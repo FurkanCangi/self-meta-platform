@@ -2,7 +2,7 @@ import { createHmac } from "node:crypto"
 import fs from "node:fs"
 import path from "node:path"
 
-import { redactLogFields } from "../src/lib/selfmeta/reportLogger"
+import { redactLogFields } from "../src/lib/dna/reportLogger"
 
 type Failure = {
   name: string

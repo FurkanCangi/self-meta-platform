@@ -47,7 +47,7 @@ def main() -> None:
         anamnesis_summary="Serbest oyun videosu smoke fixture. Amaç extractor ve evidence timeline doğrulamasıdır.",
         therapist_comments="Smoke test oturumu; klinik karar üretmek için kullanılmaz.",
         clinical_focus_areas=["attention_play", "co_regulation", "sensory_reactivity"],
-        self_meta_context=None,
+        dna_context=None,
     )
 
     with _db() as db:

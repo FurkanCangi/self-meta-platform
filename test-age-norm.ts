@@ -1,5 +1,5 @@
 import "dotenv/config"
-import { generateAIClinicalReport } from "./src/lib/selfmeta/aiReportService"
+import { generateAIClinicalReport } from "./src/lib/dna/aiReportService"
 
 const baseCase = {
   clientCode: "AGE-NORM-TEST",

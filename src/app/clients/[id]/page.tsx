@@ -37,7 +37,7 @@ export default function ClientDetailPage() {
   const [client, setClient] = useState<ClientRow | null>(null);
   const [evals, setEvals] = useState<EvalRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [busy, setBusy] = useState(true);
+  const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   const anamnezPreview = useMemo(() => {
@@ -51,6 +51,7 @@ export default function ClientDetailPage() {
 
     if (!clientId) {
       setLoading(false);
+      setBusy(false);
       setErr("Danışan ID bulunamadı.");
       return;
     }
@@ -58,6 +59,7 @@ export default function ClientDetailPage() {
     const { data: userRes, error: userErr } = await supabase.auth.getUser();
     if (userErr || !userRes?.user?.id) {
       setLoading(false);
+      setBusy(false);
       router.replace("/login");
       return;
     }
@@ -72,6 +74,7 @@ export default function ClientDetailPage() {
 
     if (cErr || !c) {
       setLoading(false);
+      setBusy(false);
       setErr("Danışan bulunamadı: " + (cErr?.message || "—"));
       return;
     }
@@ -85,6 +88,7 @@ export default function ClientDetailPage() {
 
     if (aErr) {
       setLoading(false);
+      setBusy(false);
       setErr("Değerlendirmeler alınamadı: " + aErr.message);
       return;
     }
@@ -116,6 +120,7 @@ export default function ClientDetailPage() {
     );
 
     setLoading(false);
+    setBusy(false);
   }
 
   useEffect(() => {
@@ -127,24 +132,8 @@ export default function ClientDetailPage() {
     setBusy(true);
     setErr(null);
 
-    const { data: ins, error } = await supabase
-      .from("assessments_v2")
-      .insert({
-        client_id: clientId,
-        label: "Değerlendirme",
-        assessment_date: new Date().toISOString().slice(0, 10),
-      })
-      .select("id")
-      .single();
-
-    if (error || !ins?.id) {
-      setBusy(false);
-      setErr("Değerlendirme oluşturulamadı: " + (error?.message || "—"));
-      return;
-    }
-
     setBusy(false);
-    router.push(`/assessments?client=${encodeURIComponent(client.child_code)}&evaluation_id=${encodeURIComponent(ins.id)}`);
+    router.push(`/assessments?client=${encodeURIComponent(client.child_code)}&client_id=${encodeURIComponent(clientId)}`);
   }
 
   async function softDeleteClient() {
@@ -224,7 +213,7 @@ export default function ClientDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="selfmeta-card p-5">
+      <div className="dna-card p-5">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <div className="text-xs font-medium text-slate-400">Danışan Yönetimi / Detay</div>
@@ -236,15 +225,15 @@ export default function ClientDetailPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            <Link href="/clients" className="selfmeta-btn-ghost px-4 py-2 text-sm font-semibold inline-flex items-center justify-center">
+          <div className="grid gap-2 sm:grid-cols-3 md:flex md:flex-wrap md:justify-end">
+            <Link href="/clients" className="dna-btn-ghost px-4 py-2 text-sm font-semibold inline-flex items-center justify-center">
               Listeye Dön
             </Link>
             <button
               type="button"
               onClick={createEvaluation}
               disabled={busy || loading}
-              className="selfmeta-btn px-4 py-2 text-sm font-semibold disabled:opacity-60"
+              className="dna-btn px-4 py-2 text-sm font-semibold disabled:opacity-60"
             >
               {busy ? "İşleniyor..." : "Yeni Değerlendirme Oluştur"}
             </button>
@@ -252,9 +241,9 @@ export default function ClientDetailPage() {
               type="button"
               onClick={softDeleteClient}
               disabled={busy || loading}
-              className="selfmeta-btn-ghost px-4 py-2 text-sm font-semibold disabled:opacity-60"
+              className="dna-btn-ghost px-4 py-2 text-sm font-semibold disabled:opacity-60"
             >
-              Kaldır
+              Danışanı Kaldır
             </button>
           </div>
         </div>
@@ -263,7 +252,7 @@ export default function ClientDetailPage() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
-        <div className="selfmeta-card p-6">
+        <div className="dna-card p-6">
           <div className="text-sm font-semibold text-slate-900">Değerlendirmeler</div>
 
           {loading ? (
@@ -273,44 +262,73 @@ export default function ClientDetailPage() {
               Henüz değerlendirme yok. “Yeni Değerlendirme Oluştur” ile başlayabilirsin.
             </div>
           ) : (
-            <div className="mt-4 overflow-auto rounded-2xl border border-slate-200 bg-white">
-              <table className="min-w-full divide-y divide-slate-200 text-sm">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Başlık</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tarih</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Rapor</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">İşlem</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-200">
-                  {evals.map((e) => (
-                    <tr key={e.id} className="hover:bg-slate-50/70">
-                      <td className="px-4 py-4 font-semibold text-slate-900">{e.label}</td>
-                      <td className="px-4 py-4 text-slate-600">{e.assessment_date ? e.assessment_date : fmtDate(e.created_at)}</td>
-                      <td className="px-4 py-4 text-slate-600">{e.report_count} sürüm</td>
-                      <td className="px-4 py-4 text-right">
-                        <div className="inline-flex gap-2">
-                          <Link
-                            href={`/assessments?client=${encodeURIComponent(client?.child_code || "")}&evaluation_id=${encodeURIComponent(e.id)}`}
-                            className="selfmeta-btn px-3 py-2 text-xs font-semibold"
-                          >
-                            Skor Girişi
-                          </Link>
-                          <Link href="/reports" className="selfmeta-btn-ghost px-3 py-2 text-xs font-semibold">
-                            Raporlar
-                          </Link>
-                        </div>
-                      </td>
+            <>
+              <div className="mt-4 space-y-3 md:hidden">
+                {evals.map((e) => (
+                  <div key={e.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="font-semibold text-slate-900">{e.label}</div>
+                        <div className="mt-1 text-sm text-slate-500">{e.assessment_date ? e.assessment_date : fmtDate(e.created_at)}</div>
+                      </div>
+                      <span className="inline-flex shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                        {e.report_count} sürüm
+                      </span>
+                    </div>
+                    <div className="mt-4 grid grid-cols-2 gap-2">
+                      <Link
+                        href={`/assessments?client=${encodeURIComponent(client?.child_code || "")}&client_id=${encodeURIComponent(clientId || "")}`}
+                        className="dna-btn px-3 py-2 text-xs font-semibold"
+                      >
+                        Skor Girişi
+                      </Link>
+                      <Link href="/reports" className="dna-btn-ghost px-3 py-2 text-xs font-semibold">
+                        Raporlar
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-4 hidden overflow-auto rounded-2xl border border-slate-200 bg-white md:block">
+                <table className="min-w-full divide-y divide-slate-200 text-sm">
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Başlık</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tarih</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Rapor</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">İşlem</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-200">
+                    {evals.map((e) => (
+                      <tr key={e.id} className="hover:bg-slate-50/70">
+                        <td className="px-4 py-4 font-semibold text-slate-900">{e.label}</td>
+                        <td className="px-4 py-4 text-slate-600">{e.assessment_date ? e.assessment_date : fmtDate(e.created_at)}</td>
+                        <td className="px-4 py-4 text-slate-600">{e.report_count} sürüm</td>
+                        <td className="px-4 py-4 text-right">
+                          <div className="inline-flex gap-2">
+                            <Link
+                              href={`/assessments?client=${encodeURIComponent(client?.child_code || "")}&client_id=${encodeURIComponent(clientId || "")}`}
+                              className="dna-btn px-3 py-2 text-xs font-semibold"
+                            >
+                              Skor Girişi
+                            </Link>
+                            <Link href="/reports" className="dna-btn-ghost px-3 py-2 text-xs font-semibold">
+                              Raporlar
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </div>
 
-        <div className="selfmeta-card p-6">
+        <div className="dna-card p-6">
           <div className="text-sm font-semibold text-slate-900">Anamnez</div>
           <div className="mt-2 text-xs text-slate-500">
             Bu alan danışan kaydında saklanır ve rapor üretiminde kullanılacaktır.
@@ -319,7 +337,7 @@ export default function ClientDetailPage() {
           <textarea
             readOnly
             value={anamnezPreview}
-            className="mt-4 h-[620px] w-full rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800"
+            className="mt-4 h-[360px] w-full rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 md:h-[620px]"
           />
         </div>
       </div>

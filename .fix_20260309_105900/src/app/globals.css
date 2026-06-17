@@ -1,6 +1,6 @@
 
 
-/* SELF_META_THEME */
+/* DNA_THEME */
 :root{
   --sm-bg:#f6f8fc;
   --sm-card:#ffffff;
@@ -35,42 +35,42 @@ html,body{background:var(--sm-bg); color:var(--sm-text);}
   background: rgba(255,255,255,.08) !important;
 }
 
-.selfmeta-card{
+.dna-card{
   background: var(--sm-card);
   border: 1px solid var(--sm-border);
   border-radius: 16px;
   box-shadow: 0 10px 30px rgba(15,23,42,.06);
 }
 
-.selfmeta-input{
+.dna-input{
   border: 1px solid var(--sm-border) !important;
   border-radius: 12px !important;
 }
 
-.selfmeta-input:focus{
+.dna-input:focus{
   outline: none !important;
   border-color: rgba(30,64,175,.55) !important;
   box-shadow: 0 0 0 4px rgba(30,64,175,.12) !important;
 }
 
-.selfmeta-btn{
+.dna-btn{
   background: var(--sm-primary) !important;
   color: #fff !important;
   border-radius: 12px !important;
 }
 
-.selfmeta-btn:hover{
+.dna-btn:hover{
   background: var(--sm-primary-2) !important;
 }
 
-.selfmeta-btn-ghost{
+.dna-btn-ghost{
   background: transparent !important;
   border: 1px solid var(--sm-border) !important;
   color: var(--sm-text) !important;
   border-radius: 12px !important;
 }
 
-.selfmeta-btn-ghost:hover{
+.dna-btn-ghost:hover{
   background: rgba(15,23,42,.04) !important;
 }
 
@@ -179,7 +179,7 @@ html,body{background:var(--sm-bg); color:var(--sm-text);}
 }
 
 
-/* SELFMETA_GLOBAL_UI_PATCH */
+/* DNA_GLOBAL_UI_PATCH */
 
 /* Next.js dev badge / floating debug indicator */
 [data-next-badge-root],
@@ -230,7 +230,7 @@ aside button[aria-expanded] svg:last-child {
 }
 
 
-/* SELF_META_FINAL_PATCH */
+/* DNA_FINAL_PATCH */
 
 /* Next dev siyah badge / debug overlay */
 [data-next-badge-root],

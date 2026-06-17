@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { generateAIClinicalReport } from "./src/lib/selfmeta/aiReportService";
+import { generateAIClinicalReport } from "./src/lib/dna/aiReportService";
 
 async function run() {
   const caseData = {
@@ -32,7 +32,7 @@ Bu tür yapılandırılmış aktivitelerde uzun süre odaklanabildiği belirtilm
   const result = await generateAIClinicalReport(caseData);
 
   console.log("\n==============================");
-  console.log("SELF META AI TEST RAPORU");
+  console.log("DNA INTELLIGENCE AI TEST RAPORU");
   console.log("==============================\n");
   console.log(result.reportText);
   console.log("\n\n--- STRUCTURED ANALYSIS ---\n");

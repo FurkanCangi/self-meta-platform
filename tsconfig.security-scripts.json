@@ -13,7 +13,7 @@
   "include": [
     "scripts/security-smoke-tests.ts",
     "scripts/security-readiness-check.ts",
-    "src/lib/selfmeta/reportLogger.ts"
+    "src/lib/dna/reportLogger.ts"
   ],
   "exclude": [
     "node_modules",

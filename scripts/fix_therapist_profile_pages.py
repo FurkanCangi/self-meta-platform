@@ -41,7 +41,7 @@ type TherapistProfile = {
   about: string
 }
 
-const STORAGE_KEY = "selfmeta_therapist_profile"
+const STORAGE_KEY = "dna_therapist_profile"
 
 const defaultProfile: TherapistProfile = {
   firstName: "",
@@ -265,7 +265,7 @@ type TherapistSettings = {
   reportHistoryVisible: boolean
 }
 
-const STORAGE_KEY = "selfmeta_therapist_settings"
+const STORAGE_KEY = "dna_therapist_settings"
 
 const defaultSettings: TherapistSettings = {
   clinicName: "",

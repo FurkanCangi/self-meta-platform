@@ -55,6 +55,19 @@ type EducationVideoCreateResponse = {
   item?: EducationVideoItem
 }
 
+type BillingStatus = {
+  ok: boolean
+  education?: {
+    active: boolean
+    planCode: string | null
+    expiresAt: string | null
+  }
+  reports?: {
+    used: number
+    remaining: number | null
+  }
+}
+
 type EducationVideoFormState = {
   title: string
   slug: string
@@ -157,6 +170,7 @@ export default function EducationPage() {
   const [createError, setCreateError] = useState("")
   const [createSuccess, setCreateSuccess] = useState("")
   const [form, setForm] = useState<EducationVideoFormState>(() => buildInitialFormState())
+  const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null)
 
   const nativeVideoRef = useRef<HTMLVideoElement | null>(null)
   const heartbeatRef = useRef<number | null>(null)
@@ -207,6 +221,24 @@ export default function EducationPage() {
     }
   }, [])
 
+  useEffect(() => {
+    let mounted = true
+
+    async function loadBillingStatus() {
+      try {
+        const response = await fetch("/api/billing/status", { cache: "no-store" })
+        const json = (await response.json()) as BillingStatus
+        if (!mounted) return
+        if (response.ok && json.ok) setBillingStatus(json)
+      } catch {}
+    }
+
+    void loadBillingStatus()
+    return () => {
+      mounted = false
+    }
+  }, [])
+
   const selected = useMemo(() => items.find((item) => item.id === selectedId) || null, [items, selectedId])
 
   const postPlaybackEvent = useEffectEvent(
@@ -218,7 +250,7 @@ export default function EducationPage() {
           method: "POST",
           headers: {
             "content-type": "application/json",
-            "x-selfmeta-request": "same-origin",
+            "x-dna-request": "same-origin",
           },
           body: JSON.stringify({
             eventType,
@@ -262,7 +294,7 @@ export default function EducationPage() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-selfmeta-request": "same-origin",
+          "x-dna-request": "same-origin",
         },
         body: JSON.stringify({}),
       })
@@ -336,7 +368,7 @@ export default function EducationPage() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-selfmeta-request": "same-origin",
+          "x-dna-request": "same-origin",
         },
         body: JSON.stringify(form),
       })
@@ -361,15 +393,15 @@ export default function EducationPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
-      <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="mx-auto max-w-7xl px-0 py-0 md:px-4 md:py-6">
+      <div className="dna-card p-4 md:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">
               <GraduationCap className="h-4 w-4" />
               Eğitim Kütüphanesi
             </div>
-            <h1 className="mt-3 text-3xl font-semibold text-slate-900">Terapist eğitim kayıtları</h1>
+            <h1 className="mt-3 text-2xl font-semibold text-slate-900 md:text-3xl">Terapist eğitim kayıtları</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
               Yayına alınan eğitim kayıtları burada listelenir. Erişim hakkınız varsa güvenli oynatma bağlantısı
               oluşturulur; izleme oturumu, watermark ve güvenlik logları aynı akışta çalışır.
@@ -390,8 +422,32 @@ export default function EducationPage() {
         </div>
       </div>
 
+      <div className="mt-4 grid gap-3 md:grid-cols-3">
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Eğitim Erişimi</div>
+          <div className="mt-2 text-lg font-semibold text-slate-900">
+            {billingStatus?.education?.active ? formatPlan(billingStatus.education.planCode) : "Aktif erişim yok"}
+          </div>
+          <div className="mt-1 text-xs text-slate-500">
+            {billingStatus?.education?.expiresAt
+              ? `Bitiş: ${new Date(billingStatus.education.expiresAt).toLocaleString("tr-TR")}`
+              : "Ödeme/manuel hak tanımı sonrası otomatik güncellenir."}
+          </div>
+        </div>
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">Rapor Kullanımı</div>
+          <div className="mt-2 text-lg font-semibold text-slate-900">{billingStatus?.reports?.used ?? "—"} rapor</div>
+          <div className="mt-1 text-xs text-slate-500">Mevcut rapor geçmişinden hesaplanır.</div>
+        </div>
+        <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 shadow-sm">
+          <div className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-700">Güvenlik</div>
+          <div className="mt-2 text-sm font-semibold text-blue-950">Watermark + heartbeat aktif</div>
+          <div className="mt-1 text-xs text-blue-800">Oynatma oturumu kullanıcıya ve cihaza bağlı izlenir.</div>
+        </div>
+      </div>
+
       {canManage && (
-        <section className="mt-6 rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="mt-6 rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm md:p-5">
           <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <div>
               <h2 className="text-xl font-semibold text-slate-900">Eğitim kaydı ekle</h2>
@@ -574,7 +630,7 @@ export default function EducationPage() {
               type="button"
               onClick={() => void createVideoRecord()}
               disabled={createLoading}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#06133d] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#0a1d5c] disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-[#06133d] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#0a1d5c] disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
             >
               <RefreshCw className={`h-4 w-4 ${createLoading ? "animate-spin" : ""}`} />
               Kaydı ekle
@@ -637,13 +693,13 @@ export default function EducationPage() {
           </div>
         </section>
 
-        <section className="rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm">
+        <section className="rounded-[28px] border border-slate-200 bg-white p-4 shadow-sm md:p-5">
           {!selected && <p className="text-sm text-slate-500">Soldan bir eğitim seçin.</p>}
 
           {selected && (
             <>
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <div>
+                <div className="min-w-0">
                   <h2 className="text-2xl font-semibold text-slate-900">{selected.title || selected.slug}</h2>
                   <p className="mt-1 text-sm text-slate-500">Güvenli oynatma, watermark ve erişim kaydı bu panelden yönetilir.</p>
                 </div>
@@ -730,7 +786,7 @@ export default function EducationPage() {
                       {accessData.watermark && (
                         <div
                           className={[
-                            "pointer-events-none absolute z-10 max-w-[40%] rounded-xl border border-white/20 bg-black/45 px-3 py-2 text-[11px] font-medium tracking-[0.08em] text-white backdrop-blur-sm transition-all duration-700",
+                            "pointer-events-none absolute z-10 max-w-[74%] rounded-xl border border-white/20 bg-black/45 px-3 py-2 text-[10px] font-medium tracking-[0.08em] text-white backdrop-blur-sm transition-all duration-700 sm:max-w-[40%] sm:text-[11px]",
                             watermarkPosition,
                           ].join(" ")}
                         >

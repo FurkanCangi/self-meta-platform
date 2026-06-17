@@ -11,8 +11,8 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-IMAGE_TAG = "selfmeta-video-observation-mvp:local"
-CONTAINER_NAME = "selfmeta-video-observation-mvp-smoke"
+IMAGE_TAG = "dna-video-observation-mvp:local"
+CONTAINER_NAME = "dna-video-observation-mvp-smoke"
 BASE_URL = "http://127.0.0.1:8091"
 
 

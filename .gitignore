@@ -46,7 +46,7 @@ next-env.d.ts
 .env.local
 .env
 src.bak*/
-../selfmeta_safe_backups/
+../dna_safe_backups/
 *.bak
 .tmp/
 src.zip

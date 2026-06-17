@@ -1,1 +1,1 @@
-"""Self Meta video observation MVP package."""
+"""DNA Intelligence video observation MVP package."""

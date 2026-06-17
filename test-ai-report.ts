@@ -1,6 +1,6 @@
 import "dotenv/config";
-import { demoCases } from "./src/lib/selfmeta/demoCases";
-import { generateAIClinicalReport } from "./src/lib/selfmeta/aiReportService";
+import { demoCases } from "./src/lib/dna/demoCases";
+import { generateAIClinicalReport } from "./src/lib/dna/aiReportService";
 
 async function run() {
   const arg = process.argv[2];

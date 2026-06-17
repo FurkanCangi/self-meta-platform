@@ -3,10 +3,10 @@
 import { supabase } from "@/lib/supabase/client"
 import { useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { questions } from "@/lib/selfmeta/questions"
+import { questions } from "@/lib/dna/questions"
 import { calculateAssessment } from "@/lib/assessment/assessmentEngine"
-import { buildAdvancedReport } from "@/lib/selfmeta/reportEngine"
-import { extractAgeMonthsFromAnamnez, parseAgeMonths } from "@/lib/selfmeta/ageUtils"
+import { buildAdvancedReport } from "@/lib/dna/reportEngine"
+import { extractAgeMonthsFromAnamnez, parseAgeMonths } from "@/lib/dna/ageUtils"
 const likert = [
   { label: "Hiçbir zaman", value: 1 },
   { label: "Nadiren", value: 2 },
@@ -37,14 +37,14 @@ export default function AssessmentWizardClient() {
 
   const [reportLocked, setReportLocked] = useState(false)
   const [reportLockReason, setReportLockReason] = useState("")
-  const selfMetaSupabase = supabase
+  const dnaSupabase = supabase
 
   const checkExistingReportLock = async (clientCode?: string | number | null) => {
     try {
       const normalized = String(clientCode ?? "").trim()
       if (!normalized) return
 
-      const { data, error } = await selfMetaSupabase
+      const { data, error } = await dnaSupabase
         .from("reports")
         .select("id, report_text, client_code, created_at")
         .eq("client_code", normalized)
@@ -244,7 +244,7 @@ const [saving, setSaving] = useState(false)
         .from("assessments_v2")
         .insert({
           client_id: clientInfo.id,
-          label: "Self Meta Değerlendirme",
+          label: "DNA Intelligence Değerlendirme",
           assessment_date: today,
         })
         .select("id")
@@ -343,7 +343,7 @@ const [saving, setSaving] = useState(false)
           </div>
 
           <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-900">
-            Self Meta Değerlendirme Sistemi
+            DNA Intelligence Değerlendirme Sistemi
           </h1>
 
           <p className="mt-4 text-base leading-7 text-slate-500">
@@ -360,12 +360,12 @@ const [saving, setSaving] = useState(false)
 
   return (
     <div className="space-y-6">
-      <div className="selfmeta-card p-6">
+      <div className="dna-card p-6">
         <div className="text-xs font-medium text-slate-400">Klinik Değerlendirme</div>
 
         <div className="mt-2 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-slate-900">Self Meta Değerlendirme Sistemi</h1>
+            <h1 className="text-2xl font-semibold text-slate-900">DNA Intelligence Değerlendirme Sistemi</h1>
             <p className="mt-2 text-sm leading-6 text-slate-500">
               Terapist değerlendirmesi için 6 alanda toplam 60 soru bulunur. Varsayılan seçim “Bazen” olarak gelir.
             </p>
@@ -419,7 +419,7 @@ const [saving, setSaving] = useState(false)
           {current.map((q, idx) => {
             const absoluteIndex = start + idx
             return (
-              <div key={q.id} className="selfmeta-card p-5">
+              <div key={q.id} className="dna-card p-5">
                 <div className="mb-4 text-base font-medium text-slate-900">
                   {absoluteIndex + 1}. {q.text}
                 </div>
@@ -452,7 +452,7 @@ const [saving, setSaving] = useState(false)
               type="button"
               onClick={prevPage}
               disabled={page === 0}
-              className="selfmeta-btn-ghost px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40"
+              className="dna-btn-ghost px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40"
             >
               Geri
             </button>
@@ -460,7 +460,7 @@ const [saving, setSaving] = useState(false)
             <button
               type="button"
               onClick={nextPage}
-              className="selfmeta-btn px-5 py-2.5 text-sm font-semibold"
+              className="dna-btn px-5 py-2.5 text-sm font-semibold"
             >
               {page === totalPages - 1 ? "Sonuçları Gör" : "Sonraki Bölüm"}
             </button>
@@ -470,7 +470,7 @@ const [saving, setSaving] = useState(false)
 
       {isResultPage && !clientError && !loadingClient && (
         <>
-          <div className="selfmeta-card p-6">
+          <div className="dna-card p-6">
             <h2 className="text-xl font-semibold text-slate-900">Değerlendirme Sonucu</h2>
 
             <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -511,7 +511,7 @@ const [saving, setSaving] = useState(false)
               <button
                 type="button"
                 onClick={prevPage}
-                className="selfmeta-btn-ghost px-5 py-2.5 text-sm font-semibold"
+                className="dna-btn-ghost px-5 py-2.5 text-sm font-semibold"
               >
                 Son Bölüme Dön
               </button>
@@ -520,7 +520,7 @@ const [saving, setSaving] = useState(false)
                 <button
                   type="button"
                   onClick={() => router.push("/reports")}
-                  className="selfmeta-btn-ghost px-5 py-2.5 text-sm font-semibold"
+                  className="dna-btn-ghost px-5 py-2.5 text-sm font-semibold"
                 >
                   Rapor Geçmişi
                 </button>
@@ -529,7 +529,7 @@ const [saving, setSaving] = useState(false)
                   type="button"
                   onClick={handleGenerateReport}
                   disabled={saving || reportLocked}
-                  className="selfmeta-btn px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                  className="dna-btn px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {saving ? "Kaydediliyor..." : "Rapor Oluştur"}
                 </button>
@@ -539,7 +539,7 @@ const [saving, setSaving] = useState(false)
 
           {reportReady && advancedReport && (
             <>
-              <div className="selfmeta-card p-6">
+              <div className="dna-card p-6">
                 <div className="text-xs font-medium text-slate-400">Örüntü Analizi</div>
                 <h3 className="mt-1 text-xl font-semibold text-slate-900">Karar Motoru Bulguları</h3>
 
@@ -592,7 +592,7 @@ const [saving, setSaving] = useState(false)
                 </div>
               </div>
 
-              <div className="selfmeta-card p-6">
+              <div className="dna-card p-6">
                 <div className="text-xs font-medium text-slate-400">AI Rapor</div>
                 <h3 className="mt-1 text-xl font-semibold text-slate-900">Klinik Yorum</h3>
 

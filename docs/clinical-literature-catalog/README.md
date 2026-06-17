@@ -2,7 +2,7 @@
 
 Oluşturma tarihi: 2026-06-16
 
-Bu klasör, Self Meta AI klinik rapor motorunda kullanılabilecek kaynakları alan bazlı kataloglamak için açıldı. Bu aşamada kod entegrasyonu yapılmamıştır; dosyalar yalnızca katalog ve seçim havuzu niteliğindedir.
+Bu klasör, DNA Intelligence klinik rapor motorunda kullanılabilecek kaynakları alan bazlı kataloglamak için açıldı. Bu aşamada kod entegrasyonu yapılmamıştır; dosyalar yalnızca katalog ve seçim havuzu niteliğindedir.
 
 ## Kapsam
 

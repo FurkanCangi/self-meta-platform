@@ -1,6 +1,15 @@
-# Self Meta AI Production Readiness Checklist
+# DNA Intelligence Production Readiness Checklist
 
 Bu checklist ticari yayına çıkmadan önce doğrulanması gereken operasyonel maddeleri takip etmek için tutulur.
+
+App store / mobile app güvenlik sertliği için ayrıntılı kontrol listesi:
+`docs/app-phase-8-security-production-hardening.md`.
+
+Store wrapper ve yayın akışı için ayrıntılı kontrol listesi:
+`docs/app-phase-9-store-wrapper-release.md`.
+
+Web kaynaklı app güncelleme sistemi için ayrıntılı kontrol listesi:
+`docs/app-phase-10-update-system.md`.
 
 ## Environment
 
@@ -25,6 +34,8 @@ Bu checklist ticari yayına çıkmadan önce doğrulanması gereken operasyonel 
 - Klinik rapor metni, anamnez veya final rapor snippet'i loglara yazılmamalı.
 - Owner audit export erişimi `OWNER_AUDIT_EMAILS` allowlist'i ile test edilmeli.
 - Hukuki clickwrap kabul kayıtları IP, user-agent, plan ve doküman versiyonlarıyla yazılıyor olmalı.
+- App store öncesi Faz 8 bloklayıcıları kapanmalı: paylaşımlı rate limit, legal acceptance blocker, rapor kredisi/entitlement kontrolü ve production RLS kanıtı.
+- Store wrapper sonrası Faz 10 güncelleme kontratı tamamlanmalı: runtime config, bakım modu, minimum shell version ve klinik veri için no-store stratejisi.
 
 ## Release Checks
 

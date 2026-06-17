@@ -1,0 +1,24 @@
+{
+  "clientCode": "FIXTURE-MIXED-RAW-PRESERVED-58",
+  "clientName": "Mixed Evidence",
+  "ageMonths": 58,
+  "anamnez": {
+    "ad_soyad": "Mixed Evidence Ornek",
+    "client_code": "FIXTURE-MIXED-RAW-PRESERVED-58",
+    "age": "58 ay",
+    "diagnosis": "Tanilanmis bozukluk bildirilmiyor",
+    "referral_reason": "Ev ortaminda dikkat, bekleme ve etkinligi tamamlama dalgalanmalari nedeniyle degerlendirme isteniyor.",
+    "parent_concerns_goals": "Bakimveren, yeni kurallari olan oyunlarda baslatma ve surdurme guclugunun arttigini; yorgun veya kalabalik gunlerde duygusal toparlanmanin uzadigini bildiriyor.",
+    "therapist_comments": "Yapilandirilmis bire bir etkilesimde kapasite korunmus gorunuyor; cok basamakli gorevlerde ek ipucu verilmediginde dagilma artiyor, kisa molayla toparlanma saglanabiliyor.",
+    "strengths": "Sakin ve bire bir baglamda is birligi, taklit ve oyun ilgisi korunmus.",
+    "external_clinical_findings": "Test adi: BRIEF-P\nPuan / sonuc: 44\n\nTest adi: ABAS-3\nPuan / sonuc: GAC standart skor 101\nKlinik yorum: yas beklentisi icinde / korunmus uyumsal islev"
+  },
+  "scores": {
+    "physiological": 36,
+    "sensory": 34,
+    "emotional": 30,
+    "cognitive": 27,
+    "executive": 29,
+    "interoception": 35
+  }
+}

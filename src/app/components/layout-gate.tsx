@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import PendingLegalAcceptanceSync from "./auth/PendingLegalAcceptanceSync";
+import AppShell from "./app-shell/AppShell";
+import { useAppSurface } from "./app-shell/useAppSurface";
 import Sidebar from "./sidebar";
 import Topnav from "./topnav";
 
@@ -38,6 +40,7 @@ const PUBLIC_ROUTES = new Set([
 export default function LayoutGate({ children }: LayoutGateProps) {
   const pathname = usePathname() || "/";
   const [toggle, setToggle] = useState(true);
+  const isAppSurface = useAppSurface();
 
   const isPublicRoute = useMemo(() => {
     if (PUBLIC_ROUTES.has(pathname)) return true;
@@ -56,8 +59,12 @@ export default function LayoutGate({ children }: LayoutGateProps) {
     );
   }
 
+  if (isAppSurface) {
+    return <AppShell>{children}</AppShell>;
+  }
+
   return (
-    <div className="selfmeta-shell min-h-screen bg-[#f8fbff] text-slate-900">
+    <div className="dna-shell min-h-screen bg-[#f8fbff] text-slate-900">
       <PendingLegalAcceptanceSync />
       <div className="flex min-h-screen">
         <Sidebar toggle={toggle} setToggle={setToggle} />

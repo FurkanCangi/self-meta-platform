@@ -15,7 +15,7 @@
       "toparlanma",
       "ko-regulasyon"
     ],
-    "self_meta_context": {
+    "dna_context": {
       "history_summary": "Gecislerde zorlanma ve frustrasyon sonrasi yatismada gecikme bildirilmektedir.",
       "scales": [
         { "domain": "Duygusal Regülasyon", "score": 44, "label": "Riskli" },

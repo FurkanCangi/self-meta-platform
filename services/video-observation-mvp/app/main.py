@@ -12,7 +12,7 @@ def create_app() -> FastAPI:
     app = FastAPI(
         title=settings.app_name,
         version=settings.app_version,
-        description="Self Meta serbest oyun video gozlemi icin explainable backend MVP.",
+        description="DNA Intelligence serbest oyun video gozlemi icin explainable backend MVP.",
     )
     Base.metadata.create_all(bind=engine)
     app.include_router(router)

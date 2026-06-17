@@ -6,7 +6,7 @@ import "./globals.css";
 import LayoutGate from "@/app/components/layout-gate";
 
 export const metadata: Metadata = {
-  title: "Self Meta AI",
+  title: "DNA Intelligence AI",
   description: "AI destekli klinik değerlendirme, skor girişi ve versiyonlu raporlama platformu",
 };
 

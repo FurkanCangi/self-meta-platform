@@ -84,7 +84,7 @@ export default function AssessmentsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="selfmeta-card p-5">
+      <div className="dna-card p-5">
         <div className="text-xs font-medium text-slate-400">Klinik Değerlendirme</div>
         <h1 className="mt-2 text-2xl font-semibold text-slate-900">Skor Girişi</h1>
         <p className="mt-2 text-sm text-slate-500">
@@ -96,7 +96,7 @@ export default function AssessmentsPage() {
             type="button"
             onClick={createAssessment}
             disabled={creating}
-            className="selfmeta-btn px-4 py-2 text-sm font-semibold disabled:opacity-60"
+            className="dna-btn px-4 py-2 text-sm font-semibold disabled:opacity-60"
           >
             {creating ? "Oluşturuluyor..." : "Assessment Oluştur (DB)"}
           </button>
@@ -112,7 +112,7 @@ export default function AssessmentsPage() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_360px]">
-        <div className="selfmeta-card p-6">
+        <div className="dna-card p-6">
           <div className="grid gap-6 md:grid-cols-2">
             {(["sub1", "sub2", "sub3", "sub4"] as const).map((key, i) => (
               <div key={key} className="rounded-2xl border border-slate-200 bg-white p-5">
@@ -135,7 +135,7 @@ export default function AssessmentsPage() {
           </div>
         </div>
 
-        <div className="selfmeta-card p-6">
+        <div className="dna-card p-6">
           <div className="text-xs font-medium text-slate-400">Ön Sınıflama</div>
           <div className="mt-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800">
             {riskLabel}

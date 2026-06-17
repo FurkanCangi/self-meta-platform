@@ -106,7 +106,7 @@ def build_report_text(
                 f"{fused_fragment}."
             )
     else:
-        lines.append("- Self Meta olcek baglami verilmedigi icin video-olcek entegrasyonu uretilmedi.")
+        lines.append("- DNA Intelligence olcek baglami verilmedigi icin video-olcek entegrasyonu uretilmedi.")
 
     lines.extend(
         [
@@ -133,7 +133,7 @@ def build_report_text(
             "Genel tablo, bu oturum baglaminda buyuk olcude korunmus bir regülasyon oruntusune isaret etmektedir."
         )
 
-    lines.extend(["", "7. Self Meta Ici Sonraki Adim Onerileri"])
+    lines.extend(["", "7. DNA Intelligence Ici Sonraki Adim Onerileri"])
     if fusion_results:
         for row in fusion_results:
             lines.append(f"- {DISPLAY_NAMES[row['domain_name']]}: {row['next_step']}")

@@ -16,7 +16,7 @@ import {
 import { supabase } from "@/lib/supabase/client";
 import { useTheme } from "./theme-provider";
 
-const STORAGE_KEY = "selfmeta_therapist_profile";
+const STORAGE_KEY = "dna_therapist_profile";
 
 type TopnavProps = {
   toggle?: boolean;
@@ -93,7 +93,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
   };
 
   return (
-    <header className="selfmeta-topnav sticky top-0 z-30 border-b border-slate-200/80 bg-white/88 shadow-[0_10px_34px_rgba(7,27,58,0.04)] backdrop-blur-xl">
+    <header className="dna-topnav sticky top-0 z-30 border-b border-slate-200/80 bg-white/88 shadow-[0_10px_34px_rgba(7,27,58,0.04)] backdrop-blur-xl">
       <div className="flex items-center justify-between gap-4 px-6 py-4">
         <div className="flex min-w-0 items-center gap-3">
           <button

@@ -19,7 +19,7 @@ type TherapistProfile = {
   about: string
 }
 
-const STORAGE_KEY = "selfmeta_therapist_profile"
+const STORAGE_KEY = "dna_therapist_profile"
 
 const defaultProfile: TherapistProfile = {
   firstName: "",

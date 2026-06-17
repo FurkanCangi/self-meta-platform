@@ -18,14 +18,14 @@ class ToyZoneROI(BaseModel):
     points: list[ToyZonePoint] = Field(min_length=4, max_length=4)
 
 
-class SelfMetaScaleInput(BaseModel):
+class DnaScaleInput(BaseModel):
     domain: str
     score: float | None = None
     label: str | None = None
 
 
-class SelfMetaContextInput(BaseModel):
-    scales: list[SelfMetaScaleInput] = Field(default_factory=list)
+class DnaContextInput(BaseModel):
+    scales: list[DnaScaleInput] = Field(default_factory=list)
     history_summary: str | None = None
     current_report_text: str | None = None
     clinical_targets: list[str] = Field(default_factory=list)
@@ -42,7 +42,7 @@ class SessionCreateRequest(BaseModel):
     anamnesis_summary: str | None = None
     therapist_comments: str | None = None
     clinical_focus_areas: list[str] = Field(default_factory=list)
-    self_meta_context: SelfMetaContextInput | None = None
+    dna_context: DnaContextInput | None = None
 
 
 class SessionCreateResponse(BaseModel):

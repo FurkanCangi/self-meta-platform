@@ -2,13 +2,13 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
 
-import { listFixturePaths, runSingleFixture, type FixturePayload } from "./run-selfmeta-report";
-import { extractExternalClinicalFindings, getAnamnezThemeSignals, type AnamnezRecord } from "../src/lib/selfmeta/anamnezUtils";
-import { analyzeExternalClinicalTests } from "../src/lib/selfmeta/externalTestRegistry";
-import { CLINICAL_KNOWLEDGE_CHUNKS, WORD_RAG_SOURCE } from "../src/lib/selfmeta/clinicalKnowledgeBase";
-import { splitClinicalReportSections } from "../src/lib/selfmeta/reportText";
+import { listFixturePaths, runSingleFixture, type FixturePayload } from "./run-dna-report";
+import { extractExternalClinicalFindings, getAnamnezThemeSignals, type AnamnezRecord } from "../src/lib/dna/anamnezUtils";
+import { analyzeExternalClinicalTests } from "../src/lib/dna/externalTestRegistry";
+import { CLINICAL_KNOWLEDGE_CHUNKS, WORD_RAG_SOURCE } from "../src/lib/dna/clinicalKnowledgeBase";
+import { splitClinicalReportSections } from "../src/lib/dna/reportText";
 
-const OUTPUT_DIR = "/tmp/selfmeta-report-output/deterministic-audit";
+const OUTPUT_DIR = "/tmp/dna-report-output/deterministic-audit";
 
 type AuditIssueCode =
   | "profile_generic_name"
@@ -21,6 +21,9 @@ type AuditIssueCode =
   | "language_mechanism_weak"
   | "social_mechanism_weak"
   | "physiological_mechanism_weak"
+  | "evidence_limited_mixed_missing"
+  | "preserved_or_raw_external_overweighted"
+  | "anamnez_fit_specificity_missing"
   | "mechanism_lowest_score_leak"
   | "external_test_profile_missing"
   | "external_test_quality_boundary_missing"
@@ -53,6 +56,9 @@ const ISSUE_LABELS: Record<AuditIssueCode, string> = {
   language_mechanism_weak: "Dilsel mekanizma yeterince açık değil",
   social_mechanism_weak: "Sosyal-pragmatik mekanizma yeterince açık değil",
   physiological_mechanism_weak: "Beden-temelli toparlanma mekanizması yeterince açık değil",
+  evidence_limited_mixed_missing: "Karma/sınırlı kanıtta kanıt-sınırlı mekanizma görünmüyor",
+  preserved_or_raw_external_overweighted: "Ham/preserved dış test karar ağırlığını gereğinden fazla büyütüyor",
+  anamnez_fit_specificity_missing: "Anamnez uyumu bakımveren/terapist/test üçgenini vaka özgü göstermiyor",
   mechanism_lowest_score_leak: "Ana klinik bölümlerde lowest-score mekanizması sızıyor",
   external_test_profile_missing: "Ek test kanıt profili raporda görünmüyor",
   external_test_quality_boundary_missing: "Ek test yorum sınırı/kalite uyarısı zayıf",
@@ -174,7 +180,22 @@ function getIssueCodes(params: {
       : extractExternalClinicalFindings(params.anamnezRecord).join("\n");
   const externalAnalysis = analyzeExternalClinicalTests(rawExternalText, params.ageMonths);
   const compatibleCategories = new Set(externalAnalysis.compatibleCategories);
+  const decisionCategories = new Set(externalAnalysis.decisionCompatibleCategories);
   const primaryCategory = externalAnalysis.primaryCompatibleCategory;
+  const hasLimitedExternalEvidence = externalAnalysis.matches.some(
+    (match) =>
+      match.ageCompatible === false ||
+      match.resultQuality === "ham_puan_only" ||
+      match.resultQuality === "missing_result" ||
+      match.resultQuality === "qualitative_only"
+  );
+  const hasPreservedExternalEvidence = externalAnalysis.matches.some(
+    (match) => match.ageCompatible === true && match.resultDirection === "expected_or_preserved"
+  );
+  const hasMixedLimitedEvidence =
+    externalAnalysis.mixedValidity ||
+    (hasLimitedExternalEvidence && hasPreservedExternalEvidence) ||
+    (hasLimitedExternalEvidence && externalAnalysis.decisionCompatible.length > 0);
   const profileIsBalanced = /dengeli \/ korunmuş profil|dengeli \/ korunmus profil/.test(normalizedProfile);
   const profileIsSelective = /seçici|secici/.test(normalizedProfile);
 
@@ -196,13 +217,13 @@ function getIssueCodes(params: {
           hasAny(normalizedProfile, [/duygusal regülasyon/, /interosepsiyon/, /yürütücü/, /yurutucu/])) ||
           hasAny(normalizedProfile, [/geçiş/, /gecis/, /ko-regülasyon/, /ko-regulasyon/, /ko-reg/])) ) ||
       (primaryCategory === "sensory_processing" &&
-        compatibleCategories.has("adaptive_daily_living") &&
+        decisionCategories.has("adaptive_daily_living") &&
         hasAny(normalizedProfile, [/interosepsiyon/, /fizyolojik/, /beden temelli/])) ||
       (primaryCategory === "language_communication" &&
-        compatibleCategories.has("social_pragmatic") &&
+        decisionCategories.has("social_pragmatic") &&
         profileMentionsCategory(normalizedProfile, "social_pragmatic")) ||
       (primaryCategory === "social_pragmatic" &&
-        compatibleCategories.has("language_communication") &&
+        decisionCategories.has("language_communication") &&
         profileMentionsCategory(normalizedProfile, "language_communication"));
 
     if (!primaryAligned && !contextualOverride) {
@@ -210,7 +231,7 @@ function getIssueCodes(params: {
     }
   }
 
-  if (compatibleCategories.has("motor_praxis")) {
+  if (decisionCategories.has("motor_praxis")) {
     if (!hasAny(coreText, [/praksi/, /motor plan/, /beden organiz/, /sekans/, /giyin/, /iki taraflı/, /koordinasyon/])) {
       issueCodes.push("motor_praxis_underweighted");
     }
@@ -221,7 +242,7 @@ function getIssueCodes(params: {
   const profileIsSocial = /sosyal-pragmatik|pragmatik|karşılıklılık|karsiliklilik/.test(normalizedProfile);
   const profileIsPhysioIntero = /fizyolojik toparlanma|beden temelli|interosepsiyon/.test(normalizedProfile);
 
-  if (compatibleCategories.has("adaptive_daily_living")) {
+  if (decisionCategories.has("adaptive_daily_living")) {
     if (!hasAny(coreText, [/öz bakım/, /günlük yaşam/, /rutin/, /tuvalet/, /giyin/, /katılım/, /başlatma/, /tamamlama/])) {
       issueCodes.push("adaptive_daily_living_underweighted");
     }
@@ -230,7 +251,7 @@ function getIssueCodes(params: {
     }
   }
 
-  if (compatibleCategories.has("language_communication")) {
+  if (decisionCategories.has("language_communication")) {
     if (!hasAny(coreText, [/dil/, /yönerge/, /sözel/, /anlama/, /ifade/])) {
       issueCodes.push("language_communication_underweighted");
     }
@@ -239,7 +260,7 @@ function getIssueCodes(params: {
     }
   }
 
-  if (compatibleCategories.has("social_pragmatic")) {
+  if (decisionCategories.has("social_pragmatic")) {
     if (!hasAny(coreText, [/sosyal/, /pragmatik/, /karşılıklılık/, /etkileşim/, /akran/])) {
       issueCodes.push("social_pragmatic_underweighted");
     }
@@ -281,6 +302,40 @@ function getIssueCodes(params: {
   }
 
   if (
+    hasMixedLimitedEvidence &&
+    !hasAny(normalizedReport, [/kanıt-sınırlı/, /kanıt sınırlı/, /kanıt kanalları tam yakınsama göstermedi/])
+  ) {
+    issueCodes.push("evidence_limited_mixed_missing");
+  }
+
+  if (
+    hasMixedLimitedEvidence &&
+    decisionCategories.size === 0 &&
+    hasAny(decisionAnchor, [
+      /beden-temelli toparlanma/,
+      /günlük yaşam ve öz bakım/,
+      /praksi ve motor planlama/,
+      /dilsel talep/,
+      /sosyal-pragmatik/,
+    ])
+  ) {
+    issueCodes.push("preserved_or_raw_external_overweighted");
+  }
+
+  const hasCaregiverSource =
+    typeof params.anamnezRecord.parent_concerns_goals === "string" ||
+    typeof params.anamnezRecord.referral_reason === "string";
+  const hasTherapistSource = typeof params.anamnezRecord.therapist_comments === "string";
+  if (
+    (hasCaregiverSource || hasTherapistSource || externalAnalysis.matches.length > 0) &&
+    ((hasCaregiverSource && !/Bakımveren anlatısı:/i.test(sectionBodies.fit)) ||
+      (hasTherapistSource && !/Terapist gözlemi:/i.test(sectionBodies.fit)) ||
+      (externalAnalysis.matches.length > 0 && !/Ek Test Kanıt Profili:/i.test(sectionBodies.fit)))
+  ) {
+    issueCodes.push("anamnez_fit_specificity_missing");
+  }
+
+  if (
     !/Runtime RAG:\s*%0/i.test(params.metricsText) ||
     !/Deterministic Knowledge Base:\s*Aktif/i.test(params.metricsText)
   ) {
@@ -300,7 +355,7 @@ function getIssueCodes(params: {
 
   if (
     !anamnezSignals.bodyIntero &&
-    !compatibleCategories.has("adaptive_daily_living") &&
+    !decisionCategories.has("adaptive_daily_living") &&
     hasAny(interoFocusText, [
       /interosepsiyon alanının atipik düzeyi/,
       /interosepsiyon alanı, .*bütünleştirici bir eksen/,
@@ -378,7 +433,7 @@ function buildMarkdownSummary(results: FixtureAudit[]) {
   const sortedIssues = Array.from(issueCounts.entries()).sort((a, b) => b[1] - a[1]);
 
   return [
-    "# Self Meta Deterministic Audit",
+    "# DNA Intelligence Deterministic Audit",
     "",
     `Toplam fixture: ${results.length}`,
     `Sorun bulunan fixture: ${results.filter((item) => item.issueCodes.length > 0).length}`,

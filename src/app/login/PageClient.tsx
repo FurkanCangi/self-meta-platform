@@ -15,6 +15,16 @@ function sanitizeNextPath(value: string | null) {
   return value;
 }
 
+function isAppSurfaceRequest(nextPath: string, currentSearch: URLSearchParams) {
+  if (currentSearch.get("surface") === "app") return true;
+  try {
+    const parsed = new URL(nextPath, window.location.origin);
+    return parsed.searchParams.get("surface") === "app";
+  } catch {
+    return nextPath.includes("surface=app");
+  }
+}
+
 function formatLoginError(message?: string | null) {
   const raw = String(message || "").trim();
   const normalized = raw.toLowerCase();
@@ -34,13 +44,17 @@ function formatLoginError(message?: string | null) {
   return raw || "Giriş sırasında bir hata oluştu.";
 }
 
-function resolvePostLoginPath(plan: string, nextPath: string) {
-  if (plan === "none") return "/fiyatlandirma";
+function resolvePostLoginPath(plan: string, nextPath: string, appSurface: boolean) {
+  if (plan === "none") return appSurface ? "/report-packages?surface=app" : "/fiyatlandirma";
+  if (appSurface && !nextPath.includes("surface=app")) {
+    const glue = nextPath.includes("?") ? "&" : "?";
+    return `${nextPath}${glue}surface=app`;
+  }
   return nextPath;
 }
 
 function getOrCreateDeviceId() {
-  const key = "selfmeta_device_id";
+  const key = "dna_device_id";
   const existing = window.localStorage.getItem(key);
   if (existing && existing.length >= 16) return existing;
 
@@ -98,6 +112,7 @@ export default function LoginPage() {
   const router = useRouter();
   const sp = useSearchParams();
   const nextPath = sanitizeNextPath(sp.get("next"));
+  const appSurface = isAppSurfaceRequest(nextPath, sp);
 
   const formRef = useRef<HTMLFormElement | null>(null);
   const emailRef = useRef<HTMLInputElement | null>(null);
@@ -124,11 +139,11 @@ export default function LoginPage() {
           .eq("user_id", data.session.user.id)
           .maybeSingle();
         const plan = profile?.plan ?? "none";
-        router.replace(resolvePostLoginPath(plan, nextPath));
+        router.replace(resolvePostLoginPath(plan, nextPath, appSurface));
         return;
       }
     });
-  }, [router, nextPath]);
+  }, [router, nextPath, appSurface]);
 
   async function performLogin(submittedEmail: string, submittedPassword: string) {
     setErr(null);
@@ -175,7 +190,7 @@ export default function LoginPage() {
       }
 
       const plan = profile?.plan ?? "none";
-      router.replace(resolvePostLoginPath(plan, nextPath));
+      router.replace(resolvePostLoginPath(plan, nextPath, appSurface));
     } catch (error: any) {
       console.error("[login] signIn failed", error);
       setErr("Giriş isteği tamamlanamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.");
@@ -240,7 +255,7 @@ export default function LoginPage() {
 
           <div className="pt-2 text-center text-sm font-medium text-slate-500">
             Hesabınız yok mu?{" "}
-            <a className="font-bold text-blue-700 hover:text-violet-700" href="/signup">
+            <a className="font-bold text-blue-700 hover:text-violet-700" href={appSurface ? "/signup?surface=app" : "/signup"}>
               Kayıt olun.
             </a>
           </div>

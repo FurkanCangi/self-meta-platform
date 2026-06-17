@@ -83,8 +83,8 @@ import "./globals.css";
 import LayoutGate from "./components/layout-gate";
 
 export const metadata: Metadata = {
-  title: "Self Meta AI",
-  description: "Self Meta AI clinical platform",
+  title: "DNA Intelligence",
+  description: "DNA Intelligence clinical platform",
 };
 
 export default function RootLayout({

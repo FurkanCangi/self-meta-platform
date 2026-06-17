@@ -1,4 +1,4 @@
-async function checkExistingSelfMetaReportLock(supabase: any, payload: any) {
+async function checkExistingDnaReportLock(supabase: any, payload: any) {
   const clientCode = String(
     payload?.client_code ??
     payload?.clientCode ??
@@ -34,8 +34,8 @@ async function checkExistingSelfMetaReportLock(supabase: any, payload: any) {
 }
 
 import { NextResponse } from "next/server"
-import { rewriteClinicalReport } from "@/lib/selfmeta/aiRewrite"
-import { buildAdvancedReport } from "@/lib/selfmeta/reportEngine"
+import { rewriteClinicalReport } from "@/lib/dna/aiRewrite"
+import { buildAdvancedReport } from "@/lib/dna/reportEngine"
 
 export async function POST(req: Request) {
   try {

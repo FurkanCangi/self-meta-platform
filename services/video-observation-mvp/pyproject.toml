@@ -3,9 +3,9 @@ requires = ["setuptools>=68", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "selfmeta-video-observation-mvp"
+name = "dna-video-observation-mvp"
 version = "0.1.0"
-description = "Backend-first MVP for Self Meta free-play video observation."
+description = "Backend-first MVP for DNA Intelligence free-play video observation."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [

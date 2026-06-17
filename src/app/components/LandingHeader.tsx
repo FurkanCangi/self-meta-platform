@@ -12,8 +12,10 @@ import {
   GraduationCap,
   Handshake,
   Layers3,
+  Menu,
   Microscope,
   Sparkles,
+  X,
 } from "lucide-react";
 import BrandLogo from "./BrandLogo";
 
@@ -103,6 +105,7 @@ const researchMenuItems = [
 export default function LandingHeader() {
   const pathname = usePathname() || "/";
   const [openMenu, setOpenMenu] = useState<"dna" | "research" | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const cancelClose = () => {
@@ -130,6 +133,11 @@ export default function LandingHeader() {
     setOpenMenu(null);
   };
 
+  const closeMobileNavigation = () => {
+    closeDropdown();
+    setMobileMenuOpen(false);
+  };
+
   const linkClass = (href: string) => {
     const isActive = href === "/" ? pathname === "/" : pathname === href;
     return `smiNavLink${isActive ? " smiNavLinkActive" : ""}`;
@@ -142,7 +150,7 @@ export default function LandingHeader() {
   }`;
 
   return (
-    <header className="smiHeaderWrap">
+    <header className={`smiHeaderWrap${mobileMenuOpen ? " smiMobileMenuOpen" : ""}`}>
       <div className="smiHeaderInner">
         <div className="smiHeaderLeft">
           <Link href="/" className="smiBrandLink" aria-label="DNA ana sayfa">
@@ -150,8 +158,21 @@ export default function LandingHeader() {
           </Link>
         </div>
 
+        <button
+          type="button"
+          className="smiMobileMenuButton"
+          aria-label={mobileMenuOpen ? "Menüyü kapat" : "Menüyü aç"}
+          aria-expanded={mobileMenuOpen}
+          onClick={() => {
+            closeDropdown();
+            setMobileMenuOpen((current) => !current);
+          }}
+        >
+          {mobileMenuOpen ? <X size={22} strokeWidth={2.3} /> : <Menu size={22} strokeWidth={2.3} />}
+        </button>
+
         <nav className="smiNav" aria-label="Landing navigation">
-          <Link href="/" className={linkClass("/")}>
+          <Link href="/" className={linkClass("/")} onClick={closeMobileNavigation}>
             Ana Sayfa
           </Link>
           <div
@@ -180,7 +201,7 @@ export default function LandingHeader() {
                     className="smiMegaItem"
                     key={href}
                     style={{ "--item-accent": accent } as CSSProperties}
-                    onClick={closeDropdown}
+                    onClick={closeMobileNavigation}
                   >
                     <span className="smiMegaIcon" aria-hidden="true">
                       <Icon size={20} strokeWidth={1.9} />
@@ -197,7 +218,7 @@ export default function LandingHeader() {
               </div>
             ) : null}
           </div>
-          <Link href="/cozumler" className={linkClass("/cozumler")}>
+          <Link href="/cozumler" className={linkClass("/cozumler")} onClick={closeMobileNavigation}>
             Çözümler
           </Link>
           <div
@@ -226,7 +247,7 @@ export default function LandingHeader() {
                     className="smiMegaItem"
                     key={href}
                     style={{ "--item-accent": accent } as CSSProperties}
-                    onClick={closeDropdown}
+                    onClick={closeMobileNavigation}
                   >
                     <span className="smiMegaIcon" aria-hidden="true">
                       <Icon size={20} strokeWidth={1.9} />
@@ -243,16 +264,16 @@ export default function LandingHeader() {
               </div>
             ) : null}
           </div>
-          <Link href="/iletisim" className={linkClass("/iletisim")}>
+          <Link href="/iletisim" className={linkClass("/iletisim")} onClick={closeMobileNavigation}>
             İletişim
           </Link>
         </nav>
 
         <div className="smiHeaderRight">
-          <Link href="/signup" className="smiSignupPill">
+          <Link href="/signup" className="smiSignupPill" onClick={closeMobileNavigation}>
             Kayıt Ol
           </Link>
-          <Link href="/login" className="smiLoginPill">
+          <Link href="/login" className="smiLoginPill" onClick={closeMobileNavigation}>
             Giriş Yap
           </Link>
         </div>

@@ -3,11 +3,11 @@
 import { supabase } from "@/lib/supabase/client"
 import { useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { questions } from "@/lib/selfmeta/questions"
+import { questions } from "@/lib/dna/questions"
 import { calculateAssessment } from "@/lib/assessment/assessmentEngine"
-import { buildAdvancedReport } from "@/lib/selfmeta/reportEngine"
-import { extractAgeMonthsFromAnamnez } from "@/lib/selfmeta/ageUtils"
-import { buildAnamnezPreview } from "@/lib/selfmeta/anamnezUtils"
+import { buildAdvancedReport } from "@/lib/dna/reportEngine"
+import { extractAgeMonthsFromAnamnez } from "@/lib/dna/ageUtils"
+import { buildAnamnezPreview } from "@/lib/dna/anamnezUtils"
 import ClinicalReportView from "@/components/report/ClinicalReportView"
 const likert = [
   { label: "Hiçbir zaman", value: 1 },
@@ -40,7 +40,7 @@ export default function AssessmentWizardClient() {
   
   const [reportLocked, setReportLocked] = useState(false)
   const [reportLockReason, setReportLockReason] = useState("")
-  const selfMetaSupabase = supabase
+  const dnaSupabase = supabase
 
   const checkExistingReportLock = async (clientId?: string | null) => {
     try {
@@ -51,7 +51,7 @@ export default function AssessmentWizardClient() {
         return false
       }
 
-      const { data: assessments, error: assessmentsError } = await selfMetaSupabase
+      const { data: assessments, error: assessmentsError } = await dnaSupabase
         .from("assessments_v2")
         .select("id")
         .eq("client_id", normalizedClientId)
@@ -70,7 +70,7 @@ export default function AssessmentWizardClient() {
         return false
       }
 
-      const { data, error } = await selfMetaSupabase
+      const { data, error } = await dnaSupabase
         .from("reports")
         .select("id, report_text, assessment_id, created_at")
         .in("assessment_id", assessmentIds)
@@ -97,6 +97,13 @@ export default function AssessmentWizardClient() {
   const searchParams = useSearchParams()
   const clientCode = searchParams.get("client") || ""
   const clientIdParam = searchParams.get("client_id") || ""
+  const appSurface = searchParams.get("surface") === "app"
+
+  const withSurface = (path: string) => {
+    if (!appSurface) return path
+    const separator = path.includes("?") ? "&" : "?"
+    return `${path}${separator}surface=app`
+  }
 
   const [answers, setAnswers] = useState<number[]>(Array(questions.length).fill(3))
   const [page, setPage] = useState(0)
@@ -113,7 +120,7 @@ export default function AssessmentWizardClient() {
   const [loadingClient, setLoadingClient] = useState(true)
   const [clientError, setClientError] = useState<string | null>(null)
   const [reportReady, setReportReady] = useState(false)
-const [saving, setSaving] = useState(false)
+  const [saving, setSaving] = useState(false)
   const [saveMsg, setSaveMsg] = useState<string | null>(null)
   const [generatedReportText, setGeneratedReportText] = useState<string>("")
   const [generatedReportDate, setGeneratedReportDate] = useState<string>("")
@@ -318,6 +325,33 @@ const [saving, setSaving] = useState(false)
         return
       }
 
+      const aiReportText = await generateAIReport({
+        clientCode: clientInfo.child_code,
+        anamnez: String(clientInfo.anamnez || ""),
+        answers,
+        scores: {
+          fizyolojik: result.fizyolojik,
+          duyusal: result.duyusal,
+          duygusal: result.duygusal,
+          bilissel: result.bilissel,
+          yurutucu: result.yurutucu,
+          intero: result.intero,
+          toplam: result.toplam,
+          siniflama: advancedReport.globalLevel,
+          age_months: clientInfo.ageMonths,
+          norm_source: advancedReport.normSource,
+          age_band_label: advancedReport.ageBandLabel,
+          domain_levels: advancedReport.domainLevels ?? advancedReport.domains,
+        },
+        deterministicReport: advancedReport.deterministicReport,
+      })
+
+      const lockedAfterGeneration = await checkExistingReportLock(clientInfo.id)
+      if (lockedAfterGeneration) {
+        setSaveMsg("Bu vaka için rapor daha önce oluşturulmuş. Mevcut raporu Rapor Geçmişi ekranından görüntüleyin.")
+        return
+      }
+
       const today = new Date().toISOString().slice(0, 10)
 
       const { data: assessmentRow, error: assessmentErr } = await supabase
@@ -333,27 +367,6 @@ const [saving, setSaving] = useState(false)
       if (assessmentErr) throw new Error("Assessment kaydı oluşturulamadı: " + assessmentErr.message)
 
       const assessmentId = assessmentRow.id
-
-      const aiReportText = await generateAIReport({
-        clientCode: clientInfo.child_code,
-        anamnez: String(clientInfo.anamnez || ""),
-        answers,
-        scores: {
-          fizyolojik: result.fizyolojik,
-          duyusal: result.duyusal,
-          duygusal: result.duygusal,
-          bilissel: result.bilissel,
-          yurutucu: result.yurutucu,
-          intero: result.intero,
-          toplam: result.toplam,
-          siniflama: advancedReport.globalLevel,
-          age_months: clientInfo.ageMonths,
-        norm_source: advancedReport.normSource,
-        age_band_label: advancedReport.ageBandLabel,
-        domain_levels: advancedReport.domainLevels ?? advancedReport.domains,
-        },
-        deterministicReport: advancedReport.deterministicReport,
-      })
 
       setGeneratedReportText(aiReportText)
 
@@ -419,13 +432,13 @@ const [saving, setSaving] = useState(false)
 
   if (!loadingClient && !hasSelectedClient) {
     return (
-      <div className="px-6 py-8">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6">
+      <div className="px-4 py-6 md:px-6 md:py-8">
+        <div className="rounded-3xl border border-slate-200 bg-white p-5 md:p-6">
           <div className="text-sm font-semibold uppercase tracking-wide text-slate-400">
             Klinik Değerlendirme
           </div>
 
-          <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-900">
+          <h1 className="mt-3 text-2xl font-bold tracking-tight text-slate-900 md:text-4xl">
             DNA Intelligence Değerlendirme Sistemi
           </h1>
 
@@ -443,7 +456,7 @@ const [saving, setSaving] = useState(false)
 
   return (
     <div className="space-y-6">
-      <div className="selfmeta-card p-6">
+      <div className="dna-card p-4 md:p-6">
         <div className="text-xs font-medium text-slate-400">Klinik Değerlendirme</div>
 
         <div className="mt-2 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -471,11 +484,10 @@ const [saving, setSaving] = useState(false)
           <div className="mt-4 grid gap-4 xl:grid-cols-[280px_1fr]">
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Danışan</div>
-              <div className="mt-2 text-xl font-semibold text-slate-900">{clientInfo.child_code}</div>
+              <div className="mt-2 font-mono text-xl font-semibold text-slate-900">{clientInfo.child_code}</div>
               <div className="mt-1 text-sm text-slate-500">Değerlendirme bu vaka kaydı üzerinden ilerler.</div>
 
-            <div className="mt-2 text-sm text-slate-600">Yaş: {agePreview}</div>
-            
+              <div className="mt-2 text-sm text-slate-600">Yaş: {agePreview}</div>
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -510,12 +522,12 @@ const [saving, setSaving] = useState(false)
           {current.map((q, idx) => {
             const absoluteIndex = start + idx
             return (
-              <div key={q.id} className="selfmeta-card p-5">
+              <div key={q.id} className="dna-card p-4 md:p-5">
                 <div className="mb-4 text-base font-medium text-slate-900">
                   {absoluteIndex + 1}. {q.text}
                 </div>
 
-                <div className="grid gap-2 md:grid-cols-5">
+                <div className="grid gap-2 sm:grid-cols-5">
                   {likert.map((item) => {
                     const selected = answers[absoluteIndex] === item.value
                     return (
@@ -523,7 +535,7 @@ const [saving, setSaving] = useState(false)
                         key={item.value}
                         type="button"
                         onClick={() => handleSelect(absoluteIndex, item.value)}
-                        className={`rounded-xl border px-3 py-3 text-sm font-medium transition ${
+                        className={`min-h-12 rounded-xl border px-3 py-3 text-sm font-medium transition ${
                           selected
                             ? "border-indigo-600 bg-indigo-600 text-white shadow-sm"
                             : "border-slate-300 bg-white text-slate-700 hover:border-indigo-300 hover:bg-indigo-50"
@@ -538,12 +550,12 @@ const [saving, setSaving] = useState(false)
             )
           })}
 
-          <div className="flex items-center justify-between">
+          <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center sm:justify-between">
             <button
               type="button"
               onClick={prevPage}
               disabled={page === 0}
-              className="selfmeta-btn-ghost px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40"
+              className="dna-btn-ghost px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-40"
             >
               Geri
             </button>
@@ -551,7 +563,7 @@ const [saving, setSaving] = useState(false)
             <button
               type="button"
               onClick={nextPage}
-              className="selfmeta-btn px-5 py-2.5 text-sm font-semibold"
+              className="dna-btn px-5 py-2.5 text-sm font-semibold"
             >
               {page === totalPages - 1 ? "Sonuçları Gör" : "Sonraki Bölüm"}
             </button>
@@ -561,10 +573,24 @@ const [saving, setSaving] = useState(false)
 
       {isResultPage && !clientError && !loadingClient && (
         <>
-          <div className="selfmeta-card p-6">
+          <div className="dna-card p-6">
             <h2 className="text-xl font-semibold text-slate-900">Değerlendirme Sonucu</h2>
 
-            <div className="mt-5 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <div className="mt-5 space-y-3 md:hidden">
+              {advancedReport?.domains.map((d) => (
+                <div key={d.name} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="font-semibold text-slate-900">{d.name}</div>
+                    <span className="inline-flex shrink-0 rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                      {d.level}
+                    </span>
+                  </div>
+                  <div className="mt-2 text-sm text-slate-600">{d.score} / 50</div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-5 hidden overflow-hidden rounded-2xl border border-slate-200 bg-white md:block">
               <table className="min-w-full divide-y divide-slate-200 text-sm">
                 <thead className="bg-slate-50">
                   <tr>
@@ -598,20 +624,20 @@ const [saving, setSaving] = useState(false)
               </div>
             )}
 
-            <div className="mt-6 flex items-center justify-between">
+            <div className="mt-6 grid gap-2 sm:flex sm:items-center sm:justify-between">
               <button
                 type="button"
                 onClick={prevPage}
-                className="selfmeta-btn-ghost px-5 py-2.5 text-sm font-semibold"
+                className="dna-btn-ghost px-5 py-2.5 text-sm font-semibold"
               >
                 Son Bölüme Dön
               </button>
 
-              <div className="flex gap-2">
+              <div className="grid gap-2 sm:flex">
                 <button
                   type="button"
-                  onClick={() => router.push("/reports")}
-                  className="selfmeta-btn-ghost px-5 py-2.5 text-sm font-semibold"
+                  onClick={() => router.push(withSurface("/reports"))}
+                  className="dna-btn-ghost px-5 py-2.5 text-sm font-semibold"
                 >
                   Rapor Geçmişi
                 </button>
@@ -620,9 +646,9 @@ const [saving, setSaving] = useState(false)
                   type="button"
                   onClick={handleGenerateReport}
                   disabled={saving || reportLocked}
-                  className="selfmeta-btn px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
+                  className="dna-btn px-5 py-2.5 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  {saving ? "Kaydediliyor..." : "Rapor Oluştur"}
+                  {reportLocked ? "Rapor Kilitli" : saving ? "Kaydediliyor..." : "Rapor Oluştur"}
                 </button>
               </div>
             </div>
@@ -630,7 +656,7 @@ const [saving, setSaving] = useState(false)
 
           {reportReady && advancedReport && (
             <>
-              <div className="selfmeta-card p-6">
+              <div className="dna-card p-6">
                 <div className="text-xs font-medium text-slate-400">Örüntü Analizi</div>
                 <h3 className="mt-1 text-xl font-semibold text-slate-900">Karar Motoru Bulguları</h3>
 
@@ -683,7 +709,7 @@ const [saving, setSaving] = useState(false)
                 </div>
               </div>
 
-              <div className="selfmeta-card p-6">
+              <div className="dna-card p-6">
                 <div className="text-xs font-medium text-slate-400">AI Rapor</div>
                 <h3 className="mt-1 text-xl font-semibold text-slate-900">Klinik Yorum</h3>
 

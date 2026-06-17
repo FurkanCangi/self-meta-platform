@@ -2,16 +2,16 @@ import fs from "node:fs/promises";
 import path from "node:path";
 
 import { QUALITY_CASE_SPECS, type QualityCaseSpec } from "./report-quality-cases";
-import { runSingleFixture } from "./run-selfmeta-report";
-import { VERIFIED_LITERATURE_SOURCES } from "../src/lib/selfmeta/literatureNote";
+import { runSingleFixture } from "./run-dna-report";
+import { VERIFIED_LITERATURE_SOURCES } from "../src/lib/dna/literatureNote";
 import {
   countWeakHedges,
   hasForbiddenClinicalCitation,
   hasForbiddenClinicalDetermination,
-} from "../src/lib/selfmeta/reportQuality";
-import { hasAllCanonicalReportSections, splitClinicalReportSections } from "../src/lib/selfmeta/reportText";
+} from "../src/lib/dna/reportQuality";
+import { hasAllCanonicalReportSections, splitClinicalReportSections } from "../src/lib/dna/reportText";
 
-const OUTPUT_DIR = "/tmp/selfmeta-report-output/quality-gates";
+const OUTPUT_DIR = "/tmp/dna-report-output/quality-gates";
 
 type QualityFailure = {
   caseKey: string;
@@ -341,7 +341,7 @@ async function writeSummary(results: QualityResult[], label: string) {
   await ensureOutputDir();
 
   const markdown = [
-    "# Self Meta Report Quality Gates",
+    "# DNA Intelligence Report Quality Gates",
     "",
     ...results.map((result) =>
       [

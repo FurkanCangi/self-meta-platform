@@ -56,7 +56,7 @@ def create_session(db: Session, payload: SessionCreateRequest) -> ObservationSes
         anamnesis_summary=payload.anamnesis_summary,
         therapist_comments=payload.therapist_comments,
         clinical_focus_areas=payload.clinical_focus_areas,
-        self_meta_payload_json=payload.self_meta_context.model_dump() if payload.self_meta_context else {},
+        dna_payload_json=payload.dna_context.model_dump() if payload.dna_context else {},
         support_age_band=infer_age_support_band(payload.age_months),
     )
     db.add(session)
@@ -309,11 +309,11 @@ def process_session(db: Session, session: ObservationSession) -> ProcessingRun:
             "anamnesis_summary": session.anamnesis_summary,
             "therapist_comments": session.therapist_comments,
             "clinical_focus_areas": session.clinical_focus_areas,
-            "history_summary": session.self_meta_payload_json.get("history_summary") if session.self_meta_payload_json else None,
+            "history_summary": session.dna_payload_json.get("history_summary") if session.dna_payload_json else None,
         }
         fusion_rows = fuse_results(
             domain_rows,
-            session.self_meta_payload_json or {},
+            session.dna_payload_json or {},
             session.support_age_band,
             overall_quality,
             rules_config,

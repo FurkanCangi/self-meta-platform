@@ -8,11 +8,11 @@ Amaç: Deterministic rapor motorunun birbirinden farklı 5 vaka ailesinde klinik
 
 Bu testte aşağıdaki 5 fixture deterministic hatta çalıştırıldı:
 
-1. `scripts/fixtures/selfmeta-new-01-balanced-routine-strength.json`
-2. `scripts/fixtures/selfmeta-new-03-sensory-emotional-overload.json`
-3. `scripts/fixtures/selfmeta-new-05-physiological-interoceptive-fatigue.json`
-4. `scripts/fixtures/selfmeta-new-06-somatodyspraxia-motor-planning.json`
-5. `scripts/fixtures/selfmeta-language-pragmatic-load.json`
+1. `scripts/fixtures/dna-new-01-balanced-routine-strength.json`
+2. `scripts/fixtures/dna-new-03-sensory-emotional-overload.json`
+3. `scripts/fixtures/dna-new-05-physiological-interoceptive-fatigue.json`
+4. `scripts/fixtures/dna-new-06-somatodyspraxia-motor-planning.json`
+5. `scripts/fixtures/dna-language-pragmatic-load.json`
 
 Tüm koşularda teknik durum aynıdır:
 
@@ -26,11 +26,11 @@ Tüm koşularda teknik durum aynıdır:
 
 | Vaka | Profil | Genel Sonuç | Kalite Kararı |
 |---|---|---|---|
-| `selfmeta-new-01-balanced-routine-strength` | Dengeli / Korunmuş Profil | Korunmuş profil dili var, fakat formülasyon yanlış mekanizmaya kayıyor | Zayıf |
-| `selfmeta-new-03-sensory-emotional-overload` | Duyusal-Duygusal Regülasyon Profili | Klinik eksen doğru, fakat formülasyon hâlâ skor cümlesine fazla yaslanıyor | Orta |
-| `selfmeta-new-05-physiological-interoceptive-fatigue` | Fizyolojik Toparlanma ve Beden Temelli Regülasyon Yükü | Mekanizma dili güçlü ve tutarlı | Güçlü |
-| `selfmeta-new-06-somatodyspraxia-motor-planning` | Praksi ve Motor Planlama ile İlişkili Regülasyon Yükü | Motor/praksi hattı net, karar ve formülasyon profesör formatına yakın | Güçlü |
-| `selfmeta-language-pragmatic-load` | Dilsel ve Sosyal-Pragmatik Talep Altında Regülasyon Yükü | Birleşik mekanizma açık, dış test bağlamı iyi entegre | Güçlü |
+| `dna-new-01-balanced-routine-strength` | Dengeli / Korunmuş Profil | Korunmuş profil dili var, fakat formülasyon yanlış mekanizmaya kayıyor | Zayıf |
+| `dna-new-03-sensory-emotional-overload` | Duyusal-Duygusal Regülasyon Profili | Klinik eksen doğru, fakat formülasyon hâlâ skor cümlesine fazla yaslanıyor | Orta |
+| `dna-new-05-physiological-interoceptive-fatigue` | Fizyolojik Toparlanma ve Beden Temelli Regülasyon Yükü | Mekanizma dili güçlü ve tutarlı | Güçlü |
+| `dna-new-06-somatodyspraxia-motor-planning` | Praksi ve Motor Planlama ile İlişkili Regülasyon Yükü | Motor/praksi hattı net, karar ve formülasyon profesör formatına yakın | Güçlü |
+| `dna-language-pragmatic-load` | Dilsel ve Sosyal-Pragmatik Talep Altında Regülasyon Yükü | Birleşik mekanizma açık, dış test bağlamı iyi entegre | Güçlü |
 
 ## İyi Sonuçlar
 
@@ -49,8 +49,8 @@ Bu üç vakada:
 
 Özellikle şu iki vaka güçlü:
 
-- `selfmeta-new-06-somatodyspraxia-motor-planning`
-- `selfmeta-language-pragmatic-load`
+- `dna-new-06-somatodyspraxia-motor-planning`
+- `dna-language-pragmatic-load`
 
 Bu raporlarda dış testler yalnız liste olarak geçmiyor; motor planlama ya da dilsel-sosyal yükü açıklayan bağlamsal kanıt olarak kullanılıyor.
 
@@ -67,7 +67,7 @@ Seçilen 5 vakanın tamamında:
 
 ### 1. Korunmuş profilde formülasyon yanlış mekanizmaya kayıyor
 
-En önemli kalite sorunu `selfmeta-new-01-balanced-routine-strength` vakasında görüldü.
+En önemli kalite sorunu `dna-new-01-balanced-routine-strength` vakasında görüldü.
 
 Sorun:
 
@@ -88,7 +88,7 @@ Karar:
 
 ### 2. Duyusal-duygusal vakada formülasyon hâlâ skor-merkezli
 
-`selfmeta-new-03-sensory-emotional-overload` vakasında ana klinik eksen doğru seçiliyor. Ancak `6. Klinik Önceliklendirme Notu` içindeki formülasyon şu yapıya dönüyor:
+`dna-new-03-sensory-emotional-overload` vakasında ana klinik eksen doğru seçiliyor. Ancak `6. Klinik Önceliklendirme Notu` içindeki formülasyon şu yapıya dönüyor:
 
 - `skor örüntüsü ile vaka içi kanıt birlikte okunduğunda...`
 - ardından doğrudan en düşük alan cümlesi kullanılıyor
@@ -120,7 +120,7 @@ Bu kaliteyi bozmuyor ama raporu biraz uzun ve döngüsel hissettiriyor.
 
 ## Vaka Bazlı Değerlendirme
 
-### A. `selfmeta-new-01-balanced-routine-strength`
+### A. `dna-new-01-balanced-routine-strength`
 
 İyi:
 
@@ -136,7 +136,7 @@ Kötü:
 
 Nihai karar: `Zayıf`
 
-### B. `selfmeta-new-03-sensory-emotional-overload`
+### B. `dna-new-03-sensory-emotional-overload`
 
 İyi:
 
@@ -151,7 +151,7 @@ Kötü:
 
 Nihai karar: `Orta`
 
-### C. `selfmeta-new-05-physiological-interoceptive-fatigue`
+### C. `dna-new-05-physiological-interoceptive-fatigue`
 
 İyi:
 
@@ -165,7 +165,7 @@ Kötü:
 
 Nihai karar: `Güçlü`
 
-### D. `selfmeta-new-06-somatodyspraxia-motor-planning`
+### D. `dna-new-06-somatodyspraxia-motor-planning`
 
 İyi:
 
@@ -180,7 +180,7 @@ Kötü:
 
 Nihai karar: `Güçlü`
 
-### E. `selfmeta-language-pragmatic-load`
+### E. `dna-language-pragmatic-load`
 
 İyi:
 
@@ -217,8 +217,8 @@ Henüz zayıf kalan alanlar:
 
 ## Çıktı Dosyaları
 
-- [Balanced Report](/tmp/selfmeta-report-output/selfmeta-new-01-balanced-routine-strength/final-report.md)
-- [Sensory Emotional Report](/tmp/selfmeta-report-output/selfmeta-new-03-sensory-emotional-overload/final-report.md)
-- [Physiological Interoceptive Report](/tmp/selfmeta-report-output/selfmeta-new-05-physiological-interoceptive-fatigue/final-report.md)
-- [Motor Praxis Report](/tmp/selfmeta-report-output/selfmeta-new-06-somatodyspraxia-motor-planning/final-report.md)
-- [Language Social Report](/tmp/selfmeta-report-output/selfmeta-language-pragmatic-load/final-report.md)
+- [Balanced Report](/tmp/dna-report-output/dna-new-01-balanced-routine-strength/final-report.md)
+- [Sensory Emotional Report](/tmp/dna-report-output/dna-new-03-sensory-emotional-overload/final-report.md)
+- [Physiological Interoceptive Report](/tmp/dna-report-output/dna-new-05-physiological-interoceptive-fatigue/final-report.md)
+- [Motor Praxis Report](/tmp/dna-report-output/dna-new-06-somatodyspraxia-motor-planning/final-report.md)
+- [Language Social Report](/tmp/dna-report-output/dna-language-pragmatic-load/final-report.md)

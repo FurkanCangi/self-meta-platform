@@ -9,7 +9,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 export async function POST(request: Request) {
   const rawBody = await request.text()
   const signatureHeader =
-    request.headers.get("x-selfmeta-signature") ||
+    request.headers.get("x-dna-signature") ||
     request.headers.get("x-payment-signature") ||
     request.headers.get("stripe-signature")
 

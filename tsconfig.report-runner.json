@@ -11,11 +11,11 @@
     "isolatedModules": false
   },
   "include": [
-    "scripts/run-selfmeta-report.ts",
+    "scripts/run-dna-report.ts",
     "scripts/run-report-quality-tests.ts",
     "scripts/run-report-deterministic-audit.ts",
     "scripts/report-quality-cases.ts",
-    "src/lib/selfmeta/**/*.ts"
+    "src/lib/dna/**/*.ts"
   ],
   "exclude": [
     "node_modules",

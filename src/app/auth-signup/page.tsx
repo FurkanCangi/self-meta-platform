@@ -1,10 +1,10 @@
 import { Suspense } from "react"
-import SelfMetaSignupForm from "../components/auth/SelfMetaSignupForm"
+import DnaSignupForm from "../components/auth/DnaSignupForm"
 
 export default function AuthSignupPage() {
   return (
     <Suspense fallback={<div className="p-6">Yükleniyor...</div>}>
-      <SelfMetaSignupForm />
+      <DnaSignupForm />
     </Suspense>
   )
 }

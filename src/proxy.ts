@@ -84,6 +84,7 @@ export const config = {
     "/assessments/:path*",
     "/reports",
     "/report-packages",
+    "/education",
     "/profile",
     "/profile-setting",
     "/settings",

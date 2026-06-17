@@ -118,7 +118,7 @@ Risk Seviyesi: ${risk}
 
     <div className="space-y-6">
 
-      <div className="selfmeta-card p-5">
+      <div className="dna-card p-5">
         <div className="text-xs text-slate-400">Klinik Değerlendirme</div>
         <h1 className="text-2xl font-semibold text-slate-900 mt-1">
           Skor Girişi
@@ -135,7 +135,7 @@ Risk Seviyesi: ${risk}
         type="number"
         value={scores.s1}
         onChange={e=>setScores({...scores,s1:Number(e.target.value)})}
-        className="selfmeta-input p-3"
+        className="dna-input p-3"
         placeholder="Alt Boyut 1"
         />
 
@@ -143,7 +143,7 @@ Risk Seviyesi: ${risk}
         type="number"
         value={scores.s2}
         onChange={e=>setScores({...scores,s2:Number(e.target.value)})}
-        className="selfmeta-input p-3"
+        className="dna-input p-3"
         placeholder="Alt Boyut 2"
         />
 
@@ -151,7 +151,7 @@ Risk Seviyesi: ${risk}
         type="number"
         value={scores.s3}
         onChange={e=>setScores({...scores,s3:Number(e.target.value)})}
-        className="selfmeta-input p-3"
+        className="dna-input p-3"
         placeholder="Alt Boyut 3"
         />
 
@@ -159,13 +159,13 @@ Risk Seviyesi: ${risk}
         type="number"
         value={scores.s4}
         onChange={e=>setScores({...scores,s4:Number(e.target.value)})}
-        className="selfmeta-input p-3"
+        className="dna-input p-3"
         placeholder="Alt Boyut 4"
         />
 
       </div>
 
-      <div className="selfmeta-card p-5">
+      <div className="dna-card p-5">
 
         <div className="text-sm text-slate-500">Toplam Skor</div>
         <div className="text-3xl font-semibold text-slate-900 mt-1">{total}</div>
@@ -178,7 +178,7 @@ Risk Seviyesi: ${risk}
       <button
       onClick={saveReport}
       disabled={saving || creating}
-      className="selfmeta-btn px-6 py-3"
+      className="dna-btn px-6 py-3"
       >
         {saving ? "Kaydediliyor..." : "Rapor Oluştur"}
       </button>

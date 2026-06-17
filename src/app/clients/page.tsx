@@ -286,7 +286,7 @@ export default function ClientsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="selfmeta-card p-5">
+      <div className="dna-card p-5">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <div className="text-xs font-medium text-slate-400">Danışan Yönetimi</div>
@@ -296,14 +296,14 @@ export default function ClientsPage() {
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2">
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_auto] md:min-w-[420px]">
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              className="selfmeta-input w-64 px-4 py-2.5 text-sm"
+              className="dna-input w-full px-4 py-2.5 text-sm"
               placeholder="Danışan kodu ara (SM-...)"
             />
-            <Link href="/clients/new" className="selfmeta-btn px-4 py-2.5 text-sm font-semibold inline-flex items-center justify-center">
+            <Link href="/clients/new" className="dna-btn px-4 py-2.5 text-sm font-semibold inline-flex items-center justify-center">
               Yeni Danışan
             </Link>
           </div>
@@ -312,7 +312,7 @@ export default function ClientsPage() {
         {err ? <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{err}</div> : null}
         {!err && notice ? <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{notice}</div> : null}
 
-        <div className="mt-5 grid gap-3 md:grid-cols-4">
+        <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Toplam</div>
             <div className="mt-2 text-3xl font-semibold text-slate-900">{computed.total}</div>
@@ -348,8 +348,93 @@ export default function ClientsPage() {
         </div>
       </div>
 
-      <div className="selfmeta-card p-0 overflow-hidden">
-        <div className="overflow-auto">
+      <div className="dna-card overflow-hidden p-0">
+        <div className="md:hidden">
+          {loading ? (
+            <div className="px-5 py-10 text-center text-sm text-slate-500">Yükleniyor...</div>
+          ) : computed.rows.length === 0 ? (
+            <div className="px-5 py-10 text-center text-sm text-slate-500">
+              Henüz danışan yok. “Yeni Danışan” ile ilk kaydı oluştur.
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-200 bg-white">
+              {computed.rows.map((r) => (
+                <div key={r.id} className="p-4">
+                  <div className="flex items-start gap-3">
+                    <span className={`mt-1 h-12 w-1.5 shrink-0 rounded-full ${riskBar(r.risk)}`} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <Link href={`/clients/${r.id}`} className="font-mono text-base font-semibold text-slate-900 hover:underline">
+                            {r.code}
+                          </Link>
+                          <div className="mt-1 text-xs text-slate-500">{progressLabel(r)}</div>
+                        </div>
+                        <span className={`inline-flex shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold ${badgeRisk(r.risk)}`}>
+                          {r.risk}
+                        </span>
+                      </div>
+
+                      <div className="mt-3 grid grid-cols-2 gap-2 text-xs text-slate-500">
+                        <div className="rounded-xl bg-slate-50 p-3">
+                          <div className="font-semibold uppercase tracking-wide text-slate-400">Değerlendirme</div>
+                          <div className="mt-1 text-sm font-medium text-slate-700">{r.lastAssessment}</div>
+                        </div>
+                        <div className="rounded-xl bg-slate-50 p-3">
+                          <div className="font-semibold uppercase tracking-wide text-slate-400">Rapor</div>
+                          <div className="mt-1 text-sm font-medium text-slate-700">{r.lastReport}</div>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${badgeStatus(r.status)}`}>
+                          {r.status}
+                        </span>
+                        {r.note !== "—" ? <span className="line-clamp-1 text-xs text-slate-500">{r.note}</span> : null}
+                      </div>
+
+                      <div className="mt-4 grid grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => onScoreClick(r)}
+                          className={`inline-flex min-h-11 items-center justify-center rounded-xl border px-3 py-2 text-sm font-semibold transition ${
+                            r.hasReport
+                              ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                              : "border-indigo-600 bg-white text-indigo-700 hover:bg-indigo-50"
+                          }`}
+                          title={
+                            r.hasReport
+                              ? "Bu vaka için rapor zaten oluşturulmuş. Yeniden skor girişine izin verilmez."
+                              : "Bu vaka için skor girişine geç"
+                          }
+                        >
+                          {r.hasReport ? "Skor Kilitli" : "Skor Gir"}
+                        </button>
+                        <Link href={`/clients/${r.id}`} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                          Detay
+                        </Link>
+                        <Link href="/reports" className="inline-flex min-h-11 items-center justify-center rounded-xl border border-indigo-600 bg-white px-3 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50">
+                          Raporlar
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => onDeleteClient(r)}
+                          disabled={deletingClientId === r.id}
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-rose-300 bg-white px-3 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          title="Danışanı ve bağlı raporları sil"
+                        >
+                          {deletingClientId === r.id ? "Siliniyor..." : "Sil"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="hidden overflow-auto md:block">
           <table className="min-w-full divide-y divide-slate-200 text-sm">
             <thead className="bg-slate-50">
               <tr>

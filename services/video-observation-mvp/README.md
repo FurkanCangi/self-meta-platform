@@ -1,13 +1,13 @@
-# Self Meta Video Observation MVP
+# DNA Intelligence Video Observation MVP
 
-Bu alt proje, Self Meta AI için video tabanli serbest oyun regülasyon gözlemi servisidir.
+Bu alt proje, DNA Intelligence AI için video tabanli serbest oyun regülasyon gözlemi servisidir.
 
 MVP ilkeleri:
 - tanisal cikarim yapmaz
 - LLM karar vermez
 - tum skorlar aciklanabilir kanitlarla uretilir
 - video kalitesi dusukse confidence dusurulur
-- mevcut Self Meta olcekleri ile destekleyici füzyon yapar
+- mevcut DNA Intelligence olcekleri ile destekleyici füzyon yapar
 
 ## Kapsam
 
@@ -18,7 +18,7 @@ Servis su modullerle kuruldu:
 - MediaPipe + fallback extractor wrapper katmani
 - event segmentation
 - rule-based scoring
-- Self Meta fusion
+- DNA Intelligence fusion
 - clinician-facing deterministic report
 - opsiyonel future LLM writer entrypoint
 

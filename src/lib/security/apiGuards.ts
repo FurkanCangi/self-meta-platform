@@ -70,7 +70,7 @@ export async function requireTrustedMutation(request: Request) {
   const origin = request.headers.get("origin")
   if (origin) return requireSameOrigin(request)
 
-  if (request.headers.get("x-selfmeta-request") === "same-origin") {
+  if (request.headers.get("x-dna-request") === "same-origin") {
     return null
   }
 

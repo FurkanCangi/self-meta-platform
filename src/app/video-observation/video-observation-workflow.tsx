@@ -1,7 +1,7 @@
 "use client"
 
 import { startTransition, useEffect, useMemo, useRef, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 type SegmentType = "solo" | "dyadic" | "transition"
 
@@ -26,6 +26,7 @@ type SessionFormState = {
 }
 
 const SEGMENT_ORDER: SegmentType[] = ["solo", "dyadic", "transition"]
+const MAX_VIDEO_SEGMENT_BYTES = 100 * 1024 * 1024
 
 const SEGMENT_LABELS: Record<SegmentType, string> = {
   solo: "Serbest Oyun / Solo",
@@ -92,6 +93,7 @@ async function uploadBinaryWithProgress(
     const xhr = new XMLHttpRequest()
     xhr.open("PUT", url)
     xhr.setRequestHeader("content-type", file.type || "video/mp4")
+    xhr.setRequestHeader("x-dna-request", "same-origin")
 
     xhr.upload.onprogress = (event) => {
       if (!event.lengthComputable) return
@@ -125,6 +127,8 @@ export default function VideoObservationWorkflow({
   initialSessionId?: string
 }) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const appSurface = searchParams.get("surface") === "app"
   const [form, setForm] = useState<SessionFormState>(INITIAL_FORM)
   const [segments, setSegments] = useState<Record<SegmentType, SegmentDraft>>(buildInitialSegments)
   const [sessionId, setSessionId] = useState(initialSessionId || "")
@@ -154,7 +158,34 @@ export default function VideoObservationWorkflow({
   }
 
   function handleSegmentFileChange(segmentType: SegmentType, file: File | null) {
+    setErrorText("")
     const previousPreviewUrl = previewUrlsRef.current[segmentType]
+    if (file && !file.type.toLowerCase().startsWith("video/")) {
+      revokePreviewUrl(previousPreviewUrl)
+      previewUrlsRef.current[segmentType] = ""
+      updateSegment(segmentType, {
+        file: null,
+        status: "error",
+        detail: "Yalnız video dosyası yüklenebilir.",
+        progress: 0,
+        previewUrl: "",
+      })
+      return
+    }
+
+    if (file && file.size > MAX_VIDEO_SEGMENT_BYTES) {
+      revokePreviewUrl(previousPreviewUrl)
+      previewUrlsRef.current[segmentType] = ""
+      updateSegment(segmentType, {
+        file: null,
+        status: "error",
+        detail: "Segment dosyası 100 MB sınırını aşamaz.",
+        progress: 0,
+        previewUrl: "",
+      })
+      return
+    }
+
     const nextPreviewUrl = file ? URL.createObjectURL(file) : ""
     revokePreviewUrl(previousPreviewUrl)
     previewUrlsRef.current[segmentType] = nextPreviewUrl
@@ -200,12 +231,12 @@ export default function VideoObservationWorkflow({
         .split(",")
         .map((item) => item.trim())
         .filter(Boolean),
-      self_meta_context: null,
+      dna_context: null,
     }
 
     const response = await fetch("/api/video-observation/sessions", {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json", "x-dna-request": "same-origin" },
       body: JSON.stringify(payload),
     })
 
@@ -230,7 +261,7 @@ export default function VideoObservationWorkflow({
         `/api/video-observation/sessions/${sessionIdValue}/segments/presign`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: { "content-type": "application/json", "x-dna-request": "same-origin" },
           body: JSON.stringify({
             segment_type: segmentType,
             file_name: draft.file.name,
@@ -266,7 +297,7 @@ export default function VideoObservationWorkflow({
         `/api/video-observation/sessions/${sessionIdValue}/segments/complete`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: { "content-type": "application/json", "x-dna-request": "same-origin" },
           body: JSON.stringify({
             segment_type: segmentType,
             upload_key: presign.upload_key,
@@ -366,7 +397,7 @@ export default function VideoObservationWorkflow({
         `/api/video-observation/sessions/${createdSessionId}/submit`,
         {
           method: "POST",
-          headers: { "content-type": "application/json" },
+          headers: { "content-type": "application/json", "x-dna-request": "same-origin" },
           body: JSON.stringify({ auto_start_processing: true }),
         }
       )
@@ -381,7 +412,7 @@ export default function VideoObservationWorkflow({
       previewUrlsRef.current = { solo: "", dyadic: "", transition: "" }
 
       startTransition(() => {
-        router.push(`/video-observation?session_id=${createdSessionId}`)
+        router.push(`/video-observation?session_id=${createdSessionId}${appSurface ? "&surface=app" : ""}`)
         router.refresh()
       })
     } catch (error) {
@@ -395,13 +426,13 @@ export default function VideoObservationWorkflow({
   }
 
   return (
-    <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm md:p-6">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div className="text-sm font-semibold uppercase tracking-[0.2em] text-slate-400">
             Video Session Builder
           </div>
-          <h2 className="mt-2 text-2xl font-semibold text-slate-900">
+          <h2 className="mt-2 text-xl font-semibold text-slate-900 md:text-2xl">
             Oturum Oluştur, Yükle ve İşle
           </h2>
           <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
@@ -416,6 +447,15 @@ export default function VideoObservationWorkflow({
         </div>
       </div>
 
+      <div className="mt-5 grid grid-cols-3 gap-2">
+        {SEGMENT_ORDER.map((segmentType) => (
+          <div key={segmentType} className={`rounded-2xl border px-3 py-2 text-center text-xs font-semibold ${statusTone(segments[segmentType].status)}`}>
+            <div className="truncate">{SEGMENT_LABELS[segmentType]}</div>
+            <div className="mt-1">{segments[segmentType].file ? "Seçildi" : "Eksik"}</div>
+          </div>
+        ))}
+      </div>
+
       <form onSubmit={handleSubmit} className="mt-6 grid gap-6">
         <div className="grid gap-4 lg:grid-cols-3">
           <label className="grid gap-2 text-sm text-slate-600">
@@ -423,7 +463,7 @@ export default function VideoObservationWorkflow({
             <input
               value={form.childLabel}
               onChange={(event) => updateForm("childLabel", event.target.value)}
-              className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+              className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-base text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 md:text-sm"
               placeholder="örn. Defne / Session Demo"
             />
           </label>
@@ -433,7 +473,7 @@ export default function VideoObservationWorkflow({
             <input
               value={form.childExternalRef}
               onChange={(event) => updateForm("childExternalRef", event.target.value)}
-              className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+              className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-base text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 md:text-sm"
               placeholder="örn. CASE-VO-001"
             />
           </label>
@@ -446,7 +486,7 @@ export default function VideoObservationWorkflow({
               max={144}
               value={form.ageMonths}
               onChange={(event) => updateForm("ageMonths", event.target.value)}
-              className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100"
+              className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-base text-slate-900 outline-none transition focus:border-indigo-300 focus:ring-2 focus:ring-indigo-100 md:text-sm"
               placeholder="örn. 60"
             />
           </label>
@@ -504,7 +544,7 @@ export default function VideoObservationWorkflow({
           {SEGMENT_ORDER.map((segmentType) => {
             const draft = segments[segmentType]
             return (
-              <div key={segmentType} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+              <div key={segmentType} className="rounded-3xl border border-slate-200 bg-slate-50 p-4 md:p-5">
                 <div className="flex items-center justify-between gap-3">
                   <div className="text-base font-semibold text-slate-900">{SEGMENT_LABELS[segmentType]}</div>
                   <span className={`rounded-full border px-3 py-1 text-xs font-semibold ${statusTone(draft.status)}`}>
@@ -522,10 +562,12 @@ export default function VideoObservationWorkflow({
                   <span className="font-medium text-slate-800">Video dosyası</span>
                   <input
                     type="file"
-                    accept="video/*"
+                    accept="video/mp4,video/webm,video/quicktime,video/*"
+                    capture="environment"
                     onChange={(event) => handleSegmentFileChange(segmentType, event.target.files?.[0] || null)}
-                    className="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-slate-700"
+                    className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700"
                   />
+                  <span className="text-xs leading-5 text-slate-500">Maksimum 100 MB. Telefon kamerası veya dosya seçimi desteklenir.</span>
                 </label>
 
                 <label className="mt-4 grid gap-2 text-sm text-slate-600">
@@ -554,7 +596,7 @@ export default function VideoObservationWorkflow({
                       muted
                       playsInline
                       preload="metadata"
-                      className="h-44 w-full object-cover"
+                      className="aspect-video w-full object-contain"
                     />
                   </div>
                 ) : null}
@@ -590,7 +632,7 @@ export default function VideoObservationWorkflow({
           </div>
         ) : null}
 
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="sticky bottom-[88px] z-10 -mx-4 grid gap-2 border-t border-slate-200 bg-white/90 p-4 backdrop-blur md:static md:mx-0 md:flex md:flex-wrap md:border-0 md:bg-transparent md:p-0">
           <button
             type="submit"
             disabled={busy}

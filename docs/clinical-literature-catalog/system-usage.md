@@ -10,13 +10,13 @@ Bu protokol, `literature-catalog.md` içindeki geniş kaynak havuzunun rapor mot
    - Doğrudan rapora kaynak vermez.
 
 2. Doğrulanmış runtime registry
-   - Dosya: `src/lib/selfmeta/literatureNote.ts`
+   - Dosya: `src/lib/dna/literatureNote.ts`
    - Nesne: `VERIFIED_LITERATURE_SOURCES`
    - Amaç: Raporlarda kullanılmasına izin verilen kaynakları tutmak.
    - AI bu liste dışında kaynak, DOI, URL veya APA üretmez.
 
 3. Katalog seçim haritası
-   - Dosya: `src/lib/selfmeta/literatureNote.ts`
+   - Dosya: `src/lib/dna/literatureNote.ts`
    - Nesne: `CATALOG_LITERATURE_SELECTIONS`
    - Amaç: Her klinik alan için katalogdan seçilmiş çekirdek kaynakları görünür kılmak.
 

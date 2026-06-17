@@ -1,4 +1,4 @@
-import { buildAdvancedReport } from "./src/lib/selfmeta/reportEngine"
+import { buildAdvancedReport } from "./src/lib/dna/reportEngine"
 
 const baseScores = {
   fizyolojik: 33,

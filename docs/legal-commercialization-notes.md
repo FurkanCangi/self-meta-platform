@@ -1,4 +1,4 @@
-# Self Meta AI Legal Commercialization Notes
+# DNA Intelligence Legal Commercialization Notes
 
 Bu not, avukat incelemesine gönderilecek ekonomik v1 hukuk paketinin kapsamını ve resmi dayanak kontrol noktalarını özetler. Nihai hukuki görüş yerine geçmez.
 

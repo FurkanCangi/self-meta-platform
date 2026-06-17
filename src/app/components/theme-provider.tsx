@@ -4,7 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState } 
 
 export type ThemeMode = "light" | "dark";
 
-const STORAGE_KEY = "selfmeta_theme_mode";
+const STORAGE_KEY = "dna_theme_mode";
 
 type ThemeContextValue = {
   theme: ThemeMode;

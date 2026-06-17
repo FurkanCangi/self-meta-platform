@@ -109,7 +109,7 @@ values
   ('backup_encryption', 'backup_security', 'Database and object-storage backups must be encrypted at rest and protected by least-privilege admin access.', 'platform_admin', 'quarterly', 'Verify Supabase/Vercel/provider backup encryption and access controls.'),
   ('backup_restore_test', 'backup_security', 'A restore drill must be performed and documented before production launch and at least quarterly.', 'platform_admin', 'quarterly', 'Keep evidence outside the public repository.'),
   ('backup_retention_limit', 'backup_security', 'Backup retention must not exceed documented legal/operational need.', 'platform_admin', 'quarterly', 'Align with retention policy and contractual/legal requirements.'),
-  ('production_debug_logs_off', 'logging', 'OPENAI_REPORT_DEBUG and SELF_META_REPORT_DEBUG must remain false in production.', 'platform_admin', 'monthly', 'Temporary debug sessions require approval and post-session cleanup.')
+  ('production_debug_logs_off', 'logging', 'OPENAI_REPORT_DEBUG and DNA_REPORT_DEBUG must remain false in production.', 'platform_admin', 'monthly', 'Temporary debug sessions require approval and post-session cleanup.')
 on conflict (control_key) do update
 set
   control_area = excluded.control_area,

@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 
-DOMAIN_TO_SELFMETA = {
+DOMAIN_TO_DNA = {
     "attention_engagement": ["Bilişsel Regülasyon", "Yürütücü İşlev"],
     "behavioral_organization": ["Yürütücü İşlev", "Bilişsel Regülasyon"],
     "emotional_recovery": ["Duygusal Regülasyon", "Fizyolojik Regülasyon", "İnterosepsiyon"],
@@ -12,7 +12,7 @@ DOMAIN_TO_SELFMETA = {
 }
 
 
-def _selfmeta_label_to_score(label: str | None, score: float | None) -> float | None:
+def _dna_label_to_score(label: str | None, score: float | None) -> float | None:
     if score is not None:
         return float(score)
     if not label:
@@ -85,21 +85,21 @@ def _recommended_next_step(domain_name: str, agreement_label: str, overall_confi
 
 def fuse_results(
     domain_scores: list[dict[str, Any]],
-    self_meta_context: dict[str, Any],
+    dna_context: dict[str, Any],
     support_age_band: str,
     overall_quality: dict[str, Any],
     rules_config: dict[str, Any],
     session_context: dict[str, Any],
 ) -> list[dict[str, Any]]:
-    scales = self_meta_context.get("scales", []) if self_meta_context else []
+    scales = dna_context.get("scales", []) if dna_context else []
     weights = rules_config["fusion"]["weights"][support_age_band]
     fusion_rows: list[dict[str, Any]] = []
 
     for domain_score in domain_scores:
         domain_name = domain_score["domain_name"]
-        mapped_domains = DOMAIN_TO_SELFMETA.get(domain_name, [])
+        mapped_domains = DOMAIN_TO_DNA.get(domain_name, [])
         relevant_scale_values = [
-            _selfmeta_label_to_score(item.get("label"), item.get("score"))
+            _dna_label_to_score(item.get("label"), item.get("score"))
             for item in scales
             if item.get("domain") in mapped_domains
         ]
