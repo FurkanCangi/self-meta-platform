@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server"
 import { requireConfirmedUser } from "@/lib/security/apiGuards"
 import { EDUCATION_VIDEO_FEATURE } from "@/lib/security/entitlements"
+import { getReportCreditSummary } from "@/lib/security/reportCredits"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
 function isActiveEntitlement(row: any) {
@@ -78,6 +79,8 @@ export async function GET() {
     .order("created_at", { ascending: false })
     .limit(5)
 
+  const creditSummary = await getReportCreditSummary({ admin, userId })
+
   return NextResponse.json({
     ok: true,
     education: {
@@ -89,10 +92,10 @@ export async function GET() {
       expiresAt: educationEntitlement?.expires_at || null,
     },
     reports: {
-      used: reportCount,
-      included: null,
-      remaining: null,
-      creditLedgerAvailable: false,
+      used: creditSummary.ok ? creditSummary.consumed : reportCount,
+      included: creditSummary.ok ? creditSummary.granted : 0,
+      remaining: creditSummary.ok ? creditSummary.balance : 0,
+      creditLedgerAvailable: creditSummary.ok,
     },
     recentBillingEvents: (billingEvents || []).map((row: any) => ({
       action: String(row.action || ""),

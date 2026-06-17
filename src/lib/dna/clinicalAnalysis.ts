@@ -1,4 +1,5 @@
 import type { ExternalTestCategory } from "./externalTestRegistry"
+import type { ReportAuditTrail, ReportTrace, ReportVersionMeta } from "./reportTrace"
 import type { DomainResult } from "./reportEngine"
 
 export type ClinicalMechanismType =
@@ -8,6 +9,7 @@ export type ClinicalMechanismType =
   | "language_communication"
   | "language_social_pragmatic"
   | "physiological_interoceptive"
+  | "selective_interoception"
   | "evidence_limited_mixed"
   | "default"
 
@@ -69,6 +71,9 @@ export type ClinicalAnalysis = {
   dataLimitations?: string[]
   dataConfidenceLevel?: ClinicalEvidenceMap["confidenceLevel"]
   dataConfidenceRationale?: string
+  trace?: ReportTrace
+  auditTrail?: ReportAuditTrail
+  reportVersionMeta?: ReportVersionMeta
 }
 
 function applyInteroPriorityBias(

@@ -35,17 +35,20 @@ type BillingStatus = {
 const reportPackages = [
   {
     title: "10 Rapor Paketi",
+    credits: 10,
     price: "500 TL",
     description: "Düşük hacimli ek vaka raporları için.",
   },
   {
     title: "50 Rapor Paketi",
+    credits: 50,
     price: "2.000 TL",
     description: "Düzenli klinik kullanım için ekonomik paket.",
     featured: true,
   },
   {
     title: "100 Rapor Paketi",
+    credits: 100,
     price: "3.500 TL",
     description: "Yoğun vaka akışı olan terapistler için.",
   },
@@ -125,16 +128,18 @@ export default function ReportPackagesPage() {
             </div>
           </div>
           <div className="dna-card p-5">
-            <div className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Rapor Kullanımı</div>
+            <div className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Kullanılan Hak</div>
             <div className="mt-2 text-xl font-black text-[#071b3a]">{loadingStatus ? "Yükleniyor..." : `${status?.reports?.used ?? 0} rapor`}</div>
-            <div className="mt-2 text-sm leading-6 text-slate-500">Mevcut rapor geçmişinden canlı hesaplanır.</div>
+            <div className="mt-2 text-sm leading-6 text-slate-500">AI rapor üretildiğinde ledger üzerinden düşülür.</div>
           </div>
           <div className="dna-card p-5">
-            <div className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Rapor Hakkı Ledger</div>
+            <div className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Kalan Rapor Hakkı</div>
             <div className="mt-2 text-xl font-black text-[#071b3a]">
-              {status?.reports?.creditLedgerAvailable ? `${status.reports.remaining ?? 0} kalan` : "Bağlanacak"}
+              {loadingStatus ? "Yükleniyor..." : status?.reports?.creditLedgerAvailable ? `${status.reports.remaining ?? 0} kalan` : "Ledger hazır değil"}
             </div>
-            <div className="mt-2 text-sm leading-6 text-slate-500">Kredi düşümü ayrı tablo ile bağlandığında otomatik güncellenir.</div>
+            <div className="mt-2 text-sm leading-6 text-slate-500">
+              Toplam tanımlı hak: {loadingStatus ? "..." : status?.reports?.included ?? 0}
+            </div>
           </div>
         </section>
 
@@ -161,6 +166,9 @@ export default function ReportPackagesPage() {
                 </div>
                 <h2 className="mt-5 text-xl font-black text-[#071b3a]">{pack.title}</h2>
                 <p className="mt-3 min-h-[52px] text-sm leading-7 text-slate-600">{pack.description}</p>
+                <div className="mt-4 inline-flex rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">
+                  {pack.credits} AI rapor hakkı
+                </div>
                 <div className="mt-4 text-4xl font-black text-blue-700">{pack.price}</div>
                 <button
                   type="button"

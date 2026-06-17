@@ -4,7 +4,7 @@ import { execFileSync } from "node:child_process";
 
 import { listFixturePaths, runSingleFixture, type FixturePayload } from "./run-dna-report";
 import { extractExternalClinicalFindings, getAnamnezThemeSignals, type AnamnezRecord } from "../src/lib/dna/anamnezUtils";
-import { analyzeExternalClinicalTests } from "../src/lib/dna/externalTestRegistry";
+import { analyzeExternalClinicalTests, SUPPORTED_EXTERNAL_TESTS } from "../src/lib/dna/externalTestRegistry";
 import { CLINICAL_KNOWLEDGE_CHUNKS, WORD_RAG_SOURCE } from "../src/lib/dna/clinicalKnowledgeBase";
 import { splitClinicalReportSections } from "../src/lib/dna/reportText";
 
@@ -32,6 +32,9 @@ type AuditIssueCode =
   | "sensory_theme_leakage"
   | "attention_theme_leakage"
   | "intero_overweighted"
+  | "trace_coverage_missing"
+  | "external_registry_metadata_missing"
+  | "micro_evidence_leak"
   | "narrative_guard_violation";
 
 type FixtureAudit = {
@@ -67,6 +70,9 @@ const ISSUE_LABELS: Record<AuditIssueCode, string> = {
   sensory_theme_leakage: "Duyusal tema sızıntısı var",
   attention_theme_leakage: "Dikkat/görev sürdürme tema sızıntısı var",
   intero_overweighted: "İnterosepsiyon gereğinden fazla ağırlık alıyor",
+  trace_coverage_missing: "Trace coverage eksik",
+  external_registry_metadata_missing: "Ek test registry metadata eksik",
+  micro_evidence_leak: "Mikro-kanıt soru/madde/item dili sızdırıyor",
   narrative_guard_violation: "Narrative guard ihlali var",
 };
 
@@ -224,7 +230,8 @@ function getIssueCodes(params: {
         profileMentionsCategory(normalizedProfile, "social_pragmatic")) ||
       (primaryCategory === "social_pragmatic" &&
         decisionCategories.has("language_communication") &&
-        profileMentionsCategory(normalizedProfile, "language_communication"));
+        profileMentionsCategory(normalizedProfile, "language_communication")) ||
+      (hasMixedLimitedEvidence && hasAny(normalizedProfile, [/kanıt-sınırlı/, /kanit-sinirli/, /karma/]));
 
     if (!primaryAligned && !contextualOverride) {
       issueCodes.push("profile_category_mismatch");
@@ -271,7 +278,13 @@ function getIssueCodes(params: {
 
   if (
     profileIsPhysioIntero &&
-    !hasAny(mechanismText, [/beden-temelli toparlanma/, /interoseptif düzenleme/, /içsel sinyalleri düzenlemeye katma/])
+    !hasAny(mechanismText, [
+      /beden-temelli toparlanma/,
+      /interoseptif düzenleme/,
+      /içsel sinyalleri düzenlemeye katma/,
+      /içsel bedensel sinyalleri/,
+      /seçici bir interoseptif kırılganlık/,
+    ])
   ) {
     issueCodes.push("physiological_mechanism_weak");
   }
@@ -328,8 +341,8 @@ function getIssueCodes(params: {
   const hasTherapistSource = typeof params.anamnezRecord.therapist_comments === "string";
   if (
     (hasCaregiverSource || hasTherapistSource || externalAnalysis.matches.length > 0) &&
-    ((hasCaregiverSource && !/Bakımveren anlatısı:/i.test(sectionBodies.fit)) ||
-      (hasTherapistSource && !/Terapist gözlemi:/i.test(sectionBodies.fit)) ||
+    ((hasCaregiverSource && !/(?:Aile tarafından|aileden gelen bilgi)/i.test(sectionBodies.fit)) ||
+      (hasTherapistSource && !/Terapist gözleminde/i.test(sectionBodies.fit)) ||
       (externalAnalysis.matches.length > 0 && !/Ek Test Kanıt Profili:/i.test(sectionBodies.fit)))
   ) {
     issueCodes.push("anamnez_fit_specificity_missing");
@@ -337,7 +350,9 @@ function getIssueCodes(params: {
 
   if (
     !/Runtime RAG:\s*%0/i.test(params.metricsText) ||
-    !/Deterministic Knowledge Base:\s*Aktif/i.test(params.metricsText)
+    !/Deterministic Knowledge Base:\s*Aktif/i.test(params.metricsText) ||
+    !/Trace:\s*Aktif/i.test(params.metricsText) ||
+    !/Selected atoms:\s*[1-9]\d*/i.test(params.metricsText)
   ) {
     issueCodes.push("deterministic_kb_metric_missing");
   }
@@ -417,6 +432,52 @@ function assertKnowledgeBaseCoverage() {
   }
 }
 
+function assertExternalTestRegistryMetadata(): string[] {
+  const missing: string[] = [];
+  for (const test of SUPPORTED_EXTERNAL_TESTS) {
+    if (!test.ageRange || !Number.isFinite(test.minAgeMonths) || !Number.isFinite(test.maxAgeMonths)) missing.push(`${test.id}: ageRange`);
+    if (!test.scoreSystem || test.scoreSystem.length < 8) missing.push(`${test.id}: scoreSystem`);
+    if (!test.resultLevels || test.resultLevels.length < 8) missing.push(`${test.id}: resultLevels`);
+    if (!test.domainsMeasured?.length) missing.push(`${test.id}: domainsMeasured`);
+    if (!test.interpretationBoundaries || test.interpretationBoundaries.length < 12) missing.push(`${test.id}: interpretationBoundaries`);
+    if (!test.dnaRelation || test.dnaRelation.length < 8) missing.push(`${test.id}: dnaRelation`);
+    if (!test.sourceLinks?.length || test.sourceLinks.some((link) => !/^https?:\/\//i.test(link))) missing.push(`${test.id}: sourceLinks`);
+    if (/item|madde|norm tablosu|manual item|scoring table/i.test(`${test.reportUse} ${test.interpretationBoundaries}`)) {
+      missing.push(`${test.id}: proprietary_content_boundary`);
+    }
+  }
+  return missing;
+}
+
+function getTraceAuditIssues(result: Awaited<ReturnType<typeof runSingleFixture>>): AuditIssueCode[] {
+  const issues: AuditIssueCode[] = [];
+  const trace = result.trace;
+  const mechanismRule = trace?.ruleHits?.find((rule) => rule.ruleType === "mechanism");
+  if (!trace?.active || !mechanismRule || !result.auditTrail?.inputHash) {
+    issues.push("trace_coverage_missing");
+  }
+  const invalidAtoms = trace?.selectedAtoms?.filter(
+    (atom) =>
+      !atom.id ||
+      !atom.evidenceIds?.length ||
+      !atom.ruleIds?.length ||
+      !atom.confidence ||
+      typeof atom.priority !== "number" ||
+      !atom.sections?.length ||
+      !atom.safetyTags?.length
+  ) || [];
+  if (invalidAtoms.length > 0 || (trace?.validationIssues || []).length > 0) {
+    issues.push("trace_coverage_missing");
+  }
+  if (/(?:age-mismatch|raw-score|raw-preserved|format-preserved|preserved-vineland|typical-vineland|typical-abas)/i.test(result.fixturePath) && !(trace?.suppressedAtoms || []).length) {
+    issues.push("trace_coverage_missing");
+  }
+  if (/(?:\b\d{1,2}\.\s*soru\b|\bsoru\s*\d{1,2}\b|madde düzeyinde|anket maddesi|yanıt dizisi|soru numarası)/i.test(result.finalText)) {
+    issues.push("micro_evidence_leak");
+  }
+  return issues;
+}
+
 function buildMarkdownSummary(results: FixtureAudit[]) {
   const issueCounts = new Map<AuditIssueCode, number>();
   const examples = new Map<AuditIssueCode, string[]>();
@@ -458,6 +519,7 @@ function buildMarkdownSummary(results: FixtureAudit[]) {
 
 async function main() {
   assertKnowledgeBaseCoverage();
+  const externalRegistryIssues = assertExternalTestRegistryMetadata();
   const fixturePaths = await listFixturePaths();
   const results: FixtureAudit[] = [];
 
@@ -476,6 +538,7 @@ async function main() {
       ageMonths: fixture.ageMonths,
       narrativeGuardCount: result.narrativeGuardViolations.length,
     });
+    const traceIssueCodes = getTraceAuditIssues(result);
 
     results.push({
       fixture: fixturePath,
@@ -483,7 +546,7 @@ async function main() {
       ageMonths: fixture.ageMonths,
       profileType: result.profileType,
       globalLevel: result.globalLevel,
-      issueCodes: issueResult.issueCodes,
+      issueCodes: Array.from(new Set([...issueResult.issueCodes, ...traceIssueCodes, ...(externalRegistryIssues.length ? ["external_registry_metadata_missing" as AuditIssueCode] : [])])),
       compatibleCategories: issueResult.compatibleCategories,
       incompatibleCount: issueResult.incompatibleCount,
     });
@@ -497,6 +560,9 @@ async function main() {
   console.log("=== DETERMINISTIC AUDIT ===");
   console.log(`Toplam fixture: ${results.length}`);
   console.log(`Sorun bulunan fixture: ${results.filter((item) => item.issueCodes.length > 0).length}`);
+  if (externalRegistryIssues.length > 0) {
+    console.log(`External registry metadata issue: ${externalRegistryIssues.slice(0, 10).join(" | ")}`);
+  }
 
   const issueCounts = new Map<AuditIssueCode, number>();
   for (const result of results) {
@@ -511,6 +577,9 @@ async function main() {
 
   console.log("");
   console.log(`Ozet: ${path.join(OUTPUT_DIR, "audit-summary.md")}`);
+  if (issueCounts.size > 0) {
+    process.exitCode = 1;
+  }
 }
 
 main().catch((error) => {

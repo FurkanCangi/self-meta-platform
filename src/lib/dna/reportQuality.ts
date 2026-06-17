@@ -239,6 +239,17 @@ export function getNarrativeGuardViolations(params: {
 
   const hasAny = (patterns: RegExp[]) => patterns.some((pattern) => pattern.test(text))
   const hasAnyAsserted = (patterns: RegExp[]) => patterns.some((pattern) => pattern.test(assertionText))
+  const languageQuality = analyzeReportLanguageQuality(params.text)
+
+  for (const issue of languageQuality.issues) {
+    if (issue.severity === "high") {
+      violations.push({
+        code: `language_${issue.code}`,
+        severity: "high",
+        message: issue.message,
+      })
+    }
+  }
 
   if (nonTypical.length === 0) {
     if (hasAny([/birincil kırılgan/, /risk ekseni/, /yaygın regülasyon yük/, /çok alanlı güçlük/, /yüksek klinik yük/])) {
@@ -402,3 +413,4 @@ export function hasCriticalNarrativeGuardViolation(params: {
 }): boolean {
   return getNarrativeGuardViolations(params).some((issue) => issue.severity === "high")
 }
+import { analyzeReportLanguageQuality } from "./reportLanguageQuality"

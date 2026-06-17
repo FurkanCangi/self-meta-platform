@@ -63,6 +63,18 @@ export default function ClientsPage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [rows, setRows] = useState<ClientRow[]>([]);
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
+  const [appSurface, setAppSurface] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setAppSurface(params.get("surface") === "app");
+  }, []);
+
+  const withSurface = (path: string) => {
+    if (!appSurface) return path;
+    const separator = path.includes("?") ? "&" : "?";
+    return `${path}${separator}surface=app`;
+  };
 
   useEffect(() => {
     let alive = true;
@@ -75,7 +87,7 @@ export default function ClientsPage() {
       const { data: userRes, error: userErr } = await supabase.auth.getUser();
       if (userErr || !userRes?.user?.id) {
         setLoading(false);
-        router.replace("/login");
+        router.replace(appSurface ? "/login?surface=app" : "/login");
         return;
       }
 
@@ -170,7 +182,7 @@ export default function ClientsPage() {
     return () => {
       alive = false;
     };
-  }, [router]);
+  }, [router, appSurface]);
 
   const computed = useMemo(() => {
     const all = rows.slice();
@@ -207,7 +219,7 @@ export default function ClientsPage() {
       return;
     }
 
-    router.push(`/assessments?client=${encodeURIComponent(row.code)}&client_id=${encodeURIComponent(row.id)}`);
+    router.push(withSurface(`/assessments?client=${encodeURIComponent(row.code)}&client_id=${encodeURIComponent(row.id)}`));
   };
 
   const onDeleteClient = async (row: ClientRow) => {
@@ -285,7 +297,125 @@ export default function ClientsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <>
+    <div className="dna-app-only dna-app-page space-y-4">
+      <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="dna-app-section-title">Danışan yönetimi</div>
+            <h1 className="mt-2 text-[26px] font-black leading-tight text-[#071b3a]">Danışanlar</h1>
+            <p className="mt-1 text-sm leading-6 text-slate-600">Vaka durumunu gör, skora veya rapora hızlı geç.</p>
+          </div>
+          <Link href="/clients/new?surface=app" className="dna-btn shrink-0 px-4 py-3 text-sm font-black">
+            Yeni
+          </Link>
+        </div>
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          className="mt-4 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+          placeholder="Danışan kodu ara"
+        />
+        {err ? <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{err}</div> : null}
+        {!err && notice ? <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{notice}</div> : null}
+      </section>
+
+      <section className="grid grid-cols-3 gap-2">
+        {[
+          ["Toplam", computed.total],
+          ["Skor", computed.pendingScore],
+          ["Risk", computed.riskCount],
+        ].map(([label, value]) => (
+          <div key={label} className="rounded-[18px] border border-slate-200 bg-white p-3 text-center shadow-sm">
+            <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">{label}</div>
+            <div className="mt-1 text-2xl font-black text-[#071b3a]">{value}</div>
+          </div>
+        ))}
+      </section>
+
+      <section className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1">
+        {(["Tümü", "Aktif", "Bekliyor", "Arşiv", "Riskli"] as const).map((k) => (
+          <button
+            key={k}
+            onClick={() => setFilter(k as any)}
+            className={
+              filter === k
+                ? "shrink-0 rounded-full bg-blue-600 px-4 py-2 text-sm font-black text-white"
+                : "shrink-0 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-600"
+            }
+          >
+            {k}
+          </button>
+        ))}
+      </section>
+
+      <section className="space-y-3">
+        {loading ? (
+          <div className="rounded-[22px] border border-slate-200 bg-white p-6 text-center text-sm font-semibold text-slate-500 shadow-sm">Yükleniyor...</div>
+        ) : computed.rows.length === 0 ? (
+          <div className="rounded-[22px] border border-slate-200 bg-white p-6 text-center text-sm font-semibold text-slate-500 shadow-sm">
+            Henüz danışan yok. İlk kaydı oluştur.
+          </div>
+        ) : (
+          computed.rows.map((r) => (
+            <article key={r.id} className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="flex items-start gap-3">
+                <span className={`mt-1 h-12 w-1.5 shrink-0 rounded-full ${riskBar(r.risk)}`} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <Link href={withSurface(`/clients/${r.id}`)} className="font-mono text-lg font-black text-[#071b3a]">
+                        {r.code}
+                      </Link>
+                      <div className="mt-0.5 text-xs font-semibold text-slate-500">{progressLabel(r)}</div>
+                    </div>
+                    <span className={`rounded-full border px-2.5 py-1 text-xs font-black ${badgeRisk(r.risk)}`}>{r.risk}</span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <div className="rounded-2xl bg-slate-50 p-3">
+                      <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Değerlendirme</div>
+                      <div className="mt-1 text-sm font-bold text-slate-700">{r.lastAssessment}</div>
+                    </div>
+                    <div className="rounded-2xl bg-slate-50 p-3">
+                      <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Rapor</div>
+                      <div className="mt-1 text-sm font-bold text-slate-700">{r.lastReport}</div>
+                    </div>
+                  </div>
+                  {r.note !== "—" ? <p className="mt-3 line-clamp-2 text-sm leading-6 text-slate-600">{r.note}</p> : null}
+                  <div className="mt-4 grid grid-cols-3 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => onScoreClick(r)}
+                      className={`min-h-11 rounded-2xl px-3 text-sm font-black ${
+                        r.hasReport ? "border border-amber-200 bg-amber-50 text-amber-700" : "bg-blue-600 text-white"
+                      }`}
+                    >
+                      {r.hasReport ? "Kilitli" : "Skor"}
+                    </button>
+                    <Link href={withSurface(`/clients/${r.id}`)} className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-slate-200 bg-white px-3 text-sm font-black text-slate-700">
+                      Detay
+                    </Link>
+                    <Link href={withSurface("/reports")} className="inline-flex min-h-11 items-center justify-center rounded-2xl border border-blue-200 bg-blue-50 px-3 text-sm font-black text-blue-700">
+                      Rapor
+                    </Link>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onDeleteClient(r)}
+                    disabled={deletingClientId === r.id}
+                    className="mt-3 text-xs font-bold text-rose-600 disabled:opacity-50"
+                  >
+                    {deletingClientId === r.id ? "Siliniyor..." : "Silme / arşiv işlemi"}
+                  </button>
+                </div>
+              </div>
+            </article>
+          ))
+        )}
+      </section>
+    </div>
+
+    <div className="dna-web-only space-y-6">
       <div className="dna-card p-5">
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
@@ -537,5 +667,6 @@ export default function ClientsPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

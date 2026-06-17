@@ -162,6 +162,15 @@ function getMechanismSpecificChunks(
       "RISK_PROFILE_SUMMARY_RULE"
     );
   }
+  if (mechanism === "selective_interoception") {
+    ids.push(
+      "INTEROCEPTION_REPORT_LANGUAGE",
+      "INTEROCEPTION_ANAMNESIS_INTEGRATION",
+      "PHYSIOLOGICAL_REGULATION_REPORT_LANGUAGE",
+      "RISK_PROFILE_GENERAL_RULE",
+      "RISK_PROFILE_SUMMARY_RULE"
+    );
+  }
   if (mechanism === "motor_praxis") {
     ids.push(
       "EXECUTIVE_FUNCTION_REPORT_LANGUAGE",
@@ -249,6 +258,9 @@ function getAnamnesisChunks(params: KnowledgeSelectionParams, useIn: ClinicalKno
   }
   if (params.evidenceMap?.clinicalMechanism === "physiological_interoceptive") {
     ids.push("PHYSIOLOGICAL_REGULATION_ANAMNESIS_INTEGRATION", "INTEROCEPTION_ANAMNESIS_INTEGRATION");
+  }
+  if (params.evidenceMap?.clinicalMechanism === "selective_interoception") {
+    ids.push("INTEROCEPTION_ANAMNESIS_INTEGRATION", "ANAMNESIS_PROTECTIVE_CONTEXT");
   }
   if (params.evidenceMap?.clinicalMechanism === "language_communication") {
     ids.push("COGNITIVE_REGULATION_ANAMNESIS_INTEGRATION", "EXECUTIVE_FUNCTION_ANAMNESIS_INTEGRATION");

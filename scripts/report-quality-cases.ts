@@ -92,7 +92,7 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
     mode: "paired",
     expectedGlobalLevel: "Atipik",
     expectedProfileIncludes: ["Duyusal"],
-    requiredPhrases: ["Anamnezle en güçlü örtüşen maddeler", "Madde düzeyinde dikkat çeken bulgular"],
+    requiredPhrases: ["Ölçek içi mikro-kanıt", "işitsel uyaran yükü"],
     minLiteratureParagraphs: 3,
     minApaReferences: 4,
   },
@@ -152,7 +152,7 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
     mode: "paired",
     expectedGlobalLevel: "Riskli",
     expectedProfileIncludes: ["Dilsel", "Yükü"],
-    requiredPhrases: ["yas esdegeri", "PLS-5", "sözel talep"],
+    requiredPhrases: ["yaş eşdeğeri", "PLS-5", "sözel talep"],
     minLiteratureParagraphs: 3,
     minApaReferences: 4,
   },
@@ -175,8 +175,8 @@ export const QUALITY_CASE_SPECS: QualityCaseSpec[] = [
     expectedProfileIncludes: ["Geçiş", "Ko-Regülasyon"],
     requiredPhrases: [
       "kanıt-sınırlı",
-      "Bakımveren anlatısı",
-      "Terapist gözlemi",
+      "Aileden gelen bilgiye göre",
+      "Terapist gözleminde",
       "Ham puan tek başına yorum gücünü sınırlar",
       "Korunmuş/yaş uyumlu sonuç"
     ],

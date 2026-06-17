@@ -52,7 +52,7 @@ export default function BottomTabs() {
   const pathname = usePathname() || "";
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-slate-200/80 bg-white/94 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-18px_44px_rgba(7,27,58,0.10)] backdrop-blur-xl md:hidden">
+    <nav className="fixed inset-x-0 bottom-0 z-40 mx-auto max-w-[430px] border-t border-slate-200/80 bg-white/94 px-2 pb-[max(env(safe-area-inset-bottom),8px)] pt-2 shadow-[0_-18px_44px_rgba(7,27,58,0.10)] backdrop-blur-xl">
       <div className="mx-auto grid max-w-md grid-cols-5 gap-1">
         {tabs.map((tab) => {
           const Icon = tab.icon;

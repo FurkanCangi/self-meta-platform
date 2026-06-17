@@ -10,6 +10,8 @@ import {
   hasForbiddenClinicalDetermination,
 } from "../src/lib/dna/reportQuality";
 import { hasAllCanonicalReportSections, splitClinicalReportSections } from "../src/lib/dna/reportText";
+import { questions } from "../src/lib/dna/questions";
+import { analyzeReportLanguageQuality } from "../src/lib/dna/reportLanguageQuality";
 
 const OUTPUT_DIR = "/tmp/dna-report-output/quality-gates";
 
@@ -156,7 +158,7 @@ function countCaseSpecificEvidenceSentences(text: string): number {
     /görevden kop|gorevden kop|görevde kal|gorevde kal|toparlanma süresi|toparlanma suresi/i,
     /motor planlama|praksi|sekans|beden organizasyonu|koordinasyon/i,
     /öz bakım|oz bakim|giyinme|rutin|başlatma|baslatma|sürdürme|surdurme/i,
-    /terapist gözlemi|terapist gozlemi|anamnez|dış test|dis test|madde düzeyinde/i,
+    /terapist gözlemi|terapist gozlemi|anamnez|dış test|dis test|ölçek içi mikro-kanıt|olcek ici mikro-kanit/i,
   ];
 
   return String(text || "")
@@ -201,6 +203,7 @@ function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof r
   const prioritizationSection = getSectionBody(finalText, "6.");
   const conclusionSection = getSectionBody(finalText, "7.");
   const literatureSection = getRawSectionText(finalText, "8.");
+  const languageQuality = analyzeReportLanguageQuality(finalText);
 
   if (!hasAllCanonicalReportSections(finalText)) {
     failures.push("Final rapor canonical section setini taşımıyor.");
@@ -275,12 +278,31 @@ function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof r
     );
   }
 
+  const blockingLanguageIssues = languageQuality.issues.filter((issue) => issue.severity === "high");
+  if (blockingLanguageIssues.length > 0) {
+    failures.push(
+      `Dil kalite guard ihlali var: ${blockingLanguageIssues.map((issue) => issue.code).join(", ")}`
+    );
+  }
+
   if (spec.requiredPhrases?.length && !includesAll(finalText, spec.requiredPhrases)) {
     failures.push(`Gerekli ifadelerden en az biri eksik: ${spec.requiredPhrases.join(" | ")}`);
   }
 
   if (spec.forbiddenPhrases?.length && includesAny(finalText, spec.forbiddenPhrases)) {
     failures.push(`Yasaklı anlatı ifadesi bulundu: ${spec.forbiddenPhrases.join(" | ")}`);
+  }
+
+  if (spec.key === "item-linkage") {
+    const questionTextsInReport = questions
+      .map((question) => question.text.trim())
+      .filter((text) => text.length > 8 && finalText.includes(text));
+    if (questionTextsInReport.length > 0) {
+      failures.push(`Mikro-kanıt çıktısı doğrudan soru metni içeriyor: ${questionTextsInReport.slice(0, 2).join(" | ")}`);
+    }
+    if (/(?:\b\d{1,2}\.\s*soru\b|\bsoru\s*\d{1,2}\b|madde düzeyinde|maddeler:|maddesinin)/i.test(finalText)) {
+      failures.push("Mikro-kanıt çıktısı soru numarası veya eski madde dili içeriyor.");
+    }
   }
 
   if (spec.mode === "balanced" && includesAny(patternSection + "\n" + conclusionSection, ["seçici bir kırılganlık", "yaygın regülasyon yükü"])) {
@@ -382,6 +404,21 @@ async function main() {
     const metricsText = await readMetricsText(result.outputDir);
     if (!withAi && (!/Runtime RAG:\s*%0/i.test(metricsText) || !/Deterministic Knowledge Base:\s*Aktif/i.test(metricsText))) {
       caseFailures.push("Deterministic üretimde Runtime RAG %0 ve Knowledge Base Aktif metrik ayrımı görünmüyor.");
+    }
+    if (!withAi && (!/Trace:\s*Aktif/i.test(metricsText) || !/Selected atoms:\s*[1-9]\d*/i.test(metricsText))) {
+      caseFailures.push("Deterministic üretimde trace aktif ve seçili atom metrikleri görünmüyor.");
+    }
+    if (!result.trace?.active || !result.auditTrail?.inputHash) {
+      caseFailures.push("Rapor trace/auditTrail üretmiyor.");
+    }
+    if ((result.trace?.validationIssues || []).length > 0) {
+      caseFailures.push(`Trace validation issue var: ${(result.trace?.validationIssues || []).join(" | ")}`);
+    }
+    const invalidAtoms = (result.trace?.selectedAtoms || []).filter(
+      (atom) => !atom.evidenceIds?.length || !atom.ruleIds?.length || !atom.confidence || typeof atom.priority !== "number" || !atom.sections?.length
+    );
+    if (invalidAtoms.length > 0) {
+      caseFailures.push(`Eksik trace alanı olan atom var: ${invalidAtoms.map((atom) => atom.id).join(", ")}`);
     }
     if (
       /raw-score-only|raw-ext/i.test(result.fixturePath) &&

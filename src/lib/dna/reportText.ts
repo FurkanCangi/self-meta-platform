@@ -1,6 +1,6 @@
 export const CANONICAL_REPORT_HEADINGS = [
   "1. Klinik Karar Özeti",
-  "2. Kanıt Temelli Profil Özeti",
+  "2. Klinik Kanıt Profili",
   "3. Alan Bazlı Klinik Yorum",
   "4. Klinik Örüntü ve Formülasyon",
   "5. Anamnez, Gözlem ve Test Uyumunun Değerlendirilmesi",
@@ -16,6 +16,7 @@ const LEGACY_OR_VARIANT_HEADINGS: Array<[RegExp, string]> = [
   [/^\s*(?:1\.\s*)?Klinik Karar Özeti\s*:?\s*$/gim, CANONICAL_REPORT_HEADINGS[0]],
   [/^\s*(?:1\.\s*)?Genel Sonuç\s*:?\s*$/gim, CANONICAL_REPORT_HEADINGS[0]],
   [/^\s*(?:1\.\s*)?Genel Klinik Değerlendirme\s*:?\s*$/gim, CANONICAL_REPORT_HEADINGS[0]],
+  [/^\s*(?:2\.\s*)?Klinik Kanıt Profili\s*:?\s*$/gim, CANONICAL_REPORT_HEADINGS[1]],
   [/^\s*(?:2\.\s*)?Kanıt Temelli Profil Özeti\s*:?\s*$/gim, CANONICAL_REPORT_HEADINGS[1]],
   [/^\s*(?:2\.\s*)?Sayısal Sonuç Özeti\s*:?\s*$/gim, CANONICAL_REPORT_HEADINGS[1]],
   [/^\s*(?:2\.\s*)?Öncelikli Self-Regülasyon Alanları\s*:?\s*$/gim, CANONICAL_REPORT_HEADINGS[1]],
@@ -39,6 +40,7 @@ const HEADING_ALIASES: Array<[RegExp, string]> = [
   [/1\.\s*Klinik Karar Özeti/gi, CANONICAL_REPORT_HEADINGS[0]],
   [/1\.\s*Genel Sonuç/gi, CANONICAL_REPORT_HEADINGS[0]],
   [/1\.\s*Genel Klinik Değerlendirme/gi, CANONICAL_REPORT_HEADINGS[0]],
+  [/2\.\s*Klinik Kanıt Profili/gi, CANONICAL_REPORT_HEADINGS[1]],
   [/2\.\s*Kanıt Temelli Profil Özeti/gi, CANONICAL_REPORT_HEADINGS[1]],
   [/2\.\s*Sayısal Sonuç Özeti/gi, CANONICAL_REPORT_HEADINGS[1]],
   [/2\.\s*Öncelikli Self-Regülasyon Alanları/gi, CANONICAL_REPORT_HEADINGS[1]],
@@ -59,7 +61,7 @@ const HEADING_ALIASES: Array<[RegExp, string]> = [
 ]
 
 const HEADING_PATTERN =
-  /(1\.\s*Klinik Karar Özeti|1\.\s*Genel Klinik Değerlendirme|1\.\s*Genel Sonuç|2\.\s*Kanıt Temelli Profil Özeti|2\.\s*Sayısal Sonuç Özeti|2\.\s*Öncelikli Self-Regülasyon Alanları|3\.\s*Alan Bazlı Klinik Yorum|3\.\s*Alanlar Arası Klinik Örüntü|4\.\s*Klinik Örüntü ve Formülasyon|4\.\s*Örüntü Analizi|4\.\s*Anamnez ve Ölçek Bulgularının Uyum Düzeyi|5\.\s*Anamnez,\s*Gözlem ve Test Uyumunun Değerlendirilmesi|5\.\s*Anamnez\s*[-–]\s*Test Uyum Değerlendirmesi|5\.\s*Sonuç Düzeyinde Klinik Özet|6\.\s*Klinik Önceliklendirme Notu|6\.\s*Kısa Sonuç|7\.\s*Klinik Sonuç|7\.\s*Klinik Önceliklendirme ve Karar Notu|7\.\s*Literatürle Uyumlu Klinik Not|8\.\s*Literatürle Uyumlu Klinik(?: Not| Dayanak)?|Klinik Karar Özeti|Kanıt Temelli Profil Özeti|Alan Bazlı Klinik Yorum|Klinik Örüntü ve Formülasyon|Anamnez,\s*Gözlem ve Test Uyumunun Değerlendirilmesi|Klinik Önceliklendirme Notu|Klinik Sonuç|Genel Klinik Değerlendirme|Sayısal Sonuç Özeti|Örüntü Analizi|Anamnez\s*[-–]\s*Test Uyum Değerlendirmesi|Kısa Sonuç|Klinik Önceliklendirme ve Karar Notu|Literatürle Uyumlu Klinik(?: Not| Dayanak)?)/g
+  /(1\.\s*Klinik Karar Özeti|1\.\s*Genel Klinik Değerlendirme|1\.\s*Genel Sonuç|2\.\s*Klinik Kanıt Profili|2\.\s*Kanıt Temelli Profil Özeti|2\.\s*Sayısal Sonuç Özeti|2\.\s*Öncelikli Self-Regülasyon Alanları|3\.\s*Alan Bazlı Klinik Yorum|3\.\s*Alanlar Arası Klinik Örüntü|4\.\s*Klinik Örüntü ve Formülasyon|4\.\s*Örüntü Analizi|4\.\s*Anamnez ve Ölçek Bulgularının Uyum Düzeyi|5\.\s*Anamnez,\s*Gözlem ve Test Uyumunun Değerlendirilmesi|5\.\s*Anamnez\s*[-–]\s*Test Uyum Değerlendirmesi|5\.\s*Sonuç Düzeyinde Klinik Özet|6\.\s*Klinik Önceliklendirme Notu|6\.\s*Kısa Sonuç|7\.\s*Klinik Sonuç|7\.\s*Klinik Önceliklendirme ve Karar Notu|7\.\s*Literatürle Uyumlu Klinik Not|8\.\s*Literatürle Uyumlu Klinik(?: Not| Dayanak)?|Klinik Karar Özeti|Klinik Kanıt Profili|Kanıt Temelli Profil Özeti|Alan Bazlı Klinik Yorum|Klinik Örüntü ve Formülasyon|Anamnez,\s*Gözlem ve Test Uyumunun Değerlendirilmesi|Klinik Önceliklendirme Notu|Klinik Sonuç|Genel Klinik Değerlendirme|Sayısal Sonuç Özeti|Örüntü Analizi|Anamnez\s*[-–]\s*Test Uyum Değerlendirmesi|Kısa Sonuç|Klinik Önceliklendirme ve Karar Notu|Literatürle Uyumlu Klinik(?: Not| Dayanak)?)/g
 
 function applyHeadingLineNormalization(text: string): string {
   let normalized = text
@@ -143,6 +145,12 @@ function shouldUseFallbackClinicalSection(heading: string, primaryBody: string):
   }
 
   if (heading === "2. Kanıt Temelli Profil Özeti") {
+    const hasScoreEvidence = /(\/50|\/300|toplam skor|genel düzey|global|Tipik|Riskli|Atipik)/i.test(body)
+    const hasSynthesis = /(karar\/sentez|karar|sentez|klinik izlem önceliği|öncelikli klinik|kanıt profili)/i.test(body)
+    return !hasScoreEvidence || !hasSynthesis
+  }
+
+  if (heading === "2. Klinik Kanıt Profili") {
     const hasScoreEvidence = /(\/50|\/300|toplam skor|genel düzey|global|Tipik|Riskli|Atipik)/i.test(body)
     const hasSynthesis = /(karar\/sentez|karar|sentez|klinik izlem önceliği|öncelikli klinik|kanıt profili)/i.test(body)
     return !hasScoreEvidence || !hasSynthesis

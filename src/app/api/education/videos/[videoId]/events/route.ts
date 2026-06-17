@@ -36,7 +36,7 @@ export async function POST(
   if (!auth.ok) return auth.response
 
   const { videoId } = await params
-  const rateLimit = checkRateLimit({
+  const rateLimit = await checkRateLimit({
     key: `education-video-events:${auth.user.id}:${videoId}`,
     limit: 240,
     windowMs: 60 * 60 * 1000,

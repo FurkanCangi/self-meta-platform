@@ -10,6 +10,7 @@ import Topnav from "./topnav";
 
 type LayoutGateProps = {
   children: React.ReactNode;
+  initialAppSurface?: boolean;
 };
 
 const PUBLIC_ROUTES = new Set([
@@ -37,10 +38,10 @@ const PUBLIC_ROUTES = new Set([
   "/clearroll/privacy",
 ]);
 
-export default function LayoutGate({ children }: LayoutGateProps) {
+export default function LayoutGate({ children, initialAppSurface = false }: LayoutGateProps) {
   const pathname = usePathname() || "/";
   const [toggle, setToggle] = useState(true);
-  const isAppSurface = useAppSurface();
+  const isAppSurface = useAppSurface(initialAppSurface);
 
   const isPublicRoute = useMemo(() => {
     if (PUBLIC_ROUTES.has(pathname)) return true;

@@ -14,6 +14,11 @@
     "scripts/run-dna-report.ts",
     "scripts/run-report-quality-tests.ts",
     "scripts/run-report-deterministic-audit.ts",
+    "scripts/run-report-language-qa.ts",
+    "scripts/run-report-current-qa-summary.ts",
+    "scripts/run-report-forbidden-imports.ts",
+    "scripts/run-report-determinism.ts",
+    "scripts/run-report-privacy.ts",
     "scripts/report-quality-cases.ts",
     "src/lib/dna/**/*.ts"
   ],

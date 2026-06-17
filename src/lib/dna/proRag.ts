@@ -1,3 +1,5 @@
+// LEGACY/OPTIONAL AI PATH ONLY.
+// Production report generation must remain deterministic and must not import or call this module.
 export type ProRagChunk = {
   id: string
   tags: string[]

@@ -57,11 +57,20 @@ export async function POST(request: Request) {
   const originError = await requireTrustedMutation(request)
   if (originError) return originError
 
+  const admin = createSupabaseAdminClient()
   const supabase = await createSupabaseServerClient()
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
+  const serverAuth = await supabase.auth.getUser()
+  let user = serverAuth.data.user
+  let error = serverAuth.error
+
+  if (error || !user?.id) {
+    const bearer = String(request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim()
+    if (bearer) {
+      const tokenAuth = await admin.auth.getUser(bearer)
+      user = tokenAuth.data.user
+      error = tokenAuth.error
+    }
+  }
 
   if (error || !user?.id) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 })
@@ -86,7 +95,6 @@ export async function POST(request: Request) {
   const headerStore = await headers()
   const userAgent = String(headerStore.get("user-agent") || "").slice(0, 500)
   const ipAddress = getClientIp(headerStore)
-  const admin = createSupabaseAdminClient()
   const lockExemptUser = await isSecurityLockExemptUser(user.id, user.email)
 
   const { data: existingDevice, error: existingError } = await admin
@@ -155,8 +163,19 @@ export async function POST(request: Request) {
     }
 
     const requestedSlot = deviceSlot(deviceType)
-    const slotAlreadyUsed = registeredDevices.some((device) => deviceSlot(String(device.device_type || "unknown")) === requestedSlot)
-    if (slotAlreadyUsed) {
+    const sameSlotDevice = registeredDevices.find((device) => deviceSlot(String(device.device_type || "unknown")) === requestedSlot)
+    const allowSlotReuse = body.allowSlotReuse === true
+    if (sameSlotDevice && allowSlotReuse) {
+      deviceId = sameSlotDevice.id
+      await recordSecurityEvent(admin, {
+        userId: user.id,
+        eventType: "device_slot_reused",
+        deviceId,
+        ipAddress,
+        userAgent,
+        metadata: { requested_device_type: deviceType, requested_slot: requestedSlot },
+      })
+    } else if (sameSlotDevice) {
       await recordSecurityEvent(admin, {
         userId: user.id,
         eventType: "device_slot_blocked",
@@ -178,33 +197,35 @@ export async function POST(request: Request) {
       )
     }
 
-    const { data: createdDevice, error: createDeviceError } = await admin
-      .from("account_devices")
-      .insert({
-        user_id: user.id,
-        device_fingerprint_hash: deviceHash,
-        device_type: deviceType,
-        first_user_agent: userAgent,
-        last_user_agent: userAgent,
-        first_ip: ipAddress,
-        last_ip: ipAddress,
+    if (!deviceId) {
+      const { data: createdDevice, error: createDeviceError } = await admin
+        .from("account_devices")
+        .insert({
+          user_id: user.id,
+          device_fingerprint_hash: deviceHash,
+          device_type: deviceType,
+          first_user_agent: userAgent,
+          last_user_agent: userAgent,
+          first_ip: ipAddress,
+          last_ip: ipAddress,
+        })
+        .select("id")
+        .single()
+
+      if (createDeviceError || !createdDevice?.id) {
+        return NextResponse.json({ ok: false, error: "device_create_failed" }, { status: 500 })
+      }
+
+      deviceId = createdDevice.id
+      await recordSecurityEvent(admin, {
+        userId: user.id,
+        eventType: "new_device_registered",
+        deviceId,
+        ipAddress,
+        userAgent,
+        metadata: { device_type: deviceType },
       })
-      .select("id")
-      .single()
-
-    if (createDeviceError || !createdDevice?.id) {
-      return NextResponse.json({ ok: false, error: "device_create_failed" }, { status: 500 })
     }
-
-    deviceId = createdDevice.id
-    await recordSecurityEvent(admin, {
-      userId: user.id,
-      eventType: "new_device_registered",
-      deviceId,
-      ipAddress,
-      userAgent,
-      metadata: { device_type: deviceType },
-    })
   } else {
     const { data: previousDevice } = await admin
       .from("account_devices")

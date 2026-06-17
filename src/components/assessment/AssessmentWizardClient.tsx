@@ -259,6 +259,8 @@ export default function AssessmentWizardClient() {
   }, [clientInfo, result])
 
   async function generateAIReport(payload: {
+    assessmentId: string
+    clientId: string
     clientCode: string
     anamnez: string
     answers: number[]
@@ -269,6 +271,7 @@ export default function AssessmentWizardClient() {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        "x-dna-request": "same-origin",
       },
       body: JSON.stringify(payload),
     })
@@ -276,6 +279,9 @@ export default function AssessmentWizardClient() {
     const data = await res.json()
 
     if (!res.ok || !data?.ok) {
+      if (res.status === 402 || data?.error === "report_credit_required") {
+        throw new Error("Rapor hakkınız bulunmuyor. Paketler ekranından ek rapor hakkı satın alın.")
+      }
       throw new Error(data?.error || "AI rapor üretilemedi.")
     }
 
@@ -325,7 +331,25 @@ export default function AssessmentWizardClient() {
         return
       }
 
+      const today = new Date().toISOString().slice(0, 10)
+
+      const { data: assessmentRow, error: assessmentErr } = await supabase
+        .from("assessments_v2")
+        .insert({
+          client_id: clientInfo.id,
+          label: "DNA Intelligence Değerlendirme",
+          assessment_date: today,
+        })
+        .select("id")
+        .single()
+
+      if (assessmentErr) throw new Error("Assessment kaydı oluşturulamadı: " + assessmentErr.message)
+
+      const assessmentId = assessmentRow.id
+
       const aiReportText = await generateAIReport({
+        assessmentId,
+        clientId: clientInfo.id,
         clientCode: clientInfo.child_code,
         anamnez: String(clientInfo.anamnez || ""),
         answers,
@@ -345,28 +369,6 @@ export default function AssessmentWizardClient() {
         },
         deterministicReport: advancedReport.deterministicReport,
       })
-
-      const lockedAfterGeneration = await checkExistingReportLock(clientInfo.id)
-      if (lockedAfterGeneration) {
-        setSaveMsg("Bu vaka için rapor daha önce oluşturulmuş. Mevcut raporu Rapor Geçmişi ekranından görüntüleyin.")
-        return
-      }
-
-      const today = new Date().toISOString().slice(0, 10)
-
-      const { data: assessmentRow, error: assessmentErr } = await supabase
-        .from("assessments_v2")
-        .insert({
-          client_id: clientInfo.id,
-          label: "DNA Intelligence Değerlendirme",
-          assessment_date: today,
-        })
-        .select("id")
-        .single()
-
-      if (assessmentErr) throw new Error("Assessment kaydı oluşturulamadı: " + assessmentErr.message)
-
-      const assessmentId = assessmentRow.id
 
       setGeneratedReportText(aiReportText)
 

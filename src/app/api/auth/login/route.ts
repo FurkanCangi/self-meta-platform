@@ -1,0 +1,130 @@
+import { NextResponse, type NextRequest } from "next/server"
+import { createServerClient } from "@supabase/ssr"
+import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+import { setAppSessionCookie } from "@/lib/security/appSession"
+
+type CookieToSet = {
+  name: string
+  value: string
+  options: Parameters<NextResponse["cookies"]["set"]>[2]
+}
+
+function normalizeLoginEmail(value: FormDataEntryValue | null) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\u0131/g, "i")
+    .replace(/\u0130/g, "i")
+}
+
+function sanitizeNextPath(value: FormDataEntryValue | null) {
+  const raw = String(value || "")
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/legal/accept")) {
+    return "/starter"
+  }
+  return raw
+}
+
+function resolvePostLoginPath(plan: string, nextPath: string, appSurface: boolean) {
+  if (plan === "none") return appSurface ? "/report-packages?surface=app" : "/fiyatlandirma"
+  if (appSurface && !nextPath.includes("surface=app")) {
+    const glue = nextPath.includes("?") ? "&" : "?"
+    return `${nextPath}${glue}surface=app`
+  }
+  return nextPath
+}
+
+function loginUrl(request: NextRequest, params?: Record<string, string>) {
+  const url = new URL("/login", requestOrigin(request))
+  for (const [key, value] of Object.entries(params || {})) {
+    if (value) url.searchParams.set(key, value)
+  }
+  return url
+}
+
+function requestOrigin(request: NextRequest) {
+  const host = request.headers.get("x-forwarded-host") || request.headers.get("host")
+  const protocol = request.headers.get("x-forwarded-proto") || request.nextUrl.protocol.replace(":", "") || "http"
+  return host ? `${protocol}://${host}` : request.nextUrl.origin
+}
+
+export async function POST(request: NextRequest) {
+  const formData = await request.formData()
+  const email = normalizeLoginEmail(formData.get("email"))
+  const password = String(formData.get("password") || "")
+  const nextPath = sanitizeNextPath(formData.get("next"))
+  const appSurface = String(formData.get("surface") || "") === "app" || nextPath.includes("surface=app")
+
+  const fallbackParams = {
+    ...(appSurface ? { surface: "app" } : {}),
+    ...(nextPath !== "/starter" ? { next: nextPath } : {}),
+  }
+
+  if (!email || !password) {
+    return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: "missing" }), 303)
+  }
+
+  const authCookies: CookieToSet[] = []
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            authCookies.push({ name, value, options })
+          })
+        },
+      },
+    }
+  )
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  const userId = data.user?.id
+  const accessToken = data.session?.access_token
+  if (error || !userId || !accessToken) {
+    return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: "invalid" }), 303)
+  }
+
+  const origin = requestOrigin(request)
+  const registerResponse = await fetch(new URL("/api/security/session/register", request.nextUrl.origin), {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${accessToken}`,
+      "x-dna-request": "same-origin",
+      "user-agent": request.headers.get("user-agent") || "",
+      "x-forwarded-for": request.headers.get("x-forwarded-for") || "",
+      "x-real-ip": request.headers.get("x-real-ip") || "",
+    },
+    body: JSON.stringify({
+      deviceId: String(formData.get("deviceId") || `server-${userId}-${request.headers.get("user-agent") || "unknown"}`).slice(0, 200),
+      deviceType: String(formData.get("deviceType") || "desktop"),
+      allowSlotReuse: true,
+    }),
+  })
+  const registerPayload = await registerResponse.json().catch(() => null)
+  if (!registerResponse.ok || !registerPayload?.ok || !registerPayload?.sessionId) {
+    await supabase.auth.signOut()
+    const code = String(registerPayload?.error || "session_failed")
+    return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: code }), 303)
+  }
+
+  const admin = createSupabaseAdminClient()
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("plan")
+    .eq("user_id", userId)
+    .maybeSingle()
+
+  const target = new URL(resolvePostLoginPath(profile?.plan ?? "none", nextPath, appSurface), origin)
+  const response = NextResponse.redirect(target, 303)
+  authCookies.forEach(({ name, value, options }) => {
+    response.cookies.set(name, value, options)
+  })
+  setAppSessionCookie(response, registerPayload.sessionId)
+  return response
+}

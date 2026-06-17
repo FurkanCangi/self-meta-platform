@@ -1,11 +1,13 @@
 import Link from "next/link"
 import {
   BarChart3,
+  ChevronRight,
   ClipboardCheck,
   CreditCard,
   FileText,
   GraduationCap,
   PlayCircle,
+  Search,
   Settings,
   Sparkles,
   UserPlus,
@@ -82,7 +84,72 @@ export default function StarterPage() {
   return (
     <div className="relative px-4 py-5 md:px-6 md:py-7">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_14%_8%,rgba(0,200,215,0.13),transparent_32%),radial-gradient(circle_at_86%_14%,rgba(124,58,237,0.12),transparent_34%)]" />
-      <div className="mx-auto max-w-7xl">
+      <div className="dna-app-only dna-app-page space-y-4">
+        <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="dna-app-section-title">Bugünkü çalışma</div>
+          <h1 className="mt-2 text-[26px] font-black leading-tight tracking-tight text-[#071b3a]">
+            Klinik çalışma alanı
+          </h1>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            Danışanı seç, değerlendirmeyi tamamla, raporu tek akışta yönet.
+          </p>
+          <Link
+            href="/clients?surface=app"
+            className="mt-4 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-500"
+          >
+            <Search size={18} />
+            Danışan kodu ara
+            <ChevronRight className="ml-auto text-slate-400" size={18} />
+          </Link>
+        </section>
+
+        <section className="grid grid-cols-2 gap-3">
+          <Link href="/clients/new?surface=app" className="rounded-[20px] border border-blue-100 bg-white p-4 shadow-sm">
+            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-blue-600 text-white">
+              <UserPlus size={21} />
+            </div>
+            <div className="mt-3 text-base font-black text-[#071b3a]">Yeni danışan</div>
+            <div className="mt-1 text-xs font-semibold leading-5 text-slate-500">Anamnez ve kayıt</div>
+          </Link>
+          <Link href="/clients?surface=app" className="rounded-[20px] border border-cyan-100 bg-white p-4 shadow-sm">
+            <div className="grid h-11 w-11 place-items-center rounded-2xl bg-cyan-500 text-white">
+              <UsersRound size={21} />
+            </div>
+            <div className="mt-3 text-base font-black text-[#071b3a]">Danışanlar</div>
+            <div className="mt-1 text-xs font-semibold leading-5 text-slate-500">Vaka listesi</div>
+          </Link>
+        </section>
+
+        <section className="rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">
+          <div className="px-1 pb-2 pt-1 dna-app-section-title">Hızlı işlemler</div>
+          {[
+            { title: "Skor bekleyen vakalar", text: "Danışan seçip 60 soruluk değerlendirmeye geç", href: "/clients?surface=app", icon: ClipboardCheck },
+            { title: "Rapor geçmişi", text: "Üretilmiş klinik raporları görüntüle", href: "/reports?surface=app", icon: BarChart3 },
+            { title: "Rapor hakkı", text: "Kalan kullanım ve paketleri kontrol et", href: "/report-packages?surface=app", icon: CreditCard },
+            { title: "Eğitimler", text: "Eğitim içeriklerine güvenli erişim", href: "/education?surface=app", icon: GraduationCap },
+          ].map((item) => {
+            const Icon = item.icon
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="dna-app-touch-row flex items-center gap-3 border-t border-slate-100 px-1 py-3 first:border-t-0"
+              >
+                <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-cyan-50 to-blue-50 text-blue-700">
+                  <Icon size={20} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-sm font-black text-slate-900">{item.title}</div>
+                  <div className="mt-0.5 line-clamp-1 text-xs font-medium text-slate-500">{item.text}</div>
+                </div>
+                <ChevronRight className="shrink-0 text-slate-400" size={18} />
+              </Link>
+            )
+          })}
+        </section>
+      </div>
+
+      <div className="dna-web-only mx-auto max-w-7xl">
         <section className="relative overflow-hidden rounded-[32px] border border-slate-200/80 bg-white/90 p-7 shadow-[0_28px_80px_rgba(7,27,58,0.08)] backdrop-blur-xl md:p-8">
           <div className="absolute -right-24 -top-28 h-72 w-72 rounded-full bg-cyan-100/80 blur-3xl" />
           <div className="absolute right-20 top-0 h-64 w-64 rounded-full bg-violet-100/80 blur-3xl" />

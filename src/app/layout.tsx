@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
 import "./globals.css";
 import CookieConsent from "./components/CookieConsent";
 import LayoutGate from "./components/layout-gate";
@@ -14,16 +15,19 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headerStore = await headers();
+  const initialAppSurface = headerStore.get("x-dna-app-surface") === "app";
+
   return (
     <html lang="tr" suppressHydrationWarning>
       <body className="min-h-screen">
         <ThemeProvider>
-          <LayoutGate>{children}</LayoutGate>
+          <LayoutGate initialAppSurface={initialAppSurface}>{children}</LayoutGate>
           <CookieConsent />
         </ThemeProvider>
       </body>

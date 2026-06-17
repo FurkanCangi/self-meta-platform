@@ -59,6 +59,7 @@ export default function ReportsPage() {
   const [err, setErr] = useState<string>("");
   const [notice, setNotice] = useState<string>("");
   const [deletingReportId, setDeletingReportId] = useState<string>("");
+  const [appReaderOpen, setAppReaderOpen] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -176,6 +177,7 @@ export default function ReportsPage() {
         const next = prev.filter((item) => item.id !== row.id);
         if (row.id === selectedId) {
           setSelectedId(next[0]?.id || "");
+          setAppReaderOpen(false);
         }
         return next;
       });
@@ -189,7 +191,102 @@ export default function ReportsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-7xl space-y-6 px-0 py-0 md:px-4 md:py-8">
+    <>
+    <div className="dna-app-only dna-app-page space-y-4">
+      {!appReaderOpen ? (
+        <>
+          <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+            <div className="dna-app-section-title">Klinik arşiv</div>
+            <h1 className="mt-2 text-[26px] font-black text-[#071b3a]">Raporlar</h1>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Oluşturulmuş raporu açın. Yeni rapor üretimi danışan değerlendirmesinden başlar.
+            </p>
+          </section>
+
+          {loading && <div className="rounded-[22px] border border-slate-200 bg-white p-6 text-center text-sm font-semibold text-slate-500 shadow-sm">Yükleniyor...</div>}
+          {!loading && err && <div className="rounded-[22px] border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{err}</div>}
+          {!loading && !err && notice && <div className="rounded-[22px] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{notice}</div>}
+          {!loading && !err && rows.length === 0 && (
+            <div className="rounded-[22px] border border-slate-200 bg-white p-6 text-center text-sm font-semibold text-slate-500 shadow-sm">
+              Henüz kayıtlı rapor bulunmuyor.
+            </div>
+          )}
+
+          <section className="space-y-3">
+            {rows.map((row) => (
+              <button
+                key={row.id}
+                type="button"
+                onClick={() => {
+                  setSelectedId(row.id);
+                  setAppReaderOpen(true);
+                }}
+                className="w-full rounded-[22px] border border-slate-200 bg-white p-4 text-left shadow-sm"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-mono text-lg font-black text-[#071b3a]">{extractClientCode(row)}</div>
+                    <div className="mt-1 text-xs font-semibold text-slate-500">v{row.version ?? "?"} · {formatDate(extractReportDate(row))}</div>
+                  </div>
+                  <span className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">Aç</span>
+                </div>
+                <p className="mt-3 line-clamp-3 text-sm leading-6 text-slate-600">{extractPreview(row)}</p>
+              </button>
+            ))}
+          </section>
+        </>
+      ) : (
+        <section className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setAppReaderOpen(false)}
+            className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700 shadow-sm"
+          >
+            ← Rapor listesi
+          </button>
+
+          {!selected ? (
+            <div className="rounded-[22px] border border-slate-200 bg-white p-6 text-sm text-slate-500 shadow-sm">
+              Rapor bulunamadı.
+            </div>
+          ) : (
+            <div className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="grid grid-cols-2 gap-2 rounded-2xl bg-slate-50 p-3">
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Danışan</div>
+                  <div className="mt-1 font-mono text-sm font-black text-slate-900">{extractClientCode(selected)}</div>
+                </div>
+                <div>
+                  <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Rapor</div>
+                  <div className="mt-1 text-sm font-black text-slate-900">v{selected.version ?? "?"}</div>
+                </div>
+                <div className="col-span-2">
+                  <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Tarih</div>
+                  <div className="mt-1 text-sm font-bold text-slate-700">{formatDate(extractReportDate(selected))}</div>
+                </div>
+              </div>
+
+              <ClinicalReportView
+                className="mt-4"
+                text={selected.report_text || "Rapor metni bulunamadı."}
+                reportDate={extractReportDate(selected)}
+              />
+
+              <button
+                type="button"
+                onClick={() => handleDeleteReport(selected)}
+                disabled={deletingReportId === selected.id}
+                className="mt-4 w-full rounded-2xl border border-rose-200 bg-white px-4 py-3 text-sm font-black text-rose-700 disabled:opacity-50"
+              >
+                {deletingReportId === selected.id ? "Siliniyor..." : "Raporu sil"}
+              </button>
+            </div>
+          )}
+        </section>
+      )}
+    </div>
+
+    <div className="dna-web-only mx-auto max-w-7xl space-y-6 px-0 py-0 md:px-4 md:py-8">
       <div className="dna-card p-4 md:p-6">
         <h1 className="text-2xl font-semibold text-slate-900 md:text-3xl">Rapor Geçmişi</h1>
         <p className="mt-2 text-slate-500">
@@ -323,5 +420,6 @@ export default function ReportsPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

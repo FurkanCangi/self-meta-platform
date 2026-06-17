@@ -44,6 +44,29 @@ function formatLoginError(message?: string | null) {
   return raw || "Giriş sırasında bir hata oluştu.";
 }
 
+function formatLoginErrorCode(code?: string | null) {
+  if (!code) return null;
+  if (code === "missing") return "E-posta ve şifre alanlarını doldurun.";
+  if (code === "invalid") return "E-posta veya şifre hatalı.";
+  if (code === "device_limit_exceeded") {
+    return "Bu hesap için en fazla 2 cihaz kullanılabilir. Yeni cihaz eklemek için önce mevcut cihazlardan biri kaldırılmalıdır.";
+  }
+  if (code === "device_slot_unavailable") return "Bu hesapta bu cihaz türü için kullanım limiti dolu.";
+  if (code === "device_revoked") return "Bu cihaz için erişim kapatılmış görünüyor.";
+  if (code === "account_temporarily_locked") return "Şüpheli kullanım nedeniyle hesap geçici olarak kilitlendi.";
+  if (code === "account_suspended") return "Hesap güvenlik nedeniyle askıya alınmış görünüyor.";
+  if (code === "session_failed") return "Oturum güvenlik kaydı oluşturulamadı. Lütfen tekrar deneyin.";
+  return "Giriş sırasında bir hata oluştu.";
+}
+
+function normalizeLoginEmail(value: string) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\u0131/g, "i")
+    .replace(/\u0130/g, "i");
+}
+
 function resolvePostLoginPath(plan: string, nextPath: string, appSurface: boolean) {
   if (plan === "none") return appSurface ? "/report-packages?surface=app" : "/fiyatlandirma";
   if (appSurface && !nextPath.includes("surface=app")) {
@@ -74,10 +97,13 @@ function detectDeviceType() {
   return "desktop";
 }
 
-async function registerAppSession() {
+async function registerAppSession(accessToken?: string | null) {
   const response = await fetch("/api/security/session/register", {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers: {
+      "content-type": "application/json",
+      ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
+    },
     credentials: "same-origin",
     body: JSON.stringify({
       deviceId: getOrCreateDeviceId(),
@@ -119,14 +145,22 @@ export default function LoginPage() {
   const passwordRef = useRef<HTMLInputElement | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [err, setErr] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(() => formatLoginErrorCode(sp.get("error")));
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    if (sp.has("email") || sp.has("password")) {
+      const cleaned = new URL(window.location.href);
+      cleaned.searchParams.delete("email");
+      cleaned.searchParams.delete("password");
+      router.replace(`${cleaned.pathname}${cleaned.search}${cleaned.hash}`);
+      return;
+    }
+
     supabase.auth.getSession().then(async ({ data }: { data: any }) => {
       if (data.session?.user?.id) {
         try {
-          await registerAppSession();
+          await registerAppSession(data.session.access_token);
         } catch (error) {
           await supabase.auth.signOut();
           setErr(error instanceof Error ? error.message : "Oturum güvenlik kaydı oluşturulamadı.");
@@ -143,7 +177,7 @@ export default function LoginPage() {
         return;
       }
     });
-  }, [router, nextPath, appSurface]);
+  }, [router, nextPath, appSurface, sp]);
 
   async function performLogin(submittedEmail: string, submittedPassword: string) {
     setErr(null);
@@ -154,8 +188,9 @@ export default function LoginPage() {
         return;
       }
 
+      const normalizedEmail = normalizeLoginEmail(submittedEmail);
       const { data, error } = await supabase.auth.signInWithPassword({
-        email: submittedEmail,
+        email: normalizedEmail,
         password: submittedPassword,
       });
 
@@ -171,7 +206,7 @@ export default function LoginPage() {
       }
 
       try {
-        await registerAppSession();
+        await registerAppSession(data.session?.access_token);
       } catch (error) {
         await supabase.auth.signOut();
         setErr(error instanceof Error ? error.message : "Oturum güvenlik kaydı oluşturulamadı.");
@@ -201,10 +236,11 @@ export default function LoginPage() {
 
   async function onSubmit(e?: React.FormEvent<HTMLFormElement>) {
     e?.preventDefault();
+    e?.stopPropagation();
     const formData = e?.currentTarget ? new FormData(e.currentTarget) : null;
     const submittedEmail = String(
       emailRef.current?.value || formData?.get("email") || email
-    ).trim();
+    );
     const submittedPassword = String(
       passwordRef.current?.value || formData?.get("password") || password
     );
@@ -213,9 +249,11 @@ export default function LoginPage() {
   }
 
   return (
-    <AuthLayout mode="login">
+    <AuthLayout mode="login" surface={appSurface ? "app" : "web"}>
       <div className="w-full max-w-md">
-        <form ref={formRef} className="mt-3 space-y-3" onSubmit={onSubmit}>
+        <form ref={formRef} className="mt-3 space-y-3" action="/api/auth/login" method="post" onSubmit={onSubmit}>
+          <input type="hidden" name="surface" value={appSurface ? "app" : "web"} />
+          <input type="hidden" name="next" value={nextPath} />
           {sp.get("next") ? (
             <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
               Devam etmek istediğiniz sayfaya geçmek için giriş yapın.

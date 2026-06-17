@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const auth = await requireConfirmedUser()
   if (!auth.ok) return auth.response
 
-  const rateLimit = checkRateLimit({
+  const rateLimit = await checkRateLimit({
     key: `privacy-data-request:${auth.user.id}`,
     limit: 5,
     windowMs: 24 * 60 * 60 * 1000,

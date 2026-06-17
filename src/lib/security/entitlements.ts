@@ -3,6 +3,7 @@ import "server-only"
 import { createHmac, timingSafeEqual } from "crypto"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { normalizePlanCode, PACKAGE_PLAN_PRICES_MINOR, type PlanCode } from "@/lib/legal/documents"
+import { grantInitialProgramCredits } from "@/lib/security/reportCredits"
 
 export const EDUCATION_VIDEO_FEATURE = "education_video"
 export const BILLING_WEBHOOK_TIMESTAMP_TOLERANCE_SECONDS = 5 * 60
@@ -321,6 +322,32 @@ export async function applyBillingWebhookEvent(params: {
       provider: normalized.provider,
       providerEventId: normalized.eventId,
       metadata: { feature: EDUCATION_VIDEO_FEATURE, plan_code: normalized.planCode },
+    })
+
+    const creditGrant = await grantInitialProgramCredits({
+      admin: params.admin,
+      userId: normalized.userId,
+      provider: normalized.provider,
+      providerEventId: normalized.eventId,
+      metadata: {
+        feature: EDUCATION_VIDEO_FEATURE,
+        plan_code: normalized.planCode,
+        source_event_type: normalized.eventType,
+      },
+    })
+
+    await recordBillingAuditEvent({
+      admin: params.admin,
+      targetUserId: normalized.userId,
+      action: creditGrant.ok ? "initial_report_credits_granted" : "initial_report_credits_grant_failed",
+      provider: normalized.provider,
+      providerEventId: normalized.eventId,
+      metadata: {
+        feature: "ai_report",
+        plan_code: normalized.planCode,
+        credits: 5,
+        error: creditGrant.ok ? null : creditGrant.error,
+      },
     })
 
     return { ok: true as const, accessChanged: true }

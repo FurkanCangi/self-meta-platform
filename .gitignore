@@ -49,6 +49,8 @@ src.bak*/
 ../dna_safe_backups/
 *.bak
 .tmp/
+/tmp/
+/output/
 src.zip
 ai/
 services/video-observation-mvp/data/models/

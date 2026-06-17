@@ -4,10 +4,25 @@
   background:#ffffff;
 }
 
+.appPage{
+  min-height:100svh;
+  background:
+    radial-gradient(circle at 18% 10%, rgba(0,200,215,.16), transparent 30%),
+    radial-gradient(circle at 86% 0%, rgba(124,58,237,.12), transparent 28%),
+    linear-gradient(180deg, #f8fcff 0%, #ffffff 52%, #f7f8ff 100%);
+}
+
 .shell{
   min-height:100svh;
   display:grid;
   grid-template-columns:58% 42%;
+}
+
+.appShell{
+  grid-template-columns:1fr;
+  min-height:100svh;
+  place-items:center;
+  padding:18px;
 }
 
 .visualPane{
@@ -185,6 +200,13 @@
     linear-gradient(180deg, #ffffff 0%, #fbfdff 100%);
 }
 
+.appShell .formPane{
+  width:min(100%, 430px);
+  min-height:auto;
+  padding:0;
+  background:transparent;
+}
+
 .signupPane{
   align-items:flex-start;
   padding-top:28px;
@@ -196,9 +218,43 @@
   animation:fadeUp .62s cubic-bezier(.2,.75,.2,1) both;
 }
 
+.appShell .formCard{
+  width:100%;
+  min-height:min(820px, calc(100svh - 36px));
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  padding:34px 22px 22px;
+  border:1px solid rgba(37,99,235,.12);
+  border-radius:32px;
+  background:rgba(255,255,255,.92);
+  box-shadow:0 24px 70px rgba(7,27,58,.10);
+  backdrop-filter:blur(18px);
+}
+
+.appBrand{
+  display:grid;
+  justify-items:center;
+  margin-bottom:24px;
+  text-align:center;
+}
+
+.appLogoImage{
+  display:block;
+  width:263px;
+  max-width:88%;
+  height:auto;
+  object-fit:contain;
+}
+
 .header{
   margin-bottom:34px;
   text-align:center;
+}
+
+.appShell .header{
+  margin-top:16px;
+  margin-bottom:22px;
 }
 
 .signupPane .header{
@@ -228,6 +284,11 @@
   letter-spacing:0;
 }
 
+.appShell .title{
+  font-size:30px;
+  line-height:1.08;
+}
+
 .signupPane .title{
   font-size:34px;
   line-height:1;
@@ -240,6 +301,13 @@
   font-size:16px;
   line-height:1.72;
   font-weight:560;
+}
+
+.appShell .subtitle{
+  max-width:310px;
+  margin-top:10px;
+  font-size:14px;
+  line-height:1.55;
 }
 
 .signupPane .subtitle{
@@ -258,6 +326,15 @@
   color:#94a3b8;
   font-size:12px;
   line-height:1.45;
+}
+
+.appShell .bottom{
+  grid-template-columns:1fr;
+  gap:10px;
+  margin-top:auto;
+  padding-top:30px;
+  text-align:center;
+  font-size:11px;
 }
 
 .signupBottom{
@@ -349,6 +426,17 @@
 }
 
 @media (max-width: 560px){
+  .appShell{
+    padding:0;
+  }
+
+  .appShell .formCard{
+    min-height:100svh;
+    border:0;
+    border-radius:0;
+    box-shadow:none;
+  }
+
   .visualPane{
     min-height:150px;
   }

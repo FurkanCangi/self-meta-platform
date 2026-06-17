@@ -1,3 +1,5 @@
+// LEGACY/OPTIONAL AI PATH ONLY.
+// Production report generation must remain deterministic and must not import or call this module.
 import OpenAI from "openai";
 import { zodTextFormat } from "openai/helpers/zod";
 import { AIReportAnalysisSchema } from "./aiReportSchema";
@@ -31,7 +33,7 @@ function normalizeReasoningEffort(value: string | undefined): ReasoningEffort {
 function hasAllRequiredSections(text: string): boolean {
   const required = [
     "1. Klinik Karar Özeti",
-    "2. Kanıt Temelli Profil Özeti",
+    "2. Klinik Kanıt Profili",
     "3. Alan Bazlı Klinik Yorum",
     "4. Klinik Örüntü ve Formülasyon",
     "5. Anamnez, Gözlem ve Test Uyumunun Değerlendirilmesi",

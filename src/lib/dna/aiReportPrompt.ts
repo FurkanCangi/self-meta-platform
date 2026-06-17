@@ -1,3 +1,5 @@
+// LEGACY/OPTIONAL AI PATH ONLY.
+// Production report generation must remain deterministic and must not import or call this module.
 import { DOMAIN_KEYS, type DomainKey } from "./aiReportSchema";
 import { classifyDomainScore, classifyTotalScore, findAgeNormBand, getNormSource } from "./normativeBands";
 
@@ -94,7 +96,7 @@ STRICT RULES
 REPORT STRUCTURE
 The output must contain exactly these sections:
 1. Klinik Karar Özeti
-2. Kanıt Temelli Profil Özeti
+2. Klinik Kanıt Profili
 3. Alan Bazlı Klinik Yorum
 4. Klinik Örüntü ve Formülasyon
 5. Anamnez, Gözlem ve Test Uyumunun Değerlendirilmesi

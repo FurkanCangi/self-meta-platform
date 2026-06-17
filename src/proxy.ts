@@ -4,8 +4,18 @@ import { NextResponse, type NextRequest } from "next/server";
 const APP_SESSION_COOKIE = "sm_active_session";
 
 export async function proxy(request: NextRequest) {
+  const appSurfaceRequested =
+    request.nextUrl.searchParams.get("surface") === "app" ||
+    request.cookies.get("dna_app_surface")?.value === "app";
+  const requestHeaders = new Headers(request.headers);
+  if (appSurfaceRequested) {
+    requestHeaders.set("x-dna-app-surface", "app");
+  }
+
   let response = NextResponse.next({
-    request,
+    request: {
+      headers: requestHeaders,
+    },
   });
 
   const supabase = createServerClient(
@@ -18,7 +28,9 @@ export async function proxy(request: NextRequest) {
         },
         setAll(cookiesToSet) {
           response = NextResponse.next({
-            request,
+            request: {
+              headers: requestHeaders,
+            },
           });
 
           cookiesToSet.forEach(({ name, value, options }) => {
@@ -71,6 +83,14 @@ export async function proxy(request: NextRequest) {
     const redirect = NextResponse.redirect(loginUrl);
     redirect.cookies.delete(APP_SESSION_COOKIE);
     return redirect;
+  }
+
+  if (appSurfaceRequested) {
+    response.cookies.set("dna_app_surface", "app", {
+      path: "/",
+      sameSite: "lax",
+      maxAge: 60 * 60 * 24 * 365,
+    });
   }
 
   return response;

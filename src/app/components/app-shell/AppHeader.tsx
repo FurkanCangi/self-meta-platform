@@ -37,7 +37,7 @@ export default function AppHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/92 px-4 pb-3 pt-[max(env(safe-area-inset-top),12px)] shadow-[0_12px_34px_rgba(7,27,58,0.06)] backdrop-blur-xl md:hidden">
+    <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/92 px-4 pb-3 pt-[max(env(safe-area-inset-top),12px)] shadow-[0_12px_34px_rgba(7,27,58,0.06)] backdrop-blur-xl">
       <div className="flex items-center justify-between gap-3">
         <Link href="/starter?surface=app" className="flex min-w-0 items-center gap-3" aria-label="Ana ekrana git">
           <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-cyan-50 via-blue-50 to-violet-50">

@@ -922,3 +922,65 @@ html[data-theme="dark"] .dna-shell .shadow-sm {
 [data-scroll-down]{
   display:none !important;
 }
+
+.dna-app-only {
+  display: none !important;
+}
+
+.dna-app-frame .dna-app-only {
+  display: block !important;
+}
+
+.dna-app-frame .dna-web-only {
+  display: none !important;
+}
+
+.dna-app-frame .dna-app-main {
+  background: #f8fbff;
+}
+
+.dna-app-frame .dna-card {
+  border-radius: 22px;
+  box-shadow: 0 12px 32px rgba(7, 27, 58, 0.07);
+}
+
+.dna-app-frame .dna-app-page {
+  margin-inline: -2px;
+  padding-bottom: 8px;
+}
+
+.dna-app-frame .dna-app-section-title {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #64748b;
+}
+
+.dna-app-frame .dna-app-touch-row {
+  min-height: 64px;
+  border-radius: 18px;
+}
+
+.dna-app-frame .dna-likert-grid {
+  grid-template-columns: 1fr !important;
+}
+
+.dna-app-frame .dna-result-cards {
+  display: block !important;
+}
+
+.dna-app-frame .dna-result-table {
+  display: none !important;
+}
+
+.dna-app-frame .dna-app-sticky-actions {
+  position: sticky;
+  bottom: calc(82px + env(safe-area-inset-bottom));
+  z-index: 20;
+  margin-inline: -12px;
+  border-top: 1px solid rgba(226, 232, 240, 0.88);
+  background: rgba(248, 251, 255, 0.92);
+  padding: 10px 12px;
+  backdrop-filter: blur(16px);
+}

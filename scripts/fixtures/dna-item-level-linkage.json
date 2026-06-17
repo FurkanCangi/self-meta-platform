@@ -1,10 +1,10 @@
 {
-  "clientCode": "FIXTURE-ITEM-LINK-54",
+  "clientCode": "FIXTURE-LINK-54",
   "clientName": "Mert",
   "ageMonths": 54,
   "anamnez": {
     "ad_soyad": "Mert Ornek",
-    "client_code": "FIXTURE-ITEM-LINK-54",
+    "client_code": "FIXTURE-LINK-54",
     "record_date": "2026-04-01",
     "age_range": "48-59 ay",
     "diagnosis": "Otizm spektrum bozuklugu",

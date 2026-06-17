@@ -22,8 +22,8 @@ function readSurfaceFlag() {
   return requested || stored || standalone || compactViewport;
 }
 
-export function useAppSurface() {
-  const [isAppSurface, setIsAppSurface] = useState(false);
+export function useAppSurface(initialAppSurface = false) {
+  const [isAppSurface, setIsAppSurface] = useState(initialAppSurface);
 
   useEffect(() => {
     const refresh = () => setIsAppSurface(readSurfaceFlag());

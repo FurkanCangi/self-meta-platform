@@ -1,3 +1,5 @@
+// LEGACY/OPTIONAL AI PATH ONLY.
+// Production report generation must remain deterministic and must not import or call this module.
 import OpenAI from "openai"
 import { buildAIClinicalPrompt } from "./aiClinicalPrompt"
 import type { ExternalTestCategory } from "./externalTestRegistry"

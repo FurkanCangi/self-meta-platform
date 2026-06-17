@@ -82,6 +82,14 @@ export const PACKAGE_PLAN_PRICES_MINOR: Record<Exclude<PlanCode, "none">, number
   enterprise: 1000000,
 }
 
+export const INITIAL_PROGRAM_REPORT_CREDITS = 5
+
+export const REPORT_PACKAGE_CREDITS = {
+  report_package_10: 10,
+  report_package_50: 50,
+  report_package_100: 100,
+} as const
+
 export function normalizePlanCode(value?: string | null): PlanCode {
   const raw = String(value || "").trim().toLowerCase()
   if (raw === "student" || raw === "graduate" || raw === "professional" || raw === "enterprise") {

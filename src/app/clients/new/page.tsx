@@ -14,7 +14,7 @@ import {
 } from "@/lib/dna/externalTestRegistry"
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AiOutlineDown } from "react-icons/ai";
 
 const makeChildCode = () => `SM-${Math.floor(100000 + Math.random() * 900000)}`;
@@ -343,6 +343,18 @@ export default function NewClientPage() {
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [externalTests, setExternalTests] = useState<ExternalTestEntry[]>([]);
+  const [appSurface, setAppSurface] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    setAppSurface(params.get("surface") === "app");
+  }, []);
+
+  const withSurface = (path: string) => {
+    if (!appSurface) return path;
+    const separator = path.includes("?") ? "&" : "?";
+    return `${path}${separator}surface=app`;
+  };
 
   const [form, setForm] = useState<FormState>({
     ad_soyad: "",
@@ -638,7 +650,7 @@ export default function NewClientPage() {
         client_id: data.id,
       }).toString();
 
-      router.push(`/assessments?${qs}`);
+      router.push(withSurface(`/assessments?${qs}`));
     } catch (e) {
       const message = e instanceof Error ? e.message : "Beklenmeyen bir hata oluştu.";
       setErr(message);
@@ -649,7 +661,26 @@ export default function NewClientPage() {
 
   return (
     <div className="space-y-4">
-      <div className="dna-card p-5 mt-4">
+      <div className="dna-app-only dna-app-page space-y-4">
+        <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="dna-app-section-title">Yeni danışan</div>
+          <h1 className="mt-2 text-[26px] font-black leading-tight text-[#071b3a]">Anamnez kaydı</h1>
+          <p className="mt-1 text-sm leading-6 text-slate-600">
+            {TAB_LABELS[tab]} · {currentTabMissing.length} eksik alan
+          </p>
+          <div className="mt-4 h-2 rounded-full bg-slate-100">
+            <div className="h-2 rounded-full bg-blue-600" style={{ width: `${completion}%` }} />
+          </div>
+          {err ? <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{err}</div> : null}
+          {!err && missing.length > 0 ? (
+            <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              Toplam eksik alan: <b>{missing.length}</b>
+            </div>
+          ) : null}
+        </section>
+      </div>
+
+      <div className="dna-web-only dna-card p-5 mt-4">
         <div className="text-xs font-medium text-slate-400">Danışan Yönetimi / Yeni Kayıt</div>
         <div className="mt-1 flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
           <div>
@@ -660,7 +691,7 @@ export default function NewClientPage() {
           </div>
           <div className="grid gap-2 sm:grid-cols-3 md:flex md:flex-wrap md:justify-end">
             <Link
-              href="/clients"
+              href={withSurface("/clients")}
               className="dna-btn-ghost px-4 py-2 text-sm font-semibold inline-flex items-center justify-center"
             >
               Listeye Dön
@@ -1217,7 +1248,7 @@ export default function NewClientPage() {
           </div>
         </div>
 
-        <div className="space-y-4">
+        <div className="dna-web-only space-y-4">
           <div className="dna-card p-6">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold text-slate-900">Anamnez Durumu</h2>
@@ -1238,10 +1269,10 @@ export default function NewClientPage() {
               Akış: danışan kaydı → skor girişi → rapor görüntüleme.
             </p>
             <div className="mt-4 grid gap-2">
-              <Link href="/assessments" className="inline-flex items-center justify-center rounded-xl border border-indigo-600 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50">
+              <Link href={withSurface("/assessments")} className="inline-flex items-center justify-center rounded-xl border border-indigo-600 bg-white px-4 py-2 text-sm font-semibold text-indigo-700 transition hover:bg-indigo-50">
                 Skor Girişine Git
               </Link>
-              <Link href="/reports" className="dna-btn-ghost px-4 py-2 text-sm font-semibold inline-flex items-center justify-center">
+              <Link href={withSurface("/reports")} className="dna-btn-ghost px-4 py-2 text-sm font-semibold inline-flex items-center justify-center">
                 Raporları Gör
               </Link>
             </div>
@@ -1249,19 +1280,36 @@ export default function NewClientPage() {
         </div>
       </div>
 
-      <div className="sticky bottom-[88px] z-10 -mx-4 border-t border-slate-200 bg-white/80 p-3 backdrop-blur md:hidden">
-        <div className="mx-auto flex max-w-3xl gap-2">
-          <button type="button" onClick={onReset} className="dna-btn-ghost flex-1 px-4 py-2 text-sm font-semibold">
-            Temizle
-          </button>
-          <button
-            type="button"
-            onClick={onCreate}
-            disabled={!canCreate || saving}
-            className="dna-btn flex-1 px-4 py-2 text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {saving ? "Kaydediliyor..." : "Kaydı Oluştur"}
-          </button>
+      <div className="dna-app-only dna-app-sticky-actions">
+        <div className="flex gap-2">
+          {prevTab ? (
+            <button type="button" onClick={() => setTab(prevTab)} className="dna-btn-ghost flex-1 px-4 py-3 text-sm font-black">
+              Geri
+            </button>
+          ) : (
+            <Link href="/clients?surface=app" className="dna-btn-ghost inline-flex flex-1 items-center justify-center px-4 py-3 text-sm font-black">
+              Liste
+            </Link>
+          )}
+          {nextTab ? (
+            <button
+              type="button"
+              onClick={() => setTab(nextTab)}
+              disabled={!currentTabComplete}
+              className="dna-btn flex-1 px-4 py-3 text-sm font-black disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              İleri
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={onCreate}
+              disabled={!canCreate || saving}
+              className="dna-btn flex-1 px-4 py-3 text-sm font-black disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {saving ? "Kaydediliyor..." : "Kaydet ve Skora Geç"}
+            </button>
+          )}
         </div>
       </div>
     </div>

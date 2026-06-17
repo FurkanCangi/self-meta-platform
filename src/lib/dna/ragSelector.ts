@@ -1,3 +1,5 @@
+// LEGACY/OPTIONAL AI PATH ONLY.
+// Production report generation must remain deterministic and must not import or call this module.
 import { splitClinicalReportSections } from "./reportText"
 import { PRO_RAG_CHUNKS, type ProRagChunk } from "./proRag"
 

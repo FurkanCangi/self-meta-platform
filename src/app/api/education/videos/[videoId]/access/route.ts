@@ -25,7 +25,7 @@ export async function POST(
 
   const { videoId } = await params
   const auditContext = await getRequestAuditContext()
-  const rateLimit = checkRateLimit({
+  const rateLimit = await checkRateLimit({
     key: `education-video-access:${auth.user.id}:${videoId}`,
     limit: 20,
     windowMs: 60 * 60 * 1000,

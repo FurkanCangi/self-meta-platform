@@ -1,5 +1,7 @@
 import "server-only"
 
+import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+
 type Bucket = {
   count: number
   resetAt: number
@@ -7,7 +9,7 @@ type Bucket = {
 
 const buckets = new Map<string, Bucket>()
 
-export function checkRateLimit(options: {
+function memoryRateLimit(options: {
   key: string
   limit: number
   windowMs: number
@@ -30,6 +32,39 @@ export function checkRateLimit(options: {
 
   existing.count += 1
   return { ok: true, remaining: Math.max(0, options.limit - existing.count), resetAt: existing.resetAt }
+}
+
+export async function checkRateLimit(options: {
+  key: string
+  limit: number
+  windowMs: number
+  now?: number
+}) {
+  try {
+    const admin = createSupabaseAdminClient()
+    const { data, error } = await admin.rpc("check_api_rate_limit", {
+      p_key: options.key,
+      p_limit: options.limit,
+      p_window_ms: options.windowMs,
+    })
+
+    if (error) throw error
+
+    const row = Array.isArray(data) ? data[0] : data
+    if (!row || typeof row.ok !== "boolean") throw new Error("rate_limit_rpc_invalid")
+
+    return {
+      ok: Boolean(row.ok),
+      remaining: Math.max(0, Number(row.remaining || 0)),
+      resetAt: new Date(row.reset_at).getTime(),
+    }
+  } catch (error) {
+    if (process.env.NODE_ENV === "production") {
+      throw error
+    }
+
+    return memoryRateLimit(options)
+  }
 }
 
 export function rateLimitResponse(resetAt: number) {

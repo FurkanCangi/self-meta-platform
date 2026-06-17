@@ -75,7 +75,7 @@ export async function GET(req: Request) {
 
     assertOwnerAuditAccess(user.email)
 
-    const rateLimit = checkRateLimit({
+    const rateLimit = await checkRateLimit({
       key: `owner-audit-export:${user.id}`,
       limit: 20,
       windowMs: 60 * 60 * 1000,

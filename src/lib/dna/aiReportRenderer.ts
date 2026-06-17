@@ -41,7 +41,7 @@ export function renderAIReport(
     "1. Klinik Karar Özeti",
     `${nonEmpty(analysis.generalSummary)} Klinik karar cümlesi: ${nonEmpty(analysis.conclusion)}`,
     "",
-    "2. Kanıt Temelli Profil Özeti",
+    "2. Klinik Kanıt Profili",
     [`Toplam skor ${scores.toplam}/300 ve genel düzey ${scores.globalLevel} olarak sınıflanmıştır.`, ageBandNote, "Alan puanları:", numerical].filter(Boolean).join("\n"),
     "",
     "3. Alan Bazlı Klinik Yorum",

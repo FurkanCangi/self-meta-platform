@@ -1,3 +1,5 @@
+// LEGACY/OPTIONAL AI PATH ONLY.
+// Production report generation must remain deterministic and must not import or call this module.
 const DNA_CLINICAL_STYLE_GUIDE = `
 YALNIZCA VERİ TEMELLİ YAZ:
 - Yalnızca deterministik analiz, clinicalAnalysis ve seçilmiş klinik bağlama dayan.
@@ -20,11 +22,11 @@ FORMAT:
 - Her başlık kendi satırında yazılsın.
 - Başlık ile içerik aynı satırda başlamasın.
 - Bölümler arasında boş satır bırak.
-- Kanıt Temelli Profil Özeti ve Alan Bazlı Klinik Yorum bölümünde kısa satır listeleri kullanılabilir.
+- Klinik Kanıt Profili ve Alan Bazlı Klinik Yorum bölümünde kısa satır listeleri kullanılabilir.
 
 BAŞLIK ZORUNLULUĞU:
 1. Klinik Karar Özeti
-2. Kanıt Temelli Profil Özeti
+2. Klinik Kanıt Profili
 3. Alan Bazlı Klinik Yorum
 4. Klinik Örüntü ve Formülasyon
 5. Anamnez, Gözlem ve Test Uyumunun Değerlendirilmesi
@@ -117,7 +119,7 @@ FORMAT:
 - Yalnızca düz metin yaz.
 - Sadece şu 7 başlığı kullan:
 1. Klinik Karar Özeti
-2. Kanıt Temelli Profil Özeti
+2. Klinik Kanıt Profili
 3. Alan Bazlı Klinik Yorum
 4. Klinik Örüntü ve Formülasyon
 5. Anamnez, Gözlem ve Test Uyumunun Değerlendirilmesi
@@ -650,7 +652,7 @@ GÖREV:
 Aşağıdaki başlıklarla anlaşılır, kısa, profesyonel bir klinik rapor yaz:
 
 1. Klinik Karar Özeti
-2. Kanıt Temelli Profil Özeti
+2. Klinik Kanıt Profili
 3. Alan Bazlı Klinik Yorum
 4. Klinik Örüntü ve Formülasyon
 5. Anamnez, Gözlem ve Test Uyumunun Değerlendirilmesi
@@ -669,9 +671,9 @@ BÖLÜM KURALLARI:
 - 1. Klinik Karar Özeti bölümünde yalnız skor özeti değil, raporun hangi klinik eksen üzerinden okunacağı açıkça kurulmalıdır.
 - Eğer tüm alanlar Tipik düzeydeyse, en düşük Tipik puanı birincil kırılgan alan veya risk ekseni gibi yazma.
 - Eğer tüm alanlar Tipik düzeydeyse, raporu korunmuş / dengeli profil çerçevesinde yaz; yalnız bağlama duyarlı hassasiyet varsa bunu sınırlı ve temkinli biçimde belirt.
-- 2. Kanıt Temelli Profil Özeti bölümünde tüm alanlar tam skor + düzey formatında kısa satırlar halinde tek tek verilmelidir.
-- 2. Kanıt Temelli Profil Özeti bölümünde yalnız düzey yazıp skoru atlama; global sınıflama ile alan düzeyleri farklıysa toplam skor eşiği ile alan bazlı eşik farkını açıkla.
-- 2. Kanıt Temelli Profil Özeti bölümünde "Karar/sentez:" satırı bulunmalı ve skor dağılımının klinik ağırlığını kısa belirtmelidir.
+- 2. Klinik Kanıt Profili bölümünde tüm alanlar tam skor + düzey formatında kısa satırlar halinde tek tek verilmelidir.
+- 2. Klinik Kanıt Profili bölümünde yalnız düzey yazıp skoru atlama; global sınıflama ile alan düzeyleri farklıysa toplam skor eşiği ile alan bazlı eşik farkını açıkla.
+- 2. Klinik Kanıt Profili bölümünde "Karar/sentez:" satırı bulunmalı ve skor dağılımının klinik ağırlığını kısa belirtmelidir.
 - 3. Alan Bazlı Klinik Yorum bölümünde her alan için düzeyle uyumlu, birbirinden ayrışan kısa yorumlar yazılmalıdır.
 - 3. Alan Bazlı Klinik Yorum bölümünde öncelik alan bazlı seçilmiş klinik bağlamdadır.
 - 3. Alan Bazlı Klinik Yorum bölümünde gerekirse kısa işlevsel örnekler yalnız ilgili veriyle destekleniyorsa eklenebilir.
@@ -683,7 +685,7 @@ BÖLÜM KURALLARI:
 - 4. Klinik Örüntü ve Formülasyon bölümünde "Klinik formülasyon:" etiketiyle ana mekanizma cümlesi kurulmalıdır.
 - 4. Klinik Örüntü ve Formülasyon bölümünde mümkünse primer alan, ikincil alanlar ve korunmuş alanlar arasındaki ilişki ayrı ayrı görünür kılınmalıdır.
 - 4. Klinik Örüntü ve Formülasyon bölümünde profil adı iki alanı birlikte içeriyorsa bunu tek alanlı seçici kırılganlık gibi yazma; çift eksenli veya birlikte belirginleşen örüntü olarak açıkla.
-- 4. Klinik Örüntü ve Formülasyon bölümünde profil adı "Merkezli Yaygın Regülasyon Yükü" ise önce merkez alanı, sonra o alana eşlik eden yayılımı açıkça anlat.
+- 4. Klinik Örüntü ve Formülasyon bölümünde profil adı "Çok Alanlı Regülasyon Yükü" ise tek bir alanı otomatik merkez ilan etmeden klinik mekanizma ve kanıt ağırlığını açıkça anlat.
 - Eğer tüm alanlar Tipik düzeydeyse, örüntü analizinde "anlamlı bir risk kümesi izlenmedi" çerçevesini koru; bağlamsal hassasiyet varsa bunu yaygın klinik yük gibi abartma.
 - 4. Klinik Örüntü ve Formülasyon bölümünde kalite odağı "selective" ise yaygın veya çok alanlı yük dili kurma.
 - 4. Klinik Örüntü ve Formülasyon bölümünde kalite odağı "paired" ise iki alanı birlikte açıklamadan tek alanlı seçici örüntüye düşme.

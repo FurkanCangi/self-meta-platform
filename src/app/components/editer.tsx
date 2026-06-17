@@ -1,29 +1,19 @@
-// @ts-nocheck 
 "use client";
 
-import React from 'react';
-import dynamic from 'next/dynamic';
+import React, { useState } from "react";
 
-import { CKEditor } from '@ckeditor/ckeditor5-react';
-import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
+const defaultValue =
+  "Hello,\n\nIf the distribution of letters and words is random, the reader will not be distracted from making a neutral judgment on the visual impact and readability of the typefaces or the distribution of text on the page.\n\nThank you";
 
-export default function Editer(){
-    const debugEditor = process.env.NODE_ENV !== "production";
-    return (
-        <CKEditor
-          editor={ClassicEditor}
-          data="<div id=&nbsp;editor&nbsp;><p>Hello,<br/><br/> If the distribution of letters and words is random, the reader will not be distracted from making a neutral judgment on the visual impact and readability of the typefaces (typography), or the distribution of text on the page (layout or type area). <br/><br/>Thank you</p></div>"
-          onInit={(editor) => {
-            if (debugEditor) console.info('Editor is ready to use!', editor);
-          }}
-          config={{
-            licenseKey: '<YOUR_LICENSE_KEY>', // Add your license key here
-          }}
-          onChange={(event, editor) => {
-            const data = editor.getData();
-            if (debugEditor) console.info("Editor content changed", { length: data.length });
-          }}
-        />
-    );
+export default function Editer() {
+  const [value, setValue] = useState(defaultValue);
+
+  return (
+    <textarea
+      className="min-h-[240px] w-full rounded-md border border-gray-200 bg-white p-4 text-sm leading-6 text-slate-700 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100"
+      value={value}
+      onChange={(event) => setValue(event.target.value)}
+    />
+  );
 }
 

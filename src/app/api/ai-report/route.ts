@@ -105,11 +105,13 @@ import { rejectServerControlledFields } from "@/lib/security/payloadGuards"
 import { evaluateAccountRisk, recordAccountSecurityEvent } from "@/lib/security/anomalyDetection"
 import { getPrivacyAuditContext, recordDataAccessAuditEvent } from "@/lib/security/privacyOps"
 import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
+import { consumeReportCredit } from "@/lib/security/reportCredits"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { buildAdvancedReport } from "@/lib/dna/reportEngine"
 import { extractAgeMonthsFromAnamnez, isSupportedAgeMonths } from "@/lib/dna/ageUtils"
 import { buildLiteratureAlignedSection } from "@/lib/dna/literatureNote"
 import { normalizeClinicalReportText } from "@/lib/dna/reportText"
+import { validateAndNormalizeClinicalReport } from "@/lib/dna/clinicalSafetyValidator"
 
 async function createSupabaseServerClient() {
   const cookieStore = await cookies()
@@ -135,7 +137,7 @@ async function createSupabaseServerClient() {
 }
 
 function cleanRenderedReport(text: string): string {
-  return normalizeClinicalReportText(text)
+  return validateAndNormalizeClinicalReport(normalizeClinicalReportText(text)).text
 }
 
 function appendOptionalSection(baseText: string, optionalSection?: string | null): string {
@@ -175,7 +177,7 @@ export async function POST(req: Request) {
       )
     }
 
-    const rateLimit = checkRateLimit({
+    const rateLimit = await checkRateLimit({
       key: `ai-report:${user.id}`,
       limit: 8,
       windowMs: 60 * 60 * 1000,
@@ -211,8 +213,9 @@ export async function POST(req: Request) {
     }
 
     const auditContext = await getPrivacyAuditContext()
+    const admin = createSupabaseAdminClient()
     await recordDataAccessAuditEvent({
-      admin: createSupabaseAdminClient(),
+      admin,
       actorUserId: user.id,
       subjectUserId: user.id,
       action: "ai_report_generate",
@@ -287,6 +290,28 @@ if (__validationErrors.length > 0) {
           error: "Rapor yalnızca desteklenen yaş aralıkları için üretilebilir. Lütfen 24-35 ay, 36-47 ay, 48-59 ay veya 60-71 ay aralığını seçin.",
         },
         { status: 400 }
+      )
+    }
+
+    const credit = await consumeReportCredit({
+      admin,
+      userId: user.id,
+      assessmentId: typeof body?.assessmentId === "string" ? body.assessmentId : null,
+      clientId: String((ownedClient as any).client?.id || ""),
+      metadata: {
+        route: "/api/ai-report",
+        client_code: String(body?.clientCode || body?.client_code || ""),
+      },
+    })
+
+    if (!credit.ok) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: credit.error === "report_credit_required" ? "report_credit_required" : "Rapor hakkı doğrulanamadı.",
+          remaining: credit.remaining,
+        },
+        { status: credit.error === "report_credit_required" ? 402 : 500 }
       )
     }
 

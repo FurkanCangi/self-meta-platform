@@ -16,6 +16,9 @@ import { type AnamnezRecord } from "../src/lib/dna/anamnezUtils";
 import { isSupportedAgeMonths } from "../src/lib/dna/ageUtils";
 import { estimateRagCoverage, selectProRagContext } from "../src/lib/dna/ragSelector";
 import { CLINICAL_KNOWLEDGE_CHUNKS, WORD_RAG_SOURCE } from "../src/lib/dna/clinicalKnowledgeBase";
+import { sanitizeFinalReportLanguage } from "../src/lib/dna/reportLanguageQuality";
+import { validateAndNormalizeClinicalReport } from "../src/lib/dna/clinicalSafetyValidator";
+import { redactReportDebugMeta } from "../src/lib/dna/reportPrivacy";
 import {
   getNarrativeGuardViolations,
   hasForbiddenClinicalCitation,
@@ -63,7 +66,7 @@ function hasLevelMismatch(
 
   const allLevels = ["Tipik", "Riskli", "Atipik"];
   const relevantSections = splitClinicalReportSections(text).filter((section) =>
-    section.heading === "2. Kanıt Temelli Profil Özeti" || section.heading === "3. Alan Bazlı Klinik Yorum"
+    section.heading === "2. Klinik Kanıt Profili" || section.heading === "3. Alan Bazlı Klinik Yorum"
   );
   const lines = relevantSections.flatMap((section) => section.body.split(/\n+/));
 
@@ -170,10 +173,15 @@ function parseArgs(argv: string[]) {
       ? path.resolve(process.cwd(), argv[fixtureIndex + 1])
       : DEFAULT_FIXTURE_PATH;
 
+  const deterministicOnly = !argv.includes("--with-ai");
+  if (!deterministicOnly && process.env.NODE_ENV === "production") {
+    throw new Error("Production ortamında --with-ai kullanılamaz. Rapor üretimi deterministic kalmalıdır.");
+  }
+
   return {
     fixturePath,
     runAll: argv.includes("--all"),
-    deterministicOnly: !argv.includes("--with-ai"),
+    deterministicOnly,
   };
 }
 
@@ -256,6 +264,9 @@ function buildTechnicalSummaryBlock(meta: {
   fallbackUsed: boolean;
   aiDraftNarrativeGuardViolations?: NarrativeGuardViolation[];
   narrativeGuardViolations: NarrativeGuardViolation[];
+  traceActive?: boolean;
+  selectedAtomCount?: number;
+  suppressedAtomCount?: number;
 }) {
   return [
     "Teknik Uretim Ozeti (Test Amacli)",
@@ -269,6 +280,9 @@ function buildTechnicalSummaryBlock(meta: {
     `- AI draft narrative guard issue sayisi: ${(meta.aiDraftNarrativeGuardViolations || []).length}`,
     `- Fallback: ${meta.fallbackUsed ? "Evet" : "Hayir"}`,
     `- Narrative guard issue sayisi: ${meta.narrativeGuardViolations.length}`,
+    `- Trace: ${meta.traceActive ? "Aktif" : "Pasif"}`,
+    `- Selected atoms: ${meta.selectedAtomCount ?? 0}`,
+    `- Suppressed atoms: ${meta.suppressedAtomCount ?? 0}`,
   ].join("\n");
 }
 
@@ -357,12 +371,18 @@ export async function runSingleFixture(fixturePath: string, deterministicOnly: b
   });
   const useFallback = !deterministicOnly && Boolean(fallbackReason);
   const literatureSection = buildLiteratureAlignedSection(report.clinicalAnalysis);
-  const finalText = normalizeClinicalReportText(
-    appendOptionalSection(useFallback ? report.deterministicReport : mergedAiText, literatureSection?.text)
+  const finalSafety = validateAndNormalizeClinicalReport(
+    sanitizeFinalReportLanguage(
+      normalizeClinicalReportText(appendOptionalSection(useFallback ? report.deterministicReport : mergedAiText, literatureSection?.text))
+    )
   );
-  const deterministicText = normalizeClinicalReportText(
-    appendOptionalSection(report.deterministicReport, literatureSection?.text)
+  const deterministicSafety = validateAndNormalizeClinicalReport(
+    sanitizeFinalReportLanguage(
+      normalizeClinicalReportText(appendOptionalSection(report.deterministicReport, literatureSection?.text))
+    )
   );
+  const finalText = finalSafety.text;
+  const deterministicText = deterministicSafety.text;
   const aiDraftRagCoveragePct = aiText ? estimateRagCoverage(aiText, ragContext).overall : 0;
   const aiContributionDraftPct = aiText ? estimateAiContributionPercent(report.deterministicReport, mergedAiText) : 0;
   const finalAiContributionPct = useFallback ? 0 : aiContributionDraftPct;
@@ -376,6 +396,9 @@ export async function runSingleFixture(fixturePath: string, deterministicOnly: b
     globalLevel: report.globalLevel,
     profileType: report.profileType,
   });
+  const traceActive = Boolean(report.trace?.active);
+  const selectedAtomCount = report.trace?.selectedAtoms.length || 0;
+  const suppressedAtomCount = report.trace?.suppressedAtoms.length || 0;
   const technicalSummary = buildTechnicalSummaryBlock({
     finalDeterministicContributionPct,
     finalAiContributionPct,
@@ -386,6 +409,9 @@ export async function runSingleFixture(fixturePath: string, deterministicOnly: b
     aiDraftNarrativeGuardViolations,
     fallbackUsed: useFallback,
     narrativeGuardViolations,
+    traceActive,
+    selectedAtomCount,
+    suppressedAtomCount,
   });
   const outputDir = path.join(OUTPUT_DIR, slugifyFixtureName(fixturePath));
 
@@ -414,8 +440,17 @@ export async function runSingleFixture(fixturePath: string, deterministicOnly: b
     runtimeRagContributionPct: finalRagContributionPct,
     deterministicKnowledgeBaseActive,
     wordRagChunkCoverage,
+    trace: report.trace,
+    auditTrail: report.auditTrail,
+    reportVersionMeta: report.reportVersionMeta,
+    selectedAtoms: report.trace?.selectedAtoms || [],
+    suppressedAtoms: report.trace?.suppressedAtoms || [],
+    triggeredRules: report.trace?.ruleHits || [],
+    traceValidationIssues: report.trace?.validationIssues || [],
     literatureSources: literatureSection?.sourceIds || [],
     narrativeGuardViolations,
+    clinicalSafetyIssues: finalSafety.issues,
+    clinicalSafetyCriticalIssues: finalSafety.criticalIssues,
   };
 
   await writeOutputs({
@@ -425,7 +460,7 @@ export async function runSingleFixture(fixturePath: string, deterministicOnly: b
     mergedDraft: mergedAiText,
     final: finalText,
     technicalSummary,
-    meta,
+    meta: redactReportDebugMeta(meta),
   });
 
   return {
@@ -451,6 +486,9 @@ export async function runSingleFixture(fixturePath: string, deterministicOnly: b
     finalRagContributionPct,
     aiDraftRagCoveragePct,
     narrativeGuardViolations,
+    trace: report.trace,
+    auditTrail: report.auditTrail,
+    reportVersionMeta: report.reportVersionMeta,
     finalText,
   };
 }
@@ -473,6 +511,7 @@ export async function run() {
     console.log(`AI Kullanildi: ${result.aiUsed ? "Evet (--with-ai)" : "Hayir (varsayilan deterministic)"}`);
     console.log(`Fallback: ${result.fallbackUsed ? "Evet" : "Hayir"}`);
     console.log(`Final deterministic: %${result.finalDeterministicContributionPct} | Final AI: %${result.finalAiContributionPct} | Final RAG: %${result.finalRagContributionPct} | AI draft RAG coverage: %${result.aiDraftRagCoveragePct}`);
+    console.log(`Trace: ${result.trace?.active ? "Aktif" : "Pasif"} | Selected atoms: ${result.trace?.selectedAtoms.length || 0} | Suppressed atoms: ${result.trace?.suppressedAtoms.length || 0}`);
     if (result.aiError) {
       console.log(`AI Hata: ${result.aiError}`);
     }
