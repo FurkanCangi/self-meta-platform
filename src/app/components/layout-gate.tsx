@@ -24,6 +24,7 @@ const PUBLIC_ROUTES = new Set([
   "/dna-nedir",
   "/cozumler",
   "/arastirma",
+  "/terapist-bul",
   "/fiyatlandirma",
   "/iletisim",
   "/pricing",
