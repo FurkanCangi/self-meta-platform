@@ -180,7 +180,7 @@ export default function LandingHeader() {
             onMouseEnter={() => openDropdown("dna")}
             onMouseLeave={scheduleClose}
             onBlur={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget)) {
+              if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) {
                 closeDropdown();
               }
             }}
@@ -226,7 +226,7 @@ export default function LandingHeader() {
             onMouseEnter={() => openDropdown("research")}
             onMouseLeave={scheduleClose}
             onBlur={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget)) {
+              if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget)) {
                 closeDropdown();
               }
             }}
