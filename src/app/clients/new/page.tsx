@@ -1200,7 +1200,7 @@ export default function NewClientPage() {
             )}
           </div>
 
-          <div className="mt-8 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
+          <div className="dna-web-only mt-8 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-slate-500">
               {currentTabComplete
                 ? "Bu bölüm tamamlandı. İsterseniz üst başlıklardan ya da sağ alttaki butondan ilerleyebilirsiniz."
