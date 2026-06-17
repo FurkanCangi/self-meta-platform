@@ -2,6 +2,7 @@ import LandingHeader from "./components/LandingHeader";
 import LandingHeroV2 from "./components/LandingHeroV2";
 import SolutionsGrid from "./components/SolutionsGrid";
 import TherapistsSection from "./components/TherapistsSection";
+import TherapistDirectoryPreview from "./components/TherapistDirectoryPreview";
 import FinalCTA from "./components/FinalCTA";
 import FooterContact from "./components/FooterContact";
 
@@ -12,6 +13,7 @@ export default function Page() {
       <LandingHeroV2 />
       <SolutionsGrid />
       <TherapistsSection />
+      <TherapistDirectoryPreview />
       <FinalCTA />
       <FooterContact />
 	</>
