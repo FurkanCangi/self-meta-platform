@@ -2,7 +2,7 @@ import { createHash } from "crypto"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
 import { requireTrustedMutation } from "@/lib/security/apiGuards"
-import { evaluateAccountRisk } from "@/lib/security/anomalyDetection"
+import { evaluateAccountRisk, isSecurityLockExemptUser } from "@/lib/security/anomalyDetection"
 import {
   APP_SESSION_MAX_AGE_SECONDS,
   setAppSessionCookie,
@@ -87,6 +87,7 @@ export async function POST(request: Request) {
   const userAgent = String(headerStore.get("user-agent") || "").slice(0, 500)
   const ipAddress = getClientIp(headerStore)
   const admin = createSupabaseAdminClient()
+  const lockExemptUser = await isSecurityLockExemptUser(user.id, user.email)
 
   const { data: existingDevice, error: existingError } = await admin
     .from("account_devices")
@@ -116,7 +117,7 @@ export async function POST(request: Request) {
   const lockedUntil = securityState?.temporary_locked_until
     ? new Date(securityState.temporary_locked_until).getTime()
     : 0
-  if (lockedUntil && lockedUntil > Date.now()) {
+  if (!lockExemptUser && lockedUntil && lockedUntil > Date.now()) {
     return NextResponse.json({ ok: false, error: "account_temporarily_locked" }, { status: 423 })
   }
 

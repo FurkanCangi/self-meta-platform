@@ -2,7 +2,11 @@ import "server-only"
 
 import { cookies, headers } from "next/headers"
 import { NextResponse } from "next/server"
-import { evaluateAccountRisk, recordAccountSecurityEvent } from "@/lib/security/anomalyDetection"
+import {
+  evaluateAccountRisk,
+  isSecurityLockExemptUser,
+  recordAccountSecurityEvent,
+} from "@/lib/security/anomalyDetection"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
@@ -136,7 +140,10 @@ export async function verifyCurrentAppSession(userId: string): Promise<AppSessio
   const lockedUntil = securityState?.temporary_locked_until
     ? new Date(securityState.temporary_locked_until).getTime()
     : 0
-  if (lockedUntil && lockedUntil > Date.now()) return { ok: false, reason: "locked" }
+  if (lockedUntil && lockedUntil > Date.now()) {
+    const lockExemptUser = await isSecurityLockExemptUser(userId)
+    if (!lockExemptUser) return { ok: false, reason: "locked" }
+  }
 
   await auditActiveSessionFingerprint({
     userId,

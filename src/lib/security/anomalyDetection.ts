@@ -1,6 +1,7 @@
 import "server-only"
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+import { isOwnerAuditEmail } from "@/lib/owner/ownerAccess"
 
 type SecurityEventRow = {
   event_type: string
@@ -18,6 +19,7 @@ type RiskDecision = {
 const REVIEW_THRESHOLD = 40
 const LOCK_THRESHOLD = 70
 const TEMPORARY_LOCK_MINUTES = 30
+const SECURITY_LOCK_EXEMPT_ROLES = new Set(["admin", "super_admin", "owner"])
 
 function countDistinct(values: Array<string | null | undefined>) {
   return new Set(values.map((value) => String(value || "").trim()).filter(Boolean)).size
@@ -136,6 +138,28 @@ export async function recordAccountSecurityEvent(event: {
   })
 }
 
+export async function isSecurityLockExemptUser(userId: string, email?: string | null) {
+  if (isOwnerAuditEmail(email)) return true
+
+  const admin = createSupabaseAdminClient()
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("role")
+    .eq("user_id", userId)
+    .maybeSingle()
+
+  if (SECURITY_LOCK_EXEMPT_ROLES.has(String(profile?.role || "").toLowerCase())) {
+    return true
+  }
+
+  if (!email) {
+    const { data } = await admin.auth.admin.getUserById(userId)
+    if (isOwnerAuditEmail(data.user?.email)) return true
+  }
+
+  return false
+}
+
 export async function evaluateAccountRisk(userId: string) {
   const admin = createSupabaseAdminClient()
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
@@ -152,7 +176,13 @@ export async function evaluateAccountRisk(userId: string) {
     return { ok: false as const, error: error.message }
   }
 
-  const decision = scoreAccountSecurityEvents((data || []) as SecurityEventRow[])
+  let decision = scoreAccountSecurityEvents((data || []) as SecurityEventRow[])
+  if (decision.action === "temporary_lock") {
+    const lockExempt = await isSecurityLockExemptUser(userId)
+    if (lockExempt) {
+      decision = { ...decision, action: "manual_review" }
+    }
+  }
   const lockedUntil =
     decision.action === "temporary_lock"
       ? new Date(Date.now() + TEMPORARY_LOCK_MINUTES * 60 * 1000).toISOString()
