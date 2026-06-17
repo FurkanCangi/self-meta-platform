@@ -15,6 +15,7 @@ import {
 import { type AnamnezRecord } from "../src/lib/selfmeta/anamnezUtils";
 import { isSupportedAgeMonths } from "../src/lib/selfmeta/ageUtils";
 import { estimateRagCoverage, selectProRagContext } from "../src/lib/selfmeta/ragSelector";
+import { CLINICAL_KNOWLEDGE_CHUNKS, WORD_RAG_SOURCE } from "../src/lib/selfmeta/clinicalKnowledgeBase";
 import {
   getNarrativeGuardViolations,
   hasForbiddenClinicalCitation,
@@ -250,6 +251,8 @@ function buildTechnicalSummaryBlock(meta: {
   finalAiContributionPct: number;
   finalRagContributionPct: number;
   aiDraftRagCoveragePct: number;
+  deterministicKnowledgeBaseActive: boolean;
+  wordRagChunkCoverage: string;
   fallbackUsed: boolean;
   aiDraftNarrativeGuardViolations?: NarrativeGuardViolation[];
   narrativeGuardViolations: NarrativeGuardViolation[];
@@ -259,6 +262,9 @@ function buildTechnicalSummaryBlock(meta: {
     `- Final deterministic katki (tahmini): %${meta.finalDeterministicContributionPct}`,
     `- Final AI katki (tahmini): %${meta.finalAiContributionPct}`,
     `- Final RAG katki (tahmini): %${meta.finalRagContributionPct}`,
+    `- Runtime RAG: %${meta.finalRagContributionPct}`,
+    `- Deterministic Knowledge Base: ${meta.deterministicKnowledgeBaseActive ? "Aktif" : "Pasif"}`,
+    `- Word RAG deterministic chunk coverage: ${meta.wordRagChunkCoverage}`,
     `- AI taslak RAG coverage: %${meta.aiDraftRagCoveragePct}`,
     `- AI draft narrative guard issue sayisi: ${(meta.aiDraftNarrativeGuardViolations || []).length}`,
     `- Fallback: ${meta.fallbackUsed ? "Evet" : "Hayir"}`,
@@ -362,6 +368,8 @@ export async function runSingleFixture(fixturePath: string, deterministicOnly: b
   const finalAiContributionPct = useFallback ? 0 : aiContributionDraftPct;
   const finalRagContributionPct = Math.round((finalAiContributionPct * aiDraftRagCoveragePct) / 100);
   const finalDeterministicContributionPct = Math.max(0, 100 - finalAiContributionPct);
+  const deterministicKnowledgeBaseActive = true;
+  const wordRagChunkCoverage = `${CLINICAL_KNOWLEDGE_CHUNKS.length}/${WORD_RAG_SOURCE.sourceChunkCount}`;
   const narrativeGuardViolations = getNarrativeGuardViolations({
     text: finalText,
     domainResults: report.domainResults,
@@ -373,6 +381,8 @@ export async function runSingleFixture(fixturePath: string, deterministicOnly: b
     finalAiContributionPct,
     finalRagContributionPct,
     aiDraftRagCoveragePct,
+    deterministicKnowledgeBaseActive,
+    wordRagChunkCoverage,
     aiDraftNarrativeGuardViolations,
     fallbackUsed: useFallback,
     narrativeGuardViolations,
@@ -401,6 +411,9 @@ export async function runSingleFixture(fixturePath: string, deterministicOnly: b
     finalDeterministicContributionPct,
     finalAiContributionPct,
     finalRagContributionPct,
+    runtimeRagContributionPct: finalRagContributionPct,
+    deterministicKnowledgeBaseActive,
+    wordRagChunkCoverage,
     literatureSources: literatureSection?.sourceIds || [],
     narrativeGuardViolations,
   };

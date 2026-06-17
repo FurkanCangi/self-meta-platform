@@ -140,6 +140,10 @@ function hasClassificationExplanation(decisionSection: string): boolean {
   return /toplam skor/i.test(decisionSection) && /alan.*(kendi|50 puanlık|puan eşi|eşiğ|eşi)/i.test(decisionSection);
 }
 
+async function readMetricsText(outputDir: string): Promise<string> {
+  return fs.readFile(path.join(outputDir, "report-with-metrics.md"), "utf8").catch(() => "");
+}
+
 function hasDecisionSynthesis(sectionBody: string): boolean {
   return /(öncelikli klinik hipotez|en güçlü klinik hipotez|mevcut verilerle en güçlü klinik eksen|temel klinik eksen|temel sorun|klinik eksen|karar|sentez|profil sınıflaması|sonuç olarak|sonuç|bu nedenle|dolayısıyla|genel sınıflama|örüntü|işaret etmektedir|işaret eder|göstermektedir|uyumludur|yoğunlaşmaktadır|doğrudan uyum|açık uyum|örtüşmektedir|düşündürmektedir)/i.test(
     sectionBody
@@ -219,8 +223,11 @@ function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof r
     failures.push("6. Klinik Önceliklendirme Notu beklenen hipotez/eksen/güven dilini taşımıyor.");
   }
 
-  if (!/Klinik karar cümlesi:/i.test(prioritizationSection) || !/Klinik formülasyon:/i.test(prioritizationSection)) {
-    failures.push("6. Klinik Önceliklendirme Notu profesör düzeyi karar/formülasyon cümlesini taşımıyor.");
+  if (
+    !/(Klinik karar cümlesi:|Karar özeti:)/i.test(prioritizationSection) ||
+    !/(Klinik formülasyon:|Formülasyon özeti:)/i.test(prioritizationSection)
+  ) {
+    failures.push("6. Klinik Önceliklendirme Notu profesör düzeyi karar/formülasyon özetini taşımıyor.");
   }
 
   if (!/Klinik öncelik sırası:/i.test(prioritizationSection)) {
@@ -372,6 +379,16 @@ async function main() {
   for (const spec of specs) {
     const result = await runQualityFixture(spec, withAi);
     const caseFailures = validateCase(spec, result, withAi);
+    const metricsText = await readMetricsText(result.outputDir);
+    if (!withAi && (!/Runtime RAG:\s*%0/i.test(metricsText) || !/Deterministic Knowledge Base:\s*Aktif/i.test(metricsText))) {
+      caseFailures.push("Deterministic üretimde Runtime RAG %0 ve Knowledge Base Aktif metrik ayrımı görünmüyor.");
+    }
+    if (
+      /raw-score-only|raw-ext/i.test(result.fixturePath) &&
+      /Klinik karar cümlesi:\s*bu raporda birincil klinik eksen/i.test(result.finalText)
+    ) {
+      caseFailures.push("Ham puan-only vakada karar cümlesi eski eksen şablonuna düştü.");
+    }
     const passed = caseFailures.length === 0;
 
     results.push({

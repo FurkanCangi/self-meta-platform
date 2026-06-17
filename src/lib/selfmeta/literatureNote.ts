@@ -145,7 +145,7 @@ export const VERIFIED_LITERATURE_SOURCES: Record<string, LiteratureSource> = {
     url: "https://fpg.unc.edu/sites/fpg.unc.edu/files/resources/reports-and-policy-briefs/Co-RegulationFromBirthThroughYoungAdulthood.pdf",
     evidenceDomain: "co_regulation_context",
     claimBoundary:
-      "Ko-regülasyon ve bağlamsal destek çerçevesini destekler; doğrudan müdahale planı veya tedavi reçetesi değildir.",
+      "Ko-regülasyon ve bağlamsal destek çerçevesini destekler; doğrudan uygulama yönergesi veya tedavi reçetesi değildir.",
     verifiedAt: "2026-06-01",
     catalogArea: "Çapraz Alan",
     catalogTier: "core",
@@ -299,7 +299,7 @@ export const VERIFIED_LITERATURE_SOURCES: Record<string, LiteratureSource> = {
     url: "https://www.tandfonline.com/doi/abs/10.1080/11038128.2021.2019306",
     evidenceDomain: "motor_praxis_executive_functions",
     claimBoundary:
-      "Motor beceri ve yürütücü işlev ilişkisini genel klinik yorumda destekler; DCD tanısı veya müdahale planı üretmez.",
+      "Motor beceri ve yürütücü işlev ilişkisini genel klinik yorumda destekler; DCD tanısı veya uygulama yönergesi üretmez.",
     verifiedAt: "2026-06-01",
     catalogArea: "Yürütücü İşlev",
     catalogTier: "core",

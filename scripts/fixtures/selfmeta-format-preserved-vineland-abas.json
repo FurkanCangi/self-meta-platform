@@ -1,0 +1,23 @@
+{
+  "clientCode": "FIX-FORMAT-PRESERVED-57",
+  "clientName": "Preserved",
+  "ageMonths": 57,
+  "anamnez": {
+    "ad_soyad": "Preserved Ornek",
+    "client_code": "FIX-FORMAT-PRESERVED-57",
+    "age": "57 ay",
+    "diagnosis": "Tanilanmis bozukluk bildirilmiyor",
+    "referral_reason": "Aile kalabalik ortamlarda gecici zorlanma bildiriyor; genel islevsellik korunmus mu soruluyor.",
+    "parent_concerns_goals": "Yeni ortam ve bekleme sirasinda kisa sureli hareketlenme azaltilmak isteniyor.",
+    "therapist_comments": "Bire bir ve yapilandirilmis etkinlikte is birligi, dikkat ve rutin takip korunmus.",
+    "external_clinical_findings": "Test adi: Vineland-3\nPuan / sonuc: Adaptive Behavior Composite standart skoru 101; iletisim, gunluk yasam ve sosyallesme yas beklentisiyle uyumlu.\nKlinik yorum / resmi bulgu ozeti: Genel uyumsal islevsellik korunmus ve belirgin risk profili desteklenmiyor.\nEk notlar: Kalabalik ortam zorlanmasi baglama duyarlı gorunuyor.\n\nTest adi: ABAS-3\nPuan / sonuc: Genel uyumsal bilesik standart skoru 98; kavramsal, sosyal ve pratik alanlar ortalama.\nKlinik yorum / resmi bulgu ozeti: Korunmus adaptif profil, risk dilinin gereksiz genisletilmemesini destekliyor."
+  },
+  "scores": {
+    "physiological": 40,
+    "sensory": 38,
+    "emotional": 37,
+    "cognitive": 39,
+    "executive": 36,
+    "interoception": 39
+  }
+}

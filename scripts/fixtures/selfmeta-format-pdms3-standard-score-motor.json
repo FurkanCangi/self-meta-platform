@@ -1,0 +1,23 @@
+{
+  "clientCode": "FIX-FORMAT-STD-MOTOR-55",
+  "clientName": "StandardScore",
+  "ageMonths": 55,
+  "anamnez": {
+    "ad_soyad": "Standard Score Ornek",
+    "client_code": "FIX-FORMAT-STD-MOTOR-55",
+    "age": "55 ay",
+    "diagnosis": "Tanilanmis bozukluk bildirilmiyor",
+    "referral_reason": "Motor planlama ve cok basamakli hareketlerde zorlanma",
+    "parent_concerns_goals": "Giyinme, makas kullanma ve yeni oyun hareketlerini kurmada daha bagimsiz olmasi hedefleniyor.",
+    "therapist_comments": "Yeni hareket oruntusunde beden pozisyonunu kurma zor; model ve ipucu ile performans toparliyor.",
+    "external_clinical_findings": "Test adi: PDMS-3\nPuan / sonuc: Ince motor kompozit standart skoru 76, percentil 5; goz-el koordinasyonu dusuk.\nKlinik yorum / resmi bulgu ozeti: Motor koordinasyon ve hareket sekanslama gerektiren alanlarda yas beklentisinin altinda performans var.\nEk notlar: Standart skor ve percentil resmi sonuc ozeti olarak bildirildi.\n\nTest adi: MABC-3\nPuan / sonuc: El becerileri percentil 7, denge dusuk ortalama.\nKlinik yorum / resmi bulgu ozeti: Motor uygulama kalitesi ve beden organizasyonu tarafinda ek yuk oldugunu destekliyor."
+  },
+  "scores": {
+    "physiological": 38,
+    "sensory": 31,
+    "emotional": 30,
+    "cognitive": 28,
+    "executive": 25,
+    "interoception": 32
+  }
+}

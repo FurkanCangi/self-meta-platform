@@ -1,0 +1,23 @@
+{
+  "clientCode": "FIX-FORMAT-PCTL-64",
+  "clientName": "Percentile",
+  "ageMonths": 64,
+  "anamnez": {
+    "ad_soyad": "Percentile Ornek",
+    "client_code": "FIX-FORMAT-PCTL-64",
+    "age": "64 ay",
+    "diagnosis": "Tanilanmis bozukluk bildirilmiyor",
+    "referral_reason": "Oz bakim ve gunluk rutinlerde baslatma/surdurme zorlugu",
+    "parent_concerns_goals": "Giyinme, sabah rutini ve esya toplama basamaklarini daha az hatirlatmayla tamamlamasi hedefleniyor.",
+    "therapist_comments": "Kurali anliyor ancak kendi kendine baslatma ve sirayi koruma icin dis organizasyon gerekiyor.",
+    "external_clinical_findings": "Test adi: PEDI-CAT\nPuan / sonuc: Daily Activities T skoru 38, percentil 9; Responsibility alaninda yas beklentisinin altinda.\nKlinik yorum / resmi bulgu ozeti: Gunluk etkinlikleri baslatma, siraya koyma ve sorumlulugu surdurme alaninda islevsel kisitlanma bildiriliyor.\nEk notlar: IRT/T skoru ve percentil birlikte raporlanmis.\n\nTest adi: Vineland-3\nPuan / sonuc: Gunluk yasam becerileri standart skoru 78; iletisim ve sosyallesme daha korunmus.\nKlinik yorum / resmi bulgu ozeti: Zorluk genel kapasiteden cok gunluk uygulama ve bagimsiz surdurme hattinda gorunuyor."
+  },
+  "scores": {
+    "physiological": 37,
+    "sensory": 36,
+    "emotional": 32,
+    "cognitive": 30,
+    "executive": 28,
+    "interoception": 33
+  }
+}

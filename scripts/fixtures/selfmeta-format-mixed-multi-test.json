@@ -1,0 +1,23 @@
+{
+  "clientCode": "FIX-FORMAT-MIXED-61",
+  "clientName": "MixedFormat",
+  "ageMonths": 61,
+  "anamnez": {
+    "ad_soyad": "Mixed Format Ornek",
+    "client_code": "FIX-FORMAT-MIXED-61",
+    "age": "61 ay",
+    "diagnosis": "Tanilanmis bozukluk bildirilmiyor",
+    "referral_reason": "Sosyal-pragmatik talep ve dilsel yuk arttiginda regülasyon dagilmasi",
+    "parent_concerns_goals": "Akran oyununda karsilikliligi surdurme, kurali anlama ve zorlandiginda toparlanma hedefleniyor.",
+    "therapist_comments": "Bire birde iyi organize oluyor; grup ve hizli sosyal ipucu gerektiren durumda yavaslama, yanlis anlama ve duygusal toparlanma ihtiyaci artiyor.",
+    "external_clinical_findings": "Test adi: CCC-2\nPuan / sonuc: Genel Iletisim Bilesigi standart skoru 72; pragmatik dil alt olcekleri dusuk.\nKlinik yorum / resmi bulgu ozeti: Sosyal dilin baglama gore ayarlanmasinda ve karsilikli iletisimde kirilganlik var.\nEk notlar: Standart skor ve alt alan yorumu birlikte verildi.\n\nTest adi: SRS-2\nPuan / sonuc: Toplam T skoru 68; sosyal iletisim ve sosyal motivasyon alanlarinda sinir-klinik yuk.\nKlinik yorum / resmi bulgu ozeti: Sosyal-pragmatik talep arttiginda dikkat ve duygusal toparlanma birlikte zorlanıyor.\n\nTest adi: CELF Preschool-3\nPuan / sonuc: Yönerge takibi scaled score 7; alici dil dusuk ortalama.\nKlinik yorum / resmi bulgu ozeti: Dilsel yuk arttiginda anlama ve gorevde kalma performansi dusuyor."
+  },
+  "scores": {
+    "physiological": 37,
+    "sensory": 36,
+    "emotional": 29,
+    "cognitive": 24,
+    "executive": 27,
+    "interoception": 36
+  }
+}

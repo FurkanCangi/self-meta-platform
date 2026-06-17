@@ -1,0 +1,23 @@
+{
+  "clientCode": "FIXTURE-RAW-EXT-58",
+  "clientName": "RawScore",
+  "ageMonths": 58,
+  "anamnez": {
+    "ad_soyad": "Raw Score Ornek",
+    "client_code": "FIXTURE-RAW-EXT-58",
+    "age": "58 ay",
+    "diagnosis": "Tanilanmis bozukluk bildirilmiyor",
+    "referral_reason": "Dikkat ve gorev surdurme guclugu nedeniyle degerlendirme",
+    "parent_concerns_goals": "Bekleme, sira alma ve etkinligi tamamlama sirasinda zorlanma bildiriliyor.",
+    "therapist_comments": "Yapilandirilmis bire bir etkinlikte katilim daha iyi; bekleme ve cok basamakli gorevlerde dagilma artiyor.",
+    "external_clinical_findings": "Test adi: BRIEF-P\nPuan / sonuc: 72"
+  },
+  "scores": {
+    "physiological": 36,
+    "sensory": 34,
+    "emotional": 30,
+    "cognitive": 27,
+    "executive": 25,
+    "interoception": 35
+  }
+}

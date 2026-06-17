@@ -22,6 +22,9 @@ type AuditIssueCode =
   | "social_mechanism_weak"
   | "physiological_mechanism_weak"
   | "mechanism_lowest_score_leak"
+  | "external_test_profile_missing"
+  | "external_test_quality_boundary_missing"
+  | "deterministic_kb_metric_missing"
   | "age_mismatch_warning_weak"
   | "sensory_theme_leakage"
   | "attention_theme_leakage"
@@ -51,6 +54,9 @@ const ISSUE_LABELS: Record<AuditIssueCode, string> = {
   social_mechanism_weak: "Sosyal-pragmatik mekanizma yeterince açık değil",
   physiological_mechanism_weak: "Beden-temelli toparlanma mekanizması yeterince açık değil",
   mechanism_lowest_score_leak: "Ana klinik bölümlerde lowest-score mekanizması sızıyor",
+  external_test_profile_missing: "Ek test kanıt profili raporda görünmüyor",
+  external_test_quality_boundary_missing: "Ek test yorum sınırı/kalite uyarısı zayıf",
+  deterministic_kb_metric_missing: "Runtime RAG / deterministic KB metrik ayrımı görünmüyor",
   age_mismatch_warning_weak: "Yaş uyumsuz dış test uyarısı zayıf",
   sensory_theme_leakage: "Duyusal tema sızıntısı var",
   attention_theme_leakage: "Dikkat/görev sürdürme tema sızıntısı var",
@@ -126,6 +132,7 @@ function toAnamnezRecord(anamnez: FixturePayload["anamnez"]): AnamnezRecord {
 function getIssueCodes(params: {
   profileType: string;
   finalText: string;
+  metricsText: string;
   anamnezRecord: AnamnezRecord;
   ageMonths: number;
   narrativeGuardCount: number;
@@ -161,8 +168,11 @@ function getIssueCodes(params: {
   );
   const interoFocusText = normalizeText([sectionBodies.pattern, sectionBodies.fit, sectionBodies.conclusion].join("\n"));
   const anamnezSignals = getAnamnezThemeSignals(params.anamnezRecord);
-  const externalText = extractExternalClinicalFindings(params.anamnezRecord).join("\n");
-  const externalAnalysis = analyzeExternalClinicalTests(externalText, params.ageMonths);
+  const rawExternalText =
+    typeof params.anamnezRecord.external_clinical_findings === "string"
+      ? params.anamnezRecord.external_clinical_findings
+      : extractExternalClinicalFindings(params.anamnezRecord).join("\n");
+  const externalAnalysis = analyzeExternalClinicalTests(rawExternalText, params.ageMonths);
   const compatibleCategories = new Set(externalAnalysis.compatibleCategories);
   const primaryCategory = externalAnalysis.primaryCompatibleCategory;
   const profileIsBalanced = /dengeli \/ korunmuş profil|dengeli \/ korunmus profil/.test(normalizedProfile);
@@ -249,6 +259,32 @@ function getIssueCodes(params: {
     if (!/ana klinik karar mekanizmasına dahil edilmemeli/i.test(sectionBodies.fit)) {
       issueCodes.push("age_mismatch_warning_weak");
     }
+  }
+
+  if (
+    externalAnalysis.matches.length > 0 &&
+    (!/Ek Test Kanıt Profili:/i.test(sectionBodies.fit) ||
+      !/yaş\/kapsam:|resmi kullanım aralığı/i.test(sectionBodies.fit) ||
+      !/Alan:/i.test(sectionBodies.fit) ||
+      !/Puan:/i.test(sectionBodies.fit) ||
+      !/Sonuç:/i.test(sectionBodies.fit) ||
+      !/Sınır:|Yorum sınırı:/i.test(sectionBodies.fit))
+  ) {
+    issueCodes.push("external_test_profile_missing");
+  }
+
+  if (
+    externalAnalysis.qualityFlagLines.length > 0 &&
+    !/Yorum sınırı:|ham puan|yaş uyumsuz|yas uyumsuz|ana mekanizma veya karar ağırlığını artırmak için kullanılmadı/i.test(sectionBodies.fit)
+  ) {
+    issueCodes.push("external_test_quality_boundary_missing");
+  }
+
+  if (
+    !/Runtime RAG:\s*%0/i.test(params.metricsText) ||
+    !/Deterministic Knowledge Base:\s*Aktif/i.test(params.metricsText)
+  ) {
+    issueCodes.push("deterministic_kb_metric_missing");
   }
 
   if (!anamnezSignals.sensory && hasAny(normalizedReport, [/duyusal yüklenme/, /çevresel ve dokunsal hassasiyet/, /duyusal hassasiyet/])) {
@@ -373,10 +409,14 @@ async function main() {
   for (const fixturePath of fixturePaths) {
     const fixture = await loadFixture(fixturePath);
     const result = await runSingleFixture(fixturePath, true);
+    const metricsText = await fs
+      .readFile(path.join(result.outputDir, "report-with-metrics.md"), "utf8")
+      .catch(() => "");
     const anamnezRecord = toAnamnezRecord(fixture.anamnez);
     const issueResult = getIssueCodes({
       profileType: result.profileType,
       finalText: result.finalText,
+      metricsText,
       anamnezRecord,
       ageMonths: fixture.ageMonths,
       narrativeGuardCount: result.narrativeGuardViolations.length,

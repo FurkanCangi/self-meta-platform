@@ -1,0 +1,23 @@
+{
+  "clientCode": "FIX-FORMAT-AGEEQ-50",
+  "clientName": "AgeEquivalent",
+  "ageMonths": 50,
+  "anamnez": {
+    "ad_soyad": "Age Equivalent Ornek",
+    "client_code": "FIX-FORMAT-AGEEQ-50",
+    "age": "50 ay",
+    "diagnosis": "Dilsel talep altinda zorlanma nedeniyle izlem",
+    "referral_reason": "Sozel yukun arttigi gecislerde gorevden kopma ve frustrasyon",
+    "parent_concerns_goals": "Yongerge takibi, anlatilani surdurme ve zorlandiginda toparlanma becerisinin artmasi hedefleniyor.",
+    "therapist_comments": "Gorsel destek varken katilim iyi; ard arda sozel yongerge geldiginde duraksama ve duygusal esik dususu belirgin.",
+    "external_clinical_findings": "Test adi: PLS-5\nPuan / sonuc: Ifade edici dil yas esdegeri 42 ay; alici dil standart skoru 86 ile dusuk ortalama.\nKlinik yorum / resmi bulgu ozeti: Dilsel talep arttiginda bilgiyi isleme ve ifade etme yuku gorevde kalmayi etkiliyor.\nEk notlar: Yas esdegeri tek basina tanisal yorum degil, resmi sonuc ozetinin bir parcasi olarak verildi.\n\nTest adi: CELF Preschool-3\nPuan / sonuc: Cumle anlama scaled score 6, yongerge takibi dusuk ortalama.\nKlinik yorum / resmi bulgu ozeti: Cok basamakli sozel talep arttiginda bilissel organizasyon ve frustrasyon toleransi zorlanıyor."
+  },
+  "scores": {
+    "physiological": 36,
+    "sensory": 35,
+    "emotional": 25,
+    "cognitive": 24,
+    "executive": 28,
+    "interoception": 35
+  }
+}
