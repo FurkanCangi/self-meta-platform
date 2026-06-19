@@ -7,6 +7,8 @@ import AuthLayout from "./AuthLayout"
 const LEGAL_ACCEPTANCE_ERROR =
   "Devam etmek için hizmet sözleşmesi, KVKK aydınlatması, açık rıza ve veri giriş yetkisi beyanlarını onaylayın."
 
+const REQUIRED_MARK = <span className="text-rose-500">*</span>
+
 function initialSignupError() {
   if (typeof window === "undefined") return ""
   return formatSignupErrorCode(new URLSearchParams(window.location.search).get("error"))
@@ -140,51 +142,57 @@ export default function DnaSignupForm() {
       <div className="w-full max-w-[430px]">
         <form action="/api/auth/signup" method="post" onSubmit={handleSubmit} className="space-y-2.5">
           <label className="block">
-            <div className="mb-1 text-sm font-bold text-slate-800">Ad Soyad</div>
+            <div className="mb-1 text-sm font-bold text-slate-800">Ad Soyad {REQUIRED_MARK}</div>
             <input
               name="fullName"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               autoComplete="name"
+              required
               className="h-10 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
               placeholder="Ad Soyad"
             />
           </label>
 
           <label className="block">
-            <div className="mb-1 text-sm font-bold text-slate-800">E-posta</div>
+            <div className="mb-1 text-sm font-bold text-slate-800">E-posta {REQUIRED_MARK}</div>
             <input
               name="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               autoComplete="email"
+              required
               className="h-10 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
               placeholder="mail@ornek.com"
             />
           </label>
 
           <label className="block">
-            <div className="mb-1 text-sm font-bold text-slate-800">Şifre</div>
+            <div className="mb-1 text-sm font-bold text-slate-800">Şifre {REQUIRED_MARK}</div>
             <input
               name="password"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               autoComplete="new-password"
+              minLength={8}
+              required
               className="h-10 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
               placeholder="En az 8 karakter"
             />
           </label>
 
           <label className="block">
-            <div className="mb-1 text-sm font-bold text-slate-800">Şifre Tekrar</div>
+            <div className="mb-1 text-sm font-bold text-slate-800">Şifre Tekrar {REQUIRED_MARK}</div>
             <input
               name="confirmPassword"
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
               autoComplete="new-password"
+              minLength={8}
+              required
               className="h-10 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-medium text-slate-900 shadow-sm shadow-slate-200/40 outline-none transition placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100"
               placeholder="Şifreyi tekrar yazın"
             />
@@ -195,13 +203,19 @@ export default function DnaSignupForm() {
           </div>
 
           <div className="space-y-2 rounded-2xl border border-slate-200 bg-white/80 p-3 shadow-sm shadow-slate-200/40">
-            <div className="text-sm font-semibold text-slate-800">Hukuki onaylar</div>
+            <div className="flex items-center justify-between gap-3">
+              <div className="text-sm font-semibold text-slate-800">Hukuki onaylar {REQUIRED_MARK}</div>
+              <div className="rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-600">
+                Tümü zorunlu
+              </div>
+            </div>
             <label className="flex gap-3 text-sm leading-[1.35] text-slate-700">
               <input
                 name="terms"
                 type="checkbox"
                 checked={legalChecks.terms}
                 onChange={(e) => setLegalChecks((current) => ({ ...current, terms: e.target.checked }))}
+                required
                 className="mt-1 h-4 w-4 accent-blue-600"
               />
               <span>
@@ -221,6 +235,7 @@ export default function DnaSignupForm() {
                 type="checkbox"
                 checked={legalChecks.kvkk}
                 onChange={(e) => setLegalChecks((current) => ({ ...current, kvkk: e.target.checked }))}
+                required
                 className="mt-1 h-4 w-4 accent-blue-600"
               />
               <span>
@@ -236,6 +251,7 @@ export default function DnaSignupForm() {
                 type="checkbox"
                 checked={legalChecks.consent}
                 onChange={(e) => setLegalChecks((current) => ({ ...current, consent: e.target.checked }))}
+                required
                 className="mt-1 h-4 w-4 accent-blue-600"
               />
               <span>
@@ -251,10 +267,16 @@ export default function DnaSignupForm() {
                 type="checkbox"
                 checked={legalChecks.authority}
                 onChange={(e) => setLegalChecks((current) => ({ ...current, authority: e.target.checked }))}
+                required
                 className="mt-1 h-4 w-4 accent-blue-600"
               />
               <span>Danışan/çocuk verisi girmeye yetkili olduğumu ve gerekli veli/danışan izinlerini aldığımı beyan ederim.</span>
             </label>
+            {!legalAccepted ? (
+              <div className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold leading-5 text-amber-700">
+                Kayıt olabilmek için yukarıdaki dört onayın tamamını vermeniz gerekir.
+              </div>
+            ) : null}
           </div>
 
           {error ? (
@@ -265,8 +287,10 @@ export default function DnaSignupForm() {
 
           <button
             type="submit"
-            disabled={loading}
-            className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-cyan-400 via-blue-600 to-violet-600 px-5 font-bold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 hover:shadow-blue-600/30 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={loading || !legalAccepted}
+            aria-disabled={loading || !legalAccepted}
+            title={!legalAccepted ? "Kayıt için tüm hukuki onayları tamamlayın." : undefined}
+            className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-cyan-400 via-blue-600 to-violet-600 px-5 font-bold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 hover:shadow-blue-600/30 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45"
           >
             {loading ? "Doğrulama e-postası hazırlanıyor..." : "Kayıt Ol"}
           </button>
@@ -290,8 +314,10 @@ export default function DnaSignupForm() {
           <input type="hidden" name="authority" value={legalChecks.authority ? "on" : ""} />
           <button
             type="submit"
-            disabled={googleLoading}
-            className="inline-flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-5 font-bold text-slate-800 shadow-sm shadow-slate-200/60 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-blue-100/70 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={googleLoading || !legalAccepted}
+            aria-disabled={googleLoading || !legalAccepted}
+            title={!legalAccepted ? "Google ile kayıt için tüm hukuki onayları tamamlayın." : undefined}
+            className="inline-flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-5 font-bold text-slate-800 shadow-sm shadow-slate-200/60 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-blue-100/70 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45"
           >
             <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-base shadow-sm">G</span>
             {googleLoading ? "Google’a yönlendiriliyor..." : "Google ile kayıt ol"}
