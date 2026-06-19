@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import AuthLayout from "../components/auth/AuthLayout";
-import { supabase } from "@/lib/supabase/client";
 
 function sanitizeNextPath(value: string | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -23,25 +22,6 @@ function isAppSurfaceRequest(nextPath: string, currentSearch: URLSearchParams) {
   } catch {
     return nextPath.includes("surface=app");
   }
-}
-
-function formatLoginError(message?: string | null) {
-  const raw = String(message || "").trim();
-  const normalized = raw.toLowerCase();
-
-  if (normalized.includes("email not confirmed")) {
-    return "E-posta adresiniz henüz doğrulanmamış. Gelen kutunuzu ve spam klasörünü kontrol edin.";
-  }
-
-  if (normalized.includes("invalid login credentials")) {
-    return "E-posta veya şifre hatalı.";
-  }
-
-  if (normalized.includes("signup disabled")) {
-    return "Giriş geçici olarak kullanılamıyor. Lütfen daha sonra tekrar deneyin.";
-  }
-
-  return raw || "Giriş sırasında bir hata oluştu.";
 }
 
 function formatLoginErrorCode(code?: string | null) {
@@ -65,23 +45,6 @@ function formatLoginErrorCode(code?: string | null) {
   return "Giriş sırasında bir hata oluştu.";
 }
 
-function normalizeLoginEmail(value: string) {
-  return String(value || "")
-    .trim()
-    .toLowerCase()
-    .replace(/\u0131/g, "i")
-    .replace(/\u0130/g, "i");
-}
-
-function resolvePostLoginPath(plan: string, nextPath: string, appSurface: boolean) {
-  if (plan === "none") return appSurface ? "/report-packages?surface=app" : "/fiyatlandirma";
-  if (appSurface && !nextPath.includes("surface=app")) {
-    const glue = nextPath.includes("?") ? "&" : "?";
-    return `${nextPath}${glue}surface=app`;
-  }
-  return nextPath;
-}
-
 function getOrCreateDeviceId() {
   const key = "dna_device_id";
   const existing = window.localStorage.getItem(key);
@@ -103,53 +66,11 @@ function detectDeviceType() {
   return "desktop";
 }
 
-async function registerAppSession(accessToken?: string | null) {
-  const response = await fetch("/api/security/session/register", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      ...(accessToken ? { authorization: `Bearer ${accessToken}` } : {}),
-    },
-    credentials: "same-origin",
-    body: JSON.stringify({
-      deviceId: getOrCreateDeviceId(),
-      deviceType: detectDeviceType(),
-      allowSlotReuse: true,
-    }),
-  });
-
-  const payload = await response.json().catch(() => null);
-
-  if (!response.ok || !payload?.ok) {
-    const code = String(payload?.error || "");
-    if (code === "device_limit_exceeded") {
-      throw new Error("Bu hesap için en fazla 2 cihaz kullanılabilir. Yeni cihaz eklemek için önce mevcut cihazlardan biri kaldırılmalıdır.");
-    }
-    if (code === "device_slot_unavailable") {
-      throw new Error(payload?.message || "Bu cihaz türü için hesap limiti dolu.");
-    }
-    if (code === "device_revoked") {
-      throw new Error("Bu cihaz için erişim kapatılmış görünüyor. Lütfen farklı bir cihazla giriş yapın veya destek isteyin.");
-    }
-    if (code === "account_temporarily_locked") {
-      throw new Error(payload?.message || "Şüpheli kullanım nedeniyle hesap geçici olarak kilitlendi. Lütfen daha sonra tekrar deneyin.");
-    }
-    if (code === "account_suspended") {
-      throw new Error("Hesap güvenlik nedeniyle askıya alınmış görünüyor. Lütfen destek ile iletişime geçin.");
-    }
-    throw new Error("Oturum güvenlik kaydı oluşturulamadı. Lütfen tekrar deneyin.");
-  }
-}
-
 export default function LoginPage() {
-  const router = useRouter();
   const sp = useSearchParams();
   const nextPath = sanitizeNextPath(sp.get("next"));
   const appSurface = isAppSurfaceRequest(nextPath, sp);
 
-  const formRef = useRef<HTMLFormElement | null>(null);
-  const emailRef = useRef<HTMLInputElement | null>(null);
-  const passwordRef = useRef<HTMLInputElement | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [deviceId, setDeviceId] = useState("");
@@ -163,36 +84,7 @@ export default function LoginPage() {
   useEffect(() => {
     setDeviceId(getOrCreateDeviceId());
     setDeviceType(detectDeviceType());
-
-    if (sp.has("email") || sp.has("password")) {
-      const cleaned = new URL(window.location.href);
-      cleaned.searchParams.delete("email");
-      cleaned.searchParams.delete("password");
-      router.replace(`${cleaned.pathname}${cleaned.search}${cleaned.hash}`);
-      return;
-    }
-
-    supabase.auth.getSession().then(async ({ data }: { data: any }) => {
-      if (data.session?.user?.id) {
-        try {
-          await registerAppSession(data.session.access_token);
-        } catch (error) {
-          await supabase.auth.signOut();
-          setErr(error instanceof Error ? error.message : "Oturum güvenlik kaydı oluşturulamadı.");
-          return;
-        }
-
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("plan")
-          .eq("user_id", data.session.user.id)
-          .maybeSingle();
-        const plan = profile?.plan ?? "none";
-        router.replace(resolvePostLoginPath(plan, nextPath, appSurface));
-        return;
-      }
-    });
-  }, [router, nextPath, appSurface, sp]);
+  }, []);
 
   function onSubmit() {
     setErr(null);
@@ -203,7 +95,7 @@ export default function LoginPage() {
   return (
     <AuthLayout mode="login" surface={appSurface ? "app" : "web"}>
       <div className="w-full max-w-md">
-        <form ref={formRef} className="mt-3 space-y-3" action="/api/auth/login" method="post" onSubmit={onSubmit}>
+        <form className="mt-3 space-y-3" action="/api/auth/login" method="post" onSubmit={onSubmit}>
           <input type="hidden" name="surface" value={appSurface ? "app" : "web"} />
           <input type="hidden" name="next" value={nextPath} />
           <input type="hidden" name="deviceId" value={deviceId} />
@@ -221,7 +113,6 @@ export default function LoginPage() {
           ) : null}
 
           <input
-            ref={emailRef}
             name="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
@@ -231,7 +122,6 @@ export default function LoginPage() {
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-4 text-sm font-medium text-slate-900 shadow-sm shadow-slate-200/40 placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 focus:outline-none"
           />
           <input
-            ref={passwordRef}
             name="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
