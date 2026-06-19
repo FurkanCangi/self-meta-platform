@@ -28,8 +28,27 @@ const TURKISH_ASCII_REPLACEMENTS: Array<[RegExp, TextReplacement]> = [
   [/\bOtizm spektrum bozuklugu izlemi\b/gi, "Klinik izlem ve işlevsel değerlendirme"],
   [/\bOtizm spektrum bozuklugu\b/gi, "Klinik izlem ve işlevsel değerlendirme"],
   [/\bOrnek\b/g, "Örnek"],
+  [/\bZayif\b/g, "Zayıf"],
+  [/\bzayif\b/gi, "zayıf"],
+  [/\bGuclu\b/g, "Güçlü"],
+  [/\bguclu\b/gi, "güçlü"],
+  [/\bCeliskili\b/g, "Çelişkili"],
+  [/\bceliskili\b/gi, "çelişkili"],
+  [/\bTurkce\b/g, "Türkçe"],
+  [/\bturkce\b/gi, "Türkçe"],
+  [/\bSinirli\b/g, "Sınırlı"],
+  [/\bsinirli\b/gi, "sınırlı"],
+  [/\bLiteratur\b/g, "Literatür"],
+  [/\bliteratur\b/gi, "literatür"],
+  [/\bKaniti\b/g, "Kanıtı"],
+  [/\bkaniti\b/gi, "kanıtı"],
+  [/\bAbsurt\b/g, "Absürt"],
+  [/\babsurt\b/gi, "absürt"],
+  [/\bamacli\b/gi, "amaçlı"],
+  [/\bbasvuru\b/gi, "başvuru"],
   [/\bGelisimsel\b/g, "Gelişimsel"],
   [/\bgelisimsel\b/g, "gelişimsel"],
+  [/\bsupheleri\b/gi, "şüpheleri"],
   [/\bsuphe\b/gi, "şüphe"],
   [/\bcocukluk\b/gi, "çocukluk"],
   [/\bdavranis\b/gi, "davranış"],
@@ -64,6 +83,62 @@ const TURKISH_ASCII_REPLACEMENTS: Array<[RegExp, TextReplacement]> = [
   [/\bis birligi\b/gi, "iş birliği"],
   [/\bsevdigi\b/gi, "sevdiği"],
   [/\bbelirtiyor\b/gi, "belirtiyor"],
+  [/\banlasilmasi\b/gi, "anlaşılması"],
+  [/\bgorusmede\b/gi, "görüşmede"],
+  [/\bcalisma\b/gi, "çalışma"],
+  [/\bbellegi\b/gi, "belleği"],
+  [/\bIsitsel\b/g, "İşitsel"],
+  [/\bisitsel\b/gi, "işitsel"],
+  [/\bsinir ustu\b/gi, "sınır üstü"],
+  [/\bsinir-klinik\b/gi, "sınır-klinik"],
+  [/\bInhibisyon\b/g, "İnhibisyon"],
+  [/\bdiger\b/gi, "diğer"],
+  [/\byuksek\b/gi, "yüksek"],
+  [/\bdegil\b/gi, "değil"],
+  [/\bCocuk\b/g, "Çocuk"],
+  [/\bcocuk\b/gi, "çocuk"],
+  [/\bkatildi\b/gi, "katıldı"],
+  [/\bazaldi\b/gi, "azaldı"],
+  [/\bayakkabi\b/gi, "ayakkabı"],
+  [/\byaptigini\b/gi, "yaptığını"],
+  [/\baltina\b/gi, "altına"],
+  [/\byakinligi\b/gi, "yakınlığı"],
+  [/\bkarmasik\b/gi, "karmaşık"],
+  [/\byoresinde\b/gi, "yönergesinde"],
+  [/\bbasla-dur\b/gi, "başla-dur"],
+  [/\bpazarlik\b/gi, "pazarlık"],
+  [/\bsirayla\b/gi, "sırayla"],
+  [/\bkirmizi\b/gi, "kırmızı"],
+  [/\bsaydi\b/gi, "saydı"],
+  [/\bmizahi\b/gi, "mizahi"],
+  [/\byorelgeleri\b/gi, "yönergeleri"],
+  [/\byorelge\b/gi, "yönerge"],
+  [/\byasina\b/gi, "yaşına"],
+  [/\byaygin\b/gi, "yaygın"],
+  [/\bnetlesmesi\b/gi, "netleşmesi"],
+  [/\bgorundugunun\b/gi, "göründüğünün"],
+  [/\byayilip\b/gi, "yayılıp"],
+  [/\byayilmadigi\b/gi, "yayılmadığı"],
+  [/\banlasilmak\b/gi, "anlaşılmak"],
+  [/\bbaslatmakta\b/gi, "başlatmakta"],
+  [/\bzorlandi\b/gi, "zorlandı"],
+  [/\bolcek\b/gi, "ölçek"],
+  [/\bfarkli\b/gi, "farklı"],
+  [/\bsekilde\b/gi, "şekilde"],
+  [/\byapilmasi\b/gi, "yapılması"],
+  [/\bartti\b/gi, "arttı"],
+  [/\bartmis\b/gi, "artmış"],
+  [/\byaklasmak\b/gi, "yaklaşmak"],
+  [/\bsikayet\b/gi, "şikayet"],
+  [/\bsurdu\b/gi, "sürdü"],
+  [/\bakisi\b/gi, "akışı"],
+  [/\betkilesim\b/gi, "etkileşim"],
+  [/\byonlendirme\b/gi, "yönlendirme"],
+  [/\bnin amaci\b/gi, "ailenin amacı"],
+  [/\byonergeleri\b/gi, "yönergeleri"],
+  [/\bcocugun\b/gi, "çocuğun"],
+  [/\bcocugu\b/gi, "çocuğu"],
+  [/\bcocuga\b/gi, "çocuğa"],
   [/\bdogrudan\b/gi, "doğrudan"],
   [/\btibbi\b/gi, "tıbbi"],
   [/\baclik\b/gi, "açlık"],
@@ -103,12 +178,12 @@ const TURKISH_ASCII_REPLACEMENTS: Array<[RegExp, TextReplacement]> = [
   [/\bcok\b/gi, "çok"],
   [/\bbasamakli\b/gi, "basamaklı"],
   [/\bgorevlerde\b/gi, "görevlerde"],
+  [/\betkinligi\b/gi, "etkinliği"],
   [/\bverilmediginde\b/gi, "verilmediğinde"],
   [/\bdagilma\b/gi, "dağılma"],
   [/\bkisa\b/gi, "kısa"],
   [/\bsaglanabiliyor\b/gi, "sağlanabiliyor"],
   [/\bGrup\b/g, "Grup"],
-  [/\bgrup\b/gi, "grup"],
   [/\bicinde\b/gi, "içinde"],
   [/\bkacirmama\b/gi, "kaçırmama"],
   [/\bkuralli\b/gi, "kurallı"],
@@ -121,6 +196,9 @@ const TURKISH_ASCII_REPLACEMENTS: Array<[RegExp, TextReplacement]> = [
   [/\bdaginligi\b/gi, "dağınıklığı"],
   [/\bbaglam\b/gi, "bağlam"],
   [/\balanlarinda\b/gi, "alanlarında"],
+  [/\balanlari\b/gi, "alanları"],
+  [/\bskorlarinda\b/gi, "skorlarında"],
+  [/\bislemleme\b/gi, "işlemleme"],
   [/\bSozlu\b/g, "Sözlü"],
   [/\bsozlu\b/gi, "sözlü"],
   [/\byonerge\b/gi, "yönerge"],
@@ -138,6 +216,7 @@ const TURKISH_ASCII_REPLACEMENTS: Array<[RegExp, TextReplacement]> = [
   [/\byas\b/gi, "yaş"],
   [/\bguclugunun\b/gi, "güçlüğünün"],
   [/\bguclugu\b/gi, "güçlüğü"],
+  [/\bduygu ilişkili self-regülasyonun\b/gi, "duyguyla ilişkili self-regülasyonun"],
   [/\barttigini\b/gi, "arttığını"],
   [/\buzadigini\b/gi, "uzadığını"],
   [/\bartiyor\b/gi, "artıyor"],
@@ -155,6 +234,17 @@ const TURKISH_ASCII_REPLACEMENTS: Array<[RegExp, TextReplacement]> = [
   [/\bfarkindaligi\b/gi, "farkındalığı"],
   [/\bGozlemde\b/g, "Gözlemde"],
   [/\bgozlemde\b/gi, "gözlemde"],
+  [/\bgozledi\b/gi, "gözledi"],
+  [/\bgordu\b/gi, "gördü"],
+  [/\bkotu\b/gi, "kötü"],
+  [/\bcift\b/gi, "çift"],
+  [/\bsayili\b/gi, "sayılı"],
+  [/\btek sayili\b/gi, "tek sayılı"],
+  [/\bmukemmel\b/gi, "iyi"],
+  [/\bsecmez\b/gi, "seçmez"],
+  [/\bhicbir\b/gi, "hiçbir"],
+  [/\bsey\b/gi, "şey"],
+  [/\bdikkatli bakilsin\b/gi, "daha ayrıntılı değerlendirilmesi istiyor"],
   [/\bbasi\b/gi, "başı"],
   [/\bkatilim\b/gi, "katılım"],
   [/\bbelirginlestiginde\b/gi, "belirginleştiğinde"],
@@ -223,8 +313,13 @@ const FORBIDDEN_LANGUAGE_PATTERNS: Array<{ code: string; severity: ReportLanguag
   { code: "pathology_language", severity: "high", pattern: /\bpatolojik\b/i, message: "Patoloji dili final raporda görünmemeli." },
   { code: "raw_diagnosis_placeholder", severity: "high", pattern: /tan[ıi]lanm[ıi]s bozukluk bildirilmiyor/i, message: "Tanı placeholder metni final rapora taşınmış." },
   { code: "treatment_focused_vocabulary", severity: "high", pattern: /\b(?:tedavi|müdahale|terapi|seans|ilaç|danışmanlık|destek planı|uygulama yönergesi)\b/i, message: "Tedavi/terapi odaklı kelime final raporda görünmemeli." },
+  { code: "directive_modal_language", severity: "high", pattern: /\b(?:yapılmalıdır|uygulanmalıdır|başlanmalıdır|baslanmalidir|gerekir)\b/i, message: "Direktif uygulama dili final raporda görünmemeli." },
+  { code: "practice_plan_language", severity: "high", pattern: /\b(?:program|protokol|egzersiz listesi|ödev|odev|seans akışı|seans akisi)\b/i, message: "Uygulama planı çağrıştıran dil final raporda görünmemeli." },
+  { code: "diagnostic_semantic_language", severity: "high", pattern: /\b(?:tanı ile uyumlu|tani ile uyumlu|belirtisidir|semptom|bozukluk|patoloji)\b/i, message: "Tanısal çağrışım yapan dil final raporda görünmemeli." },
   { code: "legacy_watch_range", severity: "medium", pattern: /watch range/i, message: "İngilizce watch range ifadesi görünmemeli." },
   { code: "awkward_clinical_reading", severity: "medium", pattern: /klinik okuma|klinik açıdan en güçlü okuma/i, message: "Mekanik klinik okuma kalıbı görünüyor." },
+  { code: "visible_debug_metric", severity: "high", pattern: /\b(?:Runtime RAG|Deterministic Knowledge Base|LLM:\s*%0)\b/i, message: "Teknik/debug metrikleri görünür raporda yer almamalı." },
+  { code: "system_label_leak", severity: "high", pattern: /\b(?:Klinik karar cümlesi|Bağlam notu|Kanıt entegrasyonu|Kalibrasyon|Ayırıcı sınır|İkincil izlem alanları|Birincil mekanizma|İkincil yayılım)\s*:/i, message: "Sistem etiketi kokan kalıp görünür rapora sızmış." },
 ];
 
 const ASCII_TURKISH_PATTERNS = [
@@ -260,6 +355,8 @@ function normalizeRepeatedMechanismLabels(text: string): string {
     .replace(/Ek bulgu hattı \(([^)]+)\) bu formülasyonu destekleyen bağlamsal kanıt olarak kalır\./g, "$1; bu bulgu formülasyonu destekleyen ek klinik kanıtlar arasında yer alır.")
     .replace(/Ek bulgu hattı \(([^)]+)\) bu formülasyonu büyüten değil, yorum sınırını ve korunmuş işlev alanlarını görünür kılan dengeleyici bağlam olarak kalır\./g, "$1; bu bulgu ana formülasyonu büyütmek yerine yorum sınırını ve korunmuş işlev alanlarını görünür kılar.")
     .replace(/Bu nedenle anamnez ile ölçek arasında doğrudan patolojik uyumdan çok,/g, "Bu nedenle anamnez ile ölçek arasında doğrudan risk eşleşmesinden çok,")
+    .replace(/Ölçek içi mikro-kanıt/g, "Ölçek yanıt örüntüsü")
+    .replace(/mikro-kanıt/gi, "ölçek yanıt örüntüsü")
     .replace(/Madde düzeyi yanıt dizisi bulunmadığı için/g, "Ölçek içi ayrıntılı yanıt örüntüsü bulunmadığı için")
     .replace(/madde düzeyi yanıt dizisi bulunmadığı için/g, "ölçek içi ayrıntılı yanıt örüntüsü bulunmadığı için")
     .replace(/mekanizma-temelli bir regülasyon profili olarak okunmalıdır\./g, "klinik izlemde mekanizma temelli olarak ele alınmalıdır.")
@@ -343,11 +440,33 @@ function removeRepeatedLongSentences(text: string): string {
 }
 
 function removeTreatmentFocusedVocabulary(text: string): string {
-  return text
+  const cleaned = text
+    .replace(/tedavi protokolü çıkarımı sağlamaz/gi, "uygulama planı çıkarımı sağlamaz")
+    .replace(/müdahale önerisi veya protokol çıkarımı sağlamaz/gi, "uygulama önerisi çıkarımı sağlamaz")
+    .replace(/müdahale protokolü üretmez/gi, "uygulama planı üretmez")
+    .replace(/müdahale protokolü/gi, "uygulama planı")
+    .replace(/tedavi protokolü/gi, "uygulama planı")
+    .replace(/protokolü/gi, "uygulama planı")
+    .replace(/\byapılmalıdır\b/gi, "klinik olarak ele alınır")
+    .replace(/\buygulanmalıdır\b/gi, "vaka dışı yönergeye dönüştürülmez")
+    .replace(/\bbaşlanmalıdır\b/gi, "başlangıç kararı üretmez")
+    .replace(/\bbaslanmalidir\b/gi, "başlangıç kararı üretmez")
+    .replace(/\bgerekir\b/gi, "uygundur")
+    .replace(/\bprogram\b/gi, "klinik yapı")
+    .replace(/\bprotokol\b/gi, "vaka dışı yapı")
+    .replace(/\begzersiz listesi\b/gi, "vaka dışı liste")
+    .replace(/\bödev\b/gi, "vaka dışı görev")
+    .replace(/\bodev\b/gi, "vaka dışı görev")
+    .replace(/\bseans akışı\b/gi, "oturum akışı")
+    .replace(/\bseans akisi\b/gi, "oturum akışı")
+    .replace(/\btanı ile uyumlu\b/gi, "tanısal sonuç olarak kullanılmaz")
+    .replace(/\btani ile uyumlu\b/gi, "tanısal sonuç olarak kullanılmaz")
+    .replace(/\bbelirtisidir\b/gi, "klinik yorum için tek başına yeterli değildir")
+    .replace(/\bsemptom\b/gi, "klinik bulgu")
+    .replace(/\bbozukluk\b/gi, "klinik zorlanma")
+    .replace(/\bpatoloji\b/gi, "klinik risk")
     .replace(/tedavi gerekliliği göstermez/gi, "klinik gereklilik göstermez")
     .replace(/tedavi hükmü değildir/gi, "vaka dışı karar niteliği taşımaz")
-    .replace(/tedavi protokolü çıkarımı sağlamaz/gi, "vaka dışı protokol çıkarımı sağlamaz")
-    .replace(/tedavi protokolü/gi, "vaka dışı protokol")
     .replace(/tedavi reçetesi değildir/gi, "vaka dışı karar değildir")
     .replace(/tedavi reçetesi/gi, "vaka dışı karar")
     .replace(/tedavi kararı üretmez/gi, "vaka dışı karar üretmez")
@@ -357,9 +476,7 @@ function removeTreatmentFocusedVocabulary(text: string): string {
     .replace(/müdahale reçetesi olarak kullanılmaz/gi, "vaka dışı karar olarak kullanılmaz")
     .replace(/müdahale reçetesi üretmez/gi, "vaka dışı karar üretmez")
     .replace(/müdahale reçetesi/gi, "vaka dışı karar")
-    .replace(/müdahale protokolü üretmez/gi, "vaka dışı protokol üretmez")
     .replace(/müdahale kararı üretmez/gi, "vaka dışı karar üretmez")
-    .replace(/müdahale önerisi veya protokol çıkarımı sağlamaz/gi, "vaka dışı öneri veya protokol çıkarımı sağlamaz")
     .replace(/müdahale öneren dil/gi, "vaka dışı öneri dili")
     .replace(/müdahale önermeyen/gi, "vaka dışı öneri üretmeyen")
     .replace(/\bmüdahale\b/gi, "vaka dışı uygulama")
@@ -377,6 +494,29 @@ function removeTreatmentFocusedVocabulary(text: string): string {
     .replace(/Görünür rapor tanı önerisi, vaka dışı plan, oturum sıklığı, medikal karar, aileye direkt tavsiye listesi veya kesin neden-sonuç açıklaması üretmez\./gi, "Görünür rapor yalnız değerlendirme ve klinik hipotez düzeyinde kalır.")
     .replace(/Bu rapor tanısal hüküm veya vaka dışı yönlendirme üretmez;/gi, "Bu rapor tanısal hüküm üretmez;")
     .replace(/Bu rapor tanısal hüküm veya vaka dışı yönlendirme üretmez\./gi, "Bu rapor tanısal hüküm üretmez.");
+
+  return cleaned
+    .replace(/vaka dışı yapıü/gi, "uygulama planı")
+    .replace(/protokolü/gi, "uygulama planı")
+    .replace(/\bgerekir\b/gi, "uygundur")
+    .replace(/\bprogram\b/gi, "klinik yapı")
+    .replace(/\bprotokol\b/gi, "vaka dışı yapı")
+    .replace(/\begzersiz listesi\b/gi, "vaka dışı liste")
+    .replace(/\bödev\b/gi, "vaka dışı görev")
+    .replace(/\bodev\b/gi, "vaka dışı görev")
+    .replace(/\bseans akışı\b/gi, "oturum akışı")
+    .replace(/\bseans akisi\b/gi, "oturum akışı")
+    .replace(/\bbozukluk\b/gi, "klinik zorlanma")
+    .replace(/\bpatoloji\b/gi, "klinik risk")
+    .replace(/\bpatolojik\b/gi, "klinik açıdan dikkat gerektiren")
+    .replace(/\btedavi\b/gi, "klinik uygulama")
+    .replace(/\bmüdahale\b/gi, "vaka dışı uygulama")
+    .replace(/\bterapi\b/gi, "klinik uygulama")
+    .replace(/\bseans\b/gi, "oturum")
+    .replace(/\bilaç\b/gi, "medikal karar")
+    .replace(/\bdanışmanlık\b/gi, "klinik görüşme")
+    .replace(/\bdestek planı\b/gi, "vaka dışı plan")
+    .replace(/\buygulama yönergesi\b/gi, "vaka dışı yönlendirme");
 }
 
 export function sanitizeFinalReportLanguage(text: string): string {
@@ -389,6 +529,119 @@ export function sanitizeFinalReportLanguage(text: string): string {
   sanitized = removeRepeatedLongSentences(sanitized);
   sanitized = removeTreatmentFocusedVocabulary(sanitized);
   sanitized = sanitized
+    .replace(/\böz-düzenlemenin\b/gi, "self-regülasyonun")
+    .replace(/\böz-düzenlemeyi\b/gi, "self-regülasyonu")
+    .replace(/\böz-düzenleme\b/gi, "self-regülasyon")
+    .replace(/Klinik karar cümlesi:\s*/gi, "")
+    .replace(/Klinik formülasyon:\s*/gi, "")
+    .replace(/Bağlam notu:\s*bire bir ve düşük uyaranlı yapı risk yorumunu sınırlayan korunmuş kapasite bilgisi sağlar\./gi, "Yapılandırılmış bire bir ortamda daha iyi organize olması, güçlüğün her bağlamda aynı şiddette görünmediğini düşündürür.")
+    .replace(/Bağlam notu:\s*/gi, "")
+    .replace(/Kanıt entegrasyonu:\s*/gi, "Bu sonuca nasıl ulaşıldı: ")
+    .replace(/Kalibrasyon:\s*/gi, "Yorumu sınırlayan veri: ")
+    .replace(/Ayırıcı sınır:\s*/gi, "Klinik yorum sınırı: ")
+    .replace(/İkincil izlem alanları\s+([^.\n]+?)\s+olarak ayrışmaktadır\./gi, "Bu nedenle $1 ana sorunun günlük yaşamdaki yansımaları olarak ele alınır.")
+    .replace(/Klinik öncelik sırası:/gi, "Öncelik sırası:")
+    .replace(/Vaka içi karar kanıtları:/gi, "Bu sonuca nasıl ulaşıldı:")
+    .replace(/Birincil mekanizma\s+([^.\n]+?)\s+hattında toplanmaktadır\./gi, "Ana klinik odak $1 hattında belirginleşmektedir.")
+    .replace(/İkincil yayılım\s+([^.\n]+?)\s+alanlarında görünürleşmektedir\./gi, "Günlük yaşama yansıyan alanlar $1 olarak görünürleşmektedir.")
+    .replace(/Praksi ve Motor Planlama ile İlişkili/gi, "Motor Planlama ve Beden Organizasyonu ile İlişkili")
+    .replace(/Praksi ve Motor Planlama İçeren/gi, "Motor Planlama ve Beden Organizasyonu İçeren")
+    .replace(/praksi ve motor planlama gerektiren durumlarda/gi, "motor planlama ve beden organizasyonu gerektiren durumlarda")
+    .replace(/vaka dışı yapıü/gi, "uygulama planı")
+    .replace(/uygulama planı/gi, "klinik karar")
+    .replace(/vaka dışı karar/gi, "klinik karar")
+    .replace(/vaka dışı yönlendirme/gi, "klinik yönlendirme")
+    .replace(/klinik klinik karar/gi, "klinik karar")
+    .replace(/Görünür rapor tanı önerisi,[^.]+üretmez\./gi, "Rapor yalnız değerlendirme ve klinik hipotez düzeyinde kalır.")
+    .replace(/Regülasyon skoru tek başına klinik zorlanma, tanı, neden veya klinik gereklilik göstermez; rapor betimleyici, bağlamsal ve klinik hipotez düzeyinde kalır\./gi, "Skor tek başına tanısal sonuç veya neden açıklaması üretmez; rapor klinik hipotez düzeyinde kalır.")
+    .replace(/Tek başına tanı veya klinik karar üretmez/gi, "Tek başına sonuç üretmez")
+    .replace(/tek başına praksi tanısı veya klinik karar üretmez/gi, "tek başına sonuç üretmez")
+    .replace(/Terapist gözleminde\s+Motor/gi, "Terapist gözleminde motor")
+    .replace(/model ile gösterdiğin etkinliği tekrar etmeye açık/gi, "modelle gösterilen etkinliği tekrar etmeye açık")
+    .replace(/başardığı rutin oyunda devam ediyor/gi, "başardığı rutin oyunda devam edebiliyor")
+    .replace(/görevde kalış, dikkat ve davranışsal düzenleme de bozuluyor/gi, "görevde kalma, dikkat ve davranışsal düzenleme de zayıflayabiliyor")
+    .replace(/duygusal eşik hızla düşebiliyor/gi, "duygusal toparlanma kapasitesi hızla azalabiliyor")
+    .replace(/bir profile yaklaşmak hedeflenmektedir/gi, "bu yönde desteklenmesi beklenmektedir")
+    .replace(/daha az çekinme, yeni hareketlere girişte daha az model ihtiyacı/gi, "yeni hareketlere daha rahat girişebilme ve daha az model desteğiyle ilerleyebilme")
+    .replace(/motor planlama gerektiren oyunda yeni hareketlere daha rahat girişebilme ve daha az model desteğiyle ilerleyebilme ve beden organizasyonunun duygusal zorlanmayı ikincil olarak tetiklemeyeceği bu yönde desteklenmesi beklenmektedir/gi, "motor planlama gerektiren oyunlarda yeni hareketlere daha rahat başlayabilmesi, daha az model desteğiyle ilerleyebilmesi ve beden organizasyonu zorlandığında duygusal toparlanmasının daha az etkilenmesi beklenmektedir")
+    .replace(/görevde kalma, dikkat ve davranışsal düzenleme de zayıflayabiliyor/gi, "görevde kalma, dikkat ve davranışsal düzenlemenin zayıflayabildiği gözlenmektedir")
+    .replace(/Başaramadığını hissettiği anda duygusal toparlanma kapasitesi hızla azalabiliyor\./gi, "Başaramadığını hissettiği anlarda duygusal toparlanma kapasitesinin hızla azalabildiği izlenmektedir.")
+    .replace(/Sınır:\s*Motor test sonucu DNA skorunu değiştirmez; tek başına sonuç üretmez\./gi, "Sınır: DNA skorunu değiştirmez; klinik yorumu destekler.")
+    .replace(/Sınır:\s*Tek başına sonuç üretmez; yaş uyumu zorunlu kontrol edilir\./gi, "Sınır: Tek başına sonuç üretmez.")
+    .replace(/\.\s+başaramadığını/gi, ". Başaramadığını")
+    .replace(/Korunmuş işlev alanları açısından\s+Dilsel/gi, "Korunmuş işlev alanları açısından dilsel")
+    .replace(/olarak yazılabilir/gi, "olarak değerlendirilir")
+    .replace(/Skor tek başına tanısal sonuç veya neden açıklaması üretmez; rapor klinik hipotez düzeyinde kalır\.\s*Rapor yalnız değerlendirme ve klinik hipotez düzeyinde kalır\./gi, "Skor tek başına tanısal sonuç veya neden açıklaması üretmez; rapor klinik hipotez düzeyinde kalır.")
+    .replace(/risk dilini kalibre eder/gi, "yorumun genellenmemesi gerektiğini gösterir")
+    .replace(/risk dilini sınırlar/gi, "yorumun genellenmemesi gerektiğini gösterir")
+    .replace(/risk dilinin genellenmesini sınırlar/gi, "yorumun her bağlama genellenmemesi gerektiğini gösterir")
+    .replace(/kalibre edilmiştir/gi, "sınırlandırılmıştır")
+    .replace(/duyusal modülasyon belirtilerinin/gi, "duyusal regülasyon sorunlarının")
+    .replace(/duyusal modülasyon belirtileri/gi, "duyusal regülasyon sorunları")
+    .replace(/duyusal modülasyon/gi, "duyusal regülasyon")
+    .replace(/duyusal modulasyon/gi, "duyusal regülasyon")
+    .replace(/\bRegülasyon Yükü\b/g, "Self-Regülasyon Problemi")
+    .replace(/zorluğunün/gi, "zorluğunun")
+    .replace(/zorluklarınün/gi, "zorluklarının")
+    .replace(/talebinün/gi, "talebinin")
+    .replace(/Anamnezdeki bağlamsal yük/gi, "Anamnezdeki bağlamsal bilgi")
+    .replace(/Ölçek yanıt örüntüsü şu klinik ayrıntıyı desteklemektedir:\s*Bakımveren veya terapist ses, gürültü ya da kalabalık ortamla zorlanma tarif ediyorsa işitsel reaktivite örüntüsü bu anlatımla doğrudan yakınsar\./gi, "İşitsel hassasiyet öne çıktığında ses, gürültü veya kalabalık ortamla ilgili günlük zorlanma bu bulguyla birlikte yorumlanır.")
+    .replace(/İnteroseptif yük/g, "İnteroseptif zorluk")
+    .replace(/interoseptif yük/gi, "interoseptif zorluk")
+    .replace(/işitsel uyaran yükü/gi, "işitsel uyaran yoğunluğu")
+    .replace(/çevresel uyaran yükünün/gi, "çevresel uyaran yoğunluğunun")
+    .replace(/çevresel uyaran yükü/gi, "çevresel uyaran yoğunluğu")
+    .replace(/yüksek uyaranlı/gi, "yoğun uyaranlı")
+    .replace(/praksi ve motor planlama yükü arttığında/gi, "motor planlama ve beden organizasyonu talebi arttığında")
+    .replace(/praksi ve motor planlama yükü/gi, "motor planlama ve beden organizasyonu gerektiren durumlarda belirginleşen self-regülasyon zorluğu")
+    .replace(/Yürütücü işlev yükü/g, "Yürütücü işlev zorlukları")
+    .replace(/yürütücü işlev yükü/gi, "yürütücü işlev zorlukları")
+    .replace(/Bilişsel regülasyon yükü/g, "Bilişsel regülasyon zorlukları")
+    .replace(/bilişsel regülasyon yükü/gi, "bilişsel regülasyon zorlukları")
+    .replace(/praksi ve sekanslama yükünün/gi, "praksi ve sekanslama talebinin")
+    .replace(/hareketi sıralama, motor planı uygulama ve davranışı organize etme yüküyle/gi, "hareketi sıralama, motor planı uygulama ve davranışı organize etme talebiyle")
+    .replace(/Duygusal regülasyon yükü/g, "Duygusal regülasyon zorlukları")
+    .replace(/duygusal regülasyon yükü/gi, "duygusal regülasyon zorlukları")
+    .replace(/Duyusal regülasyon yükü/g, "Duyusal regülasyon zorlukları")
+    .replace(/duyusal regülasyon yükü/gi, "duyusal regülasyon zorlukları")
+    .replace(/Fizyolojik regülasyon yükü/g, "Fizyolojik regülasyon zorlukları")
+    .replace(/fizyolojik regülasyon yükü/gi, "fizyolojik regülasyon zorlukları")
+    .replace(/\bregülasyon yükü\b/gi, "self-regülasyon zorluğu")
+    .replace(/\bregülasyon yükünün\b/gi, "self-regülasyon zorluğunun")
+    .replace(/\bregülasyon yüküne\b/gi, "self-regülasyon zorluğuna")
+    .replace(/\bdüzenleme yükü\b/gi, "self-regülasyon zorluğu")
+    .replace(/\bdüzenleme yükünü\b/gi, "self-regülasyon zorluğunu")
+    .replace(/\bdüzenleme yükünün\b/gi, "self-regülasyon zorluğunun")
+    .replace(/\bbeden organizasyonu yükünün\b/gi, "beden organizasyonu zorluğunun")
+    .replace(/\bpraksi ve motor planlama yükünün\b/gi, "motor planlama ve beden organizasyonu gerektiren durumlarda belirginleşen zorlanmanın")
+    .replace(/\bmotor planlama yükü\b/gi, "motor planlama talebi")
+    .replace(/\bduyusal yük\b/gi, "uyaran yoğunluğu")
+    .replace(/\bçevresel uyaran yükü\b/gi, "çevresel uyaran yoğunluğu")
+    .replace(/\bsözel yük\b/gi, "sözel talep")
+    .replace(/\bzihinsel yük\b/gi, "zihinsel talep")
+    .replace(/\bgörev yükü\b/gi, "görev talebi")
+    .replace(/motor görev yükü/gi, "motor görev talebi")
+    .replace(/motor planlama yükü/gi, "motor planlama talebi")
+    .replace(/\bçok alanlı ve belirgin klinik yük taşımaktadır\b/gi, "birden fazla alana yayılan belirgin self-regülasyon zorlukları göstermektedir")
+    .replace(/\byaygın yük örüntüsü\b/gi, "yaygın self-regülasyon problemi")
+    .replace(/\byaygın klinik yük\b/gi, "yaygın self-regülasyon problemi")
+    .replace(/\byüksek klinik yük\b/gi, "belirgin self-regülasyon problemi")
+    .replace(/\bklinik yük\b/gi, "klinik zorlanma")
+    .replace(/\byüklenme sonrası\b/gi, "yoğunluk sonrası")
+    .replace(/\bduyusal yüklenme\b/gi, "duyusal yoğunluk")
+    .replace(/\bduygusal yüklenme\b/gi, "duygusal yoğunluk")
+    .replace(/\bsosyal yüklenme\b/gi, "sosyal talep")
+    .replace(/\byüklenme\b/gi, "yoğunluk")
+    .replace(/\bgünlük işlevi etkileyebilecek belirgin bir yük\b/gi, "günlük işlevde belirginleşebilen bir self-regülasyon problemi")
+    .replace(/\bgünlük işlevi etkileyebilecek belirgin bir self-regülasyon zorluğu göstermektedir\b/gi, "günlük işlevde belirginleşebilen bir self-regülasyon problemi göstermektedir")
+    .replace(/\bBu yük\b/g, "Bu zorlanma")
+    .replace(/\bbu yük\b/g, "bu zorlanma")
+    .replace(/\bokunmalıdır\b/gi, "okunur")
+    .replace(/\baçıklanmalıdır\b/gi, "açıklanır")
+    .replace(/\bkurulmalıdır\b/gi, "kurulur")
+    .replace(/\bizlenmelidir\b/gi, "izlenir")
+    .replace(/\byorumlanmalıdır\b/gi, "yorumlanır")
+    .replace(/\bkalmalıdır\b/gi, "kalır")
     .replace(/Aile tarafından\s+evde\b/gi, "Aileden gelen bilgiye göre evde")
     .replace(/Aile tarafından\s+Evde\b/g, "Aileden gelen bilgiye göre evde")
     .replace(/Aile tarafından\s+bakımveren,\s*/gi, "Aile tarafından ")
@@ -396,14 +649,58 @@ export function sanitizeFinalReportLanguage(text: string): string {
     .replace(/\bBakımveren ve gözlem verileri\b/g, "Aile ve gözlem verileri")
     .replace(/Terapist gözleminde\s+Terapist gözleminde\b/gi, "Terapist gözleminde")
     .replace(/Terapist gözleminde\s+Terapist,\s*/gi, "Terapist gözleminde ")
+    .replace(/Terapist gözleminde\s+Gözlemde\s+/gi, "Terapist gözleminde ")
+    .replace(/Terapist gözleminde\s+gözlemde\s+/gi, "Terapist gözleminde ")
+    .replace(/Korunmuş işlev alanları açısından\s+Net bilgi verilmedi\.?/gi, "Korunmuş alanlara ilişkin yeterli bilgi verilmemiştir.")
+    .replace(/Korunmuş işlev alanlarına ilişkin bilgi:\s+Net bilgi verilmedi\.?/gi, "Korunmuş alanlara ilişkin yeterli bilgi verilmemiştir.")
+    .replace(/Anamnezde korunmuş kapasite veya güçlü alan bildirilmesi, yorumun her bağlama genellenmemesi gerektiğini gösterir/gi, "Korunmuş ya da sınırlayıcı veri, yorumun her bağlama genellenmemesi gerektiğini gösterir")
+    .replace(/Anamnez teması:\s*Anamnezde korunmuş\/güçlü işlev alanları tarif edilmektedir\./gi, "Anamnez teması: Korunmuş alanlara ilişkin veri sınırlıdır.")
+    .replace(/Anamnezde korunmuş veya destekleyici olabilecek güçlü yönler tarif edilmektedir; bunlar test sonuçlarıyla birlikte yorumlandığında profile denge kazandırabilir\./gi, "Korunmuş veya destekleyici alanlara ilişkin bilgiler, yeterli ayrıntı içerdiğinde profilin her bağlama genellenmemesi için dengeleyici veri sağlar.")
+    .replace(/Başvuru nedeni ve birincil ebeveyn endişeleri, testte öne çıkan alanların günlük yaşam karşılığını anlamlandırmak açısından yüksek değerli klinik veri sunmaktadır\./gi, "Başvuru nedeni ve aile endişeleri, yeterli ayrıntı içerdiği ölçüde testte öne çıkan alanların günlük yaşam karşılığını anlamlandırmaya katkı sağlar.")
+    .replace(/Anamnezde çevresel veya dokunsal uyaran altında belirgin duyusal hassasiyet\/arayış örüntüsü tarif edilmektedir\./gi, "Anamnezde çevresel veya dokunsal uyaranlara verilen yanıtta belirgin duyusal reaktivite örüntüsü tarif edilmektedir.")
+    .replace(/bağlamında hem yük hem de korunmuş kapasite bilgisi vardır/gi, "bağlamında hem zorlanma hem de korunmuş kapasite bilgisi vardır")
+    .replace(/(^|\n)(grup, kalabalık ve yoğun uyaran bağlamında)/g, "$1Grup, kalabalık ve yoğun uyaran bağlamında")
+    .replace(/\.\s+aynı zamanda/gi, ". Aynı zamanda")
+    .replace(/\buyaran yükü\b/gi, "uyaran yoğunluğu")
+    .replace(/\bgeçiş yükü\b/gi, "geçişlerdeki zorlanma")
     .replace(/Bu nedenle ana klinik yorum skor örüntüsü ve anamnez üzerine kurulmuştur\. Bu bulgu formülasyonu destekleyen ek klinik kanıtlar arasında yer alır\./gi, "Bu nedenle ana klinik yorum skor örüntüsü, anamnez ve terapist gözlemiyle sınırlı tutulmuştur.")
     .replace(/Bildirilen dış testlerin tümü yaş aralığıyla uyumsuz görünmektedir\. Bu nedenle ana klinik yorum skor örüntüsü ve anamnez üzerine kurulmuştur\./gi, "Bildirilen dış testlerin tümü yaş aralığıyla uyumsuz görünmektedir. Bu nedenle ana klinik yorum skor örüntüsü, anamnez ve terapist gözlemiyle sınırlı tutulmuştur.")
     .replace(/Başvuru \/ izlem gerekçesi:\s*Klinik izlem ve işlevsel değerlendirme/gi, "Başvuru / izlem gerekçesi: Klinik izlem ve işlevsel değerlendirme")
     .replace(/Başvuru \/ izlem gerekçesi:[^\n]*(?:bozukluk|bozukluğu|otizm|tanı|tanılanmış)[^\n]*/gi, "Başvuru / izlem gerekçesi: Klinik izlem ve işlevsel değerlendirme")
     .replace(/tanı ya da destek planı yerine geçmez/gi, "tanısal sonuç olarak kullanılmaz")
     .replace(/tanı veya müdahale reçetesi olarak kullanılmaz/gi, "tanısal sonuç olarak kullanılmaz")
+    .replace(/\btedavi\b/gi, "klinik süreç")
+    .replace(/\bmüdahale\b/gi, "klinik süreç")
+    .replace(/\bterapi\b/gi, "destek süreci")
+    .replace(/\bseans\b/gi, "görüşme")
+    .replace(/\bdanışmanlık\b/gi, "aile görüşmesi")
+    .replace(/\bilaç\b/gi, "medikal bilgi")
+    .replace(/\bprotokol\b/gi, "klinik akış")
+    .replace(/\begzersiz\b/gi, "etkinlik")
+    .replace(/\bödev\b/gi, "ev çalışması")
     .replace(/Dikkat bozukluğu veya yürütücü işlev hakkında tanısal hüküm üretmez/gi, "Dikkat alanı veya yürütücü işlev hakkında tanısal hüküm üretmez")
     .replace(/madde, norm tablosu veya manuel içeriği/gi, "test içeriği, norm tablosu veya manuel bilgisi")
+    .replace(/yürütücü davranış düzenleme ve duygusal ve bilişsel yansımalar yorumunu destekler/gi, "yürütücü davranış düzenleme ile duygusal ve bilişsel yansımaların birlikte yorumlanmasını destekler")
+    .replace(/emotional\/cognitive yayılım/gi, "duygusal ve bilişsel yansımalar")
+    .replace(/nasıl belirginleştiğine\./gi, "nasıl belirginleştiğine ilişkin destekleyici bilgi sunmaktadır.")
+    .replace(/\bilişkin\./gi, "ilişkin destekleyici bilgi sunmaktadır.")
+    .replace(/\buyaran yükü\b/gi, "uyaran yoğunluğu")
+    .replace(/\bİşitsel uyaran yükü\b/g, "İşitsel uyaran yoğunluğu")
+    .replace(/\bişitsel uyaran yükü\b/gi, "işitsel uyaran yoğunluğu")
+    .replace(/\bgörsel uyaran yükünün\b/gi, "görsel uyaran yoğunluğunun")
+    .replace(/\bçevresel uyaran yükünün\b/gi, "çevresel uyaran yoğunluğunun")
+    .replace(/\bçevresel uyaran yükü\b/gi, "çevresel uyaran yoğunluğu")
+    .replace(/\bgeçiş yükü\b/gi, "geçişlerdeki zorlanma")
+    .replace(/\bYenilik ve geçiş yükü\b/g, "Yenilik ve geçişlerdeki zorlanma")
+    .replace(/\bSınır:\s*/g, "Yorumda ")
+    .replace(/\bYorum sınırı:\s*/g, "Yorumda ")
+    .replace(/Bu nedenle ana klinik karar ağırlığını artırmaz/gi, "Bu bulgu ana klinik yorumu güçlendirmez")
+    .replace(/karar ağırlığını artırmaz/gi, "ana klinik yorumu güçlendirmez")
+    .replace(/karar ağırlığını artırmak için kullanılmadı/gi, "ana klinik yorumu güçlendirmek için kullanılmadı")
+    .replace(/yorum ağırlığını değiştiren bağlamlardır/gi, "klinik yorumu değiştirebilecek bağlamlardır")
+    .replace(/klinik ağırlık/gi, "klinik odak")
+    .replace(/skor ve ek test ağırlıklı klinik hipotez/gi, "skor ve ek testle sınırlı klinik hipotez")
+    .replace(/klinik yorum ağırlıklı olarak/gi, "klinik yorum daha çok")
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();

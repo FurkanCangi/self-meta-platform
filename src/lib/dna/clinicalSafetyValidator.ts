@@ -1,4 +1,5 @@
 import { analyzeReportLanguageQuality, sanitizeFinalReportLanguage } from "./reportLanguageQuality"
+import { evaluateClaimGuard } from "./clinicalClaimRegistry"
 
 export type ClinicalSafetySeverity = "critical" | "warning"
 
@@ -23,6 +24,15 @@ const SAFETY_REPLACEMENTS: Array<[RegExp, string]> = [
   [/\btedavi edilmelidir\b/gi, "klinik izlemde ele alınmalıdır"],
   [/\bseans sıklığı belirlenmelidir\b/gi, "uygulama planı ayrıca klinik değerlendirme ile belirlenmelidir"],
   [/\bilaç başlanmalıdır\b/gi, "medikal karar üretmez"],
+  [/\byapılmalıdır\b/gi, "klinik olarak ele alınır"],
+  [/\buygulanmalıdır\b/gi, "vaka dışı yönergeye dönüştürülmez"],
+  [/\bbaşlanmalıdır\b/gi, "başlangıç kararı üretmez"],
+  [/\bgerekir\b/gi, "uygundur"],
+  [/\btanı ile uyumlu\b/gi, "tanısal sonuç olarak kullanılmaz"],
+  [/\bbelirtisidir\b/gi, "klinik yorum için tek başına yeterli değildir"],
+  [/\bsemptom\b/gi, "klinik bulgu"],
+  [/\bbozukluk\b/gi, "klinik zorlanma"],
+  [/\bpatoloji\b/gi, "klinik risk"],
   [/\bpatolojik\b/gi, "klinik açıdan dikkat gerektiren"],
   [/\bmadde düzeyi\b/gi, "ölçek içi ayrıntılı"],
   [/\banket maddesi\b/gi, "ölçek yanıtı"],
@@ -38,8 +48,18 @@ const CRITICAL_PATTERNS: Array<{ code: string; pattern: RegExp; message: string 
   },
   {
     code: "treatment_prescription",
-    pattern: /\b(?:tedavi edilmelidir|seans sıklığı|ilaç başlanmalıdır|müdahale reçetesi\s+(?:sunar|önerir|verir|planlar)|müdahale planı\s+(?:önerir|verir|sunar))\b/i,
+    pattern: /\b(?:tedavi edilmelidir|seans sıklığı|ilaç başlanmalıdır|müdahale reçetesi\s+(?:sunar|önerir|verir|planlar)|müdahale planı\s+(?:önerir|verir|sunar)|program|protokol|egzersiz listesi|ödev|seans akışı)\b/i,
     message: "Final raporda tedavi/seans/ilaç reçetesi dili kalmış.",
+  },
+  {
+    code: "directive_modal_language",
+    pattern: /\b(?:yapılmalıdır|uygulanmalıdır|başlanmalıdır|gerekir)\b/i,
+    message: "Final raporda direktif uygulama dili kalmış.",
+  },
+  {
+    code: "diagnostic_semantic_language",
+    pattern: /\b(?:tanı ile uyumlu|belirtisidir|semptom|bozukluk|patoloji)\b/i,
+    message: "Final raporda tanısal çağrışım yapan dil kalmış.",
   },
   {
     code: "causal_certainty",
@@ -92,6 +112,14 @@ export function validateAndNormalizeClinicalReport(text: string): ClinicalSafety
         evidence: issue.evidence,
       })
     }
+  }
+  for (const issue of evaluateClaimGuard(normalized)) {
+    issues.push({
+      code: `claim_${issue.code}`,
+      severity: issue.severity,
+      message: issue.message,
+      evidence: issue.evidence,
+    })
   }
 
   const criticalIssues = issues.filter((issue) => issue.severity === "critical")

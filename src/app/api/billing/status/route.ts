@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { requireConfirmedUser } from "@/lib/security/apiGuards"
+import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { EDUCATION_VIDEO_FEATURE } from "@/lib/security/entitlements"
 import { getReportCreditSummary } from "@/lib/security/reportCredits"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
@@ -14,6 +15,13 @@ function isActiveEntitlement(row: any) {
 export async function GET() {
   const auth = await requireConfirmedUser()
   if (!auth.ok) return auth.response
+
+  const rateLimit = await checkRateLimit({
+    key: `billing-status:${auth.user.id}`,
+    limit: 120,
+    windowMs: 60 * 60 * 1000,
+  })
+  if (!rateLimit.ok) return rateLimitResponse(rateLimit.resetAt)
 
   const admin = createSupabaseAdminClient()
   const userId = auth.user.id

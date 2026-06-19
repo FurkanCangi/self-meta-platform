@@ -962,6 +962,47 @@ html[data-theme="dark"] .dna-shell .shadow-sm {
   border-radius: 18px;
 }
 
+.dna-app-frame .dna-new-client-layout {
+  display: block !important;
+}
+
+.dna-app-frame .dna-new-client-card {
+  width: 100%;
+  max-width: 100%;
+  overflow: visible;
+}
+
+.dna-app-frame .dna-new-client-card .grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+.dna-app-frame .dna-new-client-card label,
+.dna-app-frame .dna-new-client-card input,
+.dna-app-frame .dna-new-client-card textarea,
+.dna-app-frame .dna-new-client-card select {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dna-app-frame .dna-new-client-card input,
+.dna-app-frame .dna-new-client-card textarea,
+.dna-app-frame .dna-new-client-card select {
+  width: 100%;
+  font-size: 15px;
+}
+
+.dna-app-frame .dna-new-client-card input[type="radio"],
+.dna-app-frame .dna-new-client-card input[type="checkbox"] {
+  width: 1rem !important;
+  min-width: 1rem !important;
+  max-width: 1rem !important;
+  flex: 0 0 1rem;
+}
+
+.dna-app-frame .dna-new-client-card label > div:first-child {
+  overflow-wrap: anywhere;
+}
+
 .dna-app-frame .dna-likert-grid {
   grid-template-columns: 1fr !important;
 }

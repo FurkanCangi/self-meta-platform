@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { requireConfirmedUser, requireTrustedMutation } from "@/lib/security/apiGuards"
+import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { videoObservationPathSegment } from "@/lib/video-observation/config"
 import { proxyVideoObservationRequest } from "@/lib/video-observation/proxy"
 
@@ -26,6 +27,13 @@ export async function PUT(
 
   const originError = await requireTrustedMutation(request)
   if (originError) return originError
+
+  const rateLimit = await checkRateLimit({
+    key: `video-observation-upload:${auth.user.id}`,
+    limit: 60,
+    windowMs: 60 * 60 * 1000,
+  })
+  if (!rateLimit.ok) return rateLimitResponse(rateLimit.resetAt)
 
   const { sessionId, segmentType } = await params
   const safeSessionId = videoObservationPathSegment(sessionId)

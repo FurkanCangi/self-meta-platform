@@ -61,6 +61,7 @@ export default function BottomTabs() {
             <Link
               key={tab.href}
               href={tab.href}
+              prefetch
               className={[
                 "flex min-h-[56px] flex-col items-center justify-center gap-1 rounded-2xl px-1 text-[11px] font-black transition",
                 active

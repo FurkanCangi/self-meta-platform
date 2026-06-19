@@ -20,6 +20,27 @@ type LegalStatus = {
   error?: string;
 };
 
+const LEGAL_STATUS_CACHE_KEY = "dna_app_legal_status_v1";
+const LEGAL_STATUS_CACHE_MS = 60_000;
+
+function readCachedLegalStatus(): LegalStatus | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const cached = JSON.parse(window.sessionStorage.getItem(LEGAL_STATUS_CACHE_KEY) || "null");
+    if (!cached?.savedAt || Date.now() - Number(cached.savedAt) > LEGAL_STATUS_CACHE_MS) return null;
+    return cached.value || null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedLegalStatus(value: LegalStatus) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(LEGAL_STATUS_CACHE_KEY, JSON.stringify({ savedAt: Date.now(), value }));
+  } catch {}
+}
+
 export default function LegalAcceptanceGate({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<LegalStatus | null>(null);
   const [loading, setLoading] = useState(true);
@@ -27,12 +48,19 @@ export default function LegalAcceptanceGate({ children }: { children: React.Reac
   const [error, setError] = useState<string | null>(null);
 
   async function loadStatus() {
-    setLoading(true);
+    const cached = readCachedLegalStatus();
+    if (cached) {
+      setStatus(cached);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
     setError(null);
     try {
       const response = await fetch("/api/legal/status", { cache: "no-store" });
       const json = (await response.json()) as LegalStatus;
       setStatus(json);
+      if (response.ok && json.ok) writeCachedLegalStatus(json);
     } catch {
       setError("Hukuki kabul durumu kontrol edilemedi.");
     } finally {

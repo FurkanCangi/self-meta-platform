@@ -1,0 +1,25 @@
+{
+  "clientCode": "FIX-REASON-PRESERVED-60",
+  "clientName": "Reasoning Preserved",
+  "ageMonths": 60,
+  "anamnez": {
+    "ad_soyad": "Reasoning Preserved Ornek",
+    "client_code": "FIX-REASON-PRESERVED-60",
+    "age": "60 ay",
+    "diagnosis": "Klinik izlem ve islevsel degerlendirme",
+    "referral_reason": "Aile evde giyinme, yemek hazirligi ve kalabalik ortam gecislerinde hizli dagilma tarif ediyor. Buna karsin tanidik bire bir etkinliklerde is birligi ve gorev tamamlama daha korunmus gorunuyor.",
+    "parent_concerns_goals": "Aile, gunluk rutinlerde baslatma ve surdurme yukunun neden bazi ortamlarda arttigini anlamak istiyor.",
+    "therapist_comments": "Terapist gozleminde yapilandirilmis bire bir calismada sira takip, kisa yonerge ve etkinlik tamamlama korunmus; grup ve gecis yukunde toparlanma suresi uzuyor.",
+    "strengths": "Bire bir yapida sosyal is birligi, kisa sozel yonergeyi takip ve tanidik rutinlerde gorev bitirme korunmus.",
+    "external_clinical_findings": "Test adi: Vineland-3\nPuan / sonuc: Adaptive Behavior Composite standart skoru 102; iletisim, gunluk yasam ve sosyallesme alanlari yas beklentisiyle uyumlu.\nKlinik yorum / resmi bulgu ozeti: Uyumsal islevsellik genel olarak korunmus; ev ici zorlanmalar baglama duyarlı gorunuyor.\nEk notlar: Gunluk yasam becerileri risk dilini genisletmeyen dengeleyici veri sagliyor.\n\nTest adi: ABAS-3\nPuan / sonuc: Genel uyumsal bilesik standart skoru 99; kavramsal, sosyal ve pratik alanlar ortalama aralikta.\nKlinik yorum / resmi bulgu ozeti: Korunmus adaptif profil; dis test sonucu yaygin risk iddiasini desteklemiyor."
+  },
+  "scores": {
+    "physiological": 28,
+    "sensory": 29,
+    "emotional": 27,
+    "cognitive": 30,
+    "executive": 26,
+    "interoception": 31
+  },
+  "answers": [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 3, 3, 3, 2, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3]
+}

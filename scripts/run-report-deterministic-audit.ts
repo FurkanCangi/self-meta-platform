@@ -35,6 +35,15 @@ type AuditIssueCode =
   | "trace_coverage_missing"
   | "external_registry_metadata_missing"
   | "micro_evidence_leak"
+  | "reasoning_trace_missing"
+  | "sentence_trace_missing"
+  | "unsupported_specificity"
+  | "decision_trace_hash_missing"
+  | "trace_quality_metrics_missing"
+  | "sentence_evidence_resolution_weak"
+  | "redundancy_score_high"
+  | "external_weight_missing"
+  | "claim_guard_violation"
   | "narrative_guard_violation";
 
 type FixtureAudit = {
@@ -73,6 +82,15 @@ const ISSUE_LABELS: Record<AuditIssueCode, string> = {
   trace_coverage_missing: "Trace coverage eksik",
   external_registry_metadata_missing: "Ek test registry metadata eksik",
   micro_evidence_leak: "Mikro-kanıt soru/madde/item dili sızdırıyor",
+  reasoning_trace_missing: "Reasoning trace skor kırılımı eksik",
+  sentence_trace_missing: "Ana klinik cümle sentence trace coverage eksik",
+  unsupported_specificity: "Bağlam/mekanizma özgüllüğü yeterli kanıtla desteklenmiyor",
+  decision_trace_hash_missing: "Decision trace hash eksik",
+  trace_quality_metrics_missing: "Trace kalite metrikleri eksik",
+  sentence_evidence_resolution_weak: "Sentence trace gerçek evidence atomlarına yeterince ayrışmıyor",
+  redundancy_score_high: "Bölümler arası iddia tekrar skoru yüksek",
+  external_weight_missing: "Ek test ağırlık skoru eksik",
+  claim_guard_violation: "Claim/intended-use guard ihlali var",
   narrative_guard_violation: "Narrative guard ihlali var",
 };
 
@@ -297,19 +315,19 @@ function getIssueCodes(params: {
 
   if (
     externalAnalysis.matches.length > 0 &&
-    (!/Ek Test Kanıt Profili:/i.test(sectionBodies.fit) ||
+    (!/(Ek Test Kanıt Profili|Ek test bulguları):/i.test(sectionBodies.fit) ||
       !/yaş\/kapsam:|resmi kullanım aralığı/i.test(sectionBodies.fit) ||
       !/Alan:/i.test(sectionBodies.fit) ||
       !/Puan:/i.test(sectionBodies.fit) ||
       !/Sonuç:/i.test(sectionBodies.fit) ||
-      !/Sınır:|Yorum sınırı:/i.test(sectionBodies.fit))
+      !/Sınır:|Yorum sınırı:|Yorumda /i.test(sectionBodies.fit))
   ) {
     issueCodes.push("external_test_profile_missing");
   }
 
   if (
     externalAnalysis.qualityFlagLines.length > 0 &&
-    !/Yorum sınırı:|ham puan|yaş uyumsuz|yas uyumsuz|ana mekanizma veya karar ağırlığını artırmak için kullanılmadı/i.test(sectionBodies.fit)
+    !/Yorum sınırı:|Yorumda |ham puan|yaş uyumsuz|yas uyumsuz|ana mekanizma veya karar ağırlığını artırmak için kullanılmadı|ana mekanizmayı veya ana klinik yorumu güçlendirmek için kullanılmadı/i.test(sectionBodies.fit)
   ) {
     issueCodes.push("external_test_quality_boundary_missing");
   }
@@ -328,6 +346,7 @@ function getIssueCodes(params: {
       /beden-temelli toparlanma/,
       /günlük yaşam ve öz bakım/,
       /praksi ve motor planlama/,
+      /motor planlama ve beden organizasyonu/,
       /dilsel talep/,
       /sosyal-pragmatik/,
     ])
@@ -343,7 +362,7 @@ function getIssueCodes(params: {
     (hasCaregiverSource || hasTherapistSource || externalAnalysis.matches.length > 0) &&
     ((hasCaregiverSource && !/(?:Aile tarafından|aileden gelen bilgi)/i.test(sectionBodies.fit)) ||
       (hasTherapistSource && !/Terapist gözleminde/i.test(sectionBodies.fit)) ||
-      (externalAnalysis.matches.length > 0 && !/Ek Test Kanıt Profili:/i.test(sectionBodies.fit)))
+      (externalAnalysis.matches.length > 0 && !/(Ek Test Kanıt Profili|Ek test bulguları):/i.test(sectionBodies.fit)))
   ) {
     issueCodes.push("anamnez_fit_specificity_missing");
   }
@@ -357,7 +376,7 @@ function getIssueCodes(params: {
     issueCodes.push("deterministic_kb_metric_missing");
   }
 
-  if (!anamnezSignals.sensory && hasAny(normalizedReport, [/duyusal yüklenme/, /çevresel ve dokunsal hassasiyet/, /duyusal hassasiyet/])) {
+  if (!anamnezSignals.sensory && hasAny(normalizedReport, [/duyusal yüklenme/, /çevresel ve dokunsal hassasiyet/])) {
     issueCodes.push("sensory_theme_leakage");
   }
 
@@ -468,6 +487,65 @@ function getTraceAuditIssues(result: Awaited<ReturnType<typeof runSingleFixture>
   ) || [];
   if (invalidAtoms.length > 0 || (trace?.validationIssues || []).length > 0) {
     issues.push("trace_coverage_missing");
+  }
+  const reasoning = trace?.reasoning;
+  const selectedMechanism = trace?.ruleHits?.find((rule) => rule.ruleType === "mechanism")?.id.replace(/^rule\.mechanism\./, "");
+  const selectedBreakdown = reasoning?.mechanismScoreBreakdown?.find((item) => item.mechanism === selectedMechanism);
+  if (
+    !reasoning?.confidenceSubscores ||
+    !reasoning?.mechanismScoreBreakdown?.length ||
+    !selectedBreakdown ||
+    !Number.isFinite(selectedBreakdown.finalMechanismScore)
+  ) {
+    issues.push("reasoning_trace_missing");
+  }
+  if (!result.auditTrail?.decisionTraceHash || result.auditTrail.decisionTraceHash.length < 12) {
+    issues.push("decision_trace_hash_missing");
+  }
+  if (
+    typeof result.auditTrail?.redundancyScore !== "number" ||
+    typeof result.auditTrail?.unsupportedSpecificityRate !== "number" ||
+    typeof trace?.qualityMetrics?.evidenceToSentenceCoverage !== "number"
+  ) {
+    issues.push("trace_quality_metrics_missing");
+  }
+  const sentenceTraces = trace?.sentenceTraces || [];
+  const invalidSentenceTrace = sentenceTraces.some(
+    (sentence) =>
+      !sentence.sentenceId ||
+      !sentence.textHash ||
+      !sentence.evidenceAtomIds?.length ||
+      !sentence.ruleIds?.length ||
+      !sentence.confidence ||
+      !sentence.safetyTags?.length
+  );
+  if (!sentenceTraces.length || invalidSentenceTrace) {
+    issues.push("sentence_trace_missing");
+  }
+  const lowResolutionSentenceTrace = sentenceTraces.some(
+    (sentence) =>
+      sentence.claimType !== "descriptive" &&
+      sentence.evidenceAtomIds.length === 1 &&
+      sentence.evidenceAtomIds[0] === "evidence.mechanism.primary"
+  );
+  if (lowResolutionSentenceTrace) {
+    issues.push("sentence_evidence_resolution_weak");
+  }
+  if ((trace?.qualityMetrics?.redundancyScore || 0) > 12 || (result.auditTrail?.redundancyScore || 0) > 12) {
+    issues.push("redundancy_score_high");
+  }
+  if ((trace?.suppressedAtoms || []).some((atom) => atom.reason === "unsupported_specificity")) {
+    issues.push("unsupported_specificity");
+  }
+  if ((trace?.qualityMetrics?.unsupportedSpecificityRate || 0) > 0 || (result.auditTrail?.unsupportedSpecificityRate || 0) > 0) {
+    issues.push("unsupported_specificity");
+  }
+  const externalEvidenceSources = (trace?.evidenceSources || []).filter((source) => source.kind === "external_test");
+  if (externalEvidenceSources.some((source) => !/kanıt ağırlığı:\s*\d+\/(?:none|limited|moderate|strong|balancing)/i.test(source.summary || ""))) {
+    issues.push("external_weight_missing");
+  }
+  if ((trace?.claimGuardIssues || []).some((issue) => issue.severity === "critical")) {
+    issues.push("claim_guard_violation");
   }
   if (/(?:age-mismatch|raw-score|raw-preserved|format-preserved|preserved-vineland|typical-vineland|typical-abas)/i.test(result.fixturePath) && !(trace?.suppressedAtoms || []).length) {
     issues.push("trace_coverage_missing");

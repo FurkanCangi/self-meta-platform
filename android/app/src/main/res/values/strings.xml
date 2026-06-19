@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">DNA Intelligence</string>
+    <string name="title_activity_main">DNA Intelligence</string>
+    <string name="package_name">com.dnaintelligence.app</string>
+    <string name="custom_url_scheme">com.dnaintelligence.app</string>
+</resources>

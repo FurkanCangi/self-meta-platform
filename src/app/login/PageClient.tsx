@@ -48,6 +48,12 @@ function formatLoginErrorCode(code?: string | null) {
   if (!code) return null;
   if (code === "missing") return "E-posta ve şifre alanlarını doldurun.";
   if (code === "invalid") return "E-posta veya şifre hatalı.";
+  if (code === "email_not_confirmed") return "E-posta adresiniz henüz doğrulanmamış. Gelen kutunuzu ve spam klasörünü kontrol edin.";
+  if (code === "confirm_invalid") return "Doğrulama bağlantısı eksik veya geçersiz.";
+  if (code === "confirm_failed") return "Doğrulama bağlantısı süresi dolmuş veya daha önce kullanılmış olabilir.";
+  if (code === "origin") return "Giriş isteği güvenlik kontrolünden geçemedi. Sayfayı yenileyip tekrar deneyin.";
+  if (code === "network") return "Giriş servisine ulaşılamadı. Bağlantıyı kontrol edip tekrar deneyin.";
+  if (code === "rate_limited") return "Çok sık giriş denemesi yapıldı. Lütfen birkaç dakika sonra tekrar deneyin.";
   if (code === "device_limit_exceeded") {
     return "Bu hesap için en fazla 2 cihaz kullanılabilir. Yeni cihaz eklemek için önce mevcut cihazlardan biri kaldırılmalıdır.";
   }
@@ -108,6 +114,7 @@ async function registerAppSession(accessToken?: string | null) {
     body: JSON.stringify({
       deviceId: getOrCreateDeviceId(),
       deviceType: detectDeviceType(),
+      allowSlotReuse: true,
     }),
   });
 
@@ -145,10 +152,18 @@ export default function LoginPage() {
   const passwordRef = useRef<HTMLInputElement | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [deviceId, setDeviceId] = useState("");
+  const [deviceType, setDeviceType] = useState("desktop");
   const [err, setErr] = useState<string | null>(() => formatLoginErrorCode(sp.get("error")));
+  const [notice, setNotice] = useState<string | null>(() =>
+    sp.get("confirmed") === "1" ? "E-postanız doğrulandı. Şimdi giriş yapabilirsiniz." : null
+  );
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    setDeviceId(getOrCreateDeviceId());
+    setDeviceType(detectDeviceType());
+
     if (sp.has("email") || sp.has("password")) {
       const cleaned = new URL(window.location.href);
       cleaned.searchParams.delete("email");
@@ -179,73 +194,10 @@ export default function LoginPage() {
     });
   }, [router, nextPath, appSurface, sp]);
 
-  async function performLogin(submittedEmail: string, submittedPassword: string) {
+  function onSubmit() {
     setErr(null);
+    setNotice(null);
     setLoading(true);
-    try {
-      if (!submittedEmail || !submittedPassword) {
-        setErr("E-posta ve şifre alanlarını doldurun.");
-        return;
-      }
-
-      const normalizedEmail = normalizeLoginEmail(submittedEmail);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
-        password: submittedPassword,
-      });
-
-      if (error) {
-        setErr(formatLoginError(error.message));
-        return;
-      }
-
-      const uid = data.user?.id;
-      if (!uid) {
-        setErr("Giriş yapılamadı.");
-        return;
-      }
-
-      try {
-        await registerAppSession(data.session?.access_token);
-      } catch (error) {
-        await supabase.auth.signOut();
-        setErr(error instanceof Error ? error.message : "Oturum güvenlik kaydı oluşturulamadı.");
-        return;
-      }
-
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("plan")
-        .eq("user_id", uid)
-        .maybeSingle();
-
-      if (profileError) {
-        setErr("Hesap bilgileri alınamadı. Lütfen tekrar deneyin.");
-        return;
-      }
-
-      const plan = profile?.plan ?? "none";
-      router.replace(resolvePostLoginPath(plan, nextPath, appSurface));
-    } catch (error: any) {
-      console.error("[login] signIn failed", error);
-      setErr("Giriş isteği tamamlanamadı. İnternet bağlantınızı kontrol edip tekrar deneyin.");
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function onSubmit(e?: React.FormEvent<HTMLFormElement>) {
-    e?.preventDefault();
-    e?.stopPropagation();
-    const formData = e?.currentTarget ? new FormData(e.currentTarget) : null;
-    const submittedEmail = String(
-      emailRef.current?.value || formData?.get("email") || email
-    );
-    const submittedPassword = String(
-      passwordRef.current?.value || formData?.get("password") || password
-    );
-
-    await performLogin(submittedEmail, submittedPassword);
   }
 
   return (
@@ -254,9 +206,17 @@ export default function LoginPage() {
         <form ref={formRef} className="mt-3 space-y-3" action="/api/auth/login" method="post" onSubmit={onSubmit}>
           <input type="hidden" name="surface" value={appSurface ? "app" : "web"} />
           <input type="hidden" name="next" value={nextPath} />
+          <input type="hidden" name="deviceId" value={deviceId} />
+          <input type="hidden" name="deviceType" value={deviceType} />
           {sp.get("next") ? (
             <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
               Devam etmek istediğiniz sayfaya geçmek için giriş yapın.
+            </div>
+          ) : null}
+
+          {notice ? (
+            <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+              {notice}
             </div>
           ) : null}
 

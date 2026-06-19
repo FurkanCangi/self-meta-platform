@@ -218,7 +218,7 @@ function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof r
     }
   }
 
-  if (!/Klinik karar cümlesi:|öncelikli klinik hipotez|en güçlü klinik hipotez|mevcut verilerle en güçlü klinik eksen|temel klinik eksen|ana klinik eksen/i.test(decisionSummarySection)) {
+  if (!/öncelikli klinik hipotez|en güçlü klinik hipotez|mevcut verilerle en güçlü klinik eksen|temel klinik eksen|ana klinik eksen|ana klinik yorum|Bu vaka,|Bu vakada|Mevcut veriler/i.test(decisionSummarySection)) {
     failures.push("1. Klinik Karar Özeti beklenen hipotez/karar dilini taşımıyor.");
   }
 
@@ -227,14 +227,14 @@ function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof r
   }
 
   if (
-    !/(Klinik karar cümlesi:|Karar özeti:)/i.test(prioritizationSection) ||
-    !/(Klinik formülasyon:|Formülasyon özeti:)/i.test(prioritizationSection)
+    !/(Ana klinik odak:|Karar özeti:)/i.test(prioritizationSection) ||
+    !/(Günlük yaşama yansıyan alanlar:|Formülasyon özeti:)/i.test(prioritizationSection)
   ) {
     failures.push("6. Klinik Önceliklendirme Notu profesör düzeyi karar/formülasyon özetini taşımıyor.");
   }
 
-  if (!/Klinik öncelik sırası:/i.test(prioritizationSection)) {
-    failures.push("6. Klinik Önceliklendirme Notu klinik öncelik sırası üretmiyor.");
+  if (!/(Bu sonuca nasıl ulaşıldı:|Dayanak:|Veri güveni:)/i.test(prioritizationSection)) {
+    failures.push("6. Klinik Önceliklendirme Notu kanıt/veri güveni özetini üretmiyor.");
   }
 
   if (requiresClassificationExplanation(result) && !hasClassificationExplanation(`${evidenceProfileSection}\n${prioritizationSection}`)) {
@@ -330,7 +330,7 @@ function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof r
     failures.push(`Literatür paragrafı az: ${literatureParagraphCount}`);
   }
 
-  if (!/yorum sınırı|tanı, nedensellik veya müdahale reçetesi üretmez/i.test(literatureSection)) {
+  if (!/tanısal sonuç|nedensellik açıklaması|doğrudan klinik karar|yorum sınırı|tanı, nedensellik veya müdahale reçetesi üretmez/i.test(literatureSection)) {
     failures.push("Literatür bölümü kaynak kullanım sınırını açıkça yazmıyor.");
   }
 

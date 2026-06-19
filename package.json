@@ -19,9 +19,13 @@
     "report:quality:ai": "tsc -p tsconfig.report-runner.json --outDir .tmp/report-runner-quality-ai && node .tmp/report-runner-quality-ai/scripts/run-report-quality-tests.js --with-ai",
     "report:quality:ai-smoke": "tsc -p tsconfig.report-runner.json --outDir .tmp/report-runner-quality-ai-smoke && node .tmp/report-runner-quality-ai-smoke/scripts/run-report-quality-tests.js --with-ai --smoke-only",
     "security:smoke": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/security-smoke-tests.js",
-    "security:readiness": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/security-readiness-check.js"
+    "security:readiness": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/security-readiness-check.js",
+    "security:owner-scenarios": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/owner-security-scenario-tests.js"
   },
   "dependencies": {
+    "@capacitor/android": "^8.4.0",
+    "@capacitor/cli": "^8.4.0",
+    "@capacitor/core": "^8.4.0",
     "@fullcalendar/daygrid": "^6.1.20",
     "@fullcalendar/react": "^6.1.20",
     "@supabase/ssr": "^0.9.0",
@@ -60,6 +64,7 @@
   "overrides": {
     "lodash": "^4.18.1",
     "lodash-es": "^4.18.1",
+    "postcss": "^8.5.15",
     "ws": "^8.21.0"
   }
 }

@@ -1,7 +1,10 @@
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
+import { z } from "zod"
 import { requireTrustedMutation } from "@/lib/security/apiGuards"
 import { rejectServerControlledFields } from "@/lib/security/payloadGuards"
+import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
+import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { getAcceptedDocumentsSnapshot, normalizePlanCode } from "@/lib/legal/documents"
@@ -11,6 +14,13 @@ function getClientIp(headerStore: Headers) {
   if (forwardedFor) return forwardedFor.split(",")[0]?.trim() || null
   return headerStore.get("x-real-ip") || null
 }
+
+const legalAcceptPayloadSchema = z
+  .object({
+    sourcePath: z.string().max(500).optional().nullable(),
+    planCode: z.string().max(80).optional().nullable(),
+  })
+  .passthrough()
 
 export async function POST(request: Request) {
   const originError = await requireTrustedMutation(request)
@@ -26,10 +36,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 })
   }
 
-  let body: Record<string, unknown> = {}
-  try {
-    body = await request.json()
-  } catch {}
+  const rateLimit = await checkRateLimit({
+    key: `legal-accept:${user.id}`,
+    limit: 12,
+    windowMs: 60 * 60 * 1000,
+  })
+  if (!rateLimit.ok) return rateLimitResponse(rateLimit.resetAt)
+
+  const parsedBody = await readJsonWithSchema(request, legalAcceptPayloadSchema)
+  if (!parsedBody.ok) return parsedBody.response
+  const body = parsedBody.data
 
   const payloadGuard = rejectServerControlledFields(body)
   if (!payloadGuard.ok) {
@@ -69,7 +85,7 @@ export async function POST(request: Request) {
     .single()
 
   if (insertError) {
-    return NextResponse.json({ ok: false, error: insertError.message }, { status: 500 })
+    return NextResponse.json({ ok: false, error: "legal_acceptance_failed" }, { status: 500 })
   }
 
   return NextResponse.json({

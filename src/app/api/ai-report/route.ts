@@ -100,11 +100,13 @@ async function assertOwnedDnaClient(supabase: any, userId: string, payload: any)
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
+import { z } from "zod"
 import { requireTrustedMutation } from "@/lib/security/apiGuards"
 import { rejectServerControlledFields } from "@/lib/security/payloadGuards"
 import { evaluateAccountRisk, recordAccountSecurityEvent } from "@/lib/security/anomalyDetection"
 import { getPrivacyAuditContext, recordDataAccessAuditEvent } from "@/lib/security/privacyOps"
 import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
+import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import { consumeReportCredit } from "@/lib/security/reportCredits"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { buildAdvancedReport } from "@/lib/dna/reportEngine"
@@ -146,6 +148,28 @@ function appendOptionalSection(baseText: string, optionalSection?: string | null
   if (!extra) return main
   return [main, extra].filter(Boolean).join("\n\n")
 }
+
+const aiReportPayloadSchema = z
+  .object({
+    clientCode: z.string().max(120).optional(),
+    client_code: z.string().max(120).optional(),
+    client: z
+      .object({
+        code: z.string().max(120).optional(),
+        client_code: z.string().max(120).optional(),
+        id: z.string().max(120).optional(),
+      })
+      .passthrough()
+      .optional(),
+    clientId: z.string().max(120).optional(),
+    client_id: z.string().max(120).optional(),
+    assessmentId: z.string().max(120).optional(),
+    ageMonths: z.coerce.number().int().min(0).max(240).optional().nullable(),
+    anamnez: z.string().max(20000).optional(),
+    answers: z.array(z.coerce.number()).max(80).optional(),
+    scores: z.record(z.string(), z.coerce.number()).optional(),
+  })
+  .passthrough()
 
 export async function POST(req: Request) {
   try {
@@ -192,7 +216,9 @@ export async function POST(req: Request) {
       return rateLimitResponse(rateLimit.resetAt)
     }
 
-    const body = await req.json()
+    const parsedBody = await readJsonWithSchema(req, aiReportPayloadSchema)
+    if (!parsedBody.ok) return parsedBody.response
+    const body = parsedBody.data
     const payloadGuard = rejectServerControlledFields(body)
     if (!payloadGuard.ok) {
       return NextResponse.json(
@@ -343,11 +369,11 @@ if (__validationErrors.length > 0) {
       report: finalText,
       deterministic: cleanDeterministic,
     })
-  } catch (error: any) {
+  } catch {
     return NextResponse.json(
       {
         ok: false,
-        error: error?.message || "AI rapor üretilemedi.",
+        error: "AI rapor üretilemedi.",
       },
       { status: 500 }
     )

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { ACTIVE_LEGAL_DOCUMENTS, hasAcceptedActiveDocuments } from "@/lib/legal/documents"
@@ -30,6 +31,13 @@ export async function GET() {
   }
 
   try {
+    const rateLimit = await checkRateLimit({
+      key: `legal-status:${user.id}`,
+      limit: 120,
+      windowMs: 60 * 60 * 1000,
+    })
+    if (!rateLimit.ok) return rateLimitResponse(rateLimit.resetAt)
+
     const admin = createSupabaseAdminClient()
     const [{ data: acceptances, error: acceptanceError }, { data: profile, error: profileError }] =
       await Promise.all([
@@ -62,14 +70,13 @@ export async function GET() {
       profilePlan: profile?.plan || "none",
       documents: ACTIVE_LEGAL_DOCUMENTS,
     })
-  } catch (statusError) {
-    const message = statusError instanceof Error ? statusError.message : "Hukuki kabul durumu alınamadı."
+  } catch {
     return NextResponse.json({
       ok: false,
       authenticated: true,
       configured: false,
       accepted: false,
-      error: message,
+      error: "legal_status_failed",
       documents: ACTIVE_LEGAL_DOCUMENTS,
     })
   }

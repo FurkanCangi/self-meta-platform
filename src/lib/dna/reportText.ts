@@ -141,7 +141,7 @@ function shouldUseFallbackClinicalSection(heading: string, primaryBody: string):
   if (!body) return true
 
   if (heading === "1. Klinik Karar Özeti") {
-    return !/(Klinik karar cümlesi|öncelikli klinik hipotez|en güçlü klinik hipotez|temel klinik eksen|ana klinik eksen)/i.test(body)
+    return !/(öncelikli klinik hipotez|en güçlü klinik hipotez|temel klinik eksen|ana klinik eksen|ana klinik yorum|Bu vaka,|Bu vakada|Mevcut veriler)/i.test(body)
   }
 
   if (heading === "2. Kanıt Temelli Profil Özeti") {
@@ -158,10 +158,9 @@ function shouldUseFallbackClinicalSection(heading: string, primaryBody: string):
 
   if (heading === "6. Klinik Önceliklendirme Notu") {
     const hasDecisionStructure =
-      /Klinik karar cümlesi:/i.test(body) &&
-      /Klinik formülasyon:/i.test(body) &&
-      /Klinik öncelik sırası:/i.test(body) &&
-      /Veri güven(?: düzeyi)?:/i.test(body)
+      /(?:Ana klinik odak|Karar özeti):/i.test(body) &&
+      /(?:Günlük yaşama yansıyan alanlar|Formülasyon özeti):/i.test(body) &&
+      /(?:Bu sonuca nasıl ulaşıldı|Veri güveni|Veri güven(?: düzeyi)?):/i.test(body)
     const hasClinicalHypothesis =
       /(öncelikli klinik hipotez|en güçlü klinik hipotez|mevcut verilerle en güçlü klinik eksen|veri güven)/i.test(
         body

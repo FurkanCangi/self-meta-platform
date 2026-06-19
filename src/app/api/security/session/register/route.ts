@@ -1,8 +1,12 @@
 import { createHash } from "crypto"
 import { headers } from "next/headers"
 import { NextResponse } from "next/server"
+import { z } from "zod"
 import { requireTrustedMutation } from "@/lib/security/apiGuards"
 import { evaluateAccountRisk, isSecurityLockExemptUser } from "@/lib/security/anomalyDetection"
+import { rejectServerControlledFields } from "@/lib/security/payloadGuards"
+import { checkRateLimit, getClientRateLimitKey, rateLimitResponse } from "@/lib/security/rateLimit"
+import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import {
   APP_SESSION_MAX_AGE_SECONDS,
   setAppSessionCookie,
@@ -11,6 +15,14 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 const MAX_REGISTERED_DEVICES = 2
+
+const sessionRegisterPayloadSchema = z
+  .object({
+    deviceId: z.string().min(16).max(200),
+    deviceType: z.enum(["desktop", "mobile", "tablet", "unknown"]).optional(),
+    allowSlotReuse: z.boolean().optional(),
+  })
+  .passthrough()
 
 function normalizeDeviceType(value: unknown) {
   const raw = String(value || "").toLowerCase().trim()
@@ -57,6 +69,13 @@ export async function POST(request: Request) {
   const originError = await requireTrustedMutation(request)
   if (originError) return originError
 
+  const requestRateLimit = await checkRateLimit({
+    key: getClientRateLimitKey(request, "session-register"),
+    limit: 20,
+    windowMs: 10 * 60 * 1000,
+  })
+  if (!requestRateLimit.ok) return rateLimitResponse(requestRateLimit.resetAt)
+
   const admin = createSupabaseAdminClient()
   const supabase = await createSupabaseServerClient()
   const serverAuth = await supabase.auth.getUser()
@@ -80,10 +99,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Email confirmation required" }, { status: 403 })
   }
 
-  let body: Record<string, unknown> = {}
-  try {
-    body = await request.json()
-  } catch {}
+  const parsedBody = await readJsonWithSchema(request, sessionRegisterPayloadSchema)
+  if (!parsedBody.ok) return parsedBody.response
+  const body = parsedBody.data
+
+  const payloadGuard = rejectServerControlledFields(body)
+  if (!payloadGuard.ok) {
+    return NextResponse.json(
+      { ok: false, error: "server_controlled_fields_present", fields: payloadGuard.fields },
+      { status: 400 }
+    )
+  }
 
   const rawDeviceId = String(body.deviceId || "").trim()
   if (!rawDeviceId || rawDeviceId.length < 16 || rawDeviceId.length > 200) {

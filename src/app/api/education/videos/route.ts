@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server"
+import { z } from "zod"
 import { isOwnerAuditEmail } from "@/lib/owner/ownerAccess"
 import { requireConfirmedUser, requireTrustedMutation } from "@/lib/security/apiGuards"
 import { assertNoServerControlledFields } from "@/lib/security/payloadGuards"
+import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
+import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
 type EducationVideoListItem = {
@@ -28,6 +31,23 @@ type CreateEducationVideoPayload = {
   providerLibraryId?: unknown
   isActive?: unknown
 }
+
+const createEducationVideoPayloadSchema = z
+  .object({
+    title: z.string().max(160).optional().nullable(),
+    slug: z.string().max(160).optional().nullable(),
+    requiredPlan: z.string().max(80).optional().nullable(),
+    provider: z.string().max(40).optional().nullable(),
+    providerStatus: z.string().max(40).optional().nullable(),
+    playbackPolicy: z.string().max(40).optional().nullable(),
+    storageBucket: z.string().max(120).optional().nullable(),
+    storagePath: z.string().max(500).optional().nullable(),
+    hlsManifestPath: z.string().max(500).optional().nullable(),
+    providerAssetId: z.string().max(200).optional().nullable(),
+    providerLibraryId: z.string().max(200).optional().nullable(),
+    isActive: z.boolean().optional(),
+  })
+  .passthrough()
 
 const PLAN_CODES = new Set(["student", "graduate", "professional", "enterprise"])
 const PROVIDERS = new Set(["supabase", "bunny"])
@@ -174,13 +194,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "video_manage_forbidden" }, { status: 403 })
   }
 
+  const rateLimit = await checkRateLimit({
+    key: `education-video-manage:${auth.user.id}`,
+    limit: 30,
+    windowMs: 60 * 60 * 1000,
+  })
+  if (!rateLimit.ok) return rateLimitResponse(rateLimit.resetAt)
+
+  const parsedPayload = await readJsonWithSchema(request, createEducationVideoPayloadSchema)
+  if (!parsedPayload.ok) return parsedPayload.response
+
   let payload: CreateEducationVideoPayload
   try {
-    payload = (await request.json()) as CreateEducationVideoPayload
+    payload = parsedPayload.data
     assertNoServerControlledFields(payload)
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "video_payload_invalid"
-    return NextResponse.json({ ok: false, error: message }, { status: 400 })
+  } catch {
+    return NextResponse.json({ ok: false, error: "server_controlled_fields_present" }, { status: 400 })
   }
 
   let insertPayload: ReturnType<typeof buildInsertPayload>

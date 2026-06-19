@@ -120,7 +120,7 @@ const levelComments: ClinicalKnowledgeChunk[] = [
     domain: "sensory",
     purpose: "level_comment",
     level: "watch_range",
-    text: "Duyusal izlem aralığı, çocuğun her ortamda değil; kalabalık, yeni mekan, beklenmeyen ses, temas/giyim veya yoğun hareket koşullarında daha belirgin zorlanabileceğini ifade eder.",
+    text: "Bu alandaki bulgu, çocuğun her ortamda aynı düzeyde zorlanmadığını; kalabalık, yeni mekan, beklenmeyen ses, temas/giyim veya yoğun hareket koşullarında zorlanmanın daha belirgin olabileceğini ifade eder.",
     useIn: ["domain_comment", "anamnesis_fit"],
   },
   {
@@ -144,7 +144,7 @@ const levelComments: ClinicalKnowledgeChunk[] = [
     domain: "emotional",
     purpose: "level_comment",
     level: "watch_range",
-    text: "Duygusal izlem aralığı, geçiş, engellenme, belirsizlik, ayrılma veya yüksek uyaranlı bağlamlarda toparlanmanın değişkenleşebileceği anlamına gelir.",
+    text: "Bu alandaki bulgu, geçiş, engellenme, belirsizlik, ayrılma veya yüksek uyaranlı bağlamlarda toparlanmanın daha değişken olabileceğini gösterir.",
     useIn: ["domain_comment", "anamnesis_fit"],
   },
   {
@@ -168,7 +168,7 @@ const levelComments: ClinicalKnowledgeChunk[] = [
     domain: "cognitive",
     purpose: "level_comment",
     level: "watch_range",
-    text: "Bilişsel izlem aralığı, düşük talepli veya yapılandırılmış bağlamlarda kapasitenin daha iyi görünebileceğini; sözel yük ve görev karmaşıklığı arttığında kırılganlığın belirginleşebileceğini anlatır.",
+    text: "Bu alandaki bulgu, düşük talepli veya yapılandırılmış bağlamlarda kapasitenin daha iyi görünebileceğini; sözel talep ve görev karmaşıklığı arttığında zorlanmanın belirginleşebileceğini anlatır.",
     useIn: ["domain_comment", "anamnesis_fit"],
   },
   {
@@ -192,7 +192,7 @@ const levelComments: ClinicalKnowledgeChunk[] = [
     domain: "executive",
     purpose: "level_comment",
     level: "watch_range",
-    text: "Yürütücü izlem aralığı, yapılandırma ve dış düzenleme olduğunda performansın toparlanabildiğini; geçiş, bekleme, çok basamaklı görev veya belirsizlikte zorlanmanın belirginleşebildiğini anlatır.",
+    text: "Bu alandaki bulgu, yapılandırma olduğunda performansın toparlanabildiğini; geçiş, bekleme, çok basamaklı görev veya belirsizlikte zorlanmanın belirginleşebildiğini anlatır.",
     useIn: ["domain_comment", "anamnesis_fit"],
   },
   {
@@ -216,7 +216,7 @@ const levelComments: ClinicalKnowledgeChunk[] = [
     domain: "interoception",
     purpose: "level_comment",
     level: "watch_range",
-    text: "İnterosepsiyon izlem aralığı, açlık, susuzluk, tuvalet, ağrı veya yorgunluk sinyallerinin bazı bağlamlarda gecikmeli fark edilebileceğini ve toparlanmayı etkileyebileceğini anlatır.",
+    text: "Bu alandaki bulgu, açlık, susuzluk, tuvalet, ağrı veya yorgunluk sinyallerinin bazı bağlamlarda gecikmeli fark edilebileceğini ve toparlanmayı etkileyebileceğini anlatır.",
     useIn: ["domain_comment", "anamnesis_fit"],
   },
   {

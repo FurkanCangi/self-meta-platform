@@ -1,4 +1,7 @@
 import type { ExternalTestCategory } from "./externalTestRegistry"
+import type { ClinicalReasoningResult } from "./clinicalReasoning"
+import type { DifferentialFormulation } from "./clinicalDifferentialFormulation"
+import type { CompiledClinicalNarrative } from "./clinicalNarrativeCompiler"
 import type { ReportAuditTrail, ReportTrace, ReportVersionMeta } from "./reportTrace"
 import type { DomainResult } from "./reportEngine"
 
@@ -29,6 +32,16 @@ export type ClinicalEvidenceMap = {
   dataLimitations: string[]
   confidenceLevel: "yüksek" | "orta" | "sınırlı"
   confidenceRationale: string
+  evidenceGraphSummary?: string
+  counterEvidenceLines?: string[]
+  preservedCapacityLines?: string[]
+  contextMatrix?: ClinicalReasoningResult["contextMatrix"]
+  confidenceSubscores?: ClinicalReasoningResult["confidenceSubscores"]
+  calibrationNotes?: string[]
+  mechanismScoreBreakdown?: ClinicalReasoningResult["mechanismScoreBreakdown"]
+  evidenceAtoms?: ClinicalReasoningResult["atoms"]
+  differentialFormulation?: DifferentialFormulation | null
+  compiledNarrative?: CompiledClinicalNarrative
 }
 
 export type ClinicalAnalysis = {

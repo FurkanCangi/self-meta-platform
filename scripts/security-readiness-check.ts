@@ -117,6 +117,43 @@ for (const sqlFile of [
   if (!exists(sqlFile)) add("missing SQL migration file", sqlFile)
 }
 
+if (!exists("CLAUDE.md")) {
+  add("missing persistent security rules", "CLAUDE.md")
+} else {
+  const securityRules = read("CLAUDE.md")
+  for (const requiredRule of [
+    "Zod schema/normalizer",
+    "rate limit",
+    "Supabase Auth",
+    "Production CORS",
+    "Güvenlik header",
+    "Token/output limiti",
+  ]) {
+    if (!securityRules.includes(requiredRule)) {
+      add("persistent security rule missing", requiredRule)
+    }
+  }
+}
+
+const nextConfig = read("next.config.ts")
+if (!nextConfig.includes("poweredByHeader: false")) {
+  add("x-powered-by header not disabled", "next.config.ts")
+}
+for (const headerName of [
+  "Content-Security-Policy",
+  "Strict-Transport-Security",
+  "X-Frame-Options",
+  "X-Content-Type-Options",
+  "Referrer-Policy",
+]) {
+  if (!nextConfig.includes(headerName)) {
+    add("security header missing", headerName)
+  }
+}
+if (/Access-Control-Allow-Origin["']?\s*[:,]\s*["']\*/.test(nextConfig)) {
+  add("wildcard CORS in next config", "next.config.ts")
+}
+
 const serviceRoleFiles = textFiles.filter(
   (file) => /\.(ts|tsx|js|jsx)$/i.test(file) && read(file).includes("SUPABASE_SERVICE_ROLE_KEY")
 )
@@ -134,12 +171,54 @@ const mutatingRoutes = listFiles("src/app/api", (file) => /route\.ts$/.test(file
   return /export\s+async\s+function\s+(POST|PUT|PATCH|DELETE)\b/.test(content)
 })
 
+const apiRoutes = listFiles("src/app/api", (file) => /route\.ts$/.test(file))
+for (const file of apiRoutes) {
+  const content = read(file)
+  if (!content.includes("checkRateLimit") && !content.includes("rateLimitResponse")) {
+    add("API route missing rate limit", file)
+  }
+}
+
 for (const file of mutatingRoutes) {
   const content = read(file)
   if (file === "src/app/api/billing/webhook/route.ts") continue
   if (!content.includes("requireTrustedMutation")) {
     add("mutating route missing trusted mutation guard", file)
   }
+}
+
+for (const file of apiRoutes) {
+  const content = read(file)
+  const parsesJsonBody =
+    content.includes("request.json()") ||
+    content.includes("req.json()") ||
+    content.includes("JSON.parse(payload)")
+  if (!parsesJsonBody) continue
+
+  const hasSchema =
+    content.includes("readJsonWithSchema") ||
+    content.includes("parseJsonTextWithSchema") ||
+    file === "src/app/api/billing/webhook/route.ts"
+  if (!hasSchema) {
+    add("JSON body route missing schema validation", file)
+  }
+}
+
+const entitlements = read("src/lib/security/entitlements.ts")
+if (!entitlements.includes("billingWebhookPayloadSchema")) {
+  add("billing webhook missing Zod payload schema", "src/lib/security/entitlements.ts")
+}
+
+const aiReportRoute = read("src/app/api/ai-report/route.ts")
+if (!aiReportRoute.includes("aiReportPayloadSchema")) {
+  add("AI report route missing payload schema", "src/app/api/ai-report/route.ts")
+}
+if (!aiReportRoute.includes("consumeReportCredit")) {
+  add("AI report route missing user budget check", "src/app/api/ai-report/route.ts")
+}
+const aiReportService = read("src/lib/dna/aiReportService.ts")
+if (!/max_output_tokens:\s*\d+/.test(aiReportService)) {
+  add("legacy AI path missing output token limit", "src/lib/dna/aiReportService.ts")
 }
 
 const audit = spawnSync("npm", ["audit", "--omit=dev", "--audit-level=high"], {

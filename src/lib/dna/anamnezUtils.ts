@@ -560,7 +560,7 @@ export function summarizeAnamnezThemes(record: AnamnezRecord): string[] {
 
   if (themeSignals.sensory) {
     lines.push(
-      "Anamnezde çevresel veya dokunsal uyaran altında belirgin duyusal hassasiyet/arayış örüntüsü tarif edilmektedir."
+      "Anamnezde çevresel veya dokunsal uyaranlara verilen yanıtta belirgin duyusal reaktivite örüntüsü tarif edilmektedir."
     );
   }
 
@@ -584,13 +584,13 @@ export function summarizeAnamnezThemes(record: AnamnezRecord): string[] {
 
   if (themeSignals.strengths) {
     lines.push(
-      "Anamnezde korunmuş veya destekleyici olabilecek güçlü yönler tarif edilmektedir; bunlar test sonuçlarıyla birlikte yorumlandığında profile denge kazandırabilir."
+      "Korunmuş veya destekleyici alanlara ilişkin bilgiler, yeterli ayrıntı içerdiğinde profilin her bağlama genellenmemesi için dengeleyici veri sağlar."
     );
   }
 
   if (themeSignals.referralOrConcerns) {
     lines.push(
-      "Başvuru nedeni ve birincil ebeveyn endişeleri, testte öne çıkan alanların günlük yaşam karşılığını anlamlandırmak açısından yüksek değerli klinik veri sunmaktadır."
+      "Başvuru nedeni ve aile endişeleri, yeterli ayrıntı içerdiği ölçüde testte öne çıkan alanların günlük yaşam karşılığını anlamlandırmaya katkı sağlar."
     );
   }
 

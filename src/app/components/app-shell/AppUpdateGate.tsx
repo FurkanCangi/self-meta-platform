@@ -25,6 +25,30 @@ type RuntimeConfig = {
   };
 };
 
+const RUNTIME_CONFIG_CACHE_KEY = "dna_app_runtime_config_v1";
+const RUNTIME_CONFIG_CACHE_MS = 60_000;
+
+function readCachedRuntimeConfig(): RuntimeConfig | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const cached = JSON.parse(window.sessionStorage.getItem(RUNTIME_CONFIG_CACHE_KEY) || "null");
+    if (!cached?.savedAt || Date.now() - Number(cached.savedAt) > RUNTIME_CONFIG_CACHE_MS) return null;
+    return cached.value || null;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedRuntimeConfig(value: RuntimeConfig) {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.setItem(
+      RUNTIME_CONFIG_CACHE_KEY,
+      JSON.stringify({ savedAt: Date.now(), value })
+    );
+  } catch {}
+}
+
 function versionParts(value?: string | null) {
   return String(value || "0.0.0")
     .split(".")
@@ -89,13 +113,18 @@ export default function AppUpdateGate({ children }: { children: React.ReactNode 
 
   useEffect(() => {
     let active = true;
+    const cached = readCachedRuntimeConfig();
+    if (cached) setConfig(cached);
 
     async function loadConfig() {
-      if (active) setLoading(true);
+      if (active && !cached) setLoading(true);
       try {
         const response = await fetch("/api/app/runtime-config", { cache: "no-store" });
         const json = (await response.json()) as RuntimeConfig;
-        if (active && response.ok && json.ok) setConfig(json);
+        if (active && response.ok && json.ok) {
+          setConfig(json);
+          writeCachedRuntimeConfig(json);
+        }
       } finally {
         if (active) setLoading(false);
       }

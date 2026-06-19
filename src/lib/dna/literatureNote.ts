@@ -75,7 +75,7 @@ export const VERIFIED_LITERATURE_SOURCES: Record<string, LiteratureSource> = {
     url: "https://doi.org/10.1007/s10803-008-0593-3",
     evidenceDomain: "sensory_modulation_autism",
     claimBoundary:
-      "Duyusal modülasyon belirtilerinin otizm bağlamında heterojen ve sık görülebileceğini destekler; duyusal tanı veya otizm tanısı üretmez.",
+      "Duyusal regülasyon sorunlarının nörogelişimsel profillerde heterojen ve sık görülebileceğini destekler; duyusal tanı veya otizm tanısı üretmez.",
     verifiedAt: "2026-06-16",
     catalogArea: "Duyusal Regülasyon",
     catalogTier: "core",
@@ -381,7 +381,7 @@ function buildRegulationParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
     text: [
     `Erken çocukluk literatürü, self-regülasyonu tek bir belirti kümesi olarak değil; bedensel uyarılma, dikkat, duygu düzenleme ve davranış kontrolünün birlikte örgütlendiği gelişimsel bir yapı olarak ele alır ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`,
     `Bu nedenle mevcut profil, yalnız tek tek alan skorlarıyla değil, ${levelText} çok boyutlu bir düzenleme örüntüsü olarak yorumlanmalıdır.`,
-    `Aynı çerçeve, okul öncesi dönemde öz-düzenlemenin yetişkin desteği, günlük yapı ve ko-regülasyon süreçlerinden bağımsız düşünülemeyeceğini vurgular ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`,
+    `Aynı çerçeve, okul öncesi dönemde self-regülasyonun yetişkin desteği, günlük yapı ve ko-regülasyon süreçlerinden bağımsız düşünülemeyeceğini vurgular ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`,
     `Dikkat sürdürme, davranışı durdurma, çalışma belleği ve esnek geçiş gibi süreçlerin ortak düzenleyici omurga içinde yer alması da yürütücü işlev literatürüyle uyumludur ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}.`,
   ].join(" "),
     sourceIds: [
@@ -446,7 +446,7 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
   const sourceIds: string[] = []
 
   const sensorySentence = supportsSensoryContext
-    ? `Bu vakada duyusal yük ve çevresel tetikleyicilerin görünür olması, erken çocuklukta duyusal aşırı yanıtlılığın davranışsal ve duygusal zorlanmalarla ilişkili olabileceğini gösteren bulgularla örtüşmektedir ${VERIFIED_LITERATURE_SOURCES.CARPENTER_ET_AL_2019.inlineCitation}; duyusal modülasyon belirtilerinin özellikle nörogelişimsel profillerde heterojen seyredebileceği de vurgulanmaktadır ${VERIFIED_LITERATURE_SOURCES.BEN_SASSON_ET_AL_2009.inlineCitation}.`
+    ? `Bu vakada uyaran yoğunluğu ve çevresel tetikleyicilerin görünür olması, erken çocuklukta duyusal aşırı yanıtlılığın davranışsal ve duygusal zorlanmalarla ilişkili olabileceğini gösteren bulgularla örtüşmektedir ${VERIFIED_LITERATURE_SOURCES.CARPENTER_ET_AL_2019.inlineCitation}; duyusal regülasyon sorunlarının özellikle nörogelişimsel profillerde heterojen seyredebileceği de vurgulanmaktadır ${VERIFIED_LITERATURE_SOURCES.BEN_SASSON_ET_AL_2009.inlineCitation}.`
     : ""
 
   const emotionSentence = hasAnyDomain(weakDomains, ["Duygusal Regülasyon"]) || (!balancedProfile && hasAnyDomain(matchedDomains, ["Duygusal Regülasyon"]))
@@ -454,7 +454,7 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
     : ""
 
   const physiologicalSentence = supportsPhysiologicalContext
-    ? `Fizyolojik regülasyon ve toparlanma hattı öne çıktığında, okul öncesi dönemde otonom reaktivite ve toparlanmanın duygu düzenleme süreçleriyle ilişkili olabileceğini gösteren bulgular klinik yoruma arka plan sağlar ${VERIFIED_LITERATURE_SOURCES.KAHLE_ET_AL_2018.inlineCitation}; vagal kontrol ile çocukların adaptif işlevleri arasındaki ilişkiye dair meta-analitik kanıt da bu beden-temelli okumanın sınırlarını destekler ${VERIFIED_LITERATURE_SOURCES.GRAZIANO_DEREFINKO_2013.inlineCitation}.`
+    ? `Fizyolojik regülasyon ve toparlanma alanı öne çıktığında, okul öncesi dönemde otonom reaktivite ve toparlanmanın duygu düzenleme süreçleriyle ilişkili olabileceğini gösteren bulgular klinik yoruma arka plan sağlar ${VERIFIED_LITERATURE_SOURCES.KAHLE_ET_AL_2018.inlineCitation}; vagal kontrol ile çocukların adaptif işlevleri arasındaki ilişkiye dair meta-analitik kanıt da bu beden-temelli okumanın sınırlarını destekler ${VERIFIED_LITERATURE_SOURCES.GRAZIANO_DEREFINKO_2013.inlineCitation}.`
     : ""
 
   const interoSentence = hasAnyDomain(weakDomains, ["İnterosepsiyon", "Fizyolojik Regülasyon"]) ||
@@ -468,7 +468,7 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
   const adaptiveSentence = supportsAdaptiveContext
     ? balancedProfile
       ? `${joinTestNames(adaptiveTestNames) || "Uyumsal davranış ve günlük yaşam testleri"} gibi kaynaklardan gelen işlevsel veri, korunmuş ya da sınırda hassasiyet gösteren günlük yaşam akışının hangi bağlamlarda desteklendiğini ve işlevselliğin nasıl sürdürüldüğünü görünür kılar ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
-      : `${joinTestNames(adaptiveTestNames) || "Uyumsal davranış ve günlük yaşam testleri"} gibi kaynaklardan gelen işlevsel veri, regülasyon yükünün yalnız kapasite düzeyinde değil öz bakım, rutinleri başlatma, sorumluluk alma ve günlük akışta sürdürülebilirlik düzeyinde nasıl karşılık bulduğunu görünür kılar; bu tür verilerin klinik yoruma katılması gelişimsel öz-düzenleme çerçevesiyle uyumludur ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
+      : `${joinTestNames(adaptiveTestNames) || "Uyumsal davranış ve günlük yaşam testleri"} gibi kaynaklardan gelen işlevsel veri, self-regülasyon probleminin yalnız kapasite düzeyinde değil öz bakım, rutinleri başlatma, sorumluluk alma ve günlük akışta sürdürülebilirlik düzeyinde nasıl karşılık bulduğunu görünür kılar; bu tür verilerin klinik yoruma katılması gelişimsel self-regülasyon çerçevesiyle uyumludur ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
     : ""
 
   const socialCommunicationSentence = supportsSocialCommunicationContext
@@ -476,7 +476,7 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
     : ""
 
   const languageSentence = supportsLanguageContext
-    ? `${joinTestNames(languageTestNames) || "Dil testleri"} ile görünür hale gelen alıcı-ifade edici dil yükü, sözel talep ve yönerge karmaşıklığı arttığında anlama, zihinsel olarak tutma ve görevi sürdürme süreçlerinin birlikte zorlanabileceğini düşündürür; bu durum regülasyonun talep ve bağlam düzeyinde ele alınması gerektiğini vurgulayan gelişimsel çerçeveyle uyumludur ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
+    ? `${joinTestNames(languageTestNames) || "Dil testleri"} ile görünür hale gelen alıcı-ifade edici dil zorluğu, sözel talep ve yönerge karmaşıklığı arttığında anlama, zihinsel olarak tutma ve görevi sürdürme süreçlerinin birlikte zorlanabileceğini düşündürür; bu durum regülasyonun talep ve bağlam düzeyinde ele alındığı gelişimsel çerçeveyle uyumludur ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
     : ""
 
   const cognitiveSentence = supportsCognitiveContext && !supportsLanguageContext
@@ -484,11 +484,11 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
     : ""
 
   const executiveSentence = supportsExecutiveContext
-    ? `Yürütücü işlev ekseni belirginleştiğinde, inhibisyon, çalışma belleği, esneklik ve hedefe yönelik davranışın birlikte örgütlenen gelişimsel beceriler olarak ele alınması gerekir ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}; okul öncesi yürütücü işlev literatürü de bu alanın tek bir davranış belirtisine indirgenmemesi gerektiğini destekler ${VERIFIED_LITERATURE_SOURCES.GARON_ET_AL_2008.inlineCitation}.`
+    ? `Yürütücü işlev ekseni belirginleştiğinde inhibisyon, çalışma belleği, esneklik ve hedefe yönelik davranış birlikte örgütlenen gelişimsel beceriler olarak ele alınır ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}; okul öncesi yürütücü işlev literatürü de bu alanın tek bir davranış belirtisine indirgenmemesini destekler ${VERIFIED_LITERATURE_SOURCES.GARON_ET_AL_2008.inlineCitation}.`
     : ""
 
   const motorPraxisSentence = supportsMotorPraxisContext
-    ? `${joinTestNames(praxisTestNames) || "Praksi ve motor planlama testleri"} ile ortaya konan praksi, sekanslama ve beden organizasyonu bulguları, motor beceriler ile yürütücü işlev süreçlerinin birlikte ele alınması gerektiğini gösteren derlemelerle uyumludur; bu tür bulgular davranış organizasyonu, görev sürdürme ve katılım örüntüsüyle birlikte yorumlanmalıdır ${VERIFIED_LITERATURE_SOURCES.FOGEL_ET_AL_2023.inlineCitation}.`
+    ? `${joinTestNames(praxisTestNames) || "Motor planlama testleri"} ile ortaya konan praksi, sekanslama ve beden organizasyonu bulguları, motor beceriler ile yürütücü işlev süreçlerinin birlikte ele alındığı derlemelerle uyumludur; bu tür bulgular davranış organizasyonu, görev sürdürme ve katılım örüntüsüyle birlikte anlam kazanır ${VERIFIED_LITERATURE_SOURCES.FOGEL_ET_AL_2023.inlineCitation}.`
     : ""
 
   const balancedNeutralSentence =
@@ -503,7 +503,7 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
     !cognitiveSentence &&
     !executiveSentence &&
     !motorPraxisSentence
-      ? `Alanların genel olarak tipik aralıkta kalması, dikkat, duygu düzenleme ve davranış kontrolü süreçlerinin yaşa uygun sınırlar içinde birlikte işleyebildiğini düşündürür; bu görünüm, öz-düzenlemenin koruyucu gelişimsel yönlerini vurgulayan yazınla uyumludur ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}.`
+      ? `Alanların genel olarak tipik aralıkta kalması, dikkat, duygu düzenleme ve davranış kontrolü süreçlerinin yaşa uygun sınırlar içinde birlikte işleyebildiğini düşündürür; bu görünüm, self-regülasyonun koruyucu gelişimsel yönlerini vurgulayan yazınla uyumludur ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}.`
       : ""
 
   if (sensorySentence) sourceIds.push(VERIFIED_LITERATURE_SOURCES.CARPENTER_ET_AL_2019.id, VERIFIED_LITERATURE_SOURCES.BEN_SASSON_ET_AL_2009.id)
@@ -549,25 +549,27 @@ function buildIntegrationParagraph(analysis: ClinicalAnalysis): LiteratureBlock 
   const primaryExternalTestCategory = analysis.primaryExternalTestCategory || null
   const contrastSentence =
     analysis.strongDomains && analysis.strongDomains.length > 0
-      ? `Ayrıca korunmuş alanların açıkça belirtilmesi önemlidir; çünkü erken öz-düzenleme yazınında göreli güçlü sistemlerin günlük işlevsellik üzerinde dengeleyici rol oynayabileceği vurgulanır ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
+      ? `Ayrıca korunmuş alanların açıkça belirtilmesi önemlidir; çünkü erken self-regülasyon yazınında göreli güçlü sistemlerin günlük işlevsellik üzerinde dengeleyici rol oynayabileceği vurgulanır ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
       : `Korunmuş alanların sınırlı olduğu örüntülerde bile, profilin bütününü bağlam içinde okumak ve tek bir skor üzerinden aşırı yorum yapmamak gerekir ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
 
   const caseSentence = balancedProfile
-    ? `Korunmuş profillerde dikkat, davranış ve beden temelli düzenleme süreçlerinin yaşa uygun sınırlar içinde birlikte işleyebilmesi, erken çocuklukta öz-düzenlemenin koruyucu yönlerini görünür kılan gelişimsel çerçeveyle uyumludur ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}.`
+    ? `Korunmuş profillerde dikkat, davranış ve beden temelli düzenleme süreçlerinin yaşa uygun sınırlar içinde birlikte işleyebilmesi, erken çocuklukta self-regülasyonun koruyucu yönlerini görünür kılan gelişimsel çerçeveyle uyumludur ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}.`
     : primaryExternalTestCategory === "adaptive_daily_living"
-    ? `Uyumsal işlev verileriyle birlikte okunan profillerde, düzenleyici yükün genel kapasiteden çok bu kapasitenin günlük yaşam, öz bakım ve sorumluluk akışına ne ölçüde taşınabildiği üzerinden yorumlanması daha isabetli görünmektedir ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`
+    ? `Uyumsal işlev verileriyle birlikte okunan profillerde, self-regülasyon zorluğu genel kapasiteden çok bu kapasitenin günlük yaşam, öz bakım ve sorumluluk akışına ne ölçüde taşınabildiği üzerinden anlam kazanır ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`
     : primaryExternalTestCategory === "social_pragmatic"
-    ? `Sosyal-pragmatik verilerle desteklenen profillerde, düzenleyici yük yalnız bireysel performans değil sosyal bağlamı izleme, karşılıklılığı sürdürme ve bağlama uygun yanıt üretme düzleminde de ele alınmalıdır ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`
+    ? `Sosyal-pragmatik verilerle desteklenen profillerde self-regülasyon zorluğu yalnız bireysel performansta değil; sosyal bağlamı izleme, karşılıklılığı sürdürme ve bağlama uygun yanıt üretme düzleminde de görünür ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`
     : primaryExternalTestCategory === "language_communication"
-    ? `Dil testleriyle desteklenen profillerde, düzenleyici yükün sözel talep arttığında nasıl görünür hale geldiğini ele almak; anlama, görevi zihinde tutma ve davranışı sürdürme süreçleri arasındaki ilişkiyi daha doğru okumayı sağlar ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}.`
+    ? `Dil testleriyle desteklenen profillerde self-regülasyon zorluğu sözel talep arttığında görünür hale gelir; anlama, görevi zihinde tutma ve davranışı sürdürme süreçleri birlikte anlam kazanır ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}.`
     : hasAnyDomain(analysis.weakDomains, ["Bilişsel Regülasyon", "Yürütücü İşlev"])
     ? `Bilişsel ve yürütücü alanlara yayılan kırılganlıkların birlikte ele alınması, dikkat, çalışma belleği, inhibisyon ve esnekliğin aynı düzenleyici sistem içinde işlendiğini gösteren yürütücü işlev literatürüyle desteklenir ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}.`
-    : `Skor örüntüsünün tek bir alanda görünse bile diğer düzenleyici sistemlerle birlikte yorumlanması, erken çocuklukta öz-düzenleme süreçlerinin parçalı değil etkileşimli işlediğini gösteren yazınla uyumludur ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}.`
+    : `Skor örüntüsünün tek bir alanda görünse bile diğer düzenleyici sistemlerle birlikte yorumlanması, erken çocuklukta self-regülasyon süreçlerinin parçalı değil etkileşimli işlediğini gösteren yazınla uyumludur ${VERIFIED_LITERATURE_SOURCES.DIAMOND_2013.inlineCitation}.`
 
   const observationSentence =
-    therapistInsights.length > 0 || externalClinicalFindings.length > 0
-      ? `Bakımveren anlatısına terapist gözlemi ve yaşa uygun ek test bulgularının eklenmesi, profilin bağlamsal anlamını güçlendirir ve klinik hipotezin yalnız bir kaynağa dayanmamasını sağlar ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`
-      : `Bakımveren gözlemlerinin tek başına değil, klinik bağlamla birlikte okunması öz-düzenleme yorumunu daha güvenilir hale getirir ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`
+    primaryExternalTestCategory === "motor_praxis"
+      ? `Motor planlama ve beden organizasyonu bulguları, yürütücü organizasyon ve görev sürdürme süreçleriyle birlikte ele alındığında daha anlamlıdır ${VERIFIED_LITERATURE_SOURCES.FOGEL_ET_AL_2023.inlineCitation}.`
+      : therapistInsights.length > 0 || externalClinicalFindings.length > 0
+      ? `Vaka içinde gözlenen bağlamsal değişkenlik, self-regülasyonun çocuk, görev ve çevre koşullarıyla birlikte değerlendirilmesi gerektiğini gösteren gelişimsel çerçeveyle uyumludur ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`
+      : `Bakımveren gözlemleri, klinik bağlamla birlikte okunduğunda self-regülasyon profilinin günlük yaşamdaki karşılığını daha görünür kılar ${VERIFIED_LITERATURE_SOURCES.ROSANBALM_MURRAY_2017.inlineCitation}.`
 
   return {
     text: [
@@ -584,18 +586,7 @@ function buildIntegrationParagraph(analysis: ClinicalAnalysis): LiteratureBlock 
 }
 
 function buildLiteratureBoundaryParagraph(sourceIds: string[]): string {
-  const boundaries = uniqueNonEmpty(
-    sourceIds
-      .map((sourceId) => VERIFIED_LITERATURE_SOURCES[sourceId]?.claimBoundary)
-      .filter(Boolean)
-      .slice(0, 4)
-  )
-
-  const boundaryText = boundaries.length
-    ? `Bu bölümde kullanılan kaynakların yorum sınırı şudur: ${boundaries.join(" ")}`
-    : "Bu bölümde kullanılan kaynaklar yalnız klinik yorum çerçevesini destekler."
-
-  return `${boundaryText} Literatür desteği, vaka verisini açıklayıcı çerçeveye yerleştirir; tanı, nedensellik veya müdahale reçetesi üretmez.`
+  return "Bu kaynaklar, vaka bulgularını gelişimsel ve işlevsel bir çerçevede yorumlamak için kullanılmıştır. Literatür desteği tek başına tanısal sonuç, nedensellik açıklaması veya doğrudan klinik karar anlamına gelmez."
 }
 
 export function buildLiteratureAlignedSection(
@@ -611,7 +602,7 @@ export function buildLiteratureAlignedSection(
   const paragraph3 = buildIntegrationParagraph(analysis)
   const bodyParagraphs =
     analysis.primaryExternalTestCategory === "motor_praxis"
-      ? [paragraph2.text, paragraph1.text, paragraph3.text]
+      ? [paragraph2.text, paragraph3.text]
       : [paragraph1.text, paragraph2.text, paragraph3.text]
 
   const sourceIds =

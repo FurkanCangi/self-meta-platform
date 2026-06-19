@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { checkRateLimit, getClientRateLimitKey, rateLimitResponse } from "@/lib/security/rateLimit"
 import {
   applyBillingWebhookEvent,
   parseBillingWebhookPayload,
@@ -7,6 +8,13 @@ import {
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
 export async function POST(request: Request) {
+  const rateLimit = await checkRateLimit({
+    key: getClientRateLimitKey(request, "billing-webhook"),
+    limit: 120,
+    windowMs: 10 * 60 * 1000,
+  })
+  if (!rateLimit.ok) return rateLimitResponse(rateLimit.resetAt)
+
   const rawBody = await request.text()
   const signatureHeader =
     request.headers.get("x-dna-signature") ||

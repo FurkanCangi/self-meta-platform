@@ -31,8 +31,10 @@ async function main() {
   for (const fixture of FIXTURES) {
     const fixturePath = path.resolve(process.cwd(), fixture)
     const hashes: string[] = []
+    const decisionTraceHashes: string[] = []
     for (let index = 0; index < 10; index += 1) {
       const result = await runSingleFixture(fixturePath, true)
+      decisionTraceHashes.push(result.auditTrail?.decisionTraceHash || "NO_DECISION_TRACE_HASH")
       hashes.push(
         hash({
           finalText: result.finalText,
@@ -44,8 +46,12 @@ async function main() {
       )
     }
     const unique = Array.from(new Set(hashes))
+    const uniqueDecisionTrace = Array.from(new Set(decisionTraceHashes))
     if (unique.length !== 1) {
       failures.push(`${fixture}: 10 koşuda ${unique.length} farklı hash üretildi.`)
+    }
+    if (uniqueDecisionTrace.length !== 1 || uniqueDecisionTrace[0] === "NO_DECISION_TRACE_HASH") {
+      failures.push(`${fixture}: decisionTraceHash stabil değil veya eksik (${uniqueDecisionTrace.join(", ")}).`)
     }
     console.log(`${path.basename(fixture)}: ${unique[0] || "NO_HASH"}`)
   }

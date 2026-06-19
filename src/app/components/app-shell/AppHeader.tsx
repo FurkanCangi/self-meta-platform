@@ -1,27 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { AiOutlineLogout, AiOutlineMoon, AiOutlineSun, AiOutlineUser } from "react-icons/ai";
-import BrandLogo from "../BrandLogo";
 import { useTheme } from "../theme-provider";
 import { supabase } from "@/lib/supabase/client";
 
-function titleForPath(pathname: string) {
-  if (pathname.startsWith("/clients/new")) return "Yeni danışan";
-  if (pathname.startsWith("/clients")) return "Danışanlar";
-  if (pathname.startsWith("/assessments")) return "Değerlendirme";
-  if (pathname.startsWith("/reports")) return "Raporlar";
-  if (pathname.startsWith("/education")) return "Eğitimler";
-  if (pathname.startsWith("/video-observation")) return "Video gözlem";
-  if (pathname.startsWith("/report-packages")) return "Paketler";
-  if (pathname.startsWith("/profile-setting") || pathname.startsWith("/settings")) return "Ayarlar";
-  if (pathname.startsWith("/profile")) return "Profil";
-  return "Klinik çalışma alanı";
-}
-
 export default function AppHeader() {
-  const pathname = usePathname() || "";
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
 
@@ -40,15 +26,18 @@ export default function AppHeader() {
     <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/92 px-4 pb-3 pt-[max(env(safe-area-inset-top),12px)] shadow-[0_12px_34px_rgba(7,27,58,0.06)] backdrop-blur-xl">
       <div className="flex items-center justify-between gap-3">
         <Link href="/starter?surface=app" className="flex min-w-0 items-center gap-3" aria-label="Ana ekrana git">
-          <span className="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-2xl border border-blue-100 bg-gradient-to-br from-cyan-50 via-blue-50 to-violet-50">
-            <BrandLogo variant="mark" />
-          </span>
           <span className="min-w-0">
-            <span className="block truncate text-[11px] font-black uppercase tracking-[0.16em] text-blue-700">
-              DNA Intelligence
-            </span>
-            <span className="mt-0.5 block truncate text-base font-black text-[#071b3a]">
-              {titleForPath(pathname)}
+            <span className="block h-[64px] w-[224px] overflow-visible">
+              <Image
+                src="/images/brand/dna-logo-dashboard.png"
+                alt="DNA Intelligence Dynamic Neuro-Regulation Approach"
+                width={1527}
+                height={708}
+                priority
+                unoptimized
+                className="h-full w-full object-contain object-left"
+                sizes="224px"
+              />
             </span>
           </span>
         </Link>

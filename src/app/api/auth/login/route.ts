@@ -2,6 +2,8 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { setAppSessionCookie } from "@/lib/security/appSession"
+import { requireTrustedMutation } from "@/lib/security/apiGuards"
+import { checkRateLimit, getClientRateLimitKey } from "@/lib/security/rateLimit"
 
 type CookieToSet = {
   name: string
@@ -64,6 +66,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: "missing" }), 303)
   }
 
+  const originError = await requireTrustedMutation(request)
+  if (originError) {
+    return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: "origin" }), 303)
+  }
+
+  const rateLimit = await checkRateLimit({
+    key: getClientRateLimitKey(request, "auth-login"),
+    limit: 8,
+    windowMs: 10 * 60 * 1000,
+  })
+  if (!rateLimit.ok) {
+    return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: "rate_limited" }), 303)
+  }
+
   const authCookies: CookieToSet[] = []
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -82,10 +98,20 @@ export async function POST(request: NextRequest) {
     }
   )
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  let signInResult: Awaited<ReturnType<typeof supabase.auth.signInWithPassword>>
+  try {
+    signInResult = await supabase.auth.signInWithPassword({ email, password })
+  } catch {
+    return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: "network" }), 303)
+  }
+
+  const { data, error } = signInResult
   const userId = data.user?.id
   const accessToken = data.session?.access_token
   if (error || !userId || !accessToken) {
+    if (String(error?.message || "").toLowerCase().includes("email not confirmed")) {
+      return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: "email_not_confirmed" }), 303)
+    }
     return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: "invalid" }), 303)
   }
 

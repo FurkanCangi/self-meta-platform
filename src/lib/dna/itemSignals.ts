@@ -141,30 +141,30 @@ const CLUSTER_NARRATIVES: Record<MicroEvidenceCluster, ClusterNarrative> = {
     formulationLine:
       "Toparlanma süreci çevresel yapılandırma ve yetişkin desteğine daha fazla bağımlı hale gelebilmektedir.",
     alignedLine:
-      "Bakımveren veya terapist ko-regülasyon ihtiyacını tarif ediyorsa bu örüntü toparlanma eksenindeki klinik yükü doğrular.",
+      "Bakımveren veya terapist ko-regülasyon ihtiyacını tarif ediyorsa bu örüntü toparlanma eksenindeki klinik zorlanmayı destekler.",
     contextPattern: /ko-regülasyon|ko regulasyon|yetişkin deste|yetiskin deste|sakinleş|sakinles|toparlan|destek/i,
   },
   vestibular_visual_reactivity: {
     domainLine:
-      "Hızlı hareket ve vestibüler yük karşısında huzursuzluğun belirginleşmesi, duyusal reaktivitenin hareket içeren oyun ve geçiş bağlamlarında katılımı daraltabileceğini düşündürmektedir.",
+      "Hızlı hareket ve vestibüler yoğunluk karşısında huzursuzluğun belirginleşmesi, duyusal reaktivitenin hareket içeren oyun ve geçiş bağlamlarında katılımı daraltabileceğini düşündürmektedir.",
     formulationLine:
-      "Hareket içeren uyaran yükü arttığında düzenleme kapasitesi ve etkinlikte kalma süresi daralabilir.",
+      "Hareket içeren uyaran yoğunluğu arttığında düzenleme kapasitesi ve etkinlikte kalma süresi daralabilir.",
     alignedLine:
       "Hareketli ortam, sallanma, dönme veya geçişlerde huzursuzluk anlatımı varsa bu duyusal reaktivite hattı anamnezle yakınsar.",
     contextPattern: /hareket|sallan|dön|don|vestibüler|vestibuler|hızlı|hizli|geçiş|gecis/i,
   },
   visual_reactivity: {
     domainLine:
-      "Parlak ışık ve görsel yoğunluk karşısında huzursuzluğun kümelenmesi, görsel uyaran yükünün düzenleme kapasitesini daraltan bir reaktivite hattı oluşturduğunu düşündürür.",
+      "Parlak ışık ve görsel yoğunluk karşısında huzursuzluğun kümelenmesi, görsel uyaran yoğunluğunun düzenleme kapasitesini daraltan bir reaktivite hattı oluşturduğunu düşündürür.",
     formulationLine:
-      "Görsel uyaran yoğunluğu arttığında çocuğun çevresel yükü tolere etme ve görevde kalma kapasitesi zorlanabilir.",
+      "Görsel uyaran yoğunluğu arttığında çocuğun çevresel yoğunluğu tolere etme ve görevde kalma kapasitesi zorlanabilir.",
     alignedLine:
       "Anamnezde ışık, parlaklık, kalabalık veya görsel yoğunluk vurgusu varsa bu örüntü duyusal reaktivite yorumunu güçlendirir.",
     contextPattern: /ışık|isik|parlak|görsel|gorsel|kalabalık|kalabalik|yoğun ortam|yogun ortam/i,
   },
   auditory_reactivity: {
     domainLine:
-      "İşitsel uyaran yükü arttığında yalnız rahatsızlık değil, dikkat akışında kesilme ve toparlanma ihtiyacında artış da beklenebilir.",
+      "İşitsel uyaran yoğunluğu arttığında yalnız rahatsızlık değil, dikkat akışında kesilme ve toparlanma ihtiyacında artış da beklenebilir.",
     formulationLine:
       "Ses ve arka plan gürültüsü düzenleme kapasitesini daralttığında görev akışı ve duygusal toparlanma ikincil olarak etkilenebilir.",
     alignedLine:
@@ -200,7 +200,7 @@ const CLUSTER_NARRATIVES: Record<MicroEvidenceCluster, ClusterNarrative> = {
   },
   emotional_recovery: {
     domainLine:
-      "Duygusal yanıt örüntüsü, tepkinin ortaya çıkmasından çok toparlanma süresinin uzaması ve geçiş yükü altında düzenleme kapasitesinin daralması açısından klinik değer taşımaktadır.",
+      "Duygusal yanıt örüntüsü, tepkinin ortaya çıkmasından çok toparlanma süresinin uzaması ve geçişlerdeki zorlanma sırasında düzenleme kapasitesinin daralması açısından klinik değer taşımaktadır.",
     formulationLine:
       "Duygusal yükselme sonrası toparlanma uzadığında geçiş, bekleme ve yeniden göreve dönme süreçleri birlikte etkilenebilir.",
     alignedLine:
@@ -211,7 +211,7 @@ const CLUSTER_NARRATIVES: Record<MicroEvidenceCluster, ClusterNarrative> = {
     domainLine:
       "Yeni ortam, yeni kişi ve rutin değişikliklerinde huzursuzluğun artması, duygusal regülasyonun özellikle belirsizlik ve geçiş bağlamında kırılganlaştığını düşündürür.",
     formulationLine:
-      "Yenilik ve geçiş yükü arttığında duygusal toparlanma ile davranışsal uyum aynı anda zorlanabilir.",
+      "Yenilik ve geçişlerdeki zorlanma arttığında duygusal toparlanma ile davranışsal uyum aynı anda zorlanabilir.",
     alignedLine:
       "Anamnezde yeni ortam, ayrılma, geçiş veya rutin değişikliği vurgusu varsa bu duygusal düzenleme hattı klinik olarak güçlenir.",
     contextPattern: /yeni ortam|yeni kişi|yeni kisi|geçiş|gecis|ayrıl|ayril|rutin|değişiklik|degisiklik/i,
@@ -247,7 +247,7 @@ const CLUSTER_NARRATIVES: Record<MicroEvidenceCluster, ClusterNarrative> = {
     domainLine:
       "Yürütücü örüntü genel bir dikkat zayıflığından çok, başlatılan görevi sürdürme, sıra koruma ve davranışı duruma göre ayarlama yükünde yoğunlaşmaktadır.",
     formulationLine:
-      "Görev akışı kurulduktan sonra sürdürme ve yeniden göreve dönme yükü arttığında işlevsel performans dalgalanabilir.",
+      "Görev akışı kurulduktan sonra sürdürme ve yeniden göreve dönme talebi arttığında işlevsel performans dalgalanabilir.",
     alignedLine:
       "Görevden kopma, yarım bırakma, talimatı sürdürme veya yeniden dönme güçlüğü anamnezde yer alıyorsa bu yürütücü görev akışı hattı güçlenir.",
     contextPattern: /görev|gorev|tamamla|yarım|yarim|sürdür|surdur|talimat|başla|basla|geri dön|geri don/i,
@@ -263,9 +263,9 @@ const CLUSTER_NARRATIVES: Record<MicroEvidenceCluster, ClusterNarrative> = {
   },
   executive_organization: {
     domainLine:
-      "Materyal, beden ve davranış organizasyonunda zorlanmanın belirginleşmesi, yürütücü yükün yalnız masa başı dikkat değil işlevsel organizasyon düzeyinde de taşındığını düşündürür.",
+      "Materyal, beden ve davranış organizasyonunda zorlanmanın belirginleşmesi, yürütücü zorluğun yalnız masa başı dikkat değil işlevsel organizasyon düzeyinde de taşındığını düşündürür.",
     formulationLine:
-      "Organizasyon yükü arttığında bedenini, materyali ve görev adımlarını aynı anda düzenleme kapasitesi kırılganlaşabilir.",
+      "Organizasyon talebi arttığında bedenini, materyali ve görev adımlarını aynı anda düzenleme kapasitesi kırılganlaşabilir.",
     alignedLine:
       "Beden organizasyonu, materyal düzeni, motor planlama veya sıraya dayalı görev güçlüğü anlatılıyorsa bu örüntü yürütücü-organizasyon hattını güçlendirir.",
     contextPattern: /organize|organizasyon|materyal|beden|motor plan|praksi|sıral|sirala|adım|adim/i,

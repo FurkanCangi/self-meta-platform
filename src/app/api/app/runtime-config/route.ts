@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { checkRateLimit, getClientRateLimitKey, rateLimitResponse } from "@/lib/security/rateLimit"
 
 function envFlag(value?: string | null) {
   return ["1", "true", "yes", "on"].includes(String(value || "").trim().toLowerCase())
@@ -9,7 +10,14 @@ function envText(key: string, fallback: string | null = null) {
   return value || fallback
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const rateLimit = await checkRateLimit({
+    key: getClientRateLimitKey(request, "runtime-config"),
+    limit: 300,
+    windowMs: 60 * 60 * 1000,
+  })
+  if (!rateLimit.ok) return rateLimitResponse(rateLimit.resetAt)
+
   const maintenanceEnabled = envFlag(process.env.APP_MAINTENANCE_ENABLED)
   const response = NextResponse.json({
     ok: true,

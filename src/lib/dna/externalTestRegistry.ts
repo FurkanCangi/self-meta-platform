@@ -59,6 +59,8 @@ export type ExternalTestMatch = {
   reportedNotes?: string
   resultQuality?: "interpretable" | "ham_puan_only" | "missing_result" | "qualitative_only"
   resultDirection?: "elevated_or_low" | "expected_or_preserved" | "mixed_or_contextual" | "unclear"
+  externalEvidenceWeight: number
+  externalEvidenceWeightLabel: "none" | "limited" | "moderate" | "strong" | "balancing"
 }
 
 export type ExternalTestFindingEntry = {
@@ -78,6 +80,7 @@ export type ExternalTestAnalysis = {
   decisionCompatibleIds: string[]
   decisionCompatibleCategories: ExternalTestCategory[]
   primaryCompatibleCategory: ExternalTestCategory | null
+  weightedDecisionSupport: number
   validatedSupportLines: string[]
   conciseSupportLines: string[]
   specificNarrativeLines: string[]
@@ -392,7 +395,7 @@ const EXTERNAL_TEST_SCIENTIFIC_PROFILES: Record<string, ExternalTestScientificPr
     resultLevels: "Beklenen aralık, potansiyel klinik yükselme veya klinik düzeyde yürütücü işlev yükü.",
     reportUse: "Görev sürdürme, davranış ayarlama ve duygusal kontrol bulgularını yürütücü düzenleme bağlamına yerleştirir.",
     interpretationBoundaries: "Dikkat bozukluğu veya yürütücü işlev hakkında tanısal hüküm üretmez; bağlamsal derecelendirme verisidir.",
-    dnaRelation: "executive_behavior ve emotional/cognitive yayılım yorumunu destekler.",
+    dnaRelation: "Yürütücü davranış düzenleme ile duygusal ve bilişsel yansımaların birlikte yorumlanmasını destekler.",
     sourceLinks: ["https://www.parinc.com/products/BRIEF-P"],
     evidenceTier: "official_metadata",
   }),
@@ -447,7 +450,7 @@ const EXTERNAL_TEST_SCIENTIFIC_PROFILES: Record<string, ExternalTestScientificPr
     resultLevels: "Beklenen aralık, risk/yükselme veya klinik olarak anlamlı davranışsal yük.",
     reportUse: "Erken çocuklukta dikkat, davranış kontrolü ve duygusal regülasyon yükünü bağlamsallaştırır.",
     interpretationBoundaries: "Tanısal hüküm üretmez; ev/okul/terapi bağlamıyla birlikte yorumlanmalıdır.",
-    dnaRelation: "executive_behavior ve emotional/cognitive yayılımını destekler.",
+    dnaRelation: "Yürütücü davranış düzenleme ile duygusal ve bilişsel yansımaların birlikte yorumlanmasını destekler.",
     sourceLinks: ["https://storefront.mhs.com/collections/conners-ec.html"],
     evidenceTier: "official_metadata",
   }),
@@ -530,7 +533,7 @@ const EXTERNAL_TEST_SCIENTIFIC_PROFILES: Record<string, ExternalTestScientificPr
   }),
   sensory_profile_2: profile({
     ageRange: "Doğumdan 14 yaş 11 aya kadar duyusal işlemleme ve günlük yaşam etkileri.",
-    domainsMeasured: ["Duyusal işlemleme", "Hassasiyet/arayış/kaçınma/kayıt örüntüleri", "Davranışsal ve günlük yaşam etkileri"],
+    domainsMeasured: ["Duyusal işlemleme", "Duyusal hassasiyet, kaçınma, düşük kayıt ve yanıt örüntüleri", "Davranışsal ve günlük yaşam etkileri"],
     scoreSystem: "Normatif kategori/T skor temelli profil ve duyusal örüntü sınıflamaları.",
     resultLevels: "Beklenen aralık, beklenenden daha fazla/daha az duyusal yanıt veya klinik olarak anlamlı örüntü.",
     reportUse: "Çevresel uyaran yükünün katılım, görev sürdürme ve duygusal toparlanmaya etkisini açıklar.",
@@ -689,6 +692,42 @@ function hasDecisionWeight(match: Pick<ExternalTestMatch, "ageCompatible" | "res
     match.resultQuality === "interpretable" &&
     (match.resultDirection === "elevated_or_low" || match.resultDirection === "mixed_or_contextual")
   )
+}
+
+function calculateExternalEvidenceWeight(
+  test: ExternalTestDefinition,
+  match: Pick<ExternalTestMatch, "ageCompatible" | "resultQuality" | "resultDirection">
+): Pick<ExternalTestMatch, "externalEvidenceWeight" | "externalEvidenceWeightLabel"> {
+  if (match.ageCompatible === false) return { externalEvidenceWeight: 0, externalEvidenceWeightLabel: "none" }
+  if (match.resultQuality === "missing_result") return { externalEvidenceWeight: 0, externalEvidenceWeightLabel: "none" }
+  if (match.resultQuality === "ham_puan_only") return { externalEvidenceWeight: 10, externalEvidenceWeightLabel: "limited" }
+  if (match.resultQuality === "qualitative_only") return { externalEvidenceWeight: 18, externalEvidenceWeightLabel: "limited" }
+
+  const ageWeight = match.ageCompatible === true ? 25 : 10
+  const scoreSystem = test.scoreSystem.toLocaleLowerCase("tr-TR")
+  const scoreWeight = /standart|standard|t skoru|scaled|percentil|irt|composite|bileşik|bilesik/.test(scoreSystem) ? 25 : 12
+  const tierWeight = test.evidenceTier === "official_and_literature_supported" ? 20 : 14
+  const directionWeight =
+    match.resultDirection === "elevated_or_low"
+      ? 25
+      : match.resultDirection === "mixed_or_contextual"
+      ? 18
+      : match.resultDirection === "expected_or_preserved"
+      ? 16
+      : 8
+  const domainWeight = test.domainsMeasured.length ? 10 : 4
+  const weight = Math.max(0, Math.min(100, ageWeight + scoreWeight + tierWeight + directionWeight + domainWeight))
+  const label =
+    match.resultDirection === "expected_or_preserved"
+      ? "balancing"
+      : weight >= 80
+      ? "strong"
+      : weight >= 50
+      ? "moderate"
+      : weight > 0
+      ? "limited"
+      : "none"
+  return { externalEvidenceWeight: weight, externalEvidenceWeightLabel: label }
 }
 
 function findEntryForTest(test: ExternalTestDefinition, entries: ExternalTestFindingEntry[]): ExternalTestFindingEntry | undefined {
@@ -959,7 +998,7 @@ function buildDecisionLines(
       "Yaş aralığıyla uyumlu ve uyumsuz dış testler birlikte bildirilmiştir. Klinik yorum yalnız yaşa uygun testlerle güçlendirilmiş; yaş uyumsuz testler ana klinik karar mekanizmasına dahil edilmemeli ve yalnız temkinli yan bilgi olarak bırakılmalıdır.",
       ...incompatible.slice(0, 1).map(
         (match) =>
-          `${match.name} yaş uyumsuzluğu nedeniyle karar ağırlığını artırmak için kullanılmamıştır.`
+          `${match.name} yaş uyumsuzluğu nedeniyle ana klinik yorumu güçlendirmek için kullanılmamıştır.`
       ),
     ].slice(0, 2)
   }
@@ -981,7 +1020,7 @@ function getAgeConditionalCautionLine(match: ExternalTestMatch, ageMonths?: numb
     ageMonths >= 72 &&
     ageMonths <= 83
   ) {
-    return `${match.name}: 6 yaş bandında Conners EC ile Conners 4 form seçimi okul düzeyi ve uygulama bağlamına göre doğrulanmalıdır; bu nedenle bulgu destekleyici kabul edilir ancak tek başına karar ağırlığını artırmaz.`
+    return `${match.name}: 6 yaş bandında Conners EC ile Conners 4 form seçimi okul düzeyi ve uygulama bağlamına göre doğrulanmalıdır; bu nedenle bulgu destekleyici kabul edilir ancak tek başına ana klinik yorumu güçlendirmez.`
   }
 
   return ""
@@ -1006,6 +1045,7 @@ export function analyzeExternalClinicalTests(rawText: unknown, ageMonths?: numbe
       decisionCompatibleIds: [],
       decisionCompatibleCategories: [],
       primaryCompatibleCategory: null,
+      weightedDecisionSupport: 0,
       validatedSupportLines: [],
       conciseSupportLines: [],
       specificNarrativeLines: [],
@@ -1026,7 +1066,7 @@ export function analyzeExternalClinicalTests(rawText: unknown, ageMonths?: numbe
       .sort((a, b) => getMentionPosition(clean, a) - getMentionPosition(clean, b))
       .map((test) => {
         const entry = findEntryForTest(test, parsedEntries)
-        return {
+        const baseMatch = {
           id: test.id,
           name: test.name,
           category: getExternalTestCategory(test.id),
@@ -1054,6 +1094,10 @@ export function analyzeExternalClinicalTests(rawText: unknown, ageMonths?: numbe
           resultQuality: classifyResultQuality(entry),
           resultDirection: classifyResultDirection(entry),
         }
+        return {
+          ...baseMatch,
+          ...calculateExternalEvidenceWeight(test, baseMatch),
+        }
       })
   )
 
@@ -1071,6 +1115,7 @@ export function analyzeExternalClinicalTests(rawText: unknown, ageMonths?: numbe
   const decisionCompatibleIds = decisionCompatible.map((match) => match.id)
   const decisionCompatibleCategories = Array.from(new Set(decisionCompatible.map((match) => match.category)))
   const primaryCompatibleCategory = decisionCompatible[0]?.category ?? null
+  const weightedDecisionSupport = decisionCompatible.reduce((sum, match) => sum + match.externalEvidenceWeight, 0)
 
   const conciseSupportLines = compatible.map((match) => {
     return `${match.name}: Bildirilen bulgular ${getShortSupportText(match.id)}.`
@@ -1113,9 +1158,9 @@ export function analyzeExternalClinicalTests(rawText: unknown, ageMonths?: numbe
       : "Bildirilen sonuç alanı yapılandırılmış biçimde yakalanmadı."
     const relation =
       match.ageCompatible === false
-        ? "Bu nedenle ana klinik karar ağırlığını artırmaz; yalnız temkinli yan bilgi olarak tutulur."
+        ? "Bu bulgu ana klinik yorumu güçlendirmez; yalnız temkinli yan bilgi olarak tutulur."
         : match.resultQuality === "ham_puan_only"
-        ? "Ham puan tek başına yorum gücünü sınırlar; resmi yorum düzeyi olmadan klinik ağırlık artırılmaz."
+        ? "Ham puan tek başına yorum gücünü sınırlar; resmi yorum düzeyi olmadan ana klinik yorumu güçlendirmez."
         : match.resultDirection === "expected_or_preserved"
         ? "Korunmuş/yaş uyumlu sonuç, raporda risk büyütmek yerine işlevsel denge kanıtı olarak kullanılır."
         : match.dnaRelation
@@ -1126,7 +1171,7 @@ export function analyzeExternalClinicalTests(rawText: unknown, ageMonths?: numbe
     ...matches
       .map((match) => {
         if (match.ageCompatible === false) {
-          return `${match.name}: yaş uyumsuz olduğu için ana mekanizma veya karar ağırlığını artırmak için kullanılmadı.`
+          return `${match.name}: yaş uyumsuz olduğu için ana mekanizmayı veya ana klinik yorumu güçlendirmek için kullanılmadı.`
         }
         if (match.resultQuality === "ham_puan_only") {
           return `${match.name}: yalnız ham puan bildirildi; resmi yorum düzeyi olmadığı için klinik çıkarım temkinli tutuldu.`
@@ -1149,6 +1194,7 @@ export function analyzeExternalClinicalTests(rawText: unknown, ageMonths?: numbe
     decisionCompatibleIds,
     decisionCompatibleCategories,
     primaryCompatibleCategory,
+    weightedDecisionSupport,
     validatedSupportLines,
     conciseSupportLines,
     specificNarrativeLines,

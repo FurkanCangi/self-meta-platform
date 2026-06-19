@@ -67,6 +67,13 @@ export async function checkRateLimit(options: {
   }
 }
 
+export function getClientRateLimitKey(request: Request, scope: string) {
+  const forwardedFor = request.headers.get("x-forwarded-for")
+  const ipAddress = forwardedFor?.split(",")[0]?.trim() || request.headers.get("x-real-ip") || "unknown-ip"
+  const userAgent = String(request.headers.get("user-agent") || "unknown-agent").slice(0, 120)
+  return `${scope}:${ipAddress}:${userAgent}`
+}
+
 export function rateLimitResponse(resetAt: number) {
   const retryAfterSeconds = Math.max(1, Math.ceil((resetAt - Date.now()) / 1000))
   return Response.json(

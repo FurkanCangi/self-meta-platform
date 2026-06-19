@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server"
+import { z } from "zod"
 import { requireConfirmedUser, requireTrustedMutation } from "@/lib/security/apiGuards"
 import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
+import { rejectServerControlledFields } from "@/lib/security/payloadGuards"
+import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import {
   findEducationVideoAsset,
   getRequestAuditContext,
@@ -20,6 +23,17 @@ const ALLOWED_VIDEO_EVENTS = new Set([
   "error",
   "watermark_rendered",
 ])
+
+const videoEventPayloadSchema = z
+  .object({
+    eventType: z.string().max(64),
+    accessToken: z.string().max(300),
+    playerSessionId: z.string().max(120),
+    playbackSeconds: z.union([z.number(), z.string()]).optional().nullable(),
+    durationSeconds: z.union([z.number(), z.string()]).optional().nullable(),
+    visibleWatermarkCode: z.string().max(120).optional().nullable(),
+  })
+  .passthrough()
 
 function readString(value: unknown, maxLength: number) {
   return String(value || "").trim().slice(0, maxLength)
@@ -46,11 +60,16 @@ export async function POST(
     return rateLimitResponse(rateLimit.resetAt)
   }
 
-  let body: Record<string, unknown> = {}
-  try {
-    body = await request.json()
-  } catch {
-    return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 })
+  const parsedBody = await readJsonWithSchema(request, videoEventPayloadSchema)
+  if (!parsedBody.ok) return parsedBody.response
+  const body = parsedBody.data
+
+  const payloadGuard = rejectServerControlledFields(body)
+  if (!payloadGuard.ok) {
+    return NextResponse.json(
+      { ok: false, error: "server_controlled_fields_present", fields: payloadGuard.fields },
+      { status: 400 }
+    )
   }
 
   const eventType = readString(body.eventType, 64)

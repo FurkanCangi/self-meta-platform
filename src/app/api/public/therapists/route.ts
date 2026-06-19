@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import { checkRateLimit, getClientRateLimitKey, rateLimitResponse } from "@/lib/security/rateLimit"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { mapPublicTherapist } from "@/lib/therapists/directory"
 
@@ -17,7 +18,14 @@ function isMissingDirectoryTable(error: unknown) {
   )
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const rateLimit = await checkRateLimit({
+    key: getClientRateLimitKey(request, "public-therapists"),
+    limit: 120,
+    windowMs: 60 * 60 * 1000,
+  })
+  if (!rateLimit.ok) return rateLimitResponse(rateLimit.resetAt)
+
   try {
     const admin = createSupabaseAdminClient()
     const { data, error } = await admin
@@ -47,8 +55,7 @@ export async function GET() {
       ok: true,
       therapists: (data || []).map(mapPublicTherapist),
     })
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Terapist listesi alınamadı."
-    return NextResponse.json({ ok: false, therapists: [], error: message }, { status: 500 })
+  } catch {
+    return NextResponse.json({ ok: false, therapists: [], error: "therapist_list_failed" }, { status: 500 })
   }
 }

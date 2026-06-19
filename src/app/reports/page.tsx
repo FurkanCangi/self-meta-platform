@@ -13,6 +13,9 @@ type ReportRow = {
   created_at: string | null;
   snapshot_json: any;
   assessment_id: string | null;
+  clientCode?: string | null;
+  assessmentDate?: string | null;
+  preview?: string | null;
 };
 
 function formatDate(value?: string | null) {
@@ -24,6 +27,7 @@ function formatDate(value?: string | null) {
 
 function extractClientCode(row: ReportRow) {
   return (
+    row?.clientCode ||
     row?.snapshot_json?.client_code ||
     row?.snapshot_json?.scores?.client_code ||
     "—"
@@ -32,6 +36,7 @@ function extractClientCode(row: ReportRow) {
 
 function extractAssessmentDate(row: ReportRow) {
   return (
+    row?.assessmentDate ||
     row?.snapshot_json?.assessment_date ||
     row?.snapshot_json?.scores?.assessment_date ||
     row?.created_at ||
@@ -44,6 +49,7 @@ function extractReportDate(row: ReportRow) {
 }
 
 function extractPreview(row: ReportRow) {
+  if (row.preview) return row.preview;
   const text = normalizeClinicalReportText(
     String(row.report_text || "Alanlar arası teknik örüntü, mevcut skor dağılımı ve anamnez temaları birlikte değerlendirilerek oluşturulmuştur.")
   ).replace(/\s+/g, " ").trim();
@@ -69,78 +75,34 @@ export default function ReportsPage() {
       setErr("");
       setNotice("");
 
-      const { data: userRes, error: userErr } = await supabase.auth.getUser();
-      if (userErr || !userRes?.user?.id) {
-        setLoading(false);
-        router.replace("/login");
-        return;
+      try {
+        const response = await fetch("/api/app/clinical-workspace", { cache: "no-store" });
+        const payload = await response.json().catch(() => ({}));
+
+        if (!mounted) return;
+
+        if (response.status === 401) {
+          setLoading(false);
+          router.replace("/login?surface=app");
+          return;
+        }
+
+        if (!response.ok || payload?.ok === false) {
+          throw new Error(payload?.error || "Raporlar alınamadı.");
+        }
+
+        const safeRows = (payload.reports || []) as ReportRow[];
+        setRows(safeRows);
+        setSelectedId(safeRows[0]?.id || "");
+      } catch (error) {
+        if (mounted) {
+          setErr(error instanceof Error ? error.message : "Raporlar alınamadı.");
+          setRows([]);
+          setSelectedId("");
+        }
+      } finally {
+        if (mounted) setLoading(false);
       }
-
-      const { data: ownedClients, error: clientsError } = await supabase
-        .from("clients")
-        .select("id")
-        .eq("owner_id", userRes.user.id)
-        .is("deleted_at", null);
-
-      if (!mounted) return;
-
-      if (clientsError) {
-        setErr("Danışan kayıtları alınamadı: " + clientsError.message);
-        setRows([]);
-        setLoading(false);
-        return;
-      }
-
-      const clientIds = (ownedClients || []).map((row: any) => row.id);
-      if (clientIds.length === 0) {
-        setRows([]);
-        setSelectedId("");
-        setLoading(false);
-        return;
-      }
-
-      const { data: assessments, error: assessmentsError } = await supabase
-        .from("assessments_v2")
-        .select("id")
-        .in("client_id", clientIds)
-        .is("deleted_at", null);
-
-      if (!mounted) return;
-
-      if (assessmentsError) {
-        setErr("Değerlendirmeler alınamadı: " + assessmentsError.message);
-        setRows([]);
-        setLoading(false);
-        return;
-      }
-
-      const assessmentIds = (assessments || []).map((row: any) => row.id);
-      if (assessmentIds.length === 0) {
-        setRows([]);
-        setSelectedId("");
-        setLoading(false);
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("reports")
-        .select("id, version, report_text, created_at, snapshot_json, assessment_id")
-        .in("assessment_id", assessmentIds)
-        .order("created_at", { ascending: false });
-
-      if (!mounted) return;
-
-      if (error) {
-        setErr("Raporlar alınamadı: " + error.message);
-        setRows([]);
-        setLoading(false);
-        return;
-      }
-
-      const safeRows = (data || []) as ReportRow[];
-      setRows(safeRows);
-      setSelectedId(safeRows[0]?.id || "");
-      setLoading(false);
     }
 
     load();

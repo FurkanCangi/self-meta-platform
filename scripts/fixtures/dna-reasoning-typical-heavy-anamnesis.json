@@ -1,0 +1,25 @@
+{
+  "clientCode": "FIX-REASON-TYPICAL-56",
+  "clientName": "Reasoning Typical",
+  "ageMonths": 56,
+  "anamnez": {
+    "ad_soyad": "Reasoning Typical Ornek",
+    "client_code": "FIX-REASON-TYPICAL-56",
+    "age": "56 ay",
+    "diagnosis": "Klinik izlem ve islevsel degerlendirme",
+    "referral_reason": "Aile ev ortaminda gecis, bekleme, kalabalik ses ve cok basamakli yonergelerde belirgin dagilma anlatiyor. Aile anlatimi gunluk yasamda yuksek zorluk hissi tasiyor.",
+    "parent_concerns_goals": "Aile, evdeki zorlanmanin okul oncesi grup ve gunluk rutinlere nasil yansidigini anlamak istiyor.",
+    "therapist_comments": "Terapist gozleminde dusuk uyaranli bire bir yapida ortak dikkat, oyun baslatma, etkinlikte kalma ve kisa gecisler yasina uygun gorundu. Zorlanma daha cok kalabalik ve coklu talep anlatiminda belirginlesiyor.",
+    "strengths": "Bire bir etkilesimde sosyal is birligi, kisa yonergeyi takip, sembolik oyun ve tanidik gorevi bitirme korunmus.",
+    "external_clinical_findings": "Test adi: BRIEF-P\nPuan / sonuc: Ham puan bildirildi, T skoru veya resmi klinik band verilmedi.\nKlinik yorum / resmi bulgu ozeti: Yorum siniri ham puanla sinirli; normlu sonuc bildirimi yok.\nEk notlar: Aile dikkat ve gecislerde zorlanma anlatiyor ancak dis test resmi yorum duzeyi eksik."
+  },
+  "scores": {
+    "physiological": 40,
+    "sensory": 39,
+    "emotional": 38,
+    "cognitive": 41,
+    "executive": 40,
+    "interoception": 39
+  },
+  "answers": [4, 4, 3, 4, 4, 4, 4, 3, 4, 4, 3, 4, 4, 4, 3, 4, 4, 4, 4, 4, 3, 4, 4, 4, 3, 4, 4, 4, 4, 4, 3, 4, 4, 4, 3, 4, 4, 4, 4, 4, 3, 4, 4, 4, 3, 4, 4, 4, 4, 4, 3, 4, 4, 4, 3, 4, 4, 4, 4, 4]
+}

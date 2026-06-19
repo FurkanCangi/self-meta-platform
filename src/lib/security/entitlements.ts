@@ -2,6 +2,7 @@ import "server-only"
 
 import { createHmac, timingSafeEqual } from "crypto"
 import type { SupabaseClient } from "@supabase/supabase-js"
+import { z } from "zod"
 import { normalizePlanCode, PACKAGE_PLAN_PRICES_MINOR, type PlanCode } from "@/lib/legal/documents"
 import { grantInitialProgramCredits } from "@/lib/security/reportCredits"
 
@@ -52,6 +53,31 @@ export type BillingWebhookPayload = {
 export type EntitlementCheck =
   | { ok: true; planCode: PlanCode; expiresAt: string | null }
   | { ok: false; error: string }
+
+const billingWebhookPayloadSchema = z
+  .object({
+    id: z.string().max(200).optional(),
+    eventId: z.string().max(200).optional(),
+    type: z.string().max(120).optional(),
+    eventType: z.string().max(120).optional(),
+    userId: z.string().max(200).optional(),
+    user_id: z.string().max(200).optional(),
+    planCode: z.string().max(80).optional(),
+    plan_code: z.string().max(80).optional(),
+    amount: z.number().optional(),
+    currency: z.string().max(12).optional(),
+    provider: z.string().max(80).optional(),
+    providerCustomerId: z.string().max(200).optional(),
+    provider_customer_id: z.string().max(200).optional(),
+    providerSubscriptionId: z.string().max(200).optional(),
+    provider_subscription_id: z.string().max(200).optional(),
+    currentPeriodStart: z.string().max(80).optional(),
+    current_period_start: z.string().max(80).optional(),
+    currentPeriodEnd: z.string().max(80).optional(),
+    current_period_end: z.string().max(80).optional(),
+    metadata: z.record(z.string(), z.unknown()).optional(),
+  })
+  .passthrough()
 
 function hmacSha256Hex(secret: string, payload: string) {
   return createHmac("sha256", secret).update(payload).digest("hex")
@@ -153,8 +179,9 @@ export function validatePaymentGrantAmount(event: ReturnType<typeof normalizeBil
 export function parseBillingWebhookPayload(rawBody: string): BillingWebhookPayload | null {
   try {
     const parsed = JSON.parse(rawBody)
-    if (!parsed || typeof parsed !== "object") return null
-    return parsed as BillingWebhookPayload
+    const result = billingWebhookPayloadSchema.safeParse(parsed)
+    if (!result.success) return null
+    return result.data as BillingWebhookPayload
   } catch {
     return null
   }

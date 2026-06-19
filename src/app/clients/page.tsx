@@ -84,98 +84,29 @@ export default function ClientsPage() {
       setErr(null);
       setNotice(null);
 
-      const { data: userRes, error: userErr } = await supabase.auth.getUser();
-      if (userErr || !userRes?.user?.id) {
-        setLoading(false);
-        router.replace(appSurface ? "/login?surface=app" : "/login");
-        return;
-      }
+      try {
+        const response = await fetch("/api/app/clinical-workspace", { cache: "no-store" });
+        const payload = await response.json().catch(() => ({}));
+        if (!alive) return;
 
-      const { data, error } = await supabase
-        .from("clients")
-        .select("id, child_code, anamnez, created_at, deleted_at")
-        .eq("owner_id", userRes.user.id)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
-
-      if (!alive) return;
-
-      if (error) {
-        setLoading(false);
-        setErr("Veri alınamadı: " + error.message);
-        return;
-      }
-
-      const clients = data || [];
-      const clientIds = clients.map((c: any) => c.id);
-
-      const assessmentsByClient = new Map<string, Array<{ id: string; created_at?: string | null }>>();
-      const reportsByAssessment = new Map<string, { created_at?: string | null }>();
-
-      if (clientIds.length > 0) {
-        const { data: assessments } = await supabase
-          .from("assessments_v2")
-          .select("id, client_id, created_at")
-          .in("client_id", clientIds)
-          .is("deleted_at", null);
-
-        for (const assessment of assessments || []) {
-          const list = assessmentsByClient.get(assessment.client_id) || [];
-          list.push({ id: assessment.id, created_at: assessment.created_at });
-          assessmentsByClient.set(assessment.client_id, list);
+        if (response.status === 401) {
+          setLoading(false);
+          router.replace(appSurface ? "/login?surface=app" : "/login");
+          return;
         }
 
-        const assessmentIds = (assessments || []).map((a: any) => a.id);
-
-        if (assessmentIds.length > 0) {
-          const { data: reports } = await supabase
-            .from("reports")
-            .select("assessment_id, created_at")
-            .in("assessment_id", assessmentIds);
-
-          for (const report of reports || []) {
-            reportsByAssessment.set(report.assessment_id, { created_at: report.created_at });
-          }
+        if (!response.ok || payload?.ok === false) {
+          throw new Error(payload?.error || "Veri alınamadı.");
         }
+
+        setRows((payload.clients || []) as ClientRow[]);
+      } catch (error) {
+        if (alive) {
+          setErr(error instanceof Error ? "Veri alınamadı: " + error.message : "Veri alınamadı.");
+        }
+      } finally {
+        if (alive) setLoading(false);
       }
-
-      const formatDate = (value?: string | null) => {
-        if (!value) return "—";
-        const date = new Date(value);
-        if (Number.isNaN(date.getTime())) return "—";
-        return date.toLocaleDateString("tr-TR");
-      };
-
-      const mapped: ClientRow[] = clients.map((c: any) => {
-        const risk = calcRisk(c.anamnez || "");
-        const status: Status = "Aktif";
-        const clientAssessments = assessmentsByClient.get(c.id) || [];
-        const lastAssessmentAt = clientAssessments
-          .map((item) => item.created_at || "")
-          .sort()
-          .at(-1);
-        const hasReport = clientAssessments.some((item) => reportsByAssessment.has(item.id));
-        const lastReportAt = clientAssessments
-          .map((item) => reportsByAssessment.get(item.id)?.created_at || "")
-          .filter(Boolean)
-          .sort()
-          .at(-1);
-
-        return {
-          id: c.id,
-          code: c.child_code,
-          status,
-          lastAssessment: formatDate(lastAssessmentAt),
-          lastReport: formatDate(lastReportAt),
-          note: (c.anamnez || "").trim().slice(0, 80) || "—",
-          risk,
-          needsScore: !hasReport,
-          hasReport,
-        };
-      });
-
-      setRows(mapped);
-      setLoading(false);
     }
 
     load();

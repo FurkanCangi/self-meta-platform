@@ -491,6 +491,7 @@ export default function NewClientPage() {
   const createButtonClass = canCreate && !saving
     ? "inline-flex items-center justify-center rounded-2xl border-2 border-blue-500 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100"
     : "inline-flex items-center justify-center rounded-2xl border-2 border-slate-200 bg-slate-100 px-4 py-2 text-sm font-semibold text-slate-400 transition disabled:cursor-not-allowed disabled:opacity-100";
+  const formGridClass = appSurface ? "grid gap-4" : "grid gap-4 md:grid-cols-2";
 
   const clearExternalDraft = () => {
     setForm((prev) => ({
@@ -719,8 +720,8 @@ export default function NewClientPage() {
         ) : null}
       </div>
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
-        <div className="dna-card p-4 md:p-6">
+      <div className="dna-new-client-layout grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="dna-new-client-card dna-card p-4 md:p-6">
           <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-2">
             {TAB_ORDER.map((key) => {
               const isActive = tab === key;
@@ -758,7 +759,7 @@ export default function NewClientPage() {
           <div className="mt-6 space-y-6">
             {tab === "demo" && (
               <div className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className={formGridClass}>
                   <Field label="Adı-soyadı">
                     <input value={form.ad_soyad} onChange={(e) => setVal("ad_soyad", e.target.value)} className={inputBase} placeholder="Ad Soyad" />
                   </Field>
@@ -768,16 +769,16 @@ export default function NewClientPage() {
                   <Field label="Kayıt Tarihi" hint="Boş bırakılabilir" required={false}>
                     <input value={form.record_date} onChange={(e) => setVal("record_date", e.target.value)} className={inputBase} type="date" />
                   </Field>
-                  <div className="md:col-span-2">
+                  <div className={appSurface ? "" : "md:col-span-2"}>
                     <Field label="Yaş aralığı">
-                      <div className="flex flex-wrap gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                      <div className={appSurface ? "grid grid-cols-2 gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 shadow-sm" : "flex flex-wrap gap-3 rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm"}>
                         {AGE_RANGE_OPTIONS.map((option) => {
                           const label = option.label
                           const isSelected = form.ageRange === label
                           return (
                             <label
                               key={label}
-                              className={`inline-flex cursor-pointer items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition ${
+                              className={`inline-flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition ${
                                 isSelected
                                   ? "border-indigo-600 bg-indigo-50 text-indigo-700"
                                   : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
@@ -934,7 +935,7 @@ export default function NewClientPage() {
                   Ek bir değerlendirme varsa burada kısaca ekle. Test adı, sonuç ve kısa klinik yorum yeterli.
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className={formGridClass}>
                   <Field label="Test adı" required={false} hint="Yalnız desteklenen testler eklenebilir.">
                     <div className="relative">
                       <select

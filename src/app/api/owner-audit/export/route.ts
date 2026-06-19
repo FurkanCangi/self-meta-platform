@@ -155,7 +155,7 @@ export async function GET(req: Request) {
     const { data, error } = await query
 
     if (error) {
-      return NextResponse.json({ ok: false, error: error.message }, { status: 500 })
+      return NextResponse.json({ ok: false, error: "owner_audit_query_failed" }, { status: 500 })
     }
 
     const rows = data || []
@@ -192,8 +192,7 @@ export async function GET(req: Request) {
         "content-disposition": `attachment; filename="${filename}"`,
       },
     })
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Owner audit export başarısız oldu."
-    return NextResponse.json({ ok: false, error: message }, { status: 403 })
+  } catch {
+    return NextResponse.json({ ok: false, error: "owner_audit_export_failed" }, { status: 403 })
   }
 }

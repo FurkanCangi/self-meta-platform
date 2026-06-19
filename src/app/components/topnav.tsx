@@ -177,15 +177,26 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
                   </Link>
 
                   {showOwnerAudit ? (
-                    <Link
-                      href="/owner-audit"
-                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                    >
-                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-700">
-                        OA
-                      </span>
-                      Owner Paneli
-                    </Link>
+                    <>
+                      <Link
+                        href="/owner-audit"
+                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                      >
+                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-700">
+                          OA
+                        </span>
+                        Owner Paneli
+                      </Link>
+                      <Link
+                        href="/owner-audit/security"
+                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+                      >
+                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-rose-100 text-[10px] font-bold text-rose-700">
+                          OS
+                        </span>
+                        Güvenlik Merkezi
+                      </Link>
+                    </>
                   ) : null}
 
                   <Link
