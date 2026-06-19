@@ -24,6 +24,7 @@ function formatSignupErrorCode(code?: string | null) {
   if (code === "rate_limited") return "Çok sık kayıt denemesi yapıldı. Lütfen birkaç dakika sonra tekrar deneyin."
   if (code === "already_registered") return "Bu e-posta ile zaten bir hesap bulunuyor. Giriş yapmayı deneyin."
   if (code === "network") return "Kayıt servisine ulaşılamadı. Bağlantıyı kontrol edip tekrar deneyin."
+  if (code === "email_failed") return "Doğrulama e-postası gönderilemedi. Lütfen biraz sonra tekrar deneyin."
   if (code === "profile_failed") return "Hesap oluşturuldu ancak profil kaydı tamamlanamadı. Lütfen destek ile iletişime geçin."
   if (code === "legal_failed") return "Hesap oluşturuldu ancak yasal onay kaydı tamamlanamadı. Lütfen destek ile iletişime geçin."
   return "Kayıt sırasında bir hata oluştu."

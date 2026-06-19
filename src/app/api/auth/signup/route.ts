@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr"
 import { NextResponse, type NextRequest } from "next/server"
+import { isCustomSignupEmailConfigured, sendSignupConfirmationEmail } from "@/lib/auth/confirmationEmail"
 import { getAcceptedDocumentsSnapshot, LEGAL_DOCUMENT_VERSION } from "@/lib/legal/documents"
 import { requireTrustedMutation } from "@/lib/security/apiGuards"
 import { checkRateLimit, getClientRateLimitKey } from "@/lib/security/rateLimit"
@@ -13,6 +14,8 @@ type CookieToSet = {
 
 const PLAN_CODE = "none"
 const LEGAL_ERROR = "legal_required"
+
+export const runtime = "nodejs"
 
 function requestOrigin(request: NextRequest) {
   const host = request.headers.get("x-forwarded-host") || request.headers.get("host")
@@ -76,6 +79,13 @@ function mapSignupError(message?: string | null) {
   if (normalized.includes("password")) return "password_short"
   if (normalized.includes("rate")) return "rate_limited"
   return "signup_failed"
+}
+
+function confirmationUrl(request: NextRequest, tokenHash: string, type = "signup") {
+  const url = new URL("/auth/confirm", requestOrigin(request))
+  url.searchParams.set("token_hash", tokenHash)
+  url.searchParams.set("type", type)
+  return url.toString()
 }
 
 export async function POST(request: NextRequest) {
@@ -142,48 +152,90 @@ export async function POST(request: NextRequest) {
   )
 
   const emailRedirectTo = `${requestOrigin(request)}/auth/confirm?next=/login?confirmed=1`
+  const userMetadata = {
+    full_name: fullName,
+    selected_plan: PLAN_CODE,
+    legal_documents_version: LEGAL_DOCUMENT_VERSION,
+    legal_signup_checked_at: new Date().toISOString(),
+  }
 
-  let signUpResult: Awaited<ReturnType<typeof supabase.auth.signUp>>
-  try {
-    signUpResult = await supabase.auth.signUp({
+  let userId: string | null = null
+  let adminClient: ReturnType<typeof createSupabaseAdminClient> | null = null
+
+  if (isCustomSignupEmailConfigured()) {
+    adminClient = createSupabaseAdminClient()
+    const { data, error } = await adminClient.auth.admin.generateLink({
+      type: "signup",
       email,
       password,
       options: {
-        emailRedirectTo,
-        data: {
-          full_name: fullName,
-          selected_plan: PLAN_CODE,
-          legal_documents_version: LEGAL_DOCUMENT_VERSION,
-          legal_signup_checked_at: new Date().toISOString(),
-        },
+        redirectTo: emailRedirectTo,
+        data: userMetadata,
       },
     })
-  } catch {
-    return NextResponse.redirect(signupUrl(request, { error: "network" }), 303)
-  }
 
-  const { data, error } = signUpResult
-  if (error) {
-    return NextResponse.redirect(signupUrl(request, { error: mapSignupError(error.message) }), 303)
-  }
+    if (error) {
+      return NextResponse.redirect(signupUrl(request, { error: mapSignupError(error.message) }), 303)
+    }
 
-  if (!data.user?.id) {
-    return NextResponse.redirect(signupUrl(request, { error: "signup_failed" }), 303)
-  }
+    const tokenHash = data.properties?.hashed_token
+    if (!data.user?.id || !tokenHash) {
+      return NextResponse.redirect(signupUrl(request, { error: "signup_failed" }), 303)
+    }
 
-  if (isAlreadyRegisteredResult(data.user)) {
-    return NextResponse.redirect(signupUrl(request, { error: "already_registered" }), 303)
-  }
+    userId = data.user.id
 
-  if (data.session) {
-    await supabase.auth.signOut().catch(() => null)
+    try {
+      await sendSignupConfirmationEmail({
+        to: email,
+        fullName,
+        confirmationUrl: confirmationUrl(request, tokenHash, data.properties.verification_type || "signup"),
+      })
+    } catch (error) {
+      console.error("[auth-signup] custom confirmation email failed", error)
+      await adminClient.auth.admin.deleteUser(userId).catch(() => null)
+      return NextResponse.redirect(signupUrl(request, { error: "email_failed" }), 303)
+    }
+  } else {
+    let signUpResult: Awaited<ReturnType<typeof supabase.auth.signUp>>
+    try {
+      signUpResult = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo,
+          data: userMetadata,
+        },
+      })
+    } catch {
+      return NextResponse.redirect(signupUrl(request, { error: "network" }), 303)
+    }
+
+    const { data, error } = signUpResult
+    if (error) {
+      return NextResponse.redirect(signupUrl(request, { error: mapSignupError(error.message) }), 303)
+    }
+
+    if (!data.user?.id) {
+      return NextResponse.redirect(signupUrl(request, { error: "signup_failed" }), 303)
+    }
+
+    if (isAlreadyRegisteredResult(data.user)) {
+      return NextResponse.redirect(signupUrl(request, { error: "already_registered" }), 303)
+    }
+
+    if (data.session) {
+      await supabase.auth.signOut().catch(() => null)
+    }
+
+    userId = data.user.id
   }
 
   const now = new Date().toISOString()
-  const admin = createSupabaseAdminClient()
+  const admin = adminClient ?? createSupabaseAdminClient()
   const { error: profileError } = await admin.from("profiles").upsert(
     {
-      user_id: data.user.id,
+      user_id: userId,
       role: "expert",
       plan: PLAN_CODE,
       full_name: fullName,
@@ -197,7 +249,7 @@ export async function POST(request: NextRequest) {
   }
 
   const { error: legalError } = await admin.from("legal_acceptances").insert({
-    user_id: data.user.id,
+    user_id: userId,
     email,
     plan_code: PLAN_CODE,
     accepted_documents: getAcceptedDocumentsSnapshot(),
