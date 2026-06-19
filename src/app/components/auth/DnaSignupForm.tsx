@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState, type FormEvent } from "react"
+import { useEffect, useState, type FormEvent } from "react"
 import AuthLayout from "./AuthLayout"
 
 const LEGAL_ACCEPTANCE_ERROR =
@@ -24,10 +24,39 @@ function formatSignupErrorCode(code?: string | null) {
   if (code === "rate_limited") return "Çok sık kayıt denemesi yapıldı. Lütfen birkaç dakika sonra tekrar deneyin."
   if (code === "already_registered") return "Bu e-posta ile zaten bir hesap bulunuyor. Giriş yapmayı deneyin."
   if (code === "network") return "Kayıt servisine ulaşılamadı. Bağlantıyı kontrol edip tekrar deneyin."
+  if (code === "google_failed") return "Google ile kayıt tamamlanamadı. Lütfen tekrar deneyin."
+  if (code === "google_unavailable") return "Google ile kayıt şu anda yapılandırılmamış."
+  if (code === "google_legal_required") return "Google ile devam etmek için kayıt onaylarını tamamlamanız gerekir."
   if (code === "email_failed") return "Doğrulama e-postası gönderilemedi. Lütfen biraz sonra tekrar deneyin."
   if (code === "profile_failed") return "Hesap oluşturuldu ancak profil kaydı tamamlanamadı. Lütfen destek ile iletişime geçin."
   if (code === "legal_failed") return "Hesap oluşturuldu ancak yasal onay kaydı tamamlanamadı. Lütfen destek ile iletişime geçin."
   return "Kayıt sırasında bir hata oluştu."
+}
+
+function getSignupSearchParam(name: string) {
+  if (typeof window === "undefined") return ""
+  return new URLSearchParams(window.location.search).get(name) ?? ""
+}
+
+function getOrCreateDeviceId() {
+  const key = "dna_device_id"
+  const existing = window.localStorage.getItem(key)
+  if (existing && existing.length >= 16) return existing
+
+  const next =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`
+
+  window.localStorage.setItem(key, next)
+  return next
+}
+
+function detectDeviceType() {
+  const ua = navigator.userAgent || ""
+  if (/ipad|tablet|playbook|silk/i.test(ua)) return "tablet"
+  if (/mobi|iphone|android/i.test(ua)) return "mobile"
+  return "desktop"
 }
 
 export default function DnaSignupForm() {
@@ -42,9 +71,21 @@ export default function DnaSignupForm() {
     authority: false,
   })
   const [loading, setLoading] = useState(false)
+  const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState(initialSignupError)
+  const [deviceId, setDeviceId] = useState("")
+  const [deviceType, setDeviceType] = useState("desktop")
+  const [nextPath, setNextPath] = useState("")
+  const [surface, setSurface] = useState("web")
   const legalAccepted =
     legalChecks.terms && legalChecks.kvkk && legalChecks.consent && legalChecks.authority
+
+  useEffect(() => {
+    setDeviceId(getOrCreateDeviceId())
+    setDeviceType(detectDeviceType())
+    setNextPath(getSignupSearchParam("next"))
+    setSurface(getSignupSearchParam("surface") === "app" ? "app" : "web")
+  }, [])
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     setError("")
@@ -80,6 +121,18 @@ export default function DnaSignupForm() {
     }
 
     setLoading(true)
+  }
+
+  function handleGoogleSubmit(event: FormEvent<HTMLFormElement>) {
+    setError("")
+
+    if (!legalAccepted) {
+      event.preventDefault()
+      setError(LEGAL_ACCEPTANCE_ERROR)
+      return
+    }
+
+    setGoogleLoading(true)
   }
 
   return (
@@ -216,6 +269,32 @@ export default function DnaSignupForm() {
             className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-cyan-400 via-blue-600 to-violet-600 px-5 font-bold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 hover:shadow-blue-600/30 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Doğrulama e-postası hazırlanıyor..." : "Kayıt Ol"}
+          </button>
+        </form>
+
+        <div className="my-3 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+          <span className="h-px flex-1 bg-slate-200" />
+          veya
+          <span className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        <form action="/api/auth/google/start" method="post" onSubmit={handleGoogleSubmit}>
+          <input type="hidden" name="mode" value="signup" />
+          <input type="hidden" name="surface" value={surface} />
+          <input type="hidden" name="next" value={nextPath} />
+          <input type="hidden" name="deviceId" value={deviceId} />
+          <input type="hidden" name="deviceType" value={deviceType} />
+          <input type="hidden" name="terms" value={legalChecks.terms ? "on" : ""} />
+          <input type="hidden" name="kvkk" value={legalChecks.kvkk ? "on" : ""} />
+          <input type="hidden" name="consent" value={legalChecks.consent ? "on" : ""} />
+          <input type="hidden" name="authority" value={legalChecks.authority ? "on" : ""} />
+          <button
+            type="submit"
+            disabled={googleLoading}
+            className="inline-flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-5 font-bold text-slate-800 shadow-sm shadow-slate-200/60 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-blue-100/70 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-base shadow-sm">G</span>
+            {googleLoading ? "Google’a yönlendiriliyor..." : "Google ile kayıt ol"}
           </button>
         </form>
 

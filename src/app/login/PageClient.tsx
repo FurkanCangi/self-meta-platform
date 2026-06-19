@@ -33,6 +33,11 @@ function formatLoginErrorCode(code?: string | null) {
   if (code === "confirm_failed") return "Doğrulama bağlantısı süresi dolmuş veya daha önce kullanılmış olabilir.";
   if (code === "origin") return "Giriş isteği güvenlik kontrolünden geçemedi. Sayfayı yenileyip tekrar deneyin.";
   if (code === "network") return "Giriş servisine ulaşılamadı. Bağlantıyı kontrol edip tekrar deneyin.";
+  if (code === "google_failed") return "Google ile giriş tamamlanamadı. Lütfen tekrar deneyin.";
+  if (code === "google_unavailable") return "Google ile giriş şu anda yapılandırılmamış.";
+  if (code === "google_legal_required") {
+    return "Google hesabınız için kayıt onayları tamamlanmamış. Lütfen kayıt ekranından onayları tamamlayın.";
+  }
   if (code === "rate_limited") return "Çok sık giriş denemesi yapıldı. Lütfen birkaç dakika sonra tekrar deneyin.";
   if (code === "device_limit_exceeded") {
     return "Bu hesap için en fazla 2 cihaz kullanılabilir. Yeni cihaz eklemek için önce mevcut cihazlardan biri kaldırılmalıdır.";
@@ -80,6 +85,7 @@ export default function LoginPage() {
     sp.get("confirmed") === "1" ? "E-postanız doğrulandı. Şimdi giriş yapabilirsiniz." : null
   );
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
 
   useEffect(() => {
     setDeviceId(getOrCreateDeviceId());
@@ -90,6 +96,12 @@ export default function LoginPage() {
     setErr(null);
     setNotice(null);
     setLoading(true);
+  }
+
+  function onGoogleSubmit() {
+    setErr(null);
+    setNotice(null);
+    setGoogleLoading(true);
   }
 
   return (
@@ -140,14 +152,36 @@ export default function LoginPage() {
           >
             Giriş Yap
           </button>
-
-          <div className="pt-2 text-center text-sm font-medium text-slate-500">
-            Hesabınız yok mu?{" "}
-            <a className="font-bold text-blue-700 hover:text-violet-700" href={appSurface ? "/signup?surface=app" : "/signup"}>
-              Kayıt olun.
-            </a>
-          </div>
         </form>
+
+        <div className="my-4 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
+          <span className="h-px flex-1 bg-slate-200" />
+          veya
+          <span className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        <form action="/api/auth/google/start" method="post" onSubmit={onGoogleSubmit}>
+          <input type="hidden" name="mode" value="login" />
+          <input type="hidden" name="surface" value={appSurface ? "app" : "web"} />
+          <input type="hidden" name="next" value={nextPath} />
+          <input type="hidden" name="deviceId" value={deviceId} />
+          <input type="hidden" name="deviceType" value={deviceType} />
+          <button
+            type="submit"
+            disabled={googleLoading}
+            className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-4 text-sm font-bold text-slate-800 shadow-sm shadow-slate-200/60 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-blue-100/70 disabled:translate-y-0 disabled:opacity-60"
+          >
+            <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-base shadow-sm">G</span>
+            {googleLoading ? "Google’a yönlendiriliyor..." : "Google ile giriş yap"}
+          </button>
+        </form>
+
+        <div className="pt-4 text-center text-sm font-medium text-slate-500">
+          Hesabınız yok mu?{" "}
+          <a className="font-bold text-blue-700 hover:text-violet-700" href={appSurface ? "/signup?surface=app" : "/signup"}>
+            Kayıt olun.
+          </a>
+        </div>
       </div>
     </AuthLayout>
   );

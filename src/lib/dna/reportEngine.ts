@@ -2059,7 +2059,7 @@ function buildClinicalPriorityList(
       ? "- Ana klinik odak: Korunmuş self-regülasyon zemini ve bağlama göre değişebilen küçük hassasiyetler."
       : isMechanismDriven(evidenceMap)
       ? `- Ana klinik odak: ${evidenceMap.primaryAxis}. Bu odak skor sıralaması, anamnez, gözlem ve ek test bulguları birlikte ele alınarak belirlenmiştir.`
-      : `- Ana klinik odak: ${evidenceMap.primaryAxis}. Klinik yorumun ağırlığı bu eksende toplanmaktadır.`,
+      : `- Ana klinik odak: ${evidenceMap.primaryAxis}. Klinik yorum bu eksende yoğunlaşmaktadır.`,
     evidenceMap.secondaryAxes.length
       ? `- Günlük yaşama yansıyan alanlar: ${formatDomainLabels(evidenceMap.secondaryAxes)} ana sorunun günlük işlevde görünürleştiği alanlardır.`
       : "- Günlük yaşama yansıyan alanlar: Belirgin bir ikincil alan ayrışmadığı için yorum tek alan sınırında tutulur.",
@@ -2604,7 +2604,7 @@ function buildClinicalDecisionSummarySection(params: {
     isMechanismDriven(params.evidenceMap)
       ? `Toplam skor ${params.totalScore}/${GLOBAL_MAX} ve genel düzey ${params.globalLevel} olarak hesaplanmıştır. Profil, "${params.profileType}" örüntüsüyle uyumludur; ${globalMeaning}. Mevcut veriler, ana klinik yorumun ${getMechanismDescriptor(params.evidenceMap)} üzerinden kurulmasını desteklemektedir.`
       : `Toplam skor ${params.totalScore}/${GLOBAL_MAX} ve genel düzey ${params.globalLevel} olarak hesaplanmıştır. Profil, "${params.profileType}" örüntüsüyle uyumludur; ${globalMeaning}. ` +
-        `Bu nedenle yorumun ağırlığı ${params.evidenceMap.primaryAxis} alanına verilmiş; ${focusText} günlük işlevde izlenmesi gereken eşlik eden alanlar olarak ele alınmıştır.`;
+        `Bu nedenle klinik yorum ${params.evidenceMap.primaryAxis} alanında yoğunlaşmış; ${focusText} günlük işlevde izlenmesi gereken eşlik eden alanlar olarak ele alınmıştır.`;
   const secondaryText = params.evidenceMap.secondaryAxes.length
     ? `Bu nedenle ${formatDomainLabels(params.evidenceMap.secondaryAxes)} ana sorunun günlük yaşamdaki yansımaları olarak ele alınır.`
     : params.evidenceMap.primaryAxis === "Korunmuş / dengeli self-regülasyon zemini"
