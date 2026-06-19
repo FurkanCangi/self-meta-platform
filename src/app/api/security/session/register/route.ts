@@ -108,7 +108,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "device_lookup_failed" }, { status: 500 })
   }
 
-  if (existingDevice?.revoked_at) {
+  if (!lockExemptUser && existingDevice?.revoked_at) {
     return NextResponse.json({ ok: false, error: "device_revoked" }, { status: 403 })
   }
 
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
     .eq("user_id", user.id)
     .maybeSingle()
 
-  if (securityState?.suspended_at) {
+  if (!lockExemptUser && securityState?.suspended_at) {
     return NextResponse.json({ ok: false, error: "account_suspended" }, { status: 403 })
   }
 
@@ -143,7 +143,7 @@ export async function POST(request: Request) {
     }
 
     const registeredDevices = activeDevices || []
-    if (registeredDevices.length >= MAX_REGISTERED_DEVICES) {
+    if (!lockExemptUser && registeredDevices.length >= MAX_REGISTERED_DEVICES) {
       await recordSecurityEvent(admin, {
         userId: user.id,
         eventType: "device_limit_blocked",
@@ -164,9 +164,19 @@ export async function POST(request: Request) {
 
     const requestedSlot = deviceSlot(deviceType)
     const sameSlotDevice = registeredDevices.find((device) => deviceSlot(String(device.device_type || "unknown")) === requestedSlot)
-    const allowSlotReuse = body.allowSlotReuse === true
+    const allowSlotReuse = body.allowSlotReuse === true || lockExemptUser
     if (sameSlotDevice && allowSlotReuse) {
       deviceId = sameSlotDevice.id
+      await admin
+        .from("account_devices")
+        .update({
+          device_type: deviceType,
+          last_seen_at: new Date().toISOString(),
+          last_user_agent: userAgent,
+          last_ip: ipAddress,
+        })
+        .eq("id", deviceId)
+        .eq("user_id", user.id)
       await recordSecurityEvent(admin, {
         userId: user.id,
         eventType: "device_slot_reused",
@@ -268,35 +278,37 @@ export async function POST(request: Request) {
   const now = new Date()
   const expiresAt = new Date(now.getTime() + APP_SESSION_MAX_AGE_SECONDS * 1000).toISOString()
 
-  await admin
-    .from("account_sessions")
-    .update({
-      status: "replaced",
-      revoked_at: now.toISOString(),
-      replaced_by_session_id: sessionId,
+  if (!lockExemptUser) {
+    await admin
+      .from("account_sessions")
+      .update({
+        status: "replaced",
+        revoked_at: now.toISOString(),
+        replaced_by_session_id: sessionId,
+      })
+      .eq("user_id", user.id)
+      .eq("status", "active")
+
+    await recordSecurityEvent(admin, {
+      userId: user.id,
+      eventType: "active_session_replaced",
+      deviceId,
+      ipAddress,
+      userAgent,
+      metadata: { new_session_id: sessionId },
     })
-    .eq("user_id", user.id)
-    .eq("status", "active")
 
-  await recordSecurityEvent(admin, {
-    userId: user.id,
-    eventType: "active_session_replaced",
-    deviceId,
-    ipAddress,
-    userAgent,
-    metadata: { new_session_id: sessionId },
-  })
-
-  const risk = await evaluateAccountRisk(user.id)
-  if (risk.ok && risk.decision.action === "temporary_lock") {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "account_temporarily_locked",
-        message: "Şüpheli kullanım nedeniyle hesap geçici olarak kilitlendi.",
-      },
-      { status: 423 }
-    )
+    const risk = await evaluateAccountRisk(user.id)
+    if (risk.ok && risk.decision.action === "temporary_lock") {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "account_temporarily_locked",
+          message: "Şüpheli kullanım nedeniyle hesap geçici olarak kilitlendi.",
+        },
+        { status: 423 }
+      )
+    }
   }
 
   const { error: sessionError } = await admin.from("account_sessions").insert({

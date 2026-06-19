@@ -177,11 +177,9 @@ export async function evaluateAccountRisk(userId: string) {
   }
 
   let decision = scoreAccountSecurityEvents((data || []) as SecurityEventRow[])
-  if (decision.action === "temporary_lock") {
-    const lockExempt = await isSecurityLockExemptUser(userId)
-    if (lockExempt) {
-      decision = { ...decision, action: "manual_review" }
-    }
+  const lockExempt = await isSecurityLockExemptUser(userId)
+  if (lockExempt && decision.action !== "none") {
+    decision = { ...decision, action: "none" }
   }
   const lockedUntil =
     decision.action === "temporary_lock"

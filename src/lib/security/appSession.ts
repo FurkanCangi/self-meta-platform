@@ -135,15 +135,15 @@ export async function verifyCurrentAppSession(userId: string): Promise<AppSessio
     .maybeSingle()
 
   if (stateError) return { ok: false, reason: "error" }
-  if (securityState?.suspended_at) return { ok: false, reason: "suspended" }
+  const lockExemptUser = await isSecurityLockExemptUser(userId)
+  if (!lockExemptUser && securityState?.suspended_at) return { ok: false, reason: "suspended" }
 
   const lockedUntil = securityState?.temporary_locked_until
     ? new Date(securityState.temporary_locked_until).getTime()
     : 0
-  if (lockedUntil && lockedUntil > Date.now()) {
-    const lockExemptUser = await isSecurityLockExemptUser(userId)
-    if (!lockExemptUser) return { ok: false, reason: "locked" }
-  }
+  if (!lockExemptUser && lockedUntil && lockedUntil > Date.now()) return { ok: false, reason: "locked" }
+
+  if (lockExemptUser) return { ok: true, sessionId }
 
   await auditActiveSessionFingerprint({
     userId,
