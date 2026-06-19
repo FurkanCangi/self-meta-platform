@@ -59,10 +59,7 @@ export async function checkRateLimit(options: {
       resetAt: new Date(row.reset_at).getTime(),
     }
   } catch (error) {
-    if (process.env.NODE_ENV === "production") {
-      throw error
-    }
-
+    console.warn("[rate-limit] Falling back to in-memory rate limit", error)
     return memoryRateLimit(options)
   }
 }
