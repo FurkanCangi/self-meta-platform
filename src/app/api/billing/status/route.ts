@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { requireConfirmedUser } from "@/lib/security/apiGuards"
 import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { EDUCATION_VIDEO_FEATURE } from "@/lib/security/entitlements"
+import { ensurePaymentExemptAccess, isPaymentExemptEmail, PAYMENT_EXEMPT_PLAN } from "@/lib/security/paymentExemptions"
 import { getReportCreditSummary } from "@/lib/security/reportCredits"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
@@ -25,6 +26,12 @@ export async function GET() {
 
   const admin = createSupabaseAdminClient()
   const userId = auth.user.id
+  const paymentExempt = isPaymentExemptEmail(auth.user.email)
+
+  const exemption = await ensurePaymentExemptAccess({ admin, userId, email: auth.user.email })
+  if (!exemption.ok) {
+    return NextResponse.json({ ok: false, error: exemption.error }, { status: 500 })
+  }
 
   const { data: entitlements, error: entitlementError } = await admin
     .from("user_entitlements")
@@ -92,10 +99,10 @@ export async function GET() {
   return NextResponse.json({
     ok: true,
     education: {
-      active: Boolean(educationEntitlement),
-      planCode: educationEntitlement?.plan_code || null,
-      source: educationEntitlement?.source || null,
-      provider: educationEntitlement?.provider || null,
+      active: Boolean(educationEntitlement) || paymentExempt,
+      planCode: educationEntitlement?.plan_code || (paymentExempt ? PAYMENT_EXEMPT_PLAN : null),
+      source: educationEntitlement?.source || (paymentExempt ? "manual_admin" : null),
+      provider: educationEntitlement?.provider || (paymentExempt ? "internal_payment_exemption" : null),
       startsAt: educationEntitlement?.starts_at || null,
       expiresAt: educationEntitlement?.expires_at || null,
     },

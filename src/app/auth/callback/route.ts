@@ -7,6 +7,7 @@ import {
 } from "@/lib/auth/googleOAuthState"
 import { getAcceptedDocumentsSnapshot, hasAcceptedActiveDocuments } from "@/lib/legal/documents"
 import { setAppSessionCookie } from "@/lib/security/appSession"
+import { ensurePaymentExemptAccess, resolveEffectivePlan } from "@/lib/security/paymentExemptions"
 import { registerAppSessionForUser } from "@/lib/security/sessionRegistration"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
@@ -254,8 +255,18 @@ export async function GET(request: NextRequest) {
     .eq("user_id", user.id)
     .maybeSingle()
 
+  const exemption = await ensurePaymentExemptAccess({ admin, userId: user.id, email: user.email })
+  if (!exemption.ok) {
+    return redirectWithSignOut({
+      request,
+      supabase,
+      authCookies,
+      target: authUrl(request, "/login", { ...fallbackParams, error: exemption.error }),
+    })
+  }
+
   const target = new URL(
-    resolvePostLoginPath(profile?.plan ?? "none", state.nextPath, state.surface === "app"),
+    resolvePostLoginPath(resolveEffectivePlan(profile?.plan, user.email), state.nextPath, state.surface === "app"),
     requestOrigin(request)
   )
   const response = NextResponse.redirect(target, 303)

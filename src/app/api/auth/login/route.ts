@@ -3,6 +3,7 @@ import { createServerClient } from "@supabase/ssr"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { setAppSessionCookie } from "@/lib/security/appSession"
 import { requireTrustedMutation } from "@/lib/security/apiGuards"
+import { ensurePaymentExemptAccess, resolveEffectivePlan } from "@/lib/security/paymentExemptions"
 import { checkRateLimit, getClientRateLimitKey } from "@/lib/security/rateLimit"
 
 type CookieToSet = {
@@ -146,7 +147,14 @@ export async function POST(request: NextRequest) {
     .eq("user_id", userId)
     .maybeSingle()
 
-  const target = new URL(resolvePostLoginPath(profile?.plan ?? "none", nextPath, appSurface), origin)
+  const exemption = await ensurePaymentExemptAccess({ admin, userId, email: data.user?.email })
+  if (!exemption.ok) {
+    await supabase.auth.signOut()
+    return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: exemption.error }), 303)
+  }
+
+  const effectivePlan = resolveEffectivePlan(profile?.plan, data.user?.email)
+  const target = new URL(resolvePostLoginPath(effectivePlan, nextPath, appSurface), origin)
   const response = NextResponse.redirect(target, 303)
   authCookies.forEach(({ name, value, options }) => {
     response.cookies.set(name, value, options)

@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
 import { verifyCurrentAppSession } from "@/lib/security/appSession";
+import { ensurePaymentExemptAccess, resolveEffectivePlan } from "@/lib/security/paymentExemptions";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import PageClient from "./PageClient";
@@ -51,7 +52,9 @@ export default async function Page({
           .eq("user_id", user.id)
           .maybeSingle();
 
-        redirect(resolvePostLoginPath(profile?.plan ?? "none", nextPath, appSurface));
+        await ensurePaymentExemptAccess({ admin, userId: user.id, email: user.email });
+
+        redirect(resolvePostLoginPath(resolveEffectivePlan(profile?.plan, user.email), nextPath, appSurface));
       }
     }
   }

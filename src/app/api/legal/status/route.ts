@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server"
 import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
+import { resolveEffectivePlan } from "@/lib/security/paymentExemptions"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import { ACTIVE_LEGAL_DOCUMENTS, hasAcceptedActiveDocuments } from "@/lib/legal/documents"
@@ -59,6 +60,9 @@ export async function GET() {
 
     const rows = (acceptances || []) as LegalAcceptanceRow[]
     const latestCurrent = rows.find((row) => hasAcceptedActiveDocuments(row.accepted_documents))
+    const effectivePlan = resolveEffectivePlan(profile?.plan, user.email)
+    const latestPlanCode =
+      latestCurrent?.plan_code && latestCurrent.plan_code !== "none" ? latestCurrent.plan_code : null
 
     return NextResponse.json({
       ok: true,
@@ -66,8 +70,8 @@ export async function GET() {
       configured: true,
       accepted: Boolean(latestCurrent),
       acceptedAt: latestCurrent?.accepted_at || null,
-      planCode: latestCurrent?.plan_code || profile?.plan || "none",
-      profilePlan: profile?.plan || "none",
+      planCode: latestPlanCode || effectivePlan,
+      profilePlan: effectivePlan,
       documents: ACTIVE_LEGAL_DOCUMENTS,
     })
   } catch {
