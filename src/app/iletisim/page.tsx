@@ -1,7 +1,8 @@
-import { ChevronRight, ListFilter, Mail, PenLine, Phone, Send, UserRound } from "lucide-react";
+import { ChevronRight, Mail, Phone, Send } from "lucide-react";
 import FooterContact from "../components/FooterContact";
 import LandingHeader from "../components/LandingHeader";
 import styles from "../marketing-pages.module.css";
+import ContactForm from "./ContactForm";
 
 export default function IletisimPage() {
   return (
@@ -53,58 +54,7 @@ export default function IletisimPage() {
             </div>
           </div>
 
-          <form
-            className={styles.contactFormPanel}
-            action="mailto:self.metacognition.institute@gmail.com"
-            method="post"
-            encType="text/plain"
-          >
-            <div className={styles.contactFormIntro}>
-              <span className={styles.contactFormIcon}>
-                <Send size={34} strokeWidth={2.2} />
-              </span>
-              <span>
-                <strong>Mesajınızı bize iletin</strong>
-                <small>Formu doldurun, size dönüş yapalım.</small>
-              </span>
-            </div>
-
-            <div className={styles.contactFormGrid}>
-              <label className={styles.contactField}>
-                <UserRound size={22} />
-                <input name="ad-soyad" type="text" placeholder="Ad Soyad" autoComplete="name" />
-              </label>
-
-              <label className={styles.contactField}>
-                <Mail size={22} />
-                <input name="e-posta" type="email" placeholder="E-posta" autoComplete="email" />
-              </label>
-
-              <label className={`${styles.contactField} ${styles.contactFieldFull}`}>
-                <ListFilter size={22} />
-                <select name="konu" defaultValue="">
-                  <option value="" disabled>
-                    Konu seçin
-                  </option>
-                  <option>Kurumsal kullanım</option>
-                  <option>Eğitim programı</option>
-                  <option>AI raporlama</option>
-                  <option>Akademik iş birliği</option>
-                  <option>Diğer</option>
-                </select>
-              </label>
-
-              <label className={`${styles.contactField} ${styles.contactTextarea} ${styles.contactFieldFull}`}>
-                <PenLine size={22} />
-                <textarea name="mesaj" placeholder="Mesajınız" />
-              </label>
-            </div>
-
-            <button className={styles.contactSubmit} type="submit">
-              <Send size={21} strokeWidth={2.2} />
-              <span>Gönder</span>
-            </button>
-          </form>
+          <ContactForm />
         </section>
       </main>
       <FooterContact />
