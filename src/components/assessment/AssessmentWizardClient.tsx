@@ -35,6 +35,29 @@ type ClientInfo = {
   ageMonths: number | null
 }
 
+function assessmentUserMessage(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error || "")
+  const lower = message.toLowerCase()
+
+  if (lower.includes("stack depth limit exceeded") || lower.includes("infinite recursion")) {
+    return "Değerlendirme kaydı oluşturulamadı. Sistem ayarı düzeltildi; lütfen sayfayı yenileyip tekrar deneyin."
+  }
+  if (lower.includes("row-level security") || lower.includes("permission denied")) {
+    return "Bu danışan için kayıt yetkiniz doğrulanamadı. Lütfen tekrar giriş yapıp deneyin."
+  }
+  if (lower.includes("assessment kaydı")) {
+    return "Değerlendirme kaydı oluşturulamadı. Lütfen tekrar deneyin."
+  }
+  if (lower.includes("rapor kaydı")) {
+    return "Rapor kaydı oluşturulamadı. Lütfen tekrar deneyin."
+  }
+  if (lower.includes("failed to fetch") || lower.includes("network")) {
+    return "Bağlantı sorunu yaşandı. İnternet bağlantınızı kontrol edip tekrar deneyin."
+  }
+
+  return "İşlem tamamlanamadı. Lütfen tekrar deneyin."
+}
+
 export default function AssessmentWizardClient() {
 
   
@@ -418,8 +441,9 @@ export default function AssessmentWizardClient() {
           window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })
         }, 100)
       }
-    } catch (err: any) {
-      setSaveMsg(err?.message || "Beklenmeyen bir hata oluştu.")
+    } catch (err: unknown) {
+      console.error("assessment report flow failed", err)
+      setSaveMsg(assessmentUserMessage(err))
     } finally {
       setSaving(false)
     }
