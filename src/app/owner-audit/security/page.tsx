@@ -116,7 +116,7 @@ function UserSecurityCard({ user }: { user: OwnerSecurityUser }) {
             <div className="hidden text-slate-300 group-open:block">kapat</div>
           </div>
           <div className="flex items-center justify-center rounded-2xl bg-slate-50 px-3 py-2">
-            <OwnerSecurityActionButton targetUserId={user.userId} action="hide_from_security" label="Kaldır" />
+            <OwnerSecurityActionButton targetUserId={user.userId} action="hide_from_security" label="Listeden gizle" />
           </div>
         </div>
       </summary>
@@ -174,7 +174,7 @@ function UserSecurityCard({ user }: { user: OwnerSecurityUser }) {
               Detay
             </Link>
             <OwnerSecurityActionButton targetUserId={user.userId} action="revoke_sessions" label="Oturumları düşür" variant="dark" />
-            <OwnerSecurityActionButton targetUserId={user.userId} action="hide_from_security" label="Listeden kaldır" />
+            <OwnerSecurityActionButton targetUserId={user.userId} action="hide_from_security" label="Listeden gizle" />
             {(user.riskScore > 0 || user.manualReviewRequired || locked) ? (
               <OwnerSecurityActionButton targetUserId={user.userId} action="clear_risk" label="Riskten çıkar" />
             ) : null}

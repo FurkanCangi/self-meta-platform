@@ -333,7 +333,7 @@ async function main() {
   check("owner security page has filters", securityPage.includes('name="risk"') && securityPage.includes('name="category"'), "filters missing")
   check("owner security page renders action buttons", securityPage.includes("OwnerSecurityActionButton"), "action buttons missing")
   check("owner security actions do not use browser prompts", !securityActions.includes("window.prompt") && securityActions.includes("defaultReason"), "owner action prompt should not be used")
-  check("owner security page can hide rows", securityPage.includes('action="hide_from_security"') && securityPage.includes("Listeden kaldır"), "hide from security action missing")
+  check("owner security page can hide rows", securityPage.includes('action="hide_from_security"') && securityPage.includes("Listeden gizle"), "hide from security action missing")
   check("owner security page can clear risk", securityPage.includes('action="clear_risk"') && securityPage.includes("Riskten çıkar"), "clear risk action missing")
   check("owner security page can clear specific situations", securityPage.includes('action="clear_event_type"') && securityPage.includes("Temizlenebilir güvenlik durumları"), "clear event type action missing")
   check("owner security events are collapsible", securityPage.includes("Son Güvenlik Olayları") && securityPage.includes("<details"), "collapsible event panel missing")

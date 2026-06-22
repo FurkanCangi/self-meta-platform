@@ -99,7 +99,6 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
   }, [])
 
   const revokeDevice = async (deviceId: string) => {
-    if (!window.confirm("Bu cihazı hesaptan kaldırmak istediğinize emin misiniz?")) return
     setWorkingId(deviceId)
     setError("")
     setMessage("")
