@@ -160,6 +160,7 @@ check("owner security read route requires owner allowlist", ownerSecurityRoute.i
 check("owner security action route requires trusted mutation", ownerSecurityActionRoute.includes("requireTrustedMutation"), "owner security action missing trusted mutation")
 check("owner security action route validates body with Zod", ownerSecurityActionRoute.includes("ownerSecurityActionSchema"), "owner security action missing schema")
 check("owner security action route is rate limited", ownerSecurityActionRoute.includes("checkRateLimit"), "owner security action missing rate limit")
+check("owner security can hide rows from panel", ownerSecurityActionRoute.includes("hide_from_security") && ownerSecurityCore.includes("owner_security_panel_hidden"), "owner hide row action missing")
 check("owner security live wrapper uses injectable core", ownerSecurityLib.includes("applyOwnerSecurityActionWithClient"), "owner security wrapper missing injectable action core")
 check("owner security actions block self-targeting", ownerSecurityCore.includes("owner_self_action_blocked"), "owner self-action block missing")
 check("owner security actions write audit events", ownerSecurityCore.includes("owner_security_action"), "owner security audit event missing")

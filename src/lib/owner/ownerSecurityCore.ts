@@ -109,6 +109,22 @@ function isResolvedSecurityRow(row: Record<string, unknown>) {
   return Boolean(metadata?.owner_resolved_at)
 }
 
+function rowTime(row: Record<string, unknown>) {
+  const value = safeText(row.created_at || row.updated_at || row.last_seen_at || row.processed_at)
+  const time = value ? new Date(value).getTime() : 0
+  return Number.isFinite(time) ? time : 0
+}
+
+function isPanelHiddenRow(row: Record<string, unknown>) {
+  return row.event_type === "owner_security_panel_hidden"
+}
+
+function latestVisibleSecurityEventTime(rows: Record<string, unknown>[]) {
+  return rows
+    .filter((row) => !isPanelHiddenRow(row) && row.event_type !== "owner_security_action")
+    .reduce((latest, row) => Math.max(latest, rowTime(row)), 0)
+}
+
 function applyFilters(users: OwnerSecurityUser[], filters: OwnerSecurityFilters) {
   const q = safeText(filters.q).toLowerCase()
   const category = safeText(filters.category)
@@ -161,7 +177,16 @@ export function buildOwnerSecurityDashboardFromRows(
   }
   for (const row of rows.billingEvents) if (row.target_user_id) users.add(String(row.target_user_id))
 
-  const securityUsers: OwnerSecurityUser[] = Array.from(users).map((userId) => {
+  const hiddenUsers = new Set<string>()
+  for (const userId of users) {
+    const userEvents = rows.securityEvents.filter((row) => String(row.user_id || "") === userId)
+    const latestHiddenAt = userEvents.filter(isPanelHiddenRow).reduce((latest, row) => Math.max(latest, rowTime(row)), 0)
+    if (latestHiddenAt > 0 && latestHiddenAt >= latestVisibleSecurityEventTime(userEvents)) {
+      hiddenUsers.add(userId)
+    }
+  }
+
+  const securityUsers: OwnerSecurityUser[] = Array.from(users).filter((userId) => !hiddenUsers.has(userId)).map((userId) => {
     const auth = authById.get(userId)
     const profile = profilesByUser.get(userId)
     const state = statesByUser.get(userId)
@@ -261,7 +286,7 @@ export function buildOwnerSecurityDashboardFromRows(
 
   const authEmail = (userId: unknown) => authById.get(String(userId || ""))?.email || "E-posta yok"
   const eventRows: OwnerSecurityEvent[] = [
-    ...rows.securityEvents.filter((row) => !isResolvedSecurityRow(row)).map((row) => ({
+    ...rows.securityEvents.filter((row) => !isResolvedSecurityRow(row) && !isPanelHiddenRow(row) && !hiddenUsers.has(String(row.user_id || ""))).map((row) => ({
       id: `security:${row.id}`,
       userId: row.user_id ? String(row.user_id) : null,
       email: authEmail(row.user_id),
@@ -363,7 +388,7 @@ export async function applyOwnerSecurityActionWithClient(
     nowIso?: string
   }
 ) {
-  if (params.actorUserId === params.targetUserId) {
+  if (params.actorUserId === params.targetUserId && params.action !== "hide_from_security") {
     return { ok: false as const, error: "owner_self_action_blocked" }
   }
 
@@ -442,6 +467,16 @@ export async function applyOwnerSecurityActionWithClient(
       { onConflict: "user_id" }
     )
     if (stateError) return { ok: false as const, error: "risk_clear_failed" }
+  } else if (params.action === "hide_from_security") {
+    const { error } = await admin.from("account_security_events").insert({
+      user_id: params.targetUserId,
+      event_type: "owner_security_panel_hidden",
+      metadata: {
+        ...metadata,
+        owner_hidden_at: timestamp,
+      },
+    })
+    if (error) return { ok: false as const, error: "security_hide_failed" }
   } else if (params.action === "temporary_lock") {
     const lockMinutes = Math.max(5, Math.min(1440, Number(params.lockMinutes || 30)))
     const { error } = await admin.from("account_security_state").upsert(

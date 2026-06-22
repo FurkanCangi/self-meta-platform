@@ -99,6 +99,28 @@ function makeRows() {
   }
 }
 
+function makeRowsWithHiddenTarget() {
+  const rows = makeRows()
+  return {
+    ...rows,
+    securityEvents: [
+      ...rows.securityEvents,
+      { id: 99, user_id: TARGET_ID, event_type: "owner_security_panel_hidden", created_at: iso(0), ip_address: null, user_agent: "owner-agent", metadata: { owner_hidden_at: iso(0) } },
+    ],
+  }
+}
+
+function makeRowsWithHiddenTargetAndNewEvent() {
+  const rows = makeRowsWithHiddenTarget()
+  return {
+    ...rows,
+    securityEvents: [
+      ...rows.securityEvents,
+      { id: 100, user_id: TARGET_ID, event_type: "api_rate_limited", created_at: iso(-1), ip_address: "10.0.0.9", user_agent: "agent-new", metadata: { route: "/api/ai-report" } },
+    ],
+  }
+}
+
 function makeMockAdmin() {
   const calls: RecordedCall[] = []
   const admin: OwnerSecurityActionClient = {
@@ -152,6 +174,8 @@ async function main() {
   check("frequent device changes event is warning", dashboard.events.some((event) => event.label.includes("Cihaz kaldir/ekle") && event.severity === "warning"), JSON.stringify(dashboard.events))
   check("risk filter returns target only", buildOwnerSecurityDashboardFromRows(makeRows(), { risk: "critical" }).users.length === 1, "critical filter failed")
   check("payment filter returns target only", buildOwnerSecurityDashboardFromRows(makeRows(), { category: "payment" }).users.length === 1, "payment filter failed")
+  check("hidden user is removed from security panel", !buildOwnerSecurityDashboardFromRows(makeRowsWithHiddenTarget(), {}).users.some((user) => user.userId === TARGET_ID), "hidden target still visible")
+  check("new security event makes hidden user visible again", buildOwnerSecurityDashboardFromRows(makeRowsWithHiddenTargetAndNewEvent(), {}).users.some((user) => user.userId === TARGET_ID), "new event should unhide target")
 
   const selfAction = await applyOwnerSecurityActionWithClient(makeMockAdmin().admin, {
     actorUserId: OWNER_ID,
@@ -161,6 +185,15 @@ async function main() {
     nowIso: NOW.toISOString(),
   })
   check("owner cannot target own account", !selfAction.ok && selfAction.error === "owner_self_action_blocked", JSON.stringify(selfAction))
+
+  const selfHide = await applyOwnerSecurityActionWithClient(makeMockAdmin().admin, {
+    actorUserId: OWNER_ID,
+    targetUserId: OWNER_ID,
+    action: "hide_from_security",
+    reason: "hide own low risk row",
+    nowIso: NOW.toISOString(),
+  })
+  check("owner can hide own row from security panel", selfHide.ok, JSON.stringify(selfHide))
 
   const revokeSessions = makeMockAdmin()
   await applyOwnerSecurityActionWithClient(revokeSessions.admin, {
@@ -281,11 +314,26 @@ async function main() {
     call.values.action === "owner_security_suspend"
   ), JSON.stringify(suspend.calls))
 
+  const hideFromPanel = makeMockAdmin()
+  await applyOwnerSecurityActionWithClient(hideFromPanel.admin, {
+    actorUserId: OWNER_ID,
+    targetUserId: TARGET_ID,
+    action: "hide_from_security",
+    reason: "not relevant in security panel",
+    nowIso: NOW.toISOString(),
+  })
+  check("hide from security panel writes hidden event", hasCall(hideFromPanel.calls, (call) =>
+    call.table === "account_security_events" &&
+    call.type === "insert" &&
+    call.values.event_type === "owner_security_panel_hidden"
+  ), JSON.stringify(hideFromPanel.calls))
+
   const securityPage = await import("node:fs").then((fs) => fs.readFileSync("src/app/owner-audit/security/page.tsx", "utf8"))
   const securityActions = await import("node:fs").then((fs) => fs.readFileSync("src/app/owner-audit/security/OwnerSecurityActions.tsx", "utf8"))
   check("owner security page has filters", securityPage.includes('name="risk"') && securityPage.includes('name="category"'), "filters missing")
   check("owner security page renders action buttons", securityPage.includes("OwnerSecurityActionButton"), "action buttons missing")
   check("owner security actions do not use browser prompts", !securityActions.includes("window.prompt") && securityActions.includes("defaultReason"), "owner action prompt should not be used")
+  check("owner security page can hide rows", securityPage.includes('action="hide_from_security"') && securityPage.includes("Listeden kaldır"), "hide from security action missing")
   check("owner security page can clear risk", securityPage.includes('action="clear_risk"') && securityPage.includes("Riskten çıkar"), "clear risk action missing")
   check("owner security page can clear specific situations", securityPage.includes('action="clear_event_type"') && securityPage.includes("Temizlenebilir güvenlik durumları"), "clear event type action missing")
   check("owner security events are collapsible", securityPage.includes("Son Güvenlik Olayları") && securityPage.includes("<details"), "collapsible event panel missing")

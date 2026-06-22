@@ -93,7 +93,7 @@ function UserSecurityCard({ user }: { user: OwnerSecurityUser }) {
           <div className="mt-1 truncate text-sm text-slate-500">{user.email}</div>
         </div>
 
-        <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 md:min-w-[430px] md:grid-cols-5">
+        <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 md:min-w-[520px] md:grid-cols-6">
           <div className="rounded-2xl bg-slate-50 px-3 py-2">
             <div className="font-semibold text-slate-900">{user.activeSessions}</div>
             <div>oturum</div>
@@ -114,6 +114,9 @@ function UserSecurityCard({ user }: { user: OwnerSecurityUser }) {
             <div className="font-semibold">Aç</div>
             <div className="text-slate-300 group-open:hidden">detay</div>
             <div className="hidden text-slate-300 group-open:block">kapat</div>
+          </div>
+          <div className="flex items-center justify-center rounded-2xl bg-slate-50 px-3 py-2">
+            <OwnerSecurityActionButton targetUserId={user.userId} action="hide_from_security" label="Kaldır" />
           </div>
         </div>
       </summary>
@@ -171,6 +174,7 @@ function UserSecurityCard({ user }: { user: OwnerSecurityUser }) {
               Detay
             </Link>
             <OwnerSecurityActionButton targetUserId={user.userId} action="revoke_sessions" label="Oturumları düşür" variant="dark" />
+            <OwnerSecurityActionButton targetUserId={user.userId} action="hide_from_security" label="Listeden kaldır" />
             {(user.riskScore > 0 || user.manualReviewRequired || locked) ? (
               <OwnerSecurityActionButton targetUserId={user.userId} action="clear_risk" label="Riskten çıkar" />
             ) : null}

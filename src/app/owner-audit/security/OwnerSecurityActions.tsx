@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useTransition } from "react"
+import { useState, useTransition, type MouseEvent } from "react"
 import { useRouter } from "next/navigation"
 import type { OwnerSecurityAction } from "@/lib/owner/ownerSecurity"
 
@@ -41,7 +41,10 @@ export function OwnerSecurityActionButton({
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState("")
 
-  function runAction() {
+  function runAction(event?: MouseEvent<HTMLButtonElement>) {
+    event?.preventDefault()
+    event?.stopPropagation()
+
     setError("")
     startTransition(async () => {
       const response = await fetch("/api/owner-audit/security/action", {

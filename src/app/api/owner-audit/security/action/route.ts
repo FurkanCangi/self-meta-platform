@@ -16,6 +16,7 @@ const ownerSecurityActionSchema = z.object({
     "clear_review",
     "clear_risk",
     "clear_event_type",
+    "hide_from_security",
     "temporary_lock",
     "clear_lock",
     "suspend",
