@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import DeviceManagementPanel from "./DeviceManagementPanel"
 
 type TherapistSettings = {
   clinicName: string
@@ -61,9 +62,14 @@ export default function ProfileSettingPage() {
   const [settings, setSettings] = useState<TherapistSettings>(defaultSettings)
   const [loaded, setLoaded] = useState(false)
   const [savedAt, setSavedAt] = useState("")
+  const [deviceLimitMode, setDeviceLimitMode] = useState(false)
+  const [devicesTabRequested, setDevicesTabRequested] = useState(false)
 
   useEffect(() => {
     try {
+      const params = new URLSearchParams(window.location.search)
+      setDeviceLimitMode(params.get("deviceLimit") === "1")
+      setDevicesTabRequested(params.get("tab") === "devices")
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) {
         setSettings({ ...defaultSettings, ...JSON.parse(raw) })
@@ -102,7 +108,12 @@ export default function ProfileSettingPage() {
           </p>
         </div>
 
+        {deviceLimitMode ? (
+          <DeviceManagementPanel deviceLimitMode />
+        ) : (
         <div className="space-y-6">
+          {devicesTabRequested ? <DeviceManagementPanel /> : null}
+
           <div className="rounded-3xl border border-slate-200 bg-white p-6">
             <h2 className="text-xl font-semibold text-slate-900">Kurum ve Rapor Ayarları</h2>
 
@@ -238,6 +249,7 @@ export default function ProfileSettingPage() {
             ) : null}
           </div>
         </div>
+        )}
       </div>
     </div>
   )

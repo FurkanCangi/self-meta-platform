@@ -2,6 +2,10 @@ import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { setAppSessionCookie } from "@/lib/security/appSession"
+import {
+  clearDeviceManagementCookie,
+  setDeviceManagementCookie,
+} from "@/lib/security/deviceManagementAccess"
 import { requireTrustedMutation } from "@/lib/security/apiGuards"
 import { ensurePaymentExemptAccess, resolveEffectivePlan } from "@/lib/security/paymentExemptions"
 import { checkRateLimit, getClientRateLimitKey } from "@/lib/security/rateLimit"
@@ -135,8 +139,20 @@ export async function POST(request: NextRequest) {
   })
   const registerPayload = await registerResponse.json().catch(() => null)
   if (!registerResponse.ok || !registerPayload?.ok || !registerPayload?.sessionId) {
-    await supabase.auth.signOut()
     const code = String(registerPayload?.error || "session_failed")
+    if (code === "device_limit_exceeded") {
+      const target = new URL("/profile-setting", origin)
+      target.searchParams.set("tab", "devices")
+      target.searchParams.set("deviceLimit", "1")
+      const response = NextResponse.redirect(target, 303)
+      authCookies.forEach(({ name, value, options }) => {
+        response.cookies.set(name, value, options)
+      })
+      setDeviceManagementCookie(response, userId)
+      return response
+    }
+
+    await supabase.auth.signOut()
     return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: code }), 303)
   }
 
@@ -160,5 +176,6 @@ export async function POST(request: NextRequest) {
     response.cookies.set(name, value, options)
   })
   setAppSessionCookie(response, registerPayload.sessionId)
+  clearDeviceManagementCookie(response)
   return response
 }

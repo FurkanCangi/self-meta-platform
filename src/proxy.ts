@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 const APP_SESSION_COOKIE = "sm_active_session";
+const DEVICE_MANAGEMENT_COOKIE = "sm_device_management";
 
 export async function proxy(request: NextRequest) {
   const appSurfaceRequested =
@@ -54,6 +55,13 @@ export async function proxy(request: NextRequest) {
 
   const appSessionId = request.cookies.get(APP_SESSION_COOKIE)?.value;
   if (!appSessionId) {
+    if (
+      request.nextUrl.pathname === "/profile-setting" &&
+      request.cookies.get(DEVICE_MANAGEMENT_COOKIE)?.value
+    ) {
+      return response;
+    }
+
     const loginUrl = new URL("/login", request.url);
     const nextPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
     loginUrl.searchParams.set("next", nextPath);

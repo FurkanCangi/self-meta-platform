@@ -5,6 +5,7 @@ import { rejectServerControlledFields } from "@/lib/security/payloadGuards"
 import { checkRateLimit, getClientRateLimitKey, rateLimitResponse } from "@/lib/security/rateLimit"
 import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import { setAppSessionCookie } from "@/lib/security/appSession"
+import { clearDeviceManagementCookie } from "@/lib/security/deviceManagementAccess"
 import {
   registerAppSessionForUser,
   MAX_REGISTERED_DEVICES,
@@ -88,5 +89,6 @@ export async function POST(request: Request) {
     maxDevices: MAX_REGISTERED_DEVICES,
   })
   setAppSessionCookie(response, result.sessionId)
+  clearDeviceManagementCookie(response)
   return response
 }

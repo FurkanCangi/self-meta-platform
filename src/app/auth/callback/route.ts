@@ -7,6 +7,10 @@ import {
 } from "@/lib/auth/googleOAuthState"
 import { getAcceptedDocumentsSnapshot, hasAcceptedActiveDocuments } from "@/lib/legal/documents"
 import { setAppSessionCookie } from "@/lib/security/appSession"
+import {
+  clearDeviceManagementCookie,
+  setDeviceManagementCookie,
+} from "@/lib/security/deviceManagementAccess"
 import { ensurePaymentExemptAccess, resolveEffectivePlan } from "@/lib/security/paymentExemptions"
 import { registerAppSessionForUser } from "@/lib/security/sessionRegistration"
 import { createSupabaseAdminClient, hasSupabaseAdminConfig } from "@/lib/supabase/admin"
@@ -241,6 +245,19 @@ export async function GET(request: NextRequest) {
   })
 
   if (!sessionResult.ok) {
+    if (sessionResult.error === "device_limit_exceeded") {
+      const target = new URL("/profile-setting", requestOrigin(request))
+      target.searchParams.set("tab", "devices")
+      target.searchParams.set("deviceLimit", "1")
+      const response = NextResponse.redirect(target, 303)
+      authCookies.forEach(({ name, value, options }) => {
+        response.cookies.set(name, value, options)
+      })
+      setDeviceManagementCookie(response, user.id)
+      clearGoogleState(response)
+      return response
+    }
+
     return redirectWithSignOut({
       request,
       supabase,
@@ -274,6 +291,7 @@ export async function GET(request: NextRequest) {
     response.cookies.set(name, value, options)
   })
   setAppSessionCookie(response, sessionResult.sessionId)
+  clearDeviceManagementCookie(response)
   clearGoogleState(response)
   return response
 }
