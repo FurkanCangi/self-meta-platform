@@ -210,6 +210,28 @@ async function main() {
     call.table === "account_sessions" && call.type === "update" && call.values.status === "revoked"
   ), JSON.stringify(temporaryLock.calls))
 
+  const clearRisk = makeMockAdmin()
+  await applyOwnerSecurityActionWithClient(clearRisk.admin, {
+    actorUserId: OWNER_ID,
+    targetUserId: TARGET_ID,
+    action: "clear_risk",
+    reason: "test access relaxation",
+    nowIso: NOW.toISOString(),
+  })
+  check("clear risk resets risk state and lock", hasCall(clearRisk.calls, (call) =>
+    call.table === "account_security_state" &&
+    call.type === "upsert" &&
+    call.values.risk_score === 0 &&
+    Array.isArray(call.values.risk_reasons) &&
+    call.values.manual_review_required === false &&
+    call.values.temporary_locked_until === null
+  ), JSON.stringify(clearRisk.calls))
+  check("clear risk writes owner audit", hasCall(clearRisk.calls, (call) =>
+    call.table === "billing_audit_events" &&
+    call.type === "insert" &&
+    call.values.action === "owner_security_clear_risk"
+  ), JSON.stringify(clearRisk.calls))
+
   const suspend = makeMockAdmin()
   await applyOwnerSecurityActionWithClient(suspend.admin, {
     actorUserId: OWNER_ID,
@@ -237,6 +259,7 @@ async function main() {
   const securityPage = await import("node:fs").then((fs) => fs.readFileSync("src/app/owner-audit/security/page.tsx", "utf8"))
   check("owner security page has filters", securityPage.includes('name="risk"') && securityPage.includes('name="category"'), "filters missing")
   check("owner security page renders action buttons", securityPage.includes("OwnerSecurityActionButton"), "action buttons missing")
+  check("owner security page can clear risk", securityPage.includes('action="clear_risk"') && securityPage.includes("Riskten çıkar"), "clear risk action missing")
   check("owner security page links detail view", securityPage.includes("/owner-audit/${encodeURIComponent(user.userId)}?tab=audit"), "detail link missing")
 
   if (failures.length > 0) {

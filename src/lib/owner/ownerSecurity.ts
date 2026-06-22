@@ -20,6 +20,7 @@ export type OwnerSecurityAction =
   | "revoke_device"
   | "mark_review"
   | "clear_review"
+  | "clear_risk"
   | "temporary_lock"
   | "clear_lock"
   | "suspend"

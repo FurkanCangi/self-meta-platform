@@ -42,7 +42,9 @@ function formatLoginErrorCode(code?: string | null) {
   if (code === "device_limit_exceeded") {
     return "Bu hesap için en fazla 2 cihaz kullanılabilir. Yeni cihaz eklemek için önce mevcut cihazlardan biri kaldırılmalıdır.";
   }
-  if (code === "device_slot_unavailable") return "Bu hesapta bu cihaz türü için kullanım limiti dolu.";
+  if (code === "device_slot_unavailable") {
+    return "Bu hesap için en fazla 2 cihaz kullanılabilir. Yeni cihaz eklemek için önce mevcut cihazlardan biri kaldırılmalıdır.";
+  }
   if (code === "device_revoked") return "Bu cihaz için erişim kapatılmış görünüyor.";
   if (code === "account_temporarily_locked") return "Şüpheli kullanım nedeniyle hesap geçici olarak kilitlendi.";
   if (code === "account_suspended") return "Hesap güvenlik nedeniyle askıya alınmış görünüyor.";

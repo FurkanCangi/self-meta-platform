@@ -9,7 +9,7 @@ import { getAcceptedDocumentsSnapshot, hasAcceptedActiveDocuments } from "@/lib/
 import { setAppSessionCookie } from "@/lib/security/appSession"
 import { ensurePaymentExemptAccess, resolveEffectivePlan } from "@/lib/security/paymentExemptions"
 import { registerAppSessionForUser } from "@/lib/security/sessionRegistration"
-import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+import { createSupabaseAdminClient, hasSupabaseAdminConfig } from "@/lib/supabase/admin"
 
 type CookieToSet = {
   name: string
@@ -156,7 +156,7 @@ export async function GET(request: NextRequest) {
     })
   }
 
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  if (!hasSupabaseAdminConfig()) {
     return redirectWithSignOut({
       request,
       supabase,

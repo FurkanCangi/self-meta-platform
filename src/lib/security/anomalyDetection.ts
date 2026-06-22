@@ -17,7 +17,7 @@ type RiskDecision = {
 }
 
 const REVIEW_THRESHOLD = 40
-const LOCK_THRESHOLD = 70
+const LOCK_THRESHOLD = 160
 const TEMPORARY_LOCK_MINUTES = 30
 const SECURITY_LOCK_EXEMPT_ROLES = new Set(["admin", "super_admin", "owner"])
 

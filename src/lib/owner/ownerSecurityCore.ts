@@ -357,6 +357,20 @@ export async function applyOwnerSecurityActionWithClient(
       { onConflict: "user_id" }
     )
     if (error) return { ok: false as const, error: "review_update_failed" }
+  } else if (params.action === "clear_risk") {
+    const { error } = await admin.from("account_security_state").upsert(
+      {
+        user_id: params.targetUserId,
+        risk_score: 0,
+        risk_reasons: [],
+        manual_review_required: false,
+        temporary_locked_until: null,
+        last_evaluated_at: timestamp,
+        updated_at: timestamp,
+      },
+      { onConflict: "user_id" }
+    )
+    if (error) return { ok: false as const, error: "risk_clear_failed" }
   } else if (params.action === "temporary_lock") {
     const lockMinutes = Math.max(5, Math.min(1440, Number(params.lockMinutes || 30)))
     const { error } = await admin.from("account_security_state").upsert(

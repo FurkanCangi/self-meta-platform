@@ -159,24 +159,6 @@ export async function registerAppSessionForUser({
         userAgent,
         metadata: { requested_device_type: deviceType, requested_slot: requestedSlot },
       })
-    } else if (sameSlotDevice) {
-      await recordAccountSecurityEvent({
-        userId: user.id,
-        eventType: "device_slot_blocked",
-        ipAddress,
-        userAgent,
-        metadata: { requested_device_type: deviceType, requested_slot: requestedSlot },
-      })
-
-      return {
-        ok: false,
-        error: "device_slot_unavailable",
-        message:
-          requestedSlot === "desktop"
-            ? "Bu hesapta zaten bir bilgisayar kayıtlı."
-            : "Bu hesapta zaten bir telefon veya tablet kayıtlı.",
-        status: 409,
-      }
     }
 
     if (!deviceId) {

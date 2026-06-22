@@ -122,6 +122,9 @@ function UserSecurityCard({ user }: { user: OwnerSecurityUser }) {
               Detay
             </Link>
             <OwnerSecurityActionButton targetUserId={user.userId} action="revoke_sessions" label="Oturumları düşür" variant="dark" />
+            {(user.riskScore > 0 || user.manualReviewRequired || locked) ? (
+              <OwnerSecurityActionButton targetUserId={user.userId} action="clear_risk" label="Riskten çıkar" />
+            ) : null}
             {user.manualReviewRequired ? (
               <OwnerSecurityActionButton targetUserId={user.userId} action="clear_review" label="İncelemeyi kaldır" />
             ) : (
