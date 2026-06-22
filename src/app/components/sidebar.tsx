@@ -8,6 +8,7 @@ import {
   AiOutlineFileText,
   AiOutlineHome,
   AiOutlinePlayCircle,
+  AiOutlineRead,
   AiOutlineSetting,
   AiOutlineShoppingCart,
   AiOutlineUser,
@@ -113,15 +114,21 @@ export default function Sidebar({ toggle = true }: SidebarProps) {
           </ul>
 
           <div className="px-3 pb-2 pt-6 text-[12px] font-black uppercase tracking-[0.18em] text-slate-400">
-            Klinik Değerlendirme
+            Eğitim Alanı
           </div>
           <ul className="space-y-1">
             <Item
               href="/education"
               label="Eğitimler"
-              icon={<AiOutlinePlayCircle />}
-              active={pathname === "/education"}
+              icon={<AiOutlineRead />}
+              active={pathname === "/education" || pathname.startsWith("/education/")}
             />
+          </ul>
+
+          <div className="px-3 pb-2 pt-6 text-[12px] font-black uppercase tracking-[0.18em] text-slate-400">
+            Klinik Değerlendirme
+          </div>
+          <ul className="space-y-1">
             <Item
               href="/assessments"
               label="Skor Girişi"
