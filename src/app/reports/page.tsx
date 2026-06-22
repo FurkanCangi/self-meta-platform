@@ -248,16 +248,16 @@ export default function ReportsPage() {
       )}
     </div>
 
-    <div className="dna-web-only mx-auto max-w-7xl space-y-6 px-0 py-0 md:px-4 md:py-8">
-      <div className="dna-card p-4 md:p-6">
+    <div className="dna-web-only dna-reports-page mx-auto max-w-7xl space-y-6 px-0 py-0 md:px-4 md:py-8">
+      <div className="dna-card dna-print-hide p-4 md:p-6">
         <h1 className="text-2xl font-semibold text-slate-900 md:text-3xl">Rapor Geçmişi</h1>
         <p className="mt-2 text-slate-500">
           Oluşturulan klinik raporlar burada görüntülenir.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <div className="dna-card p-4 lg:col-span-2">
+      <div className="dna-reports-grid grid grid-cols-1 gap-6 lg:grid-cols-5">
+        <div className="dna-card dna-reports-list dna-print-hide p-4 lg:col-span-2">
           <h2 className="mb-4 text-lg font-semibold text-slate-900">Kayıtlı Raporlar</h2>
 
           {loading && <p className="text-sm text-slate-500">Yükleniyor...</p>}
@@ -327,18 +327,27 @@ export default function ReportsPage() {
           </div>
         </div>
 
-        <div className="dna-card p-4 md:p-6 lg:col-span-3">
-          <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="dna-card dna-print-report-shell p-4 md:p-6 lg:col-span-3">
+          <div className="dna-print-hide mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <h2 className="text-lg font-semibold text-slate-900">Seçilen Rapor</h2>
             {selected ? (
-              <button
-                type="button"
-                onClick={() => handleDeleteReport(selected)}
-                disabled={deletingReportId === selected.id}
-                className="inline-flex w-full items-center justify-center rounded-xl border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
-              >
-                {deletingReportId === selected.id ? "Siliniyor..." : "Raporu Sil"}
-              </button>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:w-auto"
+                >
+                  PDF / Yazdır
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDeleteReport(selected)}
+                  disabled={deletingReportId === selected.id}
+                  className="inline-flex w-full items-center justify-center rounded-xl border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                >
+                  {deletingReportId === selected.id ? "Siliniyor..." : "Raporu Sil"}
+                </button>
+              </div>
             ) : null}
           </div>
 
@@ -350,7 +359,7 @@ export default function ReportsPage() {
 
           {selected && (
             <>
-              <div className="mb-4 grid grid-cols-2 gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-4">
+              <div className="dna-report-meta mb-4 grid grid-cols-2 gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-4">
                 <div>
                   <div className="text-xs uppercase tracking-wide text-slate-500">Versiyon</div>
                   <div className="mt-1 text-sm font-medium text-slate-900">v{selected.version ?? "?"}</div>

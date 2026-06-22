@@ -743,9 +743,20 @@ export default function AssessmentWizardClient() {
                 </div>
               </div>
 
-              <div className="dna-card p-6">
-                <div className="text-xs font-medium text-slate-400">AI Rapor</div>
-                <h3 className="mt-1 text-xl font-semibold text-slate-900">Klinik Yorum</h3>
+              <div className="dna-card dna-print-report-shell p-6">
+                <div className="dna-print-hide flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div>
+                    <div className="text-xs font-medium text-slate-400">Klinik Rapor</div>
+                    <h3 className="mt-1 text-xl font-semibold text-slate-900">Klinik Yorum</h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:w-auto"
+                  >
+                    PDF / Yazdır
+                  </button>
+                </div>
 
                 <ClinicalReportView
                   className="mt-5"

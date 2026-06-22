@@ -1025,3 +1025,137 @@ html[data-theme="dark"] .dna-shell .shadow-sm {
   padding: 10px 12px;
   backdrop-filter: blur(16px);
 }
+
+@media print {
+  @page {
+    size: A4;
+    margin: 15mm 13mm;
+  }
+
+  html,
+  body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+  }
+
+  body {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .dna-print-hide,
+  .dna-print-hide *,
+  .dna-reports-list,
+  .dna-reports-list *,
+  .dna-app-only,
+  .dna-app-only * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .dna-print-report-shell,
+  .dna-print-report-shell * {
+    visibility: visible;
+  }
+
+  .dna-print-report-shell {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+  }
+
+  .dna-reports-page,
+  .dna-reports-grid,
+  .dna-web-only {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .dna-report-meta {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin: 0 0 10mm 0 !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    background: #f8fafc !important;
+    padding: 10px 12px !important;
+    font-size: 9.5pt !important;
+  }
+
+  .dna-clinical-report {
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+  }
+
+  .dna-report-date {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin: 0 0 8mm 0 !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: 10px !important;
+    background: #f8fafc !important;
+    color: #0f172a !important;
+    padding: 8px 10px !important;
+  }
+
+  .dna-report-sections {
+    display: block !important;
+  }
+
+  .dna-report-section {
+    break-inside: avoid-page;
+    page-break-inside: avoid;
+    margin: 0 0 7mm 0 !important;
+  }
+
+  .dna-report-heading {
+    break-after: avoid;
+    page-break-after: avoid;
+    margin: 0 0 3mm 0 !important;
+    color: #0f172a !important;
+    font-size: 13pt !important;
+    line-height: 1.28 !important;
+    font-weight: 800 !important;
+  }
+
+  .dna-report-body {
+    color: #334155 !important;
+    font-size: 10.4pt !important;
+    line-height: 1.56 !important;
+  }
+
+  .dna-report-body p {
+    margin: 0 0 2.8mm 0 !important;
+    orphans: 3;
+    widows: 3;
+  }
+
+  .dna-report-bullet {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    margin: 0 0 2.2mm 0 !important;
+  }
+
+  .dna-report-bullet-dot {
+    margin-top: 6.5pt !important;
+    background: #64748b !important;
+  }
+}

@@ -30,14 +30,14 @@ export default function BrandLogo({ variant = "header" }: BrandLogoProps) {
           variant === "mark"
             ? "/images/brand/dna-logo-intelligence-symbol-transparent.png"
             : variant === "panel"
-              ? "/images/brand/dna-logo-dashboard.png"
+              ? "/images/brand/dna-logo-intelligence-symbol-transparent.png"
               : "/images/brand/dna-logo-header-readable.png"
         }
         alt="DNA Intelligence Dynamic Neuro-Regulation Approach"
-        width={variant === "mark" ? 585 : variant === "panel" ? 1527 : 1383}
-        height={variant === "mark" ? 657 : variant === "panel" ? 708 : 552}
+        width={variant === "mark" || variant === "panel" ? 585 : 1383}
+        height={variant === "mark" || variant === "panel" ? 657 : 552}
         className={styles.image}
-        sizes={variant === "footer" ? "340px" : variant === "panel" ? "230px" : "92px"}
+        sizes={variant === "footer" ? "340px" : variant === "panel" ? "132px" : "92px"}
       />
     </div>
   );

@@ -1307,7 +1307,7 @@ function naturalizeExternalProfileLine(line: string): string {
     .replace(/\s*Puan sistemi:\s*/i, " Puan: ")
     .replace(/\s*Bildirilen sonuç:\s*/i, " Sonuç: ")
     .replace(/\s*Rapor ilişkisi:\s*/i, " İlişki: ")
-    .replace(/\s*Yorum sınırı:\s*/i, " Yorumda ");
+    .replace(/\s*Yorum sınırı:\s*/i, " Sınır: ");
 
   if (/Children'?s Communication Checklist|CCC-?2/i.test(compact)) {
     return compact.replace(
@@ -1324,12 +1324,16 @@ function naturalizeExternalProfileLine(line: string): string {
   }
 
   return compact
-    .replace(/\s*Yorumda\s*Tek başına sonuç üretmez; yaş uyumu zorunlu kontrol edilir\.?/gi, " Yorumda tek başına sonuç üretmez.")
-    .replace(/\s*Yorumda\s*Motor test sonucu DNA skorunu değiştirmez; tek başına sonuç üretmez\.?/gi, " Yorumda DNA skorunu değiştirmez; klinik yorumu destekler.")
-    .replace(/\s*Sınır:\s*Tek başına sonuç üretmez; yaş uyumu zorunlu kontrol edilir\.?/gi, " Yorumda tek başına sonuç üretmez.")
-    .replace(/\s*Sınır:\s*Motor test sonucu DNA skorunu değiştirmez; tek başına sonuç üretmez\.?/gi, " Yorumda DNA skorunu değiştirmez; klinik yorumu destekler.")
+    .replace(/\s*Yorumda\s*Klinik yorum yalnız bu bilgiden çıkarılmaz\.?/gi, " Sınır: Klinik yorum yalnız bu testten çıkarılmaz.")
+    .replace(/\s*Yorumda\s*DNA skorunu değiştirmez; klinik bağlamı destekler\.?/gi, " Sınır: DNA skorunu değiştirmez; klinik bağlamı destekler.")
+    .replace(/\s*Sınır:\s*Tek başına sonuç üretmez; yaş uyumu zorunlu kontrol edilir\.?/gi, " Sınır: Klinik yorum yalnız bu testten çıkarılmaz.")
+    .replace(/\s*Sınır:\s*Tek başına sonuç üretmez\.?/gi, " Sınır: Klinik yorum yalnız bu testten çıkarılmaz.")
+    .replace(/\s*Sınır:\s*Motor test sonucu DNA skorunu değiştirmez; tek başına sonuç üretmez\.?/gi, " Sınır: DNA skorunu değiştirmez; klinik bağlamı destekler.")
+    .replace(/\s*Sınır:\s*Motor test sonucu DNA skorunu değiştirmez; tek başına praksi tanısı veya tedavi reçetesi üretmez\.?/gi, " Sınır: DNA skorunu değiştirmez; klinik bağlamı destekler.")
+    .replace(/\s*Sınır:\s*DNA alan skorlarını değiştirmez; gelişimsel tanı veya prognoz üretmez\.?/gi, " Sınır: DNA alan skorlarını değiştirmez; klinik bağlamla birlikte okunur.")
+    .replace(/\s*Sınır:\s*Tek başına tanı veya müdahale kararı üretmez\.?/gi, " Sınır: Klinik yorum yalnız bu testten çıkarılmaz.")
     .replace(/;\s*yaş uyumu zorunlu kontrol edilir\.?/gi, ".")
-    .replace(/Motor test sonucu DNA skorunu değiştirmez; tek başına sonuç üretmez\.?/gi, "DNA skorunu değiştirmez; klinik yorumu destekler.")
+    .replace(/Motor test sonucu DNA skorunu değiştirmez; tek başına sonuç üretmez\.?/gi, "DNA skorunu değiştirmez; klinik bağlamı destekler.")
     .replace(/\s*(?:Sınır:|Yorumda)\s*[^.]+manual[^.]+\./gi, "")
     .replace(/\s{2,}/g, " ")
     .trim();
@@ -2027,11 +2031,11 @@ function buildReasoningCalibrationText(
   }
   if (evidenceMap.counterEvidenceLines?.length) {
     lines.push(
-      `${evidenceMap.counterEvidenceLines[0].replace(/\.$/, "")}. Bu nedenle klinik yorum tek yönlü bir risk iddiası olarak kurulmaz.`
+      `${cleanLimitationLine(evidenceMap.counterEvidenceLines[0])}. Bu nedenle klinik yorum tek yönlü bir risk iddiası olarak kurulmaz.`
     );
   } else if (evidenceMap.preservedCapacityLines?.length) {
     lines.push(
-      `${evidenceMap.preservedCapacityLines[0].replace(/\.$/, "")}. Bu bulgu, yorumun her bağlama genellenmemesi gerektiğini gösterir.`
+      `${cleanLimitationLine(evidenceMap.preservedCapacityLines[0])}.`
     );
   }
   return lines.slice(0, 2).join("\n");
@@ -2042,18 +2046,6 @@ function buildClinicalPriorityList(
   domainResults?: DomainResult[],
   profileType?: string
 ): string {
-  const knowledgePriorityText =
-    domainResults?.length
-      ? buildUseKnowledgeText(
-          {
-            domainResults,
-            evidenceMap,
-            profileType,
-          },
-          "prioritization",
-          2
-        )
-      : "";
   const priorities = [
     evidenceMap.primaryAxis === "Korunmuş / dengeli self-regülasyon zemini"
       ? "- Ana klinik odak: Korunmuş self-regülasyon zemini ve bağlama göre değişebilen küçük hassasiyetler."
@@ -2064,12 +2056,11 @@ function buildClinicalPriorityList(
       ? `- Günlük yaşama yansıyan alanlar: ${formatDomainLabels(evidenceMap.secondaryAxes)} ana sorunun günlük işlevde görünürleştiği alanlardır.`
       : "- Günlük yaşama yansıyan alanlar: Belirgin bir ikincil alan ayrışmadığı için yorum tek alan sınırında tutulur.",
     evidenceMap.counterEvidenceLines?.length || evidenceMap.preservedCapacityLines?.length
-      ? `- Yorumu sınırlayan veri: ${(evidenceMap.counterEvidenceLines?.[0] || evidenceMap.preservedCapacityLines?.[0] || "").replace(/\.$/, "")}.`
+      ? `- Dengeleyici bilgi: ${cleanLimitationLine(evidenceMap.counterEvidenceLines?.[0] || evidenceMap.preservedCapacityLines?.[0] || "")}.`
       : "",
     evidenceMap.differentialFormulation
       ? "- Yorum tek bir yüzeysel açıklamaya indirgenmeden bağlamsal kanıtla sınırlı tutulur."
       : "",
-    knowledgePriorityText ? `- Veri güveni: ${knowledgePriorityText}` : "",
   ];
 
   return priorities.join("\n");
@@ -2097,15 +2088,41 @@ function buildVisibleConfidenceLabel(evidenceMap: ClinicalEvidenceMap): string {
 function buildVisibleConfidenceRationale(evidenceMap: ClinicalEvidenceMap, limitationText: string): string {
   const label = buildVisibleConfidenceLabel(evidenceMap);
   if (label === "orta-yüksek") {
-    return "Skor örüntüsü, terapist gözlemi ve yaşa uygun ek test bulguları aynı klinik yorumu desteklemektedir; korunmuş alanlar ise bu yorumun her bağlama genellenmemesi gerektiğini gösterir.";
+    return "Skor örüntüsü, terapist gözlemi ve yaşa uygun ek test bulguları aynı klinik yorumu desteklemektedir; korunmuş alanlar ise yorumun bağlama göre yapılmasını gerektirir.";
   }
   if (label === "orta") {
-    return `Kanıt kaynakları birlikte değerlendirilmiştir; ${limitationText}`;
+    return `Kanıt kaynakları birlikte değerlendirilmiştir. ${limitationText}`;
   }
   if (label === "sınırlı") {
     return `Vaka içi kanıt sınırlı olduğu için yorum temkinli tutulmuştur. ${limitationText}`;
   }
   return `${evidenceMap.confidenceRationale} ${limitationText}`;
+}
+
+function cleanLimitationLine(line: string): string {
+  return String(line || "")
+    .replace(/^Yorumu sınırlayan veri:\s*/i, "")
+    .replace(/^Yorumu temkinli tutan bilgi:\s*/i, "")
+    .replace(/^Dengeleyici bilgi:\s*/i, "")
+    .replace(/^Korunmuş ya da sınırlayıcı veri,\s*/i, "Korunmuş alan bilgisi, ")
+    .replace(/Bu bulgu,\s*/i, "")
+    .replace(/yorumun her bağlama genellenmemesi gerektiğini gösterir/gi, "yorumun bağlama göre yapılmasını gerektirir")
+    .replace(/yorumun yaygın bir sorun gibi genellenmemesi gerektiğini gösterir/gi, "yorumun bağlama göre yapılmasını gerektirir")
+    .replace(/\.$/, "")
+    .trim();
+}
+
+function joinClinicalSentences(lines: string[]): string {
+  const cleaned = lines
+    .map((line) => cleanLimitationLine(line))
+    .filter(Boolean)
+  const hasSpecificLimit = cleaned.some((line) => /Fizyolojik Regülasyon|Duyusal Regülasyon|Duygusal Regülasyon|Bilişsel Regülasyon|Yürütücü İşlev|İnterosepsiyon|yaş uyumsuz|ham puan|korunmuş görünmesi/i.test(line));
+  const selected = hasSpecificLimit
+    ? cleaned.filter((line) => !/^Korunmuş alan bilgisi,\s*yorumun bağlama göre yapılmasını gerektirir/i.test(line))
+    : cleaned;
+  return selected
+    .map((line) => (/[.!?]$/.test(line) ? line : `${line}.`))
+    .join(" ");
 }
 
 function buildGlobalClassificationNote(
@@ -2374,9 +2391,9 @@ function buildClinicalEvidenceMap(params: {
     ...limitedExternalSupport.map((line) => `Dış test kanıtı ana kararı güçlendirmez: ${line}`),
     ...(params.externalWarningLines || []),
     ...(params.externalTestAnalysis?.qualityFlagLines || []),
-    ...reasoning.counterEvidenceLines.slice(0, 2).map((line) => `Yorumu sınırlayan veri: ${line}`),
+    ...reasoning.counterEvidenceLines.slice(0, 2),
     !Array.isArray(params.answers) || params.answers.length === 0
-      ? "Madde düzeyi yanıt dizisi bulunmadığı için karar notu alan skorları ve anamnezle sınırlandırılır."
+      ? "Yanıt ayrıntısı bulunmadığı için karar notu alan skorları ve anamnezle sınırlandırılır."
       : null,
   ]).slice(0, 4);
 
@@ -2539,7 +2556,7 @@ function buildClinicalDecisionSection(
     ? sourceEvidenceLines.slice(0, 2).map((line) => `- ${line}`).join("\n")
     : "- Vaka içi kanıt sınırlı olduğundan karar notu öncelikle skor örüntüsüyle sınırlandırılmıştır.";
   const limitationText = evidenceMap.dataLimitations.length
-    ? evidenceMap.dataLimitations.slice(0, 2).join(" ")
+    ? joinClinicalSentences(uniqueStrings(evidenceMap.dataLimitations).slice(0, 2))
     : "Veri sınırlılığı kararın temel yönünü değiştirecek düzeyde görünmemektedir.";
   const decisionSummary =
     evidenceMap.primaryAxis === "Korunmuş / dengeli self-regülasyon zemini"
@@ -2549,20 +2566,17 @@ function buildClinicalDecisionSection(
     evidenceMap.secondaryAxes.length > 0
       ? `Formülasyon özeti: Günlük işlevde öne çıkan yansımalar ${formatDomainLabels(evidenceMap.secondaryAxes)} alanlarında belirginleşmektedir.`
       : "Formülasyon özeti: Bulgular tek bir yaygınlık iddiasına genişletilmeden, mevcut veri sınırları içinde yorumlanır.";
-  const globalPrioritySummary = "Bu bölüm, skor bilgisinden çok vaka içi kanıtların klinik önceliğe nasıl dönüştüğünü özetler.";
   const visibleConfidenceLabel = buildVisibleConfidenceLabel(evidenceMap);
   const visibleConfidenceRationale = buildVisibleConfidenceRationale(evidenceMap, limitationText);
 
   return [
-    globalPrioritySummary,
     decisionSummary,
     formulationSummary,
-    "Öncelik sırası:",
     buildClinicalPriorityList(evidenceMap, domainResults, profileType),
     "Kararı destekleyen bulgular:",
     caseEvidenceText,
-    `Veri güveni ${visibleConfidenceLabel}: ${visibleConfidenceRationale}`,
-    "Bu karar notu tanısal sonuç değildir; anamnez, gözlem ve ek değerlendirme bulgularıyla birlikte okunması gereken klinik hipotezi özetler.",
+    `Veri güveni: ${visibleConfidenceLabel}. ${visibleConfidenceRationale}`,
+    "Bu karar notu kesin sonuç üretmez; anamnez, gözlem ve ek değerlendirme bulgularıyla birlikte okunması gereken klinik hipotezi özetler.",
   ].join("\n");
 }
 
@@ -2574,15 +2588,7 @@ function buildClinicalDecisionSummarySection(params: {
   evidenceMap: ClinicalEvidenceMap;
   visibleInfo?: { adSoyad?: string; clientCode?: string; ageText?: string; diagnosis?: string };
 }): string {
-  const knowledgeDecision = buildUseKnowledgeText(
-    {
-      domainResults: params.domainResults,
-      evidenceMap: params.evidenceMap,
-      profileType: params.profileType,
-    },
-    "decision",
-    2
-  );
+  const knowledgeDecision = "";
   const identityLine = buildCaseIdentityLine(params.visibleInfo || {});
   const weakest = [...params.domainResults].sort((a, b) => a.score - b.score)[0];
   const nonTypical = params.domainResults

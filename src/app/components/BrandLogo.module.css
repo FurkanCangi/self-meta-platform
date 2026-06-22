@@ -45,10 +45,10 @@
 
 .panel{
   justify-content:center;
-  width:282px;
+  width:136px;
   height:132px;
   padding:0;
-  background:#fff;
+  background:transparent;
   border:0;
   box-shadow:none;
   overflow:visible;
