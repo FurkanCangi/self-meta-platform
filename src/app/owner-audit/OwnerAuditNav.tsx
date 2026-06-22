@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Bell, LayoutDashboard, LifeBuoy, ShieldCheck, Stethoscope } from "lucide-react"
+import { Bell, BookOpen, LayoutDashboard, LifeBuoy, ShieldCheck, Stethoscope } from "lucide-react"
 
 const navItems = [
   {
@@ -22,6 +22,12 @@ const navItems = [
     label: "Bildirim Merkezi",
     description: "Panel duyuruları",
     icon: Bell,
+  },
+  {
+    href: "/owner-audit/education",
+    label: "Eğitim Yönetimi",
+    description: "Video ve erişim kayıtları",
+    icon: BookOpen,
   },
   {
     href: "/owner-audit/support",

@@ -444,6 +444,15 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
                         Bildirim Gönder
                       </Link>
                       <Link
+                        href="/owner-audit/education"
+                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-indigo-700 transition hover:bg-indigo-50"
+                      >
+                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-700">
+                          EY
+                        </span>
+                        Eğitim Yönetimi
+                      </Link>
+                      <Link
                         href="/owner-audit/support"
                         className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-cyan-700 transition hover:bg-cyan-50"
                       >
