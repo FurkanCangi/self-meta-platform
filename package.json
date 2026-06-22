@@ -20,7 +20,8 @@
     "report:quality:ai-smoke": "tsc -p tsconfig.report-runner.json --outDir .tmp/report-runner-quality-ai-smoke && node .tmp/report-runner-quality-ai-smoke/scripts/run-report-quality-tests.js --with-ai --smoke-only",
     "security:smoke": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/security-smoke-tests.js",
     "security:readiness": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/security-readiness-check.js",
-    "security:owner-scenarios": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/owner-security-scenario-tests.js"
+    "security:owner-scenarios": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/owner-security-scenario-tests.js",
+    "live:health": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/live-backend-health.js"
   },
   "dependencies": {
     "@capacitor/android": "^8.4.0",

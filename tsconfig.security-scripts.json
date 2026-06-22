@@ -14,6 +14,7 @@
     "scripts/security-smoke-tests.ts",
     "scripts/security-readiness-check.ts",
     "scripts/owner-security-scenario-tests.ts",
+    "scripts/live-backend-health.ts",
     "src/lib/owner/ownerSecurityCore.ts",
     "src/lib/dna/reportLogger.ts"
   ],
