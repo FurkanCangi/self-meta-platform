@@ -7,6 +7,7 @@ import {
   AiOutlineEdit,
   AiOutlineFileText,
   AiOutlineHome,
+  AiOutlineMessage,
   AiOutlinePlayCircle,
   AiOutlineRead,
   AiOutlineSetting,
@@ -170,6 +171,12 @@ export default function Sidebar({ toggle = true }: SidebarProps) {
               label="Ayarlar"
               icon={<AiOutlineSetting />}
               active={pathname === "/profile-setting" || pathname === "/settings"}
+            />
+            <Item
+              href="/support"
+              label="Destek"
+              icon={<AiOutlineMessage />}
+              active={pathname === "/support"}
             />
           </ul>
         </div>

@@ -43,6 +43,7 @@ const tabs = [
       pathname === "/profile" ||
       pathname === "/profile-setting" ||
       pathname === "/settings" ||
+      pathname === "/support" ||
       pathname === "/report-packages" ||
       pathname === "/video-observation",
   },

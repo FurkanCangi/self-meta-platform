@@ -93,6 +93,8 @@ for (const key of [
   "BUNNY_STREAM_SIGNING_KEY",
   "BUNNY_STREAM_PULL_ZONE",
   "BUNNY_STREAM_IP_LOCK",
+  "SUPPORT_ATTACHMENTS_BUCKET",
+  "SUPPORT_RESPONSE_TARGET_HOURS",
 ]) {
   if (!new RegExp(`^${key}=`, "m").test(envExample)) {
     add("missing env example placeholder", key)
@@ -113,6 +115,7 @@ for (const sqlFile of [
   "sql/education_video_security.sql",
   "sql/payment_security.sql",
   "sql/kvkk_operational_security.sql",
+  "sql/support_tickets.sql",
 ]) {
   if (!exists(sqlFile)) add("missing SQL migration file", sqlFile)
 }

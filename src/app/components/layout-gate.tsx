@@ -37,6 +37,7 @@ const PUBLIC_ROUTES = new Set([
   "/package-agreement",
   "/legal/accept",
   "/clearroll/privacy",
+  "/support",
 ]);
 
 export default function LayoutGate({ children, initialAppSurface = false }: LayoutGateProps) {

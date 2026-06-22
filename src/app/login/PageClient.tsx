@@ -151,7 +151,17 @@ export default function LoginPage() {
             className="w-full rounded-xl border border-slate-200 bg-white px-4 py-4 text-sm font-medium text-slate-900 shadow-sm shadow-slate-200/40 placeholder:text-slate-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-100 focus:outline-none"
           />
 
-          {err ? <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">{err}</div> : null}
+          {err ? (
+            <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">
+              <div>{err}</div>
+              <a
+                href={`/support?category=login&email=${encodeURIComponent(email)}`}
+                className="mt-3 inline-flex rounded-xl bg-white px-3 py-2 text-xs font-bold text-rose-700 ring-1 ring-rose-100 transition hover:bg-rose-100"
+              >
+                Ekran görüntüsüyle sorun bildir
+              </a>
+            </div>
+          ) : null}
 
           <button
             type="submit"
