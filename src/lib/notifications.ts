@@ -31,6 +31,33 @@ export type NotificationItem = {
 
 const notificationKinds = new Set<NotificationKind>(["info", "education", "system", "warning"])
 const notificationAudiences = new Set<NotificationAudience>(["all", "therapists", "owners"])
+const notificationRouteAliases = new Map<string, string>([
+  ["/training", "/education"],
+  ["/trainings", "/education"],
+  ["/egitim", "/education"],
+  ["/egitimler", "/education"],
+])
+const allowedNotificationRoutePrefixes = [
+  "/arastirma",
+  "/assessments",
+  "/clients",
+  "/dashboard",
+  "/education",
+  "/fiyatlandirma",
+  "/kvkk",
+  "/owner-audit",
+  "/pricing",
+  "/privacy",
+  "/profile",
+  "/profile-setting",
+  "/report-packages",
+  "/reports",
+  "/settings",
+  "/starter",
+  "/support",
+  "/terms",
+  "/video-observation",
+]
 
 function cleanText(value: unknown, fallback = "") {
   const normalized = String(value || "").replace(/\s+/g, " ").trim()
@@ -71,8 +98,13 @@ export function normalizeNotificationActionUrl(value: unknown) {
 
   try {
     const parsed = new URL(raw, "https://dna.local")
-    const path = `${parsed.pathname}${parsed.search}${parsed.hash}`
-    return path.startsWith("/") ? path : null
+    const pathname = notificationRouteAliases.get(parsed.pathname) || parsed.pathname
+    const allowed = allowedNotificationRoutePrefixes.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    )
+
+    if (!allowed) return null
+    return `${pathname}${parsed.search}${parsed.hash}`
   } catch {
     return null
   }

@@ -130,6 +130,12 @@ const schemaGuards = read("src/lib/security/schemaGuards.ts")
 check("Zod JSON schema helper exists", schemaGuards.includes("readJsonWithSchema"), "missing readJsonWithSchema")
 check("Zod text JSON schema helper exists", schemaGuards.includes("parseJsonTextWithSchema"), "missing parseJsonTextWithSchema")
 
+const notificationsLib = read("src/lib/notifications.ts")
+const ownerNotificationsClient = read("src/app/owner-audit/notifications/OwnerNotificationsClient.tsx")
+check("legacy trainings notification link maps to education", notificationsLib.includes('["/trainings", "/education"]'), "missing /trainings alias")
+check("notification action URLs are restricted to known app routes", notificationsLib.includes("allowedNotificationRoutePrefixes"), "missing notification route allowlist")
+check("owner notifications default to existing education route", ownerNotificationsClient.includes('useState("/education")'), "owner notification default route is invalid")
+
 const aiReportRoute = read("src/app/api/ai-report/route.ts")
 check("AI report route uses Zod payload schema", aiReportRoute.includes("aiReportPayloadSchema"), "missing AI report Zod schema")
 check("AI report route rejects server-controlled payload fields", aiReportRoute.includes("rejectServerControlledFields"), "missing AI mass-assignment guard")

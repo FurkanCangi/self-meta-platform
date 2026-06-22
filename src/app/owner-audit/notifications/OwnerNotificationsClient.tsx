@@ -77,7 +77,7 @@ export default function OwnerNotificationsClient() {
   const [kind, setKind] = useState<NotificationKind>("education")
   const [audience, setAudience] = useState<NotificationAudience>("therapists")
   const [actionLabel, setActionLabel] = useState("Eğitimleri İncele")
-  const [actionUrl, setActionUrl] = useState("/trainings")
+  const [actionUrl, setActionUrl] = useState("/education")
   const [targetEmails, setTargetEmails] = useState("")
   const [notifications, setNotifications] = useState<OwnerNotification[]>([])
   const [loading, setLoading] = useState(true)
@@ -319,7 +319,7 @@ export default function OwnerNotificationsClient() {
                   value={actionUrl}
                   onChange={(event) => setActionUrl(event.target.value)}
                   maxLength={240}
-                  placeholder="/trainings"
+                  placeholder="/education"
                   className="h-12 rounded-2xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
                 />
               </label>
