@@ -162,6 +162,37 @@ function selectedFileLabel(files: FileList | null) {
   return `${count} dosya hazır`
 }
 
+function supportErrorMessage(code?: string) {
+  if (code === "support_tables_missing") {
+    return "Destek kayıt alanı hazırlanıyor. Lütfen biraz sonra tekrar deneyin."
+  }
+  if (code === "support_storage_missing") {
+    return "Ekran görüntüsü yükleme alanı hazırlanıyor. Dosyasız göndermeyi deneyebilir veya biraz sonra tekrar deneyebilirsiniz."
+  }
+  if (code === "support_subject_invalid") {
+    return "Lütfen kısa bir başlık yazın."
+  }
+  if (code === "support_description_invalid") {
+    return "Lütfen sorunu birkaç cümleyle açıklayın."
+  }
+  if (code === "support_email_invalid" || code === "email_required") {
+    return "Lütfen geçerli bir e-posta adresi yazın."
+  }
+  if (code === "too_many_attachments") {
+    return "Lütfen daha az dosya ekleyin."
+  }
+  if (code === "attachment_too_large") {
+    return "Eklediğiniz dosyalardan biri çok büyük. Daha küçük bir ekran görüntüsü deneyin."
+  }
+  if (code === "attachment_type_invalid" || code === "attachment_signature_invalid") {
+    return "Eklediğiniz dosya desteklenmiyor. Ekran görüntüsü olarak PNG veya JPG deneyin."
+  }
+  if (code === "Too many requests") {
+    return "Çok kısa sürede fazla deneme yapıldı. Lütfen birkaç dakika sonra tekrar deneyin."
+  }
+  return "Talep oluşturulamadı. Lütfen bilgileri kontrol edip tekrar deneyin."
+}
+
 export default function SupportClient({
   initialTickets,
   initialEmail,
@@ -199,11 +230,7 @@ export default function SupportClient({
       })
       const payload = await response.json().catch(() => null)
       if (!response.ok || !payload?.ok) {
-        setError(
-          payload?.error === "support_tables_missing"
-            ? "Destek tabloları henüz Supabase tarafında uygulanmamış."
-            : "Talep oluşturulamadı. Lütfen bilgileri kontrol edip tekrar deneyin.",
-        )
+        setError(supportErrorMessage(payload?.error))
         return
       }
 

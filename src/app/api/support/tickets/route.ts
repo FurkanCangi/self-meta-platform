@@ -80,6 +80,18 @@ function getClientIp(headers: Headers) {
   return forwardedFor?.split(",")[0]?.trim() || headers.get("x-real-ip") || null
 }
 
+function isMissingStorageBucket(error: unknown) {
+  const message = String((error as { message?: string } | null)?.message || error || "").toLowerCase()
+  const statusCode = String((error as { statusCode?: string | number } | null)?.statusCode || "")
+  return (
+    statusCode === "404" ||
+    message.includes("bucket not found") ||
+    message.includes("the resource was not found") ||
+    message.includes("storage bucket") ||
+    message.includes("support-attachments")
+  )
+}
+
 async function getOptionalUser() {
   const supabase = await createSupabaseServerClient()
   const {
@@ -153,6 +165,16 @@ export async function POST(request: Request) {
 
   const parsed = supportTicketSchema.safeParse(body)
   if (!parsed.success) {
+    const fieldErrors = parsed.error.flatten().fieldErrors
+    if (fieldErrors.subject?.length) {
+      return NextResponse.json({ ok: false, error: "support_subject_invalid" }, { status: 400 })
+    }
+    if (fieldErrors.description?.length) {
+      return NextResponse.json({ ok: false, error: "support_description_invalid" }, { status: 400 })
+    }
+    if (fieldErrors.email?.length) {
+      return NextResponse.json({ ok: false, error: "support_email_invalid" }, { status: 400 })
+    }
     return NextResponse.json({ ok: false, error: "invalid_support_ticket_payload" }, { status: 400 })
   }
 
@@ -264,6 +286,16 @@ export async function POST(request: Request) {
         {
           ok: false,
           error: "support_tables_missing",
+          setupRequired: true,
+        },
+        { status: 503 },
+      )
+    }
+    if (isMissingStorageBucket(error)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "support_storage_missing",
           setupRequired: true,
         },
         { status: 503 },

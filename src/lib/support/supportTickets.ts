@@ -140,6 +140,9 @@ export function isMissingSupportTable(error: unknown) {
   const code = String((error as { code?: string } | null)?.code || "")
   return (
     code === "42P01" ||
+    code === "PGRST205" ||
+    message.includes("could not find the table") ||
+    message.includes("schema cache") ||
     message.includes('relation "support_tickets" does not exist') ||
     message.includes("relation 'support_tickets' does not exist") ||
     message.includes("support_ticket_attachments") ||
