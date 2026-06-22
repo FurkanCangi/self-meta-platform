@@ -4,6 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js"
 import type { PlanCode } from "@/lib/legal/documents"
 import { EDUCATION_VIDEO_FEATURE } from "@/lib/security/entitlements"
 import { grantReportCredits } from "@/lib/security/reportCredits"
+import { isSecurityTestExemptEmail } from "@/lib/security/securityExemptions"
 
 export const PAYMENT_EXEMPT_PLAN: Exclude<PlanCode, "none"> = "professional"
 
@@ -16,6 +17,10 @@ const PAYMENT_EXEMPT_EMAILS = new Set([
 
 const PRIVILEGED_PROFILE_ROLES = new Set(["admin", "owner", "super_admin", "superadmin"])
 
+type PaymentExemptAccessResult =
+  | { ok: true; applied: boolean; warning?: string }
+  | { ok: false; error: string }
+
 function normalizeEmail(value?: string | null) {
   return String(value || "")
     .trim()
@@ -25,7 +30,7 @@ function normalizeEmail(value?: string | null) {
 }
 
 export function isPaymentExemptEmail(email?: string | null) {
-  return PAYMENT_EXEMPT_EMAILS.has(normalizeEmail(email))
+  return PAYMENT_EXEMPT_EMAILS.has(normalizeEmail(email)) || isSecurityTestExemptEmail(email)
 }
 
 export function resolveEffectivePlan(plan?: string | null, email?: string | null): PlanCode {
@@ -43,7 +48,7 @@ export async function ensurePaymentExemptAccess(params: {
   admin: SupabaseClient
   userId: string
   email?: string | null
-}) {
+}): Promise<PaymentExemptAccessResult> {
   if (!params.userId || !isPaymentExemptEmail(params.email)) {
     return { ok: true as const, applied: false }
   }
@@ -57,7 +62,11 @@ export async function ensurePaymentExemptAccess(params: {
     .maybeSingle()
 
   if (profileLookupError) {
-    return { ok: false as const, error: "payment_exempt_profile_lookup_failed" }
+    return {
+      ok: true as const,
+      applied: false,
+      warning: "payment_exempt_profile_lookup_failed",
+    }
   }
 
   const nextRole = isPrivilegedProfileRole(existingProfile?.role) ? existingProfile?.role : "expert"
@@ -73,7 +82,11 @@ export async function ensurePaymentExemptAccess(params: {
   )
 
   if (profileError) {
-    return { ok: false as const, error: "payment_exempt_profile_upsert_failed" }
+    return {
+      ok: true as const,
+      applied: false,
+      warning: "payment_exempt_profile_upsert_failed",
+    }
   }
 
   const { error: entitlementError } = await params.admin.from("user_entitlements").upsert(
@@ -95,7 +108,11 @@ export async function ensurePaymentExemptAccess(params: {
   )
 
   if (entitlementError) {
-    return { ok: false as const, error: "payment_exempt_entitlement_failed" }
+    return {
+      ok: true as const,
+      applied: true,
+      warning: "payment_exempt_entitlement_failed",
+    }
   }
 
   const creditGrant = await grantReportCredits({
