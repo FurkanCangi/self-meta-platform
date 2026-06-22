@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { Paperclip, ShieldCheck } from "lucide-react"
+import { CheckCircle2, Clock3, Inbox, MessageSquareText, Paperclip, ShieldCheck } from "lucide-react"
 import { assertOwnerAuditAccess } from "@/lib/owner/ownerAccess"
 import {
   fetchOwnerSupportTickets,
@@ -44,7 +44,7 @@ function priorityClass(priority: string) {
 
 function StatCard({ label, value, tone }: { label: string; value: number; tone: string }) {
   return (
-    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-[0_16px_42px_rgba(15,23,42,0.06)]">
       <div className={`text-xs font-black uppercase tracking-[0.18em] ${tone}`}>{label}</div>
       <div className="mt-3 text-3xl font-black text-slate-950">{value}</div>
     </div>
@@ -53,7 +53,7 @@ function StatCard({ label, value, tone }: { label: string; value: number; tone: 
 
 function TicketRow({ ticket }: { ticket: SupportTicket }) {
   return (
-    <details className="group rounded-[2rem] border border-slate-200 bg-white shadow-sm open:shadow-md">
+    <details className="group overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_18px_48px_rgba(15,23,42,0.06)] open:shadow-[0_26px_70px_rgba(37,99,235,0.12)]">
       <summary className="flex cursor-pointer list-none flex-col gap-4 p-5 transition hover:bg-slate-50/80 xl:flex-row xl:items-center xl:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
@@ -71,7 +71,7 @@ function TicketRow({ ticket }: { ticket: SupportTicket }) {
             </span>
           </div>
           <h2 className="mt-3 truncate text-xl font-black text-slate-950">{ticket.subject}</h2>
-          <div className="mt-1 flex flex-wrap gap-2 text-sm font-semibold text-slate-500">
+          <div className="mt-2 flex flex-wrap gap-2 text-sm font-semibold text-slate-500">
             <span>{ticket.requesterName}</span>
             <span>/</span>
             <span>{ticket.requesterEmail}</span>
@@ -81,15 +81,15 @@ function TicketRow({ ticket }: { ticket: SupportTicket }) {
         </div>
 
         <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 sm:grid-cols-4 xl:min-w-[430px]">
-          <div className="rounded-2xl bg-slate-50 px-3 py-2">
+          <div className="rounded-2xl bg-slate-50 px-3 py-2 ring-1 ring-slate-100">
             <div className="font-black text-slate-950">{ticket.attachments.length}</div>
-            <div>ek</div>
+            <div>dosya</div>
           </div>
-          <div className="rounded-2xl bg-slate-50 px-3 py-2">
+          <div className="rounded-2xl bg-slate-50 px-3 py-2 ring-1 ring-slate-100">
             <div className="font-black text-slate-950">{ticket.messages.length}</div>
             <div>mesaj</div>
           </div>
-          <div className="rounded-2xl bg-slate-50 px-3 py-2">
+          <div className="rounded-2xl bg-slate-50 px-3 py-2 ring-1 ring-slate-100">
             <div className="font-black text-slate-950">{ticket.deviceType}</div>
             <div>cihaz</div>
           </div>
@@ -101,10 +101,10 @@ function TicketRow({ ticket }: { ticket: SupportTicket }) {
         </div>
       </summary>
 
-      <div className="border-t border-slate-100 p-5">
+      <div className="border-t border-slate-100 bg-slate-50/60 p-5">
         <div className="grid gap-5 xl:grid-cols-[1fr_420px]">
           <div className="min-w-0">
-            <div className="rounded-3xl bg-slate-50 p-4">
+            <div className="rounded-3xl bg-white p-4 ring-1 ring-slate-100">
               <div className="text-xs font-black uppercase tracking-wide text-slate-500">Kullanıcı açıklaması</div>
               <p className="mt-3 whitespace-pre-wrap text-sm leading-6 text-slate-700">{ticket.description}</p>
             </div>
@@ -156,7 +156,7 @@ function TicketRow({ ticket }: { ticket: SupportTicket }) {
                     ].join(" ")}
                   >
                     <div className="mb-1 text-xs font-black uppercase tracking-wide opacity-70">
-                      {message.senderRole === "owner" ? "Owner yanıtı" : "Kullanıcı"} - {formatDateTime(message.createdAt)}
+                      {message.senderRole === "owner" ? "Destek yanıtı" : "Kullanıcı"} - {formatDateTime(message.createdAt)}
                     </div>
                     {message.message}
                   </div>
@@ -205,18 +205,49 @@ export default async function OwnerSupportPage({ searchParams }: { searchParams:
   }
 
   const summary = summarizeSupportTickets(tickets)
+  const needsAttention = tickets.filter((ticket) => ["open", "in_progress"].includes(ticket.status)).length
 
   return (
     <div className="mx-auto flex max-w-7xl flex-col gap-8">
-      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+      <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_20px_60px_rgba(37,99,235,0.08)]">
+        <div className="grid gap-0 lg:grid-cols-[1fr_360px]">
+          <div className="p-6 sm:p-8">
+            <Link href="/owner-audit" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700">
+              Owner paneli
+            </Link>
+            <h1 className="mt-2 text-4xl font-black tracking-tight text-slate-950">Destek Talepleri</h1>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+              Kullanıcıların yaşadığı giriş, cihaz, ödeme, rapor ve eğitim sorunlarını tek kuyrukta takip et. Ekran görüntüleri ve çözüm notları aynı kayıtta kalır.
+            </p>
+          </div>
+          <div className="grid content-center gap-3 bg-slate-950 p-6 text-white sm:p-8">
+            <div className="flex items-center gap-3 rounded-2xl bg-white/10 p-4">
+              <Inbox className="h-5 w-5 text-cyan-200" />
+              <div>
+                <div className="text-2xl font-black">{needsAttention}</div>
+                <div className="text-xs font-semibold text-slate-300">takip bekleyen talep</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-2xl bg-white/10 p-4">
+                <Clock3 className="h-4 w-4 text-cyan-200" />
+                <div className="mt-2 text-sm font-black">Kuyruk</div>
+                <div className="mt-1 text-xs text-slate-300">Yeni talepler üstte</div>
+              </div>
+              <div className="rounded-2xl bg-white/10 p-4">
+                <MessageSquareText className="h-4 w-4 text-cyan-200" />
+                <div className="mt-2 text-sm font-black">Yanıt</div>
+                <div className="mt-1 text-xs text-slate-300">Kullanıcıya not düş</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <Link href="/owner-audit" className="text-sm font-semibold text-indigo-600 hover:text-indigo-700">
-            Owner paneli
-          </Link>
-          <h1 className="mt-2 text-4xl font-black tracking-tight text-slate-950">Destek Talepleri</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
-            Kullanıcılardan gelen giriş, cihaz, ödeme, rapor ve eğitim sorunlarını ekran görüntüleriyle birlikte tek yerden takip et.
-          </p>
+          <div className="text-lg font-black text-slate-950">Operasyon özeti</div>
+          <div className="mt-1 text-sm text-slate-500">Güncel talepleri filtrele, aç, not al ve çözüm durumuna geçir.</div>
         </div>
         <Link
           href="/support"
@@ -228,8 +259,8 @@ export default async function OwnerSupportPage({ searchParams }: { searchParams:
       </div>
 
       {setupRequired ? (
-        <div className="rounded-[2rem] border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-900">
-          Destek tabloları hazır değil. Supabase SQL editor içinde <span className="font-black">sql/support_tickets.sql</span> dosyasını çalıştırmak gerekiyor.
+        <div className="rounded-[2rem] border border-amber-200 bg-amber-50 p-5 text-sm font-semibold leading-6 text-amber-900">
+          Destek kayıt alanı henüz hazır değil. Kurulum tamamlandığında talepler burada görünür.
         </div>
       ) : null}
 
@@ -241,7 +272,7 @@ export default async function OwnerSupportPage({ searchParams }: { searchParams:
         <StatCard label="Çözülen" value={summary.resolved} tone="text-emerald-600" />
       </div>
 
-      <form className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+      <form className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_16px_42px_rgba(15,23,42,0.06)]">
         <div className="grid gap-4 xl:grid-cols-[1fr_170px_170px_170px_auto] xl:items-end">
           <label className="grid gap-2 text-sm text-slate-600">
             <span className="font-bold text-slate-800">Ara</span>
@@ -298,11 +329,28 @@ export default async function OwnerSupportPage({ searchParams }: { searchParams:
       </form>
 
       <section className="grid gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-2xl font-black text-slate-950">Talep Kuyruğu</h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Her satırı açarak açıklama, dosya, mesaj geçmişi ve çözüm aksiyonlarını görebilirsin.
+            </p>
+          </div>
+          <div className="rounded-2xl bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-sm ring-1 ring-slate-200">
+            {tickets.length} kayıt
+          </div>
+        </div>
         {tickets.length ? (
           tickets.map((ticket) => <TicketRow key={ticket.id} ticket={ticket} />)
         ) : (
-          <div className="rounded-[2rem] border border-dashed border-slate-300 bg-white p-10 text-center text-sm font-semibold text-slate-500">
-            Bu filtrelerle destek talebi bulunmadı.
+          <div className="rounded-[2rem] border border-dashed border-blue-200 bg-white p-12 text-center shadow-sm">
+            <div className="mx-auto grid h-16 w-16 place-items-center rounded-3xl bg-blue-50 text-blue-700">
+              <CheckCircle2 className="h-7 w-7" />
+            </div>
+            <div className="mt-4 text-xl font-black text-slate-950">Açık destek talebi yok</div>
+            <p className="mx-auto mt-2 max-w-md text-sm font-semibold leading-6 text-slate-500">
+              Kullanıcılar destek ekranından talep oluşturduğunda burada sıraya düşecek. Filtre seçiliyse sonuçları görmek için sıfırlayabilirsin.
+            </p>
           </div>
         )}
       </section>

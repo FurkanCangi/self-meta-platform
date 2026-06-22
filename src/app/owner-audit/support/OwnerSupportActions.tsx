@@ -64,7 +64,14 @@ export default function OwnerSupportActions({
   }
 
   return (
-    <div className="grid gap-3 rounded-3xl border border-slate-200 bg-slate-50 p-4">
+    <div className="grid gap-4 rounded-3xl border border-slate-200 bg-white p-4 shadow-sm">
+      <div>
+        <div className="text-base font-black text-slate-950">Talep işlemleri</div>
+        <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+          Durumu güncelle, iç not al veya kullanıcıya görünen çözüm mesajı bırak.
+        </p>
+      </div>
+
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="grid gap-2 text-xs font-black uppercase tracking-wide text-slate-500">
           Durum
@@ -82,36 +89,36 @@ export default function OwnerSupportActions({
         </label>
 
         <label className="grid gap-2 text-xs font-black uppercase tracking-wide text-slate-500">
-          Kullanıcıya kısa yanıt
+          Hızlı yanıt
           <input
             value={publicReply}
             onChange={(event) => setPublicReply(event.target.value)}
             maxLength={3000}
             className="h-11 rounded-2xl border border-slate-200 bg-white px-3 text-sm font-semibold normal-case tracking-normal text-slate-800"
-            placeholder="Örn: Cihaz kayıtlarınız temizlendi."
+            placeholder="Örn: Cihaz kayıtlarınızı temizledik."
           />
         </label>
       </div>
 
       <label className="grid gap-2 text-xs font-black uppercase tracking-wide text-slate-500">
-        İç not
+        İç takip notu
         <textarea
           value={ownerNote}
           onChange={(event) => setOwnerNote(event.target.value)}
           maxLength={3000}
           className="min-h-[90px] rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium normal-case leading-6 tracking-normal text-slate-800"
-          placeholder="Sadece owner tarafında görünen not"
+          placeholder="Sadece destek panelinde görünen kısa takip notu"
         />
       </label>
 
       <label className="grid gap-2 text-xs font-black uppercase tracking-wide text-slate-500">
-        Çözüm notu
+        Kullanıcının göreceği çözüm
         <textarea
           value={resolutionMessage}
           onChange={(event) => setResolutionMessage(event.target.value)}
           maxLength={3000}
           className="min-h-[90px] rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium normal-case leading-6 tracking-normal text-slate-800"
-          placeholder="Kullanıcının destek ekranında göreceği net çözüm açıklaması"
+          placeholder="Örn: Hesabınızdaki eski cihaz kaydı kaldırıldı. Şimdi tekrar giriş yapabilirsiniz."
         />
       </label>
 
@@ -122,7 +129,7 @@ export default function OwnerSupportActions({
           disabled={pending}
           className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white transition hover:bg-blue-700 disabled:opacity-60"
         >
-          {pending ? "Kaydediliyor..." : "Kaydet ve Bildir"}
+          {pending ? "Kaydediliyor..." : "Kaydet"}
         </button>
         {ok ? <span className="text-sm font-bold text-emerald-600">{ok}</span> : null}
         {error ? <span className="text-sm font-bold text-rose-600">{error}</span> : null}

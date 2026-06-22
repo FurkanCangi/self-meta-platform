@@ -8,8 +8,11 @@ import {
   Clock3,
   ImagePlus,
   LifeBuoy,
+  MessageCircle,
   Paperclip,
   Send,
+  Sparkles,
+  UploadCloud,
 } from "lucide-react"
 import type { SupportTicket } from "@/lib/support/supportTickets"
 
@@ -153,6 +156,12 @@ function TicketCard({ ticket }: { ticket: SupportTicket }) {
   )
 }
 
+function selectedFileLabel(files: FileList | null) {
+  const count = files?.length || 0
+  if (!count) return "Henüz dosya eklenmedi"
+  return `${count} dosya hazır`
+}
+
 export default function SupportClient({
   initialTickets,
   initialEmail,
@@ -210,46 +219,61 @@ export default function SupportClient({
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-      <section className="overflow-hidden rounded-[2rem] border border-blue-100 bg-white shadow-[0_24px_70px_rgba(37,99,235,0.10)]">
-        <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="bg-gradient-to-br from-slate-950 via-blue-950 to-cyan-900 p-7 text-white sm:p-9">
+      <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(37,99,235,0.10)]">
+        <div className="grid gap-0 lg:grid-cols-[0.92fr_1.08fr]">
+          <div className="relative overflow-hidden bg-slate-950 p-7 text-white sm:p-9">
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_16%,rgba(34,211,238,0.28),transparent_34%),radial-gradient(circle_at_90%_12%,rgba(124,58,237,0.24),transparent_30%),linear-gradient(160deg,#020617_0%,#0f2a4a_58%,#075569_100%)]" />
+            <div className="relative">
             <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-black uppercase tracking-[0.18em] text-cyan-100">
               <LifeBuoy className="h-4 w-4" />
               Destek Merkezi
             </div>
-            <h1 className="mt-5 max-w-xl text-3xl font-black tracking-tight sm:text-4xl">
-              Sorunu ekran görüntüsüyle gönder, biz tek kayıttan takip edelim.
+            <h1 className="mt-5 max-w-xl text-3xl font-black tracking-tight sm:text-4xl lg:text-5xl">
+              Sorunu bize net anlat, hızlıca takip edelim.
             </h1>
             <p className="mt-4 max-w-xl text-sm leading-6 text-blue-100">
-              Giriş, cihaz, paket, rapor veya eğitim hatalarında talep oluştur. Ekran görüntüsü eklersen aynı gün içinde sorunu anlamamız çok daha kolay olur.
+              Giriş, cihaz, paket, rapor veya eğitim hatalarında tek kayıt aç. Ekran görüntüsü eklersen sorunu çok daha hızlı anlayabiliriz.
             </p>
-            <div className="mt-7 grid gap-3 sm:grid-cols-3">
-              <div className="rounded-2xl bg-white/10 p-4">
-                <Clock3 className="h-5 w-5 text-cyan-200" />
-                <div className="mt-3 text-2xl font-black">24s</div>
-                <div className="text-xs font-semibold text-blue-100">Dönüş hedefi</div>
+            <div className="mt-8 grid gap-3">
+              <div className="flex gap-3 rounded-2xl bg-white/10 p-4 ring-1 ring-white/10">
+                <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-cyan-200" />
+                <div>
+                  <div className="text-sm font-black">Aynı gün takip</div>
+                  <div className="mt-1 text-xs font-semibold leading-5 text-blue-100">
+                    Talep oluşturulduğunda owner paneline düşer.
+                  </div>
+                </div>
               </div>
-              <div className="rounded-2xl bg-white/10 p-4">
-                <ImagePlus className="h-5 w-5 text-cyan-200" />
-                <div className="mt-3 text-2xl font-black">3 ek</div>
-                <div className="text-xs font-semibold text-blue-100">Ekran görüntüsü/PDF</div>
+              <div className="flex gap-3 rounded-2xl bg-white/10 p-4 ring-1 ring-white/10">
+                <ImagePlus className="mt-0.5 h-5 w-5 shrink-0 text-cyan-200" />
+                <div>
+                  <div className="text-sm font-black">Görsel kanıt eklenebilir</div>
+                  <div className="mt-1 text-xs font-semibold leading-5 text-blue-100">
+                    Hata ekranı, cihaz uyarısı veya ödeme ekranı eklenebilir.
+                  </div>
+                </div>
               </div>
-              <div className="rounded-2xl bg-white/10 p-4">
-                <CheckCircle2 className="h-5 w-5 text-cyan-200" />
-                <div className="mt-3 text-2xl font-black">{openTickets}</div>
-                <div className="text-xs font-semibold text-blue-100">Açık talep</div>
+              <div className="flex gap-3 rounded-2xl bg-white/10 p-4 ring-1 ring-white/10">
+                <MessageCircle className="mt-0.5 h-5 w-5 shrink-0 text-cyan-200" />
+                <div>
+                  <div className="text-sm font-black">Çözüm notu burada görünür</div>
+                  <div className="mt-1 text-xs font-semibold leading-5 text-blue-100">
+                    Açık talep sayınız: {openTickets}
+                  </div>
+                </div>
               </div>
+            </div>
             </div>
           </div>
 
           <form
             id="support-ticket-form"
             action={submit}
-            className="grid gap-4 bg-white p-6 sm:p-8"
+            className="grid gap-4 bg-white p-6 sm:p-8 lg:p-10"
           >
             {setupRequired ? (
               <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
-                Destek SQL dosyası Supabase’e uygulanınca kayıtlar canlı çalışacak.
+                Destek kayıt alanı hazırlanıyor. Kısa süre sonra yeniden deneyebilirsiniz.
               </div>
             ) : null}
 
@@ -323,23 +347,34 @@ export default function SupportClient({
               />
             </label>
 
-            <label className="grid gap-2 rounded-2xl border border-dashed border-blue-200 bg-blue-50/50 p-4 text-sm font-bold text-slate-700">
-              <span className="flex items-center gap-2">
-                <Paperclip className="h-4 w-4 text-blue-600" />
-                Ekran görüntüsü veya PDF ekle
-              </span>
+            <label className="grid cursor-pointer gap-3 rounded-3xl border border-dashed border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50/70 p-5 text-sm font-bold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50">
               <input
                 type="file"
                 multiple
                 accept="image/png,image/jpeg,image/webp,image/heic,image/heif,application/pdf"
                 onChange={(event) => setFiles(event.target.files)}
-                className="text-sm text-slate-600 file:mr-3 file:rounded-xl file:border-0 file:bg-blue-600 file:px-4 file:py-2 file:font-bold file:text-white"
+                className="sr-only"
               />
-              <span className="text-xs font-semibold text-slate-500">En fazla 3 dosya, dosya başına 8 MB.</span>
+              <span className="flex items-center justify-between gap-3">
+                <span className="flex items-center gap-3">
+                  <span className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-blue-700 shadow-sm">
+                    <UploadCloud className="h-5 w-5" />
+                  </span>
+                  <span>
+                    <span className="block font-black text-slate-900">Ekran görüntüsü ekle</span>
+                    <span className="mt-1 block text-xs font-semibold text-slate-500">
+                      Hata ekranı veya ilgili belgeyi buraya ekleyebilirsiniz.
+                    </span>
+                  </span>
+                </span>
+                <span className="rounded-full bg-white px-3 py-1.5 text-xs font-black text-blue-700 shadow-sm">
+                  {selectedFileLabel(files)}
+                </span>
+              </span>
             </label>
 
             <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-xs font-semibold leading-5 text-amber-800">
-              Lütfen terapi/sağlık içeriği, danışan bilgisi veya özel kişisel veri paylaşmayın. Bu alan teknik destek içindir.
+              Lütfen danışan bilgisi, terapi içeriği veya özel kişisel veri paylaşmayın. Bu alan teknik destek içindir.
             </div>
 
             {error ? (
@@ -370,7 +405,10 @@ export default function SupportClient({
       <section className="grid gap-4">
         <div className="flex items-end justify-between gap-3">
           <div>
-            <h2 className="text-2xl font-black text-slate-950">Taleplerim</h2>
+            <h2 className="flex items-center gap-2 text-2xl font-black text-slate-950">
+              <Sparkles className="h-5 w-5 text-blue-600" />
+              Taleplerim
+            </h2>
             <p className="mt-1 text-sm text-slate-500">
               Çözüm notu geldiyse burada görünür. Ayrıca panel bildiriminden de haber verilir.
             </p>
@@ -385,8 +423,11 @@ export default function SupportClient({
               ))}
             </div>
           ) : (
-            <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-white p-8 text-center text-sm font-semibold text-slate-500">
-              Henüz destek talebiniz yok.
+            <div className="rounded-[1.5rem] border border-dashed border-blue-200 bg-white p-8 text-center text-sm font-semibold text-slate-500">
+              <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-blue-50 text-blue-700">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+              Henüz açık destek talebiniz yok.
             </div>
           )
         ) : (
