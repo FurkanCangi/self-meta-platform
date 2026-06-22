@@ -89,6 +89,28 @@ export async function registerAppSessionForUser({
     return { ok: false, error: "device_revoked", status: 403 }
   }
 
+  if (lockExemptUser && existingDevice?.revoked_at) {
+    await admin
+      .from("account_devices")
+      .update({
+        revoked_at: null,
+        last_seen_at: new Date().toISOString(),
+        last_user_agent: userAgent,
+        last_ip: ipAddress,
+      })
+      .eq("id", existingDevice.id)
+      .eq("user_id", user.id)
+
+    await recordAccountSecurityEvent({
+      userId: user.id,
+      eventType: "device_reactivated_for_test_user",
+      deviceId: existingDevice.id,
+      ipAddress,
+      userAgent,
+      metadata: { reason: "security_test_exempt_user" },
+    })
+  }
+
   const { data: securityState } = await admin
     .from("account_security_state")
     .select("temporary_locked_until, suspended_at")

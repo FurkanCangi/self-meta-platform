@@ -48,13 +48,24 @@ function formatLoginErrorCode(code?: string | null) {
   if (code === "device_revoked") return "Bu cihaz için erişim kapatılmış görünüyor.";
   if (code === "account_temporarily_locked") return "Şüpheli kullanım nedeniyle hesap geçici olarak kilitlendi.";
   if (code === "account_suspended") return "Hesap güvenlik nedeniyle askıya alınmış görünüyor.";
-  if (code === "device_lookup_failed" || code === "device_create_failed" || code === "session_create_failed") {
+  if (code === "device_id_invalid") {
+    return "Bu tarayıcı cihaz bilgisini oluşturamadı. Sayfayı yenileyip tekrar deneyin.";
+  }
+  if (code === "device_count_failed") {
+    return "Cihaz kayıtları kontrol edilemedi. Lütfen tekrar deneyin; sorun devam ederse destek talebi oluşturun.";
+  }
+  if (
+    code === "device_lookup_failed" ||
+    code === "device_create_failed" ||
+    code === "session_create_failed" ||
+    code === "session_failed"
+  ) {
     return "Giriş güvenlik kaydı oluşturulamadı. Lütfen tekrar deneyin; sorun devam ederse bize haber verin.";
   }
+  if (code === "Unauthorized") return "Oturum doğrulanamadı. Lütfen tekrar giriş yapmayı deneyin.";
   if (code.startsWith("payment_exempt_")) {
     return "Test hesabı erişimi hazırlanırken teknik bir sorun oluştu. Lütfen tekrar deneyin.";
   }
-  if (code === "session_failed") return "Oturum güvenlik kaydı oluşturulamadı. Lütfen tekrar deneyin.";
   return "Giriş sırasında bir hata oluştu.";
 }
 

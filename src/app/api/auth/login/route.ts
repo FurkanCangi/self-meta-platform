@@ -121,22 +121,28 @@ export async function POST(request: NextRequest) {
   }
 
   const origin = requestOrigin(request)
-  const registerResponse = await fetch(new URL("/api/security/session/register", request.nextUrl.origin), {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      authorization: `Bearer ${accessToken}`,
-      "x-dna-request": "same-origin",
-      "user-agent": request.headers.get("user-agent") || "",
-      "x-forwarded-for": request.headers.get("x-forwarded-for") || "",
-      "x-real-ip": request.headers.get("x-real-ip") || "",
-    },
-    body: JSON.stringify({
-      deviceId: String(formData.get("deviceId") || `server-${userId}-${request.headers.get("user-agent") || "unknown"}`).slice(0, 200),
-      deviceType: String(formData.get("deviceType") || "desktop"),
-      allowSlotReuse: true,
-    }),
-  })
+  let registerResponse: Response
+  try {
+    registerResponse = await fetch(new URL("/api/security/session/register", request.nextUrl.origin), {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${accessToken}`,
+        "x-dna-request": "same-origin",
+        "user-agent": request.headers.get("user-agent") || "",
+        "x-forwarded-for": request.headers.get("x-forwarded-for") || "",
+        "x-real-ip": request.headers.get("x-real-ip") || "",
+      },
+      body: JSON.stringify({
+        deviceId: String(formData.get("deviceId") || `server-${userId}-${request.headers.get("user-agent") || "unknown"}`).slice(0, 200),
+        deviceType: String(formData.get("deviceType") || "desktop"),
+        allowSlotReuse: true,
+      }),
+    })
+  } catch {
+    await supabase.auth.signOut()
+    return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: "session_failed" }), 303)
+  }
   const registerPayload = await registerResponse.json().catch(() => null)
   if (!registerResponse.ok || !registerPayload?.ok || !registerPayload?.sessionId) {
     const code = String(registerPayload?.error || "session_failed")
