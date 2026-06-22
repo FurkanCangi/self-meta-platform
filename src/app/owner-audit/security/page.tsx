@@ -43,6 +43,12 @@ function eventClass(value: OwnerSecurityEvent["severity"]) {
   return "bg-slate-100 text-slate-700"
 }
 
+function findingClass(value: "info" | "warning" | "danger") {
+  if (value === "danger") return "border-rose-100 bg-rose-50 text-rose-800"
+  if (value === "warning") return "border-amber-100 bg-amber-50 text-amber-800"
+  return "border-slate-100 bg-slate-50 text-slate-700"
+}
+
 function StatCard({ label, value, tone }: { label: string; value: number; tone: string }) {
   return (
     <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -56,8 +62,8 @@ function UserSecurityCard({ user }: { user: OwnerSecurityUser }) {
   const locked = user.temporaryLockedUntil && new Date(user.temporaryLockedUntil).getTime() > Date.now()
 
   return (
-    <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
-      <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+    <details className="group rounded-3xl border border-slate-200 bg-white shadow-sm open:shadow-md">
+      <summary className="flex cursor-pointer list-none flex-col gap-4 p-5 transition hover:bg-slate-50/70 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
             <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${riskClass(user.riskLevel)}`}>
@@ -83,35 +89,78 @@ function UserSecurityCard({ user }: { user: OwnerSecurityUser }) {
             ) : null}
           </div>
 
-          <div className="mt-3 text-2xl font-semibold text-slate-950">{user.fullName}</div>
-          <div className="mt-1 text-sm text-slate-500">{user.email}</div>
-          <div className="mt-2 text-xs text-slate-400">User ID: {user.userId}</div>
-
-          <div className="mt-4 grid gap-2 text-sm text-slate-600 sm:grid-cols-2">
-            <div>Aktif oturum: <span className="font-semibold text-slate-900">{user.activeSessions}</span></div>
-            <div>Kayıtlı cihaz: <span className="font-semibold text-slate-900">{user.registeredDevices}</span></div>
-            <div>Son görülme: <span className="font-semibold text-slate-900">{formatDateTime(user.lastSeenAt)}</span></div>
-            <div>Rapor hakkı: <span className="font-semibold text-slate-900">{user.reportCreditBalance}</span></div>
-            <div>Ödeme uyarısı: <span className="font-semibold text-slate-900">{user.paymentWarnings}</span></div>
-            <div>Video uyarısı: <span className="font-semibold text-slate-900">{user.videoWarnings}</span></div>
-          </div>
-
-          {user.recentIps.length ? (
-            <div className="mt-4 flex flex-wrap gap-2">
-              {user.recentIps.map((ip) => (
-                <span key={ip} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
-                  {ip}
-                </span>
-              ))}
-            </div>
-          ) : null}
-
-          {user.riskReasons.length ? (
-            <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
-              {user.riskReasons.join(" • ")}
-            </div>
-          ) : null}
+          <div className="mt-3 truncate text-xl font-semibold text-slate-950">{user.fullName}</div>
+          <div className="mt-1 truncate text-sm text-slate-500">{user.email}</div>
         </div>
+
+        <div className="grid grid-cols-2 gap-2 text-xs text-slate-500 md:min-w-[430px] md:grid-cols-5">
+          <div className="rounded-2xl bg-slate-50 px-3 py-2">
+            <div className="font-semibold text-slate-900">{user.activeSessions}</div>
+            <div>oturum</div>
+          </div>
+          <div className="rounded-2xl bg-slate-50 px-3 py-2">
+            <div className="font-semibold text-slate-900">{user.registeredDevices}</div>
+            <div>cihaz</div>
+          </div>
+          <div className="rounded-2xl bg-slate-50 px-3 py-2">
+            <div className="font-semibold text-slate-900">{user.paymentWarnings}</div>
+            <div>ödeme</div>
+          </div>
+          <div className="rounded-2xl bg-slate-50 px-3 py-2">
+            <div className="font-semibold text-slate-900">{user.videoWarnings}</div>
+            <div>video</div>
+          </div>
+          <div className="rounded-2xl bg-slate-950 px-3 py-2 text-white">
+            <div className="font-semibold">Aç</div>
+            <div className="text-slate-300 group-open:hidden">detay</div>
+            <div className="hidden text-slate-300 group-open:block">kapat</div>
+          </div>
+        </div>
+      </summary>
+
+      <div className="border-t border-slate-100 p-5">
+        <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
+          <div className="min-w-0 flex-1">
+            <div className="grid gap-2 text-sm text-slate-600 sm:grid-cols-2 xl:grid-cols-3">
+              <div>User ID: <span className="font-semibold text-slate-900">{user.userId}</span></div>
+              <div>Son görülme: <span className="font-semibold text-slate-900">{formatDateTime(user.lastSeenAt)}</span></div>
+              <div>Rapor hakkı: <span className="font-semibold text-slate-900">{user.reportCreditBalance}</span></div>
+            </div>
+
+            {user.recentIps.length ? (
+              <div className="mt-4 flex flex-wrap gap-2">
+                {user.recentIps.map((ip) => (
+                  <span key={ip} className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+                    {ip}
+                  </span>
+                ))}
+              </div>
+            ) : null}
+
+            {user.riskFindings.length ? (
+              <div className="mt-4 grid gap-2">
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Temizlenebilir güvenlik durumları</div>
+                {user.riskFindings.map((finding) => (
+                  <div key={finding.eventType} className={`flex flex-wrap items-center justify-between gap-2 rounded-2xl border px-4 py-3 text-sm ${findingClass(finding.severity)}`}>
+                    <span>
+                      <span className="font-semibold">{finding.label}</span>
+                      <span className="ml-2 text-xs opacity-70">{finding.count} kayıt</span>
+                    </span>
+                    <OwnerSecurityActionButton
+                      targetUserId={user.userId}
+                      action="clear_event_type"
+                      label="Temizle"
+                      eventType={finding.eventType}
+                    />
+                  </div>
+                ))}
+              </div>
+            ) : user.riskReasons.length ? (
+              <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+                {user.riskReasons.join(" • ")}
+              </div>
+            ) : null}
+          </div>
 
         <div className="grid min-w-[260px] gap-3">
           <div className="flex flex-wrap gap-2">
@@ -169,13 +218,14 @@ function UserSecurityCard({ user }: { user: OwnerSecurityUser }) {
           ) : null}
         </div>
       </div>
-    </div>
+      </div>
+    </details>
   )
 }
 
 function EventRow({ event }: { event: OwnerSecurityEvent }) {
   return (
-    <div className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-sm md:grid-cols-[160px_1fr_180px] md:items-center">
+    <div className="grid gap-2 rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-sm md:grid-cols-[130px_1fr_190px_110px] md:items-center">
       <div className="flex flex-wrap gap-2">
         <span className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide ${eventClass(event.severity)}`}>
           {event.category}
@@ -186,6 +236,16 @@ function EventRow({ event }: { event: OwnerSecurityEvent }) {
         <div className="mt-1 text-slate-500">{event.email} / {event.detail}</div>
       </div>
       <div className="text-xs font-medium text-slate-400 md:text-right">{formatDateTime(event.createdAt)}</div>
+      <div className="md:text-right">
+        {event.category === "account" && event.userId && event.eventType ? (
+          <OwnerSecurityActionButton
+            targetUserId={event.userId}
+            action="clear_event_type"
+            label="Temizle"
+            eventType={event.eventType}
+          />
+        ) : null}
+      </div>
     </div>
   )
 }
@@ -290,10 +350,20 @@ export default async function OwnerSecurityPage({ searchParams }: { searchParams
         )}
       </section>
 
-      <section className="grid gap-4">
-        <div className="text-lg font-semibold text-slate-950">Son Güvenlik Olayları</div>
-        {dashboard.events.slice(0, 40).map((event) => <EventRow key={event.id} event={event} />)}
-      </section>
+      <details className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-5">
+          <div>
+            <div className="text-lg font-semibold text-slate-950">Son Güvenlik Olayları</div>
+            <div className="mt-1 text-sm text-slate-500">{dashboard.events.length} olay. Liste kapalı gelir; gerektiğinde açıp temizleyebilirsin.</div>
+          </div>
+          <span className="rounded-2xl bg-slate-950 px-4 py-2 text-xs font-semibold text-white">Aç/Kapat</span>
+        </summary>
+        <div className="max-h-[620px] overflow-y-auto border-t border-slate-100 p-5">
+          <div className="grid gap-3">
+            {dashboard.events.slice(0, 80).map((event) => <EventRow key={event.id} event={event} />)}
+          </div>
+        </div>
+      </details>
     </div>
   )
 }

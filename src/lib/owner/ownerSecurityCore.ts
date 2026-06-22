@@ -94,6 +94,11 @@ function eventSeverity(category: OwnerSecurityEvent["category"], raw: string): O
   return "info"
 }
 
+function isResolvedSecurityRow(row: Record<string, unknown>) {
+  const metadata = row.metadata as Record<string, unknown> | null
+  return Boolean(metadata?.owner_resolved_at)
+}
+
 function applyFilters(users: OwnerSecurityUser[], filters: OwnerSecurityFilters) {
   const q = safeText(filters.q).toLowerCase()
   const category = safeText(filters.category)
@@ -152,7 +157,7 @@ export function buildOwnerSecurityDashboardFromRows(
     const state = statesByUser.get(userId)
     const sessions = rows.sessions.filter((row) => String(row.user_id || "") === userId)
     const devices = rows.devices.filter((row) => String(row.user_id || "") === userId)
-    const events = rows.securityEvents.filter((row) => String(row.user_id || "") === userId)
+    const events = rows.securityEvents.filter((row) => String(row.user_id || "") === userId && !isResolvedSecurityRow(row))
     const billingEvents = rows.billingEvents.filter((row) => String(row.target_user_id || "") === userId)
     const paymentEvents = rows.paymentEvents.filter((row) => String(row.user_id || "") === userId)
     const entitlements = rows.entitlements.filter((row) => String(row.user_id || "") === userId)
@@ -180,6 +185,24 @@ export function buildOwnerSecurityDashboardFromRows(
       .map((row) => `${safeText(row.feature, "feature")}:${safeText(row.plan_code, "plan")}`)
       .slice(0, 4)
     const reportCreditBalance = credits.reduce((sum, row) => sum + Number(row.delta || 0), 0)
+    const riskFindings = Array.from(
+      events
+        .filter((row) => within24h(String(row.created_at || ""), nowMs))
+        .reduce((map, row) => {
+          const eventType = safeText(row.event_type)
+          if (!eventType) return map
+          const current = map.get(eventType) || {
+            eventType,
+            label: eventLabel("account", eventType),
+            count: 0,
+            severity: eventSeverity("account", eventType),
+          }
+          current.count += 1
+          map.set(eventType, current)
+          return map
+        }, new Map<string, { eventType: string; label: string; count: number; severity: "info" | "warning" | "danger" }>())
+        .values()
+    ).sort((a, b) => b.count - a.count)
     const lastSeenAt =
       sessions.map((row) => safeText(row.last_seen_at || row.created_at)).filter(Boolean).sort().at(-1) ||
       devices.map((row) => safeText(row.last_seen_at || row.first_seen_at)).filter(Boolean).sort().at(-1) ||
@@ -216,18 +239,20 @@ export function buildOwnerSecurityDashboardFromRows(
       videoWarnings,
       activeEntitlements,
       reportCreditBalance,
+      riskFindings,
     }
   })
 
   const authEmail = (userId: unknown) => authById.get(String(userId || ""))?.email || "E-posta yok"
   const eventRows: OwnerSecurityEvent[] = [
-    ...rows.securityEvents.map((row) => ({
+    ...rows.securityEvents.filter((row) => !isResolvedSecurityRow(row)).map((row) => ({
       id: `security:${row.id}`,
       userId: row.user_id ? String(row.user_id) : null,
       email: authEmail(row.user_id),
       category: "account" as const,
       severity: eventSeverity("account", String(row.event_type || "")),
       label: eventLabel("account", String(row.event_type || "")),
+      eventType: row.event_type ? String(row.event_type) : undefined,
       detail: safeText((row.metadata as Record<string, unknown> | null)?.route || (row.metadata as Record<string, unknown> | null)?.reason, "Hesap guvenlik olayi"),
       createdAt: row.created_at ? String(row.created_at) : null,
       ipAddress: row.ip_address ? String(row.ip_address) : null,
@@ -317,6 +342,7 @@ export async function applyOwnerSecurityActionWithClient(
     action: OwnerSecurityAction
     reason: string
     deviceId?: string | null
+    eventType?: string | null
     lockMinutes?: number | null
     nowIso?: string
   }
@@ -331,6 +357,7 @@ export async function applyOwnerSecurityActionWithClient(
     actor_user_id: params.actorUserId,
     reason: params.reason,
     device_id: params.deviceId || null,
+    event_type: params.eventType || null,
     lock_minutes: params.lockMinutes || null,
   }
 
@@ -371,6 +398,34 @@ export async function applyOwnerSecurityActionWithClient(
       { onConflict: "user_id" }
     )
     if (error) return { ok: false as const, error: "risk_clear_failed" }
+  } else if (params.action === "clear_event_type") {
+    if (!params.eventType) return { ok: false as const, error: "event_type_required" }
+    const { error } = await runEqChain(
+      admin.from("account_security_events").update({
+        metadata: {
+          owner_resolved_at: timestamp,
+          owner_resolved_by: params.actorUserId,
+          owner_resolved_reason: params.reason,
+          resolved_event_type: params.eventType,
+        },
+      }),
+      [["user_id", params.targetUserId], ["event_type", params.eventType]]
+    )
+    if (error) return { ok: false as const, error: "event_type_clear_failed" }
+
+    const { error: stateError } = await admin.from("account_security_state").upsert(
+      {
+        user_id: params.targetUserId,
+        risk_score: 0,
+        risk_reasons: [],
+        manual_review_required: false,
+        temporary_locked_until: null,
+        last_evaluated_at: timestamp,
+        updated_at: timestamp,
+      },
+      { onConflict: "user_id" }
+    )
+    if (stateError) return { ok: false as const, error: "risk_clear_failed" }
   } else if (params.action === "temporary_lock") {
     const lockMinutes = Math.max(5, Math.min(1440, Number(params.lockMinutes || 30)))
     const { error } = await admin.from("account_security_state").upsert(

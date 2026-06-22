@@ -10,6 +10,7 @@ type ActionButtonProps = {
   label: string
   variant?: "dark" | "light" | "danger"
   deviceId?: string | null
+  eventType?: string | null
   lockMinutes?: number
 }
 
@@ -29,6 +30,7 @@ export function OwnerSecurityActionButton({
   label,
   variant = "light",
   deviceId,
+  eventType,
   lockMinutes,
 }: ActionButtonProps) {
   const router = useRouter()
@@ -49,6 +51,7 @@ export function OwnerSecurityActionButton({
           action,
           reason,
           deviceId,
+          eventType,
           lockMinutes,
         }),
       })

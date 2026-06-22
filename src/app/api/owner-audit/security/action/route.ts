@@ -15,6 +15,7 @@ const ownerSecurityActionSchema = z.object({
     "mark_review",
     "clear_review",
     "clear_risk",
+    "clear_event_type",
     "temporary_lock",
     "clear_lock",
     "suspend",
@@ -22,6 +23,7 @@ const ownerSecurityActionSchema = z.object({
   ]),
   reason: z.string().trim().min(3).max(500),
   deviceId: z.string().uuid().optional().nullable(),
+  eventType: z.string().trim().min(2).max(120).optional().nullable(),
   lockMinutes: z.coerce.number().int().min(5).max(1440).optional().nullable(),
 })
 
@@ -58,6 +60,7 @@ export async function POST(request: Request) {
       action: parsed.data.action,
       reason: parsed.data.reason,
       deviceId: parsed.data.deviceId,
+      eventType: parsed.data.eventType,
       lockMinutes: parsed.data.lockMinutes,
     })
 

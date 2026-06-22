@@ -232,6 +232,27 @@ async function main() {
     call.values.action === "owner_security_clear_risk"
   ), JSON.stringify(clearRisk.calls))
 
+  const clearEventType = makeMockAdmin()
+  await applyOwnerSecurityActionWithClient(clearEventType.admin, {
+    actorUserId: OWNER_ID,
+    targetUserId: TARGET_ID,
+    action: "clear_event_type",
+    reason: "student support cleanup",
+    eventType: "device_limit_blocked",
+    nowIso: NOW.toISOString(),
+  })
+  check("clear event type marks matching events resolved", hasCall(clearEventType.calls, (call) =>
+    call.table === "account_security_events" &&
+    call.type === "update" &&
+    (call.values.metadata as Record<string, unknown>)?.owner_resolved_at === NOW.toISOString() &&
+    Boolean(call.filters?.some(([column, value]) => column === "event_type" && value === "device_limit_blocked"))
+  ), JSON.stringify(clearEventType.calls))
+  check("clear event type writes owner audit", hasCall(clearEventType.calls, (call) =>
+    call.table === "billing_audit_events" &&
+    call.type === "insert" &&
+    call.values.action === "owner_security_clear_event_type"
+  ), JSON.stringify(clearEventType.calls))
+
   const suspend = makeMockAdmin()
   await applyOwnerSecurityActionWithClient(suspend.admin, {
     actorUserId: OWNER_ID,
@@ -260,6 +281,8 @@ async function main() {
   check("owner security page has filters", securityPage.includes('name="risk"') && securityPage.includes('name="category"'), "filters missing")
   check("owner security page renders action buttons", securityPage.includes("OwnerSecurityActionButton"), "action buttons missing")
   check("owner security page can clear risk", securityPage.includes('action="clear_risk"') && securityPage.includes("Riskten çıkar"), "clear risk action missing")
+  check("owner security page can clear specific situations", securityPage.includes('action="clear_event_type"') && securityPage.includes("Temizlenebilir güvenlik durumları"), "clear event type action missing")
+  check("owner security events are collapsible", securityPage.includes("Son Güvenlik Olayları") && securityPage.includes("<details"), "collapsible event panel missing")
   check("owner security page links detail view", securityPage.includes("/owner-audit/${encodeURIComponent(user.userId)}?tab=audit"), "detail link missing")
 
   if (failures.length > 0) {

@@ -21,6 +21,7 @@ export type OwnerSecurityAction =
   | "mark_review"
   | "clear_review"
   | "clear_risk"
+  | "clear_event_type"
   | "temporary_lock"
   | "clear_lock"
   | "suspend"
@@ -57,6 +58,12 @@ export type OwnerSecurityUser = {
   videoWarnings: number
   activeEntitlements: string[]
   reportCreditBalance: number
+  riskFindings: Array<{
+    eventType: string
+    label: string
+    count: number
+    severity: "info" | "warning" | "danger"
+  }>
 }
 
 export type OwnerSecurityEvent = {
@@ -66,6 +73,7 @@ export type OwnerSecurityEvent = {
   category: "account" | "payment" | "video" | "entitlement" | "report_credit"
   severity: "info" | "warning" | "danger"
   label: string
+  eventType?: string
   detail: string
   createdAt: string | null
   ipAddress?: string | null
@@ -274,6 +282,7 @@ export async function applyOwnerSecurityAction(params: {
   action: OwnerSecurityAction
   reason: string
   deviceId?: string | null
+  eventType?: string | null
   lockMinutes?: number | null
 }) {
   return applyOwnerSecurityActionWithClient(createSupabaseAdminClient() as any, params)
