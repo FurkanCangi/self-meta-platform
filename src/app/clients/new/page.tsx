@@ -446,13 +446,6 @@ export default function NewClientPage() {
     [form.external_test_name]
   );
 
-  const externalScoreNeedsInterpretation = useMemo(() => {
-    const hasScore = Boolean(externalDraft.result.trim())
-    const hasName = Boolean(externalDraft.testName.trim())
-    const hasInterpretation = Boolean(externalDraft.interpretation.trim())
-    return hasName && hasScore && !hasInterpretation
-  }, [externalDraft])
-
   const externalDraftHasContent = useMemo(() => hasExternalTestContent(externalDraft), [externalDraft])
 
   const externalPreviewEntries = useMemo(() => {
@@ -518,12 +511,6 @@ export default function NewClientPage() {
 
     if (!selectedExternalTest) {
       setErr("Yalnız desteklenen testler eklenebilir. Lütfen listeden bir test seçin.")
-      setTab("external")
-      return null
-    }
-
-    if (externalScoreNeedsInterpretation) {
-      setErr("Ham puan tek başına kaydedilmez. Lütfen kısa klinik yorumu da ekleyin.")
       setTab("external")
       return null
     }
@@ -1153,12 +1140,6 @@ export default function NewClientPage() {
                     <div className="mt-2 text-sm leading-6 text-slate-700">
                       {externalPreviewText || "Henüz rapora gidecek yapılandırılmış veri oluşmadı."}
                     </div>
-                  </div>
-                ) : null}
-
-                {externalScoreNeedsInterpretation ? (
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
-                    Ham puan tek başına rapora karar girdisi olarak alınmayacak. Lütfen bu puanın kısa klinik anlamını da yaz.
                   </div>
                 ) : null}
 
