@@ -13,6 +13,7 @@ type ReportRow = {
   created_at: string | null;
   snapshot_json: any;
   assessment_id: string | null;
+  clientId?: string | null;
   clientCode?: string | null;
   assessmentDate?: string | null;
   preview?: string | null;
@@ -66,6 +67,7 @@ export default function ReportsPage() {
   const [notice, setNotice] = useState<string>("");
   const [deletingReportId, setDeletingReportId] = useState<string>("");
   const [appReaderOpen, setAppReaderOpen] = useState(false);
+  const [clientFilter, setClientFilter] = useState({ id: "", code: "" });
 
   useEffect(() => {
     let mounted = true;
@@ -76,6 +78,13 @@ export default function ReportsPage() {
       setNotice("");
 
       try {
+        const params = new URLSearchParams(window.location.search);
+        const nextClientFilter = {
+          id: (params.get("client_id") || "").trim(),
+          code: (params.get("client") || "").trim(),
+        };
+        if (mounted) setClientFilter(nextClientFilter);
+
         const response = await fetch("/api/app/clinical-workspace", { cache: "no-store" });
         const payload = await response.json().catch(() => ({}));
 
@@ -92,8 +101,11 @@ export default function ReportsPage() {
         }
 
         const safeRows = (payload.reports || []) as ReportRow[];
+        const initialRows = nextClientFilter.id
+          ? safeRows.filter((row) => String(row.clientId || "") === nextClientFilter.id)
+          : safeRows;
         setRows(safeRows);
-        setSelectedId(safeRows[0]?.id || "");
+        setSelectedId(initialRows[0]?.id || "");
       } catch (error) {
         if (mounted) {
           setErr(error instanceof Error ? error.message : "Raporlar alınamadı.");
@@ -112,9 +124,14 @@ export default function ReportsPage() {
     };
   }, [router]);
 
+  const visibleRows = useMemo(() => {
+    if (!clientFilter.id) return rows;
+    return rows.filter((row) => String(row.clientId || "") === clientFilter.id);
+  }, [rows, clientFilter.id]);
+
   const selected = useMemo(
-    () => rows.find((x) => x.id === selectedId) || null,
-    [rows, selectedId]
+    () => visibleRows.find((x) => x.id === selectedId) || null,
+    [visibleRows, selectedId]
   );
 
   async function handleDeleteReport(row: ReportRow) {
@@ -168,14 +185,16 @@ export default function ReportsPage() {
           {loading && <div className="rounded-[22px] border border-slate-200 bg-white p-6 text-center text-sm font-semibold text-slate-500 shadow-sm">Yükleniyor...</div>}
           {!loading && err && <div className="rounded-[22px] border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{err}</div>}
           {!loading && !err && notice && <div className="rounded-[22px] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{notice}</div>}
-          {!loading && !err && rows.length === 0 && (
+          {!loading && !err && visibleRows.length === 0 && (
             <div className="rounded-[22px] border border-slate-200 bg-white p-6 text-center text-sm font-semibold text-slate-500 shadow-sm">
-              Henüz kayıtlı rapor bulunmuyor.
+              {clientFilter.code
+                ? `${clientFilter.code} için henüz kayıtlı rapor bulunmuyor.`
+                : "Henüz kayıtlı rapor bulunmuyor."}
             </div>
           )}
 
           <section className="space-y-3">
-            {rows.map((row) => (
+            {visibleRows.map((row) => (
               <button
                 key={row.id}
                 type="button"
@@ -274,14 +293,16 @@ export default function ReportsPage() {
             </div>
           )}
 
-          {!loading && !err && rows.length === 0 && (
+          {!loading && !err && visibleRows.length === 0 && (
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-500">
-              Henüz kayıtlı rapor bulunmuyor.
+              {clientFilter.code
+                ? `${clientFilter.code} için henüz kayıtlı rapor bulunmuyor.`
+                : "Henüz kayıtlı rapor bulunmuyor."}
             </div>
           )}
 
           <div className="space-y-3">
-            {rows.map((row) => {
+            {visibleRows.map((row) => {
               const active = row.id === selectedId;
               return (
                 <button

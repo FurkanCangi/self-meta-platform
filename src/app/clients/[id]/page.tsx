@@ -44,6 +44,9 @@ export default function ClientDetailPage() {
     if (!client?.anamnez) return "—";
     return client.anamnez;
   }, [client]);
+  const reportsHref = `/reports?client_id=${encodeURIComponent(clientId || "")}&client=${encodeURIComponent(
+    client?.child_code || "",
+  )}`;
 
   async function load() {
     setLoading(true);
@@ -282,7 +285,7 @@ export default function ClientDetailPage() {
                       >
                         Skor Girişi
                       </Link>
-                      <Link href="/reports" className="dna-btn-ghost px-3 py-2 text-xs font-semibold">
+                      <Link href={reportsHref} className="dna-btn-ghost px-3 py-2 text-xs font-semibold">
                         Raporlar
                       </Link>
                     </div>
@@ -314,7 +317,7 @@ export default function ClientDetailPage() {
                             >
                               Skor Girişi
                             </Link>
-                            <Link href="/reports" className="dna-btn-ghost px-3 py-2 text-xs font-semibold">
+                            <Link href={reportsHref} className="dna-btn-ghost px-3 py-2 text-xs font-semibold">
                               Raporlar
                             </Link>
                           </div>

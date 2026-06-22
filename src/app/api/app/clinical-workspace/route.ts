@@ -190,6 +190,7 @@ export async function GET() {
       created_at: report.created_at,
       snapshot_json: report.snapshot_json,
       assessment_id: report.assessment_id,
+      clientId: client?.id || null,
       clientCode:
         client?.child_code ||
         report?.snapshot_json?.client_code ||
