@@ -2,6 +2,7 @@ import "server-only"
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { isOwnerAuditEmail } from "@/lib/owner/ownerAccess"
+import { isSecurityTestExemptEmail } from "@/lib/security/securityExemptions"
 
 type SecurityEventRow = {
   event_type: string
@@ -140,6 +141,7 @@ export async function recordAccountSecurityEvent(event: {
 
 export async function isSecurityLockExemptUser(userId: string, email?: string | null) {
   if (isOwnerAuditEmail(email)) return true
+  if (isSecurityTestExemptEmail(email)) return true
 
   const admin = createSupabaseAdminClient()
   const { data: profile } = await admin
@@ -155,6 +157,7 @@ export async function isSecurityLockExemptUser(userId: string, email?: string | 
   if (!email) {
     const { data } = await admin.auth.admin.getUserById(userId)
     if (isOwnerAuditEmail(data.user?.email)) return true
+    if (isSecurityTestExemptEmail(data.user?.email)) return true
   }
 
   return false
@@ -178,8 +181,8 @@ export async function evaluateAccountRisk(userId: string) {
 
   let decision = scoreAccountSecurityEvents((data || []) as SecurityEventRow[])
   const lockExempt = await isSecurityLockExemptUser(userId)
-  if (lockExempt && decision.action !== "none") {
-    decision = { ...decision, action: "none" }
+  if (lockExempt) {
+    decision = { score: 0, action: "none", reasons: [] }
   }
   const lockedUntil =
     decision.action === "temporary_lock"

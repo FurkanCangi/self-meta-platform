@@ -143,8 +143,6 @@ export async function verifyCurrentAppSession(userId: string): Promise<AppSessio
     : 0
   if (!lockExemptUser && lockedUntil && lockedUntil > Date.now()) return { ok: false, reason: "locked" }
 
-  if (lockExemptUser) return { ok: true, sessionId }
-
   await auditActiveSessionFingerprint({
     userId,
     sessionId,
