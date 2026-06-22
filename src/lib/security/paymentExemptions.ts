@@ -8,10 +8,13 @@ import { grantReportCredits } from "@/lib/security/reportCredits"
 export const PAYMENT_EXEMPT_PLAN: Exclude<PlanCode, "none"> = "professional"
 
 const PAYMENT_EXEMPT_EMAILS = new Set([
+  "ergfurkancangi@gmail.com",
   "sevdenurtatli@icloud.com",
   "busranurtohan@gmail.com",
   "ergnurtuba@gmail.com",
 ])
+
+const PRIVILEGED_PROFILE_ROLES = new Set(["admin", "owner", "super_admin", "superadmin"])
 
 function normalizeEmail(value?: string | null) {
   return String(value || "")
@@ -32,6 +35,10 @@ export function resolveEffectivePlan(plan?: string | null, email?: string | null
     : "none"
 }
 
+function isPrivilegedProfileRole(role?: string | null) {
+  return PRIVILEGED_PROFILE_ROLES.has(String(role || "").trim().toLowerCase())
+}
+
 export async function ensurePaymentExemptAccess(params: {
   admin: SupabaseClient
   userId: string
@@ -43,17 +50,30 @@ export async function ensurePaymentExemptAccess(params: {
 
   const now = new Date().toISOString()
 
-  const { error: profileError } = await params.admin
+  const { data: existingProfile, error: profileLookupError } = await params.admin
     .from("profiles")
-    .update({
-      role: "expert",
+    .select("role")
+    .eq("user_id", params.userId)
+    .maybeSingle()
+
+  if (profileLookupError) {
+    return { ok: false as const, error: "payment_exempt_profile_lookup_failed" }
+  }
+
+  const nextRole = isPrivilegedProfileRole(existingProfile?.role) ? existingProfile?.role : "expert"
+
+  const { error: profileError } = await params.admin.from("profiles").upsert(
+    {
+      user_id: params.userId,
+      role: nextRole,
       plan: PAYMENT_EXEMPT_PLAN,
       updated_at: now,
-    })
-    .eq("user_id", params.userId)
+    },
+    { onConflict: "user_id" }
+  )
 
   if (profileError) {
-    return { ok: false as const, error: "payment_exempt_profile_update_failed" }
+    return { ok: false as const, error: "payment_exempt_profile_upsert_failed" }
   }
 
   const { error: entitlementError } = await params.admin.from("user_entitlements").upsert(
