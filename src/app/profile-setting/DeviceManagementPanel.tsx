@@ -62,6 +62,12 @@ function deviceLabel(type: string) {
   return "Cihaz"
 }
 
+const deviceSlots = [
+  { type: "desktop", label: "Bilgisayar" },
+  { type: "mobile", label: "Telefon" },
+  { type: "tablet", label: "Tablet" },
+]
+
 export default function DeviceManagementPanel({ deviceLimitMode = false }: { deviceLimitMode?: boolean }) {
   const [devices, setDevices] = useState<DeviceRow[]>([])
   const [loading, setLoading] = useState(true)
@@ -152,6 +158,7 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
 
   const activeDevices = devices.filter((device) => !device.revokedAt)
   const revokedDevices = devices.filter((device) => device.revokedAt)
+  const activeSlotTypes = new Set(activeDevices.map((device) => device.deviceType))
 
   return (
     <section className="rounded-3xl border border-slate-200 bg-white p-6">
@@ -160,7 +167,7 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
           <div className="text-sm font-semibold uppercase tracking-wide text-blue-600">Cihazlarım</div>
           <h2 className="mt-2 text-2xl font-bold text-slate-900">Hesaba bağlı cihazlar</h2>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-            Hesabınız aynı anda en fazla 2 kayıtlı cihazla kullanılabilir. Kullanmadığınız cihazı kaldırıp bu cihazla devam edebilirsiniz.
+            Hesabınız 1 bilgisayar, 1 telefon ve 1 tablet hakkıyla kullanılabilir. Kullanmadığınız cihazı kaldırıp bu cihazla devam edebilirsiniz.
           </p>
         </div>
 
@@ -196,8 +203,27 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
         <div className="mb-3 flex items-center justify-between">
           <h3 className="text-base font-semibold text-slate-900">Aktif cihazlar</h3>
           <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
-            {activeDevices.length}/2
+            {activeDevices.length}/3
           </span>
+        </div>
+
+        <div className="mb-4 grid gap-2 sm:grid-cols-3">
+          {deviceSlots.map((slot) => {
+            const used = activeSlotTypes.has(slot.type)
+            return (
+              <div
+                key={slot.type}
+                className={`rounded-2xl border px-4 py-3 text-sm ${
+                  used
+                    ? "border-emerald-100 bg-emerald-50 text-emerald-800"
+                    : "border-slate-200 bg-slate-50 text-slate-500"
+                }`}
+              >
+                <div className="font-semibold">{slot.label}</div>
+                <div className="mt-1 text-xs">{used ? "Kullanılıyor" : "Boş hak"}</div>
+              </div>
+            )
+          })}
         </div>
 
         {loading ? (

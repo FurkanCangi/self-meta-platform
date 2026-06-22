@@ -64,6 +64,9 @@ function eventLabel(category: OwnerSecurityEvent["category"], raw: string) {
     new_device_registered: "Yeni cihaz kaydedildi",
     device_limit_blocked: "Cihaz limiti zorlandi",
     device_slot_blocked: "Cihaz turu limiti zorlandi",
+    device_slot_reused: "Cihaz turu yeniden kullanildi",
+    user_device_revoked_self: "Kullanici cihaz kaldirdi",
+    frequent_device_changes: "Cihaz kaldir/ekle hareketi artti",
     device_metadata_changed: "Cihaz IP/tarayici bilgisi degisti",
     api_rate_limited: "API rate limit asildi",
     concurrent_playback_blocked: "Ayni video eszamanli izlenmeye calisildi",
@@ -90,7 +93,14 @@ function eventSeverity(category: OwnerSecurityEvent["category"], raw: string): O
   ) {
     return "danger"
   }
-  if (category === "payment" || raw.includes("changed") || raw.includes("replaced")) return "warning"
+  if (
+    raw === "frequent_device_changes" ||
+    raw === "device_slot_reused" ||
+    raw === "user_device_revoked_self" ||
+    category === "payment" ||
+    raw.includes("changed") ||
+    raw.includes("replaced")
+  ) return "warning"
   return "info"
 }
 
@@ -166,6 +176,10 @@ export function buildOwnerSecurityDashboardFromRows(
     const playbackSessions = rows.playbackSessions.filter((row) => String(row.user_id || "") === userId)
     const activeSessions = sessions.filter((row) => row.status === "active").length
     const activeDevices = devices.filter((row) => !row.revoked_at).length
+    const deviceMovementEvents = events.filter((row) =>
+      ["new_device_registered", "device_slot_reused", "user_device_revoked_self", "frequent_device_changes"].includes(String(row.event_type || "")) &&
+      within24h(String(row.created_at || ""), nowMs)
+    ).length
     const riskScore = Math.max(0, Number(state?.risk_score || 0))
     const recentIps = Array.from(
       new Set(
@@ -234,7 +248,9 @@ export function buildOwnerSecurityDashboardFromRows(
       recentIps,
       securityEvents24h: events.filter((row) => within24h(String(row.created_at || ""), nowMs)).length,
       apiRateLimits24h: events.filter((row) => row.event_type === "api_rate_limited" && within24h(String(row.created_at || ""), nowMs)).length,
-      deviceBlocks24h: events.filter((row) => String(row.event_type || "").includes("device_") && String(row.event_type || "").includes("blocked") && within24h(String(row.created_at || ""), nowMs)).length,
+      deviceBlocks24h:
+        events.filter((row) => String(row.event_type || "").includes("device_") && String(row.event_type || "").includes("blocked") && within24h(String(row.created_at || ""), nowMs)).length +
+        (deviceMovementEvents >= 3 ? 1 : 0),
       paymentWarnings,
       videoWarnings,
       activeEntitlements,

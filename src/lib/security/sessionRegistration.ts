@@ -10,7 +10,7 @@ import {
 import { APP_SESSION_MAX_AGE_SECONDS } from "@/lib/security/appSession"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
-export const MAX_REGISTERED_DEVICES = 2
+export const MAX_REGISTERED_DEVICES = 3
 
 export type AppSessionDeviceType = "desktop" | "mobile" | "tablet" | "unknown"
 
@@ -29,7 +29,10 @@ function hashDeviceId(userId: string, deviceId: string) {
 }
 
 function deviceSlot(deviceType: string) {
-  return deviceType === "desktop" ? "desktop" : "handheld"
+  if (deviceType === "desktop" || deviceType === "mobile" || deviceType === "tablet") {
+    return deviceType
+  }
+  return "unknown"
 }
 
 function getClientIp(headers: Headers) {
@@ -117,23 +120,6 @@ export async function registerAppSessionForUser({
     }
 
     const registeredDevices = activeDevices || []
-    if (!lockExemptUser && registeredDevices.length >= MAX_REGISTERED_DEVICES) {
-      await recordAccountSecurityEvent({
-        userId: user.id,
-        eventType: "device_limit_blocked",
-        ipAddress,
-        userAgent,
-        metadata: { requested_device_type: deviceType },
-      })
-
-      return {
-        ok: false,
-        error: "device_limit_exceeded",
-        message: "Bu hesap için en fazla 2 cihaz kullanılabilir.",
-        status: 409,
-      }
-    }
-
     const requestedSlot = deviceSlot(deviceType)
     const sameSlotDevice = registeredDevices.find(
       (device) => deviceSlot(String(device.device_type || "unknown")) === requestedSlot
@@ -157,11 +143,28 @@ export async function registerAppSessionForUser({
         deviceId,
         ipAddress,
         userAgent,
-        metadata: { requested_device_type: deviceType, requested_slot: requestedSlot },
+        metadata: { device_type: deviceType, device_slot: requestedSlot },
       })
     }
 
     if (!deviceId) {
+      if (!lockExemptUser && registeredDevices.length >= MAX_REGISTERED_DEVICES) {
+        await recordAccountSecurityEvent({
+          userId: user.id,
+          eventType: "device_limit_blocked",
+          ipAddress,
+          userAgent,
+          metadata: { device_type: deviceType, device_slot: requestedSlot, max_devices: MAX_REGISTERED_DEVICES },
+        })
+
+        return {
+          ok: false,
+          error: "device_limit_exceeded",
+          message: "Bu hesap için en fazla 3 cihaz kullanılabilir.",
+          status: 409,
+        }
+      }
+
       const { data: createdDevice, error: createDeviceError } = await admin
         .from("account_devices")
         .insert({

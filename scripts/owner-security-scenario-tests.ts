@@ -72,6 +72,9 @@ function makeRows() {
       { id: 3, user_id: TARGET_ID, event_type: "api_rate_limited", created_at: iso(8), ip_address: "10.0.0.3", user_agent: "agent-c", metadata: { route: "/api/ai-report" } },
       { id: 4, user_id: TARGET_ID, event_type: "active_session_ip_changed", created_at: iso(7), ip_address: "10.0.0.4", user_agent: "agent-d", metadata: {} },
       { id: 5, user_id: TARGET_ID, event_type: "device_metadata_changed", created_at: iso(6), ip_address: "10.0.0.5", user_agent: "agent-e", metadata: {} },
+      { id: 6, user_id: TARGET_ID, event_type: "device_slot_reused", created_at: iso(5), ip_address: "10.0.0.6", user_agent: "agent-f", metadata: { device_slot: "mobile" } },
+      { id: 7, user_id: TARGET_ID, event_type: "user_device_revoked_self", created_at: iso(4), ip_address: "10.0.0.7", user_agent: "agent-g", metadata: { source: "device_management" } },
+      { id: 8, user_id: TARGET_ID, event_type: "frequent_device_changes", created_at: iso(3), ip_address: "10.0.0.8", user_agent: "agent-h", metadata: { device_movement_count_24h: 3 } },
     ],
     billingEvents: [
       { id: 10, target_user_id: TARGET_ID, action: "payment_amount_mismatch", provider: "stripe", provider_event_id: "evt_bad", created_at: iso(12), metadata: { expected: 50000 } },
@@ -138,7 +141,7 @@ async function main() {
 
   check("high risk user appears in panel payload", Boolean(target), JSON.stringify(dashboard.users))
   check("5 IP / device attack is critical", target?.riskLevel === "critical" && target.riskScore === 85, JSON.stringify(target))
-  check("device limit attempts are counted", target?.deviceBlocks24h === 2, JSON.stringify(target))
+  check("device limit and movement attempts are counted", target?.deviceBlocks24h === 3, JSON.stringify(target))
   check("API rate limit is counted", target?.apiRateLimits24h === 1, JSON.stringify(target))
   check("payment mismatch creates warning count", target?.paymentWarnings === 2, JSON.stringify(target))
   check("concurrent video playback creates warning count", target?.videoWarnings === 2, JSON.stringify(target))
@@ -146,6 +149,7 @@ async function main() {
   check("active sessions and devices are visible", target?.activeSessions === 2 && target.registeredDevices === 2, JSON.stringify(target))
   check("payment mismatch event is danger", dashboard.events.some((event) => event.label.includes("Paket odeme tutari") && event.severity === "danger"), JSON.stringify(dashboard.events))
   check("video concurrent event is danger", dashboard.events.some((event) => event.label.includes("eszamanli") && event.severity === "danger"), JSON.stringify(dashboard.events))
+  check("frequent device changes event is warning", dashboard.events.some((event) => event.label.includes("Cihaz kaldir/ekle") && event.severity === "warning"), JSON.stringify(dashboard.events))
   check("risk filter returns target only", buildOwnerSecurityDashboardFromRows(makeRows(), { risk: "critical" }).users.length === 1, "critical filter failed")
   check("payment filter returns target only", buildOwnerSecurityDashboardFromRows(makeRows(), { category: "payment" }).users.length === 1, "payment filter failed")
 

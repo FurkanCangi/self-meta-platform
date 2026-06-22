@@ -40,10 +40,10 @@ function formatLoginErrorCode(code?: string | null) {
   }
   if (code === "rate_limited") return "Çok sık giriş denemesi yapıldı. Lütfen birkaç dakika sonra tekrar deneyin.";
   if (code === "device_limit_exceeded") {
-    return "Bu hesap için en fazla 2 cihaz kullanılabilir. Yeni cihaz eklemek için önce mevcut cihazlardan biri kaldırılmalıdır.";
+    return "Bu hesap 1 bilgisayar, 1 telefon ve 1 tablet hakkıyla kullanılabilir. Yeni cihaz eklemek için önce mevcut cihazlardan biri kaldırılmalıdır.";
   }
   if (code === "device_slot_unavailable") {
-    return "Bu hesap için en fazla 2 cihaz kullanılabilir. Yeni cihaz eklemek için önce mevcut cihazlardan biri kaldırılmalıdır.";
+    return "Bu cihaz türü için hak dolu. Devam etmek için önce aynı türdeki eski cihazı kaldırın.";
   }
   if (code === "device_revoked") return "Bu cihaz için erişim kapatılmış görünüyor.";
   if (code === "account_temporarily_locked") return "Şüpheli kullanım nedeniyle hesap geçici olarak kilitlendi.";

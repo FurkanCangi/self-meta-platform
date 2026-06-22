@@ -67,6 +67,18 @@ export function scoreAccountSecurityEvents(events: SecurityEventRow[]): RiskDeci
     reasons.push("24 saat içinde birden fazla yeni cihaz")
   }
 
+  const deviceChanges =
+    countEvents(events, "new_device_registered") +
+    countEvents(events, "device_slot_reused") +
+    countEvents(events, "user_device_revoked_self")
+  if (deviceChanges >= 5) {
+    score += 40
+    reasons.push("24 saat içinde çok sık cihaz ekleme/kaldırma")
+  } else if (deviceChanges >= 3) {
+    score += 25
+    reasons.push("24 saat içinde sık cihaz ekleme/kaldırma")
+  }
+
   const metadataChanges = countEvents(events, "device_metadata_changed")
   if (metadataChanges >= 5) {
     score += 35
@@ -180,6 +192,22 @@ export async function evaluateAccountRisk(userId: string) {
   }
 
   let decision = scoreAccountSecurityEvents((data || []) as SecurityEventRow[])
+  const deviceMovementEvents = ((data || []) as SecurityEventRow[]).filter((event) =>
+    ["new_device_registered", "device_slot_reused", "user_device_revoked_self"].includes(event.event_type)
+  )
+  const hasFrequentDeviceEvent = ((data || []) as SecurityEventRow[]).some(
+    (event) => event.event_type === "frequent_device_changes"
+  )
+  if (deviceMovementEvents.length >= 3 && !hasFrequentDeviceEvent) {
+    await recordAccountSecurityEvent({
+      userId,
+      eventType: "frequent_device_changes",
+      ipAddress: deviceMovementEvents[0]?.ip_address || null,
+      userAgent: deviceMovementEvents[0]?.user_agent || null,
+      metadata: { device_movement_count_24h: deviceMovementEvents.length },
+    })
+  }
+
   const lockExempt = await isSecurityLockExemptUser(userId)
   if (lockExempt) {
     decision = { score: 0, action: "none", reasons: [] }

@@ -10,7 +10,7 @@ import { verifyCurrentAppSession } from "@/lib/security/appSession"
 import { rejectServerControlledFields } from "@/lib/security/payloadGuards"
 import { checkRateLimit, getClientRateLimitKey, rateLimitResponse } from "@/lib/security/rateLimit"
 import { readJsonWithSchema } from "@/lib/security/schemaGuards"
-import { recordAccountSecurityEvent } from "@/lib/security/anomalyDetection"
+import { evaluateAccountRisk, recordAccountSecurityEvent } from "@/lib/security/anomalyDetection"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
@@ -164,6 +164,7 @@ export async function POST(request: Request) {
     userAgent: request.headers.get("user-agent"),
     metadata: { source: access.mode },
   })
+  await evaluateAccountRisk(access.user.id)
 
   return NextResponse.json({ ok: true })
 }
