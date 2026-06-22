@@ -73,6 +73,26 @@ function statusLabel(profile: TherapistProfile) {
   return "Admin onayı bekliyor"
 }
 
+function profileErrorMessage(errorCode?: string) {
+  switch (errorCode) {
+    case "unauthorized":
+      return "Profil bilgilerini yönetmek için tekrar giriş yapmanız gerekiyor."
+    case "directory_profile_setup_required":
+    case "directory_profile_unavailable":
+      return "Profil kayıt alanı hazırlanıyor. Lütfen biraz sonra tekrar deneyin."
+    case "server_controlled_fields_present":
+      return "Profil bilgileri güvenlik kontrolünden geçemedi. Sayfayı yenileyip tekrar deneyin."
+    case "rate_limited":
+      return "Kısa sürede çok fazla işlem yapıldı. Biraz bekleyip tekrar deneyin."
+    case "directory_profile_fetch_failed":
+      return "Profil bilgileri alınamadı. Lütfen sayfayı yenileyin."
+    case "directory_profile_save_failed":
+      return "Profil kaydedilemedi. Lütfen bilgileri kontrol edip tekrar deneyin."
+    default:
+      return "Profil işlemi tamamlanamadı. Lütfen tekrar deneyin."
+  }
+}
+
 export default function ProfilePage() {
   const [profile, setProfile] = useState<TherapistProfile>(defaultProfile)
   const [loaded, setLoaded] = useState(false)
@@ -101,7 +121,7 @@ export default function ProfilePage() {
         }
 
         if (!response.ok || payload?.ok === false) {
-          throw new Error(payload?.error || "Profil bilgileri alınamadı.")
+          throw new Error(profileErrorMessage(payload?.error))
         }
 
         if (payload?.profile) {
@@ -148,7 +168,7 @@ export default function ProfilePage() {
       const payload = await response.json().catch(() => ({}))
 
       if (!response.ok || payload?.ok === false) {
-        throw new Error(payload?.error || "Profil kaydedilemedi.")
+        throw new Error(profileErrorMessage(payload?.error))
       }
 
       if (payload?.profile) {

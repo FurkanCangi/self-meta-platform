@@ -25,6 +25,18 @@ const therapistDirectoryPayloadSchema = z
   })
   .passthrough()
 
+function isMissingDirectoryTable(error: unknown) {
+  const code = String((error as { code?: string } | null)?.code || "")
+  const message = String((error as { message?: string } | null)?.message || error || "").toLowerCase()
+
+  return (
+    code === "42P01" ||
+    code === "PGRST205" ||
+    (message.includes("therapist_directory_profiles") &&
+      (message.includes("does not exist") || message.includes("relation") || message.includes("schema cache")))
+  )
+}
+
 async function getCurrentUser() {
   const supabase = await createSupabaseServerClient()
   const {
@@ -54,7 +66,11 @@ export async function GET() {
       .maybeSingle()
 
     if (error) {
-      return NextResponse.json({ ok: true, profile: null, warning: "directory_profile_unavailable" })
+      return NextResponse.json({
+        ok: true,
+        profile: null,
+        warning: isMissingDirectoryTable(error) ? "directory_profile_setup_required" : "directory_profile_unavailable",
+      })
     }
 
     return NextResponse.json({ ok: true, profile: data ? mapDirectoryRow(data) : null })
@@ -101,6 +117,12 @@ export async function PUT(request: Request) {
       .maybeSingle()
 
     if (existingError) {
+      if (isMissingDirectoryTable(existingError)) {
+        return NextResponse.json(
+          { ok: false, error: "directory_profile_setup_required", setupRequired: true },
+          { status: 503 },
+        )
+      }
       throw existingError
     }
 
@@ -125,11 +147,20 @@ export async function PUT(request: Request) {
       .single()
 
     if (error) {
+      if (isMissingDirectoryTable(error)) {
+        return NextResponse.json(
+          { ok: false, error: "directory_profile_setup_required", setupRequired: true },
+          { status: 503 },
+        )
+      }
       throw error
     }
 
     return NextResponse.json({ ok: true, profile: mapDirectoryRow(data) })
-  } catch {
+  } catch (error) {
+    console.error("[therapist-directory] profile save failed", {
+      error: error instanceof Error ? error.message : "unknown",
+    })
     return NextResponse.json({ ok: false, error: "directory_profile_save_failed" }, { status: 500 })
   }
 }
