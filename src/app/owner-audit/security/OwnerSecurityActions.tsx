@@ -24,6 +24,10 @@ function buttonClass(variant: ActionButtonProps["variant"]) {
   return "rounded-2xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 transition hover:bg-slate-50 disabled:opacity-50"
 }
 
+function defaultReason(label: string) {
+  return `Owner panel aksiyonu: ${label}`
+}
+
 export function OwnerSecurityActionButton({
   targetUserId,
   action,
@@ -38,9 +42,6 @@ export function OwnerSecurityActionButton({
   const [error, setError] = useState("")
 
   function runAction() {
-    const reason = window.prompt(`${label} sebebi nedir?`)
-    if (!reason || reason.trim().length < 3) return
-
     setError("")
     startTransition(async () => {
       const response = await fetch("/api/owner-audit/security/action", {
@@ -49,7 +50,7 @@ export function OwnerSecurityActionButton({
         body: JSON.stringify({
           targetUserId,
           action,
-          reason,
+          reason: defaultReason(label),
           deviceId,
           eventType,
           lockMinutes,

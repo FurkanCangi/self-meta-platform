@@ -282,8 +282,10 @@ async function main() {
   ), JSON.stringify(suspend.calls))
 
   const securityPage = await import("node:fs").then((fs) => fs.readFileSync("src/app/owner-audit/security/page.tsx", "utf8"))
+  const securityActions = await import("node:fs").then((fs) => fs.readFileSync("src/app/owner-audit/security/OwnerSecurityActions.tsx", "utf8"))
   check("owner security page has filters", securityPage.includes('name="risk"') && securityPage.includes('name="category"'), "filters missing")
   check("owner security page renders action buttons", securityPage.includes("OwnerSecurityActionButton"), "action buttons missing")
+  check("owner security actions do not use browser prompts", !securityActions.includes("window.prompt") && securityActions.includes("defaultReason"), "owner action prompt should not be used")
   check("owner security page can clear risk", securityPage.includes('action="clear_risk"') && securityPage.includes("Riskten çıkar"), "clear risk action missing")
   check("owner security page can clear specific situations", securityPage.includes('action="clear_event_type"') && securityPage.includes("Temizlenebilir güvenlik durumları"), "clear event type action missing")
   check("owner security events are collapsible", securityPage.includes("Son Güvenlik Olayları") && securityPage.includes("<details"), "collapsible event panel missing")
