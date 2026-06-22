@@ -57,10 +57,24 @@ export function mapNotificationRow(row: NotificationRow, readAt: string | null =
     kind: normalizeNotificationKind(row.kind),
     audience: normalizeNotificationAudience(row.audience),
     actionLabel: cleanText(row.action_label) || null,
-    actionUrl: cleanText(row.action_url) || null,
+    actionUrl: normalizeNotificationActionUrl(row.action_url),
     publishedAt,
     readAt,
     read: Boolean(readAt),
+  }
+}
+
+export function normalizeNotificationActionUrl(value: unknown) {
+  const raw = cleanText(value)
+  if (!raw) return null
+  if (!raw.startsWith("/") || raw.startsWith("//")) return null
+
+  try {
+    const parsed = new URL(raw, "https://dna.local")
+    const path = `${parsed.pathname}${parsed.search}${parsed.hash}`
+    return path.startsWith("/") ? path : null
+  } catch {
+    return null
   }
 }
 
@@ -77,6 +91,11 @@ export function isNotificationVisibleForUser(row: NotificationRow, userId: strin
 export function isMissingNotificationsTable(error: unknown) {
   const message = String((error as { message?: string } | null)?.message || error || "").toLowerCase()
   const code = String((error as { code?: string } | null)?.code || "")
-  return code === "42P01" || message.includes("notifications") || message.includes("notification_reads")
+  return (
+    code === "42P01" ||
+    message.includes('relation "notifications" does not exist') ||
+    message.includes("relation 'notifications' does not exist") ||
+    message.includes('relation "notification_reads" does not exist') ||
+    message.includes("relation 'notification_reads' does not exist")
+  )
 }
-

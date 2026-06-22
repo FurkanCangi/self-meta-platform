@@ -37,7 +37,7 @@ export default function BrandLogo({ variant = "header" }: BrandLogoProps) {
         width={variant === "mark" || variant === "panel" ? 585 : 1383}
         height={variant === "mark" || variant === "panel" ? 657 : 552}
         className={styles.image}
-        sizes={variant === "footer" ? "340px" : variant === "panel" ? "132px" : "92px"}
+        sizes={variant === "footer" ? "340px" : variant === "panel" ? "164px" : "92px"}
       />
     </div>
   );

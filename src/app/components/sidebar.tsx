@@ -71,97 +71,101 @@ export default function Sidebar({ toggle = true }: SidebarProps) {
       ].join(" ")}
     >
       <div className="flex h-full w-[304px] min-w-[304px] flex-col">
-      <div className="relative border-b border-slate-100 bg-white px-3 pt-4 pb-4">
-        <Link href="/" className="relative flex min-h-[134px] items-center justify-center px-0 py-1" aria-label="DNA Intelligence ana sayfa">
-          <BrandLogo variant="panel" />
-        </Link>
-      </div>
-
-      <div className="overflow-y-auto px-3 pb-6">
-        <div className="px-3 pb-2 pt-2 text-[12px] font-black uppercase tracking-[0.18em] text-slate-400">
-          Gösterge Paneli
+        <div className="relative border-b border-slate-100 bg-white px-4 py-4">
+          <Link
+            href="/"
+            className="relative flex h-[126px] items-center justify-center overflow-visible rounded-[28px] border border-cyan-100/80 bg-gradient-to-br from-white via-cyan-50/55 to-violet-50/45 shadow-[0_18px_44px_rgba(37,99,235,0.10)] transition hover:border-blue-100 hover:shadow-[0_22px_52px_rgba(37,99,235,0.14)]"
+            aria-label="DNA Intelligence ana sayfa"
+          >
+            <BrandLogo variant="panel" />
+          </Link>
         </div>
-        <ul className="space-y-1">
-          <Item
-            href="/starter"
-            label="Genel Bakış"
-            icon={<AiOutlineHome />}
-            active={pathname === "/starter" || pathname === "/dashboard"}
-          />
-        </ul>
 
-        <div className="px-3 pb-2 pt-6 text-[12px] font-black uppercase tracking-[0.18em] text-slate-400">
-          Danışan Yönetimi
-        </div>
-        <ul className="space-y-1">
-          <Item
-            href="/clients"
-            label="Danışan Listesi"
-            icon={<AiOutlineUser />}
-            active={pathname === "/clients" || pathname.startsWith("/clients/")}
-          />
-          <Item
-            href="/clients/new"
-            label="Yeni Danışan Ekle"
-            icon={<AiOutlineEdit />}
-            active={pathname === "/clients/new"}
-          />
-        </ul>
+        <div className="overflow-y-auto px-3 pb-6">
+          <div className="px-3 pb-2 pt-2 text-[12px] font-black uppercase tracking-[0.18em] text-slate-400">
+            Gösterge Paneli
+          </div>
+          <ul className="space-y-1">
+            <Item
+              href="/starter"
+              label="Genel Bakış"
+              icon={<AiOutlineHome />}
+              active={pathname === "/starter" || pathname === "/dashboard"}
+            />
+          </ul>
 
-        <div className="px-3 pb-2 pt-6 text-[12px] font-black uppercase tracking-[0.18em] text-slate-400">
-          Klinik Değerlendirme
-        </div>
-        <ul className="space-y-1">
-          <Item
-            href="/education"
-            label="Eğitimler"
-            icon={<AiOutlinePlayCircle />}
-            active={pathname === "/education"}
-          />
-          <Item
-            href="/assessments"
-            label="Skor Girişi"
-            icon={<AiOutlineFileText />}
-            active={pathname === "/assessments" || pathname === "/assessments/new"}
-          />
-          <Item
-            href="/video-observation"
-            label="Video Gözlem"
-            icon={<AiOutlinePlayCircle />}
-            active={pathname === "/video-observation"}
-          />
-          <Item
-            href="/reports"
-            label="Rapor Geçmişi"
-            icon={<AiOutlineBarChart />}
-            active={pathname === "/reports"}
-          />
-          <Item
-            href="/report-packages"
-            label="Rapor Paketleri"
-            icon={<AiOutlineShoppingCart />}
-            active={pathname === "/report-packages"}
-          />
-        </ul>
+          <div className="px-3 pb-2 pt-6 text-[12px] font-black uppercase tracking-[0.18em] text-slate-400">
+            Danışan Yönetimi
+          </div>
+          <ul className="space-y-1">
+            <Item
+              href="/clients"
+              label="Danışan Listesi"
+              icon={<AiOutlineUser />}
+              active={pathname === "/clients" || pathname.startsWith("/clients/")}
+            />
+            <Item
+              href="/clients/new"
+              label="Yeni Danışan Ekle"
+              icon={<AiOutlineEdit />}
+              active={pathname === "/clients/new"}
+            />
+          </ul>
 
-        <div className="px-3 pb-2 pt-6 text-[12px] font-black uppercase tracking-[0.18em] text-slate-400">
-          Hesap
+          <div className="px-3 pb-2 pt-6 text-[12px] font-black uppercase tracking-[0.18em] text-slate-400">
+            Klinik Değerlendirme
+          </div>
+          <ul className="space-y-1">
+            <Item
+              href="/education"
+              label="Eğitimler"
+              icon={<AiOutlinePlayCircle />}
+              active={pathname === "/education"}
+            />
+            <Item
+              href="/assessments"
+              label="Skor Girişi"
+              icon={<AiOutlineFileText />}
+              active={pathname === "/assessments" || pathname === "/assessments/new"}
+            />
+            <Item
+              href="/video-observation"
+              label="Video Gözlem"
+              icon={<AiOutlinePlayCircle />}
+              active={pathname === "/video-observation"}
+            />
+            <Item
+              href="/reports"
+              label="Rapor Geçmişi"
+              icon={<AiOutlineBarChart />}
+              active={pathname === "/reports"}
+            />
+            <Item
+              href="/report-packages"
+              label="Rapor Paketleri"
+              icon={<AiOutlineShoppingCart />}
+              active={pathname === "/report-packages"}
+            />
+          </ul>
+
+          <div className="px-3 pb-2 pt-6 text-[12px] font-black uppercase tracking-[0.18em] text-slate-400">
+            Hesap
+          </div>
+          <ul className="space-y-1">
+            <Item
+              href="/profile"
+              label="Profil"
+              icon={<AiOutlineUser />}
+              active={pathname === "/profile"}
+            />
+            <Item
+              href="/profile-setting"
+              label="Ayarlar"
+              icon={<AiOutlineSetting />}
+              active={pathname === "/profile-setting" || pathname === "/settings"}
+            />
+          </ul>
         </div>
-        <ul className="space-y-1">
-          <Item
-            href="/profile"
-            label="Profil"
-            icon={<AiOutlineUser />}
-            active={pathname === "/profile"}
-          />
-          <Item
-            href="/profile-setting"
-            label="Ayarlar"
-            icon={<AiOutlineSetting />}
-            active={pathname === "/profile-setting" || pathname === "/settings"}
-          />
-        </ul>
-      </div>
       </div>
     </aside>
   );

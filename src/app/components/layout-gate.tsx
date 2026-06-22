@@ -43,6 +43,7 @@ export default function LayoutGate({ children, initialAppSurface = false }: Layo
   const pathname = usePathname() || "/";
   const [toggle, setToggle] = useState(true);
   const isAppSurface = useAppSurface(initialAppSurface);
+  const isOwnerAuditRoute = pathname.startsWith("/owner-audit");
 
   const isPublicRoute = useMemo(() => {
     if (PUBLIC_ROUTES.has(pathname)) return true;
@@ -53,6 +54,15 @@ export default function LayoutGate({ children, initialAppSurface = false }: Layo
   }, [pathname]);
 
   if (isPublicRoute) {
+    return (
+      <>
+        <PendingLegalAcceptanceSync />
+        {children}
+      </>
+    );
+  }
+
+  if (isOwnerAuditRoute) {
     return (
       <>
         <PendingLegalAcceptanceSync />

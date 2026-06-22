@@ -189,10 +189,14 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
   }, []);
 
   const markNotificationRead = async (notificationId: string, actionUrl?: string | null) => {
+    const wasUnread = notifications.some((item) => item.id === notificationId && !item.read);
+
     setNotifications((items) =>
       items.map((item) => (item.id === notificationId ? { ...item, read: true } : item)),
     );
-    setUnreadCount((count) => Math.max(0, count - 1));
+    if (wasUnread) {
+      setUnreadCount((count) => Math.max(0, count - 1));
+    }
 
     try {
       await fetch("/api/notifications/read", {

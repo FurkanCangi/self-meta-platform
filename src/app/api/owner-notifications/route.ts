@@ -8,6 +8,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import {
   isMissingNotificationsTable,
   mapNotificationRow,
+  normalizeNotificationActionUrl,
   normalizeNotificationAudience,
   normalizeNotificationKind,
   type NotificationRow,
@@ -66,6 +67,13 @@ async function resolveTargetUserIds(targetEmails: string[]) {
   return userIds
 }
 
+function ownerAuditEmails() {
+  return String(process.env.OWNER_AUDIT_EMAILS || "")
+    .split(",")
+    .map((email) => email.trim().toLowerCase())
+    .filter(Boolean)
+}
+
 export async function GET() {
   const owner = await requireOwner()
   if (!owner.ok) return owner.response
@@ -122,9 +130,11 @@ export async function POST(request: Request) {
   if (!parsed.ok) return parsed.response
 
   try {
-    const targetUserIds = await resolveTargetUserIds(parsed.data.targetEmails)
+    const ownerTargetEmails =
+      parsed.data.audience === "owners" && parsed.data.targetEmails.length === 0 ? ownerAuditEmails() : []
+    const targetUserIds = await resolveTargetUserIds([...parsed.data.targetEmails, ...ownerTargetEmails])
     const hasTargets = targetUserIds.length > 0
-    const actionUrl = parsed.data.actionUrl?.startsWith("/") ? parsed.data.actionUrl : parsed.data.actionUrl || null
+    const actionUrl = normalizeNotificationActionUrl(parsed.data.actionUrl)
 
     const admin = createSupabaseAdminClient()
     const { data, error } = await admin
@@ -163,4 +173,3 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, error: "Bildirim oluşturulamadı." }, { status: 500 })
   }
 }
-
