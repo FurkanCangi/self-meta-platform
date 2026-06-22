@@ -185,6 +185,12 @@ export default async function OwnerAuditPage({
 
         <div className="flex flex-wrap items-center gap-3">
           <Link
+            href="/owner-audit/notifications"
+            className="rounded-2xl border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
+          >
+            Bildirim Merkezi
+          </Link>
+          <Link
             href="/owner-audit/security"
             className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-100"
           >
