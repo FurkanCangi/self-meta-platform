@@ -2,8 +2,10 @@
 
 import { useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import {
   AlertCircle,
+  ArrowLeft,
   CheckCircle2,
   Clock3,
   ImagePlus,
@@ -246,6 +248,38 @@ export default function SupportClient({
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <Link
+          href="/starter"
+          className="inline-flex items-center gap-2 rounded-2xl border border-blue-200 bg-white px-4 py-3 text-sm font-black text-blue-700 shadow-sm transition hover:bg-blue-50"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Terapist paneline dön
+        </Link>
+        {message ? (
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-800 shadow-sm">
+            Bildirim gönderilmiştir.
+          </div>
+        ) : null}
+      </div>
+
+      {message ? (
+        <div className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-5 text-emerald-900 shadow-sm">
+          <div className="flex items-start gap-3">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white text-emerald-700 shadow-sm">
+              <CheckCircle2 className="h-5 w-5" />
+            </div>
+            <div>
+              <div className="text-lg font-black">Destek talebiniz gönderildi</div>
+              <p className="mt-1 text-sm font-semibold leading-6">
+                Bildirim yönetici paneline düştü. Talebiniz incelendiğinde çözüm notu burada görünecek.
+              </p>
+              <p className="mt-2 text-sm font-bold">{message}</p>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
       <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(37,99,235,0.10)]">
         <div className="grid gap-0 lg:grid-cols-[0.92fr_1.08fr]">
           <div className="relative overflow-hidden bg-slate-950 p-7 text-white sm:p-9">
@@ -410,13 +444,6 @@ export default function SupportClient({
                 {error}
               </div>
             ) : null}
-            {message ? (
-              <div className="flex items-start gap-2 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-semibold text-emerald-700">
-                <CheckCircle2 className="mt-0.5 h-4 w-4" />
-                {message}
-              </div>
-            ) : null}
-
             <button
               type="submit"
               disabled={pending}
