@@ -1,6 +1,5 @@
 "use client"
 
-import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
 
 type TherapistProfile = {
@@ -276,19 +275,6 @@ export default function ProfilePage() {
           </div>
         </div>
 
-        <div className="mt-6 rounded-3xl border border-blue-100 bg-white p-5 md:p-6">
-          <div className="text-sm font-semibold uppercase tracking-wide text-blue-600">Destek</div>
-          <h2 className="mt-2 text-2xl font-bold text-slate-900">Bir sorun mu yaşıyorsunuz?</h2>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
-            Giriş, cihaz, paket, rapor veya eğitim hatalarında ekran görüntüsüyle destek talebi oluşturabilirsiniz.
-          </p>
-          <Link
-            href="/support"
-            className="mt-4 inline-flex rounded-2xl bg-slate-950 px-5 py-3 text-sm font-bold text-white transition hover:bg-blue-700"
-          >
-            Destek Talebi Oluştur
-          </Link>
-        </div>
       </div>
     </div>
   )

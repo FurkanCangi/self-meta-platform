@@ -52,7 +52,7 @@ function formatLoginErrorCode(code?: string | null) {
     return "Bu tarayıcı cihaz bilgisini oluşturamadı. Sayfayı yenileyip tekrar deneyin.";
   }
   if (code === "device_count_failed") {
-    return "Cihaz kayıtları kontrol edilemedi. Lütfen tekrar deneyin; sorun devam ederse destek talebi oluşturun.";
+    return "Cihaz kayıtları kontrol edilemedi. Lütfen tekrar deneyin.";
   }
   if (
     code === "device_lookup_failed" ||
@@ -165,12 +165,6 @@ export default function LoginPage() {
           {err ? (
             <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900">
               <div>{err}</div>
-              <a
-                href={`/support?category=login&email=${encodeURIComponent(email)}`}
-                className="mt-3 inline-flex rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-100"
-              >
-                Ekran görüntüsüyle sorun bildir
-              </a>
             </div>
           ) : null}
 
