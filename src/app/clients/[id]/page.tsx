@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase/client";
 
@@ -32,7 +32,9 @@ function fmtDate(s: string) {
 export default function ClientDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const clientId = params?.id;
+  const appSurface = searchParams.get("surface") === "app";
 
   const [client, setClient] = useState<ClientRow | null>(null);
   const [evals, setEvals] = useState<EvalRow[]>([]);
@@ -44,9 +46,14 @@ export default function ClientDetailPage() {
     if (!client?.anamnez) return "—";
     return client.anamnez;
   }, [client]);
-  const reportsHref = `/reports?client_id=${encodeURIComponent(clientId || "")}&client=${encodeURIComponent(
+  const withSurface = (path: string) => {
+    if (!appSurface) return path;
+    const separator = path.includes("?") ? "&" : "?";
+    return `${path}${separator}surface=app`;
+  };
+  const reportsHref = withSurface(`/reports?client_id=${encodeURIComponent(clientId || "")}&client=${encodeURIComponent(
     client?.child_code || "",
-  )}`;
+  )}`);
 
   async function load() {
     setLoading(true);
@@ -63,7 +70,7 @@ export default function ClientDetailPage() {
     if (userErr || !userRes?.user?.id) {
       setLoading(false);
       setBusy(false);
-      router.replace("/login");
+      router.replace(appSurface ? "/login?surface=app" : "/login");
       return;
     }
 
@@ -136,7 +143,7 @@ export default function ClientDetailPage() {
     setErr(null);
 
     setBusy(false);
-    router.push(`/assessments?client=${encodeURIComponent(client.child_code)}&client_id=${encodeURIComponent(clientId)}`);
+    router.push(withSurface(`/assessments?client=${encodeURIComponent(client.child_code)}&client_id=${encodeURIComponent(clientId)}`));
   }
 
   async function softDeleteClient() {
@@ -211,11 +218,96 @@ export default function ClientDetailPage() {
     }
 
     setBusy(false);
-    router.push("/clients");
+    router.push(withSurface("/clients"));
   }
 
   return (
-    <div className="space-y-6">
+    <>
+    <div className="dna-app-only dna-app-page space-y-4">
+      <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="dna-app-section-title">Vaka detayı</div>
+        <h1 className="mt-2 font-mono text-[26px] font-black leading-tight text-[#071b3a]">
+          {client?.child_code || "Danışan"}
+        </h1>
+        <p className="mt-1 text-sm leading-6 text-slate-600">
+          Anamnez, değerlendirme ve rapor geçmişini buradan yönet.
+        </p>
+        {err ? <div className="mt-3 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900">{err}</div> : null}
+      </section>
+
+      <section className="grid grid-cols-2 gap-3">
+        <button
+          type="button"
+          onClick={createEvaluation}
+          disabled={busy || loading}
+          className="min-h-[92px] rounded-[20px] bg-blue-600 p-4 text-left text-white shadow-sm disabled:opacity-60"
+        >
+          <div className="text-base font-black">Skor gir</div>
+          <div className="mt-1 text-xs font-semibold text-white/80">60 soru akışı</div>
+        </button>
+        <Link
+          href={reportsHref}
+          className="min-h-[92px] rounded-[20px] border border-blue-100 bg-blue-50 p-4 text-left text-blue-800 shadow-sm"
+        >
+          <div className="text-base font-black">Raporlar</div>
+          <div className="mt-1 text-xs font-semibold text-blue-700/80">Geçmişi aç</div>
+        </Link>
+      </section>
+
+      <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <div className="dna-app-section-title">Değerlendirmeler</div>
+            <div className="mt-1 text-2xl font-black text-[#071b3a]">{evals.length}</div>
+          </div>
+          <Link href={withSurface("/clients")} className="rounded-full border border-slate-200 bg-white px-4 py-2 text-sm font-black text-slate-700">
+            Liste
+          </Link>
+        </div>
+
+        <div className="mt-4 space-y-3">
+          {loading ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-500">Yükleniyor...</div>
+          ) : evals.length === 0 ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-500">
+              Henüz değerlendirme yok.
+            </div>
+          ) : (
+            evals.map((e) => (
+              <article key={e.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <div className="font-black text-slate-900">{e.label}</div>
+                    <div className="mt-1 text-xs font-semibold text-slate-500">{e.assessment_date ? e.assessment_date : fmtDate(e.created_at)}</div>
+                  </div>
+                  <span className="rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-xs font-black text-blue-700">
+                    {e.report_count} rapor
+                  </span>
+                </div>
+              </article>
+            ))
+          )}
+        </div>
+      </section>
+
+      <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="dna-app-section-title">Anamnez</div>
+        <div className="mt-3 max-h-[360px] overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
+          {anamnezPreview}
+        </div>
+      </section>
+
+      <button
+        type="button"
+        onClick={softDeleteClient}
+        disabled={busy || loading}
+        className="w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-black text-slate-700 disabled:opacity-60"
+      >
+        Danışanı kaldır
+      </button>
+    </div>
+
+    <div className="dna-web-only space-y-6">
       <div className="dna-card p-5">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
@@ -345,5 +437,6 @@ export default function ClientDetailPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

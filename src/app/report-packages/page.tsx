@@ -102,7 +102,94 @@ export default function ReportPackagesPage() {
   }, [])
 
   return (
-    <div className="relative px-0 py-0 md:px-2 md:py-6">
+    <>
+    <div className="dna-app-only dna-app-page space-y-4">
+      <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="dna-app-section-title">Rapor hakkı</div>
+        <h1 className="mt-2 text-[26px] font-black leading-tight text-[#071b3a]">Paketler</h1>
+        <p className="mt-1 text-sm leading-6 text-slate-600">
+          Kalan AI rapor hakkını ve ek paketleri buradan takip et.
+        </p>
+      </section>
+
+      <section className="grid grid-cols-2 gap-3">
+        <div className="rounded-[18px] border border-slate-200 bg-white p-3 shadow-sm">
+          <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Kalan</div>
+          <div className="mt-1 text-2xl font-black text-[#071b3a]">
+            {loadingStatus ? "..." : status?.reports?.creditLedgerAvailable ? status.reports.remaining ?? 0 : "—"}
+          </div>
+          <div className="mt-1 text-xs font-semibold text-slate-500">rapor hakkı</div>
+        </div>
+        <div className="rounded-[18px] border border-slate-200 bg-white p-3 shadow-sm">
+          <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Kullanılan</div>
+          <div className="mt-1 text-2xl font-black text-[#071b3a]">{loadingStatus ? "..." : status?.reports?.used ?? 0}</div>
+          <div className="mt-1 text-xs font-semibold text-slate-500">rapor</div>
+        </div>
+      </section>
+
+      <section className="rounded-[22px] border border-blue-100 bg-blue-50 p-4 shadow-sm">
+        <div className="text-[10px] font-black uppercase tracking-wide text-blue-700">Eğitim erişimi</div>
+        <div className="mt-1 text-base font-black text-blue-950">
+          {loadingStatus ? "Yükleniyor..." : status?.education?.active ? formatPlan(status.education.planCode) : "Aktif erişim yok"}
+        </div>
+        <div className="mt-1 text-xs font-semibold leading-5 text-blue-800">
+          {status?.education?.expiresAt ? `Bitiş: ${formatDate(status.education.expiresAt)}` : "Satın alma veya admin tanımı sonrası görünür."}
+        </div>
+      </section>
+
+      <section className="space-y-3">
+        {reportPackages.map((pack) => (
+          <article
+            key={pack.title}
+            className={[
+              "rounded-[22px] border bg-white p-4 shadow-sm",
+              pack.featured ? "border-blue-200 ring-2 ring-blue-50" : "border-slate-200",
+            ].join(" ")}
+          >
+            <div className="flex items-start gap-3">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-blue-50 text-blue-700">
+                <FileText size={22} strokeWidth={1.9} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start justify-between gap-2">
+                  <h2 className="text-base font-black text-[#071b3a]">{pack.title}</h2>
+                  {pack.featured ? (
+                    <span className="rounded-full bg-blue-600 px-2.5 py-1 text-[10px] font-black text-white">Önerilen</span>
+                  ) : null}
+                </div>
+                <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">{pack.description}</p>
+                <div className="mt-3 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-2xl font-black text-blue-700">{pack.price}</div>
+                    <div className="text-xs font-bold text-slate-500">{pack.credits} AI rapor hakkı</div>
+                  </div>
+                  <button
+                    type="button"
+                    className="rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white shadow-sm"
+                  >
+                    Satın al
+                  </button>
+                </div>
+              </div>
+            </div>
+          </article>
+        ))}
+      </section>
+
+      <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="dna-app-section-title">Kullanım kuralı</div>
+        <div className="mt-3 space-y-2">
+          {notes.map((note) => (
+            <div key={note} className="flex items-start gap-2 text-sm font-semibold leading-6 text-slate-700">
+              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-blue-700" />
+              <span>{note}</span>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+
+    <div className="dna-web-only relative px-0 py-0 md:px-2 md:py-6">
       <div className="mx-auto max-w-6xl">
         <section className="dna-card p-4 md:p-7">
           <div>
@@ -229,5 +316,6 @@ export default function ReportPackagesPage() {
         ) : null}
       </div>
     </div>
+    </>
   )
 }
