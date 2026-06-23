@@ -124,20 +124,14 @@ export async function fetchOwnerAuditEvents(filters: OwnerAuditFilters = {}) {
   const admin = createSupabaseAdminClient()
   const limit = Math.max(1, Math.min(50000, Number(filters.limit || 250)))
 
-  let query = admin
-    .schema("owner_audit")
-    .from("audit_events")
-    .select("id, captured_at, source_table, operation, actor_owner_id, member_owner_id, record_pk, payload, changed_fields, deleted_visible")
-    .order("captured_at", { ascending: false })
-    .limit(limit)
-
-  if (filters.sourceTable) query = query.eq("source_table", filters.sourceTable)
-  if (filters.ownerId) query = query.eq("member_owner_id", filters.ownerId)
-  if (filters.operation) query = query.eq("operation", filters.operation)
-  if (filters.from) query = query.gte("captured_at", filters.from)
-  if (filters.to) query = query.lte("captured_at", filters.to)
-
-  const { data, error } = await query
+  const { data, error } = await admin.rpc("owner_audit_read_events", {
+    p_source_table: filters.sourceTable || null,
+    p_owner_id: filters.ownerId || null,
+    p_operation: filters.operation || null,
+    p_from: filters.from || null,
+    p_to: filters.to || null,
+    p_limit: limit,
+  })
 
   if (error) {
     throw new Error(error.message)

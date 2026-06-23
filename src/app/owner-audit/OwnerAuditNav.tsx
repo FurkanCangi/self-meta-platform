@@ -7,8 +7,8 @@ import { Bell, BookOpen, LayoutDashboard, LifeBuoy, ShieldCheck, Stethoscope } f
 const navItems = [
   {
     href: "/owner-audit",
-    label: "Owner Paneli",
-    description: "Üye ve veri denetimi",
+    label: "Üye Kontrolü",
+    description: "Üye, vaka ve rapor takibi",
     icon: LayoutDashboard,
   },
   {

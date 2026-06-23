@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { assertOwnerAuditAccess } from "@/lib/owner/ownerAccess"
-import { fetchOwnerDossierRows } from "@/lib/owner/ownerAudit"
+import { fetchOwnerAuditEvents, fetchOwnerDossierRows } from "@/lib/owner/ownerAudit"
 import { evaluateAccountRisk, recordAccountSecurityEvent } from "@/lib/security/anomalyDetection"
 import { getPrivacyAuditContext, recordDataAccessAuditEvent } from "@/lib/security/privacyOps"
 import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
@@ -139,26 +139,14 @@ export async function GET(req: Request) {
       })
     }
 
-    let query = admin
-      .schema("owner_audit")
-      .from("audit_events")
-      .select("id, captured_at, source_table, operation, actor_owner_id, member_owner_id, record_pk, payload, changed_fields")
-      .order("captured_at", { ascending: false })
-      .limit(limit)
-
-    if (sourceTable) query = query.eq("source_table", sourceTable)
-    if (operation) query = query.eq("operation", operation)
-    if (ownerId) query = query.eq("member_owner_id", ownerId)
-    if (from) query = query.gte("captured_at", from)
-    if (to) query = query.lte("captured_at", to)
-
-    const { data, error } = await query
-
-    if (error) {
-      return NextResponse.json({ ok: false, error: "owner_audit_query_failed" }, { status: 500 })
-    }
-
-    const rows = data || []
+    const rows = await fetchOwnerAuditEvents({
+      sourceTable,
+      ownerId,
+      operation,
+      from,
+      to,
+      limit,
+    })
     await recordDataAccessAuditEvent({
       admin,
       actorUserId: user.id,
