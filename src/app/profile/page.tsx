@@ -205,7 +205,7 @@ export default function ProfilePage() {
         </div>
 
         {error ? (
-          <div className="mb-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-semibold text-rose-700">
+          <div className="mb-6 rounded-2xl border border-slate-300 bg-slate-50 px-5 py-4 text-sm font-semibold text-slate-900">
             {error}
           </div>
         ) : null}
@@ -272,7 +272,7 @@ export default function ProfilePage() {
               {saving ? "Kaydediliyor..." : "Profili Kaydet"}
             </button>
 
-            {savedAt ? <div className="text-sm text-emerald-600">Son kayıt: {savedAt}</div> : null}
+            {savedAt ? <div className="text-sm text-cyan-700">Son kayıt: {savedAt}</div> : null}
           </div>
         </div>
 

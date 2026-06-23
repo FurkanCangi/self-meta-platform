@@ -138,7 +138,7 @@ export default function LoginPage() {
           ) : null}
 
           {notice ? (
-            <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">
+            <div className="rounded-xl border border-cyan-100 bg-cyan-50 px-4 py-3 text-sm font-medium text-cyan-800">
               {notice}
             </div>
           ) : null}
@@ -163,11 +163,11 @@ export default function LoginPage() {
           />
 
           {err ? (
-            <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-600">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900">
               <div>{err}</div>
               <a
                 href={`/support?category=login&email=${encodeURIComponent(email)}`}
-                className="mt-3 inline-flex rounded-xl bg-white px-3 py-2 text-xs font-bold text-rose-700 ring-1 ring-rose-100 transition hover:bg-rose-100"
+                className="mt-3 inline-flex rounded-xl bg-white px-3 py-2 text-xs font-bold text-slate-700 ring-1 ring-slate-200 transition hover:bg-slate-100"
               >
                 Ekran görüntüsüyle sorun bildir
               </a>

@@ -128,7 +128,7 @@ export default function LegalAcceptanceGate({ children }: { children: React.Reac
         </div>
 
         {error || status?.error ? (
-          <div className="mt-4 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-semibold text-rose-700">
+          <div className="mt-4 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-900">
             {error || status?.error}
           </div>
         ) : null}

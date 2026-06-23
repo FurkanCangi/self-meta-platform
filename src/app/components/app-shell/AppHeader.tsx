@@ -61,7 +61,7 @@ export default function AppHeader() {
           <button
             type="button"
             onClick={handleLogout}
-            className="grid h-10 w-10 place-items-center rounded-2xl border border-rose-100 bg-rose-50 text-rose-600 shadow-sm"
+            className="grid h-10 w-10 place-items-center rounded-2xl border border-slate-200 bg-slate-50 text-slate-700 shadow-sm"
             aria-label="Çıkış yap"
           >
             <AiOutlineLogout className="text-xl" />

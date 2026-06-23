@@ -371,9 +371,9 @@ export default function EducationPage() {
           </div>
 
           {loadingList && <p className="text-sm text-slate-500">Liste yükleniyor...</p>}
-          {!loadingList && listError && <p className="text-sm text-rose-600">{listError}</p>}
+          {!loadingList && listError && <p className="text-sm text-slate-700">{listError}</p>}
           {!loadingList && !listError && setupRequired && (
-            <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4 text-sm text-violet-900">
               Eğitim video tabloları henüz veritabanında aktif değil. SQL uygulandığında kayıtlar burada listelenecek.
             </div>
           )}
@@ -427,14 +427,14 @@ export default function EducationPage() {
                   <h2 className="text-2xl font-semibold text-slate-900">{selected.title || selected.slug}</h2>
                   <p className="mt-1 text-sm text-slate-500">Güvenli oynatma, watermark ve erişim kaydı bu panelden yönetilir.</p>
                 </div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-3 py-1 text-xs font-semibold text-cyan-800">
                   <ShieldCheck className="h-4 w-4" />
                   {formatPlan(selected.requiredPlan)}
                 </div>
               </div>
 
               {accessError && (
-                <div className="mb-4 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                <div className="mb-4 rounded-2xl border border-slate-300 bg-slate-50 p-4 text-sm text-slate-900">
                   {accessError}
                 </div>
               )}

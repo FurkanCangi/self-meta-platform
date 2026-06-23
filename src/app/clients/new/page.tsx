@@ -115,7 +115,7 @@ function Field({
     <div>
       <label className="mb-2 block text-sm font-medium text-slate-700">
         {label}{" "}
-        {required ? <span className="text-rose-600">*</span> : <span className="text-slate-400">(Opsiyonel)</span>}
+        {required ? <span className="text-slate-500">*</span> : <span className="text-slate-400">(Opsiyonel)</span>}
       </label>
       {children}
       {hint ? <div className="mt-2 text-xs text-slate-400">{hint}</div> : null}
@@ -659,9 +659,9 @@ export default function NewClientPage() {
           <div className="mt-4 h-2 rounded-full bg-slate-100">
             <div className="h-2 rounded-full bg-blue-600" style={{ width: `${completion}%` }} />
           </div>
-          {err ? <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{err}</div> : null}
+          {err ? <div className="mt-3 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900">{err}</div> : null}
           {!err && missing.length > 0 ? (
-            <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            <div className="mt-3 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800">
               Toplam eksik alan: <b>{missing.length}</b>
             </div>
           ) : null}
@@ -699,9 +699,9 @@ export default function NewClientPage() {
           </div>
         </div>
 
-        {err ? <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{err}</div> : null}
+        {err ? <div className="mt-4 rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900">{err}</div> : null}
         {!err && missing.length > 0 ? (
-          <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          <div className="mt-4 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800">
             Eksik alan sayısı: <b>{missing.length}</b> (Buton aktif olması için hepsi dolmalı)
           </div>
         ) : null}
@@ -732,7 +732,7 @@ export default function NewClientPage() {
                       isActive
                         ? "bg-white/20 text-white"
                         : isComplete
-                          ? "bg-emerald-100 text-emerald-700"
+                          ? "bg-cyan-100 text-cyan-800"
                           : "bg-slate-100 text-slate-500"
                     }`}
                   >
@@ -1050,17 +1050,17 @@ export default function NewClientPage() {
                                   </span>
                                   <span className="text-sm font-semibold text-slate-900">{entry.testName || "Adsız test"}</span>
                                   {isCompatible ? (
-                                    <span className="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                                    <span className="inline-flex rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-xs font-semibold text-cyan-800">
                                       Yaşa uygun
                                     </span>
                                   ) : null}
                                   {isIncompatible ? (
-                                    <span className="inline-flex rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
+                                    <span className="inline-flex rounded-full border border-violet-200 bg-violet-50 px-2.5 py-1 text-xs font-semibold text-violet-800">
                                       Yaş uyumsuz
                                     </span>
                                   ) : null}
                                   {isUnknown ? (
-                                    <span className="inline-flex rounded-full border border-rose-200 bg-rose-50 px-2.5 py-1 text-xs font-semibold text-rose-700">
+                                    <span className="inline-flex rounded-full border border-slate-300 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-900">
                                       Desteklenmeyen test
                                     </span>
                                   ) : null}
@@ -1083,13 +1083,13 @@ export default function NewClientPage() {
                                 ) : null}
 
                                 {entryAnalysis.warningLines.length > 0 ? (
-                                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
+                                  <div className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs leading-5 text-violet-900">
                                     {entryAnalysis.warningLines[0]}
                                   </div>
                                 ) : null}
 
                                 {entryAnalysis.validatedSupportLines.length > 0 ? (
-                                  <div className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-5 text-emerald-900">
+                                  <div className="rounded-xl border border-cyan-200 bg-cyan-50 px-3 py-2 text-xs leading-5 text-cyan-900">
                                     {entryAnalysis.validatedSupportLines[0]}
                                   </div>
                                 ) : null}
@@ -1098,7 +1098,7 @@ export default function NewClientPage() {
                               <button
                                 type="button"
                                 onClick={() => removeExternalTest(entry.id)}
-                                className="dna-btn-ghost px-3 py-2 text-sm font-semibold text-rose-600 hover:bg-rose-50"
+                                className="dna-btn-ghost px-3 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50"
                               >
                                 Testi Sil
                               </button>
@@ -1144,9 +1144,9 @@ export default function NewClientPage() {
                 ) : null}
 
                 {externalTestAnalysis.compatible.length > 0 ? (
-                  <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4">
-                    <div className="text-sm font-semibold text-emerald-900">Yaşla uyumlu tanınan dış testler</div>
-                    <div className="mt-2 space-y-2 text-sm leading-6 text-emerald-800">
+                  <div className="rounded-2xl border border-cyan-200 bg-cyan-50 p-4">
+                    <div className="text-sm font-semibold text-cyan-950">Yaşla uyumlu tanınan dış testler</div>
+                    <div className="mt-2 space-y-2 text-sm leading-6 text-cyan-900">
                       {externalTestAnalysis.compatible.map((test) => (
                         <div key={test.id}>
                           <div className="font-medium">{test.name}</div>
@@ -1158,9 +1158,9 @@ export default function NewClientPage() {
                 ) : null}
 
                 {externalTestAnalysis.incompatible.length > 0 ? (
-                  <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
-                    <div className="text-sm font-semibold text-amber-900">Yaş uyumsuzluğu uyarısı</div>
-                    <div className="mt-2 space-y-3 text-sm leading-6 text-amber-900">
+                  <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4">
+                    <div className="text-sm font-semibold text-violet-950">Yaş uyumsuzluğu uyarısı</div>
+                    <div className="mt-2 space-y-3 text-sm leading-6 text-violet-900">
                       {externalTestAnalysis.incompatible.map((test) => (
                         <div key={test.id}>
                           <div className="font-medium">{test.name}</div>

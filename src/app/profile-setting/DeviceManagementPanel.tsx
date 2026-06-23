@@ -181,19 +181,19 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
       </div>
 
       {deviceLimitMode ? (
-        <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+        <div className="mt-5 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm leading-6 text-violet-900">
           Cihaz limiti dolu olduğu için şu an sadece bu bölümü kullanabilirsiniz. Kullanmadığınız bir cihazı kaldırın, sonra “Bu cihazla devam et” butonuna basın.
         </div>
       ) : null}
 
       {message ? (
-        <div className="mt-5 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
+        <div className="mt-5 rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
           {message}
         </div>
       ) : null}
 
       {error ? (
-        <div className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+        <div className="mt-5 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900">
           {error}
         </div>
       ) : null}
@@ -214,7 +214,7 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
                 key={slot.type}
                 className={`rounded-2xl border px-4 py-3 text-sm ${
                   used
-                    ? "border-emerald-100 bg-emerald-50 text-emerald-800"
+                    ? "border-cyan-100 bg-cyan-50 text-cyan-900"
                     : "border-slate-200 bg-slate-50 text-slate-500"
                 }`}
               >
@@ -245,7 +245,7 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
                   type="button"
                   onClick={() => revokeDevice(device.id)}
                   disabled={workingId === device.id}
-                  className="inline-flex h-10 items-center justify-center rounded-xl border border-rose-200 bg-rose-50 px-4 text-sm font-semibold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {workingId === device.id ? "Kaldırılıyor..." : "Cihazı kaldır"}
                 </button>

@@ -27,21 +27,21 @@ function progressLabel(row: ClientRow) {
 }
 
 function badgeStatus(s: Status) {
-  if (s === "Aktif") return "bg-emerald-50 text-emerald-700 border-emerald-200";
-  if (s === "Bekliyor") return "bg-amber-50 text-amber-700 border-amber-200";
+  if (s === "Aktif") return "bg-cyan-50 text-cyan-800 border-cyan-200";
+  if (s === "Bekliyor") return "bg-violet-50 text-violet-800 border-violet-200";
   return "bg-slate-100 text-slate-700 border-slate-200";
 }
 function badgeRisk(r: Risk) {
-  if (r === "Yüksek") return "bg-rose-50 text-rose-700 border-rose-200";
-  if (r === "Orta") return "bg-amber-50 text-amber-700 border-amber-200";
-  if (r === "Düşük") return "bg-emerald-50 text-emerald-700 border-emerald-200";
+  if (r === "Yüksek") return "bg-slate-50 text-slate-900 border-slate-300";
+  if (r === "Orta") return "bg-violet-50 text-violet-800 border-violet-200";
+  if (r === "Düşük") return "bg-cyan-50 text-cyan-800 border-cyan-200";
   if (r === "İzlem") return "bg-indigo-50 text-indigo-700 border-indigo-200";
   return "bg-slate-50 text-slate-600 border-slate-200";
 }
 function riskBar(r: Risk) {
-  if (r === "Yüksek") return "bg-rose-500";
-  if (r === "Orta") return "bg-amber-500";
-  if (r === "Düşük") return "bg-emerald-500";
+  if (r === "Yüksek") return "bg-slate-700";
+  if (r === "Orta") return "bg-violet-500";
+  if (r === "Düşük") return "bg-cyan-500";
   if (r === "İzlem") return "bg-indigo-500";
   return "bg-slate-300";
 }
@@ -250,8 +250,8 @@ export default function ClientsPage() {
           className="mt-4 w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-800 outline-none placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
           placeholder="Danışan kodu ara"
         />
-        {err ? <div className="mt-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{err}</div> : null}
-        {!err && notice ? <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{notice}</div> : null}
+        {err ? <div className="mt-3 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900">{err}</div> : null}
+        {!err && notice ? <div className="mt-3 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800">{notice}</div> : null}
       </section>
 
       <section className="grid grid-cols-3 gap-2">
@@ -321,7 +321,7 @@ export default function ClientsPage() {
                       type="button"
                       onClick={() => onScoreClick(r)}
                       className={`min-h-11 rounded-2xl px-3 text-sm font-black ${
-                        r.hasReport ? "border border-amber-200 bg-amber-50 text-amber-700" : "bg-blue-600 text-white"
+                        r.hasReport ? "border border-violet-200 bg-violet-50 text-violet-800" : "bg-blue-600 text-white"
                       }`}
                     >
                       {r.hasReport ? "Kilitli" : "Skor"}
@@ -337,7 +337,7 @@ export default function ClientsPage() {
                     type="button"
                     onClick={() => onDeleteClient(r)}
                     disabled={deletingClientId === r.id}
-                    className="mt-3 text-xs font-bold text-rose-600 disabled:opacity-50"
+                    className="mt-3 text-xs font-bold text-slate-600 transition hover:text-slate-950 disabled:opacity-50"
                   >
                     {deletingClientId === r.id ? "Siliniyor..." : "Silme / arşiv işlemi"}
                   </button>
@@ -373,8 +373,8 @@ export default function ClientsPage() {
           </div>
         </div>
 
-        {err ? <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{err}</div> : null}
-        {!err && notice ? <div className="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{notice}</div> : null}
+        {err ? <div className="mt-4 rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900">{err}</div> : null}
+        {!err && notice ? <div className="mt-4 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm text-violet-800">{notice}</div> : null}
 
         <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -385,12 +385,12 @@ export default function ClientsPage() {
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Aktif</div>
             <div className="mt-2 text-3xl font-semibold text-slate-900">{computed.activeCount}</div>
           </div>
-          <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 shadow-sm">
-            <div className="text-xs font-semibold uppercase tracking-wide text-amber-700">Skor Bekleyen</div>
+          <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4 shadow-sm">
+            <div className="text-xs font-semibold uppercase tracking-wide text-violet-800">Skor Bekleyen</div>
             <div className="mt-2 text-3xl font-semibold text-slate-900">{computed.pendingScore}</div>
           </div>
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 shadow-sm">
-            <div className="text-xs font-semibold uppercase tracking-wide text-rose-700">Riskli</div>
+          <div className="rounded-2xl border border-slate-300 bg-slate-50 p-4 shadow-sm">
+            <div className="text-xs font-semibold uppercase tracking-wide text-slate-900">Riskli</div>
             <div className="mt-2 text-3xl font-semibold text-slate-900">{computed.riskCount}</div>
           </div>
         </div>
@@ -463,7 +463,7 @@ export default function ClientsPage() {
                           onClick={() => onScoreClick(r)}
                           className={`inline-flex min-h-11 items-center justify-center rounded-xl border px-3 py-2 text-sm font-semibold transition ${
                             r.hasReport
-                              ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                              ? "border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100"
                               : "border-indigo-600 bg-white text-indigo-700 hover:bg-indigo-50"
                           }`}
                           title={
@@ -484,7 +484,7 @@ export default function ClientsPage() {
                           type="button"
                           onClick={() => onDeleteClient(r)}
                           disabled={deletingClientId === r.id}
-                          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-rose-300 bg-white px-3 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                          className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                           title="Danışanı ve bağlı raporları sil"
                         >
                           {deletingClientId === r.id ? "Siliniyor..." : "Sil"}
@@ -556,7 +556,7 @@ export default function ClientsPage() {
                             onClick={() => onScoreClick(r)}
                             className={`inline-flex items-center justify-center rounded-xl border px-4 py-2 text-sm font-semibold transition ${
                               r.hasReport
-                                ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                                ? "border-violet-200 bg-violet-50 text-violet-800 hover:bg-violet-100"
                                 : "border-indigo-600 bg-white text-indigo-700 hover:bg-indigo-50"
                             }`}
                             title={
@@ -574,7 +574,7 @@ export default function ClientsPage() {
                             type="button"
                             onClick={() => onDeleteClient(r)}
                             disabled={deletingClientId === r.id}
-                            className="inline-flex items-center justify-center rounded-xl border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50"
+                            className="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                             title="Danışanı ve bağlı raporları sil"
                           >
                             {deletingClientId === r.id ? "Siliniyor..." : "Sil"}

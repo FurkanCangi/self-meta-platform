@@ -54,9 +54,9 @@ function buildInitialSegments(): Record<SegmentType, SegmentDraft> {
 }
 
 function statusTone(status: SegmentDraft["status"]) {
-  if (status === "uploaded") return "bg-emerald-50 text-emerald-700 border-emerald-200"
+  if (status === "uploaded") return "bg-cyan-50 text-cyan-800 border-cyan-200"
   if (status === "uploading") return "bg-indigo-50 text-indigo-700 border-indigo-200"
-  if (status === "error") return "bg-rose-50 text-rose-700 border-rose-200"
+  if (status === "error") return "bg-slate-50 text-slate-900 border-slate-300"
   return "bg-slate-100 text-slate-600 border-slate-200"
 }
 
@@ -621,7 +621,7 @@ export default function VideoObservationWorkflow({
         </div>
 
         {errorText ? (
-          <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          <div className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900">
             {errorText}
           </div>
         ) : null}

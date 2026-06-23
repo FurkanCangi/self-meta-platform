@@ -7,7 +7,7 @@ import AuthLayout from "./AuthLayout"
 const LEGAL_ACCEPTANCE_ERROR =
   "Devam etmek için hizmet sözleşmesi, KVKK aydınlatması, açık rıza ve veri giriş yetkisi beyanlarını onaylayın."
 
-const REQUIRED_MARK = <span className="text-rose-500">*</span>
+const REQUIRED_MARK = <span className="text-slate-500">*</span>
 
 function initialSignupError() {
   if (typeof window === "undefined") return ""
@@ -205,7 +205,7 @@ export default function DnaSignupForm() {
           <div className="space-y-2 rounded-2xl border border-slate-200 bg-white/80 p-3 shadow-sm shadow-slate-200/40">
             <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-semibold text-slate-800">Hukuki onaylar {REQUIRED_MARK}</div>
-              <div className="rounded-full bg-rose-50 px-2.5 py-1 text-[11px] font-bold text-rose-600">
+              <div className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700">
                 Tümü zorunlu
               </div>
             </div>
@@ -273,14 +273,14 @@ export default function DnaSignupForm() {
               <span>Danışan/çocuk verisi girmeye yetkili olduğumu ve gerekli veli/danışan izinlerini aldığımı beyan ederim.</span>
             </label>
             {!legalAccepted ? (
-              <div className="rounded-xl bg-amber-50 px-3 py-2 text-xs font-semibold leading-5 text-amber-700">
+              <div className="rounded-xl bg-violet-50 px-3 py-2 text-xs font-semibold leading-5 text-violet-800">
                 Kayıt olabilmek için yukarıdaki dört onayın tamamını vermeniz gerekir.
               </div>
             ) : null}
           </div>
 
           {error ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-600">
+            <div className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900">
               {error}
             </div>
           ) : null}

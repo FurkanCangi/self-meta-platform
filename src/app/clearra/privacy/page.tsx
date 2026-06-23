@@ -82,7 +82,7 @@ export default function ClearraPrivacyPolicyPage() {
             <ArrowLeft size={16} />
             Back to site
           </Link>
-          <div className="hidden rounded-full border border-emerald-200/80 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-emerald-700 shadow-sm backdrop-blur sm:block">
+          <div className="hidden rounded-full border border-cyan-200/80 bg-white/70 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-cyan-800 shadow-sm backdrop-blur sm:block">
             Clearra Privacy
           </div>
         </div>
@@ -90,7 +90,7 @@ export default function ClearraPrivacyPolicyPage() {
         <section className="overflow-hidden rounded-[32px] border border-white/70 bg-white/85 p-6 shadow-[0_30px_80px_rgba(15,23,42,0.10)] backdrop-blur sm:p-8 lg:p-10">
           <div className="grid gap-10 lg:grid-cols-[1.2fr_0.8fr] lg:items-start">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-100 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700">
+              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-100 bg-cyan-50 px-4 py-2 text-sm font-semibold text-cyan-800">
                 <ShieldCheck size={16} />
                 Local-first gallery cleanup
               </div>

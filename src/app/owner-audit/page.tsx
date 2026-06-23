@@ -77,11 +77,11 @@ function MemberRow({ row }: { row: OwnerMemberSummary }) {
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600">
               {planLabel(row.plan)}
             </span>
-            <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-emerald-700">
+            <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-cyan-800">
               {roleLabel(row.role)}
             </span>
             {row.deleteEvents > 0 ? (
-              <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-rose-700">
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-900">
                 {row.deleteEvents} silme kaydı
               </span>
             ) : null}
@@ -230,9 +230,9 @@ export default async function OwnerAuditPage({
 
       <div className="grid gap-4 md:grid-cols-4">
         <StatCard label="Toplam üye" value={totals.members} accent="text-slate-500" />
-        <StatCard label="Toplam danışan/vaka" value={totals.clients} accent="text-emerald-600" />
+        <StatCard label="Toplam danışan/vaka" value={totals.clients} accent="text-cyan-700" />
         <StatCard label="Toplam Rapor" value={totals.reports} accent="text-indigo-600" />
-        <StatCard label="Silme kaydı" value={totals.deletes} accent="text-rose-600" />
+        <StatCard label="Silme kaydı" value={totals.deletes} accent="text-slate-700" />
       </div>
 
       <form className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
@@ -265,7 +265,7 @@ export default async function OwnerAuditPage({
       </form>
 
       {loadError ? (
-        <div className="rounded-[2rem] border border-amber-200 bg-amber-50 p-6 text-sm leading-6 text-amber-900">
+        <div className="rounded-[2rem] border border-violet-200 bg-violet-50 p-6 text-sm leading-6 text-violet-900">
           {loadError}
         </div>
       ) : null}

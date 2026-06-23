@@ -296,7 +296,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
             >
               <AiOutlineBell className="text-[22px]" />
               {unreadCount > 0 ? (
-                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-black text-white shadow-sm">
+                <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-slate-950 px-1.5 text-[10px] font-black text-white shadow-sm">
                   {unreadCount > 9 ? "9+" : unreadCount}
                 </span>
               ) : null}
@@ -324,7 +324,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
 
                 <div className="max-h-[430px] overflow-y-auto p-2">
                   {notificationsSetupRequired ? (
-                    <div className="m-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-bold leading-5 text-amber-900">
+                    <div className="m-2 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 text-xs font-bold leading-5 text-violet-900">
                       Bildirim altyapısı Supabase tarafında henüz kurulmamış.
                     </div>
                   ) : null}
@@ -352,7 +352,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
                             item.read
                               ? "bg-slate-200"
                               : item.kind === "warning"
-                                ? "bg-amber-400"
+                                ? "bg-violet-400"
                                 : "bg-gradient-to-br from-cyan-400 to-violet-600"
                           }`}
                         />
@@ -360,7 +360,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
                           <span className="flex items-center gap-2">
                             <span className="truncate text-sm font-black text-slate-950">{item.title}</span>
                             {item.read ? (
-                              <AiOutlineCheckCircle className="shrink-0 text-base text-emerald-500" />
+                              <AiOutlineCheckCircle className="shrink-0 text-base text-cyan-600" />
                             ) : null}
                           </span>
                           <span className="mt-1 line-clamp-2 text-xs font-medium leading-5 text-slate-500">
@@ -427,9 +427,9 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
                       </Link>
                       <Link
                         href="/owner-audit/security"
-                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-rose-700 transition hover:bg-rose-50"
+                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50"
                       >
-                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-rose-100 text-[10px] font-bold text-rose-700">
+                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-800">
                           OS
                         </span>
                         Güvenlik Merkezi
@@ -483,7 +483,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
                   <button
                     type="button"
                     onClick={handleLogout}
-                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-rose-600 transition hover:bg-rose-50"
+                    className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-50"
                   >
                     <AiOutlineLogout className="text-lg" />
                     Çıkış Yap

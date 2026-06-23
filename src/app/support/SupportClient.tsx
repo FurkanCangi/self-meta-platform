@@ -64,10 +64,10 @@ function detectDeviceType() {
 }
 
 function statusClass(status: string) {
-  if (status === "resolved" || status === "closed") return "bg-emerald-50 text-emerald-700"
+  if (status === "resolved" || status === "closed") return "bg-cyan-50 text-cyan-800"
   if (status === "in_progress") return "bg-blue-50 text-blue-700"
-  if (status === "waiting_user") return "bg-amber-50 text-amber-700"
-  return "bg-rose-50 text-rose-700"
+  if (status === "waiting_user") return "bg-violet-50 text-violet-800"
+  return "bg-slate-100 text-slate-900"
 }
 
 function TicketCard({ ticket }: { ticket: SupportTicket }) {
@@ -101,7 +101,7 @@ function TicketCard({ ticket }: { ticket: SupportTicket }) {
         </p>
 
         {ticket.resolutionMessage ? (
-          <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm leading-6 text-emerald-800">
+          <div className="mt-4 rounded-2xl border border-cyan-100 bg-cyan-50 p-4 text-sm leading-6 text-cyan-900">
             <div className="mb-1 flex items-center gap-2 font-black">
               <CheckCircle2 className="h-4 w-4" />
               Çözüm notu
@@ -257,16 +257,16 @@ export default function SupportClient({
           Terapist paneline dön
         </Link>
         {message ? (
-          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-black text-emerald-800 shadow-sm">
+          <div className="rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-black text-cyan-900 shadow-sm">
             Bildirim gönderilmiştir.
           </div>
         ) : null}
       </div>
 
       {message ? (
-        <div className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-5 text-emerald-900 shadow-sm">
+        <div className="rounded-[1.5rem] border border-cyan-200 bg-cyan-50 p-5 text-cyan-950 shadow-sm">
           <div className="flex items-start gap-3">
-            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white text-emerald-700 shadow-sm">
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white text-cyan-700 shadow-sm">
               <CheckCircle2 className="h-5 w-5" />
             </div>
             <div>
@@ -333,7 +333,7 @@ export default function SupportClient({
             className="grid gap-4 bg-white p-6 sm:p-8 lg:p-10"
           >
             {setupRequired ? (
-              <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm font-semibold text-amber-800">
+              <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4 text-sm font-semibold text-violet-900">
                 Destek kayıt alanı hazırlanıyor. Kısa süre sonra yeniden deneyebilirsiniz.
               </div>
             ) : null}
@@ -434,12 +434,12 @@ export default function SupportClient({
               </span>
             </label>
 
-            <div className="rounded-2xl border border-amber-100 bg-amber-50 p-4 text-xs font-semibold leading-5 text-amber-800">
+            <div className="rounded-2xl border border-violet-100 bg-violet-50 p-4 text-xs font-semibold leading-5 text-violet-900">
               Lütfen danışan bilgisi, terapi içeriği veya özel kişisel veri paylaşmayın. Bu alan teknik destek içindir.
             </div>
 
             {error ? (
-              <div className="flex items-start gap-2 rounded-2xl border border-rose-100 bg-rose-50 p-4 text-sm font-semibold text-rose-700">
+              <div className="flex items-start gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-900">
                 <AlertCircle className="mt-0.5 h-4 w-4" />
                 {error}
               </div>

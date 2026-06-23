@@ -251,7 +251,7 @@ export default function ClientDetailPage() {
           </div>
         </div>
 
-        {err ? <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{err}</div> : null}
+        {err ? <div className="mt-4 rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900">{err}</div> : null}
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1fr_420px]">

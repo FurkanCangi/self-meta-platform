@@ -34,10 +34,10 @@ function formatConfidence(value: number | null | undefined) {
 
 function labelTone(label: string | null | undefined) {
   const normalized = (label || "").toLowerCase()
-  if (normalized.includes("belirgin")) return "bg-rose-50 text-rose-700 border-rose-200"
-  if (normalized.includes("hafif")) return "bg-amber-50 text-amber-700 border-amber-200"
+  if (normalized.includes("belirgin")) return "bg-slate-50 text-slate-900 border-slate-300"
+  if (normalized.includes("hafif")) return "bg-violet-50 text-violet-800 border-violet-200"
   if (normalized.includes("olağan") || normalized.includes("olagan")) {
-    return "bg-emerald-50 text-emerald-700 border-emerald-200"
+    return "bg-cyan-50 text-cyan-800 border-cyan-200"
   }
   return "bg-slate-100 text-slate-700 border-slate-200"
 }
@@ -45,13 +45,13 @@ function labelTone(label: string | null | undefined) {
 function statusTone(status: string | null | undefined) {
   const normalized = (status || "").toLowerCase()
   if (normalized.includes("processed") || normalized.includes("approved")) {
-    return "bg-emerald-50 text-emerald-700 border-emerald-200"
+    return "bg-cyan-50 text-cyan-800 border-cyan-200"
   }
   if (normalized.includes("submitted") || normalized.includes("running")) {
     return "bg-indigo-50 text-indigo-700 border-indigo-200"
   }
   if (normalized.includes("failed") || normalized.includes("error")) {
-    return "bg-rose-50 text-rose-700 border-rose-200"
+    return "bg-slate-50 text-slate-900 border-slate-300"
   }
   return "bg-slate-100 text-slate-700 border-slate-200"
 }
@@ -120,7 +120,7 @@ function SessionListCard({
           </span>
         ))}
         {session.has_report ? (
-          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+          <span className="rounded-full border border-cyan-200 bg-cyan-50 px-2.5 py-1 text-[11px] font-semibold text-cyan-800">
             Rapor Hazır
           </span>
         ) : null}
@@ -237,7 +237,7 @@ export default async function VideoObservationPage({
         </div>
 
         {sessionList.error ? (
-          <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          <div className="mt-5 rounded-2xl border border-violet-200 bg-violet-50 p-4 text-sm text-violet-900">
             Session listesi yüklenemedi: {sessionList.error}
           </div>
         ) : sessionList.sessions.length === 0 ? (
@@ -263,7 +263,7 @@ export default async function VideoObservationPage({
       ) : null}
 
       {bundle?.errors.length ? (
-        <div className="rounded-[2rem] border border-amber-200 bg-amber-50 p-5 text-sm text-amber-800">
+        <div className="rounded-[2rem] border border-violet-200 bg-violet-50 p-5 text-sm text-violet-900">
           <div className="font-semibold">Bazı bloklar yüklenemedi</div>
           <ul className="mt-3 list-disc space-y-1 pl-5">
             {bundle.errors.map((error) => (
@@ -278,8 +278,8 @@ export default async function VideoObservationPage({
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <StatCard label="Durum" value={String(bundle.summary.status || "—")} accent="text-slate-500" />
             <StatCard label="Güven" value={formatConfidence(bundle.summary.overall_confidence)} accent="text-indigo-600" />
-            <StatCard label="Kalite" value={String(bundle.summary.quality_label || "—")} accent="text-emerald-600" />
-            <StatCard label="Segment" value={String(bundle.summary.segment_count || "0")} accent="text-amber-600" />
+            <StatCard label="Kalite" value={String(bundle.summary.quality_label || "—")} accent="text-cyan-700" />
+            <StatCard label="Segment" value={String(bundle.summary.segment_count || "0")} accent="text-violet-600" />
           </div>
 
           <div className="grid gap-6 xl:grid-cols-[1.25fr_0.95fr]">
@@ -302,7 +302,7 @@ export default async function VideoObservationPage({
                 </div>
 
                 {bundle.summary.warnings?.length ? (
-                  <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+                  <div className="mt-5 rounded-2xl border border-violet-200 bg-violet-50 p-4 text-sm text-violet-900">
                     <div className="font-semibold">Uyarılar</div>
                     <ul className="mt-2 list-disc space-y-1 pl-5">
                       {bundle.summary.warnings.map((warning: string) => (

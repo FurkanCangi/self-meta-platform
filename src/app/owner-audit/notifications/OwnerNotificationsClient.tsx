@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useState } from "react"
 import {
   Bell,
   BookOpen,
@@ -11,6 +11,7 @@ import {
   Send,
   ShieldAlert,
   Sparkles,
+  Trash2,
 } from "lucide-react"
 
 type NotificationKind = "info" | "education" | "system" | "warning"
@@ -82,15 +83,10 @@ export default function OwnerNotificationsClient() {
   const [notifications, setNotifications] = useState<OwnerNotification[]>([])
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
   const [notice, setNotice] = useState("")
   const [error, setError] = useState("")
   const [setupRequired, setSetupRequired] = useState(false)
-
-  const previewIcon = useMemo(() => {
-    const option = kindOptions.find((item) => item.value === kind)
-    return option?.icon || Bell
-  }, [kind])
-  const PreviewIcon = previewIcon
 
   const loadNotifications = async () => {
     setLoading(true)
@@ -156,67 +152,47 @@ export default function OwnerNotificationsClient() {
     }
   }
 
+  const handleDelete = async (notification: OwnerNotification) => {
+    const confirmed = window.confirm(`"${notification.title}" bildirimini silmek istiyor musunuz?`)
+    if (!confirmed) return
+
+    setDeletingId(notification.id)
+    setNotice("")
+    setError("")
+
+    try {
+      const res = await fetch("/api/owner-notifications", {
+        method: "DELETE",
+        headers: {
+          "content-type": "application/json",
+          "x-dna-request": "same-origin",
+        },
+        body: JSON.stringify({ id: notification.id }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data?.ok) {
+        setSetupRequired(Boolean(data?.setupRequired))
+        throw new Error(data?.error || "Bildirim silinemedi.")
+      }
+
+      setNotifications((current) => current.filter((item) => item.id !== notification.id))
+      setNotice("Bildirim silindi.")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Bildirim silinemedi.")
+    } finally {
+      setDeletingId(null)
+    }
+  }
+
   return (
     <div className="space-y-8">
-      <section className="overflow-hidden rounded-[2rem] border border-white/70 bg-white/80 shadow-[0_30px_90px_rgba(15,23,42,0.10)] backdrop-blur-xl">
-        <div className="grid gap-0 lg:grid-cols-[1.05fr_0.95fr]">
-          <div className="p-6 sm:p-8 lg:p-10">
-            <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-3 py-1.5 text-xs font-black uppercase tracking-[0.18em] text-blue-700 shadow-sm">
-              <span className="h-2 w-2 rounded-full bg-gradient-to-br from-cyan-400 to-violet-600" />
-              Bildirim Merkezi
-            </div>
-            <h1 className="mt-5 max-w-3xl text-4xl font-black leading-tight text-slate-950 sm:text-5xl">
-              Terapistlere şık ve kontrollü panel bildirimi gönderin.
-            </h1>
-            <p className="mt-4 max-w-2xl text-base font-medium leading-8 text-slate-600">
-              Eğitim kayıtları, sistem duyuruları ve önemli notlar terapist panelinin sağ üst
-              bildirim alanında görünür. Gönderilen içerikler klinik çalışma akışını bölmeden,
-              DNA tasarım diliyle sunulur.
-            </p>
-
-            {setupRequired ? (
-              <div className="mt-6 rounded-3xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-semibold text-amber-900">
-                Bildirim tablosu Supabase tarafında hazır değil.{" "}
-                <code className="rounded bg-white px-1.5 py-0.5">sql/notifications.sql</code>{" "}
-                dosyasını SQL Editor içinde çalıştırın.
-              </div>
-            ) : null}
-          </div>
-
-          <div className="relative min-h-[320px] bg-[radial-gradient(circle_at_30%_30%,rgba(34,211,238,0.24),transparent_30%),radial-gradient(circle_at_72%_64%,rgba(124,58,237,0.24),transparent_34%),linear-gradient(135deg,#eefbff,#f7f2ff)] p-6 sm:p-8 lg:p-10">
-            <div className="absolute inset-8 rounded-full border border-blue-200/60" />
-            <div className="absolute inset-16 rounded-full border border-dashed border-violet-200/80" />
-            <div className="relative flex h-full min-h-[260px] items-center justify-center">
-              <div className="w-full max-w-sm rounded-[2rem] border border-white/80 bg-white/86 p-5 shadow-[0_26px_80px_rgba(37,99,235,0.20)] backdrop-blur-xl">
-                <div className="flex items-start gap-4">
-                  <div
-                    className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${kindClass(kind)} shadow-lg`}
-                  >
-                    <PreviewIcon className="h-7 w-7" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-black uppercase tracking-[0.16em] text-blue-600">
-                      {kindLabel(kind)}
-                    </div>
-                    <div className="mt-2 text-xl font-black leading-snug text-slate-950">
-                      {title || "Bildirim başlığı"}
-                    </div>
-                    <p className="mt-2 text-sm font-medium leading-6 text-slate-600">
-                      {message || "Terapistin göreceği kısa açıklama burada yer alır."}
-                    </p>
-                  </div>
-                </div>
-                {actionLabel ? (
-                  <div className="mt-5 inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-4 py-2.5 text-sm font-bold text-white">
-                    {actionLabel}
-                    <Send className="h-4 w-4" />
-                  </div>
-                ) : null}
-              </div>
-            </div>
-          </div>
+      {setupRequired ? (
+        <div className="rounded-3xl border border-violet-200 bg-violet-50 px-5 py-4 text-sm font-semibold text-violet-900">
+          Bildirim tablosu Supabase tarafında hazır değil.{" "}
+          <code className="rounded bg-white px-1.5 py-0.5">sql/notifications.sql</code> dosyasını
+          SQL Editor içinde çalıştırın.
         </div>
-      </section>
+      ) : null}
 
       <section className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
         <form
@@ -337,12 +313,12 @@ export default function OwnerNotificationsClient() {
             </label>
 
             {notice ? (
-              <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-800">
+              <div className="rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-bold text-cyan-800">
                 {notice}
               </div>
             ) : null}
             {error ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-800">
+              <div className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900">
                 {error}
               </div>
             ) : null}
@@ -404,11 +380,34 @@ export default function OwnerNotificationsClient() {
                   <div className="mt-3 text-lg font-black text-slate-950">{item.title}</div>
                   <p className="mt-2 text-sm font-medium leading-6 text-slate-600">{item.message}</p>
                   {item.actionLabel ? (
-                    <div className="mt-4 inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-3 py-2 text-xs font-black text-blue-700">
-                      <CheckCircle2 className="h-4 w-4" />
-                      {item.actionLabel}
+                    <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+                      <div className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-3 py-2 text-xs font-black text-blue-700">
+                        <CheckCircle2 className="h-4 w-4" />
+                        {item.actionLabel}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(item)}
+                        disabled={deletingId === item.id}
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        {deletingId === item.id ? "Siliniyor..." : "Sil"}
+                      </button>
                     </div>
-                  ) : null}
+                  ) : (
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(item)}
+                        disabled={deletingId === item.id}
+                        className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                        {deletingId === item.id ? "Siliniyor..." : "Sil"}
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))
             )}

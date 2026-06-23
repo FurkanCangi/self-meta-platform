@@ -30,15 +30,15 @@ function formatDateTime(value: string | null | undefined) {
 }
 
 function statusClass(status: string) {
-  if (status === "resolved" || status === "closed") return "bg-emerald-50 text-emerald-700"
+  if (status === "resolved" || status === "closed") return "bg-cyan-50 text-cyan-800"
   if (status === "in_progress") return "bg-blue-50 text-blue-700"
-  if (status === "waiting_user") return "bg-amber-50 text-amber-700"
-  return "bg-rose-50 text-rose-700"
+  if (status === "waiting_user") return "bg-violet-50 text-violet-800"
+  return "bg-slate-100 text-slate-900"
 }
 
 function priorityClass(priority: string) {
-  if (priority === "urgent") return "bg-rose-100 text-rose-800"
-  if (priority === "high") return "bg-amber-100 text-amber-800"
+  if (priority === "urgent") return "bg-slate-100 text-slate-950"
+  if (priority === "high") return "bg-violet-100 text-violet-900"
   return "bg-slate-100 text-slate-700"
 }
 
@@ -259,17 +259,17 @@ export default async function OwnerSupportPage({ searchParams }: { searchParams:
       </div>
 
       {setupRequired ? (
-        <div className="rounded-[2rem] border border-amber-200 bg-amber-50 p-5 text-sm font-semibold leading-6 text-amber-900">
+        <div className="rounded-[2rem] border border-violet-200 bg-violet-50 p-5 text-sm font-semibold leading-6 text-violet-900">
           Destek kayıt alanı henüz hazır değil. Kurulum tamamlandığında talepler burada görünür.
         </div>
       ) : null}
 
       <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
         <StatCard label="Toplam" value={summary.total} tone="text-slate-500" />
-        <StatCard label="Yeni" value={summary.open} tone="text-rose-600" />
+        <StatCard label="Yeni" value={summary.open} tone="text-slate-700" />
         <StatCard label="İnceleniyor" value={summary.inProgress} tone="text-blue-600" />
-        <StatCard label="Kullanıcı Bekleniyor" value={summary.waitingUser} tone="text-amber-600" />
-        <StatCard label="Çözülen" value={summary.resolved} tone="text-emerald-600" />
+        <StatCard label="Kullanıcı Bekleniyor" value={summary.waitingUser} tone="text-violet-600" />
+        <StatCard label="Çözülen" value={summary.resolved} tone="text-cyan-700" />
       </div>
 
       <form className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_16px_42px_rgba(15,23,42,0.06)]">

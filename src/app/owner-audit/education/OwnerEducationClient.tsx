@@ -274,7 +274,7 @@ export default function OwnerEducationClient() {
                   </div>
                 </div>
                 <div className="rounded-2xl bg-white/88 p-4 shadow-sm">
-                  <div className="text-2xl font-black text-emerald-600">{stats.ready}</div>
+                  <div className="text-2xl font-black text-cyan-700">{stats.ready}</div>
                   <div className="mt-1 text-xs font-black uppercase tracking-[0.14em] text-slate-400">
                     Hazır
                   </div>
@@ -292,19 +292,19 @@ export default function OwnerEducationClient() {
       </section>
 
       {setupRequired ? (
-        <div className="rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4 text-sm font-bold text-amber-900">
+        <div className="rounded-[1.5rem] border border-violet-200 bg-violet-50 px-5 py-4 text-sm font-bold text-violet-900">
           Eğitim video tablosu Supabase tarafında hazır görünmüyor. Tablo kurulmadan kayıt eklenemez.
         </div>
       ) : null}
 
       {error ? (
-        <div className="rounded-[1.5rem] border border-rose-200 bg-rose-50 px-5 py-4 text-sm font-bold text-rose-700">
+        <div className="rounded-[1.5rem] border border-slate-300 bg-slate-50 px-5 py-4 text-sm font-bold text-slate-900">
           {error}
         </div>
       ) : null}
 
       {notice ? (
-        <div className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 px-5 py-4 text-sm font-bold text-emerald-700">
+        <div className="rounded-[1.5rem] border border-cyan-200 bg-cyan-50 px-5 py-4 text-sm font-bold text-cyan-800">
           {notice}
         </div>
       ) : null}
@@ -525,7 +525,7 @@ export default function OwnerEducationClient() {
                       {item.slug}
                     </div>
                   </div>
-                  <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">
+                  <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-black text-cyan-800">
                     Aktif
                   </span>
                 </div>
@@ -557,7 +557,7 @@ export default function OwnerEducationClient() {
           </p>
         </div>
         <div className="rounded-[1.7rem] border border-slate-200 bg-white p-5 shadow-sm">
-          <CheckCircle2 className="h-7 w-7 text-emerald-600" />
+          <CheckCircle2 className="h-7 w-7 text-cyan-700" />
           <div className="mt-4 text-lg font-black text-slate-950">Terapist tarafı sade</div>
           <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">
             Terapistler yalnızca yayınlanan eğitimleri görür; yönetim formları owner alanında kalır.

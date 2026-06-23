@@ -31,21 +31,21 @@ function riskLabel(value: OwnerSecurityUser["riskLevel"]) {
 }
 
 function riskClass(value: OwnerSecurityUser["riskLevel"]) {
-  if (value === "critical") return "bg-rose-100 text-rose-800"
-  if (value === "high") return "bg-amber-100 text-amber-800"
+  if (value === "critical") return "bg-slate-100 text-slate-950"
+  if (value === "high") return "bg-violet-100 text-violet-900"
   if (value === "medium") return "bg-blue-100 text-blue-800"
-  return "bg-emerald-100 text-emerald-800"
+  return "bg-cyan-100 text-cyan-900"
 }
 
 function eventClass(value: OwnerSecurityEvent["severity"]) {
-  if (value === "danger") return "bg-rose-50 text-rose-700"
-  if (value === "warning") return "bg-amber-50 text-amber-700"
+  if (value === "danger") return "bg-slate-100 text-slate-950"
+  if (value === "warning") return "bg-violet-50 text-violet-800"
   return "bg-slate-100 text-slate-700"
 }
 
 function findingClass(value: "info" | "warning" | "danger") {
-  if (value === "danger") return "border-rose-100 bg-rose-50 text-rose-800"
-  if (value === "warning") return "border-amber-100 bg-amber-50 text-amber-800"
+  if (value === "danger") return "border-slate-200 bg-slate-50 text-slate-950"
+  if (value === "warning") return "border-violet-100 bg-violet-50 text-violet-800"
   return "border-slate-100 bg-slate-50 text-slate-700"
 }
 
@@ -78,12 +78,12 @@ function UserSecurityCard({ user }: { user: OwnerSecurityUser }) {
               </span>
             ) : null}
             {locked ? (
-              <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-rose-700">
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-900">
                 Kilitli
               </span>
             ) : null}
             {user.suspendedAt ? (
-              <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-rose-800">
+              <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-950">
                 Askıda
               </span>
             ) : null}
@@ -159,7 +159,7 @@ function UserSecurityCard({ user }: { user: OwnerSecurityUser }) {
                 ))}
               </div>
             ) : user.riskReasons.length ? (
-              <div className="mt-4 rounded-2xl bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+              <div className="mt-4 rounded-2xl bg-violet-50 px-4 py-3 text-sm leading-6 text-violet-900">
                 {user.riskReasons.join(" • ")}
               </div>
             ) : null}
@@ -205,7 +205,7 @@ function UserSecurityCard({ user }: { user: OwnerSecurityUser }) {
                       <span className="font-semibold text-slate-900">{device.type}</span> / {device.lastIp || "IP yok"}
                     </span>
                     {device.revokedAt ? (
-                      <span className="font-semibold text-rose-600">İptal</span>
+                      <span className="font-semibold text-slate-600">İptal</span>
                     ) : (
                       <OwnerSecurityActionButton
                         targetUserId={user.userId}
@@ -287,16 +287,16 @@ export default async function OwnerSecurityPage({ searchParams }: { searchParams
       </div>
 
       {dashboard.setupIssues.length ? (
-        <div className="rounded-[2rem] border border-amber-200 bg-amber-50 p-5 text-sm leading-6 text-amber-900">
+        <div className="rounded-[2rem] border border-violet-200 bg-violet-50 p-5 text-sm leading-6 text-violet-900">
           Bazı güvenlik tabloları henüz hazır görünmüyor: {dashboard.setupIssues.join(", ")}.
         </div>
       ) : null}
 
       <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-5">
-        <StatCard label="Yüksek Risk" value={dashboard.summary.highRiskUsers} tone="text-rose-600" />
+        <StatCard label="Yüksek Risk" value={dashboard.summary.highRiskUsers} tone="text-slate-700" />
         <StatCard label="İncelemede" value={dashboard.summary.manualReviews} tone="text-violet-600" />
         <StatCard label="Aktif Oturum" value={dashboard.summary.activeSessions} tone="text-slate-500" />
-        <StatCard label="Ödeme Uyarısı" value={dashboard.summary.paymentWarnings} tone="text-amber-600" />
+        <StatCard label="Ödeme Uyarısı" value={dashboard.summary.paymentWarnings} tone="text-violet-600" />
         <StatCard label="Video Uyarısı" value={dashboard.summary.videoWarnings} tone="text-blue-600" />
       </div>
 

@@ -245,7 +245,7 @@ export default function ProfileSettingPage() {
             </button>
 
             {savedAt ? (
-              <div className="text-sm text-emerald-600">Son kayıt: {savedAt}</div>
+              <div className="text-sm text-cyan-700">Son kayıt: {savedAt}</div>
             ) : null}
           </div>
         </div>

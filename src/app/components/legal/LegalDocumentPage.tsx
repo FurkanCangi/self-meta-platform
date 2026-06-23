@@ -39,7 +39,7 @@ export default function LegalDocumentPage({ title, description, sections }: Lega
           </div>
           <h1 className="mt-2 text-3xl font-bold tracking-tight text-slate-950 md:text-4xl">{title}</h1>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-600">{description}</p>
-          <div className="mt-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900">
+          <div className="mt-5 rounded-xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm leading-6 text-violet-900">
             Bu metin avukat incelemesine hazır ticari taslaktır. Nihai yayına alınmadan önce şirket bilgileri ve hukuki kontrol tamamlanmalıdır.
           </div>
         </section>

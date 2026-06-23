@@ -138,12 +138,12 @@ export default function OwnerSupportActions({
       </label>
 
       {status === "resolved" ? (
-        <label className="flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold leading-6 text-emerald-900">
+        <label className="flex gap-3 rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-semibold leading-6 text-cyan-900">
           <input
             type="checkbox"
             checked={confirmResolved}
             onChange={(event) => setConfirmResolved(event.target.checked)}
-            className="mt-1 h-5 w-5 rounded border-emerald-300"
+            className="mt-1 h-5 w-5 rounded border-cyan-300"
           />
           <span>
             Bu talebin çözüldüğünü onaylıyorum. Kaydet dediğimde kullanıcıya çözüm e-postası gönderilsin.
@@ -160,8 +160,8 @@ export default function OwnerSupportActions({
         >
           {pending ? "Kaydediliyor..." : "Kaydet"}
         </button>
-        {ok ? <span className="text-sm font-bold text-emerald-600">{ok}</span> : null}
-        {error ? <span className="text-sm font-bold text-rose-600">{error}</span> : null}
+        {ok ? <span className="text-sm font-bold text-cyan-700">{ok}</span> : null}
+        {error ? <span className="text-sm font-bold text-slate-700">{error}</span> : null}
       </div>
     </div>
   )

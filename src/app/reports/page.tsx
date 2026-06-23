@@ -183,8 +183,8 @@ export default function ReportsPage() {
           </section>
 
           {loading && <div className="rounded-[22px] border border-slate-200 bg-white p-6 text-center text-sm font-semibold text-slate-500 shadow-sm">Yükleniyor...</div>}
-          {!loading && err && <div className="rounded-[22px] border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{err}</div>}
-          {!loading && !err && notice && <div className="rounded-[22px] border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">{notice}</div>}
+          {!loading && err && <div className="rounded-[22px] border border-slate-300 bg-slate-50 p-4 text-sm text-slate-900">{err}</div>}
+          {!loading && !err && notice && <div className="rounded-[22px] border border-cyan-200 bg-cyan-50 p-4 text-sm text-cyan-800">{notice}</div>}
           {!loading && !err && visibleRows.length === 0 && (
             <div className="rounded-[22px] border border-slate-200 bg-white p-6 text-center text-sm font-semibold text-slate-500 shadow-sm">
               {clientFilter.code
@@ -257,7 +257,7 @@ export default function ReportsPage() {
                 type="button"
                 onClick={() => handleDeleteReport(selected)}
                 disabled={deletingReportId === selected.id}
-                className="mt-4 w-full rounded-2xl border border-rose-200 bg-white px-4 py-3 text-sm font-black text-rose-700 disabled:opacity-50"
+                className="mt-4 w-full rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-black text-slate-700 disabled:opacity-50"
               >
                 {deletingReportId === selected.id ? "Siliniyor..." : "Raporu sil"}
               </button>
@@ -282,13 +282,13 @@ export default function ReportsPage() {
           {loading && <p className="text-sm text-slate-500">Yükleniyor...</p>}
 
           {!loading && err && (
-            <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm text-rose-700">
+            <div className="rounded-xl border border-slate-300 bg-slate-50 p-3 text-sm text-slate-900">
               {err}
             </div>
           )}
 
           {!loading && !err && notice && (
-            <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-700">
+            <div className="rounded-xl border border-cyan-200 bg-cyan-50 p-3 text-sm text-cyan-800">
               {notice}
             </div>
           )}
@@ -364,7 +364,7 @@ export default function ReportsPage() {
                   type="button"
                   onClick={() => handleDeleteReport(selected)}
                   disabled={deletingReportId === selected.id}
-                  className="inline-flex w-full items-center justify-center rounded-xl border border-rose-300 bg-white px-4 py-2 text-sm font-semibold text-rose-700 transition hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+                  className="inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
                 >
                   {deletingReportId === selected.id ? "Siliniyor..." : "Raporu Sil"}
                 </button>

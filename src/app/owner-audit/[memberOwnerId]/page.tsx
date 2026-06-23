@@ -120,10 +120,10 @@ function AuditEventCard({ row }: { row: OwnerAuditEventRow }) {
           className={[
             "rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide",
             row.operation === "DELETE"
-              ? "bg-rose-50 text-rose-700"
+              ? "bg-slate-100 text-slate-900"
               : row.operation === "UPDATE"
-              ? "bg-amber-50 text-amber-700"
-              : "bg-emerald-50 text-emerald-700",
+              ? "bg-violet-50 text-violet-800"
+              : "bg-cyan-50 text-cyan-800",
           ].join(" ")}
         >
           {row.operation === "DELETE" ? "Silme" : row.operation === "UPDATE" ? "Güncelleme" : "Yeni kayıt"}
@@ -182,14 +182,14 @@ export default async function OwnerMemberDetailPage({
             <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold uppercase tracking-wide text-slate-600">
               {planLabel(detail.summary.plan)}
             </span>
-            <span className="rounded-full bg-emerald-50 px-3 py-1 font-semibold uppercase tracking-wide text-emerald-700">
+            <span className="rounded-full bg-cyan-50 px-3 py-1 font-semibold uppercase tracking-wide text-cyan-800">
               {roleLabel(detail.summary.role)}
             </span>
             <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold tracking-wide text-slate-500">
               Teknik kullanıcı ID: {detail.summary.ownerId}
             </span>
             {!detail.summary.hasAuthAccount ? (
-              <span className="rounded-full bg-amber-50 px-3 py-1 font-semibold tracking-wide text-amber-700">
+              <span className="rounded-full bg-violet-50 px-3 py-1 font-semibold tracking-wide text-violet-800">
                 Aktif giriş hesabı yok / eski kayıt olabilir
               </span>
             ) : null}
@@ -360,7 +360,7 @@ export default async function OwnerMemberDetailPage({
                           {client.childCode}
                         </span>
                         {client.deletedAt ? (
-                          <span className="rounded-full bg-rose-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-rose-700">
+                          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-900">
                             Arşivlenmiş / silinmiş
                           </span>
                         ) : null}

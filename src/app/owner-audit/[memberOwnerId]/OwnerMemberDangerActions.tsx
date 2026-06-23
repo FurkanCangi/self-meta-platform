@@ -73,14 +73,14 @@ export function OwnerMemberDangerActions({
   }
 
   return (
-    <div className="rounded-[2rem] border border-rose-200 bg-rose-50 p-5">
+    <div className="rounded-[2rem] border border-slate-300 bg-slate-50 p-5">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div>
-          <h2 className="text-lg font-semibold text-rose-950">Üye hesabı yönetimi</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-rose-800">
+          <h2 className="text-lg font-semibold text-slate-950">Üye hesabı yönetimi</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-700">
             Bu işlem üyenin sisteme giriş hesabını kaldırır. Danışan, skor, rapor ve denetim kayıtları silinmez; sonradan kontrol edebilmek için saklanır.
           </p>
-          <div className="mt-3 text-sm font-semibold text-rose-950">
+          <div className="mt-3 text-sm font-semibold text-slate-950">
             {memberName} / {memberEmail}
           </div>
         </div>
@@ -89,32 +89,32 @@ export function OwnerMemberDangerActions({
           <button
             type="button"
             onClick={() => setOpen((value) => !value)}
-            className="rounded-2xl bg-rose-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={busy}
           >
             {open ? "Silme panelini kapat" : "Üyeyi sil"}
           </button>
         ) : (
-          <div className="rounded-2xl border border-rose-200 bg-white px-4 py-3 text-sm font-semibold text-rose-700">
+          <div className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-700">
             Bu hesap silmeye uygun değil
           </div>
         )}
       </div>
 
       {open ? (
-        <div className="mt-5 rounded-3xl border border-rose-200 bg-white p-5">
+        <div className="mt-5 rounded-3xl border border-slate-200 bg-white p-5">
           <div className="text-sm font-semibold text-slate-950">Silme sebebi</div>
           <textarea
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            className="mt-2 min-h-[96px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-rose-300 focus:ring-2 focus:ring-rose-100"
+            className="mt-2 min-h-[96px] w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-slate-400 focus:ring-2 focus:ring-slate-100"
           />
           <div className="mt-4 flex flex-wrap items-center gap-3">
             <button
               type="button"
               onClick={handleDelete}
               disabled={busy || reason.trim().length < 3}
-              className="rounded-2xl bg-rose-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-rose-700 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-2xl bg-slate-950 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {busy ? "Siliniyor..." : "Evet, hesabı sil"}
             </button>
@@ -131,13 +131,13 @@ export function OwnerMemberDangerActions({
       ) : null}
 
       {error ? (
-        <div className="mt-4 rounded-2xl border border-rose-200 bg-white px-4 py-3 text-sm font-semibold text-rose-700">
+        <div className="mt-4 rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-900">
           {error}
         </div>
       ) : null}
 
       {done ? (
-        <div className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+        <div className="mt-4 rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-semibold text-cyan-800">
           Üye hesabı silindi ve işlem kayda alındı.
         </div>
       ) : null}
