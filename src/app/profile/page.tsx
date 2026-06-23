@@ -19,6 +19,15 @@ type TherapistProfile = {
   educationCompletedAt: string | null
 }
 
+type TherapistReportProfile = {
+  clinicName: string
+  reportSignatureName: string
+  reportSignatureTitle: string
+  reportFooter: string
+}
+
+const SETTINGS_STORAGE_KEY = "dna_therapist_settings"
+
 const defaultProfile: TherapistProfile = {
   firstName: "",
   lastName: "",
@@ -34,6 +43,13 @@ const defaultProfile: TherapistProfile = {
   publicListingEnabled: false,
   publicationStatus: "pending",
   educationCompletedAt: null,
+}
+
+const defaultReportProfile: TherapistReportProfile = {
+  clinicName: "",
+  reportSignatureName: "",
+  reportSignatureTitle: "",
+  reportFooter: "",
 }
 
 function Field({
@@ -94,6 +110,7 @@ function profileErrorMessage(errorCode?: string) {
 
 export default function ProfilePage() {
   const [profile, setProfile] = useState<TherapistProfile>(defaultProfile)
+  const [reportProfile, setReportProfile] = useState<TherapistReportProfile>(defaultReportProfile)
   const [loaded, setLoaded] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
@@ -103,6 +120,13 @@ export default function ProfilePage() {
     let active = true
 
     async function loadProfile() {
+      try {
+        const rawSettings = window.localStorage.getItem(SETTINGS_STORAGE_KEY)
+        if (rawSettings && active) {
+          setReportProfile({ ...defaultReportProfile, ...JSON.parse(rawSettings) })
+        }
+      } catch {}
+
       const controller = new AbortController()
       const timeout = window.setTimeout(() => controller.abort(), 8_000)
       try {
@@ -154,6 +178,11 @@ export default function ProfilePage() {
     setSavedAt("")
   }
 
+  const handleReportChange = (key: keyof TherapistReportProfile, value: string) => {
+    setReportProfile((prev) => ({ ...prev, [key]: value }))
+    setSavedAt("")
+  }
+
   const handleSave = async () => {
     setSaving(true)
     setError("")
@@ -173,6 +202,11 @@ export default function ProfilePage() {
       if (payload?.profile) {
         setProfile({ ...defaultProfile, ...payload.profile })
       }
+      try {
+        const currentRaw = window.localStorage.getItem(SETTINGS_STORAGE_KEY)
+        const currentSettings = currentRaw ? JSON.parse(currentRaw) : {}
+        window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...currentSettings, ...reportProfile }))
+      } catch {}
       setSavedAt(new Date().toLocaleString("tr-TR"))
     } catch (err) {
       setError(err instanceof Error ? err.message : "Profil kaydedilemedi.")
@@ -244,6 +278,43 @@ export default function ProfilePage() {
                 className="min-h-[120px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
               />
             </label>
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5">
+            <h2 className="text-xl font-semibold text-slate-900">Kurum ve Rapor Bilgileri</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Rapor çıktısında görünecek kurum, imza ve kısa not bilgilerini burada düzenleyebilirsiniz.
+            </p>
+
+            <div className="mt-5 grid gap-5 md:grid-cols-2">
+              <Field
+                label="Kurum / Klinik Adı"
+                value={reportProfile.clinicName}
+                onChange={(v) => handleReportChange("clinicName", v)}
+                placeholder="Kurum adı"
+              />
+              <Field
+                label="Rapor İmza Adı"
+                value={reportProfile.reportSignatureName}
+                onChange={(v) => handleReportChange("reportSignatureName", v)}
+                placeholder="Ad Soyad"
+              />
+              <Field
+                label="Rapor İmza Unvanı"
+                value={reportProfile.reportSignatureTitle}
+                onChange={(v) => handleReportChange("reportSignatureTitle", v)}
+                placeholder="Uzm. Ergoterapist / Dr. / Öğr. Gör."
+              />
+              <label className="block md:col-span-2">
+                <div className="mb-2 text-sm font-medium text-slate-700">Rapor Alt Notu</div>
+                <textarea
+                  value={reportProfile.reportFooter}
+                  onChange={(e) => handleReportChange("reportFooter", e.target.value)}
+                  placeholder="Rapor sonunda görünmesini istediğiniz kısa profesyonel not"
+                  className="min-h-[120px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
+                />
+              </label>
+            </div>
           </div>
 
           <label className="mt-6 flex gap-4 rounded-2xl border border-cyan-100 bg-cyan-50/60 px-5 py-4">

@@ -4,10 +4,6 @@ import { useEffect, useState } from "react"
 import DeviceManagementPanel from "./DeviceManagementPanel"
 
 type TherapistSettings = {
-  clinicName: string
-  reportSignatureName: string
-  reportSignatureTitle: string
-  reportFooter: string
   emailNotifications: boolean
   reportHistoryVisible: boolean
   defaultPlan: "Starter" | "Professional" | "Clinic"
@@ -19,10 +15,6 @@ type TherapistSettings = {
 const STORAGE_KEY = "dna_therapist_settings"
 
 const defaultSettings: TherapistSettings = {
-  clinicName: "",
-  reportSignatureName: "",
-  reportSignatureTitle: "",
-  reportFooter: "",
   emailNotifications: true,
   reportHistoryVisible: true,
   defaultPlan: "Professional",
@@ -83,8 +75,16 @@ export default function ProfileSettingPage() {
   }
 
   const handleSave = () => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(settings))
+    const current = readStoredSettings()
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...current, ...settings }))
     setSavedAt(new Date().toLocaleString("tr-TR"))
+  }
+
+  const handleReset = () => {
+    const current = readStoredSettings()
+    setSettings(defaultSettings)
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...current, ...defaultSettings }))
+    setSavedAt("")
   }
 
   if (!loaded) {
@@ -104,7 +104,7 @@ export default function ProfileSettingPage() {
           <div className="text-sm font-semibold uppercase tracking-wide text-blue-600">Ayarlar</div>
           <h1 className="mt-2 text-3xl font-bold text-slate-900">Terapist Paneli Ayarları</h1>
           <p className="mt-3 max-w-3xl text-slate-600">
-            Bu bölüm profil bilgisinden ayrı olarak sistem ayarları, rapor imzası, plan ve faturalama tercihleri için kullanılır.
+            Bu bölüm cihaz, bildirim, görünürlük, plan ve faturalama tercihleri için kullanılır.
           </p>
         </div>
 
@@ -113,52 +113,6 @@ export default function ProfileSettingPage() {
         ) : (
         <div className="space-y-6">
           {devicesTabRequested ? <DeviceManagementPanel /> : null}
-
-          <div className="rounded-3xl border border-slate-200 bg-white p-6">
-            <h2 className="text-xl font-semibold text-slate-900">Kurum ve Rapor Ayarları</h2>
-
-            <div className="mt-5 grid gap-5 md:grid-cols-2">
-              <label className="block">
-                <div className="mb-2 text-sm font-medium text-slate-700">Kurum / Klinik Adı</div>
-                <input
-                  value={settings.clinicName}
-                  onChange={(e) => update("clinicName", e.target.value)}
-                  className="h-12 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-blue-500"
-                  placeholder="Kurum adı"
-                />
-              </label>
-
-              <label className="block">
-                <div className="mb-2 text-sm font-medium text-slate-700">Rapor İmza Adı</div>
-                <input
-                  value={settings.reportSignatureName}
-                  onChange={(e) => update("reportSignatureName", e.target.value)}
-                  className="h-12 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-blue-500"
-                  placeholder="Ad Soyad"
-                />
-              </label>
-
-              <label className="block md:col-span-2">
-                <div className="mb-2 text-sm font-medium text-slate-700">Rapor İmza Unvanı</div>
-                <input
-                  value={settings.reportSignatureTitle}
-                  onChange={(e) => update("reportSignatureTitle", e.target.value)}
-                  className="h-12 w-full rounded-xl border border-slate-200 px-4 outline-none transition focus:border-blue-500"
-                  placeholder="Uzm. Ergoterapist / Dr. / Öğr. Gör."
-                />
-              </label>
-
-              <label className="block md:col-span-2">
-                <div className="mb-2 text-sm font-medium text-slate-700">Rapor Alt Notu</div>
-                <textarea
-                  value={settings.reportFooter}
-                  onChange={(e) => update("reportFooter", e.target.value)}
-                  className="min-h-[130px] w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-blue-500"
-                  placeholder="Rapor sonunda görünmesini istediğiniz kısa profesyonel not"
-                />
-              </label>
-            </div>
-          </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6">
             <h2 className="text-xl font-semibold text-slate-900">Bildirim ve Görünürlük</h2>
@@ -234,11 +188,7 @@ export default function ProfileSettingPage() {
             </button>
 
             <button
-              onClick={() => {
-                setSettings(defaultSettings)
-                localStorage.removeItem(STORAGE_KEY)
-                setSavedAt("")
-              }}
+              onClick={handleReset}
               className="inline-flex h-12 items-center justify-center rounded-xl border border-slate-200 bg-white px-5 font-semibold text-slate-700 transition hover:bg-slate-50"
             >
               Sıfırla
@@ -253,4 +203,13 @@ export default function ProfileSettingPage() {
       </div>
     </div>
   )
+}
+
+function readStoredSettings(): Record<string, unknown> {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    return raw ? JSON.parse(raw) : {}
+  } catch {
+    return {}
+  }
 }
