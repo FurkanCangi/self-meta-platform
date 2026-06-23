@@ -415,53 +415,15 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
                   </Link>
 
                   {showOwnerAudit ? (
-                    <>
-                      <Link
-                        href="/owner-audit"
-                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-                      >
-                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-700">
-                          OA
-                        </span>
-                        Owner Paneli
-                      </Link>
-                      <Link
-                        href="/owner-audit/security"
-                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-800 transition hover:bg-slate-50"
-                      >
-                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-800">
-                          OS
-                        </span>
-                        Güvenlik Merkezi
-                      </Link>
-                      <Link
-                        href="/owner-audit/notifications"
-                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
-                      >
-                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-[10px] font-bold text-blue-700">
-                          BN
-                        </span>
-                        Bildirim Gönder
-                      </Link>
-                      <Link
-                        href="/owner-audit/education"
-                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-indigo-700 transition hover:bg-indigo-50"
-                      >
-                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-700">
-                          EY
-                        </span>
-                        Eğitim Yönetimi
-                      </Link>
-                      <Link
-                        href="/owner-audit/support"
-                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-cyan-700 transition hover:bg-cyan-50"
-                      >
-                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-cyan-100 text-[10px] font-bold text-cyan-700">
-                          DS
-                        </span>
-                        Destek Talepleri
-                      </Link>
-                    </>
+                    <Link
+                      href="/owner-audit"
+                      className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+                    >
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-indigo-100 text-[10px] font-bold text-indigo-700">
+                        YP
+                      </span>
+                      Yönetici Paneli
+                    </Link>
                   ) : null}
 
                   <Link
