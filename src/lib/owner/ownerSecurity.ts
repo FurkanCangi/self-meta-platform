@@ -252,7 +252,6 @@ export async function fetchOwnerSecurityDashboard(filters: OwnerSecurityFilters 
     billingEventsResult.issue,
     paymentEventsResult.issue,
     entitlementsResult.issue,
-    creditLedgerResult.issue,
     videoLogsResult.issue,
     playbackSessionsResult.issue,
   ].filter(Boolean) as string[]
