@@ -55,7 +55,8 @@ const reportPackages = [
 ]
 
 const notes = [
-  "Satın alınan rapor hakları hesabınıza tanımlanır.",
+  "Satın alınan rapor hakları hesabınıza tanımlanır ve bitene kadar geçerli kalır.",
+  "Rapor hakları aylık sıfırlanmaz, ay sonunda yanmaz ve otomatik yenileme yapılmaz.",
   "Rapor hakları AI klinik rapor üretimi sırasında düşülür.",
   "Paketler eğitim programı satın alımından bağımsız ek kullanım hakkıdır.",
 ]
@@ -112,7 +113,7 @@ export default function ReportPackagesPage() {
             <h1 className="mt-4 text-3xl font-black tracking-tight text-[#071b3a] md:text-4xl">Ek Test ve Rapor Paketleri</h1>
             <p className="mt-3 max-w-3xl text-[15px] leading-7 text-slate-600">
               Eğitim programına kayıt tamamlandıktan sonra ihtiyaç oldukça ek AI rapor hakkı satın alın.
-              Bu alan yalnız terapist paneli içinde kullanılır.
+              Satın aldığınız rapor hakları aylık tükenmez; bitene kadar hesabınızda kalır.
             </p>
           </div>
         </section>
@@ -138,7 +139,7 @@ export default function ReportPackagesPage() {
               {loadingStatus ? "Yükleniyor..." : status?.reports?.creditLedgerAvailable ? `${status.reports.remaining ?? 0} kalan` : "Ledger hazır değil"}
             </div>
             <div className="mt-2 text-sm leading-6 text-slate-500">
-              Toplam tanımlı hak: {loadingStatus ? "..." : status?.reports?.included ?? 0}
+              Toplam tanımlı hak: {loadingStatus ? "..." : status?.reports?.included ?? 0}. Süre sınırı yoktur.
             </div>
           </div>
         </section>
@@ -168,6 +169,9 @@ export default function ReportPackagesPage() {
                 <p className="mt-3 min-h-[52px] text-sm leading-7 text-slate-600">{pack.description}</p>
                 <div className="mt-4 inline-flex rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">
                   {pack.credits} AI rapor hakkı
+                </div>
+                <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-bold leading-5 text-slate-700">
+                  Aylık yenilenmez. Kullanmadığınız haklar hesapta kalır.
                 </div>
                 <div className="mt-4 text-4xl font-black text-blue-700">{pack.price}</div>
                 <button
@@ -201,7 +205,7 @@ export default function ReportPackagesPage() {
             </div>
             <h2 className="mt-5 text-xl font-black text-[#071b3a]">Güvenli ödeme</h2>
             <p className="mt-3 text-sm font-medium leading-7 text-slate-600">
-              Ödeme altyapısı bağlandığında paket satın alımları bu panel ekranından tamamlanacak ve rapor hakları otomatik olarak hesabınıza işlenecek.
+              Ödeme altyapısı bağlandığında paket satın alımları bu panel ekranından tamamlanacak ve rapor hakları hesabınıza tek seferlik kullanım hakkı olarak işlenecek.
             </p>
             <div className="mt-5 flex items-center gap-2 text-sm font-black text-slate-700">
               <LockKeyhole size={17} strokeWidth={1.9} />

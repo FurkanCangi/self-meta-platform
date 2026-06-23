@@ -17,13 +17,15 @@ export default function PackageAgreementPage() {
           title: "2. Paketler ve Kullanım Limitleri",
           body: [
             "Paketler öğrenci, mezun, gelişmiş/profesyonel ve kurumsal seçeneklerden oluşabilir. Paket kapsamı; danışan limiti, rapor/aktivite hakkı, eğitim içerikleri, kurum üyeliği ve ek modüllere göre değişebilir.",
-            "Ödeme entegrasyonu tamamlanana kadar paket seçimi clickwrap kabul kanıtıyla kaydedilir. Gerçek ödeme, fatura, otomatik yenileme ve iptal süreçleri entegre edildiğinde kullanıcıya ayrıca gösterilir.",
+            "Ek rapor paketleri süreli abonelik değildir. Satın alınan rapor hakları kullanıcı hesabına tanımlanır, rapor üretildikçe düşer ve kullanılmadığı sürece aylık olarak silinmez.",
+            "Ödeme entegrasyonu tamamlanana kadar paket seçimi clickwrap kabul kanıtıyla kaydedilir. Gerçek ödeme ve fatura süreçleri entegre edildiğinde kullanıcıya ayrıca gösterilir.",
           ],
         },
         {
-          title: "3. Ücret, Yenileme ve İptal",
+          title: "3. Ücret, Kullanım ve İptal",
           body: [
-            "Platformda gösterilen ücretler aksi belirtilmedikçe aylık paket bedelidir. Vergi, fatura, ödeme komisyonu ve kampanya koşulları ödeme altyapısı devreye alındığında ayrıca düzenlenir.",
+            "Platformda gösterilen ek rapor paketi ücretleri aksi açıkça belirtilmedikçe tek seferlik kullanım hakkı bedelidir. Rapor hakları ay sonunda yanmaz ve otomatik yenileme yapılmaz.",
+            "Vergi, fatura, ödeme komisyonu ve kampanya koşulları ödeme altyapısı devreye alındığında ayrıca düzenlenir.",
             "Kullanıcı paket iptal, dondurma veya değişiklik taleplerini [ILETISIM_EPOSTA] üzerinden iletebilir. Kurumsal paketlerde özel sözleşme veya manuel onay süreci uygulanabilir.",
           ],
         },

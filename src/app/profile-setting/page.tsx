@@ -7,7 +7,6 @@ type TherapistSettings = {
   emailNotifications: boolean
   reportHistoryVisible: boolean
   defaultPlan: "Starter" | "Professional" | "Clinic"
-  autoRenew: boolean
   invoiceEmail: string
   teamAccessEnabled: boolean
 }
@@ -18,7 +17,6 @@ const defaultSettings: TherapistSettings = {
   emailNotifications: true,
   reportHistoryVisible: true,
   defaultPlan: "Professional",
-  autoRenew: true,
   invoiceEmail: "",
   teamAccessEnabled: false,
 }
@@ -142,11 +140,14 @@ export default function ProfileSettingPage() {
           </div>
 
           <div className="rounded-3xl border border-slate-200 bg-white p-6">
-            <h2 className="text-xl font-semibold text-slate-900">Plan ve Faturalama Tercihleri</h2>
+            <h2 className="text-xl font-semibold text-slate-900">Plan ve Faturalama Bilgileri</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">
+              Rapor hakları aylık yenilenmez veya süre sonunda silinmez. Satın alınan haklar bitene kadar hesapta kalır.
+            </p>
 
             <div className="mt-5 grid gap-5 md:grid-cols-2">
               <label className="block">
-                <div className="mb-2 text-sm font-medium text-slate-700">Varsayılan Plan</div>
+                <div className="mb-2 text-sm font-medium text-slate-700">Görünen Plan</div>
                 <select
                   value={settings.defaultPlan}
                   onChange={(e) => update("defaultPlan", e.target.value)}
@@ -167,15 +168,6 @@ export default function ProfileSettingPage() {
                   placeholder="fatura@ornek.com"
                 />
               </label>
-
-              <div className="md:col-span-2">
-                <ToggleRow
-                  title="Otomatik yenileme"
-                  desc="Plan süresi sonunda aboneliği otomatik yenile"
-                  checked={settings.autoRenew}
-                  onChange={(v) => update("autoRenew", v)}
-                />
-              </div>
             </div>
           </div>
 
