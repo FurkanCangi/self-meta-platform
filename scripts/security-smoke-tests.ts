@@ -137,9 +137,21 @@ check("notification action URLs are restricted to known app routes", notificatio
 check("owner notifications default to existing education route", ownerNotificationsClient.includes('useState("/education")'), "owner notification default route is invalid")
 
 const aiReportRoute = read("src/app/api/ai-report/route.ts")
+const manualReportRoute = read("src/app/api/reports/manual/route.ts")
+const assessmentsClient = read("src/app/assessments/AssessmentsClient.tsx")
 check("AI report route uses Zod payload schema", aiReportRoute.includes("aiReportPayloadSchema"), "missing AI report Zod schema")
 check("AI report route rejects server-controlled payload fields", aiReportRoute.includes("rejectServerControlledFields"), "missing AI mass-assignment guard")
-check("AI report route consumes report credit before output", aiReportRoute.includes("consumeReportCredit"), "missing report credit control")
+check("AI report route consumes report credit", aiReportRoute.includes("consumeReportCredit"), "missing report credit control")
+check(
+  "AI report route charges only after successful report generation",
+  aiReportRoute.indexOf("const finalText = cleanRenderedReport") < aiReportRoute.indexOf("const credit = await consumeReportCredit"),
+  "report credit should be consumed after report text is built"
+)
+check("manual report route requires trusted mutation", manualReportRoute.includes("requireTrustedMutation"), "manual report route missing trusted mutation")
+check("manual report route validates body with Zod", manualReportRoute.includes("manualReportSchema"), "manual report route missing schema")
+check("manual report route consumes report credit", manualReportRoute.includes("consumeReportCredit"), "manual report route missing report credit control")
+check("manual report route rolls back credit if insert fails", manualReportRoute.includes("rollback_reason") && manualReportRoute.includes("manual_report_insert_failed"), "manual report rollback missing")
+check("assessment screen uses manual report API instead of direct report insert", assessmentsClient.includes('fetch("/api/reports/manual"') && !assessmentsClient.includes('.from("reports")'), "assessment report creation bypasses API")
 
 const aiReportService = read("src/lib/dna/aiReportService.ts")
 check("legacy AI path keeps API key server-side", aiReportService.includes("process.env.OPENAI_API_KEY"), "missing server-side API key usage")

@@ -319,28 +319,6 @@ if (__validationErrors.length > 0) {
       )
     }
 
-    const credit = await consumeReportCredit({
-      admin,
-      userId: user.id,
-      assessmentId: typeof body?.assessmentId === "string" ? body.assessmentId : null,
-      clientId: String((ownedClient as any).client?.id || ""),
-      metadata: {
-        route: "/api/ai-report",
-        client_code: String(body?.clientCode || body?.client_code || ""),
-      },
-    })
-
-    if (!credit.ok) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: credit.error === "report_credit_required" ? "report_credit_required" : "Rapor hakkı doğrulanamadı.",
-          remaining: credit.remaining,
-        },
-        { status: credit.error === "report_credit_required" ? 402 : 500 }
-      )
-    }
-
     const report = buildAdvancedReport({
       clientCode: body?.clientCode || "",
       ageMonths: incomingAgeMonths,
@@ -364,10 +342,34 @@ if (__validationErrors.length > 0) {
       appendOptionalSection(report.deterministicReport, literatureSection?.text)
     )
 
+    const credit = await consumeReportCredit({
+      admin,
+      userId: user.id,
+      assessmentId: typeof body?.assessmentId === "string" ? body.assessmentId : null,
+      clientId: String((ownedClient as any).client?.id || ""),
+      metadata: {
+        route: "/api/ai-report",
+        client_code: String(body?.clientCode || body?.client_code || ""),
+        charged_after_successful_generation: true,
+      },
+    })
+
+    if (!credit.ok) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: credit.error === "report_credit_required" ? "report_credit_required" : "Rapor hakkı doğrulanamadı.",
+          remaining: credit.remaining,
+        },
+        { status: credit.error === "report_credit_required" ? 402 : 500 }
+      )
+    }
+
     return NextResponse.json({
       ok: true,
       report: finalText,
       deterministic: cleanDeterministic,
+      remainingReportCredits: credit.remaining,
     })
   } catch {
     return NextResponse.json(

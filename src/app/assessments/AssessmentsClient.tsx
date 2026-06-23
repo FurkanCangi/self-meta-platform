@@ -74,44 +74,46 @@ export default function AssessmentsClient(){
 
   async function saveReport(){
 
-    if(!assessmentId) return
+    if(!assessmentId || !clientId) return
 
     setSaving(true)
 
-    const reportText = `
-Danışan: ${clientCode}
+    try {
+      const response = await fetch("/api/reports/manual", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          assessmentId,
+          clientId,
+          clientCode,
+          scores,
+        }),
+      })
+      const payload = await response.json().catch(() => ({}))
 
-Alt Boyutlar
-1: ${scores.s1}
-2: ${scores.s2}
-3: ${scores.s3}
-4: ${scores.s4}
-
-Toplam Skor: ${total}
-Risk Seviyesi: ${risk}
-`
-
-    const {error} = await supabase
-    .from("reports")
-    .insert({
-      assessment_id:assessmentId,
-      version:1,
-      report_text:reportText,
-      immutable:true,
-      snapshot_json:{
-        scores,
-        total,
-        risk
+      if (!response.ok || payload?.ok === false) {
+        if (payload?.error === "report_credit_required") {
+          setMsg("Rapor hakkınız kalmadı. Yeni rapor paketi satın almanız gerekiyor.")
+        } else {
+          setMsg("Rapor oluşturulamadı. Lütfen tekrar deneyin.")
+        }
+        return
       }
-    })
 
-    if(!error){
-      setMsg("Rapor oluşturuldu")
-    }else{
-      setMsg("Hata: "+error.message)
+      if (payload?.existing) {
+        setMsg("Bu değerlendirme için rapor zaten oluşturulmuş. Mevcut rapor korunuyor.")
+      } else {
+        setMsg(
+          typeof payload?.remainingReportCredits === "number"
+            ? `Rapor oluşturuldu. Kalan rapor hakkı: ${payload.remainingReportCredits}`
+            : "Rapor oluşturuldu"
+        )
+      }
+    } catch {
+      setMsg("Rapor oluşturulamadı. Lütfen tekrar deneyin.")
+    } finally {
+      setSaving(false)
     }
-
-    setSaving(false)
   }
 
   return(
