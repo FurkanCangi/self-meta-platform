@@ -9,7 +9,10 @@ import {
   resolveRequesterInfo,
   SUPPORT_ATTACHMENT_BUCKET,
   SUPPORT_RESPONSE_TARGET_HOURS,
+  supportCategoryLabel,
+  supportPriorityLabel,
 } from "@/lib/support/supportTickets"
+import { sendOwnerSupportTicketEmail } from "@/lib/support/supportEmail"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
@@ -78,6 +81,12 @@ function hasValidSignature(mimeType: string, bytes: Uint8Array) {
 function getClientIp(headers: Headers) {
   const forwardedFor = headers.get("x-forwarded-for")
   return forwardedFor?.split(",")[0]?.trim() || headers.get("x-real-ip") || null
+}
+
+function appOrigin(request: Request) {
+  const origin = request.headers.get("origin")
+  if (origin) return origin
+  return new URL(request.url).origin
 }
 
 function isMissingStorageBucket(error: unknown) {
@@ -271,6 +280,21 @@ export async function POST(request: Request) {
       const { error: attachmentError } = await admin.from("support_ticket_attachments").insert(attachmentRows)
       if (attachmentError) throw attachmentError
     }
+
+    await sendOwnerSupportTicketEmail({
+      ticketNo: ticket.ticket_no,
+      subject: parsed.data.subject,
+      requesterName: requester.name || "İsimsiz kullanıcı",
+      requesterEmail: requester.email,
+      categoryLabel: supportCategoryLabel(parsed.data.category),
+      priorityLabel: supportPriorityLabel(parsed.data.priority),
+      supportUrl: `${appOrigin(request)}/owner-audit/support`,
+    }).catch((emailError) => {
+      console.error("[support] owner email notification failed", {
+        ticketNo: ticket.ticket_no,
+        error: emailError instanceof Error ? emailError.message : "unknown",
+      })
+    })
 
     return NextResponse.json({
       ok: true,

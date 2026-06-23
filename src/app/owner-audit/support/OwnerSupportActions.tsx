@@ -30,12 +30,25 @@ export default function OwnerSupportActions({
   const [ownerNote, setOwnerNote] = useState(initialOwnerNote || "")
   const [resolutionMessage, setResolutionMessage] = useState(initialResolutionMessage || "")
   const [publicReply, setPublicReply] = useState("")
+  const [confirmResolved, setConfirmResolved] = useState(false)
   const [error, setError] = useState("")
   const [ok, setOk] = useState("")
 
   function save() {
     setError("")
     setOk("")
+
+    if (status === "resolved" && !confirmResolved) {
+      setError("Çözüldü olarak işaretlemek için önce onay kutusunu işaretleyin.")
+      return
+    }
+
+    if (status === "resolved") {
+      const approved = window.confirm(
+        "Bu talep kesin çözüldü mü? Evet dersen kullanıcıya 'destek talebiniz çözüldü' e-postası gönderilecek.",
+      )
+      if (!approved) return
+    }
 
     startTransition(async () => {
       const response = await fetch("/api/owner-audit/support/action", {
@@ -50,6 +63,7 @@ export default function OwnerSupportActions({
           ownerNote,
           resolutionMessage,
           publicReply,
+          confirmResolved,
         }),
       })
       const payload = await response.json().catch(() => null)
@@ -57,8 +71,9 @@ export default function OwnerSupportActions({
         setError(String(payload?.error || "Destek talebi güncellenemedi."))
         return
       }
-      setOk("Kaydedildi.")
+      setOk(status === "resolved" ? "Çözüldü olarak kaydedildi. Kullanıcıya e-posta gönderimi denendi." : "Kaydedildi.")
       setPublicReply("")
+      if (status !== "resolved") setConfirmResolved(false)
       router.refresh()
     })
   }
@@ -121,6 +136,20 @@ export default function OwnerSupportActions({
           placeholder="Örn: Hesabınızdaki eski cihaz kaydı kaldırıldı. Şimdi tekrar giriş yapabilirsiniz."
         />
       </label>
+
+      {status === "resolved" ? (
+        <label className="flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold leading-6 text-emerald-900">
+          <input
+            type="checkbox"
+            checked={confirmResolved}
+            onChange={(event) => setConfirmResolved(event.target.checked)}
+            className="mt-1 h-5 w-5 rounded border-emerald-300"
+          />
+          <span>
+            Bu talebin çözüldüğünü onaylıyorum. Kaydet dediğimde kullanıcıya çözüm e-postası gönderilsin.
+          </span>
+        </label>
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-3">
         <button

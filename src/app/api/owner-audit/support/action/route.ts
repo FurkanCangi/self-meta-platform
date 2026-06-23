@@ -5,6 +5,7 @@ import { requireConfirmedUser, requireTrustedMutation } from "@/lib/security/api
 import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import { isMissingSupportTable } from "@/lib/support/supportTickets"
+import { sendSupportTicketResolvedEmail } from "@/lib/support/supportEmail"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
 const ownerSupportActionSchema = z.object({
@@ -13,6 +14,7 @@ const ownerSupportActionSchema = z.object({
   ownerNote: z.string().trim().max(3000).optional().nullable(),
   resolutionMessage: z.string().trim().max(3000).optional().nullable(),
   publicReply: z.string().trim().max(3000).optional().nullable(),
+  confirmResolved: z.boolean().optional().default(false),
 })
 
 async function requireOwner() {
@@ -47,6 +49,10 @@ export async function POST(request: Request) {
 
   const parsed = await readJsonWithSchema(request, ownerSupportActionSchema)
   if (!parsed.ok) return parsed.response
+
+  if (parsed.data.status === "resolved" && !parsed.data.confirmResolved) {
+    return NextResponse.json({ ok: false, error: "resolved_confirmation_required" }, { status: 400 })
+  }
 
   try {
     const admin = createSupabaseAdminClient()
@@ -116,7 +122,29 @@ export async function POST(request: Request) {
       })
     }
 
-    return NextResponse.json({ ok: true })
+    let resolvedEmailSent = false
+    if (parsed.data.status === "resolved" && existing.status !== "resolved") {
+      const supportUrl = `${new URL(request.url).origin}/support`
+      const emailResult = await sendSupportTicketResolvedEmail({
+        to: existing.requester_email,
+        ticketNo: existing.ticket_no,
+        subject: existing.subject,
+        resolutionMessage:
+          parsed.data.resolutionMessage ||
+          parsed.data.publicReply ||
+          "Destek talebiniz çözüldü. Destek ekranından detayları kontrol edebilirsiniz.",
+        supportUrl,
+      }).catch((emailError) => {
+        console.error("[owner-support] resolved email failed", {
+          ticketNo: existing.ticket_no,
+          error: emailError instanceof Error ? emailError.message : "unknown",
+        })
+        return { sent: false as const, skipped: "send_failed" as const }
+      })
+      resolvedEmailSent = Boolean(emailResult.sent)
+    }
+
+    return NextResponse.json({ ok: true, resolvedEmailSent })
   } catch (error) {
     if (isMissingSupportTable(error)) {
       return NextResponse.json({ ok: false, error: "support_tables_missing" }, { status: 503 })
