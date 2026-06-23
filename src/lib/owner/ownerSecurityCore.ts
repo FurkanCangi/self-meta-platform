@@ -119,9 +119,13 @@ function isPanelHiddenRow(row: Record<string, unknown>) {
   return row.event_type === "owner_security_panel_hidden"
 }
 
+function isPanelRestoredRow(row: Record<string, unknown>) {
+  return row.event_type === "owner_security_panel_restored"
+}
+
 function latestVisibleSecurityEventTime(rows: Record<string, unknown>[]) {
   return rows
-    .filter((row) => !isPanelHiddenRow(row) && row.event_type !== "owner_security_action")
+    .filter((row) => !isPanelHiddenRow(row) && !isPanelRestoredRow(row) && row.event_type !== "owner_security_action")
     .reduce((latest, row) => Math.max(latest, rowTime(row)), 0)
 }
 
@@ -181,12 +185,13 @@ export function buildOwnerSecurityDashboardFromRows(
   for (const userId of users) {
     const userEvents = rows.securityEvents.filter((row) => String(row.user_id || "") === userId)
     const latestHiddenAt = userEvents.filter(isPanelHiddenRow).reduce((latest, row) => Math.max(latest, rowTime(row)), 0)
-    if (latestHiddenAt > 0 && latestHiddenAt >= latestVisibleSecurityEventTime(userEvents)) {
+    const latestRestoredAt = userEvents.filter(isPanelRestoredRow).reduce((latest, row) => Math.max(latest, rowTime(row)), 0)
+    if (latestHiddenAt > 0 && latestHiddenAt > latestRestoredAt && latestHiddenAt >= latestVisibleSecurityEventTime(userEvents)) {
       hiddenUsers.add(userId)
     }
   }
 
-  const securityUsers: OwnerSecurityUser[] = Array.from(users).filter((userId) => !hiddenUsers.has(userId)).map((userId) => {
+  const allSecurityUsers: OwnerSecurityUser[] = Array.from(users).map((userId) => {
     const auth = authById.get(userId)
     const profile = profilesByUser.get(userId)
     const state = statesByUser.get(userId)
@@ -284,6 +289,9 @@ export function buildOwnerSecurityDashboardFromRows(
     }
   })
 
+  const securityUsers = allSecurityUsers.filter((user) => !hiddenUsers.has(user.userId))
+  const hiddenSecurityUsers = allSecurityUsers.filter((user) => hiddenUsers.has(user.userId))
+
   const authEmail = (userId: unknown) => authById.get(String(userId || ""))?.email || "E-posta yok"
   const eventRows: OwnerSecurityEvent[] = [
     ...rows.securityEvents.filter((row) => !isResolvedSecurityRow(row) && !isPanelHiddenRow(row) && !hiddenUsers.has(String(row.user_id || ""))).map((row) => ({
@@ -362,6 +370,7 @@ export function buildOwnerSecurityDashboardFromRows(
       apiRateLimits24h: securityUsers.reduce((sum, user) => sum + user.apiRateLimits24h, 0),
     },
     users: filteredUsers,
+    hiddenUsers: hiddenSecurityUsers.sort((a, b) => a.fullName.localeCompare(b.fullName, "tr")),
     events: eventRows,
     setupIssues: Array.from(new Set(rows.setupIssues || [])),
   }
@@ -388,7 +397,7 @@ export async function applyOwnerSecurityActionWithClient(
     nowIso?: string
   }
 ) {
-  if (params.actorUserId === params.targetUserId && params.action !== "hide_from_security") {
+  if (params.actorUserId === params.targetUserId && params.action !== "hide_from_security" && params.action !== "restore_to_security") {
     return { ok: false as const, error: "owner_self_action_blocked" }
   }
 
@@ -477,6 +486,16 @@ export async function applyOwnerSecurityActionWithClient(
       },
     })
     if (error) return { ok: false as const, error: "security_hide_failed" }
+  } else if (params.action === "restore_to_security") {
+    const { error } = await admin.from("account_security_events").insert({
+      user_id: params.targetUserId,
+      event_type: "owner_security_panel_restored",
+      metadata: {
+        ...metadata,
+        owner_restored_at: timestamp,
+      },
+    })
+    if (error) return { ok: false as const, error: "security_restore_failed" }
   } else if (params.action === "temporary_lock") {
     const lockMinutes = Math.max(5, Math.min(1440, Number(params.lockMinutes || 30)))
     const { error } = await admin.from("account_security_state").upsert(

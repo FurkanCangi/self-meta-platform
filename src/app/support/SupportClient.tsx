@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useState, useTransition } from "react"
+import { useEffect, useMemo, useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
@@ -13,7 +13,6 @@ import {
   MessageCircle,
   Paperclip,
   Send,
-  Sparkles,
   UploadCloud,
 } from "lucide-react"
 import type { SupportTicket } from "@/lib/support/supportTickets"
@@ -64,13 +63,15 @@ function detectDeviceType() {
 }
 
 function statusClass(status: string) {
-  if (status === "resolved" || status === "closed") return "bg-cyan-50 text-cyan-800"
+  if (status === "resolved" || status === "closed") return "bg-emerald-50 text-emerald-800"
   if (status === "in_progress") return "bg-blue-50 text-blue-700"
   if (status === "waiting_user") return "bg-violet-50 text-violet-800"
   return "bg-slate-100 text-slate-900"
 }
 
 function TicketCard({ ticket }: { ticket: SupportTicket }) {
+  const isResolved = ticket.status === "resolved" || ticket.status === "closed"
+
   return (
     <details className="group rounded-[1.5rem] border border-slate-200 bg-white shadow-sm">
       <summary className="flex cursor-pointer list-none flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
@@ -87,7 +88,9 @@ function TicketCard({ ticket }: { ticket: SupportTicket }) {
             </span>
           </div>
           <div className="mt-3 truncate text-lg font-black text-slate-950">{ticket.subject}</div>
-          <div className="mt-1 text-sm text-slate-500">Son güncelleme: {formatDateTime(ticket.updatedAt)}</div>
+          <div className="mt-1 text-sm text-slate-500">
+            {isResolved ? "Çözüm tarihi" : "Son güncelleme"}: {formatDateTime(isResolved ? ticket.resolvedAt || ticket.updatedAt : ticket.updatedAt)}
+          </div>
         </div>
         <span className="rounded-2xl bg-slate-950 px-4 py-2 text-xs font-black text-white">
           <span className="group-open:hidden">Detay</span>
@@ -101,12 +104,16 @@ function TicketCard({ ticket }: { ticket: SupportTicket }) {
         </p>
 
         {ticket.resolutionMessage ? (
-          <div className="mt-4 rounded-2xl border border-cyan-100 bg-cyan-50 p-4 text-sm leading-6 text-cyan-900">
+          <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">
             <div className="mb-1 flex items-center gap-2 font-black">
               <CheckCircle2 className="h-4 w-4" />
-              Çözüm notu
+              Çözüm bilgisi
             </div>
             {ticket.resolutionMessage}
+          </div>
+        ) : isResolved ? (
+          <div className="mt-4 rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm font-semibold leading-6 text-emerald-900">
+            Bu talep çözüldü olarak işaretlendi.
           </div>
         ) : null}
 
@@ -204,14 +211,30 @@ export default function SupportClient({
 }: SupportClientProps) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
+  const [tickets, setTickets] = useState<SupportTicket[]>(initialTickets)
   const [message, setMessage] = useState("")
   const [error, setError] = useState("")
   const [files, setFiles] = useState<FileList | null>(null)
 
-  const openTickets = useMemo(
-    () => initialTickets.filter((ticket) => !["resolved", "closed"].includes(ticket.status)).length,
-    [initialTickets],
-  )
+  useEffect(() => {
+    setTickets(initialTickets)
+  }, [initialTickets])
+
+  const openTickets = useMemo(() => tickets.filter((ticket) => !["resolved", "closed"].includes(ticket.status)).length, [tickets])
+  const resolvedTickets = useMemo(() => tickets.filter((ticket) => ["resolved", "closed"].includes(ticket.status)).length, [tickets])
+  const activeTickets = useMemo(() => tickets.filter((ticket) => !["resolved", "closed"].includes(ticket.status)), [tickets])
+  const pastTickets = useMemo(() => tickets.filter((ticket) => ["resolved", "closed"].includes(ticket.status)), [tickets])
+
+  async function refreshTickets() {
+    if (!authenticated) return
+    try {
+      const response = await fetch("/api/support/tickets", { cache: "no-store" })
+      const payload = await response.json().catch(() => null)
+      if (response.ok && payload?.ok && Array.isArray(payload.tickets)) {
+        setTickets(payload.tickets)
+      }
+    } catch {}
+  }
 
   function submit(formData: FormData) {
     setError("")
@@ -242,6 +265,7 @@ export default function SupportClient({
       const form = document.getElementById("support-ticket-form") as HTMLFormElement | null
       form?.reset()
       setFiles(null)
+      await refreshTickets()
       router.refresh()
     })
   }
@@ -258,7 +282,7 @@ export default function SupportClient({
         </Link>
         {message ? (
           <div className="rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-black text-cyan-900 shadow-sm">
-            Bildirim gönderilmiştir.
+            Destek talebiniz gönderildi.
           </div>
         ) : null}
       </div>
@@ -272,7 +296,7 @@ export default function SupportClient({
             <div>
               <div className="text-lg font-black">Destek talebiniz gönderildi</div>
               <p className="mt-1 text-sm font-semibold leading-6">
-                Bildirim yönetici paneline düştü. Talebiniz incelendiğinde çözüm notu burada görünecek.
+                Talebiniz destek ekibimize iletildi. İnceleme ve çözüm bilgisi bu sayfada görünecek.
               </p>
               <p className="mt-2 text-sm font-bold">{message}</p>
             </div>
@@ -301,7 +325,7 @@ export default function SupportClient({
                 <div>
                   <div className="text-sm font-black">Aynı gün takip</div>
                   <div className="mt-1 text-xs font-semibold leading-5 text-blue-100">
-                    Talep oluşturulduğunda owner paneline düşer.
+                    Sorununuz tek kayıt altında takip edilir; ekran görüntüsü varsa daha hızlı netleşir.
                   </div>
                 </div>
               </div>
@@ -319,7 +343,7 @@ export default function SupportClient({
                 <div>
                   <div className="text-sm font-black">Çözüm notu burada görünür</div>
                   <div className="mt-1 text-xs font-semibold leading-5 text-blue-100">
-                    Açık talep sayınız: {openTickets}
+                    Açık talep: {openTickets} · Çözülen: {resolvedTickets}
                   </div>
                 </div>
               </div>
@@ -456,40 +480,48 @@ export default function SupportClient({
         </div>
       </section>
 
-      <section className="grid gap-4">
-        <div className="flex items-end justify-between gap-3">
-          <div>
-            <h2 className="flex items-center gap-2 text-2xl font-black text-slate-950">
-              <Sparkles className="h-5 w-5 text-blue-600" />
-              Taleplerim
-            </h2>
-            <p className="mt-1 text-sm text-slate-500">
-              Çözüm notu geldiyse burada görünür. Ayrıca panel bildiriminden de haber verilir.
-            </p>
-          </div>
-        </div>
-
-        {authenticated ? (
-          initialTickets.length ? (
-            <div className="grid gap-3">
-              {initialTickets.map((ticket) => (
-                <TicketCard key={ticket.id} ticket={ticket} />
-              ))}
+      {authenticated && tickets.length ? (
+        <section className="grid gap-6 lg:grid-cols-2">
+          <div className="grid gap-3">
+            <div>
+              <h2 className="text-xl font-black text-slate-950">Açık takipler</h2>
+              <p className="mt-1 text-sm text-slate-500">İnceleme veya işlem bekleyen talepleriniz burada durur.</p>
             </div>
-          ) : (
-            <div className="rounded-[1.5rem] border border-dashed border-blue-200 bg-white p-8 text-center text-sm font-semibold text-slate-500">
-              <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-blue-50 text-blue-700">
-                <CheckCircle2 className="h-5 w-5" />
+            {activeTickets.length ? (
+              activeTickets.map((ticket) => <TicketCard key={ticket.id} ticket={ticket} />)
+            ) : (
+              <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-white p-6 text-center text-sm font-semibold text-slate-500">
+                Açık destek talebiniz yok.
               </div>
-              Henüz açık destek talebiniz yok.
-            </div>
-          )
-        ) : (
-          <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 text-sm leading-6 text-slate-600">
-            Giriş yapmadan talep oluşturabilirsiniz. Talebi takip etmek için aynı e-posta ile giriş yaptığınızda kayıtlar hesabınıza bağlanabilir.
+            )}
           </div>
-        )}
-      </section>
+
+          <div className="grid gap-3">
+            <div>
+              <h2 className="text-xl font-black text-slate-950">Çözülen talepler</h2>
+              <p className="mt-1 text-sm text-slate-500">Çözülmüş konular ve varsa çözüm notları burada kalır.</p>
+            </div>
+            {pastTickets.length ? (
+              pastTickets.map((ticket) => <TicketCard key={ticket.id} ticket={ticket} />)
+            ) : (
+              <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-white p-6 text-center text-sm font-semibold text-slate-500">
+                Henüz çözülen talep yok.
+              </div>
+            )}
+          </div>
+        </section>
+      ) : authenticated ? (
+        <div className="rounded-[1.5rem] border border-dashed border-blue-200 bg-white p-8 text-center text-sm font-semibold text-slate-500">
+          <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-blue-50 text-blue-700">
+            <CheckCircle2 className="h-5 w-5" />
+          </div>
+          Daha önce destek talebi oluşturmadınız.
+        </div>
+      ) : (
+        <div className="rounded-[1.5rem] border border-slate-200 bg-white p-6 text-sm leading-6 text-slate-600">
+          Giriş yapmadan talep oluşturabilirsiniz. Talebi takip etmek için aynı e-posta ile giriş yaptığınızda kayıtlar hesabınıza bağlanabilir.
+        </div>
+      )}
     </div>
   )
 }

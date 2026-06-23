@@ -81,9 +81,11 @@ export default function OwnerNotificationsClient() {
   const [actionUrl, setActionUrl] = useState("/education")
   const [targetEmails, setTargetEmails] = useState("")
   const [notifications, setNotifications] = useState<OwnerNotification[]>([])
+  const [hiddenNotifications, setHiddenNotifications] = useState<OwnerNotification[]>([])
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [restoringId, setRestoringId] = useState<string | null>(null)
   const [notice, setNotice] = useState("")
   const [error, setError] = useState("")
   const [setupRequired, setSetupRequired] = useState(false)
@@ -96,6 +98,7 @@ export default function OwnerNotificationsClient() {
       const data = await res.json()
       if (!res.ok || !data?.ok) throw new Error(data?.error || "Bildirimler yüklenemedi.")
       setNotifications(data.notifications || [])
+      setHiddenNotifications(data.hiddenNotifications || [])
       setSetupRequired(Boolean(data.setupRequired))
     } catch (err) {
       setError(err instanceof Error ? err.message : "Bildirimler yüklenemedi.")
@@ -153,7 +156,7 @@ export default function OwnerNotificationsClient() {
   }
 
   const handleDelete = async (notification: OwnerNotification) => {
-    const confirmed = window.confirm(`"${notification.title}" bildirimini silmek istiyor musunuz?`)
+    const confirmed = window.confirm(`"${notification.title}" bildirimini listeden gizlemek istiyor musunuz?`)
     if (!confirmed) return
 
     setDeletingId(notification.id)
@@ -176,11 +179,42 @@ export default function OwnerNotificationsClient() {
       }
 
       setNotifications((current) => current.filter((item) => item.id !== notification.id))
-      setNotice("Bildirim silindi.")
+      setHiddenNotifications((current) => [{ ...notification, status: "archived" }, ...current])
+      setNotice("Bildirim listeden gizlendi. Gizlenen bildirimlerden geri alabilirsiniz.")
     } catch (err) {
       setError(err instanceof Error ? err.message : "Bildirim silinemedi.")
     } finally {
       setDeletingId(null)
+    }
+  }
+
+  const handleRestore = async (notification: OwnerNotification) => {
+    setRestoringId(notification.id)
+    setNotice("")
+    setError("")
+
+    try {
+      const res = await fetch("/api/owner-notifications", {
+        method: "PATCH",
+        headers: {
+          "content-type": "application/json",
+          "x-dna-request": "same-origin",
+        },
+        body: JSON.stringify({ id: notification.id, action: "restore" }),
+      })
+      const data = await res.json()
+      if (!res.ok || !data?.ok) {
+        setSetupRequired(Boolean(data?.setupRequired))
+        throw new Error(data?.error || "Bildirim geri alınamadı.")
+      }
+
+      setHiddenNotifications((current) => current.filter((item) => item.id !== notification.id))
+      setNotifications((current) => [{ ...notification, status: "published" }, ...current])
+      setNotice("Bildirim tekrar yayınlananlar listesine alındı.")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Bildirim geri alınamadı.")
+    } finally {
+      setRestoringId(null)
     }
   }
 
@@ -392,7 +426,7 @@ export default function OwnerNotificationsClient() {
                         className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <Trash2 className="h-4 w-4" />
-                        {deletingId === item.id ? "Siliniyor..." : "Sil"}
+                        {deletingId === item.id ? "Gizleniyor..." : "Listeden gizle"}
                       </button>
                     </div>
                   ) : (
@@ -404,7 +438,7 @@ export default function OwnerNotificationsClient() {
                         className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-black text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                       >
                         <Trash2 className="h-4 w-4" />
-                        {deletingId === item.id ? "Siliniyor..." : "Sil"}
+                        {deletingId === item.id ? "Gizleniyor..." : "Listeden gizle"}
                       </button>
                     </div>
                   )}
@@ -414,6 +448,46 @@ export default function OwnerNotificationsClient() {
           </div>
         </div>
       </section>
+
+      <details className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_70px_rgba(15,23,42,0.08)] sm:p-8">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3">
+          <div>
+            <h2 className="text-2xl font-black text-slate-950">Gizlenen bildirimler</h2>
+            <p className="mt-1 text-sm font-medium text-slate-500">
+              {hiddenNotifications.length} bildirim gizli. Gerekirse tekrar yayınlananlar listesine alabilirsin.
+            </p>
+          </div>
+          <span className="rounded-2xl bg-slate-950 px-4 py-2 text-xs font-black text-white">Aç/Kapat</span>
+        </summary>
+
+        <div className="mt-6 grid gap-3">
+          {hiddenNotifications.length ? (
+            hiddenNotifications.map((item) => (
+              <div key={item.id} className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <div className="text-lg font-black text-slate-950">{item.title}</div>
+                    <p className="mt-1 text-sm font-medium leading-6 text-slate-600">{item.message}</p>
+                    <div className="mt-2 text-xs font-bold text-slate-400">{formatDate(item.publishedAt)}</div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRestore(item)}
+                    disabled={restoringId === item.id}
+                    className="rounded-2xl bg-slate-950 px-4 py-2 text-xs font-black text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {restoringId === item.id ? "Alınıyor..." : "Geri al"}
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm font-bold text-slate-500">
+              Gizlenen bildirim yok.
+            </div>
+          )}
+        </div>
+      </details>
     </div>
   )
 }

@@ -1,28 +1,20 @@
 "use client"
 
+import type { ChangeEvent, FormEvent } from "react"
+import { useCallback, useEffect, useState } from "react"
 import Link from "next/link"
-import type { FormEvent } from "react"
-import { useCallback, useEffect, useMemo, useState } from "react"
-import {
-  BookOpen,
-  CheckCircle2,
-  Database,
-  ExternalLink,
-  Film,
-  Lock,
-  Plus,
-  RefreshCw,
-  ShieldCheck,
-} from "lucide-react"
+import { Clock3, Database, Film, HardDrive, Plus, RefreshCw, UploadCloud } from "lucide-react"
+import { supabase } from "@/lib/supabase/client"
 
 type EducationVideoItem = {
   id: string
   slug: string
   title: string | null
-  requiredPlan: string | null
   provider: string
   providerStatus: string
   playbackPolicy: string
+  isActive?: boolean
+  storagePath?: string | null
 }
 
 type EducationVideoListResponse = {
@@ -37,6 +29,16 @@ type EducationVideoCreateResponse = {
   ok: boolean
   error?: string
   item?: EducationVideoItem
+}
+
+type EducationVideoUploadResponse = {
+  ok: boolean
+  error?: string
+  bucket?: string
+  path?: string
+  token?: string
+  signedUrl?: string
+  maxBytes?: number
 }
 
 type EducationVideoFormState = {
@@ -54,13 +56,21 @@ type EducationVideoFormState = {
   isActive: boolean
 }
 
-const planOptions = [
-  { value: "", label: "Tüm eğitim erişimi" },
-  { value: "student", label: "Öğrenci paketi" },
-  { value: "graduate", label: "Mezun paketi" },
-  { value: "professional", label: "Profesyonel paket" },
-  { value: "enterprise", label: "Kurumsal paket" },
-]
+type UploadProgressState = {
+  percent: number
+  loadedBytes: number
+  totalBytes: number
+  speedBytesPerSecond: number
+}
+
+const MAX_CLIENT_VIDEO_UPLOAD_BYTES = 8 * 1024 * 1024 * 1024
+const allowedVideoExtensions = new Set(["mp4", "mov", "webm", "m4v"])
+const mimeTypeByExtension: Record<string, string> = {
+  mp4: "video/mp4",
+  mov: "video/quicktime",
+  webm: "video/webm",
+  m4v: "video/x-m4v",
+}
 
 function buildInitialFormState(): EducationVideoFormState {
   return {
@@ -79,15 +89,6 @@ function buildInitialFormState(): EducationVideoFormState {
   }
 }
 
-function formatPlan(value?: string | null) {
-  if (!value) return "Tüm eğitim erişimi"
-  if (value === "student") return "Öğrenci paketi"
-  if (value === "graduate") return "Mezun paketi"
-  if (value === "professional") return "Profesyonel paket"
-  if (value === "enterprise") return "Kurumsal paket"
-  return value
-}
-
 function formatStatus(value: string) {
   if (value === "ready") return "Hazır"
   if (value === "processing") return "İşleniyor"
@@ -95,37 +96,127 @@ function formatStatus(value: string) {
   return "Taslak"
 }
 
-function formatPlayback(value: string) {
-  if (value === "signed_embed") return "Signed Embed"
-  if (value === "signed_hls") return "Signed HLS"
-  return "Signed URL"
+function formatBytes(value: number) {
+  if (!Number.isFinite(value) || value <= 0) return "0 MB"
+  const units = ["B", "KB", "MB", "GB"]
+  let nextValue = value
+  let unitIndex = 0
+  while (nextValue >= 1024 && unitIndex < units.length - 1) {
+    nextValue /= 1024
+    unitIndex += 1
+  }
+  return `${nextValue >= 10 ? nextValue.toFixed(0) : nextValue.toFixed(1)} ${units[unitIndex]}`
+}
+
+function formatUploadSpeed(value: number) {
+  if (!Number.isFinite(value) || value <= 0) return "hesaplanıyor"
+  return `${formatBytes(value)}/sn`
 }
 
 function formatCreateError(error?: string) {
   if (error === "video_manage_forbidden") return "Bu alan yalnızca owner yetkisiyle kullanılabilir."
   if (error === "unconfirmed_email") return "E-posta doğrulaması tamamlanmadan eğitim kaydı eklenemez."
-  if (error === "video_slug_invalid") return "Slug en az 3 karakter olmalı; küçük harf, rakam ve tire kullanın."
-  if (error === "required_plan_invalid") return "Gerekli paket geçerli değil."
-  if (error === "video_provider_invalid") return "Provider seçimi geçerli değil."
-  if (error === "video_provider_status_invalid") return "Durum seçimi geçerli değil."
-  if (error === "video_playback_policy_invalid") return "Playback seçimi geçerli değil."
+  if (error === "video_slug_invalid") return "Eğitim adı en az 3 karakter olmalı."
+  if (error === "required_plan_invalid") return "Video ayarı otomatik belirlenemedi. Sayfayı yenileyip tekrar deneyin."
+  if (error === "video_provider_invalid") return "Video ayarı oluşturulamadı. Sayfayı yenileyip tekrar deneyin."
+  if (error === "video_provider_status_invalid") return "Video durumu oluşturulamadı. Sayfayı yenileyip tekrar deneyin."
+  if (error === "video_playback_policy_invalid") return "Video oynatma ayarı oluşturulamadı. Sayfayı yenileyip tekrar deneyin."
   if (error === "storage_path_invalid") return "Video yolu geçerli değil. Başında / olmadan klasör/dosya yolu girin."
-  if (error === "video_storage_path_required") return "Supabase için video path veya HLS manifest path zorunlu."
-  if (error === "video_provider_ids_required") return "Bunny için library ve asset bilgileri zorunlu."
+  if (error === "video_storage_path_required") return "Video dosyası bilgisi zorunlu."
+  if (error === "video_provider_ids_required") return "Video kaydı için gerekli bilgiler eksik."
   if (error === "server_controlled_fields_present") return "Sunucuya ait alanlar gönderilemez."
-  if (error === "video_slug_conflict") return "Bu slug ile kayıt zaten var."
-  if (error === "video_setup_required") return "Eğitim video tablosu Supabase tarafında henüz hazır değil."
+  if (error === "video_slug_conflict") return "Bu eğitim adıyla kayıt zaten var. Başlığı biraz değiştirin."
+  if (error === "video_setup_required") return "Eğitim video altyapısı henüz hazır değil."
   if (error === "video_create_failed") return "Kayıt oluşturulamadı."
   return error || "Kayıt oluşturulamadı."
+}
+
+function formatUploadError(error?: string) {
+  if (error === "video_upload_forbidden") return "Video yükleme yalnızca owner yetkisiyle yapılabilir."
+  if (error === "video_upload_type_invalid") return "Yalnızca MP4, MOV, M4V veya WebM video yükleyin."
+  if (error === "education_video_bucket_missing") return "Supabase tarafında education-videos private bucket hazır değil."
+  if (error === "video_upload_prepare_failed") return "Video yükleme izni oluşturulamadı."
+  if (error === "Too many requests") return "Kısa sürede çok fazla yükleme denemesi yapıldı. Biraz bekleyin."
+  return error || "Video yüklenemedi."
+}
+
+function inferVideoContentType(file: File) {
+  if (file.type.startsWith("video/")) return file.type
+  const extension = file.name.split(".").pop()?.toLowerCase() || ""
+  return mimeTypeByExtension[extension] || file.type
+}
+
+function isAllowedVideoFile(file: File) {
+  if (file.type.startsWith("video/")) return true
+  const extension = file.name.split(".").pop()?.toLowerCase() || ""
+  return allowedVideoExtensions.has(extension)
+}
+
+function uploadSignedUrlWithProgress(params: {
+  signedUrl: string
+  file: File
+  onProgress: (progress: UploadProgressState) => void
+}) {
+  return new Promise<void>((resolve, reject) => {
+    const startedAt = Date.now()
+    const xhr = new XMLHttpRequest()
+    const body = new FormData()
+    body.append("cacheControl", "3600")
+    body.append("", params.file)
+
+    xhr.open("PUT", params.signedUrl)
+    xhr.setRequestHeader("x-upsert", "false")
+
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    if (anonKey) {
+      xhr.setRequestHeader("apikey", anonKey)
+      xhr.setRequestHeader("Authorization", `Bearer ${anonKey}`)
+    }
+
+    xhr.upload.onprogress = (event) => {
+      if (!event.lengthComputable) return
+      const elapsedSeconds = Math.max((Date.now() - startedAt) / 1000, 0.1)
+      params.onProgress({
+        percent: Math.min(99, Math.round((event.loaded / event.total) * 100)),
+        loadedBytes: event.loaded,
+        totalBytes: event.total,
+        speedBytesPerSecond: event.loaded / elapsedSeconds,
+      })
+    }
+
+    xhr.onload = () => {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        params.onProgress({
+          percent: 100,
+          loadedBytes: params.file.size,
+          totalBytes: params.file.size,
+          speedBytesPerSecond: params.file.size / Math.max((Date.now() - startedAt) / 1000, 0.1),
+        })
+        resolve()
+        return
+      }
+
+      reject(new Error("Video private storage'a yüklenemedi. Bağlantıyı kontrol edip tekrar deneyin."))
+    }
+
+    xhr.onerror = () => {
+      reject(new Error("Video yükleme sırasında bağlantı hatası oluştu."))
+    }
+
+    xhr.send(body)
+  })
 }
 
 export default function OwnerEducationClient() {
   const [form, setForm] = useState<EducationVideoFormState>(() => buildInitialFormState())
   const [items, setItems] = useState<EducationVideoItem[]>([])
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
   const [notice, setNotice] = useState("")
+  const [uploadNotice, setUploadNotice] = useState("")
+  const [uploadProgress, setUploadProgress] = useState<UploadProgressState | null>(null)
   const [setupRequired, setSetupRequired] = useState(false)
 
   const loadVideos = useCallback(async () => {
@@ -133,7 +224,7 @@ export default function OwnerEducationClient() {
     setError("")
 
     try {
-      const response = await fetch("/api/education/videos", { cache: "no-store" })
+      const response = await fetch("/api/education/videos?scope=manage", { cache: "no-store" })
       const json = (await response.json()) as EducationVideoListResponse
 
       if (!response.ok || !json.ok) {
@@ -156,19 +247,6 @@ export default function OwnerEducationClient() {
     void loadVideos()
   }, [loadVideos])
 
-  const stats = useMemo(() => {
-    const ready = items.filter((item) => item.providerStatus === "ready").length
-    const processing = items.filter(
-      (item) => item.providerStatus === "draft" || item.providerStatus === "processing",
-    ).length
-
-    return {
-      total: items.length,
-      ready,
-      processing,
-    }
-  }, [items])
-
   const updateForm = <K extends keyof EducationVideoFormState>(
     key: K,
     value: EducationVideoFormState[K],
@@ -176,20 +254,132 @@ export default function OwnerEducationClient() {
     setForm((current) => ({ ...current, [key]: value }))
   }
 
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0] || null
+    setError("")
+    setNotice("")
+    setUploadNotice("")
+    setUploadProgress(null)
+
+    if (!file) {
+      setSelectedFile(null)
+      return
+    }
+
+    if (!isAllowedVideoFile(file)) {
+      setSelectedFile(null)
+      setError("Yalnızca MP4, MOV, M4V veya WebM video dosyası seçin.")
+      return
+    }
+
+    if (file.size > MAX_CLIENT_VIDEO_UPLOAD_BYTES) {
+      setSelectedFile(null)
+      setError("Bu video 8 GB sınırını aşıyor. Büyük dosyaları Bunny Stream aşamasında yüklemek daha doğru olur.")
+      return
+    }
+
+    setSelectedFile(file)
+  }
+
+  async function prepareAndUploadVideo(file: File) {
+    setUploadProgress(null)
+    setUploadNotice("Video için güvenli yükleme izni hazırlanıyor.")
+    const contentType = inferVideoContentType(file)
+    const prepareResponse = await fetch("/api/education/videos/upload", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-dna-request": "same-origin",
+      },
+      body: JSON.stringify({
+        fileName: file.name,
+        contentType,
+        fileSize: file.size,
+      }),
+    })
+
+    const prepareJson = (await prepareResponse.json()) as EducationVideoUploadResponse
+    if (!prepareResponse.ok || !prepareJson.ok || !prepareJson.bucket || !prepareJson.path || !prepareJson.token) {
+      throw new Error(formatUploadError(prepareJson.error))
+    }
+
+    setUploadNotice(`Video doğrudan private storage'a yükleniyor. Dosya boyutu: ${formatBytes(file.size)}. Bu sırada sayfayı kapatmayın.`)
+    if (prepareJson.signedUrl) {
+      await uploadSignedUrlWithProgress({
+        signedUrl: prepareJson.signedUrl,
+        file,
+        onProgress: setUploadProgress,
+      })
+    } else {
+      const { error: uploadError } = await supabase.storage
+        .from(prepareJson.bucket)
+        .uploadToSignedUrl(prepareJson.path, prepareJson.token, file, {
+          contentType,
+          cacheControl: "3600",
+        })
+
+      if (uploadError) {
+        throw new Error("Video private storage'a yüklenemedi. Bağlantıyı kontrol edip tekrar deneyin.")
+      }
+      setUploadProgress({
+        percent: 100,
+        loadedBytes: file.size,
+        totalBytes: file.size,
+        speedBytesPerSecond: 0,
+      })
+    }
+
+    return {
+      bucket: prepareJson.bucket,
+      path: prepareJson.path,
+    }
+  }
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setSubmitting(true)
     setError("")
     setNotice("")
+    setUploadProgress(null)
 
     try {
+      let storageBucket = form.storageBucket || "education-videos"
+      let storagePath = form.storagePath.trim()
+
+      if (selectedFile) {
+        const uploaded = await prepareAndUploadVideo(selectedFile)
+        storageBucket = uploaded.bucket
+        storagePath = uploaded.path
+      }
+
+      if (!storagePath) {
+        setError("Önce video dosyası seçin veya hazır private storage dosya yolunu yazın.")
+        setSubmitting(false)
+        return
+      }
+
+      setUploadNotice("Video kaydı terapist eğitim kütüphanesine bağlanıyor.")
+      const payload: EducationVideoFormState = {
+        ...form,
+        slug: "",
+        requiredPlan: "",
+        provider: "supabase",
+        providerStatus: form.isActive ? "ready" : "draft",
+        playbackPolicy: "signed_url",
+        storageBucket,
+        storagePath,
+        hlsManifestPath: "",
+        providerAssetId: "",
+        providerLibraryId: "",
+      }
+
       const response = await fetch("/api/education/videos", {
         method: "POST",
         headers: {
           "content-type": "application/json",
           "x-dna-request": "same-origin",
         },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       })
       const json = (await response.json()) as EducationVideoCreateResponse
 
@@ -199,101 +389,24 @@ export default function OwnerEducationClient() {
         return
       }
 
-      setNotice("Eğitim kaydı oluşturuldu. Aktifse terapist kütüphanesinde görünecek.")
+      setNotice("Eğitim kaydı oluşturuldu. Aktifse terapist panelindeki Eğitimler alanında artık görünecek.")
+      setUploadNotice("")
+      setUploadProgress(null)
+      setSelectedFile(null)
       setForm(buildInitialFormState())
       setSubmitting(false)
       await loadVideos()
-    } catch {
-      setError("Kayıt oluşturulamadı.")
+    } catch (uploadError) {
+      setError(uploadError instanceof Error ? uploadError.message : "Kayıt oluşturulamadı.")
       setSubmitting(false)
     }
   }
 
   return (
     <div className="space-y-8">
-      <section className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-[0_24px_70px_rgba(15,23,42,0.08)]">
-        <div className="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="p-6 sm:p-8 lg:p-10">
-            <div className="inline-flex items-center gap-2 rounded-full border border-blue-100 bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.24em] text-blue-700 shadow-sm">
-              <span className="h-2 w-2 rounded-full bg-gradient-to-br from-cyan-400 to-violet-600" />
-              Eğitim Yönetimi
-            </div>
-            <h1 className="mt-6 max-w-3xl text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
-              Eğitim kayıtlarını ayrı owner panelinden yönetin.
-            </h1>
-            <p className="mt-5 max-w-2xl text-base font-semibold leading-8 text-slate-600">
-              Buradan eklenen aktif yayınlar terapistlerin eğitim kütüphanesinde sıra sıra görünür.
-              Terapist tarafı izleme, erişim ve güvenli oynatma deneyimine odaklı kalır.
-            </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Link
-                href="/education"
-                className="inline-flex items-center gap-2 rounded-2xl bg-slate-950 px-5 py-3 text-sm font-black text-white shadow-[0_16px_40px_rgba(15,23,42,0.2)] transition hover:bg-slate-800"
-              >
-                Terapist görünümünü aç
-                <ExternalLink className="h-4 w-4" />
-              </Link>
-              <button
-                type="button"
-                onClick={() => void loadVideos()}
-                className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:bg-slate-50"
-              >
-                <RefreshCw className="h-4 w-4" />
-                Kayıtları yenile
-              </button>
-            </div>
-          </div>
-
-          <div className="relative min-h-[320px] border-t border-slate-100 bg-[radial-gradient(circle_at_65%_32%,rgba(34,211,238,0.22),transparent_34%),radial-gradient(circle_at_35%_68%,rgba(124,58,237,0.2),transparent_34%),linear-gradient(135deg,#f8fbff,#eef8ff)] p-6 sm:p-8 lg:border-l lg:border-t-0">
-            <div className="absolute inset-8 rounded-[2rem] border border-white/70 bg-white/45 backdrop-blur-sm" />
-            <div className="relative grid gap-4">
-              <div className="rounded-[1.6rem] border border-white/80 bg-white/86 p-5 shadow-[0_18px_45px_rgba(37,99,235,0.12)]">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 via-blue-600 to-violet-600 text-white shadow-lg">
-                    <BookOpen className="h-7 w-7" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-black uppercase tracking-[0.2em] text-blue-600">
-                      Terapist kütüphanesi
-                    </div>
-                    <div className="mt-1 text-xl font-black text-slate-950">
-                      Sıralı eğitim deneyimi
-                    </div>
-                  </div>
-                </div>
-                <p className="mt-4 text-sm font-semibold leading-6 text-slate-600">
-                  Bir sonraki adımda bu alan Udemy/Khan Academy mantığında modüller,
-                  ilerleme ve ders detaylarıyla genişletilebilir.
-                </p>
-              </div>
-              <div className="grid gap-3 sm:grid-cols-3">
-                <div className="rounded-2xl bg-white/88 p-4 shadow-sm">
-                  <div className="text-2xl font-black text-slate-950">{stats.total}</div>
-                  <div className="mt-1 text-xs font-black uppercase tracking-[0.14em] text-slate-400">
-                    Aktif kayıt
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-white/88 p-4 shadow-sm">
-                  <div className="text-2xl font-black text-cyan-700">{stats.ready}</div>
-                  <div className="mt-1 text-xs font-black uppercase tracking-[0.14em] text-slate-400">
-                    Hazır
-                  </div>
-                </div>
-                <div className="rounded-2xl bg-white/88 p-4 shadow-sm">
-                  <div className="text-2xl font-black text-blue-600">{stats.processing}</div>
-                  <div className="mt-1 text-xs font-black uppercase tracking-[0.14em] text-slate-400">
-                    Taslak
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {setupRequired ? (
         <div className="rounded-[1.5rem] border border-violet-200 bg-violet-50 px-5 py-4 text-sm font-bold text-violet-900">
-          Eğitim video tablosu Supabase tarafında hazır görünmüyor. Tablo kurulmadan kayıt eklenemez.
+          Eğitim video altyapısı hazır görünmüyor. Altyapı kurulmadan kayıt eklenemez.
         </div>
       ) : null}
 
@@ -321,17 +434,15 @@ export default function OwnerEducationClient() {
               </div>
               <h2 className="mt-4 text-3xl font-black text-slate-950">Yeni eğitim kaydı</h2>
               <p className="mt-2 max-w-2xl text-sm font-semibold leading-6 text-slate-500">
-                Dosyayı storage veya video sağlayıcıya koyduktan sonra burada yayın kaydını oluşturun.
+                Videoyu buradan seçince dosya sunucudan geçmeden doğrudan private Supabase Storage&apos;a yüklenir.
+                Kayıt tamamlanınca aktif eğitim otomatik olarak terapist panelindeki Eğitimler alanında görünür.
               </p>
             </div>
-            <span className="rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-slate-500">
-              Owner/Admin
-            </span>
           </div>
 
-          <div className="mt-7 grid gap-5 lg:grid-cols-2">
+          <div className="mt-7 grid gap-5">
             <label className="grid gap-2 text-sm font-black text-slate-700">
-              Başlık
+              Eğitim adı
               <input
                 value={form.title}
                 onChange={(event) => updateForm("title", event.target.value)}
@@ -339,123 +450,80 @@ export default function OwnerEducationClient() {
                 className="h-14 rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
               />
             </label>
+
+            <div className="rounded-[1.5rem] border border-dashed border-blue-200 bg-blue-50/50 p-5">
+              <label className="flex cursor-pointer flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex items-start gap-4">
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-blue-700 shadow-sm">
+                    <UploadCloud className="h-6 w-6" />
+                  </div>
+                  <div>
+                    <div className="text-base font-black text-slate-950">Video dosyası seç</div>
+                    <p className="mt-1 text-sm font-semibold leading-6 text-slate-500">
+                      MP4, MOV, M4V veya WebM. Büyük videolar API üzerinden değil, doğrudan private storage&apos;a gider.
+                    </p>
+                  </div>
+                </div>
+                <span className="rounded-2xl bg-white px-4 py-3 text-sm font-black text-blue-700 shadow-sm">
+                  Dosya seç
+                </span>
+                <input
+                  type="file"
+                  accept="video/mp4,video/quicktime,video/webm,video/x-m4v"
+                  onChange={handleFileChange}
+                  className="sr-only"
+                />
+              </label>
+
+              {selectedFile ? (
+                <div className="mt-4 grid gap-2 rounded-2xl bg-white px-4 py-3 text-sm font-bold text-slate-700 shadow-sm">
+                  <div className="flex items-center gap-2">
+                    <HardDrive className="h-4 w-4 text-blue-600" />
+                    <span className="break-all">{selectedFile.name}</span>
+                  </div>
+                  <div className="text-xs font-semibold text-slate-500">Boyut: {formatBytes(selectedFile.size)}</div>
+                </div>
+              ) : null}
+            </div>
+
             <label className="grid gap-2 text-sm font-black text-slate-700">
-              Slug
+              Hazır dosya yolu
               <input
-                value={form.slug}
-                onChange={(event) => updateForm("slug", event.target.value)}
-                placeholder="regulasyon-temelleri-1"
+                value={form.storagePath}
+                onChange={(event) => updateForm("storagePath", event.target.value)}
+                placeholder="therapist-egitimleri/modul-1.mp4"
                 className="h-14 rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
               />
+              <span className="text-xs font-semibold leading-5 text-slate-500">
+                Sadece video daha önce private bucket&apos;a yüklendiyse kullanın. Dosya seçtiyseniz burayı boş bırakabilirsiniz.
+              </span>
             </label>
-            <label className="grid gap-2 text-sm font-black text-slate-700">
-              Gerekli Paket
-              <select
-                value={form.requiredPlan}
-                onChange={(event) => updateForm("requiredPlan", event.target.value)}
-                className="h-14 rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-              >
-                {planOptions.map((option) => (
-                  <option key={option.value || "all"} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="grid gap-2 text-sm font-black text-slate-700">
-              Provider
-              <select
-                value={form.provider}
-                onChange={(event) => updateForm("provider", event.target.value as EducationVideoFormState["provider"])}
-                className="h-14 rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-              >
-                <option value="supabase">Supabase Storage</option>
-                <option value="bunny">Bunny Stream</option>
-              </select>
-            </label>
-            <label className="grid gap-2 text-sm font-black text-slate-700">
-              Durum
-              <select
-                value={form.providerStatus}
-                onChange={(event) =>
-                  updateForm("providerStatus", event.target.value as EducationVideoFormState["providerStatus"])
-                }
-                className="h-14 rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-              >
-                <option value="draft">Taslak</option>
-                <option value="processing">İşleniyor</option>
-                <option value="ready">Hazır</option>
-                <option value="failed">Hata</option>
-              </select>
-            </label>
-            <label className="grid gap-2 text-sm font-black text-slate-700">
-              Playback
-              <select
-                value={form.playbackPolicy}
-                onChange={(event) =>
-                  updateForm("playbackPolicy", event.target.value as EducationVideoFormState["playbackPolicy"])
-                }
-                className="h-14 rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-900 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-              >
-                <option value="signed_url">Signed URL</option>
-                <option value="signed_embed">Signed Embed</option>
-                <option value="signed_hls">Signed HLS</option>
-              </select>
-            </label>
-
-            {form.provider === "supabase" ? (
-              <>
-                <label className="grid gap-2 text-sm font-black text-slate-700">
-                  Bucket
-                  <input
-                    value={form.storageBucket}
-                    onChange={(event) => updateForm("storageBucket", event.target.value)}
-                    placeholder="education-videos"
-                    className="h-14 rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-                  />
-                </label>
-                <label className="grid gap-2 text-sm font-black text-slate-700">
-                  Video Path
-                  <input
-                    value={form.storagePath}
-                    onChange={(event) => updateForm("storagePath", event.target.value)}
-                    placeholder="therapist-egitimleri/modul-1.mp4"
-                    className="h-14 rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-                  />
-                </label>
-                <label className="grid gap-2 text-sm font-black text-slate-700 lg:col-span-2">
-                  HLS Manifest Path
-                  <input
-                    value={form.hlsManifestPath}
-                    onChange={(event) => updateForm("hlsManifestPath", event.target.value)}
-                    placeholder="therapist-egitimleri/modul-1/playlist.m3u8"
-                    className="h-14 rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-                  />
-                </label>
-              </>
-            ) : (
-              <>
-                <label className="grid gap-2 text-sm font-black text-slate-700">
-                  Bunny Library ID
-                  <input
-                    value={form.providerLibraryId}
-                    onChange={(event) => updateForm("providerLibraryId", event.target.value)}
-                    placeholder="library-id"
-                    className="h-14 rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-                  />
-                </label>
-                <label className="grid gap-2 text-sm font-black text-slate-700">
-                  Bunny Asset ID
-                  <input
-                    value={form.providerAssetId}
-                    onChange={(event) => updateForm("providerAssetId", event.target.value)}
-                    placeholder="video-guid"
-                    className="h-14 rounded-2xl border border-slate-200 bg-white px-4 text-base font-semibold text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
-                  />
-                </label>
-              </>
-            )}
           </div>
+
+          {uploadNotice ? (
+            <div className="mt-5 flex items-start gap-3 rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-bold leading-6 text-slate-700">
+              <Clock3 className="mt-0.5 h-4 w-4 shrink-0 text-blue-600" />
+              <span>{uploadNotice}</span>
+            </div>
+          ) : null}
+
+          {uploadProgress ? (
+            <div className="mt-4 rounded-[1.25rem] border border-blue-100 bg-blue-50 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2 text-sm font-black text-blue-950">
+                <span>Yükleme durumu: %{uploadProgress.percent}</span>
+                <span>{formatUploadSpeed(uploadProgress.speedBytesPerSecond)}</span>
+              </div>
+              <div className="mt-3 h-3 overflow-hidden rounded-full bg-white">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-cyan-500 via-blue-600 to-violet-600 transition-all"
+                  style={{ width: `${uploadProgress.percent}%` }}
+                />
+              </div>
+              <div className="mt-2 text-xs font-bold text-blue-800">
+                {formatBytes(uploadProgress.loadedBytes)} / {formatBytes(uploadProgress.totalBytes)}
+              </div>
+            </div>
+          ) : null}
 
           <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <label className="flex items-center gap-3 text-sm font-black text-slate-700">
@@ -465,7 +533,7 @@ export default function OwnerEducationClient() {
                 onChange={(event) => updateForm("isActive", event.target.checked)}
                 className="h-5 w-5 rounded border-slate-300 text-blue-600 focus:ring-blue-200"
               />
-              Yayında aktif olsun
+              Terapistlere yayınla
             </label>
             <button
               type="submit"
@@ -473,7 +541,7 @@ export default function OwnerEducationClient() {
               className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-950 px-6 py-4 text-sm font-black text-white shadow-[0_18px_45px_rgba(15,23,42,0.22)] transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {submitting ? <RefreshCw className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
-              Kaydı ekle
+              {submitting ? "Yükleniyor" : "Videoyu kaydet ve yayınla"}
             </button>
           </div>
         </form>
@@ -484,9 +552,9 @@ export default function OwnerEducationClient() {
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-cyan-50 text-cyan-700">
                 <Film className="h-7 w-7" />
               </div>
-              <h2 className="mt-4 text-3xl font-black text-slate-950">Aktif yayınlar</h2>
+              <h2 className="mt-4 text-3xl font-black text-slate-950">Eğitim kayıtları</h2>
               <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">
-                Bu liste terapist panelindeki kütüphanede görünen aktif kayıtları gösterir.
+                Aktif kayıtlar terapist panelindeki Eğitimler alanında görünür. Taslak kayıtlar burada kalır.
               </p>
             </div>
             <span className="rounded-full bg-slate-100 px-4 py-2 text-sm font-black text-slate-600">
@@ -504,7 +572,7 @@ export default function OwnerEducationClient() {
             {!loading && items.length === 0 ? (
               <div className="rounded-[1.5rem] border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
                 <Database className="mx-auto h-8 w-8 text-slate-400" />
-                <div className="mt-3 text-sm font-black text-slate-900">Aktif eğitim kaydı yok</div>
+                <div className="mt-3 text-sm font-black text-slate-900">Eğitim kaydı yok</div>
                 <p className="mt-1 text-xs font-semibold leading-5 text-slate-500">
                   İlk aktif kaydı eklediğinizde terapist kütüphanesinde görünür.
                 </p>
@@ -519,49 +587,37 @@ export default function OwnerEducationClient() {
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
                     <div className="truncate text-base font-black text-slate-950">
-                      {item.title || item.slug}
+                      {item.title || "Başlıksız eğitim"}
                     </div>
-                    <div className="mt-1 truncate text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
-                      {item.slug}
+                    <div className="mt-1 text-xs font-bold text-slate-500">
+                      {item.isActive ? "Terapist eğitim kütüphanesinde görünür." : "Taslak olarak saklanıyor."}
                     </div>
                   </div>
-                  <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-black text-cyan-800">
-                    Aktif
+                  <span className={`rounded-full px-3 py-1 text-xs font-black ${
+                    item.isActive ? "bg-cyan-50 text-cyan-800" : "bg-slate-100 text-slate-600"
+                  }`}>
+                    {item.isActive ? "Aktif" : "Taslak"}
                   </span>
                 </div>
-                <div className="mt-4 grid gap-2 text-xs font-bold text-slate-600 sm:grid-cols-2">
-                  <div className="rounded-2xl bg-slate-50 px-3 py-2">{formatPlan(item.requiredPlan)}</div>
-                  <div className="rounded-2xl bg-slate-50 px-3 py-2">{formatStatus(item.providerStatus)}</div>
-                  <div className="rounded-2xl bg-slate-50 px-3 py-2">{item.provider}</div>
-                  <div className="rounded-2xl bg-slate-50 px-3 py-2">{formatPlayback(item.playbackPolicy)}</div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <span className="inline-flex rounded-2xl bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600">
+                    Durum: {formatStatus(item.providerStatus)}
+                  </span>
+                  <span className="inline-flex rounded-2xl bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600">
+                    Sağlayıcı: {item.provider}
+                  </span>
+                  {item.isActive ? (
+                    <Link
+                      href="/education"
+                      className="inline-flex rounded-2xl border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 transition hover:bg-blue-100"
+                    >
+                      Terapist panelinde gör
+                    </Link>
+                  ) : null}
                 </div>
               </div>
             ))}
           </div>
-        </div>
-      </section>
-
-      <section className="grid gap-4 md:grid-cols-3">
-        <div className="rounded-[1.7rem] border border-slate-200 bg-white p-5 shadow-sm">
-          <ShieldCheck className="h-7 w-7 text-blue-600" />
-          <div className="mt-4 text-lg font-black text-slate-950">Erişim kontrollü</div>
-          <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">
-            Kayıtlar paket erişimi, oturum ve cihaz güvenliğiyle birlikte çalışır.
-          </p>
-        </div>
-        <div className="rounded-[1.7rem] border border-slate-200 bg-white p-5 shadow-sm">
-          <Lock className="h-7 w-7 text-violet-600" />
-          <div className="mt-4 text-lg font-black text-slate-950">Güvenli oynatma</div>
-          <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">
-            Signed URL, HLS veya embed akışları aynı video erişim kontrolünden geçer.
-          </p>
-        </div>
-        <div className="rounded-[1.7rem] border border-slate-200 bg-white p-5 shadow-sm">
-          <CheckCircle2 className="h-7 w-7 text-cyan-700" />
-          <div className="mt-4 text-lg font-black text-slate-950">Terapist tarafı sade</div>
-          <p className="mt-2 text-sm font-semibold leading-6 text-slate-500">
-            Terapistler yalnızca yayınlanan eğitimleri görür; yönetim formları owner alanında kalır.
-          </p>
         </div>
       </section>
     </div>

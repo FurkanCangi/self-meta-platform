@@ -76,7 +76,7 @@ export default function Sidebar({ toggle = true }: SidebarProps) {
         <div className="relative border-b border-slate-100 bg-white px-4 py-4">
           <Link
             href="/"
-            className="relative flex h-[126px] items-center justify-center overflow-visible rounded-[28px] border border-cyan-100/80 bg-gradient-to-br from-white via-cyan-50/55 to-violet-50/45 shadow-[0_18px_44px_rgba(37,99,235,0.10)] transition hover:border-blue-100 hover:shadow-[0_22px_52px_rgba(37,99,235,0.14)]"
+            className="dna-sidebar-logo-card relative flex h-[126px] items-center justify-center overflow-visible rounded-[28px] border border-cyan-100/80 bg-gradient-to-br from-white via-cyan-50/55 to-violet-50/45 shadow-[0_18px_44px_rgba(37,99,235,0.10)] transition hover:border-blue-100 hover:shadow-[0_22px_52px_rgba(37,99,235,0.14)]"
             aria-label="DNA Intelligence ana sayfa"
           >
             <BrandLogo variant="panel" />

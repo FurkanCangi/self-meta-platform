@@ -15,6 +15,9 @@ type EducationVideoListItem = {
   provider: string
   providerStatus: string
   playbackPolicy: string
+  isActive?: boolean
+  storageBucket?: string | null
+  storagePath?: string | null
 }
 
 type CreateEducationVideoPayload = {
@@ -57,6 +60,12 @@ const PLAYBACK_POLICIES = new Set(["signed_url", "signed_embed", "signed_hls"])
 function slugify(value: string) {
   return value
     .toLocaleLowerCase("tr-TR")
+    .replace(/ğ/g, "g")
+    .replace(/ü/g, "u")
+    .replace(/ş/g, "s")
+    .replace(/ı/g, "i")
+    .replace(/ö/g, "o")
+    .replace(/ç/g, "c")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "")
     .slice(0, 120)
@@ -133,8 +142,8 @@ function buildInsertPayload(payload: CreateEducationVideoPayload) {
   }
 }
 
-function mapVideoRow(row: Record<string, unknown>): EducationVideoListItem {
-  return {
+function mapVideoRow(row: Record<string, unknown>, includeOwnerFields = false): EducationVideoListItem {
+  const item: EducationVideoListItem = {
     id: String(row.id || ""),
     slug: String(row.slug || ""),
     title: row.title ? String(row.title) : null,
@@ -143,19 +152,39 @@ function mapVideoRow(row: Record<string, unknown>): EducationVideoListItem {
     providerStatus: String(row.provider_status || "draft"),
     playbackPolicy: String(row.playback_policy || "signed_url"),
   }
+
+  if (includeOwnerFields) {
+    item.isActive = Boolean(row.is_active)
+    item.storageBucket = row.storage_bucket ? String(row.storage_bucket) : null
+    item.storagePath = row.storage_path ? String(row.storage_path) : null
+  }
+
+  return item
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const auth = await requireConfirmedUser()
   if (!auth.ok) return auth.response
 
+  const owner = isOwnerAuditEmail(auth.user.email)
+  const manageScope = new URL(request.url).searchParams.get("scope") === "manage"
+
+  if (manageScope && !owner) {
+    return NextResponse.json({ ok: false, error: "video_manage_forbidden" }, { status: 403 })
+  }
+
   const admin = createSupabaseAdminClient()
-  const { data, error } = await admin
+  let query = admin
     .from("education_video_assets")
     .select("*")
-    .eq("is_active", true)
     .order("created_at", { ascending: false })
-    .limit(100)
+    .limit(manageScope ? 200 : 100)
+
+  if (!manageScope) {
+    query = query.eq("is_active", true)
+  }
+
+  const { data, error } = await query
 
   if (error) {
     const message = String(error.message || "")
@@ -168,7 +197,7 @@ export async function GET() {
         ok: true,
         items: [],
         setupRequired: true,
-        canManage: isOwnerAuditEmail(auth.user.email),
+        canManage: owner,
       })
     }
 
@@ -177,9 +206,9 @@ export async function GET() {
 
   return NextResponse.json({
     ok: true,
-    items: (data || []).map((row) => mapVideoRow(row as Record<string, unknown>)),
+    items: (data || []).map((row) => mapVideoRow(row as Record<string, unknown>, manageScope)),
     setupRequired: false,
-    canManage: isOwnerAuditEmail(auth.user.email),
+    canManage: owner,
   })
 }
 

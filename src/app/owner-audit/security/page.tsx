@@ -357,6 +357,45 @@ export default async function OwnerSecurityPage({ searchParams }: { searchParams
       <details className="rounded-3xl border border-slate-200 bg-white shadow-sm">
         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-5">
           <div>
+            <div className="text-lg font-semibold text-slate-950">Listeden gizlenen güvenlik kayıtları</div>
+            <div className="mt-1 text-sm text-slate-500">
+              {dashboard.hiddenUsers.length} kullanıcı gizli. İstersen aynı bölüme geri alabilirsin.
+            </div>
+          </div>
+          <span className="rounded-2xl bg-slate-950 px-4 py-2 text-xs font-semibold text-white">Aç/Kapat</span>
+        </summary>
+        <div className="border-t border-slate-100 p-5">
+          {dashboard.hiddenUsers.length ? (
+            <div className="grid gap-3">
+              {dashboard.hiddenUsers.map((hiddenUser) => (
+                <div
+                  key={hiddenUser.userId}
+                  className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:flex-row md:items-center md:justify-between"
+                >
+                  <div>
+                    <div className="font-semibold text-slate-950">{hiddenUser.fullName}</div>
+                    <div className="mt-1 text-sm text-slate-500">{hiddenUser.email}</div>
+                  </div>
+                  <OwnerSecurityActionButton
+                    targetUserId={hiddenUser.userId}
+                    action="restore_to_security"
+                    label="Listeye geri al"
+                    variant="dark"
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
+              Gizlenen güvenlik kaydı yok.
+            </div>
+          )}
+        </div>
+      </details>
+
+      <details className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-5">
+          <div>
             <div className="text-lg font-semibold text-slate-950">Son Güvenlik Olayları</div>
             <div className="mt-1 text-sm text-slate-500">{dashboard.events.length} olay. Liste kapalı gelir; gerektiğinde açıp temizleyebilirsin.</div>
           </div>

@@ -2,11 +2,12 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { assertOwnerAuditAccess } from "@/lib/owner/ownerAccess"
 import {
-  fetchOwnerMemberSummaries,
+  fetchOwnerMemberSummaryGroups,
   isOwnerAuditConfigured,
   type OwnerMemberSummary,
 } from "@/lib/owner/ownerAudit"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { OwnerMemberActionButton } from "./OwnerMemberActionButton"
 
 type SearchParams = Promise<Record<string, string | string[] | undefined>>
 
@@ -68,7 +69,7 @@ function StatCard({
   )
 }
 
-function MemberRow({ row }: { row: OwnerMemberSummary }) {
+function MemberRow({ row, hidden = false }: { row: OwnerMemberSummary; hidden?: boolean }) {
   return (
     <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
       <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
@@ -135,6 +136,20 @@ function MemberRow({ row }: { row: OwnerMemberSummary }) {
         >
           Üyenin detayına gir
         </Link>
+        {hidden ? (
+          <OwnerMemberActionButton
+            targetUserId={row.ownerId}
+            action="restore_member_to_owner"
+            label="Listeye geri al"
+            variant="dark"
+          />
+        ) : (
+          <OwnerMemberActionButton
+            targetUserId={row.ownerId}
+            action="hide_member_from_owner"
+            label="Listeden gizle"
+          />
+        )}
       </div>
     </div>
   )
@@ -160,11 +175,14 @@ export default async function OwnerAuditPage({
   const q = pickQueryValue(params.q)
 
   let rows: OwnerMemberSummary[] = []
+  let hiddenRows: OwnerMemberSummary[] = []
   let loadError = ""
 
   if (isOwnerAuditConfigured()) {
     try {
-      rows = await fetchOwnerMemberSummaries(q)
+      const groups = await fetchOwnerMemberSummaryGroups(q)
+      rows = groups.visible
+      hiddenRows = groups.hidden
     } catch (error) {
       loadError = error instanceof Error ? error.message : "Uye verileri yuklenemedi."
     }
@@ -279,6 +297,27 @@ export default async function OwnerAuditPage({
           </div>
         )}
       </div>
+
+      <details className="rounded-3xl border border-slate-200 bg-white shadow-sm">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-5">
+          <div>
+            <div className="text-lg font-semibold text-slate-950">Listeden gizlenen üyeler</div>
+            <div className="mt-1 text-sm text-slate-500">
+              {hiddenRows.length} üye gizli. Buradan tekrar ana listeye alabilirsin.
+            </div>
+          </div>
+          <span className="rounded-2xl bg-slate-950 px-4 py-2 text-xs font-semibold text-white">Aç/Kapat</span>
+        </summary>
+        <div className="grid gap-4 border-t border-slate-100 p-5">
+          {hiddenRows.length ? (
+            hiddenRows.map((row) => <MemberRow key={row.ownerId} row={row} hidden />)
+          ) : (
+            <div className="rounded-[2rem] border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-sm text-slate-500">
+              Gizlenen üye yok.
+            </div>
+          )}
+        </div>
+      </details>
     </div>
   )
 }

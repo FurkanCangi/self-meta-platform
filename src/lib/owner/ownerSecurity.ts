@@ -23,6 +23,7 @@ export type OwnerSecurityAction =
   | "clear_risk"
   | "clear_event_type"
   | "hide_from_security"
+  | "restore_to_security"
   | "temporary_lock"
   | "clear_lock"
   | "suspend"
@@ -93,6 +94,7 @@ export type OwnerSecurityDashboard = {
     apiRateLimits24h: number
   }
   users: OwnerSecurityUser[]
+  hiddenUsers: OwnerSecurityUser[]
   events: OwnerSecurityEvent[]
   setupIssues: string[]
 }

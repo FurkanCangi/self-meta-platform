@@ -11,7 +11,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 const ownerMemberActionSchema = z
   .object({
     targetUserId: z.string().uuid(),
-    action: z.literal("delete_member_account"),
+    action: z.enum(["delete_member_account", "hide_member_from_owner", "restore_member_to_owner"]),
     reason: z.string().trim().min(3).max(500),
   })
   .passthrough()

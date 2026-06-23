@@ -3,7 +3,7 @@ import "server-only"
 import { isOwnerAuditEmail } from "@/lib/owner/ownerAccess"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
-export type OwnerMemberAction = "delete_member_account"
+export type OwnerMemberAction = "delete_member_account" | "hide_member_from_owner" | "restore_member_to_owner"
 
 export async function applyOwnerMemberAction(params: {
   actorUserId: string
@@ -16,11 +16,48 @@ export async function applyOwnerMemberAction(params: {
   const reason = String(params.reason || "").trim()
 
   if (!actorUserId || !targetUserId) return { ok: false as const, error: "user_id_required" }
-  if (actorUserId === targetUserId) return { ok: false as const, error: "owner_self_delete_blocked" }
-  if (params.action !== "delete_member_account") return { ok: false as const, error: "action_invalid" }
+  if (!["delete_member_account", "hide_member_from_owner", "restore_member_to_owner"].includes(params.action)) {
+    return { ok: false as const, error: "action_invalid" }
+  }
 
   const admin = createSupabaseAdminClient()
   const timestamp = new Date().toISOString()
+
+  if (params.action === "hide_member_from_owner" || params.action === "restore_member_to_owner") {
+    const metadata = {
+      owner_action: params.action,
+      actor_user_id: actorUserId,
+      target_user_id: targetUserId,
+      reason,
+      changed_at: timestamp,
+    }
+
+    const { error } = await admin.from("account_security_events").insert({
+      user_id: targetUserId,
+      event_type: params.action === "hide_member_from_owner" ? "owner_member_panel_hidden" : "owner_member_panel_restored",
+      created_at: timestamp,
+      metadata,
+    })
+    if (error) {
+      return {
+        ok: false as const,
+        error: params.action === "hide_member_from_owner" ? "member_hide_failed" : "member_restore_failed",
+      }
+    }
+
+    await admin.from("billing_audit_events").insert({
+      actor_user_id: actorUserId,
+      target_user_id: targetUserId,
+      action: params.action,
+      provider: "owner_panel",
+      created_at: timestamp,
+      metadata,
+    })
+
+    return { ok: true as const }
+  }
+
+  if (actorUserId === targetUserId) return { ok: false as const, error: "owner_self_delete_blocked" }
   const { data: targetUser, error: lookupError } = await admin.auth.admin.getUserById(targetUserId)
 
   if (lookupError || !targetUser?.user) {

@@ -79,6 +79,10 @@ export async function POST(request: Request) {
       if (parsed.data.status === "closed") update.closed_at = now
     }
     if (parsed.data.ownerNote !== undefined) update.owner_note = parsed.data.ownerNote || null
+    if (parsed.data.status === "resolved" && parsed.data.resolutionMessage === undefined && parsed.data.publicReply) {
+      update.resolution_message = parsed.data.publicReply
+      update.last_owner_message_at = now
+    }
     if (parsed.data.resolutionMessage !== undefined) {
       update.resolution_message = parsed.data.resolutionMessage || null
       if (parsed.data.resolutionMessage) {

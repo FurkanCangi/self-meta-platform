@@ -46,6 +46,11 @@ export type OwnerMemberSummary = {
   latestReportAt: string | null
 }
 
+export type OwnerMemberSummaryGroups = {
+  visible: OwnerMemberSummary[]
+  hidden: OwnerMemberSummary[]
+}
+
 export type OwnerClientSnapshot = {
   id: string
   childCode: string
@@ -312,7 +317,7 @@ async function fetchOwnerProductionRows() {
       admin
         .from("account_security_events")
         .select("id, user_id, event_type, created_at, metadata")
-        .in("event_type", ["owner_member_deleted"])
+        .in("event_type", ["owner_member_deleted", "owner_member_panel_hidden", "owner_member_panel_restored"])
         .order("created_at", { ascending: false })
         .limit(5000),
     ])
@@ -467,7 +472,24 @@ function buildOwnerIndex(
   }
 }
 
-export async function fetchOwnerMemberSummaries(search = "") {
+function latestEventTime(events: AccountSecurityEventRow[], userId: string, eventType: string) {
+  return events
+    .filter((row) => row.user_id === userId && row.event_type === eventType)
+    .reduce((latest, row) => Math.max(latest, new Date(row.created_at || "").getTime() || 0), 0)
+}
+
+function filterOwnerMemberSummaries(rows: OwnerMemberSummary[], search = "") {
+  const q = String(search || "").trim().toLowerCase()
+  if (!q) return rows
+
+  return rows.filter((row) =>
+    [row.fullName, row.email, row.ownerId, row.plan, row.role]
+      .map((value) => String(value || "").toLowerCase())
+      .some((value) => value.includes(q))
+  )
+}
+
+export async function fetchOwnerMemberSummaryGroups(search = ""): Promise<OwnerMemberSummaryGroups> {
   const [authUsers, profiles, productionRows, auditRows] = await Promise.all([
     fetchAuthUsers(),
     fetchProfiles(),
@@ -486,14 +508,24 @@ export async function fetchOwnerMemberSummaries(search = "") {
     productionRows.securityEvents
   )
 
-  const q = String(search || "").trim().toLowerCase()
-  if (!q) return memberSummaries
+  const hiddenUserIds = new Set<string>()
+  for (const row of memberSummaries) {
+    const latestHiddenAt = latestEventTime(productionRows.securityEvents, row.ownerId, "owner_member_panel_hidden")
+    const latestRestoredAt = latestEventTime(productionRows.securityEvents, row.ownerId, "owner_member_panel_restored")
+    if (latestHiddenAt > 0 && latestHiddenAt > latestRestoredAt) {
+      hiddenUserIds.add(row.ownerId)
+    }
+  }
 
-  return memberSummaries.filter((row) =>
-    [row.fullName, row.email, row.ownerId, row.plan, row.role]
-      .map((value) => String(value || "").toLowerCase())
-      .some((value) => value.includes(q))
-  )
+  return {
+    visible: filterOwnerMemberSummaries(memberSummaries.filter((row) => !hiddenUserIds.has(row.ownerId)), search),
+    hidden: filterOwnerMemberSummaries(memberSummaries.filter((row) => hiddenUserIds.has(row.ownerId)), search),
+  }
+}
+
+export async function fetchOwnerMemberSummaries(search = "") {
+  const groups = await fetchOwnerMemberSummaryGroups(search)
+  return groups.visible
 }
 
 async function fetchOwnerDataBundle(auditFilters: OwnerAuditFilters = { limit: 50000 }) {

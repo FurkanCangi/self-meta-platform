@@ -24,6 +24,15 @@ const notificationCreateSchema = z.object({
   targetEmails: z.array(z.string().email()).max(30).optional().default([]),
 })
 
+const notificationDeleteSchema = z.object({
+  id: z.string().uuid(),
+})
+
+const notificationRestoreSchema = z.object({
+  id: z.string().uuid(),
+  action: z.enum(["archive", "restore"]),
+})
+
 async function requireOwner() {
   const auth = await requireConfirmedUser()
   if (!auth.ok) return auth
@@ -95,16 +104,18 @@ export async function GET() {
 
     if (error) throw error
 
-    const notifications = ((data || []) as NotificationRow[]).map((row) => ({
+    const allNotifications = ((data || []) as NotificationRow[]).map((row) => ({
       ...mapNotificationRow(row, null),
       status: row.status || "published",
       targetCount: Array.isArray(row.target_user_ids) ? row.target_user_ids.length : 0,
     }))
+    const notifications = allNotifications.filter((row) => row.status !== "archived")
+    const hiddenNotifications = allNotifications.filter((row) => row.status === "archived")
 
-    return NextResponse.json({ ok: true, notifications })
+    return NextResponse.json({ ok: true, notifications, hiddenNotifications })
   } catch (error) {
     if (isMissingNotificationsTable(error)) {
-      return NextResponse.json({ ok: true, notifications: [], setupRequired: true })
+      return NextResponse.json({ ok: true, notifications: [], hiddenNotifications: [], setupRequired: true })
     }
 
     console.error("[owner-notifications] list failed", error)
@@ -171,5 +182,103 @@ export async function POST(request: Request) {
 
     console.error("[owner-notifications] create failed", error)
     return NextResponse.json({ ok: false, error: "Bildirim oluşturulamadı." }, { status: 500 })
+  }
+}
+
+export async function DELETE(request: Request) {
+  const trusted = await requireTrustedMutation(request)
+  if (trusted) return trusted
+
+  const owner = await requireOwner()
+  if (!owner.ok) return owner.response
+
+  const rateLimit = await checkRateLimit({
+    key: `owner-notifications:delete:${owner.user.id}`,
+    limit: 40,
+    windowMs: 60 * 60 * 1000,
+  })
+  if (!rateLimit.ok) return rateLimitResponse(rateLimit.resetAt)
+
+  const parsed = await readJsonWithSchema(request, notificationDeleteSchema)
+  if (!parsed.ok) return parsed.response
+
+  try {
+    const admin = createSupabaseAdminClient()
+    const { data, error } = await admin
+      .from("notifications")
+      .update({ status: "archived" })
+      .eq("id", parsed.data.id)
+      .select("id")
+      .maybeSingle()
+
+    if (error) throw error
+    if (!data) {
+      return NextResponse.json({ ok: false, error: "Bildirim bulunamadı." }, { status: 404 })
+    }
+
+    return NextResponse.json({ ok: true, archivedId: parsed.data.id })
+  } catch (error) {
+    if (isMissingNotificationsTable(error)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Bildirim tablosu hazır değil. sql/notifications.sql dosyasını Supabase SQL editor içinde çalıştırın.",
+          setupRequired: true,
+        },
+        { status: 503 },
+      )
+    }
+
+    console.error("[owner-notifications] archive failed", error)
+    return NextResponse.json({ ok: false, error: "Bildirim gizlenemedi." }, { status: 500 })
+  }
+}
+
+export async function PATCH(request: Request) {
+  const trusted = await requireTrustedMutation(request)
+  if (trusted) return trusted
+
+  const owner = await requireOwner()
+  if (!owner.ok) return owner.response
+
+  const rateLimit = await checkRateLimit({
+    key: `owner-notifications:update:${owner.user.id}`,
+    limit: 60,
+    windowMs: 60 * 60 * 1000,
+  })
+  if (!rateLimit.ok) return rateLimitResponse(rateLimit.resetAt)
+
+  const parsed = await readJsonWithSchema(request, notificationRestoreSchema)
+  if (!parsed.ok) return parsed.response
+
+  try {
+    const admin = createSupabaseAdminClient()
+    const { data, error } = await admin
+      .from("notifications")
+      .update({ status: parsed.data.action === "restore" ? "published" : "archived" })
+      .eq("id", parsed.data.id)
+      .select("id,status")
+      .maybeSingle()
+
+    if (error) throw error
+    if (!data) {
+      return NextResponse.json({ ok: false, error: "Bildirim bulunamadı." }, { status: 404 })
+    }
+
+    return NextResponse.json({ ok: true, notification: data })
+  } catch (error) {
+    if (isMissingNotificationsTable(error)) {
+      return NextResponse.json(
+        {
+          ok: false,
+          error: "Bildirim tablosu hazır değil. sql/notifications.sql dosyasını Supabase SQL editor içinde çalıştırın.",
+          setupRequired: true,
+        },
+        { status: 503 },
+      )
+    }
+
+    console.error("[owner-notifications] update failed", error)
+    return NextResponse.json({ ok: false, error: "Bildirim güncellenemedi." }, { status: 500 })
   }
 }

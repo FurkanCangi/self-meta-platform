@@ -2,6 +2,19 @@
 -- This does not make videos impossible to record; it makes access private,
 -- short-lived, logged, and attributable through user-specific watermark codes.
 
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'education-videos',
+  'education-videos',
+  false,
+  8589934592,
+  array['video/mp4', 'video/quicktime', 'video/webm', 'video/x-m4v']
+)
+on conflict (id) do update set
+  public = excluded.public,
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
 create table if not exists public.education_video_assets (
   id uuid primary key default gen_random_uuid(),
   slug text not null unique,
