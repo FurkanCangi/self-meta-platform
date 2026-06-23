@@ -8,6 +8,8 @@ import {
   type OwnerAuditEventRow,
 } from "@/lib/owner/ownerAudit"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { isOwnerAuditEmail } from "@/lib/owner/ownerAccess"
+import { OwnerMemberDangerActions } from "./OwnerMemberDangerActions"
 
 type Params = Promise<{ memberOwnerId: string }>
 type SearchParams = Promise<Record<string, string | string[] | undefined>>
@@ -68,6 +70,28 @@ function roleLabel(value: string) {
   if (["owner", "admin", "super_admin", "yonetici", "yönetici"].includes(normalized)) return "Yönetici"
   if (normalized === "therapist" || normalized === "expert") return "Terapist"
   return value || "Üye"
+}
+
+function directoryStatusLabel(value: string) {
+  if (value === "approved") return "Public profili yayında"
+  if (value === "pending") return "Profil onay bekliyor"
+  if (value === "hidden") return "Profil gizli"
+  if (value === "rejected") return "Profil reddedilmiş"
+  return "Profil oluşturulmamış"
+}
+
+function yesNo(value: boolean | null | undefined) {
+  return value ? "Evet" : "Hayır"
+}
+
+function DetailField({ label, value }: { label: string; value: string | number | null | undefined }) {
+  const text = value === null || value === undefined || value === "" ? "-" : String(value)
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3">
+      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</div>
+      <div className="mt-1 break-words text-sm font-semibold text-slate-900">{text}</div>
+    </div>
+  )
 }
 
 function InfoCard({
@@ -164,6 +188,11 @@ export default async function OwnerMemberDetailPage({
             <span className="rounded-full bg-slate-100 px-3 py-1 font-semibold tracking-wide text-slate-500">
               Teknik kullanıcı ID: {detail.summary.ownerId}
             </span>
+            {!detail.summary.hasAuthAccount ? (
+              <span className="rounded-full bg-amber-50 px-3 py-1 font-semibold tracking-wide text-amber-700">
+                Aktif giriş hesabı yok / eski kayıt olabilir
+              </span>
+            ) : null}
           </div>
         </div>
 
@@ -206,6 +235,72 @@ export default async function OwnerMemberDetailPage({
         <InfoCard label="Rapor" value={detail.summary.totalReports} />
         <InfoCard label="Silme kaydı" value={detail.summary.deleteEvents} />
       </div>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-2xl font-semibold text-slate-950">Üye hesap bilgileri</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            Bu bölüm üyenin sisteme giriş hesabını gösterir. Giriş hesabı yoksa bu satır eski vaka/rapor kayıtlarından geliyor olabilir.
+          </p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <DetailField label="Giriş e-postası" value={detail.account.email} />
+            <DetailField label="Hesap adı" value={detail.account.fullName} />
+            <DetailField label="Telefon" value={detail.account.phone} />
+            <DetailField label="Giriş yöntemi" value={detail.account.provider} />
+            <DetailField label="Hesap oluşturma" value={formatDateTime(detail.account.createdAt)} />
+            <DetailField label="Son giriş" value={formatDateTime(detail.account.lastSignInAt)} />
+            <DetailField label="E-posta doğrulandı" value={detail.account.emailConfirmedAt ? "Evet" : "Hayır / bilinmiyor"} />
+            <DetailField label="Aktif giriş hesabı" value={yesNo(detail.account.hasAuthAccount)} />
+            <DetailField label="Sistemdeki rolü" value={roleLabel(detail.appProfile?.role || detail.summary.role)} />
+            <DetailField label="Paketi" value={planLabel(detail.appProfile?.plan || detail.summary.plan)} />
+            <DetailField label="Sistem profil adı" value={detail.appProfile?.fullName || "-"} />
+            <DetailField label="Profil güncellemesi" value={formatDateTime(detail.appProfile?.updatedAt)} />
+          </div>
+        </div>
+
+        <div className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-2xl font-semibold text-slate-950">Terapist profil bilgileri</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-500">
+            Bunlar üyenin Profil ekranında doldurduğu bilgiler. Public dizinde gösterilip gösterilmeyeceği ayrıca onay durumuna bağlıdır.
+          </p>
+
+          {detail.directoryProfile ? (
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              <DetailField label="Ad" value={detail.directoryProfile.firstName} />
+              <DetailField label="Soyad" value={detail.directoryProfile.lastName} />
+              <DetailField label="Ünvan" value={detail.directoryProfile.title} />
+              <DetailField label="Meslek" value={detail.directoryProfile.profession} />
+              <DetailField label="Çalıştığı kurum" value={detail.directoryProfile.workplace} />
+              <DetailField label="Şehir" value={detail.directoryProfile.city} />
+              <DetailField label="İlçe" value={detail.directoryProfile.district} />
+              <DetailField label="Public e-posta" value={detail.directoryProfile.publicEmail} />
+              <DetailField label="Public telefon" value={detail.directoryProfile.publicPhone} />
+              <DetailField label="Kısa adres" value={detail.directoryProfile.shortAddress} />
+              <DetailField label="Public görünürlük isteği" value={yesNo(detail.directoryProfile.publicListingEnabled)} />
+              <DetailField label="Profil durumu" value={directoryStatusLabel(detail.directoryProfile.publicationStatus)} />
+              <DetailField label="Eğitim tamamlanma" value={formatDateTime(detail.directoryProfile.educationCompletedAt)} />
+              <DetailField label="Son profil güncellemesi" value={formatDateTime(detail.directoryProfile.updatedAt)} />
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 sm:col-span-2">
+                <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Uzmanlıklar</div>
+                <div className="mt-1 whitespace-pre-wrap text-sm font-semibold leading-6 text-slate-900">
+                  {detail.directoryProfile.specialties || "-"}
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="mt-5 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-8 text-center text-sm text-slate-500">
+              Bu üye henüz profil ekranındaki terapist bilgilerini doldurmamış.
+            </div>
+          )}
+        </div>
+      </section>
+
+      <OwnerMemberDangerActions
+        targetUserId={detail.summary.ownerId}
+        memberName={detail.summary.fullName}
+        memberEmail={detail.summary.email}
+        canDelete={detail.summary.hasAuthAccount && !isOwnerAuditEmail(detail.summary.email)}
+      />
 
       <div className="flex flex-wrap items-center gap-3 rounded-[2rem] border border-slate-200 bg-white p-4 shadow-sm">
         <Link

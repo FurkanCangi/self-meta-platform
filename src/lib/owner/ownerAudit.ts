@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+import { mapDirectoryRow, type TherapistDirectoryProfile } from "@/lib/therapists/directory"
 
 export type OwnerAuditFilters = {
   sourceTable?: string
@@ -28,6 +29,11 @@ export type OwnerMemberSummary = {
   fullName: string
   role: string
   plan: string
+  hasAuthAccount: boolean
+  accountCreatedAt: string | null
+  lastSignInAt: string | null
+  accountDeletedAt: string | null
+  directoryStatus: string
   totalClients: number
   archivedClients: number
   totalAssessments: number
@@ -79,9 +85,34 @@ export type OwnerReportSnapshot = {
 
 export type OwnerMemberDetail = {
   summary: OwnerMemberSummary
+  account: OwnerMemberAccountDetail
+  appProfile: OwnerMemberAppProfile | null
+  directoryProfile: TherapistDirectoryProfile | null
   clients: OwnerClientSnapshot[]
   reports: OwnerReportSnapshot[]
   recentEvents: OwnerAuditEventRow[]
+}
+
+export type OwnerMemberAccountDetail = {
+  userId: string
+  email: string
+  fullName: string
+  phone: string
+  createdAt: string | null
+  lastSignInAt: string | null
+  emailConfirmedAt: string | null
+  provider: string
+  hasAuthAccount: boolean
+}
+
+export type OwnerMemberAppProfile = {
+  userId: string
+  role: string
+  plan: string
+  createdAt: string | null
+  updatedAt: string | null
+  fullName: string
+  raw: Record<string, unknown>
 }
 
 export type OwnerDossierRow = {
@@ -144,9 +175,14 @@ type AuthUserRow = {
   id: string
   email: string
   fullName: string
+  phone: string
+  createdAt: string | null
+  lastSignInAt: string | null
+  emailConfirmedAt: string | null
+  provider: string
 }
 
-type ProfileRow = {
+type ProfileRow = Record<string, unknown> & {
   user_id: string
   role: string | null
   plan: string | null
@@ -175,6 +211,14 @@ type ReportRow = {
   version: number | null
   report_text: string | null
   snapshot_json: Record<string, unknown> | null
+}
+
+type AccountSecurityEventRow = {
+  id: string
+  user_id: string | null
+  event_type: string | null
+  created_at: string | null
+  metadata: Record<string, unknown> | null
 }
 
 function cleanPreview(value: string | null | undefined, maxLength = 220) {
@@ -210,6 +254,15 @@ async function fetchAuthUsers() {
         id: user.id,
         email: user.email || "",
         fullName: String(user.user_metadata?.full_name || user.user_metadata?.name || "").trim(),
+        phone: String(user.phone || "").trim(),
+        createdAt: user.created_at || null,
+        lastSignInAt: user.last_sign_in_at || null,
+        emailConfirmedAt: user.email_confirmed_at || null,
+        provider: String(
+          user.app_metadata?.provider ||
+            (Array.isArray(user.identities) ? user.identities[0]?.provider : "") ||
+            "email"
+        ),
       })
     }
 
@@ -222,7 +275,7 @@ async function fetchAuthUsers() {
 
 async function fetchProfiles() {
   const admin = createSupabaseAdminClient()
-  const { data, error } = await admin.from("profiles").select("user_id, role, plan")
+  const { data, error } = await admin.from("profiles").select("*")
 
   if (error) {
     throw new Error(error.message)
@@ -234,7 +287,13 @@ async function fetchProfiles() {
 async function fetchOwnerProductionRows() {
   const admin = createSupabaseAdminClient()
 
-  const [{ data: clients, error: clientsError }, { data: assessments, error: assessmentsError }, { data: reports, error: reportsError }] =
+  const [
+    { data: clients, error: clientsError },
+    { data: assessments, error: assessmentsError },
+    { data: reports, error: reportsError },
+    { data: directoryProfiles, error: directoryProfilesError },
+    { data: securityEvents, error: securityEventsError },
+  ] =
     await Promise.all([
       admin
         .from("clients")
@@ -245,29 +304,47 @@ async function fetchOwnerProductionRows() {
       admin
         .from("reports")
         .select("id, assessment_id, created_at, version, report_text, snapshot_json"),
+      admin
+        .from("therapist_directory_profiles")
+        .select(
+          "user_id, first_name, last_name, profession, title, workplace, city, district, public_phone, public_email, short_address, specialties, education_completed_at, public_listing_enabled, publication_status, updated_at"
+        ),
+      admin
+        .from("account_security_events")
+        .select("id, user_id, event_type, created_at, metadata")
+        .in("event_type", ["owner_member_deleted"])
+        .order("created_at", { ascending: false })
+        .limit(5000),
     ])
 
   if (clientsError) throw new Error(clientsError.message)
   if (assessmentsError) throw new Error(assessmentsError.message)
   if (reportsError) throw new Error(reportsError.message)
+  if (directoryProfilesError) throw new Error(directoryProfilesError.message)
+  if (securityEventsError) throw new Error(securityEventsError.message)
 
   return {
     clients: (clients || []) as ClientRow[],
     assessments: (assessments || []) as AssessmentRow[],
     reports: (reports || []) as ReportRow[],
+    directoryProfiles: (directoryProfiles || []).map(mapDirectoryRow),
+    securityEvents: (securityEvents || []) as AccountSecurityEventRow[],
   }
 }
 
 function buildOwnerIndex(
   authUsers: AuthUserRow[],
   profiles: ProfileRow[],
+  directoryProfiles: TherapistDirectoryProfile[],
   clients: ClientRow[],
   assessments: AssessmentRow[],
   reports: ReportRow[],
-  auditRows: OwnerAuditEventRow[]
+  auditRows: OwnerAuditEventRow[],
+  securityEvents: AccountSecurityEventRow[]
 ) {
   const authById = new Map(authUsers.map((row) => [row.id, row]))
   const profileByUserId = new Map(profiles.map((row) => [row.user_id, row]))
+  const directoryByUserId = new Map(directoryProfiles.map((row) => [row.userId, row]))
   const clientById = new Map(clients.map((row) => [row.id, row]))
   const assessmentsByClientId = new Map<string, AssessmentRow[]>()
   const reportsByAssessmentId = new Map<string, ReportRow[]>()
@@ -289,14 +366,25 @@ function buildOwnerIndex(
   const candidateOwnerIds = new Set<string>()
   for (const user of authUsers) candidateOwnerIds.add(user.id)
   for (const profile of profiles) candidateOwnerIds.add(profile.user_id)
+  for (const directoryProfile of directoryProfiles) candidateOwnerIds.add(directoryProfile.userId)
   for (const client of clients) if (client.owner_id) candidateOwnerIds.add(client.owner_id)
   for (const row of auditRows) if (row.member_owner_id) candidateOwnerIds.add(row.member_owner_id)
+
+  const deletedMemberByUserId = new Map<string, AccountSecurityEventRow>()
+  for (const row of securityEvents) {
+    if (!row.user_id || row.event_type !== "owner_member_deleted") continue
+    const existing = deletedMemberByUserId.get(row.user_id)
+    if (!existing || String(row.created_at || "") > String(existing.created_at || "")) {
+      deletedMemberByUserId.set(row.user_id, row)
+    }
+  }
 
   const memberSummaries: OwnerMemberSummary[] = []
 
   for (const ownerId of candidateOwnerIds) {
     const authUser = authById.get(ownerId)
     const profile = profileByUserId.get(ownerId)
+    const directoryProfile = directoryByUserId.get(ownerId)
     const ownerClients = clients.filter((row) => row.owner_id === ownerId)
     const ownerClientIds = new Set(ownerClients.map((row) => row.id))
     const ownerAssessments = assessments.filter((row) => row.client_id && ownerClientIds.has(row.client_id))
@@ -309,23 +397,24 @@ function buildOwnerIndex(
       .sort()
       .at(-1) || null
 
-    if (
-      ownerClients.length === 0 &&
-      ownerAssessments.length === 0 &&
-      ownerReports.length === 0 &&
-      ownerEvents.length === 0 &&
-      !authUser &&
-      !profile
-    ) {
+    if (!authUser && !profile && !directoryProfile) {
       continue
     }
 
     memberSummaries.push({
       ownerId,
-      email: authUser?.email || "E-posta yok",
-      fullName: authUser?.fullName || "İsimsiz Üye",
-      role: profile?.role || "expert",
-      plan: profile?.plan || "none",
+      email: authUser?.email || directoryProfile?.publicEmail || "E-posta yok",
+      fullName:
+        authUser?.fullName ||
+        [directoryProfile?.firstName, directoryProfile?.lastName].filter(Boolean).join(" ").trim() ||
+        "İsimsiz üye",
+      role: String(profile?.role || "expert"),
+      plan: String(profile?.plan || "none"),
+      hasAuthAccount: Boolean(authUser),
+      accountCreatedAt: authUser?.createdAt || null,
+      lastSignInAt: authUser?.lastSignInAt || null,
+      accountDeletedAt: deletedMemberByUserId.get(ownerId)?.created_at || null,
+      directoryStatus: directoryProfile?.publicationStatus || "not_created",
       totalClients: ownerClients.filter((row) => !row.deleted_at).length,
       archivedClients: ownerClients.filter((row) => Boolean(row.deleted_at)).length,
       totalAssessments: ownerAssessments.filter((row) => !row.deleted_at).length,
@@ -370,6 +459,7 @@ function buildOwnerIndex(
   return {
     authById,
     profileByUserId,
+    directoryByUserId,
     clientById,
     assessmentsByClientId,
     reportsByAssessmentId,
@@ -388,10 +478,12 @@ export async function fetchOwnerMemberSummaries(search = "") {
   const { memberSummaries } = buildOwnerIndex(
     authUsers,
     profiles,
+    productionRows.directoryProfiles,
     productionRows.clients,
     productionRows.assessments,
     productionRows.reports,
-    auditRows
+    auditRows,
+    productionRows.securityEvents
   )
 
   const q = String(search || "").trim().toLowerCase()
@@ -415,10 +507,12 @@ async function fetchOwnerDataBundle(auditFilters: OwnerAuditFilters = { limit: 5
   const ownerIndex = buildOwnerIndex(
     authUsers,
     profiles,
+    productionRows.directoryProfiles,
     productionRows.clients,
     productionRows.assessments,
     productionRows.reports,
-    auditRows
+    auditRows,
+    productionRows.securityEvents
   )
 
   return {
@@ -439,6 +533,33 @@ function buildOwnerMemberDetailFromBundle(
   if (!summary) {
     throw new Error("Üye kaydı bulunamadı.")
   }
+  const authUser = ownerIndex.authById.get(ownerId)
+  const profile = ownerIndex.profileByUserId.get(ownerId)
+  const directoryProfile = ownerIndex.directoryByUserId.get(ownerId) || null
+
+  const account: OwnerMemberAccountDetail = {
+    userId: ownerId,
+    email: authUser?.email || summary.email,
+    fullName: authUser?.fullName || summary.fullName,
+    phone: authUser?.phone || "",
+    createdAt: authUser?.createdAt || null,
+    lastSignInAt: authUser?.lastSignInAt || null,
+    emailConfirmedAt: authUser?.emailConfirmedAt || null,
+    provider: authUser?.provider || "Hesap bulunamadı",
+    hasAuthAccount: Boolean(authUser),
+  }
+
+  const appProfile: OwnerMemberAppProfile | null = profile
+    ? {
+        userId: ownerId,
+        role: String(profile.role || ""),
+        plan: String(profile.plan || ""),
+        createdAt: typeof profile.created_at === "string" ? profile.created_at : null,
+        updatedAt: typeof profile.updated_at === "string" ? profile.updated_at : null,
+        fullName: String(profile.full_name || profile.name || "").trim(),
+        raw: profile,
+      }
+    : null
 
   const ownerClients = productionRows.clients
     .filter((row) => row.owner_id === ownerId)
@@ -549,6 +670,9 @@ function buildOwnerMemberDetailFromBundle(
 
   return {
     summary,
+    account,
+    appProfile,
+    directoryProfile,
     clients: ownerClients,
     reports: ownerReports,
     recentEvents,
