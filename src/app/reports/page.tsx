@@ -58,6 +58,11 @@ function extractPreview(row: ReportRow) {
   return text.length > 140 ? text.slice(0, 140) + "..." : text;
 }
 
+function reportTitle(row: ReportRow) {
+  const code = extractClientCode(row);
+  return code === "—" ? "Klinik rapor" : `${code} raporu`;
+}
+
 export default function ReportsPage() {
   const router = useRouter();
   const [rows, setRows] = useState<ReportRow[]>([]);
@@ -206,8 +211,8 @@ export default function ReportsPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <div className="font-mono text-lg font-black text-[#071b3a]">{extractClientCode(row)}</div>
-                    <div className="mt-1 text-xs font-semibold text-slate-500">v{row.version ?? "?"} · {formatDate(extractReportDate(row))}</div>
+                    <div className="font-mono text-lg font-black text-[#071b3a]">{reportTitle(row)}</div>
+                    <div className="mt-1 text-xs font-semibold text-slate-500">{formatDate(extractReportDate(row))}</div>
                   </div>
                   <span className="rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">Aç</span>
                 </div>
@@ -236,10 +241,6 @@ export default function ReportsPage() {
                 <div>
                   <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Danışan</div>
                   <div className="mt-1 font-mono text-sm font-black text-slate-900">{extractClientCode(selected)}</div>
-                </div>
-                <div>
-                  <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Rapor</div>
-                  <div className="mt-1 text-sm font-black text-slate-900">v{selected.version ?? "?"}</div>
                 </div>
                 <div className="col-span-2">
                   <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Tarih</div>
@@ -277,7 +278,17 @@ export default function ReportsPage() {
 
       <div className="dna-reports-grid grid grid-cols-1 gap-6 lg:grid-cols-5">
         <div className="dna-card dna-reports-list dna-print-hide p-4 lg:col-span-2">
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">Kayıtlı Raporlar</h2>
+          <div className="mb-4 flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Kayıtlı Raporlar</h2>
+              <p className="mt-1 text-xs font-medium leading-5 text-slate-500">
+                Raporu seç; detay sağ tarafta açılır.
+              </p>
+            </div>
+            <span className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
+              {visibleRows.length} kayıt
+            </span>
+          </div>
 
           {loading && <p className="text-sm text-slate-500">Yükleniyor...</p>}
 
@@ -301,7 +312,7 @@ export default function ReportsPage() {
             </div>
           )}
 
-          <div className="space-y-3">
+          <div className="max-h-[620px] space-y-2 overflow-y-auto pr-1">
             {visibleRows.map((row) => {
               const active = row.id === selectedId;
               return (
@@ -309,39 +320,32 @@ export default function ReportsPage() {
                   key={row.id}
                   type="button"
                   onClick={() => setSelectedId(row.id)}
-                  className={`w-full rounded-2xl border p-4 text-left transition ${
+                  className={`w-full rounded-2xl border px-4 py-3 text-left transition ${
                     active
-                      ? "border-indigo-500 bg-indigo-50"
-                      : "border-slate-200 bg-white hover:border-slate-300"
+                      ? "border-indigo-400 bg-indigo-50 shadow-sm"
+                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <span className="text-sm font-semibold text-slate-900">
-                      v{row.version ?? "?"}
-                    </span>
-                    <div className="text-right">
-                      <div className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
-                        Rapor Tarihi
+                  <div className="grid gap-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold text-slate-950">
+                          {reportTitle(row)}
+                        </div>
+                        <div className="mt-1 text-xs font-medium text-slate-500">
+                          Değerlendirme: {formatDate(extractAssessmentDate(row))}
+                        </div>
                       </div>
-                      <div className="text-xs text-slate-600">
+                      <div className="shrink-0 text-right text-xs font-semibold text-slate-500">
                         {formatDate(extractReportDate(row))}
                       </div>
                     </div>
+                    {active ? (
+                      <p className="rounded-xl bg-white/70 px-3 py-2 text-xs leading-5 text-slate-600">
+                        {extractPreview(row)}
+                      </p>
+                    ) : null}
                   </div>
-
-                  <div className="mt-2 text-sm text-slate-700">
-                    <span className="font-medium">Danışan Kodu:</span>{" "}
-                    {extractClientCode(row)}
-                  </div>
-
-                  <div className="mt-1 text-xs text-slate-500">
-                    <span className="font-medium">Değerlendirme Tarihi:</span>{" "}
-                    {formatDate(extractAssessmentDate(row))}
-                  </div>
-
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    {extractPreview(row)}
-                  </p>
                 </button>
               );
             })}
@@ -380,11 +384,7 @@ export default function ReportsPage() {
 
           {selected && (
             <>
-              <div className="dna-report-meta mb-4 grid grid-cols-2 gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-4">
-                <div>
-                  <div className="text-xs uppercase tracking-wide text-slate-500">Versiyon</div>
-                  <div className="mt-1 text-sm font-medium text-slate-900">v{selected.version ?? "?"}</div>
-                </div>
+              <div className="dna-report-meta mb-4 grid grid-cols-1 gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-4 md:grid-cols-3">
                 <div>
                   <div className="text-xs uppercase tracking-wide text-slate-500">Danışan Kodu</div>
                   <div className="mt-1 text-sm font-medium text-slate-900">{extractClientCode(selected)}</div>
