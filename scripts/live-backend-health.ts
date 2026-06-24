@@ -32,6 +32,7 @@ let reportId: string | null = null
 let supportTicketId: string | null = null
 let sessionId: string | null = null
 let deviceId: string | null = null
+let rateLimitKey: string | null = null
 
 function loadDotEnvFile(filePath: string) {
   if (!fs.existsSync(filePath)) return
@@ -94,10 +95,78 @@ async function safeCleanup(label: string, fn: () => Promise<void>) {
   }
 }
 
-async function headTable(table: string) {
+async function checkTableReadable(table: string) {
   if (!admin) throw new Error("admin client missing")
-  const { error } = await admin.from(table).select("*", { count: "exact", head: true })
+  const { error } = await admin.from(table).select("*").limit(1)
   failIfError(`${table} table check failed`, error)
+}
+
+async function checkTablesReadable(tables: string[]) {
+  const failures: string[] = []
+  for (const table of tables) {
+    try {
+      await checkTableReadable(table)
+    } catch (error) {
+      failures.push(error instanceof Error ? error.message : String(error))
+    }
+  }
+  if (failures.length > 0) {
+    throw new Error(failures.join(" | "))
+  }
+}
+
+async function checkRequiredRpcFunctions() {
+  if (!admin) throw new Error("admin client missing")
+  const dummyUserId = "00000000-0000-4000-8000-000000000000"
+  const failures: string[] = []
+
+  try {
+    const balance = await admin.rpc("get_report_credit_balance", {
+      target_user_id: dummyUserId,
+    })
+    failIfError("get_report_credit_balance RPC check failed", balance.error)
+    if (typeof balance.data !== "number") {
+      throw new Error("get_report_credit_balance RPC returned invalid payload")
+    }
+  } catch (error) {
+    failures.push(error instanceof Error ? error.message : String(error))
+  }
+
+  try {
+    const consume = await admin.rpc("consume_report_credit", {
+      target_user_id: dummyUserId,
+      target_assessment_id: null,
+      target_client_id: null,
+      consume_metadata: { test_automation: runId },
+    })
+    failIfError("consume_report_credit RPC check failed", consume.error)
+    const consumeRow = Array.isArray(consume.data) ? consume.data[0] : consume.data
+    if (!consumeRow || typeof consumeRow.ok !== "boolean" || typeof consumeRow.remaining !== "number") {
+      throw new Error("consume_report_credit RPC returned invalid payload")
+    }
+  } catch (error) {
+    failures.push(error instanceof Error ? error.message : String(error))
+  }
+
+  try {
+    rateLimitKey = `live-health:${runId}`
+    const rateLimit = await admin.rpc("check_api_rate_limit", {
+      p_key: rateLimitKey,
+      p_limit: 5,
+      p_window_ms: 60_000,
+    })
+    failIfError("check_api_rate_limit RPC check failed", rateLimit.error)
+    const rateLimitRow = Array.isArray(rateLimit.data) ? rateLimit.data[0] : rateLimit.data
+    if (!rateLimitRow || typeof rateLimitRow.ok !== "boolean" || typeof rateLimitRow.remaining !== "number") {
+      throw new Error("check_api_rate_limit RPC returned invalid payload")
+    }
+  } catch (error) {
+    failures.push(error instanceof Error ? error.message : String(error))
+  }
+
+  if (failures.length > 0) {
+    throw new Error(failures.join(" | "))
+  }
 }
 
 async function cleanup() {
@@ -159,6 +228,12 @@ async function cleanup() {
       await admin!.auth.admin.deleteUser(userId!)
     })
   }
+
+  if (rateLimitKey) {
+    await safeCleanup("api_rate_limits", async () => {
+      await admin!.from("api_rate_limits").delete().eq("key", rateLimitKey)
+    })
+  }
 }
 
 async function main() {
@@ -197,9 +272,15 @@ async function main() {
         "therapist_directory_profiles",
         "user_entitlements",
         "report_credit_ledger",
+        "api_rate_limits",
       ]
-      for (const table of tables) await headTable(table)
+      await checkTablesReadable(tables)
       return `${tables.length} tables`
+    })
+
+    await step("required Supabase RPC functions are callable", async () => {
+      await checkRequiredRpcFunctions()
+      return "report credits + api rate limit"
     })
 
     await step("support attachments bucket exists", async () => {
