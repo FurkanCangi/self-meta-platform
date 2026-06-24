@@ -164,6 +164,7 @@ const aiReportPayloadSchema = z
     clientId: z.string().max(120).optional(),
     client_id: z.string().max(120).optional(),
     assessmentId: z.string().max(120).optional(),
+    age_months: z.coerce.number().int().min(0).max(240).optional().nullable(),
     ageMonths: z.coerce.number().int().min(0).max(240).optional().nullable(),
     anamnez: z.string().max(20000).optional(),
     answers: z.array(z.coerce.number()).max(80).optional(),
@@ -304,9 +305,14 @@ if (__validationErrors.length > 0) {
   return new Response(JSON.stringify({ error: 'invalid_input', details: __validationErrors }), { status: 400 })
 }
 
+    const scoreAgeMonths = Number(body?.scores?.age_months ?? body?.scores?.ageMonths)
     const incomingAgeMonths =
       typeof body?.ageMonths === "number"
         ? body.ageMonths
+        : typeof body?.age_months === "number"
+          ? body.age_months
+        : Number.isFinite(scoreAgeMonths)
+          ? scoreAgeMonths
         : extractAgeMonthsFromAnamnez(typeof body?.anamnez === "string" ? body.anamnez : "")
 
     if (!isSupportedAgeMonths(incomingAgeMonths)) {

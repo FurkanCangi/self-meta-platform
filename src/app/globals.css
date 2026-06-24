@@ -993,11 +993,21 @@ html[data-theme="dark"] .dna-shell .shadow-sm {
   max-width: 100%;
 }
 
+.dna-app-frame .dna-new-client-card label {
+  display: block;
+  width: 100%;
+}
+
 .dna-app-frame .dna-new-client-card input,
 .dna-app-frame .dna-new-client-card textarea,
 .dna-app-frame .dna-new-client-card select {
   width: 100%;
   font-size: 15px;
+}
+
+.dna-app-frame .dna-new-client-card input:not([type="radio"]):not([type="checkbox"]),
+.dna-app-frame .dna-new-client-card select {
+  min-height: 48px;
 }
 
 .dna-app-frame .dna-new-client-card input[type="radio"],

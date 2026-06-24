@@ -97,7 +97,7 @@ export default function ReportsPage() {
 
         if (response.status === 401) {
           setLoading(false);
-          router.replace("/login?surface=app");
+          router.replace("/app-login");
           return;
         }
 

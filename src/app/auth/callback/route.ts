@@ -34,9 +34,11 @@ function requestOrigin(request: NextRequest) {
 }
 
 function authUrl(request: NextRequest, path: "/login" | "/signup", params?: Record<string, string>) {
-  const url = new URL(path, requestOrigin(request))
+  const appSurface = params?.surface === "app" || String(params?.next || "").includes("surface=app")
+  const targetPath = appSurface && path === "/login" ? "/app-login" : path
+  const url = new URL(targetPath, requestOrigin(request))
   for (const [key, value] of Object.entries(params || {})) {
-    if (value) url.searchParams.set(key, value)
+    if (value && !(appSurface && key === "surface" && targetPath === "/app-login")) url.searchParams.set(key, value)
   }
   return url
 }

@@ -15,6 +15,7 @@ type LayoutGateProps = {
 
 const PUBLIC_ROUTES = new Set([
   "/",
+  "/app-login",
   "/login",
   "/signup",
   "/auth-login",
@@ -40,11 +41,27 @@ const PUBLIC_ROUTES = new Set([
   "/support",
 ]);
 
+const APP_SHELL_ROUTES = [
+  "/starter",
+  "/dashboard",
+  "/clients",
+  "/assessments",
+  "/reports",
+  "/education",
+  "/profile",
+  "/profile-setting",
+  "/settings",
+  "/support",
+  "/report-packages",
+  "/video-observation",
+];
+
 export default function LayoutGate({ children, initialAppSurface = false }: LayoutGateProps) {
   const pathname = usePathname() || "/";
   const [toggle, setToggle] = useState(true);
   const isAppSurface = useAppSurface(initialAppSurface);
   const isOwnerAuditRoute = pathname.startsWith("/owner-audit");
+  const isAppShellRoute = APP_SHELL_ROUTES.some((route) => pathname === route || pathname.startsWith(`${route}/`));
 
   const isPublicRoute = useMemo(() => {
     if (PUBLIC_ROUTES.has(pathname)) return true;
@@ -53,6 +70,10 @@ export default function LayoutGate({ children, initialAppSurface = false }: Layo
     if (pathname.startsWith("/arastirma/")) return true;
     return false;
   }, [pathname]);
+
+  if (isAppSurface && isAppShellRoute) {
+    return <AppShell>{children}</AppShell>;
+  }
 
   if (isPublicRoute) {
     return (
@@ -70,10 +91,6 @@ export default function LayoutGate({ children, initialAppSurface = false }: Layo
         {children}
       </>
     );
-  }
-
-  if (isAppSurface) {
-    return <AppShell>{children}</AppShell>;
   }
 
   return (

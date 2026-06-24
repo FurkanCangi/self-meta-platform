@@ -3,9 +3,10 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { AiOutlineLogout, AiOutlineMoon, AiOutlineSun, AiOutlineUser } from "react-icons/ai";
+import { AiOutlineLogout, AiOutlineMoon, AiOutlineSun } from "react-icons/ai";
 import { useTheme } from "../theme-provider";
 import { supabase } from "@/lib/supabase/client";
+import AppNotifications from "./AppNotifications";
 
 export default function AppHeader() {
   const router = useRouter();
@@ -18,16 +19,16 @@ export default function AppHeader() {
     try {
       localStorage.removeItem("dna_therapist_profile");
     } catch {}
-    router.replace("/login?surface=app");
+    router.replace("/app-login");
     router.refresh();
   };
 
   return (
     <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/92 px-4 pb-3 pt-[max(env(safe-area-inset-top),12px)] shadow-[0_12px_34px_rgba(7,27,58,0.06)] backdrop-blur-xl">
-      <div className="flex items-center justify-between gap-3">
-        <Link href="/starter?surface=app" className="flex min-w-0 items-center gap-3" aria-label="Ana ekrana git">
+      <div className="mx-auto flex items-center justify-between gap-3 md:max-w-6xl">
+        <Link href="/starter?surface=app" className="flex min-h-14 min-w-0 items-center gap-3 rounded-2xl pr-2" aria-label="Ana ekrana git">
           <span className="min-w-0">
-            <span className="block h-[64px] w-[224px] overflow-visible">
+            <span className="block h-[58px] w-[204px] overflow-visible sm:h-[64px] sm:w-[224px]">
               <Image
                 src="/images/brand/dna-logo-dashboard.png"
                 alt="DNA Intelligence Dynamic Neuro-Regulation Approach"
@@ -51,13 +52,7 @@ export default function AppHeader() {
           >
             {theme === "dark" ? <AiOutlineSun className="text-xl" /> : <AiOutlineMoon className="text-xl" />}
           </button>
-          <Link
-            href="/profile?surface=app"
-            className="grid h-10 w-10 place-items-center rounded-2xl border border-slate-200 bg-white text-slate-800 shadow-sm"
-            aria-label="Profil"
-          >
-            <AiOutlineUser className="text-xl" />
-          </Link>
+          <AppNotifications />
           <button
             type="button"
             onClick={handleLogout}

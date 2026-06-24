@@ -90,10 +90,14 @@ function detectDeviceType() {
   return "desktop";
 }
 
-export default function LoginPage() {
+type LoginPageProps = {
+  forcedSurface?: "app" | "web";
+};
+
+export default function LoginPage({ forcedSurface }: LoginPageProps = {}) {
   const sp = useSearchParams();
   const nextPath = sanitizeNextPath(sp.get("next"));
-  const appSurface = isAppSurfaceRequest(nextPath, sp);
+  const appSurface = forcedSurface === "app" || (forcedSurface !== "web" && isAppSurfaceRequest(nextPath, sp));
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

@@ -6,6 +6,7 @@ import {
   CreditCard,
   FileText,
   GraduationCap,
+  LifeBuoy,
   PlayCircle,
   Search,
   Settings,
@@ -126,6 +127,7 @@ export default function StarterPage() {
             { title: "Skor bekleyen vakalar", text: "Danışan seçip 60 soruluk değerlendirmeye geç", href: "/clients?surface=app", icon: ClipboardCheck },
             { title: "Rapor geçmişi", text: "Üretilmiş klinik raporları görüntüle", href: "/reports?surface=app", icon: BarChart3 },
             { title: "Rapor hakkı", text: "Kalan kullanım ve paketleri kontrol et", href: "/report-packages?surface=app", icon: CreditCard },
+            { title: "Taleplerim", text: "Sorun bildir veya destek yanıtlarını takip et", href: "/support?surface=app", icon: LifeBuoy },
             { title: "Eğitimler", text: "Eğitim içeriklerine güvenli erişim", href: "/education?surface=app", icon: GraduationCap },
           ].map((item) => {
             const Icon = item.icon

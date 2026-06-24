@@ -54,6 +54,15 @@ function assessmentUserMessage(error: unknown) {
   if (lower.includes("failed to fetch") || lower.includes("network")) {
     return "Bağlantı sorunu yaşandı. İnternet bağlantınızı kontrol edip tekrar deneyin."
   }
+  if (
+    lower.includes("rapor hakk") ||
+    lower.includes("yaş aral") ||
+    lower.includes("e-posta doğrul") ||
+    lower.includes("skor verisi") ||
+    lower.includes("rapor üret")
+  ) {
+    return message
+  }
 
   return "İşlem tamamlanamadı. Lütfen tekrar deneyin."
 }
@@ -285,6 +294,7 @@ export default function AssessmentWizardClient() {
     assessmentId: string
     clientId: string
     clientCode: string
+    ageMonths: number | null
     anamnez: string
     answers: number[]
     scores: Record<string, unknown>
@@ -299,13 +309,19 @@ export default function AssessmentWizardClient() {
       body: JSON.stringify(payload),
     })
 
-    const data = await res.json()
+    const data = await res.json().catch(() => null)
 
     if (!res.ok || !data?.ok) {
       if (res.status === 402 || data?.error === "report_credit_required") {
         throw new Error("Rapor hakkınız bulunmuyor. Paketler ekranından ek rapor hakkı satın alın.")
       }
-      throw new Error(data?.error || "AI rapor üretilemedi.")
+      if (res.status === 403 && data?.error === "Email confirmation required") {
+        throw new Error("Rapor üretimi için e-posta doğrulaması gerekiyor.")
+      }
+      if (data?.error === "invalid_input") {
+        throw new Error("Rapor üretimi için skor verisi eksik veya hatalı görünüyor.")
+      }
+      throw new Error(data?.error || "Rapor üretilemedi. Lütfen danışan yaşı, skorlar ve rapor hakkını kontrol edin.")
     }
 
     return String(data.report || "").trim()
@@ -374,6 +390,7 @@ export default function AssessmentWizardClient() {
         assessmentId,
         clientId: clientInfo.id,
         clientCode: clientInfo.child_code,
+        ageMonths: clientInfo.ageMonths,
         anamnez: String(clientInfo.anamnez || ""),
         answers,
         scores: {

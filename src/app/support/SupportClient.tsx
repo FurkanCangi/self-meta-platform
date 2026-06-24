@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useMemo, useState, useTransition } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import {
   AlertCircle,
@@ -210,6 +210,8 @@ export default function SupportClient({
   setupRequired,
 }: SupportClientProps) {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isAppSurface = searchParams.get("surface") === "app"
   const [pending, startTransition] = useTransition()
   const [tickets, setTickets] = useState<SupportTicket[]>(initialTickets)
   const [message, setMessage] = useState("")
@@ -274,7 +276,7 @@ export default function SupportClient({
     <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
-          href="/starter"
+          href={isAppSurface ? "/starter?surface=app" : "/starter"}
           className="inline-flex items-center gap-2 rounded-2xl border border-blue-200 bg-white px-4 py-3 text-sm font-black text-blue-700 shadow-sm transition hover:bg-blue-50"
         >
           <ArrowLeft className="h-4 w-4" />

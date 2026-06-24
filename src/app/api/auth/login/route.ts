@@ -42,9 +42,10 @@ function resolvePostLoginPath(plan: string, nextPath: string, appSurface: boolea
 }
 
 function loginUrl(request: NextRequest, params?: Record<string, string>) {
-  const url = new URL("/login", requestOrigin(request))
+  const appSurface = params?.surface === "app" || String(params?.next || "").includes("surface=app")
+  const url = new URL(appSurface ? "/app-login" : "/login", requestOrigin(request))
   for (const [key, value] of Object.entries(params || {})) {
-    if (value) url.searchParams.set(key, value)
+    if (value && !(appSurface && key === "surface")) url.searchParams.set(key, value)
   }
   return url
 }

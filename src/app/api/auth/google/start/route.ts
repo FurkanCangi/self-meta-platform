@@ -42,9 +42,11 @@ function surfaceFromForm(value: FormDataEntryValue | null, nextPath: string) {
 }
 
 function redirectUrl(request: NextRequest, path: string, params?: Record<string, string>) {
-  const url = new URL(path, requestOrigin(request))
+  const appSurface = params?.surface === "app" || String(params?.next || "").includes("surface=app")
+  const targetPath = appSurface && path === "/login" ? "/app-login" : path
+  const url = new URL(targetPath, requestOrigin(request))
   for (const [key, value] of Object.entries(params || {})) {
-    if (value) url.searchParams.set(key, value)
+    if (value && !(appSurface && key === "surface" && targetPath === "/app-login")) url.searchParams.set(key, value)
   }
   return url
 }
@@ -59,14 +61,14 @@ export async function POST(request: NextRequest) {
   const mode = String(formData.get("mode") || "login") as GoogleOAuthMode
   const nextPath = sanitizeNextPath(formData.get("next"))
   const surface = surfaceFromForm(formData.get("surface"), nextPath)
-  const sourcePath = mode === "signup" ? "/signup" : "/login"
+  const sourcePath = mode === "signup" ? "/signup" : surface === "app" ? "/app-login" : "/login"
   const fallbackParams = {
     ...(surface === "app" ? { surface: "app" } : {}),
     ...(nextPath !== "/starter" ? { next: nextPath } : {}),
   }
 
   if (mode !== "signup" && mode !== "login") {
-    return NextResponse.redirect(redirectUrl(request, "/login", { ...fallbackParams, error: "google_failed" }), 303)
+    return NextResponse.redirect(redirectUrl(request, surface === "app" ? "/app-login" : "/login", { ...fallbackParams, error: "google_failed" }), 303)
   }
 
   const legalAccepted =

@@ -70,7 +70,7 @@ export default function ClientDetailPage() {
     if (userErr || !userRes?.user?.id) {
       setLoading(false);
       setBusy(false);
-      router.replace(appSurface ? "/login?surface=app" : "/login");
+      router.replace(appSurface ? "/app-login" : "/login");
       return;
     }
 

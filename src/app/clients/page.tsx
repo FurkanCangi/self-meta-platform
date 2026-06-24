@@ -94,7 +94,7 @@ export default function ClientsPage() {
 
         if (response.status === 401) {
           setLoading(false);
-          router.replace(appSurface ? "/login?surface=app" : "/login");
+          router.replace(appSurface ? "/app-login" : "/login");
           return;
         }
 
