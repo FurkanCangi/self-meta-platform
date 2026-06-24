@@ -2,6 +2,8 @@ import "server-only"
 
 import type { SupabaseClient } from "@supabase/supabase-js"
 import { INITIAL_PROGRAM_REPORT_CREDITS, REPORT_PACKAGE_CREDITS } from "@/lib/legal/documents"
+import { isOwnerAuditEmail } from "@/lib/owner/ownerAccess"
+import { isSecurityTestExemptEmail } from "@/lib/security/securityExemptions"
 
 export type ReportCreditReason =
   | "initial_program_grant"
@@ -112,10 +114,19 @@ export async function grantInitialProgramCredits(params: {
 export async function consumeReportCredit(params: {
   admin: SupabaseClient
   userId: string
+  userEmail?: string | null
   assessmentId?: string | null
   clientId?: string | null
   metadata?: Record<string, unknown>
 }) {
+  if (isSecurityTestExemptEmail(params.userEmail) || isOwnerAuditEmail(params.userEmail)) {
+    return {
+      ok: true as const,
+      remaining: 999999,
+      exempt: true,
+    }
+  }
+
   const { data, error } = await params.admin.rpc("consume_report_credit", {
     target_user_id: params.userId,
     target_assessment_id: params.assessmentId || null,

@@ -147,6 +147,7 @@ check("owner notifications default to existing education route", ownerNotificati
 
 const aiReportRoute = read("src/app/api/ai-report/route.ts")
 const manualReportRoute = read("src/app/api/reports/manual/route.ts")
+const reportCreditsLib = read("src/lib/security/reportCredits.ts")
 const assessmentsClient = read("src/app/assessments/AssessmentsClient.tsx")
 check("AI report route uses Zod payload schema", aiReportRoute.includes("aiReportPayloadSchema"), "missing AI report Zod schema")
 check("AI report route rejects server-controlled payload fields", aiReportRoute.includes("rejectServerControlledFields"), "missing AI mass-assignment guard")
@@ -161,6 +162,7 @@ check("manual report route validates body with Zod", manualReportRoute.includes(
 check("manual report route consumes report credit", manualReportRoute.includes("consumeReportCredit"), "manual report route missing report credit control")
 check("manual report route rolls back credit if insert fails", manualReportRoute.includes("rollback_reason") && manualReportRoute.includes("manual_report_insert_failed"), "manual report rollback missing")
 check("assessment screen uses manual report API instead of direct report insert", assessmentsClient.includes('fetch("/api/reports/manual"') && !assessmentsClient.includes('.from("reports")'), "assessment report creation bypasses API")
+check("test and owner emails bypass report credit gate", reportCreditsLib.includes("isSecurityTestExemptEmail") && reportCreditsLib.includes("isOwnerAuditEmail") && aiReportRoute.includes("userEmail: user.email") && manualReportRoute.includes("userEmail: auth.user.email"), "test/owner report credit exemption missing")
 
 const aiReportService = read("src/lib/dna/aiReportService.ts")
 check("legacy AI path keeps API key server-side", aiReportService.includes("process.env.OPENAI_API_KEY"), "missing server-side API key usage")

@@ -396,6 +396,7 @@ if (__validationErrors.length > 0) {
     const credit = await consumeReportCredit({
       admin,
       userId: user.id,
+      userEmail: user.email,
       assessmentId,
       clientId: ownedClientId,
       metadata: {

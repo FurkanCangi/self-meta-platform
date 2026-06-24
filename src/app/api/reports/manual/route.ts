@@ -132,6 +132,7 @@ export async function POST(request: Request) {
   const credit = await consumeReportCredit({
     admin,
     userId: auth.user.id,
+    userEmail: auth.user.email,
     assessmentId: body.assessmentId,
     clientId: body.clientId,
     metadata: {
