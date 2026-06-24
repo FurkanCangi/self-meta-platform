@@ -63,6 +63,23 @@ function reportTitle(row: ReportRow) {
   return code === "—" ? "Klinik rapor" : `${code} raporu`;
 }
 
+function normalizeCode(value?: string | null) {
+  return String(value || "").trim().toUpperCase();
+}
+
+function reportMatchesClientFilter(row: ReportRow, filter: { id: string; code: string }) {
+  const filterId = String(filter.id || "").trim();
+  const filterCode = normalizeCode(filter.code);
+  const rowClientId = String(row.clientId || "").trim();
+  const rowClientCode = normalizeCode(extractClientCode(row));
+
+  if (filterId && rowClientId === filterId) return true;
+  if (filterCode && rowClientCode === filterCode) return true;
+  if (!filterId && !filterCode) return true;
+
+  return false;
+}
+
 export default function ReportsPage() {
   const router = useRouter();
   const [rows, setRows] = useState<ReportRow[]>([]);
@@ -106,9 +123,7 @@ export default function ReportsPage() {
         }
 
         const safeRows = (payload.reports || []) as ReportRow[];
-        const initialRows = nextClientFilter.id
-          ? safeRows.filter((row) => String(row.clientId || "") === nextClientFilter.id)
-          : safeRows;
+        const initialRows = safeRows.filter((row) => reportMatchesClientFilter(row, nextClientFilter));
         setRows(safeRows);
         setSelectedId(initialRows[0]?.id || "");
       } catch (error) {
@@ -130,9 +145,8 @@ export default function ReportsPage() {
   }, [router]);
 
   const visibleRows = useMemo(() => {
-    if (!clientFilter.id) return rows;
-    return rows.filter((row) => String(row.clientId || "") === clientFilter.id);
-  }, [rows, clientFilter.id]);
+    return rows.filter((row) => reportMatchesClientFilter(row, clientFilter));
+  }, [rows, clientFilter]);
 
   const selected = useMemo(
     () => visibleRows.find((x) => x.id === selectedId) || null,
