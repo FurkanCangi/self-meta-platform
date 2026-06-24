@@ -107,7 +107,7 @@ import { evaluateAccountRisk, recordAccountSecurityEvent } from "@/lib/security/
 import { getPrivacyAuditContext, recordDataAccessAuditEvent } from "@/lib/security/privacyOps"
 import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { readJsonWithSchema } from "@/lib/security/schemaGuards"
-import { consumeReportCredit } from "@/lib/security/reportCredits"
+import { consumeReportCredit, grantReportCredits } from "@/lib/security/reportCredits"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { buildAdvancedReport } from "@/lib/dna/reportEngine"
 import { extractAgeMonthsFromAnamnez, isSupportedAgeMonths } from "@/lib/dna/ageUtils"
@@ -147,6 +147,37 @@ function appendOptionalSection(baseText: string, optionalSection?: string | null
   const extra = String(optionalSection || "").trim()
   if (!extra) return main
   return [main, extra].filter(Boolean).join("\n\n")
+}
+
+function validateInputDna(body: any) {
+  const errors = []
+
+  if (!body) errors.push("body_missing")
+
+  const scores = body?.scores || {}
+  const domains = ["fizyolojik", "duyusal", "duygusal", "bilissel", "yurutucu", "intero"]
+
+  for (const domain of domains) {
+    const value = scores[domain]
+    if (value == null) errors.push(`${domain}_missing`)
+    if (typeof value === "number" && (value < 10 || value > 50)) {
+      errors.push(`${domain}_out_of_range`)
+    }
+  }
+
+  if (body?.answers != null) {
+    if (!Array.isArray(body.answers) || body.answers.length !== 60) {
+      errors.push("answers_invalid")
+    } else if (
+      body.answers.some(
+        (value: unknown) => !Number.isFinite(Number(value)) || Number(value) < 1 || Number(value) > 5
+      )
+    ) {
+      errors.push("answers_out_of_range")
+    }
+  }
+
+  return errors
 }
 
 const aiReportPayloadSchema = z
@@ -241,13 +272,60 @@ export async function POST(req: Request) {
 
     const auditContext = await getPrivacyAuditContext()
     const admin = createSupabaseAdminClient()
+    const ownedClientId = String((ownedClient as any).client?.id || "")
+    const assessmentId = typeof body?.assessmentId === "string" ? body.assessmentId.trim() : ""
+
+    if (!assessmentId) {
+      return NextResponse.json(
+        { ok: false, error: "Değerlendirme kaydı doğrulanamadı." },
+        { status: 400 }
+      )
+    }
+
+    if (!ownedClientId) {
+      return NextResponse.json(
+        { ok: false, error: "Danışan kaydı doğrulanamadı." },
+        { status: 403 }
+      )
+    }
+
+    const incomingClientId = String(body?.clientId || body?.client_id || "").trim()
+    if (incomingClientId && incomingClientId !== ownedClientId) {
+      return NextResponse.json(
+        { ok: false, error: "Danışan kaydı doğrulanamadı." },
+        { status: 403 }
+      )
+    }
+
+    const { data: assessmentRow, error: assessmentLookupError } = await admin
+      .from("assessments_v2")
+      .select("id, client_id")
+      .eq("id", assessmentId)
+      .eq("client_id", ownedClientId)
+      .is("deleted_at", null)
+      .maybeSingle()
+
+    if (assessmentLookupError) {
+      return NextResponse.json(
+        { ok: false, error: "Değerlendirme kaydı doğrulanamadı." },
+        { status: 500 }
+      )
+    }
+
+    if (!assessmentRow?.id) {
+      return NextResponse.json(
+        { ok: false, error: "Değerlendirme kaydı bulunamadı." },
+        { status: 404 }
+      )
+    }
+
     await recordDataAccessAuditEvent({
       admin,
       actorUserId: user.id,
       subjectUserId: user.id,
       action: "ai_report_generate",
       resourceType: "client",
-      resourceId: String((ownedClient as any).client?.id || ""),
+      resourceId: ownedClientId,
       legalBasis: "explicit_consent_and_service_delivery",
       ipAddress: auditContext.ipAddress,
       userAgent: auditContext.userAgent,
@@ -261,44 +339,11 @@ export async function POST(req: Request) {
         ok: true,
         report: existingText,
         deterministic: existingText,
+        reportId: existingLock.existing.id,
+        createdAt: existingLock.existing.created_at,
+        existing: true,
       })
     }
-
-
-function validateInputDna(body: any) {
-  const errors = []
-
-  if (!body) errors.push("body_missing")
-
-  const scores = body?.scores || {}
-
-  const domains = [
-    "fizyolojik",
-    "duyusal",
-    "duygusal",
-    "bilissel",
-    "yurutucu",
-    "intero"
-  ]
-
-  for (const d of domains) {
-    const val = scores[d]
-    if (val == null) errors.push(`${d}_missing`)
-    if (typeof val === "number" && (val < 10 || val > 50)) {
-      errors.push(`${d}_out_of_range`)
-    }
-  }
-
-  if (body?.answers != null) {
-    if (!Array.isArray(body.answers) || body.answers.length !== 60) {
-      errors.push("answers_invalid")
-    } else if (body.answers.some((value: unknown) => !Number.isFinite(Number(value)) || Number(value) < 1 || Number(value) > 5)) {
-      errors.push("answers_out_of_range")
-    }
-  }
-
-  return errors
-}
 
 const __validationErrors = validateInputDna(body)
 if (__validationErrors.length > 0) {
@@ -351,8 +396,8 @@ if (__validationErrors.length > 0) {
     const credit = await consumeReportCredit({
       admin,
       userId: user.id,
-      assessmentId: typeof body?.assessmentId === "string" ? body.assessmentId : null,
-      clientId: String((ownedClient as any).client?.id || ""),
+      assessmentId,
+      clientId: ownedClientId,
       metadata: {
         route: "/api/ai-report",
         client_code: String(body?.clientCode || body?.client_code || ""),
@@ -371,13 +416,65 @@ if (__validationErrors.length > 0) {
       )
     }
 
+    const snapshotJson = {
+      client_code: String(body?.clientCode || body?.client_code || ""),
+      answers: Array.isArray(body?.answers) ? body.answers : [],
+      scores: body?.scores || {},
+      age_months: incomingAgeMonths,
+      norm_source: report.normSource,
+      age_band_label: report.ageBandLabel,
+      domain_levels: report.domainLevels ?? report.domains,
+      weak_domains: report.weakDomains,
+      strong_domains: report.strongDomains,
+      patterns: report.patterns,
+      anamnez_flags: report.anamnezFlags,
+      ai_report_text: finalText,
+      saved_by: "api/ai-report",
+    }
+
+    const { data: createdReport, error: reportInsertError } = await admin
+      .from("reports")
+      .insert({
+        assessment_id: assessmentId,
+        version: 1,
+        report_text: finalText,
+        immutable: true,
+        snapshot_json: snapshotJson,
+      })
+      .select("id, created_at")
+      .single()
+
+    if (reportInsertError) {
+      await grantReportCredits({
+        admin,
+        userId: user.id,
+        delta: 1,
+        reason: "adjustment",
+        source: "system",
+        metadata: {
+          route: "/api/ai-report",
+          rollback_reason: "ai_report_insert_failed",
+          assessment_id: assessmentId,
+        },
+      })
+
+      return NextResponse.json(
+        { ok: false, error: "Rapor kaydı oluşturulamadı. Rapor hakkınız iade edildi; lütfen tekrar deneyin." },
+        { status: 500 }
+      )
+    }
+
     return NextResponse.json({
       ok: true,
       report: finalText,
       deterministic: cleanDeterministic,
       remainingReportCredits: credit.remaining,
+      reportId: createdReport?.id || null,
+      createdAt: createdReport?.created_at || null,
+      existing: false,
     })
-  } catch {
+  } catch (error) {
+    console.error("[ai-report] report generation failed", error)
     return NextResponse.json(
       {
         ok: false,

@@ -116,6 +116,7 @@ for (const sqlFile of [
   "sql/payment_security.sql",
   "sql/kvkk_operational_security.sql",
   "sql/support_tickets.sql",
+  "sql/owner_bulk_email.sql",
 ]) {
   if (!exists(sqlFile)) add("missing SQL migration file", sqlFile)
 }

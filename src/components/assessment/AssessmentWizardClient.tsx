@@ -35,6 +35,14 @@ type ClientInfo = {
   ageMonths: number | null
 }
 
+type AiReportResult = {
+  report: string
+  reportId: string | null
+  createdAt: string | null
+  existing: boolean
+  remainingReportCredits: number | null
+}
+
 function assessmentUserMessage(error: unknown) {
   const message = error instanceof Error ? error.message : String(error || "")
   const lower = message.toLowerCase()
@@ -299,7 +307,7 @@ export default function AssessmentWizardClient() {
     answers: number[]
     scores: Record<string, unknown>
     deterministicReport: string
-  }) {
+  }): Promise<AiReportResult> {
     const res = await fetch("/api/ai-report", {
       method: "POST",
       headers: {
@@ -324,7 +332,14 @@ export default function AssessmentWizardClient() {
       throw new Error(data?.error || "Rapor üretilemedi. Lütfen danışan yaşı, skorlar ve rapor hakkını kontrol edin.")
     }
 
-    return String(data.report || "").trim()
+    return {
+      report: String(data.report || "").trim(),
+      reportId: typeof data.reportId === "string" ? data.reportId : null,
+      createdAt: typeof data.createdAt === "string" ? data.createdAt : null,
+      existing: Boolean(data.existing),
+      remainingReportCredits:
+        typeof data.remainingReportCredits === "number" ? data.remainingReportCredits : null,
+    }
   }
 
   function handleSelect(index: number, value: number) {
@@ -386,7 +401,7 @@ export default function AssessmentWizardClient() {
 
       const assessmentId = assessmentRow.id
 
-      const aiReportText = await generateAIReport({
+      const aiReportResult = await generateAIReport({
         assessmentId,
         clientId: clientInfo.id,
         clientCode: clientInfo.child_code,
@@ -409,50 +424,18 @@ export default function AssessmentWizardClient() {
         },
         deterministicReport: advancedReport.deterministicReport,
       })
+      const aiReportText = aiReportResult.report
 
       setGeneratedReportText(aiReportText)
-
-      const snapshotJson = {
-        client_code: clientInfo.child_code,
-        answers,
-        scores: {
-            fizyolojik: result.fizyolojik,
-          duyusal: result.duyusal,
-          duygusal: result.duygusal,
-          bilissel: result.bilissel,
-          yurutucu: result.yurutucu,
-          intero: result.intero,
-          toplam: result.toplam,
-          siniflama: advancedReport.globalLevel,
-        },
-        age_months: clientInfo.ageMonths,
-        norm_source: advancedReport.normSource,
-        age_band_label: advancedReport.ageBandLabel,
-        domain_levels: advancedReport.domainLevels ?? advancedReport.domains,
-        weak_domains: advancedReport.weakDomains,
-        strong_domains: advancedReport.strongDomains,
-        patterns: advancedReport.patterns,
-        anamnez_flags: advancedReport.anamnezFlags,
-        ai_report_text: aiReportText,
-      }
-
-      const { data: createdReport, error: reportErr } = await supabase
-        .from("reports")
-        .insert({
-          assessment_id: assessmentId,
-          version: 1,
-          report_text: aiReportText || advancedReport.deterministicReport,
-          immutable: true,
-          snapshot_json: snapshotJson,
-        })
-        .select("created_at")
-        .single()
-
-      if (reportErr) throw new Error("Rapor kaydı oluşturulamadı: " + reportErr.message)
-
-      setGeneratedReportDate(createdReport?.created_at || new Date().toISOString())
+      setGeneratedReportDate(aiReportResult.createdAt || new Date().toISOString())
       setReportReady(true)
-      setSaveMsg("Rapor başarıyla oluşturuldu ve geçmişe kaydedildi.")
+      setSaveMsg(
+        aiReportResult.existing
+          ? "Bu vaka için rapor daha önce oluşturulmuş. Mevcut rapor açıldı; yeni hak düşülmedi."
+          : aiReportResult.remainingReportCredits == null
+            ? "Rapor başarıyla oluşturuldu ve geçmişe kaydedildi."
+            : `Rapor başarıyla oluşturuldu ve geçmişe kaydedildi. Kalan rapor hakkı: ${aiReportResult.remainingReportCredits}`
+      )
       if (typeof window !== "undefined") {
         setTimeout(() => {
           window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" })
