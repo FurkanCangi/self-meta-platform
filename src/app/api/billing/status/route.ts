@@ -6,6 +6,8 @@ import { ensurePaymentExemptAccess, isPaymentExemptEmail, PAYMENT_EXEMPT_PLAN } 
 import { getReportCreditSummary } from "@/lib/security/reportCredits"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
+const UNLIMITED_REPORT_CREDITS = 999999
+
 function isActiveEntitlement(row: any) {
   if (!row || row.revoked_at) return false
   if (row.starts_at && new Date(String(row.starts_at)).getTime() > Date.now()) return false
@@ -98,6 +100,7 @@ export async function GET() {
 
   return NextResponse.json({
     ok: true,
+    paymentExempt,
     education: {
       active: Boolean(educationEntitlement) || paymentExempt,
       planCode: educationEntitlement?.plan_code || (paymentExempt ? PAYMENT_EXEMPT_PLAN : null),
@@ -108,9 +111,10 @@ export async function GET() {
     },
     reports: {
       used: creditSummary.ok ? creditSummary.consumed : reportCount,
-      included: creditSummary.ok ? creditSummary.granted : 0,
-      remaining: creditSummary.ok ? creditSummary.balance : 0,
+      included: paymentExempt ? UNLIMITED_REPORT_CREDITS : creditSummary.ok ? creditSummary.granted : 0,
+      remaining: paymentExempt ? UNLIMITED_REPORT_CREDITS : creditSummary.ok ? creditSummary.balance : 0,
       creditLedgerAvailable: creditSummary.ok,
+      unlimited: paymentExempt,
     },
     recentBillingEvents: (billingEvents || []).map((row: any) => ({
       action: String(row.action || ""),
