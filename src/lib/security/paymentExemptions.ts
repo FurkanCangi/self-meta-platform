@@ -3,7 +3,6 @@ import "server-only"
 import type { SupabaseClient } from "@supabase/supabase-js"
 import type { PlanCode } from "@/lib/legal/documents"
 import { EDUCATION_VIDEO_FEATURE } from "@/lib/security/entitlements"
-import { grantReportCredits } from "@/lib/security/reportCredits"
 import { isSecurityTestExemptEmail } from "@/lib/security/securityExemptions"
 
 export const PAYMENT_EXEMPT_PLAN: Exclude<PlanCode, "none"> = "professional"
@@ -115,35 +114,18 @@ export async function ensurePaymentExemptAccess(params: {
     }
   }
 
-  const creditGrant = await grantReportCredits({
-    admin: params.admin,
-    userId: params.userId,
-    delta: 5,
-    reason: "manual_admin_grant",
-    source: "manual_admin",
-    provider: "internal_payment_exemption",
-    providerEventId: `payment-exempt:${params.userId}:initial-report-credits`,
-    metadata: {
-      email: normalizeEmail(params.email),
-      reason: "payment_exempt_therapist_access",
-      plan_code: PAYMENT_EXEMPT_PLAN,
-    },
-  })
-
   await params.admin.from("billing_audit_events").insert({
     actor_user_id: null,
     target_user_id: params.userId,
-    action: creditGrant.ok
-      ? "payment_exemption_applied"
-      : "payment_exemption_applied_credit_grant_failed",
+    action: "payment_exemption_applied",
     provider: "internal_payment_exemption",
     provider_event_id: `payment-exempt:${params.userId}`,
     metadata: {
       email: normalizeEmail(params.email),
       plan_code: PAYMENT_EXEMPT_PLAN,
       feature: EDUCATION_VIDEO_FEATURE,
-      report_credits: creditGrant.ok ? 5 : 0,
-      credit_error: creditGrant.ok ? null : creditGrant.error,
+      report_credits: "unlimited",
+      credit_error: null,
     },
   })
 
