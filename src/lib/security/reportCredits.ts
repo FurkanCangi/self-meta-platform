@@ -73,6 +73,22 @@ export async function grantReportCredits(params: {
     return { ok: false as const, error: "report_credit_grant_invalid" }
   }
 
+  if (params.providerEventId) {
+    let query = params.admin
+      .from("report_credit_ledger")
+      .select("id")
+      .eq("provider_event_id", params.providerEventId)
+      .eq("reason", params.reason)
+      .limit(1)
+
+    query = params.provider ? query.eq("provider", params.provider) : query.is("provider", null)
+
+    const { data: existing, error: lookupError } = await query
+    if (!lookupError && existing && existing.length > 0) {
+      return { ok: true as const, duplicate: true }
+    }
+  }
+
   const { error } = await params.admin.from("report_credit_ledger").insert({
     user_id: params.userId,
     delta: Math.floor(params.delta),
