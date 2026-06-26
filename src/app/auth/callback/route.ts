@@ -49,6 +49,10 @@ function resolvePostLoginPath(plan: string, nextPath: string, appSurface: boolea
     const glue = nextPath.includes("?") ? "&" : "?"
     return `${nextPath}${glue}surface=app`
   }
+  if (!appSurface && !nextPath.includes("surface=")) {
+    const glue = nextPath.includes("?") ? "&" : "?"
+    return `${nextPath}${glue}surface=web`
+  }
   return nextPath
 }
 
