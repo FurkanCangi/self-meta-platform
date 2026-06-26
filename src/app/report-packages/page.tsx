@@ -11,6 +11,7 @@ import {
 
 type BillingStatus = {
   ok: boolean
+  paymentExempt?: boolean
   education?: {
     active: boolean
     planCode: string | null
@@ -24,6 +25,7 @@ type BillingStatus = {
     included: number | null
     remaining: number | null
     creditLedgerAvailable: boolean
+    unlimited?: boolean
   }
   recentBillingEvents?: Array<{
     action: string
@@ -77,6 +79,22 @@ function formatDate(value?: string | null) {
   return date.toLocaleString("tr-TR")
 }
 
+function formatReportBalance(status: BillingStatus | null) {
+  if (status?.reports?.unlimited) return "Sınırsız"
+  if (!status?.reports?.creditLedgerAvailable) return "—"
+  return String(status.reports.remaining ?? 0)
+}
+
+function formatReportBalanceLabel(status: BillingStatus | null) {
+  if (status?.reports?.unlimited) return "rapor hakkı"
+  return "rapor hakkı"
+}
+
+function formatIncludedReports(status: BillingStatus | null) {
+  if (status?.reports?.unlimited) return "Sınırsız"
+  return String(status?.reports?.included ?? 0)
+}
+
 export default function ReportPackagesPage() {
   const [status, setStatus] = useState<BillingStatus | null>(null)
   const [loadingStatus, setLoadingStatus] = useState(true)
@@ -116,9 +134,9 @@ export default function ReportPackagesPage() {
         <div className="rounded-[18px] border border-slate-200 bg-white p-3 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Kalan</div>
           <div className="mt-1 text-2xl font-black text-[#071b3a]">
-            {loadingStatus ? "..." : status?.reports?.creditLedgerAvailable ? status.reports.remaining ?? 0 : "—"}
+            {loadingStatus ? "..." : formatReportBalance(status)}
           </div>
-          <div className="mt-1 text-xs font-semibold text-slate-500">rapor hakkı</div>
+          <div className="mt-1 text-xs font-semibold text-slate-500">{formatReportBalanceLabel(status)}</div>
         </div>
         <div className="rounded-[18px] border border-slate-200 bg-white p-3 shadow-sm">
           <div className="text-[10px] font-black uppercase tracking-wide text-slate-400">Kullanılan</div>
@@ -133,7 +151,11 @@ export default function ReportPackagesPage() {
           {loadingStatus ? "Yükleniyor..." : status?.education?.active ? formatPlan(status.education.planCode) : "Aktif erişim yok"}
         </div>
         <div className="mt-1 text-xs font-semibold leading-5 text-blue-800">
-          {status?.education?.expiresAt ? `Bitiş: ${formatDate(status.education.expiresAt)}` : "Satın alma veya admin tanımı sonrası görünür."}
+          {status?.paymentExempt
+            ? "Test hesabı: paket kontrolü uygulanmaz."
+            : status?.education?.expiresAt
+              ? `Bitiş: ${formatDate(status.education.expiresAt)}`
+              : "Satın alma veya admin tanımı sonrası görünür."}
         </div>
       </section>
 
@@ -212,7 +234,11 @@ export default function ReportPackagesPage() {
               {loadingStatus ? "Yükleniyor..." : status?.education?.active ? formatPlan(status.education.planCode) : "Aktif erişim yok"}
             </div>
             <div className="mt-2 text-sm leading-6 text-slate-500">
-              {status?.education?.expiresAt ? `Bitiş: ${formatDate(status.education.expiresAt)}` : "Webhook veya admin tanımı sonrası aktif görünür."}
+              {status?.paymentExempt
+                ? "Test hesabı: eğitim erişimi ve rapor hakkı sınırsızdır."
+                : status?.education?.expiresAt
+                  ? `Bitiş: ${formatDate(status.education.expiresAt)}`
+                  : "Satın alma veya admin tanımı sonrası aktif görünür."}
             </div>
           </div>
           <div className="dna-card p-5">
@@ -223,10 +249,16 @@ export default function ReportPackagesPage() {
           <div className="dna-card p-5">
             <div className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Kalan Rapor Hakkı</div>
             <div className="mt-2 text-xl font-black text-[#071b3a]">
-              {loadingStatus ? "Yükleniyor..." : status?.reports?.creditLedgerAvailable ? `${status.reports.remaining ?? 0} kalan` : "Ledger hazır değil"}
+              {loadingStatus
+                ? "Yükleniyor..."
+                : status?.reports?.unlimited
+                  ? "Sınırsız"
+                  : status?.reports?.creditLedgerAvailable
+                    ? `${status.reports.remaining ?? 0} kalan`
+                    : "Ledger hazır değil"}
             </div>
             <div className="mt-2 text-sm leading-6 text-slate-500">
-              Toplam tanımlı hak: {loadingStatus ? "..." : status?.reports?.included ?? 0}. Süre sınırı yoktur.
+              Toplam tanımlı hak: {loadingStatus ? "..." : formatIncludedReports(status)}. Süre sınırı yoktur.
             </div>
           </div>
         </section>
