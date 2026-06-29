@@ -1,6 +1,7 @@
 import "server-only"
 
 import nodemailer from "nodemailer"
+import { DEFAULT_SUPPORT_RESOLUTION_MESSAGE } from "@/lib/support/supportMessages"
 import { getOwnerAuditEmails } from "@/lib/owner/ownerAccess"
 
 type OwnerSupportEmailInput = {
@@ -136,14 +137,14 @@ export async function sendSupportTicketResolvedEmail(input: ResolvedSupportEmail
   const body = `
     <p style="margin:0 0 12px;">${escapeHtml(input.ticketNo)} numaralı destek talebiniz çözüldü.</p>
     <p style="margin:0 0 8px;"><strong>Konu:</strong> ${escapeHtml(input.subject)}</p>
-    <p style="margin:0;"><strong>Çözüm notu:</strong><br />${escapeHtml(input.resolutionMessage || "Talebiniz çözüldü.").replace(/\n/g, "<br />")}</p>
+    <p style="margin:0;"><strong>Çözüm notu:</strong><br />${escapeHtml(input.resolutionMessage || DEFAULT_SUPPORT_RESOLUTION_MESSAGE).replace(/\n/g, "<br />")}</p>
   `
 
   await transporter().sendMail({
     from: fromAddress(),
     to: input.to,
     subject: `Destek talebiniz çözüldü: ${input.ticketNo}`,
-    text: `${input.ticketNo} numaralı destek talebiniz çözüldü.\n\nKonu: ${input.subject}\n\nÇözüm notu:\n${input.resolutionMessage || "Talebiniz çözüldü."}\n\nDestek ekranı: ${input.supportUrl}`,
+    text: `${input.ticketNo} numaralı destek talebiniz çözüldü.\n\nKonu: ${input.subject}\n\nÇözüm notu:\n${input.resolutionMessage || DEFAULT_SUPPORT_RESOLUTION_MESSAGE}\n\nDestek ekranı: ${input.supportUrl}`,
     html: cardHtml("Destek talebiniz çözüldü", body, "Destek ekranını aç", input.supportUrl),
   })
 

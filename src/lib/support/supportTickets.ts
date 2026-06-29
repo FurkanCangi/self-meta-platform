@@ -25,7 +25,7 @@ const statusLabels: Record<string, string> = {
   in_progress: "İnceleniyor",
   waiting_user: "Kullanıcıdan bilgi bekleniyor",
   resolved: "Çözüldü",
-  closed: "Kapandı",
+  closed: "Listeden kaldırıldı",
 }
 
 const priorityLabels: Record<string, string> = {
@@ -275,7 +275,11 @@ export async function fetchOwnerSupportTickets(filters: {
     .order("updated_at", { ascending: false })
     .limit(120)
 
-  if (filters.status && filters.status !== "all") query = query.eq("status", filters.status)
+  if (filters.status && filters.status !== "all") {
+    query = query.eq("status", filters.status)
+  } else {
+    query = query.neq("status", "closed")
+  }
   if (filters.category && filters.category !== "all") query = query.eq("category", filters.category)
   if (filters.priority && filters.priority !== "all") query = query.eq("priority", filters.priority)
 

@@ -30,7 +30,8 @@ function formatDateTime(value: string | null | undefined) {
 }
 
 function statusClass(status: string) {
-  if (status === "resolved" || status === "closed") return "bg-cyan-50 text-cyan-800"
+  if (status === "resolved") return "bg-cyan-50 text-cyan-800"
+  if (status === "closed") return "bg-slate-100 text-slate-600"
   if (status === "in_progress") return "bg-blue-50 text-blue-700"
   if (status === "waiting_user") return "bg-violet-50 text-violet-800"
   return "bg-slate-100 text-slate-900"
@@ -291,7 +292,7 @@ export default async function OwnerSupportPage({ searchParams }: { searchParams:
               <option value="in_progress">İnceleniyor</option>
               <option value="waiting_user">Kullanıcı bekleniyor</option>
               <option value="resolved">Çözüldü</option>
-              <option value="closed">Kapandı</option>
+              <option value="closed">Listeden kaldırılanlar</option>
             </select>
           </label>
           <label className="grid gap-2 text-sm text-slate-600">

@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react"
 import { useRouter } from "next/navigation"
+import { DEFAULT_SUPPORT_RESOLUTION_MESSAGE } from "@/lib/support/supportMessages"
 
 type OwnerSupportActionsProps = {
   ticketId: string
@@ -15,7 +16,7 @@ const statusOptions = [
   { value: "in_progress", label: "İnceleniyor" },
   { value: "waiting_user", label: "Kullanıcıdan bilgi bekleniyor" },
   { value: "resolved", label: "Çözüldü" },
-  { value: "closed", label: "Kapandı" },
+  { value: "closed", label: "Listeden kaldırıldı" },
 ]
 
 export default function OwnerSupportActions({
@@ -28,11 +29,36 @@ export default function OwnerSupportActions({
   const [pending, startTransition] = useTransition()
   const [status, setStatus] = useState(currentStatus)
   const [ownerNote, setOwnerNote] = useState(initialOwnerNote || "")
-  const [resolutionMessage, setResolutionMessage] = useState(initialResolutionMessage || "")
+  const [resolutionMessage, setResolutionMessage] = useState(
+    initialResolutionMessage || DEFAULT_SUPPORT_RESOLUTION_MESSAGE,
+  )
   const [publicReply, setPublicReply] = useState("")
   const [confirmResolved, setConfirmResolved] = useState(false)
   const [error, setError] = useState("")
   const [ok, setOk] = useState("")
+
+  async function submitAction(nextStatus: string, options?: { removeFromList?: boolean }) {
+    const response = await fetch("/api/owner-audit/support/action", {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-dna-request": "same-origin",
+      },
+      body: JSON.stringify({
+        ticketId,
+        status: nextStatus,
+        ownerNote,
+        resolutionMessage,
+        publicReply: options?.removeFromList ? "" : publicReply,
+        confirmResolved: nextStatus === "resolved" ? confirmResolved : false,
+      }),
+    })
+    const payload = await response.json().catch(() => null)
+    if (!response.ok || !payload?.ok) {
+      throw new Error(String(payload?.error || "Destek talebi güncellenemedi."))
+    }
+    return payload
+  }
 
   function save() {
     setError("")
@@ -51,29 +77,33 @@ export default function OwnerSupportActions({
     }
 
     startTransition(async () => {
-      const response = await fetch("/api/owner-audit/support/action", {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          "x-dna-request": "same-origin",
-        },
-        body: JSON.stringify({
-          ticketId,
-          status,
-          ownerNote,
-          resolutionMessage,
-          publicReply,
-          confirmResolved,
-        }),
-      })
-      const payload = await response.json().catch(() => null)
-      if (!response.ok || !payload?.ok) {
-        setError(String(payload?.error || "Destek talebi güncellenemedi."))
+      try {
+        await submitAction(status)
+      } catch (saveError) {
+        setError(saveError instanceof Error ? saveError.message : "Destek talebi güncellenemedi.")
         return
       }
       setOk(status === "resolved" ? "Çözüldü olarak kaydedildi. Kullanıcıya e-posta gönderimi denendi." : "Kaydedildi.")
       setPublicReply("")
       if (status !== "resolved") setConfirmResolved(false)
+      router.refresh()
+    })
+  }
+
+  function removeResolvedFromList() {
+    setError("")
+    setOk("")
+    startTransition(async () => {
+      try {
+        await submitAction("closed", { removeFromList: true })
+      } catch (removeError) {
+        setError(removeError instanceof Error ? removeError.message : "Destek talebi listeden kaldırılamadı.")
+        return
+      }
+      setStatus("closed")
+      setPublicReply("")
+      setConfirmResolved(false)
+      setOk("Talep destek kuyruğundan kaldırıldı. Gerekirse filtrelerden listeden kaldırılanlarda görebilirsiniz.")
       router.refresh()
     })
   }
@@ -133,7 +163,7 @@ export default function OwnerSupportActions({
           onChange={(event) => setResolutionMessage(event.target.value)}
           maxLength={3000}
           className="min-h-[90px] rounded-2xl border border-slate-200 bg-white px-3 py-3 text-sm font-medium normal-case leading-6 tracking-normal text-slate-800"
-          placeholder="Örn: Hesabınızdaki eski cihaz kaydı kaldırıldı. Şimdi tekrar giriş yapabilirsiniz."
+          placeholder={DEFAULT_SUPPORT_RESOLUTION_MESSAGE}
         />
       </label>
 
@@ -160,6 +190,16 @@ export default function OwnerSupportActions({
         >
           {pending ? "Kaydediliyor..." : "Kaydet"}
         </button>
+        {status === "resolved" ? (
+          <button
+            type="button"
+            onClick={removeResolvedFromList}
+            disabled={pending}
+            className="rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-black text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 disabled:opacity-60"
+          >
+            Listeden kaldır
+          </button>
+        ) : null}
         {ok ? <span className="text-sm font-bold text-cyan-700">{ok}</span> : null}
         {error ? <span className="text-sm font-bold text-slate-700">{error}</span> : null}
       </div>

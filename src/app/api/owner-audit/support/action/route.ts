@@ -6,6 +6,7 @@ import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import { isMissingSupportTable } from "@/lib/support/supportTickets"
 import { sendSupportTicketResolvedEmail } from "@/lib/support/supportEmail"
+import { DEFAULT_SUPPORT_RESOLUTION_MESSAGE } from "@/lib/support/supportMessages"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
 const ownerSupportActionSchema = z.object({
@@ -136,7 +137,7 @@ export async function POST(request: Request) {
         resolutionMessage:
           parsed.data.resolutionMessage ||
           parsed.data.publicReply ||
-          "Destek talebiniz çözüldü. Destek ekranından detayları kontrol edebilirsiniz.",
+          DEFAULT_SUPPORT_RESOLUTION_MESSAGE,
         supportUrl,
       }).catch((emailError) => {
         console.error("[owner-support] resolved email failed", {
