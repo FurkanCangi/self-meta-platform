@@ -114,12 +114,12 @@ export async function POST(request: Request) {
         title: "Destek talebiniz güncellendi",
         message:
           parsed.data.status === "resolved"
-            ? `${existing.ticket_no} numaralı talebiniz çözüldü. Destek alanından yanıtı kontrol edebilirsiniz.`
-            : `${existing.ticket_no} numaralı talebiniz güncellendi. Destek alanından kontrol edebilirsiniz.`,
+            ? "Destek talebiniz çözüldü. Çözüm notunu destek alanından kontrol edebilirsiniz."
+            : "Destek talebiniz güncellendi. Detayları destek alanından kontrol edebilirsiniz.",
         kind: "system",
         audience: "owners",
         target_user_ids: [existing.user_id],
-        action_label: "Talebi Aç",
+        action_label: "Destek Talebini Aç",
         action_url: "/support",
         status: "published",
         published_at: now,

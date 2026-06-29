@@ -64,6 +64,12 @@ function cleanText(value: unknown, fallback = "") {
   return normalized || fallback
 }
 
+function cleanNotificationMessage(value: unknown) {
+  return cleanText(value)
+    .replace(/\bDST-[A-Z0-9]+\s+numaralı talebiniz/gi, "Destek talebiniz")
+    .replace(/\bDST-[A-Z0-9]+\s+numaralı destek talebiniz/gi, "Destek talebiniz")
+}
+
 export function normalizeNotificationKind(value: unknown): NotificationKind {
   return notificationKinds.has(value as NotificationKind) ? (value as NotificationKind) : "info"
 }
@@ -80,7 +86,7 @@ export function mapNotificationRow(row: NotificationRow, readAt: string | null =
   return {
     id: row.id,
     title: cleanText(row.title, "Bildirim"),
-    message: cleanText(row.message),
+    message: cleanNotificationMessage(row.message),
     kind: normalizeNotificationKind(row.kind),
     audience: normalizeNotificationAudience(row.audience),
     actionLabel: cleanText(row.action_label) || null,

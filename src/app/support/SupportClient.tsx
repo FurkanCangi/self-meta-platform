@@ -80,9 +80,6 @@ function TicketCard({ ticket }: { ticket: SupportTicket }) {
             <span className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide ${statusClass(ticket.status)}`}>
               {ticket.statusLabel}
             </span>
-            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-bold uppercase tracking-wide text-slate-600">
-              {ticket.ticketNo}
-            </span>
             <span className="rounded-full bg-cyan-50 px-3 py-1 text-xs font-bold text-cyan-700">
               {ticket.categoryLabel}
             </span>
@@ -261,9 +258,7 @@ export default function SupportClient({
         return
       }
 
-      setMessage(
-        `${payload.ticket.ticketNo} numaralı destek talebiniz alındı. En geç ${payload.ticket.responseTargetHours} saat içinde dönüş hedefliyoruz.`,
-      )
+      setMessage(`Talebiniz alındı. En geç ${payload.ticket.responseTargetHours} saat içinde dönüş hedefliyoruz.`)
       const form = document.getElementById("support-ticket-form") as HTMLFormElement | null
       form?.reset()
       setFiles(null)
