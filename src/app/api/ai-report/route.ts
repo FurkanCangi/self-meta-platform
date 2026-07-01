@@ -65,7 +65,37 @@ async function checkExistingDnaReportLock(supabase: any, payload: any) {
   return { locked: false, existing: null }
 }
 
-async function assertOwnedDnaClient(supabase: any, userId: string, payload: any) {
+async function checkExistingDnaReportLockByClientId(admin: any, clientId: string) {
+  const normalizedClientId = String(clientId || "").trim()
+  if (!normalizedClientId) return { locked: false, existing: null }
+
+  const { data: assessments, error: assessmentsError } = await admin
+    .from("assessments_v2")
+    .select("id")
+    .eq("client_id", normalizedClientId)
+    .is("deleted_at", null)
+
+  if (assessmentsError || !assessments || assessments.length === 0) {
+    return { locked: false, existing: null }
+  }
+
+  const assessmentIds = assessments.map((row: any) => row.id).filter(Boolean)
+  if (assessmentIds.length === 0) return { locked: false, existing: null }
+
+  const { data, error } = await admin
+    .from("reports")
+    .select("id, report_text, created_at, assessment_id")
+    .in("assessment_id", assessmentIds)
+    .not("report_text", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+
+  if (error || !data?.length) return { locked: false, existing: null }
+
+  return { locked: true, existing: data[0] }
+}
+
+async function assertOwnedDnaClient(supabase: any, admin: any, userId: string, userEmail: string | null | undefined, payload: any) {
   const clientCode = String(
     payload?.client_code ??
     payload?.clientCode ??
@@ -73,28 +103,41 @@ async function assertOwnedDnaClient(supabase: any, userId: string, payload: any)
     payload?.client?.client_code ??
     ""
   ).trim()
+  const clientId = String(payload?.clientId ?? payload?.client_id ?? payload?.client?.id ?? "").trim()
 
-  if (!clientCode) {
+  if (!clientCode && !clientId) {
     return { ok: false, error: "client_code_required" }
   }
 
-  const { data, error } = await supabase
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("role")
+    .eq("user_id", userId)
+    .maybeSingle()
+
+  const elevated = isOwnerAuditEmail(userEmail) || isAdminRole(profile?.role)
+  let query = (elevated ? admin : supabase)
     .from("clients")
     .select("id, child_code")
-    .eq("owner_id", userId)
-    .eq("child_code", clientCode)
     .is("deleted_at", null)
-    .maybeSingle()
+    .limit(1)
+
+  query = clientId ? query.eq("id", clientId) : query.eq("child_code", clientCode)
+  if (!elevated) query = query.eq("owner_id", userId)
+
+  const { data, error } = await query
 
   if (error) {
     return { ok: false, error: "client_lookup_failed" }
   }
 
-  if (!data?.id) {
+  const row = Array.isArray(data) ? data[0] : data
+
+  if (!row?.id) {
     return { ok: false, error: "client_not_found" }
   }
 
-  return { ok: true, client: data }
+  return { ok: true, client: row, elevated }
 }
 
 import { NextResponse } from "next/server"
@@ -109,6 +152,7 @@ import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import { consumeReportCredit, grantReportCredits } from "@/lib/security/reportCredits"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+import { isOwnerAuditEmail } from "@/lib/owner/ownerAccess"
 import { buildAdvancedReport } from "@/lib/dna/reportEngine"
 import { extractAgeMonthsFromAnamnez, isSupportedAgeMonths } from "@/lib/dna/ageUtils"
 import { buildLiteratureAlignedSection } from "@/lib/dna/literatureNote"
@@ -195,6 +239,10 @@ function normalizeDnaScores(scores: Record<string, unknown> | undefined | null) 
   }
 }
 
+function isAdminRole(role?: string | null) {
+  return ["admin", "owner", "super_admin", "yonetici", "yönetici"].includes(String(role || "").toLowerCase())
+}
+
 const aiReportPayloadSchema = z
   .object({
     clientCode: z.string().max(120).optional(),
@@ -274,7 +322,8 @@ export async function POST(req: Request) {
       )
     }
 
-    const ownedClient = await assertOwnedDnaClient(supabase, user.id, body)
+    const admin = createSupabaseAdminClient()
+    const ownedClient = await assertOwnedDnaClient(supabase, admin, user.id, user.email, body)
     if (!ownedClient.ok) {
       return NextResponse.json(
         {
@@ -286,7 +335,6 @@ export async function POST(req: Request) {
     }
 
     const auditContext = await getPrivacyAuditContext()
-    const admin = createSupabaseAdminClient()
     const ownedClientId = String((ownedClient as any).client?.id || "")
     const assessmentId = typeof body?.assessmentId === "string" ? body.assessmentId.trim() : ""
 
@@ -347,7 +395,9 @@ export async function POST(req: Request) {
       metadata: { route: "/api/ai-report" },
     })
 
-    const existingLock = await checkExistingDnaReportLock(supabase, body)
+    const existingLock =
+      (await checkExistingDnaReportLockByClientId(admin, ownedClientId)) ||
+      (await checkExistingDnaReportLock(supabase, body))
     if (existingLock.locked && existingLock.existing?.report_text) {
       const existingText = cleanRenderedReport(String(existingLock.existing.report_text))
       return NextResponse.json({

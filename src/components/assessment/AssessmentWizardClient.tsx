@@ -1,6 +1,5 @@
 "use client"
 
-import { supabase } from "@/lib/supabase/client"
 import { useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { questions } from "@/lib/dna/questions"
@@ -80,7 +79,6 @@ export default function AssessmentWizardClient() {
   
   const [reportLocked, setReportLocked] = useState(false)
   const [reportLockReason, setReportLockReason] = useState("")
-  const dnaSupabase = supabase
 
   const checkExistingReportLock = async (clientId?: string | null) => {
     try {
@@ -91,42 +89,22 @@ export default function AssessmentWizardClient() {
         return false
       }
 
-      const { data: assessments, error: assessmentsError } = await dnaSupabase
-        .from("assessments_v2")
-        .select("id")
-        .eq("client_id", normalizedClientId)
-        .is("deleted_at", null)
+      const query = new URLSearchParams({ client_id: normalizedClientId })
+      const response = await fetch(`/api/app/assessment-context?${query.toString()}`, { cache: "no-store" })
+      const data = await response.json().catch(() => null)
 
-      if (assessmentsError || !assessments || assessments.length === 0) {
-        setReportLocked(false)
-        setReportLockReason("")
-        return false
-      }
-
-      const assessmentIds = assessments.map((row) => row.id).filter(Boolean)
-      if (assessmentIds.length === 0) {
-        setReportLocked(false)
-        setReportLockReason("")
-        return false
-      }
-
-      const { data, error } = await dnaSupabase
-        .from("reports")
-        .select("id, report_text, assessment_id, created_at")
-        .in("assessment_id", assessmentIds)
-        .not("report_text", "is", null)
-        .order("created_at", { ascending: false })
-        .limit(1)
-
-      if (!error && data && data.length > 0) {
+      if (response.ok && data?.reportLock?.locked) {
         setReportLocked(true)
-        setReportLockReason("Bu vaka için rapor daha önce oluşturulmuş. Yeniden rapor alınamaz.")
+        setReportLockReason(
+          data.reportLock.reason ||
+            "Bu vaka için rapor daha önce oluşturulmuş. Mevcut raporu Rapor Geçmişi ekranından görüntüleyebilirsiniz."
+        )
         return true
-      } else {
-        setReportLocked(false)
-        setReportLockReason("")
-        return false
       }
+
+      setReportLocked(false)
+      setReportLockReason("")
+      return false
     } catch (error) {
       console.error("report lock check failed", error)
       return false
@@ -196,56 +174,26 @@ export default function AssessmentWizardClient() {
 
       setLoadingClient(true)
       setClientError(null)
-      let data: Array<{ id: string; child_code: string; anamnez: string | null }> | null = null
-      let error: any = null
-
-      if (normalizedClientId) {
-        const response = await supabase
-          .from("clients")
-          .select("id, child_code, anamnez")
-          .eq("id", normalizedClientId)
-          .is("deleted_at", null)
-          .limit(1)
-
-        data = response.data
-        error = response.error
-      } else {
-        const response = await supabase
-          .from("clients")
-          .select("id, child_code, anamnez")
-          .eq("child_code", normalizedClientCode)
-          .is("deleted_at", null)
-          .order("created_at", { ascending: false })
-          .limit(2)
-
-        data = response.data
-        error = response.error
-      }
+      const query = new URLSearchParams()
+      if (normalizedClientId) query.set("client_id", normalizedClientId)
+      if (normalizedClientCode) query.set("client", normalizedClientCode)
+      const response = await fetch(`/api/app/assessment-context?${query.toString()}`, { cache: "no-store" })
+      const payload = await response.json().catch(() => null)
 
       if (!mounted) return
 
-      if (error) {
+      if (!response.ok || payload?.ok === false) {
         setClientInfo(null)
-        setClientError("Danışan bilgisi alınamadı: " + error.message)
+        setClientError(
+          payload?.error === "client_not_found"
+            ? "Bu kodla eşleşen danışan bulunamadı."
+            : "Danışan bilgisi alınamadı. Lütfen tekrar deneyin."
+        )
         setLoadingClient(false)
         return
       }
 
-      if (!data || data.length === 0) {
-        setClientInfo(null)
-        setClientError("Bu kodla eşleşen danışan bulunamadı.")
-        setLoadingClient(false)
-        return
-      }
-
-      if (data.length > 1) {
-        setClientInfo(null)
-        setClientError("Bu danışan kodu birden fazla kayıtta bulundu. Lütfen farklı bir danışan kodu kullanın.")
-        setLoadingClient(false)
-        return
-      }
-
-      const row = data[0]
+      const row = payload?.client
 
       setClientInfo({
         id: row.id,
@@ -253,6 +201,13 @@ export default function AssessmentWizardClient() {
         anamnez: row.anamnez,
         ageMonths: extractAgeMonthsFromAnamnez(row.anamnez),
       })
+      if (payload?.reportLock?.locked) {
+        setReportLocked(true)
+        setReportLockReason(
+          payload.reportLock.reason ||
+            "Bu vaka için rapor daha önce oluşturulmuş. Mevcut raporu Rapor Geçmişi ekranından görüntüleyebilirsiniz."
+        )
+      }
       setLoadingClient(false)
     }
 
@@ -385,21 +340,31 @@ export default function AssessmentWizardClient() {
         return
       }
 
-      const today = new Date().toISOString().slice(0, 10)
+      const assessmentResponse = await fetch("/api/app/assessment-context", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-dna-request": "same-origin",
+        },
+        body: JSON.stringify({ clientId: clientInfo.id }),
+      })
+      const assessmentPayload = await assessmentResponse.json().catch(() => null)
 
-      const { data: assessmentRow, error: assessmentErr } = await supabase
-        .from("assessments_v2")
-        .insert({
-          client_id: clientInfo.id,
-          label: "DNA Intelligence Değerlendirme",
-          assessment_date: today,
-        })
-        .select("id")
-        .single()
+      if (assessmentResponse.status === 409 || assessmentPayload?.error === "report_already_exists") {
+        setReportLocked(true)
+        setReportLockReason(
+          assessmentPayload?.reportLock?.reason ||
+            "Bu vaka için rapor daha önce oluşturulmuş. Mevcut raporu Rapor Geçmişi ekranından görüntüleyin."
+        )
+        setSaveMsg("Bu vaka için rapor daha önce oluşturulmuş. Mevcut raporu Rapor Geçmişi ekranından görüntüleyin.")
+        return
+      }
 
-      if (assessmentErr) throw new Error("Assessment kaydı oluşturulamadı: " + assessmentErr.message)
+      if (!assessmentResponse.ok || assessmentPayload?.ok === false || !assessmentPayload?.assessmentId) {
+        throw new Error("Assessment kaydı oluşturulamadı.")
+      }
 
-      const assessmentId = assessmentRow.id
+      const assessmentId = assessmentPayload.assessmentId
 
       const aiReportResult = await generateAIReport({
         assessmentId,
