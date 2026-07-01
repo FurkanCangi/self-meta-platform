@@ -180,6 +180,21 @@ function validateInputDna(body: any) {
   return errors
 }
 
+function normalizeDnaScores(scores: Record<string, unknown> | undefined | null) {
+  const source = scores || {}
+  return {
+    fizyolojik: Number(source.fizyolojik),
+    duyusal: Number(source.duyusal),
+    duygusal: Number(source.duygusal),
+    bilissel: Number(source.bilissel),
+    yurutucu: Number(source.yurutucu),
+    intero: Number(source.intero),
+    toplam: Number(source.toplam),
+    age_months: Number(source.age_months),
+    ageMonths: Number(source.ageMonths),
+  }
+}
+
 const aiReportPayloadSchema = z
   .object({
     clientCode: z.string().max(120).optional(),
@@ -199,7 +214,7 @@ const aiReportPayloadSchema = z
     ageMonths: z.coerce.number().int().min(0).max(240).optional().nullable(),
     anamnez: z.string().max(20000).optional(),
     answers: z.array(z.coerce.number()).max(80).optional(),
-    scores: z.record(z.string(), z.coerce.number()).optional(),
+    scores: z.record(z.string(), z.unknown()).optional(),
   })
   .passthrough()
 
@@ -350,7 +365,8 @@ if (__validationErrors.length > 0) {
   return new Response(JSON.stringify({ error: 'invalid_input', details: __validationErrors }), { status: 400 })
 }
 
-    const scoreAgeMonths = Number(body?.scores?.age_months ?? body?.scores?.ageMonths)
+    const numericScores = normalizeDnaScores(body?.scores)
+    const scoreAgeMonths = Number(numericScores.age_months ?? numericScores.ageMonths)
     const incomingAgeMonths =
       typeof body?.ageMonths === "number"
         ? body.ageMonths
@@ -375,7 +391,7 @@ if (__validationErrors.length > 0) {
       ageMonths: incomingAgeMonths,
       anamnez: body?.anamnez || "",
       answers: Array.isArray(body?.answers) ? body.answers : undefined,
-      scores: body?.scores || {},
+      scores: numericScores,
     })
 
     if (!report.clinicalAnalysis) {
@@ -420,7 +436,7 @@ if (__validationErrors.length > 0) {
     const snapshotJson = {
       client_code: String(body?.clientCode || body?.client_code || ""),
       answers: Array.isArray(body?.answers) ? body.answers : [],
-      scores: body?.scores || {},
+      scores: numericScores,
       age_months: incomingAgeMonths,
       norm_source: report.normSource,
       age_band_label: report.ageBandLabel,

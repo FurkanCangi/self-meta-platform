@@ -76,6 +76,7 @@ function isAlreadyRegisteredResult(user: { identities?: unknown[] } | null | und
 function mapSignupError(message?: string | null) {
   const normalized = String(message || "").toLowerCase()
   if (normalized.includes("already registered") || normalized.includes("already exists")) return "already_registered"
+  if (normalized.includes("email") && normalized.includes("invalid")) return "invalid_email"
   if (normalized.includes("password")) return "password_short"
   if (normalized.includes("rate")) return "rate_limited"
   return "signup_failed"
