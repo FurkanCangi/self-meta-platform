@@ -41,14 +41,21 @@ function writeCachedLegalStatus(value: LegalStatus) {
   } catch {}
 }
 
+function clearCachedLegalStatus() {
+  if (typeof window === "undefined") return;
+  try {
+    window.sessionStorage.removeItem(LEGAL_STATUS_CACHE_KEY);
+  } catch {}
+}
+
 export default function LegalAcceptanceGate({ children }: { children: React.ReactNode }) {
   const [status, setStatus] = useState<LegalStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  async function loadStatus() {
-    const cached = readCachedLegalStatus();
+  async function loadStatus(options?: { skipCache?: boolean }) {
+    const cached = options?.skipCache ? null : readCachedLegalStatus();
     if (cached) {
       setStatus(cached);
       setLoading(false);
@@ -90,7 +97,17 @@ export default function LegalAcceptanceGate({ children }: { children: React.Reac
       if (!response.ok || !json?.ok) {
         throw new Error(json?.error || "Hukuki onay kaydedilemedi.");
       }
-      await loadStatus();
+      clearCachedLegalStatus();
+      const acceptedStatus: LegalStatus = {
+        ok: true,
+        authenticated: true,
+        configured: true,
+        accepted: true,
+        documents: Array.isArray(json.documents) ? json.documents : status?.documents || [],
+      };
+      setStatus(acceptedStatus);
+      writeCachedLegalStatus(acceptedStatus);
+      await loadStatus({ skipCache: true });
     } catch (acceptError) {
       setError(acceptError instanceof Error ? acceptError.message : "Hukuki onay kaydedilemedi.");
     } finally {
@@ -144,7 +161,7 @@ export default function LegalAcceptanceGate({ children }: { children: React.Reac
           </button>
           <button
             type="button"
-            onClick={loadStatus}
+            onClick={() => void loadStatus({ skipCache: true })}
             className="inline-flex h-12 items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 text-sm font-black text-slate-700"
           >
             <RefreshCw size={17} />
