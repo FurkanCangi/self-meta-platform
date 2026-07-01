@@ -145,6 +145,8 @@ export default function ClientsPage() {
     return { rows: view, riskCount, pendingScore, activeCount, total: all.length };
   }, [rows, q, filter]);
 
+  const metricValue = (value: number) => (loading ? "..." : value);
+
   const onScoreClick = (row: ClientRow) => {
     setNotice(null);
 
@@ -256,9 +258,9 @@ export default function ClientsPage() {
 
       <section className="grid grid-cols-3 gap-2">
         {[
-          ["Toplam", computed.total],
-          ["Skor", computed.pendingScore],
-          ["Risk", computed.riskCount],
+          ["Toplam", metricValue(computed.total)],
+          ["Skor", metricValue(computed.pendingScore)],
+          ["Risk", metricValue(computed.riskCount)],
         ].map(([label, value]) => (
           <div key={label} className="rounded-[18px] border border-slate-200 bg-white p-3 text-center shadow-sm">
             <div className="text-[11px] font-black uppercase tracking-wide text-slate-400">{label}</div>
@@ -379,19 +381,19 @@ export default function ClientsPage() {
         <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Toplam</div>
-            <div className="mt-2 text-3xl font-semibold text-slate-900">{computed.total}</div>
+            <div className="mt-2 text-3xl font-semibold text-slate-900">{metricValue(computed.total)}</div>
           </div>
           <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Aktif</div>
-            <div className="mt-2 text-3xl font-semibold text-slate-900">{computed.activeCount}</div>
+            <div className="mt-2 text-3xl font-semibold text-slate-900">{metricValue(computed.activeCount)}</div>
           </div>
           <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4 shadow-sm">
             <div className="text-xs font-semibold uppercase tracking-wide text-violet-800">Skor Bekleyen</div>
-            <div className="mt-2 text-3xl font-semibold text-slate-900">{computed.pendingScore}</div>
+            <div className="mt-2 text-3xl font-semibold text-slate-900">{metricValue(computed.pendingScore)}</div>
           </div>
           <div className="rounded-2xl border border-slate-300 bg-slate-50 p-4 shadow-sm">
             <div className="text-xs font-semibold uppercase tracking-wide text-slate-900">Riskli</div>
-            <div className="mt-2 text-3xl font-semibold text-slate-900">{computed.riskCount}</div>
+            <div className="mt-2 text-3xl font-semibold text-slate-900">{metricValue(computed.riskCount)}</div>
           </div>
         </div>
 
