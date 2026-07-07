@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useMemo, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { questions } from "@/lib/dna/questions"
 import { calculateAssessment } from "@/lib/assessment/assessmentEngine"
@@ -40,6 +40,68 @@ type AiReportResult = {
   createdAt: string | null
   existing: boolean
   remainingReportCredits: number | null
+}
+
+const ASSESSMENT_DRAFT_PREFIX = "dna:assessment-draft:v1:"
+
+type AssessmentDraft = {
+  answers?: number[]
+  page?: number
+  reportReady?: boolean
+  generatedReportText?: string
+  generatedReportDate?: string
+  savedAt?: string
+}
+
+function assessmentDraftKey(clientId?: string | null, clientCode?: string | null) {
+  const stableKey = String(clientId || clientCode || "unknown").trim()
+  return `${ASSESSMENT_DRAFT_PREFIX}${stableKey || "unknown"}`
+}
+
+function sanitizeAnswers(value: unknown) {
+  if (!Array.isArray(value) || value.length !== questions.length) {
+    return null
+  }
+
+  const next = value.map((item) => Number(item))
+  if (next.some((item) => !Number.isInteger(item) || item < 1 || item > 5)) {
+    return null
+  }
+
+  return next
+}
+
+function readAssessmentDraft(key: string): AssessmentDraft | null {
+  if (typeof window === "undefined") return null
+
+  try {
+    const raw = window.localStorage.getItem(key)
+    if (!raw) return null
+    const parsed = JSON.parse(raw) as AssessmentDraft
+    return parsed && typeof parsed === "object" ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+function writeAssessmentDraft(key: string, draft: AssessmentDraft) {
+  if (typeof window === "undefined") return
+
+  try {
+    window.localStorage.setItem(key, JSON.stringify(draft))
+  } catch {
+    // Taslak kaydı destek amaçlıdır; tarayıcı izin vermezse ekran içi state çalışmaya devam eder.
+  }
+}
+
+function clearAssessmentDraft(key?: string) {
+  if (typeof window === "undefined" || !key) return
+
+  try {
+    window.localStorage.removeItem(key)
+  } catch {
+    // Ignore storage cleanup failures.
+  }
 }
 
 function assessmentUserMessage(error: unknown) {
@@ -126,6 +188,8 @@ export default function AssessmentWizardClient() {
   const [answers, setAnswers] = useState<number[]>(Array(questions.length).fill(3))
   const [page, setPage] = useState(0)
   const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null)
+  const activeDraftKeyRef = useRef("")
+  const draftHydratedRef = useRef(false)
 
   useEffect(() => {
     const clientId = (clientInfo as any)?.id ?? null
@@ -155,6 +219,8 @@ export default function AssessmentWizardClient() {
     setGeneratedReportDate("")
     setPage(0)
     setAnswers(Array(questions.length).fill(3))
+    activeDraftKeyRef.current = ""
+    draftHydratedRef.current = false
   }, [clientCode, clientIdParam])
 
   useEffect(() => {
@@ -232,6 +298,45 @@ export default function AssessmentWizardClient() {
   }, [page, totalPages])
 
   const result = useMemo(() => calculateAssessment(answers), [answers])
+
+  useEffect(() => {
+    if (!clientInfo) return
+
+    const key = assessmentDraftKey(clientInfo.id, clientInfo.child_code)
+    activeDraftKeyRef.current = key
+
+    const draft = readAssessmentDraft(key)
+    const draftAnswers = sanitizeAnswers(draft?.answers)
+
+    if (draftAnswers) {
+      setAnswers(draftAnswers)
+    }
+    if (typeof draft?.page === "number" && draft.page >= 0 && draft.page <= totalPages) {
+      setPage(draft.page)
+    }
+    if (typeof draft?.generatedReportText === "string" && draft.generatedReportText.trim()) {
+      setGeneratedReportText(draft.generatedReportText)
+      setReportReady(Boolean(draft.reportReady))
+    }
+    if (typeof draft?.generatedReportDate === "string") {
+      setGeneratedReportDate(draft.generatedReportDate)
+    }
+
+    draftHydratedRef.current = true
+  }, [clientInfo, totalPages])
+
+  useEffect(() => {
+    if (!draftHydratedRef.current || !activeDraftKeyRef.current || reportLocked) return
+
+    writeAssessmentDraft(activeDraftKeyRef.current, {
+      answers,
+      page,
+      reportReady,
+      generatedReportText,
+      generatedReportDate,
+      savedAt: new Date().toISOString(),
+    })
+  }, [answers, generatedReportDate, generatedReportText, page, reportLocked, reportReady])
 
   const advancedReport = useMemo(() => {
     if (!clientInfo) return null
@@ -394,6 +499,7 @@ export default function AssessmentWizardClient() {
       setGeneratedReportText(aiReportText)
       setGeneratedReportDate(aiReportResult.createdAt || new Date().toISOString())
       setReportReady(true)
+      clearAssessmentDraft(activeDraftKeyRef.current)
       setSaveMsg(
         aiReportResult.existing
           ? "Bu vaka için rapor daha önce oluşturulmuş. Mevcut rapor açıldı; yeni hak düşülmedi."
@@ -476,6 +582,15 @@ export default function AssessmentWizardClient() {
               {reportLockReason || "Bu vaka için rapor daha önce oluşturulmuş. Mevcut raporu Rapor Geçmişi ekranından görüntüleyebilirsiniz."}
             </div>
           ) : null}
+          {clientInfo ? (
+            <button
+              type="button"
+              onClick={() => router.push(withSurface(`/clients/${clientInfo.id}`))}
+              className="mt-3 inline-flex w-full items-center justify-center rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-sm"
+            >
+              Anamnez kaydına dön
+            </button>
+          ) : null}
         </section>
       </div>
 
@@ -511,12 +626,25 @@ export default function AssessmentWizardClient() {
               <div className="mt-1 text-sm text-slate-500">Değerlendirme bu vaka kaydı üzerinden ilerler.</div>
 
               <div className="mt-2 text-sm text-slate-600">Yaş: {agePreview}</div>
+              <button
+                type="button"
+                onClick={() => router.push(withSurface(`/clients/${clientInfo.id}`))}
+                className="mt-4 inline-flex w-full items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+              >
+                Anamnez kaydına dön
+              </button>
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
               <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Anamnez Özeti</div>
               <div className="mt-2 text-sm leading-6 text-slate-600">{anamnezPreview}</div>
             </div>
+          </div>
+        ) : null}
+
+        {!loadingClient && !clientError && clientInfo ? (
+          <div className="mt-4 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
+            Test cevapları bu cihazda otomatik korunur. Bölümler arasında ileri geri geçebilir, anamnez kaydına dönüp sonra skor girişine devam edebilirsiniz.
           </div>
         ) : null}
 
@@ -657,6 +785,16 @@ export default function AssessmentWizardClient() {
               </button>
 
               <div className="grid gap-2 sm:flex">
+                {clientInfo ? (
+                  <button
+                    type="button"
+                    onClick={() => router.push(withSurface(`/clients/${clientInfo.id}`))}
+                    className="dna-btn-ghost px-5 py-2.5 text-sm font-semibold"
+                  >
+                    Anamnez Kaydı
+                  </button>
+                ) : null}
+
                 <button
                   type="button"
                   onClick={() => router.push(withSurface("/reports"))}

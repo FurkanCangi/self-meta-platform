@@ -210,6 +210,110 @@ const TAB_REQUIRED: Record<TabKey, Array<keyof FormState>> = {
   external: [],
 };
 
+const NEW_CLIENT_DRAFT_KEY = "dna:new-client-draft:v1";
+
+type NewClientDraft = {
+  form?: Partial<FormState>;
+  externalTests?: ExternalTestEntry[];
+  tab?: TabKey;
+  savedAt?: string;
+};
+
+function createEmptyFormState(): FormState {
+  return {
+    ad_soyad: "",
+    client_code: "",
+    record_date: "",
+    ageRange: "",
+    gender: "",
+    sibling_count: "",
+    birth_order: "",
+    household_count: "",
+
+    mother_age_at_birth: "",
+    mother_education: "",
+    mother_job_working: "",
+    mother_work_hours: "",
+    caregiver_if_working: "",
+
+    father_education: "",
+    father_job: "",
+    father_work_hours: "",
+
+    diagnosis: "",
+    medical_history: "",
+    allergy_epilepsy_gi_colic_seizure: "",
+    current_therapies: "",
+    past_therapies: "",
+    medications: "",
+
+    prenatal_story: "",
+    birth_story: "",
+    postnatal_story: "",
+    low_birth_history: "",
+
+    feeding_type: "",
+    liked_foods: "",
+    rejected_foods: "",
+    liked_toys: "",
+    strengths: "",
+
+    parent_concerns_goals: "",
+    parent_contact: "",
+    referral_reason: "",
+    therapist_comments: "",
+    external_test_name: "",
+    external_test_score: "",
+    external_test_interpretation: "",
+    external_clinical_findings: "",
+  };
+}
+
+function isTabKey(value: unknown): value is TabKey {
+  return typeof value === "string" && TAB_ORDER.includes(value as TabKey);
+}
+
+function readNewClientDraft(): NewClientDraft | null {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const raw = window.localStorage.getItem(NEW_CLIENT_DRAFT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as NewClientDraft;
+    return parsed && typeof parsed === "object" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeNewClientDraft(draft: NewClientDraft) {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.setItem(NEW_CLIENT_DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    // Draft persistence is a convenience layer; form state still works in memory.
+  }
+}
+
+function clearNewClientDraft() {
+  if (typeof window === "undefined") return;
+
+  try {
+    window.localStorage.removeItem(NEW_CLIENT_DRAFT_KEY);
+  } catch {
+    // Ignore storage cleanup failures.
+  }
+}
+
+function hasNewClientDraftContent(form: FormState, externalTests: ExternalTestEntry[], tab: TabKey) {
+  return (
+    tab !== "demo" ||
+    externalTests.length > 0 ||
+    Object.values(form).some((value) => String(value || "").trim().length > 0)
+  );
+}
+
 function hasExternalTestContent(entry: Pick<ExternalTestEntry, "testName" | "result" | "interpretation" | "notes">): boolean {
   return Boolean(entry.testName.trim() || entry.result.trim() || entry.interpretation.trim() || entry.notes.trim())
 }
@@ -344,6 +448,7 @@ export default function NewClientPage() {
   const [err, setErr] = useState<string | null>(null);
   const [externalTests, setExternalTests] = useState<ExternalTestEntry[]>([]);
   const [appSurface, setAppSurface] = useState(false);
+  const [draftLoaded, setDraftLoaded] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -356,53 +461,49 @@ export default function NewClientPage() {
     return `${path}${separator}surface=app`;
   };
 
-  const [form, setForm] = useState<FormState>({
-    ad_soyad: "",
-    client_code: "",
-    record_date: "",
-    ageRange: "",
-    gender: "",
-    sibling_count: "",
-    birth_order: "",
-    household_count: "",
+  const [form, setForm] = useState<FormState>(() => createEmptyFormState());
 
-    mother_age_at_birth: "",
-    mother_education: "",
-    mother_job_working: "",
-    mother_work_hours: "",
-    caregiver_if_working: "",
+  useEffect(() => {
+    const draft = readNewClientDraft();
 
-    father_education: "",
-    father_job: "",
-    father_work_hours: "",
+    if (draft?.form) {
+      setForm((prev) => ({ ...prev, ...draft.form }));
+    }
+    if (Array.isArray(draft?.externalTests)) {
+      setExternalTests(
+        draft.externalTests
+          .filter((entry) => entry && typeof entry === "object")
+          .map((entry) => ({
+            id: typeof entry.id === "string" ? entry.id : makeExternalTestId(),
+            testName: typeof entry.testName === "string" ? entry.testName : "",
+            result: typeof entry.result === "string" ? entry.result : "",
+            interpretation: typeof entry.interpretation === "string" ? entry.interpretation : "",
+            notes: typeof entry.notes === "string" ? entry.notes : "",
+          }))
+      );
+    }
+    if (isTabKey(draft?.tab)) {
+      setTab(draft.tab);
+    }
 
-    diagnosis: "",
-    medical_history: "",
-    allergy_epilepsy_gi_colic_seizure: "",
-    current_therapies: "",
-    past_therapies: "",
-    medications: "",
+    setDraftLoaded(true);
+  }, []);
 
-    prenatal_story: "",
-    birth_story: "",
-    postnatal_story: "",
-    low_birth_history: "",
+  useEffect(() => {
+    if (!draftLoaded || saving) return;
 
-    feeding_type: "",
-    liked_foods: "",
-    rejected_foods: "",
-    liked_toys: "",
-    strengths: "",
+    if (!hasNewClientDraftContent(form, externalTests, tab)) {
+      clearNewClientDraft();
+      return;
+    }
 
-    parent_concerns_goals: "",
-    parent_contact: "",
-    referral_reason: "",
-    therapist_comments: "",
-    external_test_name: "",
-    external_test_score: "",
-    external_test_interpretation: "",
-    external_clinical_findings: "",
-  });
+    writeNewClientDraft({
+      form,
+      externalTests,
+      tab,
+      savedAt: new Date().toISOString(),
+    });
+  }, [draftLoaded, externalTests, form, saving, tab]);
 
   const setVal = (k: keyof FormState, v: string) => setForm((p) => ({ ...p, [k]: v }));
 
@@ -537,54 +638,9 @@ export default function NewClientPage() {
     setErr(null);
     setSaving(false);
     setExternalTests([]);
-    setForm({
-      ad_soyad: "",
-      client_code: "",
-      record_date: "",
-      ageRange: "",
-      gender: "",
-      sibling_count: "",
-      birth_order: "",
-      household_count: "",
-
-      mother_age_at_birth: "",
-      mother_education: "",
-      mother_job_working: "",
-      mother_work_hours: "",
-      caregiver_if_working: "",
-
-      father_education: "",
-      father_job: "",
-      father_work_hours: "",
-
-      diagnosis: "",
-      medical_history: "",
-      allergy_epilepsy_gi_colic_seizure: "",
-      current_therapies: "",
-      past_therapies: "",
-      medications: "",
-
-      prenatal_story: "",
-      birth_story: "",
-      postnatal_story: "",
-      low_birth_history: "",
-
-      feeding_type: "",
-      liked_foods: "",
-      rejected_foods: "",
-      liked_toys: "",
-      strengths: "",
-
-      parent_concerns_goals: "",
-      parent_contact: "",
-      referral_reason: "",
-      therapist_comments: "",
-      external_test_name: "",
-      external_test_score: "",
-      external_test_interpretation: "",
-      external_clinical_findings: "",
-    });
+    setForm(createEmptyFormState());
     setTab("demo");
+    clearNewClientDraft();
   };
 
   const onCreate = async () => {
@@ -638,6 +694,7 @@ export default function NewClientPage() {
         client_id: data.id,
       }).toString();
 
+      clearNewClientDraft();
       router.push(withSurface(`/assessments?${qs}`));
     } catch (e) {
       const message = e instanceof Error ? e.message : "Beklenmeyen bir hata oluştu.";
@@ -665,6 +722,9 @@ export default function NewClientPage() {
               Toplam eksik alan: <b>{missing.length}</b>
             </div>
           ) : null}
+          <div className="mt-3 rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
+            Yazdıklarınız bu cihazda otomatik korunur. Bölümler arasında ileri geri geçebilirsiniz.
+          </div>
         </section>
       </div>
 
@@ -705,6 +765,9 @@ export default function NewClientPage() {
             Eksik alan sayısı: <b>{missing.length}</b> (Buton aktif olması için hepsi dolmalı)
           </div>
         ) : null}
+        <div className="mt-4 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-900">
+          Bu ekranda yazdıklarınız otomatik taslak olarak saklanır. İleri/geri yapınca veya sayfaya tekrar dönünce bilgiler korunur.
+        </div>
       </div>
 
       <div className="dna-new-client-layout grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
@@ -1186,7 +1249,7 @@ export default function NewClientPage() {
             <div className="text-sm text-slate-500">
               {currentTabComplete
                 ? "Bu bölüm tamamlandı. İsterseniz üst başlıklardan ya da sağ alttaki butondan ilerleyebilirsiniz."
-                : `Bu bölümde ${currentTabMissing.length} zorunlu alan eksik. Bölümü tamamlayınca sonraki adıma geçebilirsiniz.`}
+                : `Bu bölümde ${currentTabMissing.length} zorunlu alan eksik. Yine de diğer bölümlere geçip sonra geri dönebilirsiniz.`}
             </div>
             <div className="grid gap-2 sm:flex sm:items-center sm:justify-end">
               {prevTab ? (
@@ -1205,13 +1268,8 @@ export default function NewClientPage() {
                 <button
                   type="button"
                   onClick={() => setTab(nextTab)}
-                  disabled={!currentTabComplete}
-                  className="dna-btn px-4 py-2 text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-50"
-                  title={
-                    currentTabComplete
-                      ? `${TAB_LABELS[nextTab]} bölümüne geç`
-                      : `Önce bu bölümdeki eksikleri tamamlayın: ${currentTabMissing.join(", ")}`
-                  }
+                  className="dna-btn px-4 py-2 text-sm font-semibold"
+                  title={`${TAB_LABELS[nextTab]} bölümüne geç`}
                 >
                   Sonraki Bölüm: {TAB_LABELS[nextTab]} →
                 </button>
@@ -1277,8 +1335,7 @@ export default function NewClientPage() {
             <button
               type="button"
               onClick={() => setTab(nextTab)}
-              disabled={!currentTabComplete}
-              className="dna-btn flex-1 px-4 py-3 text-sm font-black disabled:cursor-not-allowed disabled:opacity-50"
+              className="dna-btn flex-1 px-4 py-3 text-sm font-black"
             >
               İleri
             </button>

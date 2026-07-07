@@ -37,9 +37,12 @@ export default function ClientDetailPage() {
   const appSurface = searchParams.get("surface") === "app";
 
   const [client, setClient] = useState<ClientRow | null>(null);
+  const [anamnezDraft, setAnamnezDraft] = useState("");
   const [evals, setEvals] = useState<EvalRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
+  const [savingAnamnez, setSavingAnamnez] = useState(false);
+  const [anamnezMsg, setAnamnezMsg] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
 
   const anamnezPreview = useMemo(() => {
@@ -119,6 +122,7 @@ export default function ClientDetailPage() {
     }
 
     setClient(c as any);
+    setAnamnezDraft(String((c as any).anamnez || ""));
     setEvals(
       (a || []).map((x: any) => ({
         id: x.id,
@@ -144,6 +148,29 @@ export default function ClientDetailPage() {
 
     setBusy(false);
     router.push(withSurface(`/assessments?client=${encodeURIComponent(client.child_code)}&client_id=${encodeURIComponent(clientId)}`));
+  }
+
+  async function saveAnamnez() {
+    if (!clientId) return;
+
+    setSavingAnamnez(true);
+    setAnamnezMsg(null);
+    setErr(null);
+
+    const { error } = await supabase
+      .from("clients")
+      .update({ anamnez: anamnezDraft })
+      .eq("id", clientId);
+
+    if (error) {
+      setSavingAnamnez(false);
+      setAnamnezMsg("Anamnez kaydedilemedi: " + error.message);
+      return;
+    }
+
+    setClient((prev) => (prev ? { ...prev, anamnez: anamnezDraft } : prev));
+    setSavingAnamnez(false);
+    setAnamnezMsg("Anamnez güncellendi. Skor girişine döndüğünüzde bilgiler korunur.");
   }
 
   async function softDeleteClient() {
@@ -292,9 +319,20 @@ export default function ClientDetailPage() {
 
       <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
         <div className="dna-app-section-title">Anamnez</div>
-        <div className="mt-3 max-h-[360px] overflow-auto rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
-          {anamnezPreview}
-        </div>
+        <textarea
+          value={anamnezDraft || anamnezPreview}
+          onChange={(event) => setAnamnezDraft(event.target.value)}
+          className="mt-3 h-[360px] w-full rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-700 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100"
+        />
+        {anamnezMsg ? <div className="mt-3 rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-semibold text-cyan-900">{anamnezMsg}</div> : null}
+        <button
+          type="button"
+          onClick={saveAnamnez}
+          disabled={savingAnamnez || loading}
+          className="mt-3 w-full rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white disabled:opacity-60"
+        >
+          {savingAnamnez ? "Kaydediliyor..." : "Anamnezi Kaydet"}
+        </button>
       </section>
 
       <button
@@ -430,10 +468,19 @@ export default function ClientDetailPage() {
           </div>
 
           <textarea
-            readOnly
-            value={anamnezPreview}
-            className="mt-4 h-[360px] w-full rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 md:h-[620px]"
+            value={anamnezDraft || anamnezPreview}
+            onChange={(event) => setAnamnezDraft(event.target.value)}
+            className="mt-4 h-[360px] w-full rounded-2xl border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-800 outline-none transition focus:border-blue-300 focus:ring-4 focus:ring-blue-100 md:h-[620px]"
           />
+          {anamnezMsg ? <div className="mt-3 rounded-xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-semibold text-cyan-900">{anamnezMsg}</div> : null}
+          <button
+            type="button"
+            onClick={saveAnamnez}
+            disabled={savingAnamnez || loading}
+            className="mt-3 w-full rounded-xl bg-blue-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-60"
+          >
+            {savingAnamnez ? "Kaydediliyor..." : "Anamnezi Kaydet"}
+          </button>
         </div>
       </div>
     </div>
