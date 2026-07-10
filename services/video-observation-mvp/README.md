@@ -1,10 +1,10 @@
 # DNA Intelligence Video Observation MVP
 
-Bu alt proje, DNA Intelligence AI için video tabanli serbest oyun regülasyon gözlemi servisidir.
+Bu alt proje, DNA Intelligence icin video tabanli serbest oyun regülasyon gözlemi servisidir.
 
 MVP ilkeleri:
 - tanisal cikarim yapmaz
-- LLM karar vermez
+- harici model veya LLM cagrisi yapmaz
 - tum skorlar aciklanabilir kanitlarla uretilir
 - video kalitesi dusukse confidence dusurulur
 - mevcut DNA Intelligence olcekleri ile destekleyici füzyon yapar
@@ -20,7 +20,7 @@ Servis su modullerle kuruldu:
 - rule-based scoring
 - DNA Intelligence fusion
 - clinician-facing deterministic report
-- opsiyonel future LLM writer entrypoint
+- deterministik klinisyen raporu
 
 ## Calistirma
 

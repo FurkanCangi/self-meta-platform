@@ -347,11 +347,11 @@ const EXTERNAL_TEST_SCIENTIFIC_PROFILES: Record<string, ExternalTestScientificPr
   abas3: profile({
     ageRange: "Doğumdan 89 yaşa kadar; çocuk formları bakımveren/öğretmen bildirimiyle kullanılır.",
     domainsMeasured: ["Uyumsal davranış", "Kavramsal beceriler", "Sosyal beceriler", "Pratik/günlük yaşam becerileri"],
-    scoreSystem: "Genel uyumsal bileşik ve alan standart skorları; beceri alanlarında scaled score/alan düzeyi özetleri.",
+    scoreSystem: "Genel uyumsal bileşik ve alan standart skorları; beceri alanlarında ölçek puanı ve alan düzeyi özetleri.",
     resultLevels: "Ortalama/yaş beklentisiyle uyumlu, düşük ortalama, düşük veya çok düşük uyumsal işlev gibi resmi rapor düzeyleri.",
     reportUse: "Günlük yaşam, öz bakım, bağımsız rutin ve sorumluluk performansını DNA profilinin işlevsel karşılığı olarak bağlamsallaştırır.",
     interpretationBoundaries: "DNA skorunu değiştirmez; uyumsal beceri sonucu tanı veya müdahale reçetesi olarak kullanılmaz.",
-    dnaRelation: "adaptive_daily_living mekanizmasını ve korunmuş profil varsa işlevsel denge yorumunu destekler.",
+    dnaRelation: "Günlük yaşam ve öz bakım akışını, korunmuş alanlarla birlikte yorumlamaya katkı sağlar.",
     sourceLinks: ["https://www.parinc.com/products/ABAS-3", "https://www.wpspublish.com/abas-3-adaptive-behavior-assessment-system-third-edition"],
     evidenceTier: "official_metadata",
   }),
@@ -362,7 +362,7 @@ const EXTERNAL_TEST_SCIENTIFIC_PROFILES: Record<string, ExternalTestScientificPr
     resultLevels: "Klinik yükselme, riskli/at-risk, beklenen aralık veya uyumsal beceri düşüklüğü gibi resmi düzeyler.",
     reportUse: "Duygusal toparlanma, davranış ayarlama ve dikkat-yürütücü yükün çok kaynaklı gözlem karşılığını açıklar.",
     interpretationBoundaries: "Psikiyatrik tanı veya davranış nedeni üretmez; yalnız derecelendirme temelli destekleyici bağlamdır.",
-    dnaRelation: "executive_behavior ve emotional yayılım yorumunu destekler.",
+    dnaRelation: "Yürütücü davranış düzenleme ile duygusal yansımaların birlikte yorumlanmasını destekler.",
     sourceLinks: ["https://www.pearsonassessments.com/store/en/usd/p/P100010000"],
     evidenceTier: "official_metadata",
   }),
@@ -373,18 +373,18 @@ const EXTERNAL_TEST_SCIENTIFIC_PROFILES: Record<string, ExternalTestScientificPr
     resultLevels: "Yaş beklentisiyle uyumlu, düşük ortalama, düşük veya belirgin zayıflık gibi performans düzeyleri.",
     reportUse: "Görsel-motor organizasyonun motor planlama, görev uygulama ve bilişsel organizasyonla ilişkisini bağlamsallaştırır.",
     interpretationBoundaries: "Tek başına praksi, öğrenme veya nörogelişimsel tanı üretmez.",
-    dnaRelation: "motor_praxis ve cognitive/executive yayılım yorumuna destek sağlar.",
+    dnaRelation: "Motor planlama ile bilişsel ve yürütücü yansımaların birlikte yorumlanmasına katkı sağlar.",
     sourceLinks: ["https://www.pearsonassessments.com/store/en/usd/p/100000663.html"],
     evidenceTier: "official_metadata",
   }),
   bot2: profile({
     ageRange: "4-21 yaş 11 ay aralığında motor yeterlilik değerlendirmesi.",
     domainsMeasured: ["İnce motor kontrol", "El koordinasyonu", "Vücut koordinasyonu", "Güç ve çeviklik"],
-    scoreSystem: "Standart skor, scaled score, percentil ve motor bileşik skorlar.",
+    scoreSystem: "Standart skor, ölçek puanı, percentil ve motor bileşik skorlar.",
     resultLevels: "Ortalama, düşük ortalama, düşük veya belirgin motor yeterlilik zayıflığı gibi normatif düzeyler.",
     reportUse: "Motor koordinasyon ve görev performansındaki yükü praksi/motor planlama formülasyonuna bağlar.",
     interpretationBoundaries: "DNA skorunu değiştirmez; motor tanı veya tedavi protokolü çıkarmaz.",
-    dnaRelation: "motor_praxis mekanizmasını güçlendirir.",
+    dnaRelation: "Motor planlama ve praksi yorumunu destekler.",
     sourceLinks: ["https://www.pearsonassessments.com/store/usassessments/en/p/bruininks-oseretsky-test-of-motor-proficiency-second-edition/100000648"],
     evidenceTier: "official_metadata",
   }),
@@ -417,18 +417,18 @@ const EXTERNAL_TEST_SCIENTIFIC_PROFILES: Record<string, ExternalTestScientificPr
     resultLevels: "Yaş beklentisiyle uyumlu, düşük performans, pragmatik dil zayıflığı veya sosyal iletişim yükü.",
     reportUse: "Sosyal-pragmatik talep ve dilsel bağlamın regülasyon yükünü nasıl artırdığını açıklar.",
     interpretationBoundaries: "Otizm veya dil bozukluğu tanısı üretmez; iletişimsel bağlamı destekler.",
-    dnaRelation: "social_pragmatic ve language_social_pragmatic mekanizmalarını destekler.",
+    dnaRelation: "Sosyal-pragmatik taleple dilsel talebin birlikte yorumlanmasını destekler.",
     sourceLinks: ["https://www.pearsonassessments.com/store/en/usd/p/100000193"],
     evidenceTier: "official_metadata",
   }),
   celf_preschool3: profile({
     ageRange: "3-6 yaş 11 ay okul öncesi dil değerlendirmesi.",
     domainsMeasured: ["Alıcı dil", "İfade edici dil", "Dil yapısı", "Yönerge ve sınıf dili talepleri"],
-    scoreSystem: "Standart skorlar, scaled score, percentil ve indeks/alt test özetleri.",
+    scoreSystem: "Standart skorlar, ölçek puanı, percentil ve indeks/alt test özetleri.",
     resultLevels: "Ortalama, düşük ortalama, düşük veya dilsel talep altında performans zayıflığı.",
     reportUse: "Sözel yük, yönerge karmaşıklığı ve dilsel işlemleme yükünü bilişsel/yürütücü regülasyonla ilişkilendirir.",
     interpretationBoundaries: "Dil tanısı üretmez; kullanıcı tarafından bildirilen resmi sonuç özetini bağlamlaştırır.",
-    dnaRelation: "language_communication ve language_social_pragmatic mekanizmalarını destekler.",
+    dnaRelation: "Dilsel iletişimle sosyal-pragmatik talebin birlikte yorumlanmasını destekler.",
     sourceLinks: ["https://www.pearsonassessments.com/store/en/usd/p/100002031.html"],
     evidenceTier: "official_metadata",
   }),
@@ -472,7 +472,7 @@ const EXTERNAL_TEST_SCIENTIFIC_PROFILES: Record<string, ExternalTestScientificPr
     resultLevels: "Beklenen performans, riskli/sınır veya motor koordinasyon güçlüğü açısından destekleyici profil.",
     reportUse: "Günlük yaşamda motor koordinasyon ve beden organizasyonu yükünü praksi/motor mekanizmaya bağlar.",
     interpretationBoundaries: "Tarama/bildirim niteliği taşır; DCD tanısı üretmez.",
-    dnaRelation: "motor_praxis mekanizmasını destekler.",
+    dnaRelation: "Motor planlama ve praksi yorumunu destekler.",
     sourceLinks: ["https://dcdq.ca/"],
     evidenceTier: "official_metadata",
   }),
@@ -483,18 +483,18 @@ const EXTERNAL_TEST_SCIENTIFIC_PROFILES: Record<string, ExternalTestScientificPr
     resultLevels: "Beklenen aralık, risk/sınır veya belirgin motor performans güçlüğü.",
     reportUse: "Motor koordinasyonun görev uygulama, katılım ve beden organizasyonuyla ilişkisini açıklar.",
     interpretationBoundaries: "Tek başına tanı veya müdahale kararı üretmez.",
-    dnaRelation: "motor_praxis mekanizmasını destekler.",
+    dnaRelation: "Motor planlama ve praksi yorumunu destekler.",
     sourceLinks: ["https://www.pearsonassessments.com/store/usassessments/en/p/movement-assessment-battery-for-children-third-edition/P100051002"],
     evidenceTier: "official_metadata",
   }),
   mfun: profile({
     ageRange: "2 yaş 6 aydan 7 yaş 11 aya kadar okul öncesi/erken okul çağı işlev ve katılım.",
     domainsMeasured: ["İnce motor", "Kaba motor", "Görsel-motor", "Okul öncesi görev performansı", "Katılım"],
-    scoreSystem: "Standart skor, scaled score, percentil ve görev/katılım profili özetleri.",
+    scoreSystem: "Standart skor, ölçek puanı, percentil ve görev/katılım profili özetleri.",
     resultLevels: "Yaş beklentisiyle uyumlu, düşük ortalama, düşük veya katılımda işlevsel zorlanma.",
     reportUse: "Motor performansın katılım ve görev sürdürme üzerindeki etkisini görünür kılar.",
     interpretationBoundaries: "Motor performans sonucu self-regülasyon tanısı olarak yorumlanmaz.",
-    dnaRelation: "motor_praxis ve executive/cognitive yayılım yorumunu destekler.",
+    dnaRelation: "Motor planlama ile yürütücü ve bilişsel yansımaların birlikte yorumlanmasını destekler.",
     sourceLinks: ["https://www.pearsonassessments.com/store/usassessments/en/p/miller-function-and-participation-scales/100000557"],
     evidenceTier: "official_metadata",
   }),
@@ -505,18 +505,18 @@ const EXTERNAL_TEST_SCIENTIFIC_PROFILES: Record<string, ExternalTestScientificPr
     resultLevels: "Yaş beklentisiyle uyumlu, düşük ortalama, düşük veya motor gelişim performansında belirgin zayıflık.",
     reportUse: "Erken motor gelişim bulgularını beden organizasyonu, motor planlama ve günlük işlevle ilişkilendirir.",
     interpretationBoundaries: "Motor test sonucu DNA skorunu değiştirmez; tek başına praksi tanısı veya tedavi reçetesi üretmez.",
-    dnaRelation: "motor_praxis mekanizmasını ve yürütücü/bilişsel yayılımı destekler.",
+    dnaRelation: "Motor planlama ile yürütücü ve bilişsel yansımaların birlikte yorumlanmasını destekler.",
     sourceLinks: ["https://www.wpspublish.com/peabody-developmental-motor-scales-third-edition.html", "https://www.parinc.com/products/PDMS-3"],
     evidenceTier: "official_metadata",
   }),
   pedi_cat: profile({
     ageRange: "Doğumdan 20 yaşa kadar günlük işlevsellik ve katılım değerlendirmesi.",
     domainsMeasured: ["Daily Activities", "Mobility", "Social/Cognitive", "Responsibility"],
-    scoreSystem: "Bilgisayar uyarlamalı IRT modeliyle T skoru, scaled score ve percentil/yaş karşılaştırmalı özetler.",
+    scoreSystem: "Bilgisayar uyarlamalı IRT modeliyle T skoru, ölçek puanı ve percentil/yaş karşılaştırmalı özetler.",
     resultLevels: "Yaş beklentisiyle uyumlu, beklenenin altında işlevsel beceri veya sorumluluk/katılımda destek ihtiyacı.",
     reportUse: "Regülasyon yükünün öz bakım, mobilite, sosyal-bilişsel katılım ve sorumluluk düzeyindeki işlevsel karşılığını gösterir.",
     interpretationBoundaries: "Katılım ve işlevsellik verisidir; DNA alan skoru veya tanı yerine geçmez.",
-    dnaRelation: "adaptive_daily_living, physiological_interoceptive ve daily-function yayılım yorumunu destekler.",
+    dnaRelation: "Günlük yaşam ve öz bakım bulgularının bedensel toparlanma ve günlük işlevle birlikte yorumlanmasını destekler.",
     sourceLinks: ["https://www.pedicat.com/", "https://www.pedicat.com/faq/"],
     evidenceTier: "official_metadata",
   }),
@@ -538,7 +538,7 @@ const EXTERNAL_TEST_SCIENTIFIC_PROFILES: Record<string, ExternalTestScientificPr
     resultLevels: "Beklenen aralık, beklenenden daha fazla/daha az duyusal yanıt veya klinik olarak anlamlı örüntü.",
     reportUse: "Çevresel uyaran yükünün katılım, görev sürdürme ve duygusal toparlanmaya etkisini açıklar.",
     interpretationBoundaries: "Duyusal tanı veya nedensellik üretmez; bağlama duyarlı destekleyici veri olarak kalır.",
-    dnaRelation: "sensory_processing ve sensory-emotional formülasyonu destekler.",
+    dnaRelation: "Duyusal işlemleme ile duyusal-duygusal formülasyonu destekler.",
     sourceLinks: ["https://www.pearsonassessments.com/store/usassessments/en/p/sensory-profile-2/100000822"],
     evidenceTier: "official_metadata",
   }),
@@ -549,7 +549,7 @@ const EXTERNAL_TEST_SCIENTIFIC_PROFILES: Record<string, ExternalTestScientificPr
     resultLevels: "Yaş beklentisiyle uyumlu, düşük performans veya praksi/duyusal bütünleme alanında klinik zayıflık.",
     reportUse: "Motor planlama, beden organizasyonu ve yeni hareket örüntüsü kurma yükünü ana mekanizma düzeyinde açıklar.",
     interpretationBoundaries: "Tek başına tanı veya müdahale protokolü üretmez; yaş uyumu zorunlu kontrol edilir.",
-    dnaRelation: "motor_praxis mekanizması için yüksek değerli destekleyici testtir.",
+    dnaRelation: "Motor planlama ve praksi yorumunu güçlü biçimde destekler.",
     sourceLinks: ["https://www.wpspublish.com/sipt-sensory-integration-and-praxis-tests"],
     evidenceTier: "official_metadata",
   }),
@@ -560,7 +560,7 @@ const EXTERNAL_TEST_SCIENTIFIC_PROFILES: Record<string, ExternalTestScientificPr
     resultLevels: "Tipik, orta düzey zorluk, belirgin zorluk veya alan/ortam bazlı duyusal-praksi yük.",
     reportUse: "Duyusal yükün farklı ortamlarda katılım ve davranış organizasyonunu nasıl değiştirdiğini açıklar.",
     interpretationBoundaries: "Duyusal neden-sonuç veya tanı dili üretmez; ortamlar arası bağlam verisidir.",
-    dnaRelation: "sensory_processing ve motor/praxis ikincil bağlamını destekler.",
+    dnaRelation: "Duyusal işlemleme ile motor planlama ve praksiye ilişkin ikincil bağlamı destekler.",
     sourceLinks: ["https://www.wpspublish.com/spm-2"],
     evidenceTier: "official_metadata",
   }),
@@ -571,7 +571,7 @@ const EXTERNAL_TEST_SCIENTIFIC_PROFILES: Record<string, ExternalTestScientificPr
     resultLevels: "Beklenen aralık, hafif/orta/ağır sosyal iletişim yükü veya klinik yükselme.",
     reportUse: "Sosyal talep ve karşılıklılık arttığında regülasyon yükünün nasıl belirginleştiğini bağlamsallaştırır.",
     interpretationBoundaries: "Otizm tanısı üretmez; sosyal-pragmatik bağlam verisi olarak kullanılır.",
-    dnaRelation: "social_pragmatic ve language_social_pragmatic mekanizmalarını destekler.",
+    dnaRelation: "Sosyal-pragmatik taleple dilsel talebin birlikte yorumlanmasını destekler.",
     sourceLinks: ["https://www.wpspublish.com/srs-2-social-responsiveness-scale-second-edition"],
     evidenceTier: "official_metadata",
   }),
@@ -582,7 +582,7 @@ const EXTERNAL_TEST_SCIENTIFIC_PROFILES: Record<string, ExternalTestScientificPr
     resultLevels: "Yaş beklentisiyle uyumlu, düşük ortalama, düşük veya uyumsal işlevsellikte belirgin zayıflık.",
     reportUse: "Regülasyon profilinin günlük yaşam, iletişim ve sosyalleşme işlevlerine nasıl yansıdığını gösterir.",
     interpretationBoundaries: "Uyumsal davranış sonucu DNA skorunu değiştirmez; tanı ya da destek planı yerine geçmez.",
-    dnaRelation: "adaptive_daily_living, social-pragmatic ve korunmuş profil yorumunu destekler.",
+    dnaRelation: "Günlük yaşam becerileriyle sosyal-pragmatik işlevi ve korunmuş alanları birlikte yorumlamaya katkı sağlar.",
     sourceLinks: ["https://www.pearsonassessments.com/store/en/usd/p/100001622"],
     evidenceTier: "official_metadata",
   }),
@@ -959,7 +959,7 @@ function buildSynthesisLines(compatible: ExternalTestMatch[]): string[] {
     lines.push("Motor planlama ve beden organizasyonuna ilişkin birden fazla test, praksi temelli zorlanmanın görev organizasyonu ve katılımı etkilediğini düşündürmektedir.")
   }
   if ((categoryCounts.get("language_communication") || 0) >= 2) {
-    lines.push("Dilsel talebe ilişkin birden fazla test, sözel yük ve yönerge karmaşıklığı arttığında anlama, görevde kalma ve frustrasyon toleransının birlikte zorlandığını desteklemektedir.")
+    lines.push("Dilsel talebe ilişkin birden fazla test, sözel talep ve yönerge karmaşıklığı arttığında anlama, görevde kalma ve engellenmeye dayanma kapasitesinin birlikte zorlandığını desteklemektedir.")
   }
   if ((categoryCounts.get("social_pragmatic") || 0) >= 2) {
     lines.push("Sosyal-pragmatik iletişime ilişkin birden fazla test, karşılıklılık ve sosyal esneklik talepleri arttığında düzenleyici yükün belirginleştiğini desteklemektedir.")
@@ -995,10 +995,10 @@ function buildDecisionLines(
 ): string[] {
   if (compatible.length > 0 && incompatible.length > 0) {
     return [
-      "Yaş aralığıyla uyumlu ve uyumsuz dış testler birlikte bildirilmiştir. Klinik yorum yalnız yaşa uygun testlerle güçlendirilmiş; yaş uyumsuz testler ana klinik karar mekanizmasına dahil edilmemeli ve yalnız temkinli yan bilgi olarak bırakılmalıdır.",
+      "Yaş aralığıyla uyumlu ve uyumsuz dış testler birlikte bildirilmiştir. Klinik yorum yaşa uygun testlerle desteklenmiştir. Yaş uyumsuz testler yalnız temkinli yan bilgi olarak kayda geçirilmiştir.",
       ...incompatible.slice(0, 1).map(
         (match) =>
-          `${match.name} yaş uyumsuzluğu nedeniyle ana klinik yorumu güçlendirmek için kullanılmamıştır.`
+          `${match.name} yaş uyumsuz olduğu için ana klinik değerlendirmeyi destekleyen veri olarak kullanılmamıştır.`
       ),
     ].slice(0, 2)
   }
@@ -1020,7 +1020,7 @@ function getAgeConditionalCautionLine(match: ExternalTestMatch, ageMonths?: numb
     ageMonths >= 72 &&
     ageMonths <= 83
   ) {
-    return `${match.name}: 6 yaş bandında Conners EC ile Conners 4 form seçimi okul düzeyi ve uygulama bağlamına göre doğrulanmalıdır; bu nedenle bulgu destekleyici kabul edilir ancak tek başına ana klinik yorumu güçlendirmez.`
+    return `${match.name}: 6 yaş bandında Conners EC ile Conners 4 form seçimi okul düzeyi ve uygulama bağlamına göre doğrulanmalıdır; bu nedenle bulgu destekleyici kabul edilir ancak tek başına ana klinik değerlendirmeyi taşımaz.`
   }
 
   return ""
@@ -1138,7 +1138,7 @@ export function analyzeExternalClinicalTests(rawText: unknown, ageMonths?: numbe
       typeof ageMonths === "number" && Number.isFinite(ageMonths)
         ? `Mevcut vaka yaşı ${ageMonths} aydır`
         : "Mevcut vaka yaşı belirlenemediği için"
-    return `${match.name}: ${ageText}; bu testin resmi yaş aralığı ${formatExternalTestAgeRange(match)} görünmektedir. Bu nedenle dış test bulgusu ana klinik karar mekanizmasına dahil edilmemeli, en fazla temkinli yan bilgi olarak ele alınmalıdır. Kaynak: ${match.sourceTitle}.`
+    return `${match.name}: ${ageText}; bu testin resmi yaş aralığı ${formatExternalTestAgeRange(match)} görünmektedir. Bu bulgu ana klinik değerlendirmeyi desteklemez; yalnız temkinli yan bilgi olarak kayda geçirilmiştir. Kaynak: ${match.sourceTitle}.`
   })
   const ageConditionalCautionLines = matches
     .map((match) => getAgeConditionalCautionLine(match, ageMonths))
@@ -1158,9 +1158,9 @@ export function analyzeExternalClinicalTests(rawText: unknown, ageMonths?: numbe
       : "Bildirilen sonuç alanı yapılandırılmış biçimde yakalanmadı."
     const relation =
       match.ageCompatible === false
-        ? "Bu bulgu ana klinik yorumu güçlendirmez; yalnız temkinli yan bilgi olarak tutulur."
-        : match.resultQuality === "ham_puan_only"
-        ? "Ham puan tek başına yorum gücünü sınırlar; resmi yorum düzeyi olmadan ana klinik yorumu güçlendirmez."
+        ? "Bu bulgu ana klinik değerlendirmeyi desteklemez; yalnız temkinli yan bilgi olarak kayda geçirilir."
+      : match.resultQuality === "ham_puan_only"
+        ? "Ham puan tek başına yorum gücünü sınırlar; resmi yorum düzeyi olmadan ana klinik değerlendirmeyi destekleyen veri sayılmaz."
         : match.resultDirection === "expected_or_preserved"
         ? "Korunmuş/yaş uyumlu sonuç, raporda risk büyütmek yerine işlevsel denge kanıtı olarak kullanılır."
         : match.dnaRelation
@@ -1171,7 +1171,7 @@ export function analyzeExternalClinicalTests(rawText: unknown, ageMonths?: numbe
     ...matches
       .map((match) => {
         if (match.ageCompatible === false) {
-          return `${match.name}: yaş uyumsuz olduğu için ana mekanizmayı veya ana klinik yorumu güçlendirmek için kullanılmadı.`
+          return `${match.name}: yaş uyumsuz olduğu için ana klinik değerlendirmeyi destekleyen veri olarak kullanılmamıştır.`
         }
         if (match.resultQuality === "ham_puan_only") {
           return `${match.name}: yalnız ham puan bildirildi; resmi yorum düzeyi olmadığı için klinik çıkarım temkinli tutuldu.`

@@ -60,7 +60,7 @@ const cards = [
   },
   {
     title: "Rapor Paketleri",
-    text: "Ek test ve AI rapor haklarınızı panel içinden satın alın ve kullanımınıza devam edin.",
+    text: "Ek test ve klinik rapor haklarınızı panel içinden satın alın ve kullanımınıza devam edin.",
     href: "/report-packages",
     icon: CreditCard,
     accent: "from-violet-500 to-cyan-500",
@@ -186,7 +186,7 @@ export default function StarterPage() {
                     <Sparkles size={22} />
                   </div>
                   <div>
-                    <div className="text-sm font-black text-[#071b3a]">AI raporlama</div>
+                    <div className="text-sm font-black text-[#071b3a]">Deterministik raporlama</div>
                     <div className="mt-1 text-xs font-semibold text-slate-500">Klinisyen onaylı rapor taslağı</div>
                   </div>
                 </div>

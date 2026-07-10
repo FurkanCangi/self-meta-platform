@@ -8,7 +8,7 @@ function isEnabled(value?: string) {
 }
 
 export function isAiReportDebugEnabled() {
-  return isEnabled(process.env.OPENAI_REPORT_DEBUG) || isEnabled(process.env.DNA_REPORT_DEBUG)
+  return isEnabled(process.env.DNA_REPORT_DEBUG)
 }
 
 function redactLogValue(key: string, value: unknown): unknown {
@@ -43,7 +43,7 @@ export function redactLogFields(fields: LogFields) {
 
 export function logAiReportDebug(event: string, fields: LogFields = {}) {
   if (!isAiReportDebugEnabled()) return
-  console.info("[AI-REPORT]", event, redactLogFields(fields))
+  console.info("[REPORT]", event, redactLogFields(fields))
 }
 
 function safeError(error: unknown) {
@@ -69,7 +69,7 @@ function safeError(error: unknown) {
 }
 
 export function logAiReportError(event: string, error: unknown, fields: LogFields = {}) {
-  console.error("[AI-REPORT]", event, {
+  console.error("[REPORT]", event, {
     ...redactLogFields(fields),
     error: safeError(error),
   })

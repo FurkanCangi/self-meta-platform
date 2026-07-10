@@ -34,6 +34,16 @@ const PLACEHOLDER_VALUES = new Set([
   "bilinmiyor",
   "bilmiyorum",
   "belirsiz",
+  "belirtilmedi",
+  "belirtilmemis",
+  "net bilgi verilmedi",
+  "netbilgiverilmedi",
+  "bilgi verilmedi",
+  "bilgiverilmedi",
+  "veri yok",
+  "veriyok",
+  "mevcut degil",
+  "mevcutdegil",
   "none",
   "null",
   "undefined",
@@ -530,19 +540,19 @@ export function summarizeAnamnezThemes(record: AnamnezRecord): string[] {
 
   if (themeSignals.transitionCoregulation) {
     lines.push(
-      "Geçişler, ayrılma anları veya bakımveren desteği gerektiren bağlamlarda regülasyon kırılganlığının belirginleştiği tarif edilmektedir."
+      "Geçiş, ayrılma veya yetişkin desteğinin azaldığı durumlarda self-regülasyon güçlüğünün arttığı bildirilmektedir."
     );
   }
 
   if (themeSignals.adaptiveDailyLiving) {
     lines.push(
-      "Öz bakım, günlük rutinleri başlatma veya sıralı günlük yaşam görevlerini sürdürme alanında işlevsel sürtünme tarif edilmektedir."
+      "Öz bakım, günlük rutinleri başlatma veya sıralı günlük yaşam görevlerini sürdürme sırasında işlevsel zorlanma bildirilmektedir."
     );
   }
 
   if (themeSignals.languageLoad) {
     lines.push(
-      "Sözel yük ve yönerge karmaşıklığı arttığında performansın, görevde kalmanın veya frustrasyon toleransının bozulabildiği bildirilmektedir."
+      "Sözel talep ve yönerge karmaşıklığı arttığında performansın, görevde kalmanın veya engellenmeye dayanma kapasitesinin bozulabildiği bildirilmektedir."
     );
   }
 
@@ -697,15 +707,15 @@ export function extractAnamnezFlags(record: AnamnezRecord): string[] {
   const themeSignals = getAnamnezThemeSignals(record)
 
   if (themeSignals.transitionCoregulation) {
-    flags.push("Geçiş, ayrılma ve ko-regülasyon gerektiren anlarda kırılganlık tarif edilmektedir.");
+    flags.push("Geçiş, ayrılma ve yetişkin desteğinin azaldığı anlarda self-regülasyon güçlüğünün arttığı bildirilmektedir.");
   }
 
   if (themeSignals.adaptiveDailyLiving) {
-    flags.push("Öz bakım ve günlük rutinleri sürdürme alanında işlevsel sürtünme bildirilmektedir.");
+    flags.push("Öz bakım ve günlük rutinleri sürdürme sırasında işlevsel zorlanma bildirilmektedir.");
   }
 
   if (themeSignals.languageLoad) {
-    flags.push("Sözel yük ve yönerge karmaşıklığı arttığında performansın bozulabildiği bildirilmektedir.");
+    flags.push("Sözel talep ve yönerge karmaşıklığı arttığında performansın bozulabildiği bildirilmektedir.");
   }
 
   if (themeSignals.socialPragmatic) {
@@ -713,11 +723,11 @@ export function extractAnamnezFlags(record: AnamnezRecord): string[] {
   }
 
   if (themeSignals.motorPraxis) {
-    flags.push("Motor planlama, sekanslama veya beden organizasyonu yükü tarif edilmektedir.");
+    flags.push("Motor planlama, sıralama veya beden organizasyonu talebi arttığında zorlanma bildirilmektedir.");
   }
 
   if (themeSignals.sensory) {
-    flags.push("Duyusal yüklenme ve tetikleyici çevresel uyaran teması bildirilmektedir.");
+    flags.push("Çevresel uyaran yoğunluğu arttığında duyusal zorlanma bildirilmektedir.");
   }
 
   if (themeSignals.emotional) {

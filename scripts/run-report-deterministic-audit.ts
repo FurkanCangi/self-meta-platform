@@ -74,7 +74,7 @@ const ISSUE_LABELS: Record<AuditIssueCode, string> = {
   mechanism_lowest_score_leak: "Ana klinik bölümlerde lowest-score mekanizması sızıyor",
   external_test_profile_missing: "Ek test kanıt profili raporda görünmüyor",
   external_test_quality_boundary_missing: "Ek test yorum sınırı/kalite uyarısı zayıf",
-  deterministic_kb_metric_missing: "Runtime RAG / deterministic KB metrik ayrımı görünmüyor",
+  deterministic_kb_metric_missing: "%100 deterministik üretim veya yerel bilgi tabanı doğrulaması görünmüyor",
   age_mismatch_warning_weak: "Yaş uyumsuz dış test uyarısı zayıf",
   sensory_theme_leakage: "Duyusal tema sızıntısı var",
   attention_theme_leakage: "Dikkat/görev sürdürme tema sızıntısı var",
@@ -100,6 +100,12 @@ function normalizeText(value: string): string {
 
 function hasAny(text: string, patterns: RegExp[]): boolean {
   return patterns.some((pattern) => pattern.test(text));
+}
+
+function isMeaningfulNarrativeSource(value: unknown): boolean {
+  const text = String(value || "").replace(/\s+/g, " ").trim();
+  if (text.length < 18) return false;
+  return !/^(?:net bilgi verilmedi|belirtilmedi|bilgi yok|genel degerlendirme istenmistir|genel değerlendirme istenmiştir|kisa gorusme yapildi|kısa görüşme yapıldı)[.!]?$/i.test(text);
 }
 
 function profileMentionsCategory(profileText: string, category: string): boolean {
@@ -249,7 +255,16 @@ function getIssueCodes(params: {
       (primaryCategory === "social_pragmatic" &&
         decisionCategories.has("language_communication") &&
         profileMentionsCategory(normalizedProfile, "language_communication")) ||
-      (hasMixedLimitedEvidence && hasAny(normalizedProfile, [/kanıt-sınırlı/, /kanit-sinirli/, /karma/]));
+      (hasMixedLimitedEvidence &&
+        hasAny(normalizedProfile, [
+          /kanıt-sınırlı/,
+          /kanit-sinirli/,
+          /kanıtı sınırlı/,
+          /kaniti sinirli/,
+          /bağlama duyarlı/,
+          /baglama duyarli/,
+          /karma/,
+        ]));
 
     if (!primaryAligned && !contextualOverride) {
       issueCodes.push("profile_category_mismatch");
@@ -308,7 +323,7 @@ function getIssueCodes(params: {
   }
 
   if (externalAnalysis.incompatible.length > 0) {
-    if (!/ana klinik karar mekanizmasına dahil edilmemeli/i.test(sectionBodies.fit)) {
+    if (!/ana klinik değerlendirmeyi desteklemez|ana klinik değerlendirmeyi destekleyen veri olarak kullanılmamıştır|ana klinik karar mekanizmasına dahil edilmemeli/i.test(sectionBodies.fit)) {
       issueCodes.push("age_mismatch_warning_weak");
     }
   }
@@ -327,14 +342,14 @@ function getIssueCodes(params: {
 
   if (
     externalAnalysis.qualityFlagLines.length > 0 &&
-    !/Yorum sınırı:|Yorumda |ham puan|yaş uyumsuz|yas uyumsuz|ana mekanizma veya karar ağırlığını artırmak için kullanılmadı|ana mekanizmayı veya ana klinik yorumu güçlendirmek için kullanılmadı/i.test(sectionBodies.fit)
+    !/Yorum sınırı:|Yorumda |ham puan|yaş uyumsuz|yas uyumsuz|ana klinik değerlendirmeyi destekleyen veri olarak kullanılmamıştır|ana mekanizma veya karar ağırlığını artırmak için kullanılmadı|ana mekanizmayı veya ana klinik yorumu güçlendirmek için kullanılmadı/i.test(sectionBodies.fit)
   ) {
     issueCodes.push("external_test_quality_boundary_missing");
   }
 
   if (
     hasMixedLimitedEvidence &&
-    !hasAny(normalizedReport, [/kanıt-sınırlı/, /kanıt sınırlı/, /kanıt kanalları tam yakınsama göstermedi/])
+    !hasAny(normalizedReport, [/kanıt-sınırlı/, /kanıt sınırlı/, /kanıt kanalları tam yakınsama göstermedi/, /dış test, anamnez ve gözlem tam örtüşmediğinde/, /yalnız ortaklaşan görev ve bağlamlarla sınırlandırılmıştır/])
   ) {
     issueCodes.push("evidence_limited_mixed_missing");
   }
@@ -355,9 +370,9 @@ function getIssueCodes(params: {
   }
 
   const hasCaregiverSource =
-    typeof params.anamnezRecord.parent_concerns_goals === "string" ||
-    typeof params.anamnezRecord.referral_reason === "string";
-  const hasTherapistSource = typeof params.anamnezRecord.therapist_comments === "string";
+    isMeaningfulNarrativeSource(params.anamnezRecord.parent_concerns_goals) ||
+    isMeaningfulNarrativeSource(params.anamnezRecord.referral_reason);
+  const hasTherapistSource = isMeaningfulNarrativeSource(params.anamnezRecord.therapist_comments);
   if (
     (hasCaregiverSource || hasTherapistSource || externalAnalysis.matches.length > 0) &&
     ((hasCaregiverSource && !/(?:Aile tarafından|aileden gelen bilgi)/i.test(sectionBodies.fit)) ||
@@ -368,8 +383,9 @@ function getIssueCodes(params: {
   }
 
   if (
-    !/Runtime RAG:\s*%0/i.test(params.metricsText) ||
-    !/Deterministic Knowledge Base:\s*Aktif/i.test(params.metricsText) ||
+    !/Uretim modu:\s*%100 deterministik/i.test(params.metricsText) ||
+    !/Harici model cagrisi:\s*Yok/i.test(params.metricsText) ||
+    !/Yerel klinik bilgi tabani:\s*Aktif/i.test(params.metricsText) ||
     !/Trace:\s*Aktif/i.test(params.metricsText) ||
     !/Selected atoms:\s*[1-9]\d*/i.test(params.metricsText)
   ) {
@@ -534,10 +550,13 @@ function getTraceAuditIssues(result: Awaited<ReturnType<typeof runSingleFixture>
   if ((trace?.qualityMetrics?.redundancyScore || 0) > 12 || (result.auditTrail?.redundancyScore || 0) > 12) {
     issues.push("redundancy_score_high");
   }
-  if ((trace?.suppressedAtoms || []).some((atom) => atom.reason === "unsupported_specificity")) {
-    issues.push("unsupported_specificity");
-  }
-  if ((trace?.qualityMetrics?.unsupportedSpecificityRate || 0) > 0 || (result.auditTrail?.unsupportedSpecificityRate || 0) > 0) {
+  const unsupportedSuppressedIds = new Set(
+    (trace?.suppressedAtoms || [])
+      .filter((atom) => atom.reason === "unsupported_specificity")
+      .map((atom) => atom.id)
+  );
+  const unsupportedSpecificityLeaked = (trace?.selectedAtoms || []).some((atom) => unsupportedSuppressedIds.has(atom.id));
+  if (unsupportedSpecificityLeaked) {
     issues.push("unsupported_specificity");
   }
   const externalEvidenceSources = (trace?.evidenceSources || []).filter((source) => source.kind === "external_test");

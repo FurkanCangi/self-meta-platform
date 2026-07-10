@@ -450,7 +450,7 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
     : ""
 
   const emotionSentence = hasAnyDomain(weakDomains, ["Duygusal Regülasyon"]) || (!balancedProfile && hasAnyDomain(matchedDomains, ["Duygusal Regülasyon"]))
-    ? `Duygusal toparlanma, yoğunluk ve yatışma hızının bir düzenleyici süreç olarak ele alınması, duygusal zorlanmanın tanı değil işlevsel regülasyon ekseni olarak yorumlanması gerektiğini vurgulayan kuramsal çerçeveyle tutarlıdır ${VERIFIED_LITERATURE_SOURCES.THOMPSON_2019.inlineCitation}; duygu ilişkili self-regülasyonun çocukların uyum süreçleriyle ilişkili olduğu da geniş derleme düzeyinde desteklenmektedir ${VERIFIED_LITERATURE_SOURCES.EISENBERG_ET_AL_2010.inlineCitation}.`
+    ? `Duygusal toparlanma, yoğunluk ve yatışma hızı işlevsel bir regülasyon süreci olarak ele alınır ${VERIFIED_LITERATURE_SOURCES.THOMPSON_2019.inlineCitation}. Duyguyla ilişkili self-regülasyonun çocukların uyum süreçleriyle bağlantısı da derleme düzeyinde desteklenmektedir ${VERIFIED_LITERATURE_SOURCES.EISENBERG_ET_AL_2010.inlineCitation}.`
     : ""
 
   const physiologicalSentence = supportsPhysiologicalContext
@@ -467,8 +467,8 @@ function buildDomainParagraph(analysis: ClinicalAnalysis): LiteratureBlock {
 
   const adaptiveSentence = supportsAdaptiveContext
     ? balancedProfile
-      ? `${joinTestNames(adaptiveTestNames) || "Uyumsal davranış ve günlük yaşam testleri"} gibi kaynaklardan gelen işlevsel veri, korunmuş ya da sınırda hassasiyet gösteren günlük yaşam akışının hangi bağlamlarda desteklendiğini ve işlevselliğin nasıl sürdürüldüğünü görünür kılar ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
-      : `${joinTestNames(adaptiveTestNames) || "Uyumsal davranış ve günlük yaşam testleri"} gibi kaynaklardan gelen işlevsel veri, self-regülasyon probleminin yalnız kapasite düzeyinde değil öz bakım, rutinleri başlatma, sorumluluk alma ve günlük akışta sürdürülebilirlik düzeyinde nasıl karşılık bulduğunu görünür kılar; bu tür verilerin klinik yoruma katılması gelişimsel self-regülasyon çerçevesiyle uyumludur ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
+      ? `${joinTestNames(adaptiveTestNames) || "Uyumsal davranış ve günlük yaşam testleri"} günlük yaşam işlevlerine ilişkin veri sağlar. Bu veri, işlevselliğin hangi koşullarda korunduğunu ve günlük akışın nasıl sürdürüldüğünü gösterir ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
+      : `${joinTestNames(adaptiveTestNames) || "Uyumsal davranış ve günlük yaşam testleri"} günlük yaşam işlevlerine ilişkin veri sağlar. Bu veri, self-regülasyon güçlüğünün öz bakım, rutin başlatma, sorumluluk alma ve günlük akışta nasıl karşılık bulduğunu gösterir ${VERIFIED_LITERATURE_SOURCES.BLAIR_RAVER_2015.inlineCitation}.`
     : ""
 
   const socialCommunicationSentence = supportsSocialCommunicationContext

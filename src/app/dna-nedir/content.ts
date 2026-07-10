@@ -12,10 +12,10 @@ export const dnaPages = {
   "dna-yaklasimi": {
     slug: "dna-yaklasimi",
     route: "/dna-nedir",
-    eyebrow: "Eğitim modeli ve AI sistemi",
-    title: "Eğitimden AI raporlamaya net bir klinik hat.",
+    eyebrow: "Eğitim modeli ve deterministik sistem",
+    title: "Eğitimden açıklanabilir raporlamaya net bir klinik hat.",
     intro:
-      "Dynamic Neuro-Regulation Approach, self-regülasyon eğitim modelidir. DNA Intelligence ise bu modeli değerlendirme, analiz ve AI destekli raporlama akışına taşıyan klinik sistemdir.",
+      "Dynamic Neuro-Regulation Approach, self-regülasyon eğitim modelidir. DNA Intelligence ise bu modeli değerlendirme, analiz ve deterministik raporlama akışına taşıyan klinik sistemdir.",
     icon: BrainCircuit,
     accent: "#2563EB",
     sections: [
@@ -24,8 +24,8 @@ export const dnaPages = {
         text: "Dynamic Neuro-Regulation Approach, çocuğun davranışını tek bir belirti üzerinden değil; fizyolojik, duyusal, duygusal, bilişsel ve yürütücü sistemlerin etkileşimi içinde ele alır.",
       },
       {
-        title: "AI sistem katmanı",
-        text: "DNA Intelligence, eğitim modelinden gelen klinik dili dijital değerlendirme, veri düzenleme ve AI destekli raporlama sürecine taşır.",
+        title: "Deterministik sistem katmanı",
+        text: "DNA Intelligence, eğitim modelinden gelen klinik dili dijital değerlendirme, veri düzenleme ve açıklanabilir raporlama sürecine taşır.",
       },
       {
         title: "Klinik çıktı",
@@ -136,7 +136,7 @@ export const dnaPages = {
   "ai-raporlama": {
     slug: "ai-raporlama",
     route: "/dna-nedir/ai-raporlama",
-    eyebrow: "AI Raporlama",
+    eyebrow: "Deterministik Raporlama",
     title: "Klinik verilerden anlamlı içgörülere, okunabilir raporlara.",
     intro:
       "DNA Intelligence, çok boyutlu klinik verileri analiz eder, klinik muhakemeyi destekleyen tutarlı ve yapılandırılmış raporlar üretir.",
@@ -145,7 +145,7 @@ export const dnaPages = {
     sections: [
       {
         title: "Klinik sentez",
-        text: "AI, veri içindeki örüntüyü görünür kılar; kesin tanı veya tedavi hükmü üretmez.",
+        text: "Kural tabanlı motor veri içindeki örüntüyü görünür kılar; kesin tanı veya klinik hüküm üretmez.",
       },
       {
         title: "Tutarlı rapor yapısı",

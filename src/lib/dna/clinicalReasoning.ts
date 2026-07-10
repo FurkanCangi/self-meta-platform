@@ -106,7 +106,7 @@ const CATEGORY_MECHANISM_MAP: Record<ExternalTestCategory, ClinicalMechanismType
 }
 
 const CONTEXT_LABELS: Record<ContextTag, string> = {
-  low_demand_one_to_one: "bire bir ve düşük uyaranlı yapı",
+  low_demand_one_to_one: "bire bir, görsel destekli ve yapılandırılmış ortam",
   group_crowd: "grup, kalabalık ve yoğun uyaran",
   transition: "geçiş ve rutin değişimi",
   verbal_load: "sözel yük ve yönerge karmaşıklığı",
@@ -131,7 +131,12 @@ function hasAny(text: string, patterns: RegExp[]): boolean {
 function contextTagsFromText(text: string): ContextTag[] {
   const value = String(text || "")
   const tags: ContextTag[] = []
-  if (hasAny(value, [/bire bir|yapılandırılmış|yapilandirilmis|düşük uyaran|dusuk uyaran|yetişkinle|yetiskinle/i])) tags.push("low_demand_one_to_one")
+  if (
+    hasAny(value, [
+      /bire bir|yapılandırılmış|yapilandirilmis|düşük uyaran|dusuk uyaran|yetişkinle|yetiskinle/i,
+      /görsel plan|gorsel plan|görsel model|gorsel model|adımları ayır|adimlari ayir|anlık geri bildirim|anlik geri bildirim/i,
+    ])
+  ) tags.push("low_demand_one_to_one")
   if (hasAny(value, [/grup|akran|kalabalık|kalabalik|sınıf|sinif|gürültü|gurultu|çok uyaran|cok uyaran/i])) tags.push("group_crowd")
   if (hasAny(value, [/geçiş|gecis|rutin değiş|rutin degis|bekleme|sıra|sira|aktivite sonlandır/i])) tags.push("transition")
   if (hasAny(value, [/sözel|sozel|yönerge|yonerge|komut|dilsel|anlama|cümle|cumle/i])) tags.push("verbal_load")
@@ -207,10 +212,18 @@ function buildAnamnesisAtoms(params: {
   anamnezSignals: AnamnezThemeSignals
   anamnezFlags: string[]
   therapistInsights: string[]
+  loadingContextTexts?: string[]
+  preservedContextTexts?: string[]
   selectedMechanism: ClinicalMechanismType
 }): ClinicalReasoningAtom[] {
-  const text = [...params.anamnezFlags, ...params.therapistInsights].join(" ")
-  const tags = contextTagsFromText(text)
+  const loadingText = [
+    ...params.anamnezFlags,
+    ...params.therapistInsights,
+    ...(params.loadingContextTexts || []),
+  ].join(" ")
+  const preservedText = (params.preservedContextTexts || []).join(" ")
+  const preservedTags = contextTagsFromText(preservedText)
+  const tags = contextTagsFromText(loadingText).filter((tag) => !preservedTags.includes(tag))
   const signalKeys: Array<keyof AnamnezThemeSignals> = [
     "motorPraxis",
     "adaptiveDailyLiving",
@@ -251,7 +264,7 @@ function buildAnamnesisAtoms(params: {
       strength: 2,
       reliability: 2,
       specificity: 2,
-      contextTags: tags,
+      contextTags: preservedTags,
       ageFit: "unknown",
       scoreInterpretability: "not_applicable",
       traceId: "anamnesis.strengths",
@@ -409,6 +422,8 @@ export function buildClinicalReasoning(params: {
   anamnezSignals: AnamnezThemeSignals
   anamnezFlags: string[]
   therapistInsights: string[]
+  loadingContextTexts?: string[]
+  preservedContextTexts?: string[]
   externalTestAnalysis?: ExternalTestAnalysis
   itemLevelAnalysis?: ItemLevelAnalysis | null
 }): ClinicalReasoningResult {

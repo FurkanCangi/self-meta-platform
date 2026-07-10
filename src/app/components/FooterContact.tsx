@@ -14,7 +14,7 @@ const footerLinks = [
 
 const solutionLinks = [
   "Eğitim Platformu",
-  "AI Platformu",
+  "Deterministik Analiz",
   "Klinik Raporlama",
   "Karar Desteği",
   "Danışan Takip",
@@ -35,7 +35,7 @@ export default function FooterContact() {
             <BrandLogo variant="footer" />
             <p className={styles.brandText}>
               Dynamic Neuro-Regulation Approach; klinik eğitim, değerlendirme ve uygulama çerçevesi sunar.
-              DNA Intelligence ise bu yaklaşımı dijital değerlendirme ve AI destekli raporlama altyapısıyla destekler.
+              DNA Intelligence ise bu yaklaşımı dijital değerlendirme ve açıklanabilir deterministik raporlama altyapısıyla destekler.
             </p>
           </div>
 

@@ -10,7 +10,7 @@ const items = [
     icon: ClipboardCheck,
     tone: "purple",
     title: "Değerlendirme",
-    body: "Standardize ölçekler ve AI destekli analizlerle doğru değerlendirme.",
+    body: "Standartlaştırılmış ölçekler ve deterministik analiz kurallarıyla tutarlı değerlendirme.",
   },
   {
     icon: Workflow,

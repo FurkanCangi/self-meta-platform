@@ -25,17 +25,14 @@ type QualityResult = {
   fixturePath: string;
   profileType: string;
   globalLevel: string;
-  finalAiContributionPct: number;
-  finalRagContributionPct: number;
-  fallbackUsed: boolean;
+  productionMode: "deterministic";
   passed: boolean;
   failures: string[];
 };
 
 function parseArgs(argv: string[]) {
   return {
-    withAi: argv.includes("--with-ai"),
-    smokeOnly: argv.includes("--smoke-only"),
+    professorFive: argv.includes("--professor-five"),
   };
 }
 
@@ -192,12 +189,13 @@ function getKnownExternalTestNames(text: string): string[] {
   return known.filter((name) => haystack.includes(name.toLocaleLowerCase("tr-TR")));
 }
 
-function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof runSingleFixture>>, withAi: boolean) {
+function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof runSingleFixture>>) {
   const failures: string[] = [];
   const finalText = result.finalText;
   const clinicalMainText = getClinicalMainText(finalText);
   const decisionSummarySection = getSectionBody(finalText, "1.");
   const evidenceProfileSection = getSectionBody(finalText, "2.");
+  const domainSection = getSectionBody(finalText, "3.");
   const patternSection = getSectionBody(finalText, "4.");
   const fitSection = getSectionBody(finalText, "5.");
   const prioritizationSection = getSectionBody(finalText, "6.");
@@ -237,12 +235,87 @@ function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof r
     failures.push("6. Klinik Önceliklendirme Notu kanıt/veri güveni özetini üretmiyor.");
   }
 
+  if (spec.requireProfessorDecisionFrame) {
+    const professorFrameText = `${decisionSummarySection}\n${prioritizationSection}`;
+    const requiredDecisionLabels = [
+      "En güçlü klinik hipotez:",
+      "İşlevsel karşılık:",
+      "Bağlamsal ayrım:",
+      "Kanıt hiyerarşisi:",
+      "Alternatif açıklama:",
+      "Karar sınırı:",
+      "Doğrulama önceliği:",
+    ];
+    const missingLabels = requiredDecisionLabels.filter((label) => !professorFrameText.includes(label));
+    if (missingLabels.length > 0) {
+      failures.push(`Profesör düzeyi karar çerçevesi eksik: ${missingLabels.join(" | ")}`);
+    }
+    if (/yaş-duyarlı norm bandı/i.test(finalText)) {
+      failures.push("Geçici sistem içi yorum bandı, normatif validasyon varmış gibi yazılmış.");
+    }
+    if (/Aileden gelen bilgiye göre\s+(?:nın|nin|nun|nün)\b/i.test(finalText)) {
+      failures.push("Anamnez aktarımında iyelik ekiyle başlayan bozuk cümle bulundu.");
+    }
+    if (spec.mode !== "widespread" && /Alternatif açıklama:\s*Yaygın düşük puanlar/i.test(finalText)) {
+      failures.push("Seçici, dengeli veya çift eksenli vakaya yaygın düşük puan açıklaması yazılmış.");
+    }
+  }
+
+  const clarityRegressions: Array<[RegExp, string]> = [
+    [/\b(?:Tipik|Riskli|Atipik) banttadır\b/i, "Alan yorumu eski bant diline geri döndü."],
+    [/Profil sınıflaması:/i, "Profil adı yeniden sınıflama veya tanı etiketi gibi yazıldı."],
+    [/ana eksene eşlik eden/i, "Soyut ana eksen anlatımı yeniden üretildi."],
+    [/vaka dışı görev/i, "Doğal ödev ifadesi yapay güvenlik metnine dönüştürüldü."],
+    [/Bu vaka,[^.]+ ile açıklanır/i, "Klinik karar öznesi belirsiz açıklama kalıbına döndü."],
+    [/İşlevsel karşılık:\s*İşlevsel olarak/i, "İşlevsel karşılık etiketi cümle içinde gereksiz yere tekrarlandı."],
+  ];
+  for (const [pattern, message] of clarityRegressions) {
+    if (pattern.test(clinicalMainText)) failures.push(message);
+  }
+
+  if (spec.key === "prof-04-executive-context-contrast") {
+    if (/başka bir koşulda korunmuş performansı gösteren karşılaştırmalı veri sınırlı/i.test(finalText)) {
+      failures.push("Korunmuş performans girdisi bulunmasına rağmen bağlam karşılaştırması yok sayıldı.");
+    }
+    if (!/koşullarında performans düşerken[^.]+koşullarında performans daha düzenlidir/i.test(finalText)) {
+      failures.push("Yük bindiren ve performansı destekleyen koşullar açık karşılaştırma cümlesinde gösterilmedi.");
+    }
+    if (!/ödev\s+ba[şs]latmada/i.test(finalText)) {
+      failures.push("Doğal ödev başlatma ifadesi raporda korunmadı.");
+    }
+    const fullBriefPNameCount = (
+      finalText.match(/Behavior Rating Inventory of Executive Function - Preschool Version \(BRIEF-P\)/gi) || []
+    ).length;
+    if (fullBriefPNameCount > 1) {
+      failures.push("BRIEF-P'nin uzun adı raporda gereksiz biçimde tekrarlandı.");
+    }
+  }
+
+  if (spec.key === "prof-03-severe-sparse-evidence") {
+    if (/Bu alan raporun temel klinik odağıdır|Temel bulgu\s+(?:Fizyolojik Regülasyon|Duyusal Regülasyon|Duygusal Regülasyon|Bilişsel Regülasyon|Yürütücü İşlev|İnterosepsiyon)\s+alanındadır/i.test(domainSection)) {
+      failures.push("Çok alanlı ve yakın puanlı vakada tek bir alan yanlışlıkla temel klinik odak seçildi.");
+    }
+    if (!/tek bir temel alan seçilmez/i.test(domainSection)) {
+      failures.push("Çok alanlı ve yakın puanlı vakada alan yorumunun tek odak seçmediği açıkça belirtilmedi.");
+    }
+  }
+
+  if (spec.expectedVisibleConfidence) {
+    const confidencePattern = new RegExp(
+      `(?:Veri güveni|Karar güveni):\\s*${spec.expectedVisibleConfidence}(?=\\s|[.,;:!?]|$)`,
+      "i"
+    );
+    if (!confidencePattern.test(prioritizationSection)) {
+      failures.push(`Beklenen görünür karar güveni ${spec.expectedVisibleConfidence} değil.`);
+    }
+  }
+
   if (requiresClassificationExplanation(result) && !hasClassificationExplanation(`${evidenceProfileSection}\n${prioritizationSection}`)) {
     failures.push("Global/domain sınıflama farkı kanıt profili veya karar notunda toplam skor ve alan eşiği farkıyla açıklanmıyor.");
   }
 
   if (hasForbiddenClinicalCitation(clinicalMainText)) {
-    failures.push("Klinik ana bölümlerde AI/rapor kaynak, DOI, APA veya inline citation üretmiş.");
+    failures.push("Klinik ana bölümlerde kaynak, DOI, APA veya inline citation üretilmiş.");
   }
 
   if (hasForbiddenClinicalDetermination(clinicalMainText)) {
@@ -321,7 +394,12 @@ function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof r
     failures.push("Yaygın vaka örüntü veya sonuç kısmında seçici diye anlatılmış.");
   }
 
-  if (spec.requireAgeMismatchWarning && !/ana klinik karar mekanizmasına dahil edilmemeli/i.test(fitSection)) {
+  if (
+    spec.requireAgeMismatchWarning &&
+    !/ana klinik değerlendirmeyi desteklemez|ana klinik değerlendirmeyi destekleyen veri olarak kullanılmamıştır|yaş uyumsuz testler yalnız temkinli yan bilgi/i.test(
+      fitSection
+    )
+  ) {
     failures.push("Yaş uyumsuz dış test uyarısı fit bölümünde görünmüyor.");
   }
 
@@ -340,17 +418,6 @@ function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof r
   }
 
   failures.push(...validateRegistryOnlyLiterature(literatureSection));
-
-  if (withAi && typeof spec.expectedAiMinContributionPct === "number") {
-    if (result.finalAiContributionPct < spec.expectedAiMinContributionPct) {
-      failures.push(
-        `AI katkısı beklenen eşiğin altında: %${result.finalAiContributionPct} < %${spec.expectedAiMinContributionPct}`
-      );
-    }
-    if (result.fallbackUsed) {
-      failures.push("AI quality modunda rapor fallback'e düştü.");
-    }
-  }
 
   return failures;
 }
@@ -371,9 +438,7 @@ async function writeSummary(results: QualityResult[], label: string) {
         `- Fixture: ${result.fixturePath}`,
         `- Profil: ${result.profileType}`,
         `- Genel düzey: ${result.globalLevel}`,
-        `- Final AI: %${result.finalAiContributionPct}`,
-        `- Final RAG: %${result.finalRagContributionPct}`,
-        `- Fallback: ${result.fallbackUsed ? "Evet" : "Hayır"}`,
+        "- Üretim modu: %100 deterministik",
         `- Durum: ${result.passed ? "PASS" : "FAIL"}`,
         ...(result.failures.length ? result.failures.map((failure) => `- Hata: ${failure}`) : []),
         "",
@@ -385,27 +450,26 @@ async function writeSummary(results: QualityResult[], label: string) {
   await fs.writeFile(path.join(OUTPUT_DIR, `quality-summary-${label}.json`), JSON.stringify(results, null, 2), "utf8");
 }
 
-async function runQualityFixture(spec: QualityCaseSpec, withAi: boolean) {
-  const deterministicOnly = !withAi;
-  return runSingleFixture(spec.fixturePath, deterministicOnly);
+async function runQualityFixture(spec: QualityCaseSpec) {
+  return runSingleFixture(spec.fixturePath);
 }
 
 async function main() {
-  const { withAi, smokeOnly } = parseArgs(process.argv.slice(2));
-  const specs = smokeOnly
-    ? QUALITY_CASE_SPECS.filter((spec) => typeof spec.expectedAiMinContributionPct === "number")
+  const { professorFive } = parseArgs(process.argv.slice(2));
+  const specs = professorFive
+    ? QUALITY_CASE_SPECS.filter((spec) => spec.suite === "professor-five")
     : QUALITY_CASE_SPECS;
   const results: QualityResult[] = [];
   const failures: QualityFailure[] = [];
 
   for (const spec of specs) {
-    const result = await runQualityFixture(spec, withAi);
-    const caseFailures = validateCase(spec, result, withAi);
+    const result = await runQualityFixture(spec);
+    const caseFailures = validateCase(spec, result);
     const metricsText = await readMetricsText(result.outputDir);
-    if (!withAi && (!/Runtime RAG:\s*%0/i.test(metricsText) || !/Deterministic Knowledge Base:\s*Aktif/i.test(metricsText))) {
-      caseFailures.push("Deterministic üretimde Runtime RAG %0 ve Knowledge Base Aktif metrik ayrımı görünmüyor.");
+    if (!/Uretim modu:\s*%100 deterministik/i.test(metricsText) || !/Harici model cagrisi:\s*Yok/i.test(metricsText)) {
+      caseFailures.push("Rapor üretiminin %100 deterministik ve harici modelsiz olduğu teknik özette doğrulanmıyor.");
     }
-    if (!withAi && (!/Trace:\s*Aktif/i.test(metricsText) || !/Selected atoms:\s*[1-9]\d*/i.test(metricsText))) {
+    if (!/Trace:\s*Aktif/i.test(metricsText) || !/Selected atoms:\s*[1-9]\d*/i.test(metricsText)) {
       caseFailures.push("Deterministic üretimde trace aktif ve seçili atom metrikleri görünmüyor.");
     }
     if (!result.trace?.active || !result.auditTrail?.inputHash) {
@@ -433,9 +497,7 @@ async function main() {
       fixturePath: spec.fixturePath,
       profileType: result.profileType,
       globalLevel: result.globalLevel,
-      finalAiContributionPct: result.finalAiContributionPct,
-      finalRagContributionPct: result.finalRagContributionPct,
-      fallbackUsed: result.fallbackUsed,
+      productionMode: result.productionMode,
       passed,
       failures: caseFailures,
     });
@@ -445,14 +507,14 @@ async function main() {
     }
   }
 
-  const summaryLabel = withAi ? (smokeOnly ? "ai-smoke" : "ai-full") : "deterministic";
+  const summaryLabel = professorFive ? "professor-five" : "deterministic";
   await writeSummary(results, summaryLabel);
 
   console.log("");
   console.log("=== REPORT QUALITY GATES ===");
   for (const result of results) {
     console.log(
-      `- ${result.caseKey} | ${result.passed ? "PASS" : "FAIL"} | Profil: ${result.profileType} | Final AI %${result.finalAiContributionPct} | Final RAG %${result.finalRagContributionPct}`
+      `- ${result.caseKey} | ${result.passed ? "PASS" : "FAIL"} | Profil: ${result.profileType} | %100 deterministik`
     );
   }
 

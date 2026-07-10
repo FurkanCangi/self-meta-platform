@@ -59,7 +59,7 @@ const reportPackages = [
 const notes = [
   "Satın alınan rapor hakları hesabınıza tanımlanır ve bitene kadar geçerli kalır.",
   "Rapor hakları aylık sıfırlanmaz, ay sonunda yanmaz ve otomatik yenileme yapılmaz.",
-  "Rapor hakları AI klinik rapor üretimi sırasında düşülür.",
+  "Rapor hakkı, deterministik klinik rapor başarıyla oluşturulduğunda düşülür.",
   "Paketler eğitim programı satın alımından bağımsız ek kullanım hakkıdır.",
 ]
 
@@ -126,7 +126,7 @@ export default function ReportPackagesPage() {
         <div className="dna-app-section-title">Rapor hakkı</div>
         <h1 className="mt-2 text-[26px] font-black leading-tight text-[#071b3a]">Paketler</h1>
         <p className="mt-1 text-sm leading-6 text-slate-600">
-          Kalan AI rapor hakkını ve ek paketleri buradan takip et.
+          Kalan klinik rapor hakkını ve ek paketleri buradan takip et.
         </p>
       </section>
 
@@ -183,7 +183,7 @@ export default function ReportPackagesPage() {
                 <div className="mt-3 flex items-center justify-between gap-3">
                   <div>
                     <div className="text-2xl font-black text-blue-700">{pack.price}</div>
-                    <div className="text-xs font-bold text-slate-500">{pack.credits} AI rapor hakkı</div>
+                    <div className="text-xs font-bold text-slate-500">{pack.credits} klinik rapor hakkı</div>
                   </div>
                   <button
                     type="button"
@@ -221,7 +221,7 @@ export default function ReportPackagesPage() {
             </div>
             <h1 className="mt-4 text-3xl font-black tracking-tight text-[#071b3a] md:text-4xl">Ek Test ve Rapor Paketleri</h1>
             <p className="mt-3 max-w-3xl text-[15px] leading-7 text-slate-600">
-              Eğitim programına kayıt tamamlandıktan sonra ihtiyaç oldukça ek AI rapor hakkı satın alın.
+              Eğitim programına kayıt tamamlandıktan sonra ihtiyaç oldukça ek klinik rapor hakkı satın alın.
               Satın aldığınız rapor hakları aylık tükenmez; bitene kadar hesabınızda kalır.
             </p>
           </div>
@@ -244,7 +244,7 @@ export default function ReportPackagesPage() {
           <div className="dna-card p-5">
             <div className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Kullanılan Hak</div>
             <div className="mt-2 text-xl font-black text-[#071b3a]">{loadingStatus ? "Yükleniyor..." : `${status?.reports?.used ?? 0} rapor`}</div>
-            <div className="mt-2 text-sm leading-6 text-slate-500">AI rapor üretildiğinde ledger üzerinden düşülür.</div>
+            <div className="mt-2 text-sm leading-6 text-slate-500">Klinik rapor başarıyla oluşturulduğunda kullanım kaydından düşülür.</div>
           </div>
           <div className="dna-card p-5">
             <div className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">Kalan Rapor Hakkı</div>
@@ -287,7 +287,7 @@ export default function ReportPackagesPage() {
                 <h2 className="mt-5 text-xl font-black text-[#071b3a]">{pack.title}</h2>
                 <p className="mt-3 min-h-[52px] text-sm leading-7 text-slate-600">{pack.description}</p>
                 <div className="mt-4 inline-flex rounded-full border border-blue-100 bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">
-                  {pack.credits} AI rapor hakkı
+                  {pack.credits} klinik rapor hakkı
                 </div>
                 <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs font-bold leading-5 text-slate-700">
                   Aylık yenilenmez. Kullanmadığınız haklar hesapta kalır.

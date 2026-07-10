@@ -37,14 +37,14 @@ export default function KvkkPage() {
           body: [
             "Hesap, üyelik, paket ve hizmet sunumu verileri sözleşmenin kurulması/ifası, hukuki yükümlülüklerin yerine getirilmesi ve meşru menfaat hukuki sebeplerine dayanabilir.",
             "Güvenlik, audit, erişim logu, kötüye kullanım önleme, ödeme doğrulama ve uyuşmazlık yönetimi kayıtları; veri güvenliğinin sağlanması, sözleşmenin korunması, hukuki yükümlülüklerin yerine getirilmesi ve meşru menfaat kapsamında işlenebilir.",
-            "Özel nitelikli veri, çocuk/danışan verisi, AI destekli işleme ve gerekli yurt dışı aktarım süreçlerinde açık rıza alınması öngörülür. Açık rızanın geri alınması halinde hizmetin ilgili veri işleme kısmı durdurulabilir veya sınırlanabilir; hukuken saklanması gereken kayıtlar saklanmaya devam edebilir.",
+            "Özel nitelikli veri, çocuk/danışan verisi, deterministik rapor üretimi ve gerekli yurt dışı aktarım süreçlerinde açık rıza alınması öngörülür. Açık rızanın geri alınması halinde hizmetin ilgili veri işleme kısmı durdurulabilir veya sınırlanabilir; hukuken saklanması gereken kayıtlar saklanmaya devam edebilir.",
           ],
         },
         {
           title: "5. Aktarım Yapılabilecek Taraflar",
           body: [
-            "Veriler, hizmetin gerektirdiği ölçüde barındırma, veritabanı, kimlik doğrulama, yapay zeka API, güvenlik, loglama, ödeme/fatura, destek ve hukuki danışmanlık sağlayıcılarına aktarılabilir.",
-            "Yurt dışı altyapı veya yapay zeka sağlayıcısı kullanılması halinde aktarım açık rıza ve ilgili mevzuat çerçevesinde yürütülür.",
+            "Veriler, hizmetin gerektirdiği ölçüde barındırma, veritabanı, kimlik doğrulama, güvenlik, loglama, ödeme/fatura, destek ve hukuki danışmanlık sağlayıcılarına aktarılabilir. Rapor üretimi amacıyla klinik içerik harici bir üretken yapay zeka veya LLM sağlayıcısına aktarılmaz.",
+            "Yurt dışı altyapı sağlayıcısı kullanılması halinde aktarım açık rıza ve ilgili mevzuat çerçevesinde yürütülür.",
           ],
         },
         {
@@ -53,7 +53,7 @@ export default function KvkkPage() {
             "Platformda kimlik doğrulama, e-posta doğrulama, aktif uygulama oturumu, aynı anda tek aktif oturum, hesap başına sınırlı cihaz politikası, kısa süreli erişim tokenları, same-origin kontrolleri, rate limit ve yetki kontrolleri uygulanabilir.",
             "Eğitim/video içerikleri için doğrudan public dosya linki yerine private storage veya private video provider, kısa süreli signed URL veya signed playback/embed tokenı, domain restriction, kullanıcıya özel watermark/QR/kısa kod, erişim tokenı ve izleme/erişim logu kullanılabilir.",
             "Ödeme ve ekonomik güvenlik için client tarafındaki ödeme durumuna tek başına güvenilmez; erişim hakları doğrulanmış ödeme webhookları veya audit kayıtlı manuel işlem ile server tarafında tutulur.",
-            "Owner/admin export, AI rapor üretimi, video erişimi, güvenlik olayları, ödeme eventleri ve KVKK veri talepleri için audit kayıtları tutulabilir. Hassas içeriklerin uygulama loglarına düşmemesi için log redaction ve debug log kapatma politikaları uygulanır.",
+            "Owner/admin export, deterministik rapor üretimi, video erişimi, güvenlik olayları, ödeme eventleri ve KVKK veri talepleri için audit kayıtları tutulabilir. Hassas içeriklerin uygulama loglarına düşmemesi için log redaction ve debug log kapatma politikaları uygulanır.",
           ],
         },
         {
@@ -76,7 +76,7 @@ export default function KvkkPage() {
           title: "9. Kaynak ve Gözden Geçirme",
           body: [
             "Bu metin 6698 sayılı KVKK, aydınlatma yükümlülüğü, özel nitelikli kişisel veri, veri güvenliği, saklama ve imha ilkeleri dikkate alınarak teknik ürün mimarisiyle uyumlu olacak şekilde hazırlanmıştır.",
-            "Ürün kapsamı, ödeme sağlayıcısı, AI sağlayıcısı, video/eğitim modülü, yurt dışı aktarım yapısı veya mevzuat değiştiğinde metin güncellenir. Yayına çıkmadan önce resmi veri sorumlusu bilgileri ve nihai hukuki değerlendirme tamamlanmalıdır.",
+            "Ürün kapsamı, ödeme sağlayıcısı, video/eğitim modülü, yurt dışı aktarım yapısı veya mevzuat değiştiğinde metin güncellenir. Yayına çıkmadan önce resmi veri sorumlusu bilgileri ve nihai hukuki değerlendirme tamamlanmalıdır.",
           ],
         },
       ]}

@@ -7,7 +7,7 @@ import { ThemeProvider } from "./components/theme-provider";
 
 export const metadata: Metadata = {
   title: "DNA Intelligence | Dynamic Neuro-Regulation Approach",
-  description: "DNA Intelligence clinical education and AI-supported reporting platform",
+  description: "DNA Intelligence clinical education and deterministic reporting platform",
   icons: {
     icon: [
       { url: "/images/favicon.ico" },

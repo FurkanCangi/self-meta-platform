@@ -3,26 +3,16 @@ import path from "node:path";
 import dotenv from "dotenv";
 
 import { buildAdvancedReport, type DomainScoreMap } from "../src/lib/dna/reportEngine";
-import { rewriteClinicalReport } from "../src/lib/dna/aiRewrite";
 import { buildLiteratureAlignedSection } from "../src/lib/dna/literatureNote";
-import {
-  splitClinicalReportSections,
-  getClinicalReportSectionHeadings,
-  hasAllCanonicalReportSections,
-  mergeClinicalReportSections,
-  normalizeClinicalReportText,
-} from "../src/lib/dna/reportText";
+import { normalizeClinicalReportText } from "../src/lib/dna/reportText";
 import { type AnamnezRecord } from "../src/lib/dna/anamnezUtils";
 import { isSupportedAgeMonths } from "../src/lib/dna/ageUtils";
-import { estimateRagCoverage, selectProRagContext } from "../src/lib/dna/ragSelector";
 import { CLINICAL_KNOWLEDGE_CHUNKS, WORD_RAG_SOURCE } from "../src/lib/dna/clinicalKnowledgeBase";
 import { sanitizeFinalReportLanguage } from "../src/lib/dna/reportLanguageQuality";
 import { validateAndNormalizeClinicalReport } from "../src/lib/dna/clinicalSafetyValidator";
 import { redactReportDebugMeta } from "../src/lib/dna/reportPrivacy";
 import {
   getNarrativeGuardViolations,
-  hasForbiddenClinicalCitation,
-  hasCriticalNarrativeGuardViolation,
   type NarrativeGuardViolation,
 } from "../src/lib/dna/reportQuality";
 
@@ -41,124 +31,6 @@ const OUTPUT_DIR = "/tmp/dna-report-output";
 dotenv.config({ path: path.resolve(process.cwd(), ".env.local") });
 dotenv.config();
 
-function escapeRegex(s: string): string {
-  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function normalizeLevel(v: string): string {
-  const x = String(v || "")
-    .toLowerCase()
-    .trim()
-    .replace(/\.\s*olarak görünmektedir\./g, ".")
-    .replace(/\s{2,}/g, " ")
-    .trim();
-  if (x.includes("atipik")) return "Atipik";
-  if (x.includes("riskli")) return "Riskli";
-  if (x.includes("tipik")) return "Tipik";
-  return "";
-}
-
-function hasLevelMismatch(
-  text: string,
-  domainSummary: Record<string, string> | undefined
-): boolean {
-  if (!text || !domainSummary) return false;
-
-  const allLevels = ["Tipik", "Riskli", "Atipik"];
-  const relevantSections = splitClinicalReportSections(text).filter((section) =>
-    section.heading === "2. Klinik Kanıt Profili" || section.heading === "3. Alan Bazlı Klinik Yorum"
-  );
-  const lines = relevantSections.flatMap((section) => section.body.split(/\n+/));
-
-  for (const [domain, rawLevel] of Object.entries(domainSummary)) {
-    const expected = normalizeLevel(rawLevel);
-    if (!domain || !expected) continue;
-
-    const domainRe = new RegExp(escapeRegex(domain), "i");
-    const matchingLines = lines.filter((ln) => {
-      const line = String(ln || "").trim();
-      if (!line || !domainRe.test(line)) return false;
-      return (
-        line.startsWith(`- ${domain}:`) ||
-        line.startsWith(`${domain}:`) ||
-        line.startsWith(`${domain} `) ||
-        line === domain
-      );
-    });
-
-    for (const ln of matchingLines) {
-      const foundLevels = allLevels.filter((lvl) => ln.includes(lvl));
-      if (foundLevels.length > 0 && !foundLevels.includes(expected)) {
-        return true;
-      }
-    }
-  }
-
-  return false;
-}
-
-function shouldFallbackToDeterministic(
-  aiText: string,
-  clinicalAnalysis: {
-    domainSummary?: Record<string, string>;
-  } | undefined,
-  reportMeta?: {
-    domainResults?: Array<{ key: string; label: string; score: number; level: string }>
-    globalLevel?: string
-    profileType?: string
-  }
-): boolean {
-  if (!aiText || !aiText.trim()) return true;
-  if (!hasAllCanonicalReportSections(aiText)) return true;
-  if (hasForbiddenClinicalCitation(aiText)) return true;
-  if (hasLevelMismatch(aiText, clinicalAnalysis?.domainSummary)) return true;
-  if (
-    reportMeta?.domainResults?.length &&
-    reportMeta.globalLevel &&
-    reportMeta.profileType &&
-    hasCriticalNarrativeGuardViolation({
-      text: aiText,
-      domainResults: reportMeta.domainResults,
-      globalLevel: reportMeta.globalLevel,
-      profileType: reportMeta.profileType,
-    })
-  ) {
-    return true;
-  }
-  return false;
-}
-
-function getFallbackReason(
-  aiText: string,
-  clinicalAnalysis: {
-    domainSummary?: Record<string, string>;
-  } | undefined,
-  reportMeta?: {
-    domainResults?: Array<{ key: string; label: string; score: number; level: string }>
-    globalLevel?: string
-    profileType?: string
-  }
-): string | null {
-  if (!aiText || !aiText.trim()) return "empty";
-  if (!hasAllCanonicalReportSections(aiText)) return "missing_sections";
-  if (hasForbiddenClinicalCitation(aiText)) return "forbidden_source_or_citation";
-  if (hasLevelMismatch(aiText, clinicalAnalysis?.domainSummary)) return "level_mismatch";
-  if (
-    reportMeta?.domainResults?.length &&
-    reportMeta.globalLevel &&
-    reportMeta.profileType &&
-    hasCriticalNarrativeGuardViolation({
-      text: aiText,
-      domainResults: reportMeta.domainResults,
-      globalLevel: reportMeta.globalLevel,
-      profileType: reportMeta.profileType,
-    })
-  ) {
-    return "narrative_guard";
-  }
-  return null;
-}
-
 function appendOptionalSection(baseText: string, optionalSection?: string | null): string {
   const main = String(baseText || "").trim();
   const extra = String(optionalSection || "").trim();
@@ -173,15 +45,9 @@ function parseArgs(argv: string[]) {
       ? path.resolve(process.cwd(), argv[fixtureIndex + 1])
       : DEFAULT_FIXTURE_PATH;
 
-  const deterministicOnly = !argv.includes("--with-ai");
-  if (!deterministicOnly && process.env.NODE_ENV === "production") {
-    throw new Error("Production ortamında --with-ai kullanılamaz. Rapor üretimi deterministic kalmalıdır.");
-  }
-
   return {
     fixturePath,
     runAll: argv.includes("--all"),
-    deterministicOnly,
   };
 }
 
@@ -202,67 +68,9 @@ function slugifyFixtureName(input: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-function tokenize(text: string): string[] {
-  return String(text || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9çğıöşü\s]/gi, " ")
-    .split(/\s+/)
-    .map((token) => token.trim())
-    .filter((token) => token.length >= 3);
-}
-
-function jaccardSimilarity(aText: string, bText: string): number {
-  const a = new Set(tokenize(aText));
-  const b = new Set(tokenize(bText));
-
-  if (!a.size && !b.size) return 1;
-
-  const union = new Set([...a, ...b]);
-  let intersection = 0;
-  for (const token of a) {
-    if (b.has(token)) intersection += 1;
-  }
-
-  return union.size ? intersection / union.size : 0;
-}
-
-function estimateAiContributionPercent(deterministicText: string, aiMergedText: string): number {
-  const deterministicSections = new Map(
-    splitClinicalReportSections(deterministicText).map((section) => [section.heading, section.body])
-  );
-  const aiSections = new Map(
-    splitClinicalReportSections(aiMergedText).map((section) => [section.heading, section.body])
-  );
-
-  let totalWeight = 0;
-  let weightedInfluence = 0;
-
-  for (const [heading, deterministicBody] of deterministicSections.entries()) {
-    const detBody = String(deterministicBody || "").trim();
-    const aiBody = String(aiSections.get(heading) || "").trim();
-    const weight = Math.max(tokenize(detBody).length, 1);
-
-    totalWeight += weight;
-
-    if (!aiBody || aiBody === detBody) continue;
-
-    const similarity = jaccardSimilarity(detBody, aiBody);
-    const influencePercent = Math.max(0, Math.min(100, Math.round((1 - similarity) * 100)));
-    weightedInfluence += influencePercent * weight;
-  }
-
-  return totalWeight ? Math.round(weightedInfluence / totalWeight) : 0;
-}
-
 function buildTechnicalSummaryBlock(meta: {
-  finalDeterministicContributionPct: number;
-  finalAiContributionPct: number;
-  finalRagContributionPct: number;
-  aiDraftRagCoveragePct: number;
   deterministicKnowledgeBaseActive: boolean;
-  wordRagChunkCoverage: string;
-  fallbackUsed: boolean;
-  aiDraftNarrativeGuardViolations?: NarrativeGuardViolation[];
+  knowledgeChunkCoverage: string;
   narrativeGuardViolations: NarrativeGuardViolation[];
   traceActive?: boolean;
   selectedAtomCount?: number;
@@ -270,15 +78,10 @@ function buildTechnicalSummaryBlock(meta: {
 }) {
   return [
     "Teknik Uretim Ozeti (Test Amacli)",
-    `- Final deterministic katki (tahmini): %${meta.finalDeterministicContributionPct}`,
-    `- Final AI katki (tahmini): %${meta.finalAiContributionPct}`,
-    `- Final RAG katki (tahmini): %${meta.finalRagContributionPct}`,
-    `- Runtime RAG: %${meta.finalRagContributionPct}`,
-    `- Deterministic Knowledge Base: ${meta.deterministicKnowledgeBaseActive ? "Aktif" : "Pasif"}`,
-    `- Word RAG deterministic chunk coverage: ${meta.wordRagChunkCoverage}`,
-    `- AI taslak RAG coverage: %${meta.aiDraftRagCoveragePct}`,
-    `- AI draft narrative guard issue sayisi: ${(meta.aiDraftNarrativeGuardViolations || []).length}`,
-    `- Fallback: ${meta.fallbackUsed ? "Evet" : "Hayir"}`,
+    "- Uretim modu: %100 deterministik",
+    "- Harici model cagrisi: Yok",
+    `- Yerel klinik bilgi tabani: ${meta.deterministicKnowledgeBaseActive ? "Aktif" : "Pasif"}`,
+    `- Yerel bilgi parcasi kapsami: ${meta.knowledgeChunkCoverage}`,
     `- Narrative guard issue sayisi: ${meta.narrativeGuardViolations.length}`,
     `- Trace: ${meta.traceActive ? "Aktif" : "Pasif"}`,
     `- Selected atoms: ${meta.selectedAtomCount ?? 0}`,
@@ -289,8 +92,6 @@ function buildTechnicalSummaryBlock(meta: {
 async function writeOutputs(payload: {
   outputDir: string;
   deterministic: string;
-  aiDraft: string;
-  mergedDraft: string;
   final: string;
   technicalSummary: string;
   meta: Record<string, unknown>;
@@ -298,8 +99,6 @@ async function writeOutputs(payload: {
   await ensureOutputDir(payload.outputDir);
 
   await fs.writeFile(path.join(payload.outputDir, "deterministic-report.md"), payload.deterministic, "utf8");
-  await fs.writeFile(path.join(payload.outputDir, "ai-draft.md"), payload.aiDraft, "utf8");
-  await fs.writeFile(path.join(payload.outputDir, "merged-draft.md"), payload.mergedDraft, "utf8");
   await fs.writeFile(path.join(payload.outputDir, "final-report.md"), payload.final, "utf8");
   await fs.writeFile(
     path.join(payload.outputDir, "report-with-metrics.md"),
@@ -318,7 +117,7 @@ export async function listFixturePaths(): Promise<string[]> {
     .map((entry) => path.join(fixtureDir, entry));
 }
 
-export async function runSingleFixture(fixturePath: string, deterministicOnly: boolean) {
+export async function runSingleFixture(fixturePath: string, _deterministicOnly = true) {
   const fixture = await loadFixture(fixturePath);
 
   if (!fixture?.clientCode) {
@@ -341,55 +140,15 @@ export async function runSingleFixture(fixturePath: string, deterministicOnly: b
     throw new Error("clinicalAnalysis olusmadi.");
   }
 
-  const ragContext = selectProRagContext(report.clinicalAnalysis);
-  let aiText = "";
-  let aiError: string | null = null;
-
-  if (!deterministicOnly) {
-    try {
-      aiText = await rewriteClinicalReport(report.clinicalAnalysis);
-    } catch (error) {
-      aiError = error instanceof Error ? error.message : String(error);
-    }
-  }
-
-  const mergedAiText = mergeClinicalReportSections(aiText, report.deterministicReport);
-  const fallbackReason = deterministicOnly
-    ? null
-    : aiText.trim()
-    ? getFallbackReason(mergedAiText, report.clinicalAnalysis, {
-        domainResults: report.domainResults,
-        globalLevel: report.globalLevel,
-        profileType: report.profileType,
-      })
-    : "empty";
-  const aiDraftNarrativeGuardViolations = getNarrativeGuardViolations({
-    text: mergedAiText,
-    domainResults: report.domainResults,
-    globalLevel: report.globalLevel,
-    profileType: report.profileType,
-  });
-  const useFallback = !deterministicOnly && Boolean(fallbackReason);
   const literatureSection = buildLiteratureAlignedSection(report.clinicalAnalysis);
   const finalSafety = validateAndNormalizeClinicalReport(
-    sanitizeFinalReportLanguage(
-      normalizeClinicalReportText(appendOptionalSection(useFallback ? report.deterministicReport : mergedAiText, literatureSection?.text))
-    )
-  );
-  const deterministicSafety = validateAndNormalizeClinicalReport(
     sanitizeFinalReportLanguage(
       normalizeClinicalReportText(appendOptionalSection(report.deterministicReport, literatureSection?.text))
     )
   );
   const finalText = finalSafety.text;
-  const deterministicText = deterministicSafety.text;
-  const aiDraftRagCoveragePct = aiText ? estimateRagCoverage(aiText, ragContext).overall : 0;
-  const aiContributionDraftPct = aiText ? estimateAiContributionPercent(report.deterministicReport, mergedAiText) : 0;
-  const finalAiContributionPct = useFallback ? 0 : aiContributionDraftPct;
-  const finalRagContributionPct = Math.round((finalAiContributionPct * aiDraftRagCoveragePct) / 100);
-  const finalDeterministicContributionPct = Math.max(0, 100 - finalAiContributionPct);
   const deterministicKnowledgeBaseActive = true;
-  const wordRagChunkCoverage = `${CLINICAL_KNOWLEDGE_CHUNKS.length}/${WORD_RAG_SOURCE.sourceChunkCount}`;
+  const knowledgeChunkCoverage = `${CLINICAL_KNOWLEDGE_CHUNKS.length}/${WORD_RAG_SOURCE.sourceChunkCount}`;
   const narrativeGuardViolations = getNarrativeGuardViolations({
     text: finalText,
     domainResults: report.domainResults,
@@ -400,14 +159,8 @@ export async function runSingleFixture(fixturePath: string, deterministicOnly: b
   const selectedAtomCount = report.trace?.selectedAtoms.length || 0;
   const suppressedAtomCount = report.trace?.suppressedAtoms.length || 0;
   const technicalSummary = buildTechnicalSummaryBlock({
-    finalDeterministicContributionPct,
-    finalAiContributionPct,
-    finalRagContributionPct,
-    aiDraftRagCoveragePct,
     deterministicKnowledgeBaseActive,
-    wordRagChunkCoverage,
-    aiDraftNarrativeGuardViolations,
-    fallbackUsed: useFallback,
+    knowledgeChunkCoverage,
     narrativeGuardViolations,
     traceActive,
     selectedAtomCount,
@@ -424,22 +177,10 @@ export async function runSingleFixture(fixturePath: string, deterministicOnly: b
     globalLevel: report.globalLevel,
     profileType: report.profileType,
     domainResults: report.domainResults,
-    deterministicOnly,
-    aiError,
-    aiLength: aiText.length,
-    aiHeadings: getClinicalReportSectionHeadings(aiText || ""),
-    mergedHeadings: getClinicalReportSectionHeadings(mergedAiText || ""),
-    fallbackUsed: useFallback,
-    fallbackReason,
-    aiDraftContributionPct: aiContributionDraftPct,
-    aiDraftRagCoveragePct,
-    aiDraftNarrativeGuardViolations,
-    finalDeterministicContributionPct,
-    finalAiContributionPct,
-    finalRagContributionPct,
-    runtimeRagContributionPct: finalRagContributionPct,
+    productionMode: "deterministic",
+    externalModelUsed: false,
     deterministicKnowledgeBaseActive,
-    wordRagChunkCoverage,
+    knowledgeChunkCoverage,
     trace: report.trace,
     auditTrail: report.auditTrail,
     reportVersionMeta: report.reportVersionMeta,
@@ -455,9 +196,7 @@ export async function runSingleFixture(fixturePath: string, deterministicOnly: b
 
   await writeOutputs({
     outputDir,
-    deterministic: deterministicText,
-    aiDraft: aiText,
-    mergedDraft: mergedAiText,
+    deterministic: finalText,
     final: finalText,
     technicalSummary,
     meta: redactReportDebugMeta(meta),
@@ -477,14 +216,10 @@ export async function runSingleFixture(fixturePath: string, deterministicOnly: b
       typeof fixture.anamnez === "object" && fixture.anamnez !== null
         ? String((fixture.anamnez as Record<string, unknown>).external_clinical_findings || "")
         : String(fixture.anamnez || ""),
-    aiUsed: !deterministicOnly && Boolean(aiText),
-    aiError,
-    fallbackUsed: useFallback,
-    fallbackReason,
-    finalDeterministicContributionPct,
-    finalAiContributionPct,
-    finalRagContributionPct,
-    aiDraftRagCoveragePct,
+    productionMode: "deterministic" as const,
+    externalModelUsed: false,
+    deterministicKnowledgeBaseActive,
+    knowledgeChunkCoverage,
     narrativeGuardViolations,
     trace: report.trace,
     auditTrail: report.auditTrail,
@@ -494,13 +229,13 @@ export async function runSingleFixture(fixturePath: string, deterministicOnly: b
 }
 
 export async function run() {
-  const { fixturePath, runAll, deterministicOnly } = parseArgs(process.argv.slice(2));
+  const { fixturePath, runAll } = parseArgs(process.argv.slice(2));
   const fixturePaths = runAll ? await listFixturePaths() : [fixturePath];
   const printReportText = String(process.env.DNA_PRINT_REPORT_OUTPUT || "").toLowerCase() === "true";
   const results = [];
 
   for (const currentFixturePath of fixturePaths) {
-    const result = await runSingleFixture(currentFixturePath, deterministicOnly);
+    const result = await runSingleFixture(currentFixturePath);
     results.push(result);
 
     console.log("");
@@ -508,13 +243,8 @@ export async function run() {
     console.log(`Fixture: ${result.fixturePath}`);
     console.log(`Danisan: ${result.clientName || "-"} | Kod: ${result.clientCode} | Yas: ${result.ageMonths} ay`);
     console.log(`Toplam Skor: ${result.totalScore} | Genel Duzey: ${result.globalLevel} | Profil: ${result.profileType}`);
-    console.log(`AI Kullanildi: ${result.aiUsed ? "Evet (--with-ai)" : "Hayir (varsayilan deterministic)"}`);
-    console.log(`Fallback: ${result.fallbackUsed ? "Evet" : "Hayir"}`);
-    console.log(`Final deterministic: %${result.finalDeterministicContributionPct} | Final AI: %${result.finalAiContributionPct} | Final RAG: %${result.finalRagContributionPct} | AI draft RAG coverage: %${result.aiDraftRagCoveragePct}`);
+    console.log("Uretim modu: %100 deterministik | Harici model cagrisi: Yok");
     console.log(`Trace: ${result.trace?.active ? "Aktif" : "Pasif"} | Selected atoms: ${result.trace?.selectedAtoms.length || 0} | Suppressed atoms: ${result.trace?.suppressedAtoms.length || 0}`);
-    if (result.aiError) {
-      console.log(`AI Hata: ${result.aiError}`);
-    }
     console.log(`Ciktilar: ${result.outputDir}`);
     if (printReportText) {
       console.log("");
@@ -529,7 +259,7 @@ export async function run() {
     console.log("=== TOPLU OZET ===");
     for (const result of results) {
       console.log(
-        `- ${path.basename(result.fixturePath)} | Profil: ${result.profileType} | Final AI %${result.finalAiContributionPct} | Final RAG %${result.finalRagContributionPct} | Fallback: ${result.fallbackUsed ? "Evet" : "Hayir"}`
+        `- ${path.basename(result.fixturePath)} | Profil: ${result.profileType} | %100 deterministik`
       );
     }
   }

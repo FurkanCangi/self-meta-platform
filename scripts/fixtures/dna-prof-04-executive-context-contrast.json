@@ -1,0 +1,24 @@
+{
+  "clientCode": "PROF-04-EXEC-CONTEXT",
+  "clientName": "Executive Context Contrast",
+  "ageMonths": 63,
+  "anamnez": {
+    "ad_soyad": "Ornek Danisan Dort",
+    "client_code": "PROF-04-EXEC-CONTEXT",
+    "age": "63 ay",
+    "diagnosis": "Cok basamakli gorevlerde organizasyon guclugu",
+    "referral_reason": "Tek adimli ve bire bir gorevlerde kapasite korunurken sinifta cok adimli yonerge, bekleme ve gecis talepleri birlestiginde performans belirgin dusmektedir.",
+    "parent_concerns_goals": "Sabah rutini, canta hazirlama ve odev baslatmada dis hatirlatici gereksiniminin azalmasi hedeflenmektedir.",
+    "therapist_comments": "Gorsel plan ve adimlari ayirma ile hizli toparliyor. Soyut, uzun ve zaman baskili yonergede calisma bellegi yuku, gorevden kopma ve frustrasyon artiyor.",
+    "strengths": "Bire bir etkilesim, gorsel model, ilgi duydugu yapilandirilmis etkinlik ve anlik geri bildirim performansi belirgin bicimde organize ediyor.",
+    "external_clinical_findings": "Test adi: BRIEF-P\nPuan / sonuc: Calisma bellegi T skoru 71, planlama-organizasyon T skoru 69; inhibisyon T skoru 58.\nKlinik yorum / resmi bulgu ozeti: Zorlanma davranissal inhibisyondan cok calisma bellegi ve planlama-organizasyon hattinda belirginlesmektedir.\nEk notlar: Ev ve okul formlarinda benzer yonelim vardir."
+  },
+  "scores": {
+    "physiological": 41,
+    "sensory": 39,
+    "emotional": 31,
+    "cognitive": 26,
+    "executive": 24,
+    "interoception": 38
+  }
+}

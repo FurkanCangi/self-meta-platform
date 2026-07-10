@@ -20,11 +20,11 @@ const DIFFERENTIAL_TEXT: Record<ClinicalMechanismType | "balanced", string> = {
   language_social_pragmatic:
     "Bu örüntü yalnız dilsel ya da yalnız sosyal başlıkla daraltılamaz; dilsel yük ile sosyal-pragmatik talep aynı işlevsel hatta birleşir.",
   physiological_interoceptive:
-    "Bu örüntü medikal bir açıklama üretmeden, beden sinyali, yorgunluk ve toparlanma bağlamında artan düzenleme yükü olarak okunur.",
+    "Bu örüntü, beden sinyalleri, yorgunluk ve toparlanmanın günlük işlev üzerindeki etkisiyle açıklanır.",
   selective_interoception:
     "Bu örüntü yaygın bir kapasite düşüklüğü gibi genişletilmez; içsel bedensel sinyal farkındalığı hattında seçici ve bağlama duyarlı biçimde ele alınır.",
   evidence_limited_mixed:
-    "Bu örüntü tek bir dış test ya da tek bir anlatı kaynağıyla açıklanmaz; kaynaklar arası ayrışma karar dilini bağlamla sınırlı tutar.",
+    "Dış test, anamnez ve gözlem tam örtüşmediğinde sonuç yalnız ortaklaşan görev ve bağlamlarla sınırlandırılır.",
   default:
     "Bu örüntü yalnız en düşük puan üzerinden açıklanmaz; skor örüntüsü, gözlem ve bağlamsal veri birlikte tartıldığında klinik anlam kazanır.",
   balanced:
@@ -54,4 +54,3 @@ export function buildDifferentialFormulation(evidenceMap: ClinicalEvidenceMap): 
     confidence: evidenceMap.confidenceLevel,
   }
 }
-

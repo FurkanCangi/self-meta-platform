@@ -49,7 +49,7 @@ const domainConstructs: ClinicalKnowledgeChunk[] = [
     id: "SENSORY_REGULATION_CONSTRUCT",
     domain: "sensory",
     purpose: "construct",
-    text: "Duyusal regülasyon; işitsel, görsel, taktil, vestibüler, oral, koku ve tat temelli uyaranların filtrelenmesi ve bu uyaranlara işlevsel yanıt üretme kapasitesidir.",
+    text: "Duyusal regülasyon; işitsel, görsel, dokunsal, hareket-denge, ağız içi, koku ve tat uyaranlarının filtrelenmesi ve bu uyaranlara işlevsel yanıt üretme kapasitesidir.",
     useIn: ["domain_comment", "formulation", "anamnesis_fit"],
   },
   {
@@ -88,7 +88,7 @@ const levelComments: ClinicalKnowledgeChunk[] = [
     domain: "physiological",
     purpose: "level_comment",
     level: "relative_weakness",
-    text: "Bu alandaki kırılganlık, bedensel ritimlerin ve stres sonrası toparlanmanın günlük işlevselliği daha belirgin etkileyebileceğini düşündürür; tıbbi ya da otonom sinir sistemi hükmü üretilmemelidir.",
+    text: "Bu bulgu, uyku, beslenme, enerji düzeyi ve stres sonrası toparlanmadaki düzensizliğin günlük katılımı etkileyebileceğini gösterir. Tek başına tıbbi veya otonom sinir sistemi sorunu anlamına gelmez.",
     useIn: ["domain_comment", "formulation"],
   },
   {
@@ -104,7 +104,7 @@ const levelComments: ClinicalKnowledgeChunk[] = [
     domain: "physiological",
     purpose: "level_comment",
     level: "relative_strength",
-    text: "Göreli korunmuşluk, günlük biyolojik ritimlerin ve toparlanma zemininin daha dengeli olabileceğini gösterir; ancak bu, diğer alanlardaki zorlanmaları ortadan kaldıran bir güvence gibi yazılmamalıdır.",
+    text: "Göreli korunmuşluk, günlük biyolojik ritimlerin ve toparlanma zemininin daha dengeli olabileceğini gösterir; ancak diğer alanlardaki zorlanmaları dışlamaz.",
     useIn: ["domain_comment", "formulation", "conclusion"],
   },
   {
@@ -112,7 +112,7 @@ const levelComments: ClinicalKnowledgeChunk[] = [
     domain: "sensory",
     purpose: "level_comment",
     level: "relative_weakness",
-    text: "Bu alandaki kırılganlık, çevresel uyaran yükü arttığında düzenlenme kapasitesinin düşebileceğini; ses, dokunma, kalabalık, ışık, hareket veya oral uyaranların katılımı dalgalandırabileceğini düşündürür.",
+    text: "Bu bulgu, ses, dokunma, kalabalık, ışık, hareket veya ağız içi uyaran yoğunluğu arttığında katılımın ve görevde kalmanın zorlaşabileceğini gösterir.",
     useIn: ["domain_comment", "formulation", "anamnesis_fit"],
   },
   {
@@ -136,7 +136,7 @@ const levelComments: ClinicalKnowledgeChunk[] = [
     domain: "emotional",
     purpose: "level_comment",
     level: "relative_weakness",
-    text: "Bu alandaki kırılganlık, duygusal yoğunluğun hızlı yükselmesi, toparlanmanın uzaması ve dış düzenleme ihtiyacının artması üzerinden klinik anlam kazanır; kişilik etiketi veya psikiyatrik hüküm kurulmaz.",
+    text: "Bu bulgu, duygusal yoğunluğun hızlı yükseldiğini, toparlanmanın uzadığını veya dış desteğe duyulan gereksinimin arttığını gösterebilir. Kişilik özelliği ya da psikiyatrik tanı olarak yorumlanmaz.",
     useIn: ["domain_comment", "formulation", "anamnesis_fit"],
   },
   {
@@ -160,7 +160,7 @@ const levelComments: ClinicalKnowledgeChunk[] = [
     domain: "cognitive",
     purpose: "level_comment",
     level: "relative_weakness",
-    text: "Bu alandaki kırılganlık, dikkat sürdürme, bilgiyi zihinde tutma, yönerge karmaşıklığı ve görev talebi arttığında zihinsel organizasyonu koruma güçlüğü üzerinden klinik anlam kazanır.",
+    text: "Bu bulgu, görev talebi arttığında dikkati sürdürme, bilgiyi zihinde tutma, yönergeyi işleme ve zihinsel organizasyonu koruma süreçlerinin zorlandığını gösterir.",
     useIn: ["domain_comment", "formulation", "anamnesis_fit"],
   },
   {
@@ -184,7 +184,7 @@ const levelComments: ClinicalKnowledgeChunk[] = [
     domain: "executive",
     purpose: "level_comment",
     level: "relative_weakness",
-    text: "Bu alandaki kırılganlık, başlatma, durdurma, bekleme, sıra koruma, esneklik ve çok basamaklı görev akışını organize etme süreçlerinde yük artışı olarak klinik anlam kazanır.",
+    text: "Bu bulgu, görevi başlatma ve durdurma, bekleme, sıra koruma, değişikliğe uyum sağlama ve çok basamaklı görevleri organize etme süreçlerinde daha fazla desteğe gereksinim olabileceğini gösterir.",
     useIn: ["domain_comment", "formulation", "anamnesis_fit"],
   },
   {
@@ -208,7 +208,7 @@ const levelComments: ClinicalKnowledgeChunk[] = [
     domain: "interoception",
     purpose: "level_comment",
     level: "relative_weakness",
-    text: "Bu alandaki kırılganlık, iç beden sinyallerini erken fark etme ve bu sinyalleri davranışsal düzenlemeye katma sürecinde zorlanma olarak klinik anlam kazanır; erken çocuklukta ölçüm sınırı nedeniyle temkinli dil korunur.",
+    text: "Bu bulgu, açlık, susuzluk, tuvalet, ağrı veya yorgunluk gibi beden sinyallerini zamanında fark etme ve davranışı bu bilgiye göre ayarlama sürecinde güçlük olabileceğini gösterir. Erken çocuklukta bu alan tek veri kaynağıyla genellenmez.",
     useIn: ["domain_comment", "formulation", "anamnesis_fit"],
   },
   {
@@ -233,7 +233,7 @@ export const CLINICAL_KNOWLEDGE_CHUNKS: ClinicalKnowledgeChunk[] = [
   {
     id: "REGULATION_OVERVIEW",
     purpose: "construct",
-    text: "Regülasyon erken çocuklukta fizyolojik uyarılma, duyusal yanıt, duygu, dikkat ve davranışın bağlama göre birlikte ayarlanmasıdır; tek bir davranış belirtisine indirgenmemelidir.",
+    text: "Regülasyon erken çocuklukta fizyolojik uyarılma, duyusal yanıt, duygu, dikkat ve davranışın bağlama göre birlikte ayarlanmasıdır; tek bir davranış belirtisiyle açıklanamaz.",
     useIn: ["decision", "formulation", "conclusion"],
   },
   {
@@ -266,7 +266,7 @@ export const CLINICAL_KNOWLEDGE_CHUNKS: ClinicalKnowledgeChunk[] = [
     domain: "physiological",
     mechanism: ["physiological_interoceptive", "selective_interoception", "adaptive_daily_living"],
     purpose: "report_language",
-    text: "Fizyolojik regülasyon yükü, bedensel toparlanma zemininin günlük akışta hangi koşullarda kırılganlaştığını açıklar; tıbbi nedensellik ya da otonom bozukluk hükmü olarak kullanılmamalıdır.",
+    text: "Fizyolojik regülasyon güçlüğü, bedensel toparlanmanın günlük akışta hangi koşullarda zorlandığını açıklar. Bu bulgu tıbbi bir neden veya otonom işlev bozukluğu göstermez.",
     useIn: ["decision", "formulation", "conclusion"],
   },
   {
@@ -311,7 +311,7 @@ export const CLINICAL_KNOWLEDGE_CHUNKS: ClinicalKnowledgeChunk[] = [
     domain: "cognitive",
     mechanism: ["language_communication", "language_social_pragmatic", "social_pragmatic", "motor_praxis", "default"],
     purpose: "report_language",
-    text: "Bilişsel regülasyon yükü, sözel talep veya eşzamanlı görev arttığında zihinsel organizasyonun nasıl zorlandığını açıklar; genel zeka ya da öğrenme kapasitesi hükmü değildir.",
+    text: "Sözel talep veya eşzamanlı görev arttığında zihinsel organizasyon zorlanabilir. Bu bulgu tek başına genel zekâ veya öğrenme kapasitesi hakkında sonuç vermez.",
     useIn: ["decision", "formulation", "conclusion"],
   },
   {
@@ -326,7 +326,7 @@ export const CLINICAL_KNOWLEDGE_CHUNKS: ClinicalKnowledgeChunk[] = [
     domain: "executive",
     mechanism: ["adaptive_daily_living", "social_pragmatic", "language_communication", "language_social_pragmatic", "motor_praxis", "default"],
     purpose: "report_language",
-    text: "Yürütücü işlev yükü, davranış organizasyonunun görev akışı içinde nasıl zorlandığını görünür kılar; bu durum uyumsuzluk ya da itaat eksikliği gibi dar bir çerçeveye indirgenmemelidir.",
+    text: "Yürütücü işlev güçlüğü, davranış organizasyonunun görev akışı içinde nerede zorlandığını görünür kılar. Bu bulgu görev düzenleme becerileri üzerinden değerlendirilir.",
     useIn: ["decision", "formulation", "conclusion"],
   },
   {
@@ -341,7 +341,7 @@ export const CLINICAL_KNOWLEDGE_CHUNKS: ClinicalKnowledgeChunk[] = [
     domain: "interoception",
     mechanism: ["physiological_interoceptive", "selective_interoception", "adaptive_daily_living"],
     purpose: "report_language",
-    text: "İnteroseptif yük, iç beden sinyallerinin günlük öz bakım ve toparlanma akışına zamanında katılamaması üzerinden klinik anlam kazanır; tek başına medikal açıklama olarak yorumlanmamalıdır.",
+    text: "İnteroseptif güçlük, iç beden sinyallerinin günlük öz bakım ve toparlanma akışına zamanında katılamaması üzerinden klinik anlam kazanır.",
     useIn: ["decision", "formulation", "conclusion"],
   },
   ...domainConstructs,
@@ -373,13 +373,13 @@ export const CLINICAL_KNOWLEDGE_CHUNKS: ClinicalKnowledgeChunk[] = [
   {
     id: "CROSS_SCALE_COGNITIVE_EXECUTIVE",
     purpose: "cross_scale",
-    text: "Bilişsel ve yürütücü alanlar birlikte zorlandığında, dikkat sürdürme, görev organizasyonu ve davranışı hedefe göre düzenleme süreçlerinde bütüncül bir görev yükü oluşabilir.",
+    text: "Bilişsel ve yürütücü alanlar birlikte zorlandığında dikkat sürdürme, görevi organize etme ve davranışı hedefe göre ayarlama süreçleri aynı anda etkilenebilir.",
     useIn: ["decision", "formulation", "prioritization"],
   },
   {
     id: "CROSS_SCALE_EMOTIONAL_EXECUTIVE",
     purpose: "cross_scale",
-    text: "Duygusal ve yürütücü alanlar birlikte zorlandığında, duygusal yükselme anlarında davranışı durdurma, bekleme, esneme ve yeniden düzenleme kapasitesi daha kırılgan hale gelebilir.",
+    text: "Duygusal ve yürütücü alanlar birlikte zorlandığında duygusal yoğunluk sırasında davranışı durdurma, bekleme, değişikliğe uyum sağlama ve yeniden katılım gösterme güçleşebilir.",
     useIn: ["formulation", "prioritization", "conclusion"],
   },
   {

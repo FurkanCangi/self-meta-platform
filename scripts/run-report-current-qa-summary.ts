@@ -11,7 +11,7 @@ const SUMMARY_PATH = "/tmp/dna-current-qa-summary.md";
 const FORBIDDEN_VISIBLE_PATTERNS: Array<[string, RegExp]> = [
   ["treatment_word", /\b(?:tedavi|müdahale|terapi|seans|ilaç|danışmanlık|destek planı|uygulama yönergesi)\b/i],
   ["directive_modal_language", /\b(?:yapılmalıdır|uygulanmalıdır|başlanmalıdır|gerekir)\b/i],
-  ["practice_plan_language", /\b(?:program|protokol|egzersiz listesi|ödev|seans akışı)\b/i],
+  ["practice_plan_language", /\b(?:program|protokol|egzersiz listesi|seans akışı)\b/i],
   ["diagnostic_semantic_language", /\b(?:tanı ile uyumlu|belirtisidir|semptom|bozukluk|patoloji)\b/i],
   ["causal_certainty_claim", /\b(?:kesin olarak|kesin neden(?!-sonuç)|neden olur|doğrudan neden|tek başına gösterir|açıkça gösterir|kanıtlar nitelikte|kanıtlamaktadır|kanıtlanmıştır|kanıtladı)\b/i],
   ["automation_claim", /\b(?:otomatik klinik karar|klinik kararı verir|karar yerine geçer|uzman değerlendirmesi yerine geçer)\b/i],

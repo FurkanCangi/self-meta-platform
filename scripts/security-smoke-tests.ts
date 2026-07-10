@@ -133,7 +133,11 @@ check("security headers include HSTS", nextConfig.includes("Strict-Transport-Sec
 
 const securityRules = read("CLAUDE.md")
 check("project security rules mention Zod server validation", /Zod schema\/normalizer/.test(securityRules), "CLAUDE.md Zod rule missing")
-check("project security rules mention AI token limits", /Token\/output limiti/.test(securityRules), "CLAUDE.md AI token limit rule missing")
+check(
+  "project security rules require deterministic reporting",
+  /tamamen deterministik kalır/.test(securityRules) && /Harici üretken model/.test(securityRules),
+  "CLAUDE.md deterministic report rule missing"
+)
 
 const schemaGuards = read("src/lib/security/schemaGuards.ts")
 check("Zod JSON schema helper exists", schemaGuards.includes("readJsonWithSchema"), "missing readJsonWithSchema")
@@ -149,11 +153,11 @@ const aiReportRoute = read("src/app/api/ai-report/route.ts")
 const manualReportRoute = read("src/app/api/reports/manual/route.ts")
 const reportCreditsLib = read("src/lib/security/reportCredits.ts")
 const assessmentsClient = read("src/app/assessments/AssessmentsClient.tsx")
-check("AI report route uses Zod payload schema", aiReportRoute.includes("aiReportPayloadSchema"), "missing AI report Zod schema")
-check("AI report route rejects server-controlled payload fields", aiReportRoute.includes("rejectServerControlledFields"), "missing AI mass-assignment guard")
-check("AI report route consumes report credit", aiReportRoute.includes("consumeReportCredit"), "missing report credit control")
+check("deterministic report route uses Zod payload schema", aiReportRoute.includes("deterministicReportPayloadSchema"), "missing report Zod schema")
+check("deterministic report route rejects server-controlled payload fields", aiReportRoute.includes("rejectServerControlledFields"), "missing report mass-assignment guard")
+check("deterministic report route consumes report credit", aiReportRoute.includes("consumeReportCredit"), "missing report credit control")
 check(
-  "AI report route charges only after successful report generation",
+  "deterministic report route charges only after successful report generation",
   aiReportRoute.indexOf("const finalText = cleanRenderedReport") < aiReportRoute.indexOf("const credit = await consumeReportCredit"),
   "report credit should be consumed after report text is built"
 )
@@ -164,10 +168,15 @@ check("manual report route rolls back credit if insert fails", manualReportRoute
 check("assessment screen uses manual report API instead of direct report insert", assessmentsClient.includes('fetch("/api/reports/manual"') && !assessmentsClient.includes('.from("reports")'), "assessment report creation bypasses API")
 check("test and owner emails bypass report credit gate", reportCreditsLib.includes("isSecurityTestExemptEmail") && reportCreditsLib.includes("isOwnerAuditEmail") && aiReportRoute.includes("userEmail: user.email") && manualReportRoute.includes("userEmail: auth.user.email"), "test/owner report credit exemption missing")
 
-const aiReportService = read("src/lib/dna/aiReportService.ts")
-check("legacy AI path keeps API key server-side", aiReportService.includes("process.env.OPENAI_API_KEY"), "missing server-side API key usage")
-check("legacy AI path has output token limit", /max_output_tokens:\s*\d+/.test(aiReportService), "missing max_output_tokens")
-check("legacy AI path uses structured output schema", aiReportService.includes("zodTextFormat"), "missing structured output schema")
+const deterministicReportEngine = read("src/lib/dna/reportEngine.ts")
+check("report route uses deterministic report engine", aiReportRoute.includes("buildAdvancedReport"), "deterministic report builder missing")
+check(
+  "production report path has no external model runtime",
+  !/OPENAI_API_KEY|from\s+["']openai["']|rewriteClinicalReport|generateAIClinicalReport/i.test(
+    `${aiReportRoute}\n${deterministicReportEngine}`
+  ),
+  "external model runtime found in production report path"
+)
 
 const ownerSecurityRoute = read("src/app/api/owner-audit/security/route.ts")
 const ownerSecurityActionRoute = read("src/app/api/owner-audit/security/action/route.ts")

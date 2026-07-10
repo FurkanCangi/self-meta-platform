@@ -13,7 +13,7 @@ Bu protokol, `literature-catalog.md` içindeki geniş kaynak havuzunun rapor mot
    - Dosya: `src/lib/dna/literatureNote.ts`
    - Nesne: `VERIFIED_LITERATURE_SOURCES`
    - Amaç: Raporlarda kullanılmasına izin verilen kaynakları tutmak.
-   - AI bu liste dışında kaynak, DOI, URL veya APA üretmez.
+   - Rapor motoru bu liste dışında kaynak, DOI, URL veya APA üretmez.
 
 3. Katalog seçim haritası
    - Dosya: `src/lib/dna/literatureNote.ts`
@@ -44,7 +44,7 @@ Bu protokol, `literature-catalog.md` içindeki geniş kaynak havuzunun rapor mot
 
 ## Yasaklar
 
-- AI kaynak üretmez.
+- Rapor motoru kaynak üretmez.
 - Katalogdaki her kaynak otomatik olarak rapora girmez.
 - Kaynaklar tanı, nedensellik veya müdahale reçetesi üretmek için kullanılmaz.
 - Pilot/fizibilite çalışmalar tek başına güçlü klinik dayanak gibi yazılmaz.

@@ -15,7 +15,7 @@ Bu klasör, DNA Intelligence klinik rapor motorunda kullanılabilecek kaynaklar�
 
 ## Kullanım İlkesi
 
-- AI kaynak üretmemelidir.
+- Rapor motoru kaynak üretmemelidir.
 - Raporda kullanılacak kaynaklar önce bu katalogdan veya mevcut doğrulanmış registry'den seçilmelidir.
 - Kaynaklar klinik hipotezi desteklemek için kullanılabilir; tanı, nedensellik veya uygulama yönergesi üretmek için kullanılmamalıdır.
 - DOI veya PubMed/dergi URL'si bulunan kaynaklar entegrasyonda önceliklendirilmelidir.

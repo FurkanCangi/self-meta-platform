@@ -41,7 +41,6 @@ class Settings:
     ffmpeg_bin: str = os.getenv("VIDEO_OBS_FFMPEG_BIN", "ffmpeg")
     ffprobe_bin: str = os.getenv("VIDEO_OBS_FFPROBE_BIN", "ffprobe")
     queue_mode: str = os.getenv("VIDEO_OBS_QUEUE_MODE", "inline")
-    llm_writer_enabled: bool = os.getenv("VIDEO_OBS_ENABLE_LLM_WRITER", "false").lower() == "true"
     storage_backend: str = os.getenv("VIDEO_OBS_STORAGE_BACKEND", "local")
     storage_public_base_url: str = os.getenv("VIDEO_OBS_STORAGE_PUBLIC_BASE_URL", "")
     s3_bucket: str | None = os.getenv("VIDEO_OBS_S3_BUCKET")

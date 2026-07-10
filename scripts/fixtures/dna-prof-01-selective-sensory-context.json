@@ -1,0 +1,24 @@
+{
+  "clientCode": "PROF-01-SENSORY",
+  "clientName": "Selective Sensory Context",
+  "ageMonths": 54,
+  "anamnez": {
+    "ad_soyad": "Ornek Danisan Bir",
+    "client_code": "PROF-01-SENSORY",
+    "age": "54 ay",
+    "diagnosis": "Duyusal yuk altinda katilim degiskenligi",
+    "referral_reason": "Kalabalik, gurultulu ve hareketli ortamlarda etkinlikten kopma; sakin bire bir ortamda ise yasa uygun katilim bildirilmektedir.",
+    "parent_concerns_goals": "Grup etkinliginde sesi filtreleme, gorevde kalma ve yuklenme sonrasinda daha kisa surede toparlanma hedeflenmektedir.",
+    "therapist_comments": "Bire bir ve dusuk uyaranli yapida gorev organizasyonu korunuyor. Arka plan sesi ve beklenmeyen temas arttiginda bedensel gerilim, kacınma ve gorevden kopma belirginlesiyor.",
+    "strengths": "Gorsel ipucu, onceden haber verme ve sakin calisma alaninda katilim, dil anlama ve problem cozme kapasitesi korunmus.",
+    "external_clinical_findings": "Test adi: Sensory Profile 2\nPuan / sonuc: Isitsel hassasiyet ve dokunsal kacinma alanlarinda klinik olarak anlamli yukseklik.\nKlinik yorum / resmi bulgu ozeti: Cevresel uyaran yuku arttiginda katilim ve toparlanma zorlanmaktadir.\nEk notlar: Dusuk uyaranli ortamda performans belirgin bicimde iyilesmektedir."
+  },
+  "scores": {
+    "physiological": 42,
+    "sensory": 21,
+    "emotional": 40,
+    "cognitive": 39,
+    "executive": 39,
+    "interoception": 38
+  }
+}

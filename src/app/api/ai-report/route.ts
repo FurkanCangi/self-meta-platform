@@ -243,7 +243,7 @@ function isAdminRole(role?: string | null) {
   return ["admin", "owner", "super_admin", "yonetici", "yönetici"].includes(String(role || "").toLowerCase())
 }
 
-const aiReportPayloadSchema = z
+const deterministicReportPayloadSchema = z
   .object({
     clientCode: z.string().max(120).optional(),
     client_code: z.string().max(120).optional(),
@@ -311,7 +311,7 @@ export async function POST(req: Request) {
       return rateLimitResponse(rateLimit.resetAt)
     }
 
-    const parsedBody = await readJsonWithSchema(req, aiReportPayloadSchema)
+    const parsedBody = await readJsonWithSchema(req, deterministicReportPayloadSchema)
     if (!parsedBody.ok) return parsedBody.response
     const body = parsedBody.data
     const payloadGuard = rejectServerControlledFields(body)
@@ -541,11 +541,11 @@ if (__validationErrors.length > 0) {
       existing: false,
     })
   } catch (error) {
-    console.error("[ai-report] report generation failed", error)
+    console.error("[report] deterministic report generation failed", error)
     return NextResponse.json(
       {
         ok: false,
-        error: "AI rapor üretilemedi.",
+        error: "Rapor oluşturulamadı.",
       },
       { status: 500 }
     )

@@ -252,7 +252,7 @@ function getAnamnezMatchHint(
     return " Anamnezde bildirilen zorlanma sonrası duygusal toparlanma güçlüğü bu alanı desteklemektedir.";
   }
   if ((key === "cognitive" || key === "executive") && /dikkat|görevde kal|görev sürdür|çok uyaran|yönerge|sözel/.test(joined)) {
-    return " Anamnezdeki bağlamsal bilgi, bilişsel-yürütücü organizasyonun hangi koşullarda kırılganlaştığını anlamak için destekleyici veri sağlar.";
+    return " Anamnez bilgisi, bilişsel ve yürütücü süreçlerin hangi koşullarda zorlandığını göstermeye yardımcı olur.";
   }
   if ((key === "physiological" || key === "interoception") && /bedensel|fizyolojik|yorgun|uyku|beslenme|iştah|alerji|kolik|nöbet/.test(joined)) {
     return " Anamnezdeki bedensel ve fizyolojik bağlam bu alanın yorumuna kısmi destek sağlayabilir.";
@@ -378,6 +378,41 @@ function getSelectiveProfileName(domain: DomainResult | undefined): string {
 
 function getWidespreadProfileName(primaryDomain: DomainResult | undefined): string {
   return "Çok Alanlı Self-Regülasyon Problemi";
+}
+
+function clarifyProfileType(profileType: string): string {
+  const exactLabels: Record<string, string> = {
+    "Yürütücü-Duygusal Self-Regülasyon Problemi": "Yürütücü İşlev Öncelikli Regülasyon Profili",
+    "Yürütücü-Duygusal Regülasyon Kırılganlığı": "Yürütücü İşlev Öncelikli Regülasyon Profili",
+    "Bilişsel-Yürütücü-Duygusal Self-Regülasyon Problemi": "Yürütücü ve Bilişsel İşlev Öncelikli Regülasyon Profili",
+    "Bilişsel-Yürütücü Self-Regülasyon Problemi": "Yürütücü ve Bilişsel İşlev Öncelikli Regülasyon Profili",
+    "Yürütücü-Beden Temelli Self-Regülasyon Problemi": "Yürütücü İşlev ve Beden Organizasyonu Öncelikli Regülasyon Profili",
+    "Çok Alanlı Self-Regülasyon Problemi": "Yaygın Çok Alanlı Regülasyon Güçlüğü",
+    "Yaygın Çoklu Alan Kırılganlığı": "Yaygın Çok Alanlı Regülasyon Güçlüğü",
+    "İnterosepsiyon Merkezli Seçici Kırılganlık": "İnterosepsiyon Alanında Seçici Regülasyon Güçlüğü",
+    "Yürütücü-Beden Temelli Seçici Kırılganlık":
+      "Yürütücü İşlev ve Beden Organizasyonu Alanlarında Seçici Regülasyon Güçlüğü",
+    "Fizyolojik Toparlanma Ekseninde Seçici Kırılganlık":
+      "Fizyolojik Toparlanma Alanında Seçici Regülasyon Güçlüğü",
+    "Geçiş ve Ko-Regülasyon İçeren Belirgin Regülasyon Güçlüğü":
+      "Geçiş ve Ko-Regülasyonla İlişkili Belirgin Regülasyon Güçlüğü",
+  };
+
+  return (exactLabels[profileType] || profileType)
+    .replace(/Geçiş ve Ko-Regülasyon İçeren Kanıt-Sınırlı Karma Regülasyon Profili/g,
+      "Geçiş ve Ko-Regülasyonla İlişkili Bağlama Duyarlı Regülasyon Profili")
+    .replace(/Motor Planlama ve Beden Organizasyonu İçeren Kanıt-Sınırlı Karma Regülasyon Profili/g,
+      "Motor Planlama ve Beden Organizasyonuyla İlişkili Bağlama Duyarlı Regülasyon Profili")
+    .replace(/Dilsel Talep İçeren Kanıt-Sınırlı Karma Regülasyon Profili/g,
+      "Dilsel Taleple İlişkili Bağlama Duyarlı Regülasyon Profili")
+    .replace(/Sosyal-Pragmatik Talep İçeren Kanıt-Sınırlı Karma Regülasyon Profili/g,
+      "Sosyal-Pragmatik Taleple İlişkili Bağlama Duyarlı Regülasyon Profili")
+    .replace(/Günlük Yaşam ve Öz Bakım İçeren Kanıt-Sınırlı Karma Regülasyon Profili/g,
+      "Günlük Yaşam ve Öz Bakımla İlişkili Bağlama Duyarlı Regülasyon Profili")
+    .replace(/Kanıt-Sınırlı \/ Karma Regülasyon Profili/g, "Bağlama Duyarlı Regülasyon Profili")
+    .replace(/Self-Regülasyon Problemi/g, "Belirgin Regülasyon Güçlüğü")
+    .replace(/Regülasyon Kırılganlığı/g, "Regülasyon Güçlüğü Profili")
+    .replace(/Seçici Kırılganlık/g, "Seçici Regülasyon Güçlüğü");
 }
 
 function buildProfileDomainWeights(
@@ -907,7 +942,7 @@ function getExternalDomainCommentHint(
   if (compatibleCategories.has("motor_praxis")) {
     const testText = formatNamedTests(praxisNames)
     if (domainKey === "executive" && testText) {
-      return ` ${testText} bulguları, bu alandaki zorlanmanın yalnız inhibisyon ya da dikkatle değil, hareketi sıralama, motor planı uygulama ve davranışı organize etme talebiyle de ilişkili olabileceğini düşündürmektedir.`
+      return ` ${testText} bulguları motor planlama ve beden organizasyonu güçlüğüne işaret etmektedir. Bu örüntü; hareketi sıralama, motor planı uygulama ve davranışı organize etme talepleriyle ilişkilidir.`
     }
     if (domainKey === "cognitive" && testText) {
       return ` ${testText} bulguları, görevin zihinsel olarak planlanması ve adım adım sürdürülmesi sırasında hareket sıralama talebinin bilişsel organizasyonu zorlaştırabileceğini düşündürmektedir.`
@@ -936,7 +971,7 @@ function getExternalDomainCommentHint(
       return ` ${testText} bulguları, çok basamaklı sözel taleplerde geçiş yapma, sıralama ve görevi tamamlama zorluğunun belirginleşebileceğini düşündürmektedir.`
     }
     if (domainKey === "emotional" && testText) {
-      return ` ${testText} bulguları, iletişimsel talep ve anlaşılmama anlarında frustrasyon eşiğinin düşebileceğini düşündürmektedir.`
+      return ` ${testText} bulguları, iletişimsel talep ve anlaşılmama anlarında engellenmeye dayanma kapasitesinin azalabileceğini düşündürmektedir.`
     }
   }
 
@@ -956,6 +991,12 @@ function getExternalDomainCommentHint(
   return ""
 }
 
+function describeClinicalRange(level: DomainLevel): string {
+  if (level === "Tipik") return "beklenen aralıktadır";
+  if (level === "Riskli") return "izlem gerektiren aralıktadır";
+  return "belirgin güçlük aralığındadır";
+}
+
 function buildDomainSection(
   domainResults: DomainResult[],
   anamnezFlags: string[],
@@ -965,6 +1006,7 @@ function buildDomainSection(
   itemLevelAnalysis?: ItemLevelAnalysis | null
 ): string {
   const allTypical = domainResults.every((d) => d.level === "Tipik");
+  const isHomogeneousWidespread = Boolean(evidenceMap && /yaygın çoklu alan/i.test(evidenceMap.primaryAxis));
   const mechanismOrder: DomainKey[] = getMechanismDomainOrder(evidenceMap?.clinicalMechanism);
   const orderedDomains = [...domainResults].sort((a, b) => {
     if (mechanismOrder.length) {
@@ -1008,18 +1050,25 @@ function buildDomainSection(
       Boolean(evidenceMap && isMechanismDriven(evidenceMap) && evidenceMap.secondaryAxes.includes(d.label));
     const mechanismText =
       isMechanismSecondary && index === 0
-        ? ` Bu bulgu, ana sorunun günlük işlevdeki görünümünü netleştirir.`
+        ? ` Bu bulgu, temel güçlüğün günlük işlevdeki görünümünü netleştirir.`
         : "";
+    const rangeDescription = describeClinicalRange(d.level as DomainLevel);
     const clinicalWeight =
       d.level === "Tipik"
-        ? `${d.label} mevcut profil içinde öncelikli bir klinik sorun alanı oluşturmamaktadır.`
+        ? `${d.label} skoru ${d.score}/${DOMAIN_MAX}'dir ve ${rangeDescription}; mevcut değerlendirmede öncelikli bir güçlük oluşturmamaktadır.`
       : isMechanismSecondary
-        ? `${d.label} ${d.score}/${DOMAIN_MAX} ile ${d.level} banttadır. Bu alan, ana sorunun günlük yaşamdaki yansımalarından biri olarak değerlendirilir.`
-        : evidenceMap && isMechanismDriven(evidenceMap)
-        ? `${d.label} ${d.score}/${DOMAIN_MAX} ile ${d.level} banttadır; ancak raporun ana odağı değil, genel self-regülasyon zorluklarına eşlik eden klinik arka plan olarak okunur.`
-        : `${d.label} ${d.score}/${DOMAIN_MAX} ile ${d.level} banttadır ve ${
-            index === 0 ? "raporun birincil klinik eksenine" : "ana eksene eşlik eden self-regülasyon zorluğuna"
-          } katkı verir.`;
+        ? `${d.label} skoru ${d.score}/${DOMAIN_MAX}'dir ve ${rangeDescription}. ${d.label} alanındaki bulgu, temel güçlüğün günlük işlevdeki etkilerinden birini göstermektedir.`
+      : evidenceMap && isMechanismDriven(evidenceMap)
+        ? `${d.label} skoru ${d.score}/${DOMAIN_MAX}'dir ve ${rangeDescription}. Bu bulgu genel profille birlikte değerlendirilir, ancak temel klinik odağı oluşturmaz.`
+        : isHomogeneousWidespread
+        ? `${d.label} skoru ${d.score}/${DOMAIN_MAX}'dir ve ${rangeDescription}.`
+        : `${d.label} skoru ${d.score}/${DOMAIN_MAX}'dir ve ${rangeDescription}. ${
+            index === 0
+              ? "Bu alan raporun temel klinik odağıdır."
+              : index === 1
+              ? "Bu alan temel bulguyla birlikte değerlendirilir."
+              : ""
+          }`;
 
     return [
       d.label,
@@ -1030,12 +1079,14 @@ function buildDomainSection(
     .filter((domain) => domain.level !== "Tipik")
     .sort((a, b) => a.score - b.score);
   const synthesis = allTypical
-    ? "Alanların tamamı tipik aralıkta kaldığı için klinik yorum korunmuş self-regülasyon zeminiyle sınırlıdır."
+    ? "Alanların tamamı beklenen aralıktadır; değerlendirmede belirgin bir öncelikli güçlük saptanmamıştır."
+    : isHomogeneousWidespread
+    ? "Alan puanları birbirine yakın olduğu için tek bir temel alan seçilmez; güçlükler çok alanlı bir örüntü olarak birlikte değerlendirilir."
     : evidenceMap && isMechanismDriven(evidenceMap)
-    ? `Ana klinik odak ${evidenceMap.primaryAxis}; günlük yaşama yansıyan alanlar ${formatDomainLabels(evidenceMap.secondaryAxes) || "yürütücü ve bilişsel organizasyon"} olarak izlenir.`
-    : `Klinik yorumda birincil alan ${sortedNonTypical[0]?.label}; eşlik eden alanlar ${formatDomainLabels(
+    ? `Temel klinik odak: ${evidenceMap.primaryAxis}. Günlük işlevde ${formatDomainAreaSubject(evidenceMap.secondaryAxes) || "yürütücü ve bilişsel organizasyon alanları"} ${evidenceMap.secondaryAxes.length === 1 ? "değerlendirilir" : "birlikte değerlendirilir"}.`
+    : `Temel bulgu ${sortedNonTypical[0]?.label} alanındadır; ${formatDomainLabels(
         sortedNonTypical.slice(1, 3).map((domain) => domain.label)
-      ) || "belirgin biçimde ayrışmamaktadır"} olarak okunur.`;
+      ) || "başka bir alan belirgin biçimde ayrışmamaktadır"} bu bulguyla birlikte değerlendirilir.`;
   const mechanismIntro =
     evidenceMap && isMechanismDriven(evidenceMap) && evidenceMap.mechanismSummary
       ? [evidenceMap.mechanismLabel || "Klinik Mekanizma", evidenceMap.mechanismSummary].join("\n")
@@ -1172,34 +1223,34 @@ function buildWeaknessNarrative(domainResults: DomainResult[], homogeneous: bool
 
   if (sortedWeak.length === 0) {
     return strengths.length
-      ? `- Tüm alanlar tipik aralıktadır; ${strengths.map((x) => x.label).join(", ")} alanlarında göreli korunmuşluk izlenmektedir.`
-      : "- Tüm alanlar tipik aralıktadır ve belirgin bir kırılganlık odağı izlenmemektedir.";
+      ? `- Tüm alanlar tipik aralıktadır; ${formatDomainAreaLocation(strengths.map((x) => x.label))} göreli korunmuşluk izlenmektedir.`
+      : "- Tüm alanlar beklenen aralıktadır ve belirgin bir güçlük odağı izlenmemektedir.";
   }
 
   if (sortedWeak.length === 1) {
     const preserved = strengths.length
-      ? ` ${strengths.map((x) => x.label).join(", ")} alanlarında göreli korunmuşluk izlenmektedir.`
+      ? ` ${formatDomainAreaLocation(strengths.map((x) => x.label))} göreli korunmuşluk izlenmektedir.`
       : "";
-    return `- Profil, temel olarak ${sortedWeak[0].label} alanında seçici bir kırılganlık göstermektedir.${preserved}`;
+    return `- Güçlük yalnız ${sortedWeak[0].label} alanında seçici olarak belirginleşmektedir.${preserved}`;
   }
 
   if (sortedWeak.length >= 3) {
     const secondaryLabels = sortedWeak.slice(1, 3).map((domain) => domain.label).join(" ve ");
     const preserved = strengths.length
-      ? ` ${strengths.map((x) => x.label).join(", ")} alanlarında göreli korunmuşluk izlenmektedir.`
+      ? ` ${formatDomainAreaLocation(strengths.map((x) => x.label))} göreli korunmuşluk izlenmektedir.`
       : "";
-    return `- Kırılganlık öncelikle ${sortedWeak[0].label} alanında belirginleşmekte; ${secondaryLabels} alanları bu örüntüye eşlik etmektedir.${preserved}`;
+    return `- Güçlük öncelikle ${sortedWeak[0].label} alanında belirginleşmekte; ${secondaryLabels} alanları aynı işlevsel tablo içinde etkilenmektedir.${preserved}`;
   }
 
   if (sortedWeak.length === 2) {
     const preserved = strengths.length
-      ? ` ${strengths.map((x) => x.label).join(", ")} alanlarında göreli korunmuşluk izlenmektedir.`
+      ? ` ${formatDomainAreaLocation(strengths.map((x) => x.label))} göreli korunmuşluk izlenmektedir.`
       : "";
-    return `- Kırılganlık ${sortedWeak[0].label} ve ${sortedWeak[1].label} alanlarında birlikte belirginleşmektedir.${preserved}`;
+    return `- Güçlük ${sortedWeak[0].label} ve ${sortedWeak[1].label} alanlarında birlikte belirginleşmektedir.${preserved}`;
   }
 
   if (strengths.length) {
-    return `- ${strengths.map((x) => x.label).join(", ")} alanlarında göreli korunmuşluk izlenmektedir.`;
+    return `- ${formatDomainAreaLocation(strengths.map((x) => x.label))} göreli korunmuşluk izlenmektedir.`;
   }
 
   return "";
@@ -1214,7 +1265,7 @@ function buildPatternSection(
   externalTestAnalysis?: ExternalTestAnalysis,
   evidenceMap?: ClinicalEvidenceMap
 ): string {
-  const lines: string[] = [`- Profil sınıflaması: ${profileType}.`];
+  const lines: string[] = [`- Klinik profil: ${profileType}.`];
   const weaknessNarrative = buildWeaknessNarrative(domainResults, homogeneous);
   const { strengths, weaknesses } = getMeaningfulStrengthWeakness(domainResults, homogeneous);
   const nonTypicalCount = domainResults.filter((d) => d.level !== "Tipik").length;
@@ -1224,14 +1275,21 @@ function buildPatternSection(
 
   if (hasMotorPraxisMechanism) {
     const preserved = strengths.length
-      ? ` ${strengths.map((x) => x.label).join(", ")} alanlarında göreli korunmuşluk izlenmektedir.`
+      ? ` ${formatDomainAreaLocation(strengths.map((x) => x.label))} göreli korunmuşluk izlenmektedir.`
       : "";
     lines.push(
       `- Klinik örüntü, en düşük skorun tek başına merkez alınmasından çok motor planlama ve beden organizasyonu gerektiren durumlarda belirginleşen zorlanmanın yürütücü organizasyon, görev sürdürme ve duygusal toparlanmaya yansımasıyla açıklanır.${preserved}`
     );
+  } else if (evidenceMap?.clinicalMechanism === "evidence_limited_mixed") {
+    const preserved = strengths.length
+      ? ` ${formatDomainAreaLocation(strengths.map((x) => x.label))} göreli korunmuşluk izlenmektedir.`
+      : "";
+    lines.push(
+      `- Dış test, anamnez ve gözlem tam örtüşmediği için klinik yorum yalnız ortaklaşan görev ve bağlamlarla sınırlandırılmıştır.${preserved}`
+    );
   } else if (evidenceMap && isMechanismDriven(evidenceMap)) {
     const preserved = strengths.length
-      ? ` ${strengths.map((x) => x.label).join(", ")} alanlarında göreli korunmuşluk izlenmektedir.`
+      ? ` ${formatDomainAreaLocation(strengths.map((x) => x.label))} göreli korunmuşluk izlenmektedir.`
       : "";
     lines.push(
       `- Klinik örüntü, en düşük skorun tek başına merkez alınmasından çok ${getMechanismDescriptor(
@@ -1243,7 +1301,7 @@ function buildPatternSection(
   }
 
   if (nonTypicalCount === 0) {
-    lines.push("- Alt alanların tümü tipik aralıkta seyrettiği için klinik olarak anlamlı bir risk kümesi ya da yaygın self-regülasyon problemi izlenmemektedir.");
+    lines.push("- Alt alanların tümü beklenen aralıkta olduğu için klinik olarak anlamlı bir risk kümesi ya da yaygın regülasyon güçlüğü izlenmemektedir.");
   }
 
   if (patterns.length > 0) {
@@ -1343,7 +1401,7 @@ function formatExternalSupportSentence(text: string, limited: boolean): string {
   const clean = String(text || "").trim().replace(/\.$/, "");
   if (!clean) return "";
   return limited
-    ? ` ${clean}. Bu bulgu ana kararı güçlendirmez; yalnız yorum sınırını ve kaynaklar arası ayrışmayı görünür kılar.`
+    ? ` ${clean}. Bu bulgu ana klinik değerlendirmeyi tek başına desteklemez; yorumun hangi bağlamlarla sınırlı tutulacağını gösterir.`
     : ` ${clean}; bu bulgu formülasyonu destekleyen ek klinik kanıtlar arasında yer alır.`;
 }
 
@@ -1372,6 +1430,9 @@ function getAnamnezFieldText(record: AnamnezRecord | undefined, keys: string[]):
 
 function naturalizeCaseEvidenceText(text: string): string {
   return String(text || "")
+    .replace(/görsel plan ve adımları ayırma ile hızlı toparlıyor/gi, "görsel plan ve adımların ayrıştırılmasıyla hızla toparlandığı gözlenmektedir")
+    .replace(/çalışma belleği yükü, görevden kopma ve frustrasyon artıyor/gi, "çalışma belleği yükünün, görevden kopmanın ve engellenme karşısındaki zorlanmanın arttığı gözlenmektedir")
+    .replace(/performansı belirgin biçimde organize ediyor/gi, "performansın belirgin biçimde daha düzenli olmasını sağlamaktadır")
     .replace(/daha az çekinme,\s*yeni hareketlere girişte daha az model ihtiyacı\s+ve\s+beden organizasyonunun duygusal zorlanmayı ikincil olarak tetiklemeyeceği\s+bir profile yaklaşmak hedeflenmektedir\.?/gi,
       "yeni hareketlere daha rahat başlayabilmesi, daha az model desteğiyle ilerleyebilmesi ve beden organizasyonu zorlandığında duygusal toparlanmasının daha az etkilenmesi beklenmektedir")
     .replace(/yeni hareketlere daha rahat girişebilme ve daha az model desteğiyle ilerleyebilme ve beden organizasyonunun duygusal zorlanmayı ikincil olarak tetiklemeyeceği bu yönde desteklenmesi beklenmektedir\.?/gi,
@@ -1438,7 +1499,12 @@ function buildCaseSpecificAnamnezLines(record?: AnamnezRecord): string[] {
     "protective_factors",
   ]);
 
-  const cleanCaregiver = naturalizeCaseEvidenceText(caregiver.replace(/^Aile(?:\s+tarafından)?\s*/i, "").trim());
+  const cleanCaregiver = naturalizeCaseEvidenceText(
+    caregiver
+      .replace(/^Aile(?:\s+tarafından)?\s*/i, "")
+      .replace(/^(?:nın|nin|nun|nün)\s+/i, "")
+      .trim()
+  );
   const cleanTherapist = naturalizeCaseEvidenceText(
     therapist
       .replace(/^Terapist(?:\s+gözleminde|,\s*)?\s*/i, "")
@@ -1452,8 +1518,8 @@ function buildCaseSpecificAnamnezLines(record?: AnamnezRecord): string[] {
     cleanCaregiver && !isLowInformationClinicalText(cleanCaregiver)
       ? ensureSentenceEnd(`Aileden gelen bilgiye göre ${cleanCaregiver.charAt(0).toLocaleLowerCase("tr-TR")}${cleanCaregiver.slice(1)}`)
       : "",
-    cleanTherapist && !isLowInformationClinicalText(cleanTherapist)
-      ? ensureSentenceEnd(`Terapist gözleminde ${cleanTherapist}`)
+    cleanTherapist && !isLowInformationClinicalText(cleanTherapist) && !isLimitedClinicalNarrativeLine(cleanTherapist)
+      ? ensureSentenceEnd(`Terapist gözleminde ${cleanTherapist.charAt(0).toLocaleLowerCase("tr-TR")}${cleanTherapist.slice(1)}`)
       : "",
     cleanStrengths && !isLowInformationClinicalText(cleanStrengths)
       ? ensureSentenceEnd(`Korunmuş işlev alanlarına ilişkin bilgi: ${cleanStrengths}`)
@@ -1565,7 +1631,7 @@ function buildAnamnezFitSection(
 
   if (compatibleCategories.has("adaptive_daily_living")) {
     externalFitSynthesis.push(
-      `${externalTestNamesText || "Uyumsal işlev testleri"} verileri, güçlüğün kapasitenin tümden kaybından çok günlük öz bakım, rutin başlatma, sıralı görevi sürdürme ve tamamlamada tutarlılık sorunu olarak görünür hale geldiğini düşündürmektedir.`
+      `${externalTestNamesText || "Uyumsal işlev testleri"} verileri günlük yaşam becerilerini bağlamsallaştırır. Bulgular, kapasitenin tümden kaybından çok öz bakım, rutin başlatma, sıralı görevi sürdürme ve tamamlamada tutarlılık güçlüğüne işaret eder.`
     );
   }
 
@@ -1574,7 +1640,7 @@ function buildAnamnezFitSection(
     : externalTestDecisionNotes.slice(0, 2);
   const mixedEvidenceNote =
     evidenceMap?.clinicalMechanism === "evidence_limited_mixed"
-      ? "Kanıt kanalları tam yakınsama göstermediği için bu bölüm, güçlü bir tek mekanizma iddiasından çok bakımveren anlatısı, terapist gözlemi ve dış test sınırları arasındaki sınırlı uyum/ayrışmayı görünür tutar."
+      ? "Aileden gelen bilgi, terapist gözlemi ve dış test sonuçları birbiriyle tam örtüşmemektedir. Bu nedenle yorum, yalnız ortaklaşan görev ve bağlamlarla sınırlandırılmıştır."
       : "";
 
   if (weakLabels.length === 0) {
@@ -1587,7 +1653,8 @@ function buildAnamnezFitSection(
     }
 
     if (rawMatchedDomains.length > 0) {
-      sentences.push(`Bu temalar özellikle ${rawMatchedDomains.slice(0, 2).join(", ")} alanlarıyla birlikte okunmuş; ancak ölçek sonuçları bu alanlarda yaygın ya da kalıcı bir kırılganlık kümelenmesine işaret etmemiştir.`)
+      const matchedAreas = rawMatchedDomains.slice(0, 2);
+      sentences.push(`Bu temalar özellikle ${formatDomainAreaSubject(matchedAreas)} ile birlikte değerlendirilmiş; ancak ölçek sonuçları bu alanlarda yaygın ya da kalıcı bir güçlük kümelenmesine işaret etmemiştir.`)
     } else {
       sentences.push("Bildirilen güçlükler ölçek üzerinde belirgin bir risk kümesine dönüşmemiştir.")
     }
@@ -1670,15 +1737,15 @@ function buildAnamnezFitSection(
     const sentences: string[] = [...caseSpecificLines, themeSentence];
 
     if (alignedDomains.length > 0 && flagCount >= 2) {
-      sentences.push(`Ölçekte öne çıkan ${alignedDomains.join(", ")} alanları bu anlatımla doğrudan uyum göstermektedir.`);
+      sentences.push(`Ölçekte öne çıkan ${formatDomainAreaSubject(alignedDomains)} bu anlatımla doğrudan uyum göstermektedir.`);
     }
 
     if (partialDomains.length > 0) {
-      sentences.push(`${partialDomains.join(", ")} alanlarında ise daha sınırlı ama klinik olarak anlamlı bir eşleşme izlenmektedir.`);
+      sentences.push(`${formatDomainAreaLocation(partialDomains)} ise daha sınırlı ancak klinik olarak anlamlı bir eşleşme izlenmektedir.`);
     }
 
     if (mismatchDomains.length > 0) {
-      sentences.push(`${mismatchDomains.join(", ")} alanlarına ilişkin anamnez vurgusu bulunmasına karşın ölçek bulguları bu alanlarda göreli korunmuş görünmektedir; bu durum bağlama özgü bir ayrışma düşündürebilir.`);
+      sentences.push(`${formatDomainAreaDative(mismatchDomains)} ilişkin anamnez vurgusu bulunmasına karşın ölçek bulguları bu alanlarda göreli korunmuş görünmektedir; bu durum bağlama özgü bir ayrışma düşündürebilir.`);
     }
 
     if (
@@ -1758,7 +1825,7 @@ function buildConclusion(
       ? evidenceMap.compiledNarrative.conclusionSentence
       :
     evidenceMap?.clinicalMechanism === "evidence_limited_mixed"
-      ? "Sonuç olarak dış test kanıtı sınırlıdır; yürütücü-bilişsel-duygusal değişkenlik bağlamsal kanıtlarla birlikte temkinli biçimde yorumlanır."
+      ? "Sonuç olarak klinik odak, bağlama göre değişen self-regülasyon güçlüğü üzerinden açıklanır; yorum yalnız ortaklaşan görev ve bağlamlarla sınırlandırılmıştır."
       : evidenceMap?.clinicalMechanism === "motor_praxis"
       ? "Sonuç olarak motor planlama ve beden organizasyonu zorluğu, yürütücü organizasyon, görev sürdürme ve duygusal toparlanma süreçlerine yansımaktadır."
       : evidenceMap && isMechanismDriven(evidenceMap)
@@ -1774,7 +1841,7 @@ function buildConclusion(
     globalLevel === "Tipik"
       ? "Bu rapor tanısal hüküm içermez; mevcut veriler bağlama duyarlı hassasiyetlerin aşırı yorumlanmadan ele alınması gerektiğini gösterir."
       : evidenceMap?.clinicalMechanism === "evidence_limited_mixed"
-      ? "Bu rapor tanısal hüküm içermez; dış test kanıtı sınırlı veya çelişkili olduğunda ek test sonucu büyütülmeden skor örüntüsü, bakımveren anlatısı ve terapist gözlemi birlikte tartılır."
+      ? "Bu rapor tanısal hüküm içermez. Kaynaklar birbiriyle tam örtüşmediğinde skor örüntüsü, aileden gelen bilgi ve terapist gözlemi birlikte değerlendirilir."
       : evidenceMap?.clinicalMechanism === "motor_praxis"
       ? "Bu rapor tanısal hüküm içermez; mevcut veriler motor planlama, beden organizasyonu, görev sürdürme ve toparlanma süreçlerinin birlikte okunması gerektiğini gösterir."
       : evidenceMap?.clinicalMechanism === "adaptive_daily_living"
@@ -1785,10 +1852,10 @@ function buildConclusion(
       ? "Bu rapor tanısal hüküm içermez; mevcut veriler sözel talep, görevde kalma ve duygusal toparlanma süreçlerinin birlikte okunması gerektiğini gösterir."
       : evidenceMap?.clinicalMechanism === "physiological_interoceptive"
       ? "Bu rapor tanısal hüküm içermez; mevcut veriler beden-temelli toparlanma, interoseptif farkındalık ve günlük işlev akışının birlikte okunması gerektiğini gösterir."
-      : "Bu rapor tanısal hüküm içermez; mevcut veriler öncelikli karar ekseni, görev sürdürme ve toparlanma süreçlerinin birlikte okunması gerektiğini gösterir.";
+      : "Bu rapor tanısal hüküm içermez; mevcut veriler temel klinik güçlük ile görev sürdürme ve toparlanma süreçlerinin birlikte değerlendirilmesi gerektiğini gösterir.";
 
   return [
-    `Profil "${profileType}" ile uyumludur; ${levelText}.`,
+    `Klinik profil "${profileType}" olarak özetlenmiştir; ${levelText}.`,
     patternText,
     boundaryText,
   ]
@@ -1829,6 +1896,24 @@ function formatDomainLabels(labels: string[]): string {
   if (labels.length <= 1) return labels[0] || "";
   if (labels.length === 2) return `${labels[0]} ve ${labels[1]}`;
   return `${labels.slice(0, -1).join(", ")} ve ${labels[labels.length - 1]}`;
+}
+
+function formatDomainAreaSubject(labels: string[]): string {
+  const formatted = formatDomainLabels(labels);
+  if (!formatted) return "";
+  return `${formatted} ${labels.length === 1 ? "alanı" : "alanları"}`;
+}
+
+function formatDomainAreaLocation(labels: string[]): string {
+  const formatted = formatDomainLabels(labels);
+  if (!formatted) return "";
+  return `${formatted} ${labels.length === 1 ? "alanında" : "alanlarında"}`;
+}
+
+function formatDomainAreaDative(labels: string[]): string {
+  const formatted = formatDomainLabels(labels);
+  if (!formatted) return "";
+  return `${formatted} ${labels.length === 1 ? "alanına" : "alanlarına"}`;
 }
 
 function isMechanismDriven(evidenceMap: ClinicalEvidenceMap): boolean {
@@ -1877,7 +1962,7 @@ function getPreferredSecondaryAxes(
 function getMechanismDescriptor(evidenceMap: Pick<ClinicalEvidenceMap, "clinicalMechanism" | "primaryAxis">): string {
   switch (evidenceMap.clinicalMechanism) {
     case "evidence_limited_mixed":
-      return "kanıt sınırlılığı ve çelişkili dış test bilgisi altında yürütücü organizasyon, bilişsel düzenleme ve duygusal toparlanmanın bağlama göre dalgalanması";
+      return "dış test, anamnez ve gözlemdeki farklılıkların işaret ettiği bağlama göre değişen performans";
     case "motor_praxis":
       return "motor planlama ve beden organizasyonu gerektiren durumlarda belirginleşen zorlanmanın görev organizasyonuna, dikkat sürdürmeye ve duygusal toparlanmaya yansıması";
     case "adaptive_daily_living":
@@ -1885,7 +1970,7 @@ function getMechanismDescriptor(evidenceMap: Pick<ClinicalEvidenceMap, "clinical
     case "social_pragmatic":
       return "sosyal karşılıklılık ve pragmatik esneklik talebi arttığında bilişsel düzenleme, duygusal toparlanma ve davranış ayarlamanın birlikte zorlanması";
     case "language_communication":
-      return "sözel talep ve yönerge karmaşıklığı arttığında bilgiyi işleme, görevde kalma ve frustrasyon toleransının ikincil olarak zorlanması";
+      return "sözel talep ve yönerge karmaşıklığı arttığında bilgiyi işleme, görevde kalma ve engellenmeye dayanma kapasitesinin ikincil olarak zorlanması";
     case "language_social_pragmatic":
       return "dilsel talep ile sosyal-pragmatik talep birlikte arttığında anlama, karşılıklılığı sürdürme, bilişsel organizasyon ve duygusal toparlanmanın aynı hat üzerinde zorlanması";
     case "physiological_interoceptive":
@@ -1903,7 +1988,7 @@ function getMechanismFormulationSentence(evidenceMap: ClinicalEvidenceMap): stri
   }
   switch (evidenceMap.clinicalMechanism) {
     case "evidence_limited_mixed":
-      return "Dış testte kanıt sınırlılığı, ham puan, korunmuş sonuç veya yaş uyumsuzluk bulunduğunda yürütücü organizasyon, bilişsel düzenleme ve duygusal toparlanma yorumu skor örüntüsü, bakımveren anlatısı ve terapist gözlemiyle sınırlı tutulur.";
+      return "Dış test sonucu ham puan, beklenen düzey veya yaş uyumsuzluğu içerdiğinde görev organizasyonu ve duygusal toparlanma yalnız skor örüntüsü, aileden gelen bilgi ve terapist gözlemiyle birlikte yorumlanır.";
     case "motor_praxis":
       return "Yeni veya çok basamaklı motor görevlerde beden organizasyonunu kurma ve sürdürme talebi arttığında yürütücü organizasyon, görevde kalma ve duygusal toparlanma ikincil olarak zorlanmaktadır.";
     case "adaptive_daily_living":
@@ -1911,7 +1996,7 @@ function getMechanismFormulationSentence(evidenceMap: ClinicalEvidenceMap): stri
     case "social_pragmatic":
       return "Sosyal karşılıklılık, bağlama uyum ve pragmatik esneklik talebi arttığında bilişsel düzenleme, duygusal toparlanma ve davranışı bağlama göre ayarlama birlikte zorlanmaktadır.";
     case "language_communication":
-      return "Sözel talep ve yönerge karmaşıklığı arttığında bilgiyi işleme, görevde kalma ve frustrasyon toleransını sürdürme zorluğu ikincil olarak belirginleşmektedir.";
+      return "Sözel talep ve yönerge karmaşıklığı arttığında bilgiyi işleme, görevde kalma ve engellenmeye dayanma kapasitesini sürdürme zorluğu ikincil olarak belirginleşmektedir.";
     case "language_social_pragmatic":
       return "Dilsel talep ile sosyal-pragmatik talep birlikte arttığında anlama, karşılıklılığı sürdürme, bilişsel organizasyon ve duygusal toparlanma aynı düzenleyici hat üzerinde zorlanmaktadır.";
     case "physiological_interoceptive":
@@ -1924,7 +2009,7 @@ function getMechanismFormulationSentence(evidenceMap: ClinicalEvidenceMap): stri
 }
 
 function buildBalancedFormulationSentence(): string {
-  return "Mevcut profil, belirgin bir self-regülasyon kırılganlığından çok korunmuş ve dengeli düzenleme zemini üzerinde bağlama duyarlı küçük değişkenlikler göstermektedir.";
+  return "Mevcut bulgular, genel self-regülasyon becerilerinin büyük ölçüde korunduğunu ve yalnız belirli koşullarda sınırlı değişkenlik görüldüğünü göstermektedir.";
 }
 
 function buildDomainAxisFormulationSentence(evidenceMap: ClinicalEvidenceMap): string {
@@ -1960,11 +2045,11 @@ function buildProfessorLevelDecisionSentence(evidenceMap: ClinicalEvidenceMap): 
   }
 
   if (evidenceMap.clinicalMechanism === "evidence_limited_mixed") {
-    return "Bu vakada dış test kanıtı sınırlı veya çelişkilidir; bu nedenle ana yorum yalnız ek test üzerinden büyütülmez, yürütücü organizasyon, bilişsel düzenleme ve duygusal toparlanmadaki değişkenlik bağlamla birlikte ele alınır.";
+    return "Bu vakada kaynaklar birbiriyle tam örtüşmemektedir. Bu nedenle görev organizasyonu, bilişsel düzenleme ve duygusal toparlanmadaki değişkenlik yalnız gözlenen bağlamlarla sınırlandırılarak ele alınır.";
   }
 
   if (evidenceMap.clinicalMechanism === "selective_interoception") {
-    return "Bu vaka, genel self-regülasyon problemi gibi genişletilmeden; içsel bedensel sinyalleri fark etme ve düzenleme sürecine katma alanında seçici bir interoseptif kırılganlık profili olarak okunur.";
+    return "Bulgular, yaygın bir self-regülasyon güçlüğünden çok içsel bedensel sinyalleri fark etme ve düzenleme sürecine katmada seçici bir güçlüğe işaret eder.";
   }
 
   if (isMechanismDriven(evidenceMap)) {
@@ -2046,20 +2131,25 @@ function buildClinicalPriorityList(
   domainResults?: DomainResult[],
   profileType?: string
 ): string {
+  const isHomogeneousWidespread = /yaygın çoklu alan/i.test(evidenceMap.primaryAxis);
   const priorities = [
-    evidenceMap.primaryAxis === "Korunmuş / dengeli self-regülasyon zemini"
+    isHomogeneousWidespread
+      ? "- Ana klinik odak: Tek bir baskın alan değil; birden fazla düzenleyici sistemde birlikte görülen güçlükler."
+      : evidenceMap.primaryAxis === "Korunmuş / dengeli self-regülasyon zemini"
       ? "- Ana klinik odak: Korunmuş self-regülasyon zemini ve bağlama göre değişebilen küçük hassasiyetler."
       : isMechanismDriven(evidenceMap)
       ? `- Ana klinik odak: ${evidenceMap.primaryAxis}. Bu odak skor sıralaması, anamnez, gözlem ve ek test bulguları birlikte ele alınarak belirlenmiştir.`
       : `- Ana klinik odak: ${evidenceMap.primaryAxis}. Klinik yorum bu eksende yoğunlaşmaktadır.`,
-    evidenceMap.secondaryAxes.length
-      ? `- Günlük yaşama yansıyan alanlar: ${formatDomainLabels(evidenceMap.secondaryAxes)} ana sorunun günlük işlevde görünürleştiği alanlardır.`
+    isHomogeneousWidespread
+      ? "- Günlük yaşama yansıyan alanlar: Görevi başlatma ve sürdürme, geçiş, beden-duygu sinyallerini düzenlemeye katma ve toparlanma birlikte izlenir."
+      : evidenceMap.secondaryAxes.length
+      ? `- Günlük yaşama yansıyan alanlar: ${formatDomainLabels(evidenceMap.secondaryAxes)}, temel bulguyla ilişkili işlevsel etkilerin görüldüğü alanlardır.`
       : "- Günlük yaşama yansıyan alanlar: Belirgin bir ikincil alan ayrışmadığı için yorum tek alan sınırında tutulur.",
     evidenceMap.counterEvidenceLines?.length || evidenceMap.preservedCapacityLines?.length
       ? `- Dengeleyici bilgi: ${cleanLimitationLine(evidenceMap.counterEvidenceLines?.[0] || evidenceMap.preservedCapacityLines?.[0] || "")}.`
       : "",
     evidenceMap.differentialFormulation
-      ? "- Yorum tek bir yüzeysel açıklamaya indirgenmeden bağlamsal kanıtla sınırlı tutulur."
+      ? "- Klinik yorum tek bir nedene indirgenmez; skorlar, anamnez, gözlem ve dış test bilgileri birlikte değerlendirilir."
       : "",
   ];
 
@@ -2073,15 +2163,20 @@ function buildVisibleConfidenceLabel(evidenceMap: ClinicalEvidenceMap): string {
   const hasDecisionExternal =
     Boolean(evidenceMap.externalTestSupport?.length) ||
     evidenceMap.caseEvidenceLines.some((line) => /Dış test\/bulgu|SIPT|PDMS|Vineland|ABAS|PEDI|BRIEF|Conners|BASC|CELF|PLS|CCC|SRS/i.test(line));
-  const hasObservation = evidenceMap.caseEvidenceLines.some((line) => /Terapist gözlemi|gözlem/i.test(line));
-  const hasPreservedOnlyLimit = !hasHardContradiction && Boolean(evidenceMap.preservedCapacityLines?.length);
+  const hasObservation = evidenceMap.therapistObservationEvidence.some((line) => !isLimitedClinicalNarrativeLine(line));
+  const hasMeaningfulAnamnesis = evidenceMap.anamnesisEvidence.some((line) => !isLimitedClinicalNarrativeLine(line));
+  const hasContextEvidence = Boolean(evidenceMap.contextMatrix?.length);
+  const isBalancedExternalDiscrepancy = evidenceMap.primaryAxisKind === "balanced" && hasDecisionExternal;
+  const lacksCaseTriangulation = !hasObservation && !hasDecisionExternal && !hasContextEvidence;
   const hasConstrainedExternalEvidence = evidenceMap.caseEvidenceLines.some((line) =>
     /korunmuş|beklenen aralık|ortalama|yaş uyumsuz|ham puan|ana kararı güçlendirmez/i.test(line)
   ) || evidenceMap.dataLimitations.some((line) => /korunmuş|beklenen aralık|ortalama|yaş uyumsuz|ham puan|sınırlı dış test|sonuç yönü/i.test(line));
 
-  if (hasHardContradiction || evidenceMap.clinicalMechanism === "evidence_limited_mixed") return "orta";
+  if (isBalancedExternalDiscrepancy) return "orta";
+  if (evidenceMap.clinicalMechanism === "evidence_limited_mixed" || hasHardContradiction) return "orta";
+  if (lacksCaseTriangulation || (!hasMeaningfulAnamnesis && !hasObservation && !hasDecisionExternal)) return "sınırlı";
+  if (hasDecisionExternal && hasObservation && hasMeaningfulAnamnesis && hasContextEvidence) return "orta-yüksek";
   if (hasConstrainedExternalEvidence) return evidenceMap.confidenceLevel === "sınırlı" ? "sınırlı" : "orta";
-  if (hasDecisionExternal && hasObservation && hasPreservedOnlyLimit) return "orta-yüksek";
   return evidenceMap.confidenceLevel;
 }
 
@@ -2125,6 +2220,64 @@ function joinClinicalSentences(lines: string[]): string {
     .join(" ");
 }
 
+function buildEvidenceHierarchyText(evidenceMap: ClinicalEvidenceMap): string {
+  const supportingChannels = [
+    evidenceMap.anamnesisEvidence.some((line) => !isLimitedClinicalNarrativeLine(line)) ? "anamnez" : "",
+    evidenceMap.therapistObservationEvidence.some((line) => !isLimitedClinicalNarrativeLine(line)) ? "terapist gözlemi" : "",
+    evidenceMap.externalTestSupport.length ? "yaşa uygun ve yorumlanabilir dış test bulguları" : "",
+    evidenceMap.contextMatrix?.length ? "bağlam karşılaştırması" : "",
+  ].filter(Boolean);
+
+  if (evidenceMap.primaryAxisKind === "balanced" && evidenceMap.externalTestSupport.length) {
+    return "Genel düzenleme zemini için birincil dayanak DNA Intelligence alan skorlarıdır; seçici güçlük için dış test, anamnez ve doğal bağlam gözlemi dikkate alınır. Kaynaklar arasındaki ayrışma nedeniyle hiçbir veri kanalı tek başına genel hüküm oluşturmaz.";
+  }
+  if (supportingChannels.length === 0) {
+    return "Birincil dayanak DNA Intelligence alan skorlarıdır. Anamnez, doğal bağlam gözlemi ve yorumlanabilir dış test desteği sınırlı olduğu için puan örüntüsü vaka geneline genişletilmez.";
+  }
+  return `Birincil dayanak DNA Intelligence alan skorlarıdır; klinik anlam ${formatDomainLabels(supportingChannels)} ile birlikte tartılmıştır. Korunmuş veya çelişkili bulgular, klinik yorumun hangi görev ve koşullarda geçerli olduğunu belirler.`;
+}
+
+function buildAlternativeExplanationText(evidenceMap: ClinicalEvidenceMap): string {
+  if (evidenceMap.primaryAxisKind === "balanced" && evidenceMap.externalTestSupport.length) {
+    return "DNA Intelligence ölçeğinin genel self-regülasyon zeminini, dış test veya doğal bağlam bilgisinin ise daha dar ve duruma özgü bir performans alanını yakalaması kaynaklar arasındaki ayrışmayı açıklayabilir. Bu olasılık, korunmuş genel profil ile seçici güçlüğün aynı anda bulunabileceği kabul edilerek sınanmalıdır.";
+  }
+  if (evidenceMap.primaryAxisKind === "balanced") {
+    return "Korunmuş skor görünümü her koşulda aynı performansın gösterileceğini garanti etmez; yüksek görev talebi, yorgunluk, alışılmadık ortam veya bilgi verenler arasındaki gözlem farkı seçici dalgalanmaları görünür kılabilir.";
+  }
+  if (evidenceMap.clinicalMechanism === "evidence_limited_mixed") {
+    return "Kaynaklar arasındaki ayrışma gerçek bağlamsal değişkenliği yansıtabileceği gibi bilgi verenlerin farklı görevleri gözlemesi, ölçüm zamanlarının farklı olması veya destek düzeylerinin değişmesiyle de açıklanabilir.";
+  }
+  if (
+    evidenceMap.clinicalMechanism === "language_communication" ||
+    evidenceMap.clinicalMechanism === "language_social_pragmatic"
+  ) {
+    return "Görülen performans farkı temel bir düzenleme güçlüğünün yanı sıra sözel yönergeyi anlama, işlemleme hızı, görev yeniliği veya sosyal talebin eşzamanlı artmasıyla da açıklanabilir; bu bileşenler ayrı koşullarda karşılaştırılmalıdır.";
+  }
+  if (
+    evidenceMap.clinicalMechanism === "physiological_interoceptive" ||
+    evidenceMap.clinicalMechanism === "selective_interoception"
+  ) {
+    return "Beden sinyali ve toparlanma örüntüsü düzenleme güçlüğünün yanı sıra uyku, beslenme, gün içi yorgunluk veya tıbbi değişkenlerden etkilenebilir; mevcut rapor bu olasılıklar arasında nedensel ayrım yapmaz.";
+  }
+  if (/duyusal/i.test(evidenceMap.primaryAxis)) {
+    return "Seçici duyusal zorlanma, kalıcı bir duyusal filtreleme güçlüğünün yanı sıra uyaranın yeniliği, yoğunluğu, öngörülebilirliği, yorgunluk veya ortam üzerindeki kontrol düzeyiyle de değişebilir; düşük ve yüksek uyaranlı koşullar karşılaştırılmalıdır.";
+  }
+  if (/yürütücü|bilişsel/i.test(evidenceMap.primaryAxis)) {
+    return "Yürütücü-bilişsel zorlanma sabit bir kapasite kaybının yanı sıra yönerge uzunluğu, çalışma belleği yükü, görev yeniliği, motivasyon veya yorgunlukla da artabilir; aynı görev farklı destek koşullarında sınanmalıdır.";
+  }
+  if (/motor planlama|beden organizasyonu/i.test(evidenceMap.primaryAxis)) {
+    return "Motor planlama güçlüğü görev yeniliği, model desteği, yorgunluk veya ölçüm koşuluna göre değişebilir. Mevcut veri bu etkenlerin göreli katkısını ayırmaya yetmez.";
+  }
+  if (evidenceMap.confidenceLevel === "sınırlı") {
+    if (/yaygın çoklu alan/i.test(evidenceMap.primaryAxis)) {
+      return "Yaygın düşük puanlar ölçüm koşulu, güncel fizyolojik durum, yönergeyi anlama veya bağlamsal talepten etkilenebilir. Mevcut veri, bu olasılıkları kalıcı ve genellenmiş bir güçlükten ayırmaya yetmez.";
+    }
+    return `${evidenceMap.primaryAxis} görünümü ölçüm koşulu, güncel fizyolojik durum, görev yeniliği veya bağlamsal talepten etkilenebilir. Mevcut veri bu açıklamaların göreli katkısını ayırmaya yetmez.`;
+  }
+  if (evidenceMap.differentialFormulation?.text) return evidenceMap.differentialFormulation.text;
+  return `${evidenceMap.primaryAxis} örüntüsü tek bir puan, motivasyon ya da davranış etiketiyle açıklanamaz; görev talebi, çevresel yük, güncel fizyolojik durum ve korunmuş kapasite birlikte değerlendirilmelidir.`;
+}
+
 function buildGlobalClassificationNote(
   totalScore: number,
   globalLevel: DomainLevel,
@@ -2133,10 +2286,10 @@ function buildGlobalClassificationNote(
 ): string {
   const domainLevels = Array.from(new Set(domainResults.map((domain) => domain.level)));
   const nonMatchingDomains = domainResults.filter((domain) => domain.level !== globalLevel);
-  const ageText = ageBandLabel ? `${ageBandLabel} yaş bandında ` : "";
+  const ageText = ageBandLabel ? `${ageBandLabel} için sistem içi yaş-duyarlı yorum aralığında ` : "";
 
   if (nonMatchingDomains.length === 0) {
-    return `${ageText}Global sınıflama toplam skor (${totalScore}/${GLOBAL_MAX}) üzerinden ${globalLevel} düzeydedir ve alan düzeyleri bu genel yönelimle uyumludur.`;
+    return `${ageText}genel sınıflama toplam skor (${totalScore}/${GLOBAL_MAX}) üzerinden ${globalLevel} düzeydedir ve alan düzeyleri bu genel yönelimle uyumludur.`;
   }
 
   const groupedLevels = domainLevels
@@ -2147,7 +2300,7 @@ function buildGlobalClassificationNote(
     .filter(Boolean)
     .join("; ");
 
-  return `${ageText}Global sınıflama toplam skor (${totalScore}/${GLOBAL_MAX}) eşiğine göre ${globalLevel} düzeydedir; alan düzeyleri ise her alanın 50 puanlık kendi eşiğine göre sınıflanır (${groupedLevels}). Bu nedenle global düzey ile alan etiketleri aynı olmak zorunda değildir; karar notu toplam skor görünümü ile alan bazlı kırılganlığı birlikte okur.`;
+  return `${ageText}genel sınıflama toplam skor (${totalScore}/${GLOBAL_MAX}) eşiğine göre ${globalLevel} düzeydedir. Alanlar, her birinin 50 puanlık kendi eşiğine göre sınıflanır (${groupedLevels}). Bu nedenle genel düzey ile alan etiketleri aynı olmak zorunda değildir; klinik yorum toplam skoru ve alanlar arasındaki güçlük dağılımını birlikte değerlendirir.`;
 }
 
 function buildClinicalEvidenceMap(params: {
@@ -2158,6 +2311,8 @@ function buildClinicalEvidenceMap(params: {
   anamnezFlags: string[];
   anamnezSignals: AnamnezThemeSignals;
   therapistInsights: string[];
+  loadingContextTexts: string[];
+  preservedContextTexts: string[];
   externalClinicalFindings: string[];
   externalWarningLines: string[];
   externalTestAnalysis?: ExternalTestAnalysis;
@@ -2277,8 +2432,17 @@ function buildClinicalEvidenceMap(params: {
     : "default";
   const balanced = sortedNonTypical.length === 0;
   const clinicalMechanism: ClinicalMechanismType = balanced ? "default" : detectedClinicalMechanism;
+  const nonTypicalScoreSpread = sortedNonTypical.length
+    ? Math.max(...sortedNonTypical.map((domain) => domain.score)) - Math.min(...sortedNonTypical.map((domain) => domain.score))
+    : 0;
+  const homogeneousWidespread =
+    sortedNonTypical.length >= 4 &&
+    nonTypicalScoreSpread <= 5 &&
+    clinicalMechanism === "default";
   const secondaryAxes = (
-    clinicalMechanism === "default"
+    homogeneousWidespread
+      ? sortedNonTypical.slice(0, 3).map((domain) => domain.label)
+      : clinicalMechanism === "default"
       ? sortedNonTypical.slice(1, 3).map((domain) => domain.label)
       : getPreferredSecondaryAxes(clinicalMechanism, sortedNonTypical)
   )
@@ -2286,8 +2450,10 @@ function buildClinicalEvidenceMap(params: {
     .slice(0, 3);
   const primaryAxis = balanced
     ? "Korunmuş / dengeli self-regülasyon zemini"
+    : homogeneousWidespread
+    ? "Yaygın çoklu alan regülasyon güçlüğü"
     : clinicalMechanism === "motor_praxis"
-    ? "Motor planlama ve beden organizasyonu ile ilişkili self-regülasyon problemi"
+    ? "Motor planlama ve beden organizasyonu ile ilişkili regülasyon güçlüğü"
     : clinicalMechanism === "adaptive_daily_living"
     ? "Günlük yaşam ve öz bakım akışını sürdürme zorluğu"
     : clinicalMechanism === "social_pragmatic"
@@ -2295,16 +2461,18 @@ function buildClinicalEvidenceMap(params: {
     : clinicalMechanism === "language_communication"
     ? "Dilsel talep ve sözel işleme zorluğu"
     : clinicalMechanism === "language_social_pragmatic"
-    ? "Dilsel ve sosyal-pragmatik talep altında birleşen self-regülasyon problemi"
+    ? "Dilsel ve sosyal-pragmatik talep altında belirginleşen regülasyon güçlüğü"
     : clinicalMechanism === "physiological_interoceptive"
-    ? "Beden-temelli toparlanma ve interoseptif düzenleme süreçlerinde self-regülasyon problemi"
+    ? "Beden-temelli toparlanma ve interoseptif düzenleme süreçlerinde regülasyon güçlüğü"
     : clinicalMechanism === "selective_interoception"
     ? "Seçici interoseptif farkındalık ve beden sinyali düzenleme sürecinde self-regülasyon zorluğu"
     : clinicalMechanism === "evidence_limited_mixed"
-    ? "Kanıt sınırlı ve bağlama duyarlı yürütücü-bilişsel-duygusal regülasyon dalgalanması"
+    ? "Bağlama göre değişen self-regülasyon güçlüğü"
     : primaryDomain?.label || "Belirginleşen eksen yok";
   const primaryClinicalHypothesis = balanced
     ? `Mevcut veriler, klinik yorumu genişletmeden; genel olarak korunmuş self-regülasyon zemini üzerinde bağlama duyarlı hassasiyetlerin izlenmesini desteklemektedir.`
+    : homogeneousWidespread
+    ? `Alan puanlarının birbirine yakın ve tamamının klinik eşik altında olması, tek bir baskın alandan çok çoklu düzenleyici sistemlere yayılan bir yükü düşündürmektedir; bağlamsal veri sınırlıysa bu örüntü genellenmiş kapasite kaybı olarak yorumlanamaz.`
     : clinicalMechanism === "motor_praxis"
     ? `Mevcut veriler, ana zorlanmanın motor planlama ve beden organizasyonu talepleriyle başladığını; yürütücü organizasyon, görev sürdürme ve duygusal toparlanmanın buna ikincil olarak zorlandığını düşündürmektedir.`
     : clinicalMechanism === "adaptive_daily_living"
@@ -2312,7 +2480,7 @@ function buildClinicalEvidenceMap(params: {
     : clinicalMechanism === "social_pragmatic"
     ? `Mevcut veriler, ana zorlanmanın sosyal karşılıklılık ve pragmatik esneklik taleplerinde toplandığını; bilişsel düzenleme, duygusal toparlanma ve davranış ayarlamanın bu hatta ikincil olarak zorlandığını düşündürmektedir.`
     : clinicalMechanism === "language_communication"
-    ? `Mevcut veriler, ana zorlanmanın sözel talep ve yönerge karmaşıklığında belirginleştiğini; bilişsel işleme, görevde kalma ve frustrasyon toleransının bu koşullarda ikincil olarak zorlandığını düşündürmektedir.`
+    ? `Mevcut veriler, temel güçlüğün sözel talep ve yönerge karmaşıklığında belirginleştiğini; bilişsel işleme, görevde kalma ve engellenmeye dayanma kapasitesinin bu koşullarda ikincil olarak zorlandığını düşündürmektedir.`
     : clinicalMechanism === "language_social_pragmatic"
     ? `Mevcut veriler, dilsel talep ile sosyal-pragmatik talebin birlikte ana düzenleyici baskıyı oluşturduğunu; anlama, karşılıklılığı sürdürme, bilişsel organizasyon ve duygusal toparlanmanın bu hatta birlikte zorlandığını düşündürmektedir.`
     : clinicalMechanism === "physiological_interoceptive"
@@ -2320,10 +2488,17 @@ function buildClinicalEvidenceMap(params: {
     : clinicalMechanism === "selective_interoception"
     ? `Mevcut veriler, ana zorlanmanın yaygın bir regülasyon bozulmasından çok içsel bedensel sinyalleri fark etme, anlamlandırma ve düzenleme sürecine zamanında katma alanında seçici olarak toplandığını düşündürmektedir.`
     : clinicalMechanism === "evidence_limited_mixed"
-    ? `Mevcut verilerde dış test kanıtı ham puan, korunmuş sonuç veya yaş uyumsuzluk nedeniyle sınırlı kalmaktadır; bu nedenle ana klinik yorum DNA Intelligence skor örüntüsü, aileden gelen bilgi ve terapist gözlemiyle temkinli biçimde sınırlandırılır.`
+    ? `Dış test, anamnez ve gözlem tam örtüşmediği için klinik yorum yalnız ortaklaşan görev ve bağlamlarla sınırlandırılmıştır.`
     : `Mevcut veriler, zorlanmanın öncelikle ${primaryAxis} odağında belirginleştiğini; diğer alanların ise bunun günlük işlevdeki yansımalarını açıkladığını düşündürmektedir.`;
 
-  const anamnesisEvidence = uniqueStrings(params.anamnezFlags).map((line) => cleanEvidenceLine(line)).slice(0, 3);
+  const anamnesisEvidence = uniqueStrings(params.anamnezFlags)
+    .map((line) => cleanEvidenceLine(line))
+    .filter(
+      (line) =>
+        !isLimitedClinicalNarrativeLine(line) &&
+        !/Korunmuş alanlara ilişkin veri sınırlıdır|Başvuru nedeni ve ebeveyn öncelikleri klinik yorum için yüksek değerli bağlam|Terapist gözlem notları, günlük performansta hangi alt sistemlerin yük taşıdığını netleştiren ek klinik bağlam/i.test(line)
+    )
+    .slice(0, 3);
   const therapistObservationEvidence = uniqueStrings(params.therapistInsights)
     .map((line) => cleanEvidenceLine(line.replace(/^Terapist gözlemi:\s*/i, "")))
     .filter((line) => !isLimitedClinicalNarrativeLine(line))
@@ -2338,6 +2513,8 @@ function buildClinicalEvidenceMap(params: {
     anamnezSignals: params.anamnezSignals,
     anamnezFlags: params.anamnezFlags,
     therapistInsights: params.therapistInsights,
+    loadingContextTexts: params.loadingContextTexts,
+    preservedContextTexts: params.preservedContextTexts,
     externalTestAnalysis: params.externalTestAnalysis,
     itemLevelAnalysis: params.itemLevelAnalysis,
   });
@@ -2358,7 +2535,7 @@ function buildClinicalEvidenceMap(params: {
         `Ana klinik odak ${primaryAxis.toLocaleLowerCase("tr-TR")} alanında belirginleşmektedir.`,
         secondaryAxes.length
           ? `Günlük yaşama yansıyan alanlar ${formatDomainLabels(secondaryAxes)} olarak görünürleşmektedir.`
-          : "Yorum, ikincil bir alan kümesine genişletilmeden ana eksen üzerinden tutulur.",
+          : "Klinik yorum, ikincil alanlara genişletilmeden temel bulguyla sınırlandırılır.",
         ...(therapistObservationEvidence.length
           ? ["Terapist gözlemi, klinik yorumun günlük görev bağlamında nasıl göründüğünü anlamaya katkı sağlar."]
           : []),
@@ -2385,15 +2562,15 @@ function buildClinicalEvidenceMap(params: {
     .slice(0, 6);
 
   const dataLimitations = uniqueStrings([
-    anamnesisEvidence.length === 0 ? "Anamnez teması sınırlı olduğu için bağlamsal uyum yorumu temkinli tutulmalıdır." : null,
-    therapistObservationEvidence.length === 0 ? "Terapist gözlem notu sınırlı olduğu için performans genellemesi artırılmamalıdır." : null,
-    decisionWeightedExternalSupport.length === 0 ? "Yaşa uygun ve yorumlanabilir dış test desteği bulunmadığı için karar notu daha çok DNA Intelligence skor örüntüsü, anamnez ve gözleme dayanır." : null,
-    ...limitedExternalSupport.map((line) => `Dış test kanıtı ana kararı güçlendirmez: ${line}`),
+    anamnesisEvidence.length === 0 ? "Anamnez teması sınırlı olduğu için bağlamsal uyum yorumu temkinlidir." : null,
+    therapistObservationEvidence.length === 0 ? "Terapist gözlem notu sınırlı olduğu için gözlenen performansın farklı bağlamlara genellenebilirliği sınırlıdır." : null,
+    decisionWeightedExternalSupport.length === 0 ? "Yaşa uygun ve yorumlanabilir dış test desteği bulunmadığı için klinik yorum daha çok DNA Intelligence skor örüntüsü, anamnez ve gözleme dayanır." : null,
+    ...limitedExternalSupport.map((line) => `Dış test bulgusu genel klinik sonucu tek başına desteklemez: ${line}`),
     ...(params.externalWarningLines || []),
     ...(params.externalTestAnalysis?.qualityFlagLines || []),
     ...reasoning.counterEvidenceLines.slice(0, 2),
     !Array.isArray(params.answers) || params.answers.length === 0
-      ? "Yanıt ayrıntısı bulunmadığı için karar notu alan skorları ve anamnezle sınırlandırılır."
+      ? "Yanıt ayrıntısı bulunmadığı için klinik yorum alan skorları ve anamnezle sınırlandırılır."
       : null,
   ]).slice(0, 4);
 
@@ -2430,18 +2607,18 @@ function buildClinicalEvidenceMap(params: {
       : "sınırlı";
   const confidenceRationale =
     clinicalMechanism === "evidence_limited_mixed"
-      ? "Skor örüntüsü ve vaka anlatısı klinik hipotez üretir; ancak dış test kanıtı ham puan, korunmuş sonuç veya yaş/yorum sınırı içerdiği için karar güveni kontrollü tutulmuştur."
+      ? "Skor örüntüsü ve vaka anlatısı klinik hipotezi destekler; ancak dış test sonucu ham puan, beklenen düzey veya yaş/yorum sınırı içerdiği için sonuç orta güvenle ve bağlama göre yorumlanmıştır."
       : reasoning.counterEvidenceLines.length >= 2 || reasoning.preservedCapacityLines.length >= 2
-      ? "Destekleyici kanıtla birlikte korunmuş kapasite veya sınırlayıcı kanıt bulunduğu için karar dili genellenmiş risk iddiasına dönüştürülmeden kalibre edilmiştir."
+      ? "Destekleyici bulguların yanında korunmuş veya sınırlayıcı bulgular da bulunduğu için sonuç tüm görev ve ortamlara genellenmemiştir."
       : reasoning.confidenceSubscores.crossSourceAgreement < 45
-      ? "Kaynaklar arası uyum sınırlı olduğu için karar güveni düşürülmüş ve yorum bağlama duyarlı tutulmuştur."
+      ? "Kaynaklar tam örtüşmediği için sonuç yalnız gözlenen görev ve bağlamlarla sınırlandırılmıştır."
       : hasExternalConstraint
-      ? "Kanıt kaynakları arasında yaş, yorum düzeyi veya sonuç yönü açısından sınırlılık bulunduğu için veri güveni temkinli tutulmuştur."
+      ? "Dış testlerde yaş, yorum düzeyi veya sonuç yönü bakımından sınırlılık bulunduğu için sonuç temkinli yorumlanmıştır."
       : confidenceLevel === "yüksek"
       ? "Skor örüntüsü, anamnez/gözlem ve destekleyici klinik bulgular aynı klinik eksene yakınsamaktadır."
       : confidenceLevel === "orta"
       ? "Skor örüntüsü klinik ekseni belirginleştirmektedir; bağlamsal kanıtların bir bölümü destekleyici, bir bölümü sınırlıdır."
-      : "Karar notu üretilebilir ancak bağlamsal veri kanalları sınırlı olduğu için yorumun genellenebilirliği düşüktür.";
+      : "Klinik hipotez oluşturulabilir; ancak bağlamsal veri az olduğundan sonuç tüm ortamlara genellenemez.";
   const differentialFormulation = buildDifferentialFormulation({
     globalClassificationNote: "",
     primaryClinicalHypothesis,
@@ -2503,7 +2680,7 @@ function buildClinicalEvidenceMap(params: {
     clinicalMechanism,
     mechanismLabel:
       clinicalMechanism === "evidence_limited_mixed"
-        ? "Kanıt Sınırlı / Çelişkili Klinik Ekseni"
+        ? "Bağlama Göre Değişen Klinik Örüntü"
         : clinicalMechanism === "motor_praxis"
         ? "Motor Planlama ve Beden Organizasyonu"
         : clinicalMechanism === "adaptive_daily_living"
@@ -2522,7 +2699,7 @@ function buildClinicalEvidenceMap(params: {
     mechanismSummary:
       clinicalMechanism === "default"
         ? undefined
-        : `Ana klinik tablo, ${getMechanismDescriptor({ clinicalMechanism, primaryAxis })} biçiminde izlenmektedir.`,
+        : `Klinik bulguların ortak örüntüsü, ${getMechanismDescriptor({ clinicalMechanism, primaryAxis })} olarak belirlenmiştir.`,
     secondaryAxes,
     anamnesisEvidence,
     therapistObservationEvidence,
@@ -2550,33 +2727,55 @@ function buildClinicalDecisionSection(
   profileType?: string
 ): string {
   const sourceEvidenceLines = evidenceMap.caseEvidenceLines.filter(
-    (line) => !/^(Ana klinik odak|Günlük yaşama yansıyan alanlar|Birincil klinik eksen|Birincil mekanizma|İkincil yayılım)/i.test(line)
+    (line) =>
+      !/^(Ana klinik odak|Günlük yaşama yansıyan alanlar|Birincil klinik eksen|Birincil mekanizma|İkincil yayılım)/i.test(line) &&
+      !isLimitedClinicalNarrativeLine(line)
   );
   const caseEvidenceText = sourceEvidenceLines.length
     ? sourceEvidenceLines.slice(0, 2).map((line) => `- ${line}`).join("\n")
-    : "- Vaka içi kanıt sınırlı olduğundan karar notu öncelikle skor örüntüsüyle sınırlandırılmıştır.";
+    : "- Vaka içi kanıt sınırlıdır; klinik yorum öncelikle skor örüntüsüyle sınırlandırılmıştır.";
+  const caseEvidenceHeading = sourceEvidenceLines.length ? "Kararı destekleyen bulgular:" : "Kanıt durumu:";
   const limitationText = evidenceMap.dataLimitations.length
     ? joinClinicalSentences(uniqueStrings(evidenceMap.dataLimitations).slice(0, 2))
     : "Veri sınırlılığı kararın temel yönünü değiştirecek düzeyde görünmemektedir.";
   const decisionSummary =
-    evidenceMap.primaryAxis === "Korunmuş / dengeli self-regülasyon zemini"
+    /yaygın çoklu alan/i.test(evidenceMap.primaryAxis)
+      ? "Karar özeti: Alan puanları birbirine yakın olduğu için tek bir temel alan seçilmez; güçlükler birlikte değerlendirilir."
+      : evidenceMap.primaryAxis === "Korunmuş / dengeli self-regülasyon zemini"
       ? "Karar özeti: Klinik yorum korunmuş düzenleme zemini ve bağlama duyarlı küçük değişkenliklerle sınırlıdır."
-      : `Karar özeti: Ana odak ${evidenceMap.primaryAxis}; diğer alanlar bu odağın günlük yaşamdaki yansımalarını açıklar.`;
+      : isMechanismDriven(evidenceMap)
+      ? `Karar özeti: Temel klinik örüntü, ${getMechanismDescriptor(evidenceMap)} ile açıklanmaktadır.`
+      : `Karar özeti: Temel bulgu ${evidenceMap.primaryAxis} alanındadır; diğer alanlar bu bulgunun günlük işlev üzerindeki etkisini açıklar.`;
   const formulationSummary =
-    evidenceMap.secondaryAxes.length > 0
-      ? `Formülasyon özeti: Günlük işlevde öne çıkan yansımalar ${formatDomainLabels(evidenceMap.secondaryAxes)} alanlarında belirginleşmektedir.`
+    /yaygın çoklu alan/i.test(evidenceMap.primaryAxis)
+      ? "Formülasyon özeti: Başlatma, sürdürme, geçiş, beden-duygu sinyallerini düzenlemeye katma ve toparlanma aynı işlevsel çerçevede değerlendirilir."
+      : evidenceMap.secondaryAxes.length > 0
+      ? `Formülasyon özeti: Günlük işlevde öne çıkan yansımalar ${formatDomainAreaLocation(evidenceMap.secondaryAxes)} belirginleşmektedir.`
       : "Formülasyon özeti: Bulgular tek bir yaygınlık iddiasına genişletilmeden, mevcut veri sınırları içinde yorumlanır.";
   const visibleConfidenceLabel = buildVisibleConfidenceLabel(evidenceMap);
   const visibleConfidenceRationale = buildVisibleConfidenceRationale(evidenceMap, limitationText);
+  const compiled = evidenceMap.compiledNarrative;
+  const strongestHypothesis = compiled?.decisionSentence || buildProfessorLevelDecisionSentence(evidenceMap);
+  const functionalImpact = compiled?.functionalImpactSentence || buildProfessorLevelFormulationSentence(evidenceMap, domainResults, profileType);
+  const contextContrast = compiled?.contextContrastSentence || buildReasoningCalibrationText(evidenceMap, "decision");
+  const decisionBoundary = compiled?.decisionBoundarySentence || "Bu hipotez tek başına tanı, nedensellik veya değişmez kapasite hükmü oluşturmaz.";
+  const verificationPriority = compiled?.verificationSentence || "Doğrulama için öncelik, bildirilen güçlüğün doğal görev ve farklı bağlamlarda ortak ölçütlerle izlenmesidir.";
 
   return [
+    `En güçlü klinik hipotez: ${strongestHypothesis}`,
     decisionSummary,
     formulationSummary,
+    `İşlevsel karşılık: ${functionalImpact}`,
+    `Bağlamsal ayrım: ${contextContrast}`,
     buildClinicalPriorityList(evidenceMap, domainResults, profileType),
-    "Kararı destekleyen bulgular:",
+    `Kanıt hiyerarşisi: ${buildEvidenceHierarchyText(evidenceMap)}`,
+    caseEvidenceHeading,
     caseEvidenceText,
+    `Alternatif açıklama: ${buildAlternativeExplanationText(evidenceMap)}`,
     `Veri güveni: ${visibleConfidenceLabel}. ${visibleConfidenceRationale}`,
-    "Bu karar notu kesin sonuç üretmez; anamnez, gözlem ve ek değerlendirme bulgularıyla birlikte okunması gereken klinik hipotezi özetler.",
+    `Karar sınırı: ${decisionBoundary}`,
+    `Doğrulama önceliği: ${verificationPriority}`,
+    "Bu karar notu bir tarama ve klinik akıl yürütme çıktısıdır; tek başına tanı, uzman değerlendirmesi ya da resmi klinik hüküm yerine geçmez.",
   ].join("\n");
 }
 
@@ -2595,35 +2794,54 @@ function buildClinicalDecisionSummarySection(params: {
     .filter((domain) => domain.level !== "Tipik")
     .sort((a, b) => a.score - b.score);
   const focusText =
-    nonTypical.length >= 3
-      ? formatDomainLabels(nonTypical.slice(0, 3).map((domain) => domain.label))
-      : nonTypical.length > 0
-      ? formatDomainLabels(nonTypical.map((domain) => domain.label))
+    params.evidenceMap.secondaryAxes.length > 0
+      ? formatDomainAreaSubject(params.evidenceMap.secondaryAxes)
       : "korunmuş self-regülasyon zemini";
   const globalMeaning =
     params.globalLevel === "Tipik"
-      ? "genel profil korunmuş bir düzenleme zemini göstermektedir"
+      ? "genel self-regülasyon becerileri büyük ölçüde beklenen aralıktadır"
     : params.globalLevel === "Riskli"
       ? "genel profil, günlük işlevde belirginleşebilen self-regülasyon zorlukları göstermektedir"
       : "genel profil birden fazla alana yayılan belirgin self-regülasyon zorlukları göstermektedir";
+  const isHomogeneousWidespread = /yaygın çoklu alan/i.test(params.evidenceMap.primaryAxis);
+  const isBalanced = params.evidenceMap.primaryAxis === "Korunmuş / dengeli self-regülasyon zemini";
   const opening =
-    isMechanismDriven(params.evidenceMap)
-      ? `Toplam skor ${params.totalScore}/${GLOBAL_MAX} ve genel düzey ${params.globalLevel} olarak hesaplanmıştır. Profil, "${params.profileType}" örüntüsüyle uyumludur; ${globalMeaning}. Mevcut veriler, ana klinik yorumun ${getMechanismDescriptor(params.evidenceMap)} üzerinden kurulmasını desteklemektedir.`
-      : `Toplam skor ${params.totalScore}/${GLOBAL_MAX} ve genel düzey ${params.globalLevel} olarak hesaplanmıştır. Profil, "${params.profileType}" örüntüsüyle uyumludur; ${globalMeaning}. ` +
-        `Bu nedenle klinik yorum ${params.evidenceMap.primaryAxis} alanında yoğunlaşmış; ${focusText} günlük işlevde izlenmesi gereken eşlik eden alanlar olarak ele alınmıştır.`;
+    isHomogeneousWidespread
+      ? `Toplam skor ${params.totalScore}/${GLOBAL_MAX} ve genel düzey ${params.globalLevel} olarak hesaplanmıştır. Klinik profil "${params.profileType}" olarak özetlenmiştir; ${globalMeaning}. Alan puanları birbirine yakın olduğundan klinik yorum tek bir baskın alana daraltılmamış, çoklu düzenleyici sistemler birlikte değerlendirilmiştir.`
+      : isBalanced
+      ? `Toplam skor ${params.totalScore}/${GLOBAL_MAX} ve genel düzey ${params.globalLevel} olarak hesaplanmıştır. Klinik profil "${params.profileType}" olarak özetlenmiştir; ${globalMeaning}. DNA Intelligence alan skorları genel düzenleme zemininin korunmuş olduğunu gösterirken, anamnez, gözlem veya dış testteki seçici bulgular ayrı ve bağlama duyarlı kanıt olarak değerlendirilmiştir.`
+      : isMechanismDriven(params.evidenceMap)
+      ? `Toplam skor ${params.totalScore}/${GLOBAL_MAX} ve genel düzey ${params.globalLevel} olarak hesaplanmıştır. Klinik profil "${params.profileType}" olarak özetlenmiştir; ${globalMeaning}. Mevcut verilerin ortak örüntüsü, ${getMechanismDescriptor(params.evidenceMap)} olarak değerlendirilmiştir.`
+      : nonTypical.length === 1
+      ? `Toplam skor ${params.totalScore}/${GLOBAL_MAX} ve genel düzey ${params.globalLevel} olarak hesaplanmıştır. Klinik profil "${params.profileType}" olarak özetlenmiştir; ${globalMeaning}. Tek belirgin ayrışma ${nonTypical[0].label} alanında görüldüğü için klinik yorum bu seçici alanla sınırlandırılmıştır.`
+      : `Toplam skor ${params.totalScore}/${GLOBAL_MAX} ve genel düzey ${params.globalLevel} olarak hesaplanmıştır. Klinik profil "${params.profileType}" olarak özetlenmiştir; ${globalMeaning}. ` +
+        `Klinik yorum ${params.evidenceMap.primaryAxis} alanına odaklanmıştır; ${focusText} bu bulgunun günlük yaşamdaki yansımalarını göstermektedir.`;
   const secondaryText = params.evidenceMap.secondaryAxes.length
-    ? `Bu nedenle ${formatDomainLabels(params.evidenceMap.secondaryAxes)} ana sorunun günlük yaşamdaki yansımaları olarak ele alınır.`
-    : params.evidenceMap.primaryAxis === "Korunmuş / dengeli self-regülasyon zemini"
-    ? "İkincil bir kırılgan alan belirgin biçimde ayrışmadığı için klinik yorum korunmuş işleyiş sınırında kalır."
+    ? isHomogeneousWidespread
+      ? `${formatDomainLabels(params.evidenceMap.secondaryAxes)} en düşük puan kümesini temsil eder; ancak yakın puan dağılımı nedeniyle bu alanlardan biri tek başına birincil neden olarak gösterilemez.`
+      : `${formatDomainAreaSubject(params.evidenceMap.secondaryAxes)} temel bulgunun günlük işlev üzerindeki etkisini göstermektedir.`
+    : isBalanced
+    ? "İkincil bir güçlük alanı belirgin biçimde ayrışmadığı için klinik yorum korunmuş işleyiş sınırında kalır."
+    : nonTypical.length === 1
+    ? `Diğer ${Math.max(0, params.domainResults.length - 1)} alan korunmuş görünmektedir; bu nedenle seçici bulgu yaygın bir regülasyon güçlüğü olarak genişletilmez.`
     : weakest
     ? `En düşük alan puanı ${weakest.label} alanında görünmekle birlikte ikincil eksen gereksiz biçimde genişlemez.`
     : "";
+  const compiled = params.evidenceMap.compiledNarrative;
+  const strongestHypothesis = compiled?.decisionSentence || buildProfessorLevelDecisionSentence(params.evidenceMap);
+  const functionalImpact = compiled?.functionalImpactSentence || buildProfessorLevelFormulationSentence(
+    params.evidenceMap,
+    params.domainResults,
+    params.profileType
+  );
+  const contextContrast = compiled?.contextContrastSentence || buildReasoningCalibrationText(params.evidenceMap, "decision");
 
   return [
     identityLine,
     opening,
-    buildProfessorLevelDecisionSentence(params.evidenceMap),
-    buildReasoningCalibrationText(params.evidenceMap, "decision"),
+    `En güçlü klinik hipotez: ${strongestHypothesis}`,
+    `İşlevsel karşılık: ${functionalImpact}`,
+    `Bağlamsal ayrım: ${contextContrast}`,
     secondaryText,
     knowledgeDecision,
   ]
@@ -2651,10 +2869,10 @@ function buildEvidenceProfileSummarySection(params: {
       : buildNumericalSection(params.domainResults);
   const normText =
     params.normSource === "age_band_heuristic" && params.ageBandLabel
-      ? `Yorum ${params.ageBandLabel} yaş-duyarlı norm bandı üzerinden yapılmıştır.`
-      : "Yorum sistem içi sabit eşikler üzerinden yapılmıştır.";
+      ? `Yorum, ${params.ageBandLabel} için sistem içi yaş-duyarlı yorum aralığı üzerinden yapılmıştır. Bu aralık standardize edilmiş normatif test sonucu veya tanı eşiği değildir.`
+      : "Yorum sistem içi sabit eşikler üzerinden yapılmıştır; bu eşikler standardize edilmiş normatif test sonucu veya tanı eşiği değildir.";
   return [
-    `Kanıt profili toplam ${params.totalScore}/${GLOBAL_MAX} skor, ${params.globalLevel} genel düzey ve "${params.profileType}" sınıflamasıyla özetlenmektedir.`,
+    `Kanıt profili toplam ${params.totalScore}/${GLOBAL_MAX} skor ve ${params.globalLevel} genel düzey göstermektedir. Klinik profil "${params.profileType}" olarak özetlenmiştir.`,
     normText,
     params.evidenceMap.globalClassificationNote,
     "Alan puanları:",
@@ -2668,21 +2886,11 @@ function buildClinicalPatternFormulationSection(
   domainResults?: DomainResult[],
   profileType?: string
 ): string {
-  const mechanism =
-    evidenceMap.primaryAxis === "Korunmuş / dengeli self-regülasyon zemini"
-      ? "Korunmuş self-regülasyon zemini, bağlama duyarlı küçük değişkenliklerin risk diliyle genişletilmeden ele alınmasını sağlar."
-    : evidenceMap.clinicalMechanism === "motor_praxis"
-      ? "Motor planlama ve beden organizasyonu talebi arttığında yürütücü düzenleme ve duygusal toparlanma aynı görev akışı içinde birlikte zorlanmaktadır."
-    : isMechanismDriven(evidenceMap)
-      ? `${getMechanismDescriptor(evidenceMap)} bu vakanın klinik formülasyonunu belirlemektedir.`
-      : `${evidenceMap.primaryAxis} alanındaki zorlanma, ikincil kanıtlarla birlikte çocuğun hangi koşullarda zorlandığını açıklar.`;
-
   return [
     patternText,
     buildProfessorLevelFormulationSentence(evidenceMap, domainResults, profileType, { includeExternalSupport: false }),
     buildReasoningCalibrationText(evidenceMap, "formulation"),
     evidenceMap.differentialFormulation?.text,
-    mechanism,
   ]
     .filter(Boolean)
     .join("\n");
@@ -2744,12 +2952,14 @@ export function generateDeterministicReport(input: ReportInput): DeterministicRe
   const homogeneousProfile = getHomogeneousProfile(domainResults);
   const normSource = getNormSource(input.ageMonths);
   const ageBandLabel = findAgeNormBand(input.ageMonths)?.label ?? null;
-  const profileType = detectProfileType(
-    domainResults,
-    globalLevel,
-    homogeneousProfile,
-    anamnezSignals,
-    externalTestAnalysis
+  const profileType = clarifyProfileType(
+    detectProfileType(
+      domainResults,
+      globalLevel,
+      homogeneousProfile,
+      anamnezSignals,
+      externalTestAnalysis
+    )
   );
   const patterns = analyzePatterns(domainResults, homogeneousProfile);
   let itemLevelAnalysis = analyzeItemLevelSignals({
@@ -2803,6 +3013,13 @@ export function generateDeterministicReport(input: ReportInput): DeterministicRe
     anamnezFlags,
     anamnezSignals,
     therapistInsights,
+    loadingContextTexts: [
+      getAnamnezFieldText(cleanedAnamnez, ["referral_reason", "parent_concerns_goals", "caregiver_concerns"]),
+      getAnamnezFieldText(cleanedAnamnez, ["therapist_comments", "therapist_observation", "clinical_observation"]),
+    ].filter(Boolean),
+    preservedContextTexts: [
+      getAnamnezFieldText(cleanedAnamnez, ["strengths", "preserved_areas", "protective_factors"]),
+    ].filter(Boolean),
     externalClinicalFindings: externalNarrativeLines.slice(0, 3),
     externalWarningLines,
     externalTestAnalysis,

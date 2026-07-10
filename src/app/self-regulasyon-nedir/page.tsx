@@ -154,7 +154,7 @@ export default function Page() {
 
           <p>
             DNA Intelligence Platform, self-regülasyonun farklı bileşenlerini birlikte ele
-            alan yapay zeka destekli bir klinik karar destek platformudur.
+            alan açıklanabilir, deterministik bir klinik karar destek platformudur.
             Sistem, farklı alanlardan gelen puanları yalnızca toplamaz; aynı
             zamanda bunlar arasındaki örüntüyü analiz ederek klinik açıdan anlamlı
             bir profil oluşturur.

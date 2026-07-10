@@ -38,7 +38,7 @@ export default function RetentionPolicyPage() {
         {
           title: "5. Periyodik Gözden Geçirme",
           body: [
-            "Saklama ve imha politikası ürün kapsamı, ödeme altyapısı, video gözlem modülü, AI sağlayıcıları ve mevzuat değişikliklerine göre düzenli olarak gözden geçirilir.",
+            "Saklama ve imha politikası ürün kapsamı, ödeme altyapısı, video gözlem modülü, altyapı sağlayıcıları ve mevzuat değişikliklerine göre düzenli olarak gözden geçirilir.",
             "Avukat incelemesi sonrası kesin süreler ve veri kategorisi bazlı tablo bu metne eklenecektir.",
           ],
         },

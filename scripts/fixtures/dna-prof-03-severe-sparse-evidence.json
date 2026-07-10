@@ -1,0 +1,23 @@
+{
+  "clientCode": "PROF-03-SPARSE",
+  "clientName": "Severe Sparse Evidence",
+  "ageMonths": 50,
+  "anamnez": {
+    "ad_soyad": "Ornek Danisan Uc",
+    "client_code": "PROF-03-SPARSE",
+    "age": "50 ay",
+    "diagnosis": "Genel gelisimsel izlem",
+    "referral_reason": "Genel degerlendirme istenmistir.",
+    "parent_concerns_goals": "Net bilgi verilmedi.",
+    "therapist_comments": "Kisa gorusme yapildi.",
+    "strengths": "Belirtilmedi."
+  },
+  "scores": {
+    "physiological": 19,
+    "sensory": 18,
+    "emotional": 20,
+    "cognitive": 19,
+    "executive": 18,
+    "interoception": 18
+  }
+}

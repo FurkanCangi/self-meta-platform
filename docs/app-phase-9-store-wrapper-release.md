@@ -131,7 +131,7 @@ Domain kesinlesmeden bu dosyalar eklenmemeli. Yanlis team id, SHA-256 veya packa
 6. Release signing key olusturulur ve guvenli saklanir.
 7. AAB release build alinir.
 8. Internal testing track'e yuklenir.
-9. Data safety formu klinik veri, hesap, video upload ve AI rapor isleme gerceklerine gore doldurulur.
+9. Data safety formu klinik veri, hesap, video upload ve deterministik rapor isleme gerceklerine gore doldurulur.
 
 ## Store Review Hazirligi
 

@@ -1,0 +1,24 @@
+{
+  "clientCode": "PROF-05-DISCREPANCY",
+  "clientName": "Preserved Scale External Concern",
+  "ageMonths": 62,
+  "anamnez": {
+    "ad_soyad": "Ornek Danisan Bes",
+    "client_code": "PROF-05-DISCREPANCY",
+    "age": "62 ay",
+    "diagnosis": "Sosyal iletisim ve grup katilimi izlemi",
+    "referral_reason": "Gunluk rutin ve bire bir etkilesimde genel duzenleme korunmus; akran grubunda karsilikliligi surdurme ve dolayli sosyal ipuclarini yorumlama guclugu bildirilmektedir.",
+    "parent_concerns_goals": "Akran oyununa katilim, karsilikli sohbeti surdurme ve grup kuralina esnek uyum hedeflenmektedir.",
+    "therapist_comments": "Bire bir etkilesimde iletisim baslatma ve ortak dikkat iyi; grup oyununda konu degisimi, sira takibi ve karsilikli esneklik zorlanabiliyor.",
+    "strengths": "Yapisal dil, gorsel problem cozme, oz bakim rutini ve yetiskinle is birligi korunmus.",
+    "external_clinical_findings": "Test adi: SRS-2\nPuan / sonuc: Toplam T skoru 72; sosyal iletisim ve sosyal motivasyon alanlarinda klinik yukseklik.\nKlinik yorum / resmi bulgu ozeti: Grup baglaminda sosyal karsiliklilik ve esneklik guclugu bildirilmektedir.\n\nTest adi: CCC-2\nPuan / sonuc: Genel Iletisim Bilesigi standart skoru 74; pragmatik dil alt olcekleri dusuk.\nKlinik yorum / resmi bulgu ozeti: Yapisal dilden cok dilin sosyal baglama gore kullanimi zorlanmaktadir."
+  },
+  "scores": {
+    "physiological": 42,
+    "sensory": 41,
+    "emotional": 39,
+    "cognitive": 40,
+    "executive": 39,
+    "interoception": 38
+  }
+}

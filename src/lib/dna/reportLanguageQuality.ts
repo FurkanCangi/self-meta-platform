@@ -21,7 +21,394 @@ export type ReportLanguageQualityResult = {
 
 type TextReplacement = string | ((substring: string, ...args: any[]) => string);
 
+// Serbest anamnez ve ek test metinlerinde kalan ASCII Turkce yazimlari
+// merkezi olarak duzeltir. Eslesmeler tam kelimedir; klinik metin disindaki
+// parcali ifadeleri degistirmez.
+const TURKISH_ASCII_WORD_REPLACEMENTS: Record<string, string> = {
+  adimli: "adımlı",
+  adimlar: "adımlar",
+  alici: "alıcı",
+  ayrilma: "ayrılma",
+  ayrilmasi: "ayrılması",
+  ayrilmama: "ayrılmama",
+  arttigi: "arttığı",
+  artirmak: "artırmak",
+  basamaklarinda: "basamaklarında",
+  basamaklarini: "basamaklarını",
+  baglamda: "bağlamda",
+  baglamlarda: "bağlamlarda",
+  bagli: "bağlı",
+  baslangic: "başlangıç",
+  baslangici: "başlangıcı",
+  baslangicta: "başlangıçta",
+  baslama: "başlama",
+  baslayacagini: "başlayacağını",
+  baslayabiliyor: "başlayabiliyor",
+  basliyor: "başlıyor",
+  belleigi: "belleği",
+  belleginde: "belleğinde",
+  belirginlesmektedir: "belirginleşmektedir",
+  biriktiginde: "biriktiğinde",
+  buyuk: "büyük",
+  cabuk: "çabuk",
+  calismada: "çalışmada",
+  calismayi: "çalışmayı",
+  carpiyor: "çarpıyor",
+  cekingenlik: "çekingenlik",
+  cevreye: "çevreye",
+  cumle: "cümle",
+  dagilim: "dağılım",
+  dagilimi: "dağılımı",
+  dagilmasi: "dağılması",
+  davranisini: "davranışını",
+  degerlendirme: "değerlendirme",
+  degisiklik: "değişiklik",
+  degisiklikleri: "değişiklikleri",
+  degisikligi: "değişikliği",
+  degisime: "değişime",
+  degisiyor: "değişiyor",
+  degistiginde: "değiştiğinde",
+  degistirme: "değiştirme",
+  destegiyle: "desteğiyle",
+  destegin: "desteğin",
+  destegine: "desteğine",
+  donuldugu: "dönüldüğü",
+  donebildi: "dönebildi",
+  donebilme: "dönebilme",
+  donuyor: "dönüyor",
+  donus: "dönüş",
+  dustu: "düştü",
+  dusme: "düşme",
+  dustugunde: "düştüğünde",
+  dususu: "düşüşü",
+  dusus: "düşüş",
+  dusuyor: "düşüyor",
+  duyarliilik: "duyarlılık",
+  duyarliligi: "duyarlılığı",
+  duyarliliginda: "duyarlılığında",
+  duyarlilik: "duyarlılık",
+  duzenini: "düzenini",
+  duzenlenebildi: "düzenlenebildi",
+  duzenlenebiliyor: "düzenlenebiliyor",
+  duzenlenince: "düzenlenince",
+  duzenleyici: "düzenleyici",
+  duzenliydi: "düzenliydi",
+  duzeni: "düzeni",
+  duzene: "düzene",
+  duzey: "düzey",
+  esdegeri: "eşdeğeri",
+  etkinlige: "etkinliğe",
+  etkinliginde: "etkinliğinde",
+  etkinligine: "etkinliğine",
+  frustrasyona: "engellenme karşısındaki zorlanmaya",
+  frustrasyonlar: "engellenme anları",
+  frustrasyonu: "engellenme karşısındaki zorlanmayı",
+  gelisim: "gelişim",
+  gelisimi: "gelişimi",
+  genisleme: "genişleme",
+  gerektiginde: "gerektiğinde",
+  girdiginde: "girdiğinde",
+  giris: "giriş",
+  gore: "göre",
+  goreve: "göreve",
+  gorevi: "görevi",
+  gorevleri: "görevleri",
+  goruldu: "görüldü",
+  goruluyor: "görülüyor",
+  gozleme: "gözleme",
+  gozlem: "gözlem",
+  gozlenebilir: "gözlenebilir",
+  goze: "göze",
+  guclendirmek: "güçlendirmek",
+  guclenmesi: "güçlenmesi",
+  guclugun: "güçlüğün",
+  guclukleri: "güçlükleri",
+  "hafif-yukselmis": "hafif-yükselmiş",
+  hizlandirmak: "hızlandırmak",
+  icin: "için",
+  ihtiyacini: "ihtiyacını",
+  ihtiyaclarini: "ihtiyaçlarını",
+  iliskide: "ilişkide",
+  iliskili: "ilişkili",
+  iliskin: "ilişkin",
+  iliskiye: "ilişkiye",
+  islevlerde: "işlevlerde",
+  islevsellik: "işlevsellik",
+  istenmistir: "istenmiştir",
+  katilimi: "katılımı",
+  katilma: "katılma",
+  katiliyor: "katılıyor",
+  kisalmasi: "kısalması",
+  korunmusluk: "korunmuşluk",
+  kullanim: "kullanım",
+  oral: "ağız içi",
+  ortami: "ortamı",
+  ozbakim: "öz bakım",
+  ozellikle: "özellikle",
+  pasiflesme: "pasifleşme",
+  sakinlesmek: "sakinleşmek",
+  secme: "seçme",
+  sinir: "sınır",
+  sinirda: "sınırda",
+  sinirlama: "sınırlama",
+  sinirlari: "sınırları",
+  sira: "sıra",
+  sirasi: "sırası",
+  sozel: "sözel",
+  sonlandirma: "sonlandırma",
+  sonrasi: "sonrası",
+  sonrasinda: "sonrasında",
+  sureci: "süreci",
+  surede: "sürede",
+  suregen: "süregen",
+  surekliligi: "sürekliliği",
+  sureli: "süreli",
+  surelerinin: "sürelerinin",
+  suresinde: "süresinde",
+  suresini: "süresini",
+  suresinin: "süresinin",
+  suresi: "süresi",
+  surdurmede: "sürdürmede",
+  surdurmekte: "sürdürmekte",
+  surdurebiliyor: "sürdürebiliyor",
+  surdurulebilir: "sürdürülebilir",
+  tamamlamayi: "tamamlamayı",
+  temasi: "teması",
+  tutarli: "tutarlı",
+  tutarlilik: "tutarlılık",
+  uc: "üç",
+  uzaklasma: "uzaklaşma",
+  uyaranli: "uyaranlı",
+  verildiginde: "verildiğinde",
+  yalnizca: "yalnızca",
+  yapilandirma: "yapılandırma",
+  yapilandirmasi: "yapılandırması",
+  yapilandirmaya: "yapılandırmaya",
+  yapilar: "yapılar",
+  yardimla: "yardımla",
+  yetiskine: "yetişkine",
+  yonelme: "yönelme",
+  yonergeyi: "yönergeyi",
+  yonergelerde: "yönergelerde",
+  yonetiminde: "yönetiminde",
+  yonetmek: "yönetmek",
+  yongerge: "yönerge",
+  yuklendigi: "yüklendiği",
+  yuklenme: "yüklenme",
+  yuklenmede: "yüklenmede",
+  yuksekligi: "yüksekliği",
+  yukselmeden: "yükselmeden",
+  yukselmesi: "yükselmesi",
+  yukselmis: "yükselmiş",
+  yukseliyor: "yükseliyor",
+  yukunde: "yükünde",
+  yukune: "yüküne",
+  yukunun: "yükünün",
+  yumusak: "yumuşak",
+  zamanlamasinda: "zamanlamasında",
+  zorlandigi: "zorlandığı",
+  zorlandiginda: "zorlandığında",
+  adlandirma: "adlandırma",
+  anladigini: "anladığını",
+  anlatilani: "anlatılanı",
+  ardindan: "ardından",
+  artmasi: "artması",
+  ayrisma: "ayrışma",
+  belirginlesti: "belirginleşti",
+  dustugunu: "düştüğünü",
+  erisince: "erişince",
+  gec: "geç",
+  gosterebilme: "gösterebilme",
+  goz: "göz",
+  kacirma: "kaçırma",
+  kirilgan: "kırılgan",
+  molasi: "molası",
+  oldugunda: "olduğunda",
+  oldukca: "oldukça",
+  postur: "postür",
+  rahatsizligi: "rahatsızlığı",
+  toleransinin: "toleransının",
+  uzadikca: "uzadıkça",
+  yarisi: "yarısı",
+  yararlaniyor: "yararlanıyor",
+  aciklik: "açıklık",
+  yonlerini: "yönlerini",
+  netlestirmektir: "netleştirmektir",
+  kurali: "kuralı",
+  hazirlik: "hazırlık",
+  gun: "gün",
+  cekici: "çekici",
+  acisindan: "açısından",
+  oncesi: "öncesi",
+  sirasinda: "sırasında",
+  seklinde: "şeklinde",
+  olmadiginin: "olmadığının",
+  ogretildiginde: "öğretildiğinde",
+  kisaltmak: "kısaltmak",
+  kirikligi: "kırıklığı",
+  esigi: "eşiği",
+  cekildigi: "çekildiği",
+  zamaninda: "zamanında",
+  sonlandirildiginda: "sonlandırıldığında",
+  cozme: "çözme",
+  anlarinda: "anlarında",
+  zorlanmalarin: "zorlanmaların",
+  zamanli: "zamanlı",
+  yuze: "yüze",
+  yurutuucu: "yürütücü",
+  yurutucu: "yürütücü",
+  yurutme: "yürütme",
+  yorumlanmali: "yorumlanmalı",
+  yorgunlugu: "yorgunluğu",
+  yonelim: "yönelim",
+  yogun: "yoğun",
+  yavaslama: "yavaşlama",
+  yatismayi: "yatışmayı",
+  yatismakta: "yatışmakta",
+  yarim: "yarım",
+  yapisir: "yapışır",
+  yanlis: "yanlış",
+  yakinligiyla: "yakınlığıyla",
+  tasma: "taşma",
+  tarafli: "taraflı",
+  tanimlamak: "tanımlamak",
+  tamamlamasi: "tamamlaması",
+  suruyor: "sürüyor",
+  sik: "sık",
+  seyin: "şeyin",
+  saglama: "sağlama",
+  rahatsizlik: "rahatsızlık",
+  paylasma: "paylaşma",
+  oyuncaga: "oyuncağa",
+  oruntusunde: "örüntüsünde",
+  onceden: "önceden",
+  olmasi: "olması",
+  oldugu: "olduğu",
+  ogreniyor: "öğreniyor",
+  netlestirilmesi: "netleştirilmesi",
+  merakli: "meraklı",
+  kucuk: "küçük",
+  kolaylastiriyor: "kolaylaştırıyor",
+  kesildigi: "kesildiği",
+  kazanmasi: "kazanması",
+  kazaniyor: "kazanıyor",
+  kaydirma: "kaydırma",
+  kaybi: "kaybı",
+  karsisinda: "karşısında",
+  karsilikliligi: "karşılıklılığı",
+  kalktiginda: "kalktığında",
+  kacma: "kaçma",
+  istikrarli: "istikrarlı",
+  istedigi: "istediği",
+  isaretleri: "işaretleri",
+  iletisimde: "iletişimde",
+  icindeki: "içindeki",
+  hatti: "hattı",
+  hatirlatmayla: "hatırlatmayla",
+  hatirlatmasi: "hatırlatması",
+  haritasi: "haritası",
+  gunlerinde: "günlerinde",
+  gosteriyor: "gösteriyor",
+  gosterebiliyor: "gösterebiliyor",
+  gercek: "gerçek",
+  etrafinda: "etrafında",
+  eslestirme: "eşleştirme",
+  edilmediginde: "edilmediğinde",
+  duzelmesi: "düzelmesi",
+  durtusellikte: "dürtüsellikte",
+  durtu: "dürtü",
+  dinlenmis: "dinlenmiş",
+  dayanikliligin: "dayanıklılığının",
+  cokuslerini: "çöküşlerini",
+  cizelge: "çizelge",
+  cesitliligi: "çeşitliliği",
+  cekiyor: "çekiyor",
+  cekilmenin: "çekilmenin",
+  birakma: "bırakma",
+  baskin: "baskın",
+  basinda: "başında",
+  bag: "bağ",
+  azaltilmak: "azaltılmak",
+  ayirt: "ayırt",
+  asil: "asıl",
+  arayis: "arayış",
+  arasinda: "arasında",
+  aliyor: "alıyor",
+  alindiginda: "alındığında",
+  algisiyla: "algısıyla",
+  zorlanmanin: "zorlanmanın",
+  zorlaniyor: "zorlanıyor",
+  yonelimi: "yönelimi",
+  yogunlugu: "yoğunluğu",
+  yapisal: "yapısal",
+  yansidigini: "yansıdığını",
+  tekrarli: "tekrarlı",
+  sozsuz: "sözsüz",
+  sekillerini: "şekillerini",
+  oruntusunu: "örüntüsünü",
+  olusturma: "oluşturma",
+  ogrenilmis: "öğrenilmiş",
+  nasil: "nasıl",
+  kuralina: "kuralına",
+  kolaylasiyor: "kolaylaşıyor",
+  kirikligina: "kırıklığına",
+  kaciriyor: "kaçırıyor",
+  icine: "içine",
+  geldikce: "geldikçe",
+  eslesme: "eşleşme",
+  degisimi: "değişimi",
+  coklu: "çoklu",
+  cevabi: "cevabı",
+  basina: "başına",
+  artinca: "artınca",
+  anlatiminda: "anlatımında",
+  toparlanmasi: "toparlanması",
+  acikma: "acıkma",
+  anlarini: "anlarını",
+  derinlesebilme: "derinleşebilme",
+  gunler: "günler",
+  pekistirece: "pekiştirece",
+  toleransi: "toleransı",
+  toparlamasi: "toparlaması",
+  yuz: "yüz",
+  zorlanmande: "zorlanmada",
+  sosyallesme: "sosyalleşme",
+  alti: "altı",
+  degiskenlik: "değişkenlik",
+  degisken: "değişken",
+  aralik: "aralık",
+  yakin: "yakın",
+  "oz-bakim": "öz bakım",
+  zamanlanmasinda: "zamanlanmasında",
+  saptanmadi: "saptanmadı",
+  olceklerinde: "ölçeklerinde",
+  kayit: "kayıt",
+  kacinma: "kaçınma",
+  ici: "içi",
+  duzeyinde: "düzeyinde",
+  duygulanima: "duygulanıma",
+  ayri: "ayrı",
+  arayisi: "arayışı",
+  alani: "alanı",
+  yaratiyor: "yaratıyor",
+  oruntu: "örüntü",
+  olcude: "ölçüde",
+  gurultude: "gürültüde",
+  cevresel: "çevresel",
+  bagimsizlikta: "bağımsızlıkta",
+  "oz-denetim": "öz denetim",
+  bandinda: "bandında",
+};
+
+const TURKISH_ASCII_WORD_PATTERN_SOURCE = `(?<![\\p{L}\\p{N}_])(?:${Object.keys(TURKISH_ASCII_WORD_REPLACEMENTS)
+  .sort((a, b) => b.length - a.length)
+  .map((word) => word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+  .join("|")})(?![\\p{L}\\p{N}_])`;
+const TURKISH_ASCII_WORD_REPLACEMENT_PATTERN = new RegExp(TURKISH_ASCII_WORD_PATTERN_SOURCE, "giu");
+const TURKISH_ASCII_WORD_DETECTION_PATTERN = new RegExp(TURKISH_ASCII_WORD_PATTERN_SOURCE, "iu");
+
 const TURKISH_ASCII_REPLACEMENTS: Array<[RegExp, TextReplacement]> = [
+  [/\bIlk\b/g, "İlk"],
   [/\bTanilanmis bozukluk bildirilmiyor\b/gi, "Klinik izlem ve işlevsel değerlendirme"],
   [/\btanilanmis bozukluk bildirilmiyor\b/gi, "klinik izlem ve işlevsel değerlendirme"],
   [/\bTanilanmis gelisimsel bozukluk bildirilmedi\b/gi, "Klinik izlem ve işlevsel değerlendirme"],
@@ -62,6 +449,59 @@ const TURKISH_ASCII_REPLACEMENTS: Array<[RegExp, TextReplacement]> = [
   [/\bgorusme\b/gi, "görüşme"],
   [/\bgorev\b/gi, "görev"],
   [/\bgorev\b/gi, "görev"],
+  [/\bDanisan\b/g, "Danışan"],
+  [/\bdanisan\b/gi, "danışan"],
+  [/\bDort\b/g, "Dört"],
+  [/\bUc\b/g, "Üç"],
+  [/\bIki\b/g, "İki"],
+  [/\biki\b/g, "iki"],
+  [/\barasi\b/gi, "arası"],
+  [/\bfarki\b/gi, "farkı"],
+  [/\bsirayi\b/gi, "sırayı"],
+  [/\bsirada\b/gi, "sırada"],
+  [/\byardimi\b/gi, "yardımı"],
+  [/\bongorulebilir\b/gi, "öngörülebilir"],
+  [/\bBilesik\b/g, "Bileşik"],
+  [/\bbilesik\b/g, "bileşik"],
+  [/\byapildi\b/gi, "yapıldı"],
+  [/\bcesitli\b/gi, "çeşitli"],
+  [/\bistegi\b/gi, "isteği"],
+  [/\byetiskinle\b/gi, "yetişkinle"],
+  [/\bazaldiginda\b/gi, "azaldığında"],
+  [/\bsiralama\b/gi, "sıralama"],
+  [/\byapabildigi\b/gi, "yapabildiği"],
+  [/\bbagimsiz\b/gi, "bağımsız"],
+  [/\banlamli\b/gi, "anlamlı"],
+  [/\bbaglama\b/gi, "bağlama"],
+  [/\bduzelme\b/gi, "düzelme"],
+  [/\bduzeyi\b/gi, "düzeyi"],
+  [/\bbilesigi\b/gi, "bileşiği"],
+  [/\bolcekleri\b/gi, "ölçekleri"],
+  [/\bolcegi\b/gi, "ölçeği"],
+  [/\bparcasi\b/gi, "parçası"],
+  [/\bisleme\b/gi, "işleme"],
+  [/\bifade\b/gi, "ifade"],
+  [/\bcanta\b/gi, "çanta"],
+  [/\bhazirlama\b/gi, "hazırlama"],
+  [/\bbaslatmada\b/gi, "başlatmada"],
+  [/\bdis\b/gi, "dış"],
+  [/\bhatirlatici\b/gi, "hatırlatıcı"],
+  [/\bazalmasi\b/gi, "azalması"],
+  [/\bGorsel\b/g, "Görsel"],
+  [/\bgorsel\b/gi, "görsel"],
+  [/\badimlari\b/gi, "adımları"],
+  [/\bayirma\b/gi, "ayırma"],
+  [/\btoparliyor\b/gi, "toparlıyor"],
+  [/\byonergede\b/gi, "yönergede"],
+  [/\byuku\b/gi, "yükü"],
+  [/\bbaskili\b/gi, "baskılı"],
+  [/\bgorevden\b/gi, "görevden"],
+  [/\bperformansi\b/gi, "performansı"],
+  [/\bdegerlendirmede\b/gi, "değerlendirmede"],
+  [/\bgecisli\b/gi, "geçişli"],
+  [/\bduydugu\b/gi, "duyduğu"],
+  [/\banlik\b/gi, "anlık"],
+  [/\bbicimde\b/gi, "biçimde"],
   [/\bgozleminde\b/gi, "gözleminde"],
   [/\bsure\b/gi, "süre"],
   [/\buzamasi\b/gi, "uzaması"],
@@ -283,15 +723,15 @@ const TURKISH_ASCII_REPLACEMENTS: Array<[RegExp, TextReplacement]> = [
 const INTERNAL_INSTRUCTION_REPLACEMENTS: Array<[RegExp, string]> = [
   [
     /Yürütücü işlev dili, davranış organizasyonunun görev akışı içinde nasıl çözüldüğünü göstermeli; sorunu yalnız uyumsuzluk veya itaat eksikliği gibi sunmamalıdır\./g,
-    "Yürütücü işlev yükü, davranış organizasyonunun görev akışı içinde nasıl zorlandığını görünür kılar; bu durum uyumsuzluk ya da itaat eksikliği gibi dar bir çerçeveye indirgenmemelidir.",
+    "Yürütücü işlev güçlüğü, davranış organizasyonunun görev akışı içinde nerede zorlandığını görünür kılar. Bu bulgu görev düzenleme becerileri üzerinden değerlendirilir.",
   ],
   [
     /İnterosepsiyon öne çıktığında rapor, iç beden sinyallerinin günlük öz bakım ve toparlanma akışına nasıl katılamadığını anlatmalı; tek başına medikal açıklama üretmemelidir\./g,
-    "İnteroseptif yük, iç beden sinyallerinin günlük öz bakım ve toparlanma akışına zamanında katılamaması üzerinden klinik anlam kazanır; tek başına medikal açıklama olarak yorumlanmamalıdır.",
+    "İnteroseptif güçlük, iç beden sinyallerinin günlük öz bakım ve toparlanma akışına zamanında katılamaması üzerinden klinik anlam kazanır.",
   ],
   [
     /Fizyolojik regülasyon öne çıktığında rapor, bedensel toparlanma zemininin günlük akışta ne zaman kırılganlaştığını anlatmalı; tıbbi nedensellik veya otonom bozukluk dili kurmamalıdır\./g,
-    "Fizyolojik regülasyon yükü, bedensel toparlanma zemininin günlük akışta hangi koşullarda kırılganlaştığını açıklar; tıbbi nedensellik ya da otonom bozukluk hükmü olarak kullanılmamalıdır.",
+    "Fizyolojik regülasyon güçlüğü, bedensel toparlanmanın günlük akışta hangi koşullarda zorlandığını açıklar. Bu bulgu tıbbi bir neden veya otonom işlev bozukluğu göstermez.",
   ],
   [
     /Duyusal regülasyon öne çıktığında rapor, çevresel uyaran yükünün işlevsel performansı nasıl dalgalandırdığını açıklamalı; sorunu yalnız davranış etiketiyle tanımlamamalıdır\./g,
@@ -303,7 +743,7 @@ const INTERNAL_INSTRUCTION_REPLACEMENTS: Array<[RegExp, string]> = [
   ],
   [
     /Bilişsel regülasyon öne çıktığında rapor, sözel talep veya eşzamanlı görev yükü altında zihinsel organizasyonun nasıl zorlandığını anlatmalı; genel zeka veya öğrenme kapasitesi hükmüne gitmemelidir\./g,
-    "Bilişsel regülasyon yükü, sözel talep veya eşzamanlı görev arttığında zihinsel organizasyonun nasıl zorlandığını açıklar; genel zeka ya da öğrenme kapasitesi hükmü değildir.",
+    "Sözel talep veya eşzamanlı görev arttığında zihinsel organizasyon zorlanabilir. Bu bulgu tek başına genel zekâ veya öğrenme kapasitesi hakkında sonuç vermez.",
   ],
 ];
 
@@ -313,16 +753,40 @@ const FORBIDDEN_LANGUAGE_PATTERNS: Array<{ code: string; severity: ReportLanguag
   { code: "pathology_language", severity: "high", pattern: /\bpatolojik\b/i, message: "Patoloji dili final raporda görünmemeli." },
   { code: "raw_diagnosis_placeholder", severity: "high", pattern: /tan[ıi]lanm[ıi]s bozukluk bildirilmiyor/i, message: "Tanı placeholder metni final rapora taşınmış." },
   { code: "treatment_focused_vocabulary", severity: "high", pattern: /\b(?:tedavi|müdahale|terapi|seans|ilaç|danışmanlık|destek planı|uygulama yönergesi)\b/i, message: "Tedavi/terapi odaklı kelime final raporda görünmemeli." },
-  { code: "directive_modal_language", severity: "high", pattern: /\b(?:yapılmalıdır|uygulanmalıdır|başlanmalıdır|baslanmalidir|gerekir)\b/i, message: "Direktif uygulama dili final raporda görünmemeli." },
-  { code: "practice_plan_language", severity: "high", pattern: /\b(?:program|protokol|egzersiz listesi|ödev|odev|seans akışı|seans akisi)\b/i, message: "Uygulama planı çağrıştıran dil final raporda görünmemeli." },
+  { code: "directive_modal_language", severity: "high", pattern: /\b(?:yapılmalıdır|uygulanmalıdır|başlanmalıdır|baslanmalidir|kullanılmalıdır|kullanılmamalıdır|edilmemeli|gerekir)\b/i, message: "Direktif uygulama dili final raporda görünmemeli." },
+  { code: "practice_plan_language", severity: "high", pattern: /\b(?:program|protokol|egzersiz listesi|seans akışı|seans akisi)\b/i, message: "Uygulama planı çağrıştıran dil final raporda görünmemeli." },
   { code: "diagnostic_semantic_language", severity: "high", pattern: /\b(?:tanı ile uyumlu|tani ile uyumlu|belirtisidir|semptom|bozukluk|patoloji)\b/i, message: "Tanısal çağrışım yapan dil final raporda görünmemeli." },
   { code: "legacy_watch_range", severity: "medium", pattern: /watch range/i, message: "İngilizce watch range ifadesi görünmemeli." },
   { code: "awkward_clinical_reading", severity: "medium", pattern: /klinik okuma|klinik açıdan en güçlü okuma/i, message: "Mekanik klinik okuma kalıbı görünüyor." },
   { code: "visible_debug_metric", severity: "high", pattern: /\b(?:Runtime RAG|Deterministic Knowledge Base|LLM:\s*%0)\b/i, message: "Teknik/debug metrikleri görünür raporda yer almamalı." },
   { code: "system_label_leak", severity: "high", pattern: /\b(?:Klinik karar cümlesi|Bağlam notu|Kanıt entegrasyonu|Kalibrasyon|Ayırıcı sınır|İkincil izlem alanları|Birincil mekanizma|İkincil yayılım)\s*:/i, message: "Sistem etiketi kokan kalıp görünür rapora sızmış." },
+  { code: "awkward_profile_label", severity: "high", pattern: /Klinik profil\s+"[^"]*(?:Kırılganlık|Kanıt-Sınırlı)[^"]*"/i, message: "Profil adı doğal olmayan kırılganlık veya kanıt-sınırlı etiketi içeriyor." },
+  { code: "singular_domain_plural", severity: "high", pattern: /(?<!ve )(?<!, )(?:Fizyolojik Regülasyon|Duyusal Regülasyon|Duygusal Regülasyon|Bilişsel Regülasyon|Yürütücü İşlev|İnterosepsiyon) alanlar(?:ı|ında)\b/i, message: "Tek bir alan adı çoğul ekle kullanılmış." },
+  { code: "system_decision_wording", severity: "high", pattern: /karar notu toplam skor görünümü|alan bazlı kırılganlığı birlikte okur/i, message: "Kullanıcıya dönük raporda sistem dili kalmış." },
+  { code: "functional_friction", severity: "high", pattern: /işlevsel sürtünme/i, message: "İşlevsel sürtünme ifadesi doğal klinik Türkçe değil." },
+  { code: "internal_english_term", severity: "high", pattern: /\b(?:emotional|cognitive|executive) yayılım|motor\/praxis|scaled score\b/i, message: "İç sistemde kullanılan İngilizce terim görünür rapora sızmış." },
+  { code: "lowercase_sentence_start", severity: "high", pattern: /\.\s+(?:sözel|yardım|ilişki|görsel|duyusal|bilişsel|yürütücü|öz bakım)\b/, message: "Noktadan sonra cümle küçük harfle başlıyor." },
+  { code: "self_regulation_problem", severity: "high", pattern: /self-regülasyon problemi/i, message: "Self-regülasyon problemi yerine daha açık güçlük dili kullanılmalı." },
+  { code: "broken_turkish_suffix", severity: "high", pattern: /güçlüğünin|güçlüğündan|güçlüğünı\b/i, message: "Klinik metinde bozuk Türkçe çekim eki bulundu." },
+  { code: "visible_meta_instruction", severity: "high", pattern: /güvence gibi yazılmamalıdır|tek bir yüzeysel açıklama|risk iddiasını genişletmek|öncelikli karar ekseni/i, message: "Klinik raporda sistem talimatı veya denetim dili kalmış." },
+  { code: "functional_impact_repetition", severity: "high", pattern: /gösterebilme performansıdır/i, message: "İşlevsel karşılık cümlesinde anlam tekrarı var." },
+  { code: "legacy_global_label", severity: "high", pattern: /\bGlobal sınıflama\b/i, message: "Görünür raporda genel sınıflama yerine eski teknik etiket kullanılmış." },
+  { code: "abstract_primary_problem", severity: "high", pattern: /ana sorunun günlük işlevdeki görünümü/i, message: "Ana sorun ifadesi yerine temel klinik güçlük açıkça yazılmalı." },
+  { code: "limited_observation_as_evidence", severity: "high", pattern: /Kararı destekleyen bulgular:\s*\n-\s*Terapist gözlemi:\s*kısa görüşme/i, message: "Sınırlı gözlem destekleyici kanıt gibi sunulmuş." },
+  { code: "external_evidence_sentence_fragment", severity: "high", pattern: /bulgularının yorum içine alınması\./i, message: "Dış test kanıtı yüklemsiz bir cümle olarak yazılmış." },
+  { code: "exploratory_jargon", severity: "high", pattern: /exploratuvar/i, message: "Gelişimsel temkin yerine anlaşılması güç exploratuvar terimi kullanılmış." },
+  { code: "broken_selective_word", severity: "high", pattern: /seçiçi/i, message: "Seçici kelimesi hatalı yazılmış." },
+  { code: "mechanism_grammar_error", severity: "high", pattern: /yansıması göstermektedir/i, message: "Klinik mekanizma cümlesinde dilbilgisi hatası var." },
+  { code: "visible_negative_instruction", severity: "high", pattern: /\b(?:kullanılmamalıdır|yorumlanmamalıdır|indirgenmemelidir)\b/i, message: "Final raporda kullanıcıya dönük bulgu yerine yazım talimatı kalmış." },
+  { code: "legacy_primary_axis_wording", severity: "high", pattern: /ana eksen üzerinden tutulur/i, message: "Ana eksen ifadesi yerine temel klinik odak açıkça yazılmalı." },
+  { code: "abstract_regulation_load", severity: "high", pattern: /düzenleme yükü olarak okunur/i, message: "Düzenleme yükü olarak okunur ifadesi gereksiz derecede soyut." },
+  { code: "uppercase_after_anamnesis_lead", severity: "high", pattern: /Anamnezde\s+(?:Sözel|Görsel|Duyusal|Bilişsel|Yürütücü|Çevresel|Dokunsal|Geçiş|Sosyal|Öz)(?![\p{L}\p{N}_])/u, message: "Anamnez girişinden sonra cümle gereksiz büyük harfle devam ediyor." },
+  { code: "abstract_regulatory_load", severity: "high", pattern: /\b(?:yürütücü|düzenleyici) yük(?:ün)?\b/i, message: "Yük ifadesi yerine somut self-regülasyon güçlüğü yazılmalı." },
+  { code: "age_mismatch_instruction_language", severity: "high", pattern: /ana klinik karar mekanizmasına dahil edilmemeli/i, message: "Yaş uyumsuz test sınırı, kullanıcıya dönük klinik cümleyle yazılmalı." },
 ];
 
 const ASCII_TURKISH_PATTERNS = [
+  TURKISH_ASCII_WORD_DETECTION_PATTERN,
   /\bgunluk\b/i,
   /\byasam\b/i,
   /\bgecis/i,
@@ -334,16 +798,50 @@ const ASCII_TURKISH_PATTERNS = [
   /\byetiskin\b/i,
   /\bIletisim\b/,
   /\bdusuk/i,
+  /\bcesitli\b/i,
+  /\bistegi\b/i,
+  /\byetiskinle\b/i,
+  /\bazaldiginda\b/i,
+  /\bsiralama\b/i,
+  /\byapabildigi\b/i,
+  /\bbagimsiz\b/i,
+  /\banlamli\b/i,
+  /\bbaglama\b/i,
+  /\bIki\b/,
+  /\bUc\b/,
+  /\barasi\b/i,
+  /\bfarki\b/i,
+  /\bsirayi\b/i,
+  /\bsirada\b/i,
+  /\byardimi\b/i,
+  /\bongorulebilir\b/i,
+  /\bbilesik\b/i,
+  /\byapildi\b/i,
 ];
 
 function applyReplacements(text: string, replacements: Array<[RegExp, TextReplacement]>) {
   return replacements.reduce((current, [pattern, replacement]) => current.replace(pattern, replacement as any), text);
 }
 
+function preserveReplacementCase(match: string, replacement: string): string {
+  if (match === match.toLocaleUpperCase("tr-TR")) return replacement.toLocaleUpperCase("tr-TR");
+  if (/^[A-Z]/.test(match)) {
+    return `${replacement.charAt(0).toLocaleUpperCase("tr-TR")}${replacement.slice(1)}`;
+  }
+  return replacement;
+}
+
+function replaceTurkishAsciiWords(text: string): string {
+  return text.replace(TURKISH_ASCII_WORD_REPLACEMENT_PATTERN, (match) => {
+    const replacement = TURKISH_ASCII_WORD_REPLACEMENTS[match.toLocaleLowerCase("tr-TR")];
+    return replacement ? preserveReplacementCase(match, replacement) : match;
+  });
+}
+
 export function normalizeTurkishClinicalText(text: unknown): string {
   const value = String(text || "");
   if (!value) return "";
-  return applyReplacements(value, TURKISH_ASCII_REPLACEMENTS)
+  return replaceTurkishAsciiWords(applyReplacements(value, TURKISH_ASCII_REPLACEMENTS))
     .replace(/[ \t]{2,}/g, " ")
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n[ \t]+/g, "\n")
@@ -377,7 +875,7 @@ function replaceInternalMechanismIds(text: string): string {
     .replace(/\badaptive_daily_living\b/g, "günlük yaşam ve öz bakım")
     .replace(/\bmotor_praxis\b/g, "motor planlama ve praksi")
     .replace(/\bphysiological_interoceptive\b/g, "beden-temelli toparlanma ve interoseptif düzenleme")
-    .replace(/\bevidence_limited_mixed\b/g, "kanıt-sınırlı karma profil")
+    .replace(/\bevidence_limited_mixed\b/g, "kanıtı sınırlı, bağlama duyarlı profil")
     .replace(/\bexecutive_behavior\b/g, "yürütücü davranış düzenleme")
     .replace(/\bsensory_processing\b/g, "duyusal işlemleme")
     .replace(/\bdevelopment_general\b/g, "genel gelişim")
@@ -455,8 +953,6 @@ function removeTreatmentFocusedVocabulary(text: string): string {
     .replace(/\bprogram\b/gi, "klinik yapı")
     .replace(/\bprotokol\b/gi, "vaka dışı yapı")
     .replace(/\begzersiz listesi\b/gi, "vaka dışı liste")
-    .replace(/\bödev\b/gi, "vaka dışı görev")
-    .replace(/\bodev\b/gi, "vaka dışı görev")
     .replace(/\bseans akışı\b/gi, "oturum akışı")
     .replace(/\bseans akisi\b/gi, "oturum akışı")
     .replace(/\btanı ile uyumlu\b/gi, "tanısal sonuç olarak kullanılmaz")
@@ -502,8 +998,6 @@ function removeTreatmentFocusedVocabulary(text: string): string {
     .replace(/\bprogram\b/gi, "klinik yapı")
     .replace(/\bprotokol\b/gi, "vaka dışı yapı")
     .replace(/\begzersiz listesi\b/gi, "vaka dışı liste")
-    .replace(/\bödev\b/gi, "vaka dışı görev")
-    .replace(/\bodev\b/gi, "vaka dışı görev")
     .replace(/\bseans akışı\b/gi, "oturum akışı")
     .replace(/\bseans akisi\b/gi, "oturum akışı")
     .replace(/\bbozukluk\b/gi, "klinik zorlanma")
@@ -519,6 +1013,12 @@ function removeTreatmentFocusedVocabulary(text: string): string {
     .replace(/\buygulama yönergesi\b/gi, "vaka dışı yönlendirme");
 }
 
+function capitalizeSentenceStarts(text: string): string {
+  return text.replace(/(^|[.!?]\s+)(?!https?:\/\/)([a-zçğıöşü])/g, (_match, prefix: string, initial: string) =>
+    `${prefix}${initial.toLocaleUpperCase("tr-TR")}`
+  );
+}
+
 export function sanitizeFinalReportLanguage(text: string): string {
   let sanitized = String(text || "");
   sanitized = applyReplacements(sanitized, INTERNAL_INSTRUCTION_REPLACEMENTS);
@@ -532,6 +1032,36 @@ export function sanitizeFinalReportLanguage(text: string): string {
     .replace(/\böz-düzenlemenin\b/gi, "self-regülasyonun")
     .replace(/\böz-düzenlemeyi\b/gi, "self-regülasyonu")
     .replace(/\böz-düzenleme\b/gi, "self-regülasyon")
+    .replace(/kanıt-sınırlı/gi, "kanıtı sınırlı")
+    .replace(/\bscaled score\b/gi, "ölçek puanı")
+    .replace(/\bemotional yayılım\b/gi, "duygusal yansımalar")
+    .replace(/\bcognitive\/executive yayılım\b/gi, "bilişsel ve yürütücü yansımalar")
+    .replace(/\bexecutive\/cognitive yayılım\b/gi, "yürütücü ve bilişsel yansımalar")
+    .replace(/\bmotor\/praxis\b/gi, "motor planlama ve praksi")
+    .replace(/self-regülasyon probleminin/gi, "self-regülasyon güçlüğünün")
+    .replace(/self-regülasyon problemine/gi, "self-regülasyon güçlüğüne")
+    .replace(/self-regülasyon problemleri/gi, "self-regülasyon güçlükleri")
+    .replace(/self-regülasyon problemini/gi, "self-regülasyon güçlüğünü")
+    .replace(/self-regülasyon problemi/gi, "self-regülasyon güçlüğü")
+    .replace(/self-regülasyon güçlüğünin/gi, "self-regülasyon güçlüğünün")
+    .replace(/regülasyon kırılganlığının/gi, "regülasyon güçlüğünün")
+    .replace(/self-regülasyon kırılganlığından/gi, "self-regülasyon güçlüğünden")
+    .replace(/alan bazlı kırılganlığı/gi, "alanlar arasındaki güçlük dağılımını")
+    .replace(/kırılganlıkların/gi, "güçlüklerin")
+    .replace(/kırılganlığın/gi, "güçlüğün")
+    .replace(/kırılganlığı/gi, "güçlüğü")
+    .replace(/kırılganlık/gi, "güçlük")
+    .replace(/kırılganlaştığını/gi, "zorlandığını")
+    .replace(/kırılganlaşabileceğini/gi, "zorlanabileceğini")
+    .replace(/kırılganlaşabilir/gi, "zorlanabilir")
+    .replace(/işlevsel sürtünme/gi, "işlevsel zorlanma")
+    .replace(/\bGlobal sınıflama\b/gi, "Genel sınıflama")
+    .replace(/güvence gibi yazılmamalıdır/gi, "diğer alanlardaki zorlanmaları dışlamaz")
+    .replace(/ana sorunun günlük işlevdeki görünümünü/gi, "temel güçlüğün günlük işlevdeki görünümünü")
+    .replace(/Yorum tek bir yüzeysel açıklamaya indirgenmeden bağlamsal kanıtla sınırlı tutulur\./gi, "Klinik yorum tek bir nedene indirgenmez; skorlar, anamnez, gözlem ve dış test bilgileri birlikte değerlendirilir.")
+    .replace(/Korunmuş ya da çelişkili bulgular risk iddiasını genişletmek için değil, kararın sınırını belirlemek için kullanılmıştır\./gi, "Korunmuş veya çelişkili bulgular, klinik yorumun hangi görev ve koşullarda geçerli olduğunu belirler.")
+    .replace(/mevcut veriler öncelikli karar ekseni, görev sürdürme ve toparlanma süreçlerinin birlikte okunması gerektiğini gösterir/gi, "mevcut veriler temel klinik güçlük ile görev sürdürme ve toparlanma süreçlerinin birlikte değerlendirilmesi gerektiğini gösterir")
+    .replace(/gösterebilme performansıdır/gi, "gösterebilme becerilerini kapsar")
     .replace(/Klinik karar cümlesi:\s*/gi, "")
     .replace(/Klinik formülasyon:\s*/gi, "")
     .replace(/Bağlam notu:\s*bire bir ve düşük uyaranlı yapı risk yorumunu sınırlayan korunmuş kapasite bilgisi sağlar\./gi, "Yapılandırılmış bire bir ortamda daha iyi organize olması, güçlüğün her bağlamda aynı şiddette görünmediğini düşündürür.")
@@ -540,7 +1070,7 @@ export function sanitizeFinalReportLanguage(text: string): string {
     .replace(/Kalibrasyon:\s*/gi, "Yorumu temkinli tutan bilgi: ")
     .replace(/Yorumu temkinli tutan bilgi:/gi, "Dengeleyici bilgi:")
     .replace(/Ayırıcı sınır:\s*/gi, "Klinik yorum sınırı: ")
-    .replace(/İkincil izlem alanları\s+([^.\n]+?)\s+olarak ayrışmaktadır\./gi, "Bu nedenle $1 ana sorunun günlük yaşamdaki yansımaları olarak ele alınır.")
+    .replace(/İkincil izlem alanları\s+([^.\n]+?)\s+olarak ayrışmaktadır\./gi, "$1 aynı işlevsel güçlük kümesi içinde değerlendirilir.")
     .replace(/Klinik öncelik sırası:/gi, "Öncelik sırası:")
     .replace(/Vaka içi karar kanıtları:/gi, "Bu sonuca nasıl ulaşıldı:")
     .replace(/Birincil mekanizma\s+([^.\n]+?)\s+hattında toplanmaktadır\./gi, "Ana klinik odak $1 hattında belirginleşmektedir.")
@@ -558,6 +1088,17 @@ export function sanitizeFinalReportLanguage(text: string): string {
     .replace(/Tek başına tanı veya klinik karar üretmez/gi, "Klinik yorum yalnız bu bilgiden çıkarılmaz")
     .replace(/tek başına praksi tanısı veya klinik karar üretmez/gi, "klinik yorum yalnız bu bilgiden çıkarılmaz")
     .replace(/Terapist gözleminde\s+Motor/gi, "Terapist gözleminde motor")
+    .replace(/\bodev\b/gi, "ödev")
+    .replace(/frustrasyon toleransını/gi, "engellenmeye dayanma kapasitesini")
+    .replace(/frustrasyon toleransının/gi, "engellenmeye dayanma kapasitesinin")
+    .replace(/frustrasyon toleransı/gi, "engellenmeye dayanma kapasitesi")
+    .replace(/frustrasyon artıyor/gi, "engellenme karşısındaki zorlanma artıyor")
+    .replace(/\bfrustrasyon\b/gi, "engellenme karşısındaki zorlanma")
+    .replace(/engellenme karşısındaki zorlanma sonrasında/gi, "engellendiği durumların ardından")
+    .replace(/engellenme karşısındaki zorlanma toleransının/gi, "engellenmeye dayanma kapasitesinin")
+    .replace(/([^\.\n]+?) ile elde edilen ([^.\n]+?) bulgularının yorum içine alınması\./gi, "$1 ile elde edilen $2 bulguları klinik yoruma dahil edilmiştir.")
+    .replace(/\bpercentil\b/gi, "persentil")
+    .replace(/bu yaş grubunda profil daha exploratuvar yorumlanmalı/gi, "bu yaş grubunda profil gelişimsel değişkenlik göz önünde tutularak temkinli yorumlanmalıdır")
     .replace(/model ile gösterdiğin etkinliği tekrar etmeye açık/gi, "modelle gösterilen etkinliği tekrar etmeye açık")
     .replace(/başardığı rutin oyunda devam ediyor/gi, "başardığı rutin oyunda devam edebiliyor")
     .replace(/görevde kalış, dikkat ve davranışsal düzenleme de bozuluyor/gi, "görevde kalma, dikkat ve davranışsal düzenleme de zayıflayabiliyor")
@@ -583,11 +1124,25 @@ export function sanitizeFinalReportLanguage(text: string): string {
     .replace(/duyusal modülasyon belirtileri/gi, "duyusal regülasyon sorunları")
     .replace(/duyusal modülasyon/gi, "duyusal regülasyon")
     .replace(/duyusal modulasyon/gi, "duyusal regülasyon")
-    .replace(/\bRegülasyon Yükü\b/g, "Self-Regülasyon Problemi")
+    .replace(/\bRegülasyon Yükü\b/g, "Regülasyon Güçlüğü")
     .replace(/zorluğunün/gi, "zorluğunun")
     .replace(/zorluklarınün/gi, "zorluklarının")
     .replace(/talebinün/gi, "talebinin")
     .replace(/Anamnezdeki bağlamsal yük/gi, "Anamnezdeki bağlamsal bilgi")
+    .replace(/Anamnezde\s+(Sözel|Görsel|Duyusal|Bilişsel|Yürütücü|Çevresel|Dokunsal|Geçiş|Sosyal|Öz)(?![\p{L}\p{N}_])/gu, (_match, word: string) => `Anamnezde ${word.toLocaleLowerCase("tr-TR")}`)
+    .replace(/Aileden gelen bilgiye göre\s+bakımveren,?\s*/gi, "Aileden gelen bilgiye göre ")
+    .replace(/bakımveren eş-regülasyonu/gi, "aileden gelen düzenleyici destek")
+    .replace(/Bakımveren veya terapist/gi, "Aile veya terapist")
+    .replace(/Anamnez skoru açıklayan neden gibi değil, skorun günlük yaşamdaki görünümünü bağlamsallaştıran veri olarak kullanılmalıdır\./gi, "Anamnez, skorun nedeni olarak değil, günlük yaşamdaki görünümünü açıklayan bağlamsal veri olarak değerlendirilir.")
+    .replace(/yürütücü yük tarif edilmektedir/gi, "yürütücü işlev güçlüğü tarif edilmektedir")
+    .replace(/düzenleyici yükün belirginleştiği/gi, "self-regülasyon güçlüğünün belirginleştiği")
+    .replace(/Kaynaklar Arasında Sınırlı Uyum Gösteren Klinik Örüntü/gi, "Bağlama Göre Değişen Klinik Örüntü")
+    .replace(/Kaynaklar arasında sınırlı uyum gösteren,? bağlama göre değişen self-regülasyon güçlüğü/gi, "Bağlama göre değişen self-regülasyon güçlüğü")
+    .replace(/Kaynaklar arasında sınırlı uyum gösteren bağlama duyarlı regülasyon güçlüğü/gi, "Bağlama göre değişen self-regülasyon güçlüğü")
+    .replace(/Kaynaklar arasında tam uyum göstermeyen,? bağlama göre değişen self-regülasyon güçlüğü/gi, "Bağlama göre değişen self-regülasyon güçlüğü")
+    .replace(/Bu bulgu ana klinik yorumu güçlendirmez; yalnız temkinli yan bilgi olarak tutulur\./gi, "Bu bulgu ana klinik değerlendirmeyi desteklemez; yalnız temkinli yan bilgi olarak kayda geçirilir.")
+    .replace(/Ham puan tek başına yorum gücünü sınırlar; resmi yorum düzeyi olmadan ana klinik yorumu güçlendirmez\./gi, "Ham puan tek başına yorum gücünü sınırlar; resmi yorum düzeyi olmadan ana klinik değerlendirmeyi destekleyen veri sayılmaz.")
+    .replace(/ana klinik karar mekanizmasına dahil edilmemeli,? en fazla temkinli yan bilgi olarak ele alınmalıdır/gi, "ana klinik değerlendirmeyi desteklemez; yalnız temkinli yan bilgi olarak kayda geçirilmiştir")
     .replace(/Ölçek yanıt örüntüsü şu klinik ayrıntıyı desteklemektedir:\s*Bakımveren veya terapist ses, gürültü ya da kalabalık ortamla zorlanma tarif ediyorsa işitsel reaktivite örüntüsü bu anlatımla doğrudan yakınsar\./gi, "İşitsel hassasiyet öne çıktığında ses, gürültü veya kalabalık ortamla ilgili günlük zorlanma bu bulguyla birlikte yorumlanır.")
     .replace(/İnteroseptif yük/g, "İnteroseptif zorluk")
     .replace(/interoseptif yük/gi, "interoseptif zorluk")
@@ -680,7 +1235,6 @@ export function sanitizeFinalReportLanguage(text: string): string {
     .replace(/\bilaç\b/gi, "medikal bilgi")
     .replace(/\bprotokol\b/gi, "klinik akış")
     .replace(/\begzersiz\b/gi, "etkinlik")
-    .replace(/\bödev\b/gi, "ev çalışması")
     .replace(/Dikkat bozukluğu veya yürütücü işlev hakkında tanısal hüküm üretmez/gi, "Dikkat alanı veya yürütücü işlev hakkında tanısal hüküm üretmez")
     .replace(/madde, norm tablosu veya manuel içeriği/gi, "test içeriği, norm tablosu veya manuel bilgisi")
     .replace(/yürütücü davranış düzenleme ve duygusal ve bilişsel yansımalar yorumunu destekler/gi, "yürütücü davranış düzenleme ile duygusal ve bilişsel yansımaların birlikte yorumlanmasını destekler")
@@ -696,9 +1250,9 @@ export function sanitizeFinalReportLanguage(text: string): string {
     .replace(/\bgeçiş yükü\b/gi, "geçişlerdeki zorlanma")
     .replace(/\bYenilik ve geçiş yükü\b/g, "Yenilik ve geçişlerdeki zorlanma")
     .replace(/\bYorum sınırı:\s*/g, "Sınır: ")
-    .replace(/Bu nedenle ana klinik karar ağırlığını artırmaz/gi, "Bu bulgu ana klinik yorumu güçlendirmez")
-    .replace(/karar ağırlığını artırmaz/gi, "ana klinik yorumu güçlendirmez")
-    .replace(/karar ağırlığını artırmak için kullanılmadı/gi, "ana klinik yorumu güçlendirmek için kullanılmadı")
+    .replace(/Bu nedenle ana klinik karar ağırlığını artırmaz/gi, "Bu bulgu ana klinik değerlendirmeyi tek başına desteklemez")
+    .replace(/karar ağırlığını artırmaz/gi, "ana klinik değerlendirmeyi tek başına desteklemez")
+    .replace(/karar ağırlığını artırmak için kullanılmadı/gi, "ana klinik değerlendirmeyi destekleyen veri olarak kullanılmadı")
     .replace(/yorum ağırlığını değiştiren bağlamlardır/gi, "klinik yorumu değiştirebilecek bağlamlardır")
     .replace(/yorumun ağırlığı\s+([^.;]+?)\s+alanına verilmiş/gi, "klinik yorum $1 alanında yoğunlaşmış")
     .replace(/Klinik yorumun ağırlığı bu eksende toplanmaktadır/gi, "Klinik yorum bu eksende yoğunlaşmaktadır")
@@ -709,10 +1263,22 @@ export function sanitizeFinalReportLanguage(text: string): string {
     .replace(/algı sorunu anlatmıyor/gi, "ayrı bir algısal güçlük anlatmıyor")
     .replace(/skor ve ek test ağırlıklı klinik hipotez/gi, "skor ve ek testle sınırlı klinik hipotez")
     .replace(/klinik yorum ağırlıklı olarak/gi, "klinik yorum daha çok")
+    .replace(/\bPediatrik\s+pediatrik\b/gi, "Pediatrik")
+    .replace(/\bBu bulgular\.\s+Bu bulgular,/g, "Bu bulgular,")
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
-  return sanitized;
+
+  let briefPNameSeen = false;
+  sanitized = sanitized.replace(
+    /Behavior Rating Inventory of Executive Function - Preschool Version \(BRIEF-P\)/gi,
+    (match) => {
+      if (briefPNameSeen) return "BRIEF-P";
+      briefPNameSeen = true;
+      return match;
+    }
+  );
+  return capitalizeSentenceStarts(sanitized);
 }
 
 function splitSentences(text: string): string[] {
@@ -759,7 +1325,7 @@ export function analyzeReportLanguageQuality(text: string): ReportLanguageQualit
   if (asciiMatches.length > 0) {
     issues.push({
       code: "ascii_turkish_leak",
-      severity: "medium",
+      severity: "high",
       message: "Türkçe karakteri bozuk klinik metin final raporda görünüyor.",
       evidence: String(asciiMatches.length),
     });

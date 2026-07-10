@@ -34,7 +34,7 @@ type ClientInfo = {
   ageMonths: number | null
 }
 
-type AiReportResult = {
+type DeterministicReportResult = {
   report: string
   reportId: string | null
   createdAt: string | null
@@ -358,7 +358,7 @@ export default function AssessmentWizardClient() {
     })
   }, [clientInfo, result])
 
-  async function generateAIReport(payload: {
+  async function generateDeterministicReport(payload: {
     assessmentId: string
     clientId: string
     clientCode: string
@@ -367,7 +367,7 @@ export default function AssessmentWizardClient() {
     answers: number[]
     scores: Record<string, unknown>
     deterministicReport: string
-  }): Promise<AiReportResult> {
+  }): Promise<DeterministicReportResult> {
     const res = await fetch("/api/ai-report", {
       method: "POST",
       headers: {
@@ -471,7 +471,7 @@ export default function AssessmentWizardClient() {
 
       const assessmentId = assessmentPayload.assessmentId
 
-      const aiReportResult = await generateAIReport({
+      const reportResult = await generateDeterministicReport({
         assessmentId,
         clientId: clientInfo.id,
         clientCode: clientInfo.child_code,
@@ -494,18 +494,18 @@ export default function AssessmentWizardClient() {
         },
         deterministicReport: advancedReport.deterministicReport,
       })
-      const aiReportText = aiReportResult.report
+      const reportText = reportResult.report
 
-      setGeneratedReportText(aiReportText)
-      setGeneratedReportDate(aiReportResult.createdAt || new Date().toISOString())
+      setGeneratedReportText(reportText)
+      setGeneratedReportDate(reportResult.createdAt || new Date().toISOString())
       setReportReady(true)
       clearAssessmentDraft(activeDraftKeyRef.current)
       setSaveMsg(
-        aiReportResult.existing
+        reportResult.existing
           ? "Bu vaka için rapor daha önce oluşturulmuş. Mevcut rapor açıldı; yeni hak düşülmedi."
-          : aiReportResult.remainingReportCredits == null
+          : reportResult.remainingReportCredits == null
             ? "Rapor başarıyla oluşturuldu ve geçmişe kaydedildi."
-            : `Rapor başarıyla oluşturuldu ve geçmişe kaydedildi. Kalan rapor hakkı: ${aiReportResult.remainingReportCredits}`
+            : `Rapor başarıyla oluşturuldu ve geçmişe kaydedildi. Kalan rapor hakkı: ${reportResult.remainingReportCredits}`
       )
       if (typeof window !== "undefined") {
         setTimeout(() => {

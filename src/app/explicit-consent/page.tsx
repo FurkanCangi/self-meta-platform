@@ -4,7 +4,7 @@ export default function ExplicitConsentPage() {
   return (
     <LegalDocumentPage
       title="Açık Rıza Metni"
-      description="Özel nitelikli kişisel veriler, çocuk/danışan verileri, AI destekli rapor üretimi ve gerekli altyapı aktarımı için alınacak ayrı açık rıza beyanının taslağıdır."
+      description="Özel nitelikli kişisel veriler, çocuk/danışan verileri, deterministik rapor üretimi ve gerekli altyapı aktarımı için alınacak ayrı açık rıza beyanının taslağıdır."
       sections={[
         {
           title: "1. Rızanın Konusu",
@@ -21,16 +21,16 @@ export default function ExplicitConsentPage() {
           ],
         },
         {
-          title: "3. Yapay Zeka Destekli İşleme",
+          title: "3. Deterministik Rapor Üretimi",
           body: [
-            "Kullanıcı, rapor üretiminde LLM/API sağlayıcılarına sınırlı değerlendirme içeriği gönderilebileceğini ve çıktının uzman kontrolüne tabi karar destek metni olduğunu kabul eder.",
-            "AI çıktıları tek başına tanı, tedavi, resmi rapor veya kesin klinik hüküm değildir. Uzman, çıktıyı kullanmadan önce doğruluk, uygunluk ve mesleki etik yönünden kontrol eder.",
+            "Kullanıcı, değerlendirme verilerinin uygulamanın kendi sunucu tarafı kuralları ve yerel klinik bilgi tabanı kullanılarak deterministik bir karar destek raporuna dönüştürüleceğini kabul eder. Rapor üretimi amacıyla içerik harici bir üretken yapay zeka veya LLM sağlayıcısına gönderilmez.",
+            "Deterministik çıktılar tek başına tanı, resmi rapor veya kesin klinik hüküm değildir. Uzman, çıktıyı kullanmadan önce doğruluk, uygunluk ve mesleki etik yönünden kontrol eder.",
           ],
         },
         {
           title: "4. Yurt Dışı Aktarım ve Altyapı",
           body: [
-            "Barındırma, veritabanı, kimlik doğrulama, yapay zeka, loglama, güvenlik veya ödeme sağlayıcılarının yurt dışında bulunması halinde kişisel veriler hizmetin gerektirdiği ölçüde yurt dışına aktarılabilir.",
+            "Barındırma, veritabanı, kimlik doğrulama, loglama, güvenlik veya ödeme sağlayıcılarının yurt dışında bulunması halinde kişisel veriler hizmetin gerektirdiği ölçüde yurt dışına aktarılabilir.",
             "Bu aktarım, kullanıcı tarafından verilen açık rıza ve ilgili mevzuat kapsamında yapılır. Hizmet sağlayıcı, aktarımı mümkün olduğunca sınırlı ve güvenli tutmayı hedefler.",
           ],
         },
@@ -38,7 +38,7 @@ export default function ExplicitConsentPage() {
           title: "5. Rızanın Geri Alınması",
           body: [
             "Açık rıza [ILETISIM_EPOSTA] üzerinden geri alınabilir. Geri alma, geçmişte hukuka uygun şekilde yapılan işlemleri etkilemez.",
-            "Rızanın geri alınması halinde özel nitelikli veri işleme, AI destekli rapor üretimi veya ilgili hizmet bileşenleri durdurulabilir; yasal saklama ve denetim yükümlülükleri kapsamında tutulması gereken kayıtlar saklanmaya devam edebilir.",
+            "Rızanın geri alınması halinde özel nitelikli veri işleme, deterministik rapor üretimi veya ilgili hizmet bileşenleri durdurulabilir; yasal saklama ve denetim yükümlülükleri kapsamında tutulması gereken kayıtlar saklanmaya devam edebilir.",
           ],
         },
       ]}

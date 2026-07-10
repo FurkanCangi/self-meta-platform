@@ -124,7 +124,7 @@ async function main() {
     failures.forEach((failure) => console.error(`- ${failure}`))
     process.exit(1)
   }
-  console.log("PASS: production report path AI/RAG import veya model çağrısı içermiyor.")
+  console.log("PASS: production report path harici model, runtime retrieval veya model API çağrısı içermiyor.")
 }
 
 main().catch((error) => {

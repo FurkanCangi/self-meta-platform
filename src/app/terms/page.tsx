@@ -28,10 +28,10 @@ export default function TermsPage() {
           ],
         },
         {
-          title: "4. Yapay Zeka Çıktıları",
+          title: "4. Deterministik Karar Destek Çıktıları",
           body: [
-            "Platformda LLM destekli rapor yazımı kullanılabilir. AI çıktıları uzman tarafından kontrol edilmeden doğrudan tanı, tedavi, resmi karar veya kesin klinik hüküm olarak kullanılmamalıdır.",
-            "Sistem kalite kontrolleri, deterministik skor motoru ve fallback mekanizmaları içerse de raporun danışan özelinde uygunluğu, dilinin düzenlenmesi ve paylaşım kararı uzman kullanıcıya aittir.",
+            "Platform raporları sunucu tarafındaki doğrulanmış skor kuralları ve yerel klinik bilgi tabanı ile deterministik olarak oluşturulur; rapor üretimi için harici bir üretken yapay zeka veya LLM servisi kullanılmaz.",
+            "Sistem kalite kontrolleri ve deterministik skor motoru içerse de raporun danışan özelinde uygunluğu, dilinin düzenlenmesi ve paylaşım kararı uzman kullanıcıya aittir. Çıktılar uzman kontrolü olmadan doğrudan tanı, resmi karar veya kesin klinik hüküm olarak kullanılmamalıdır.",
           ],
         },
         {

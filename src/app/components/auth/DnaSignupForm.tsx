@@ -256,7 +256,7 @@ export default function DnaSignupForm() {
               />
               <span>
                 <Link href="/explicit-consent" target="_blank" className="font-bold text-blue-700 hover:text-violet-700">
-                  Özel nitelikli veri ve AI işleme açık rızasını
+                  Özel nitelikli veri ve deterministik rapor işleme açık rızasını
                 </Link>{" "}
                 veriyorum.
               </span>

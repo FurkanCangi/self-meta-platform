@@ -48,7 +48,6 @@ const textFiles = listFiles(".", (file) =>
 
 function isSuspiciousSecretKey(key: string) {
   return (
-    key === "OPENAI_API_KEY" ||
     key === "SUPABASE_SERVICE_ROLE_KEY" ||
     key === "PAYMENT_WEBHOOK_SECRET" ||
     /(^|_)(SECRET|PASSWORD|PRIVATE_KEY)($|_)/.test(key) ||
@@ -131,7 +130,7 @@ if (!exists("CLAUDE.md")) {
     "Supabase Auth",
     "Production CORS",
     "Güvenlik header",
-    "Token/output limiti",
+    "tamamen deterministik kalır",
   ]) {
     if (!securityRules.includes(requiredRule)) {
       add("persistent security rule missing", requiredRule)
@@ -214,15 +213,18 @@ if (!entitlements.includes("billingWebhookPayloadSchema")) {
 }
 
 const aiReportRoute = read("src/app/api/ai-report/route.ts")
-if (!aiReportRoute.includes("aiReportPayloadSchema")) {
-  add("AI report route missing payload schema", "src/app/api/ai-report/route.ts")
+if (!aiReportRoute.includes("deterministicReportPayloadSchema")) {
+  add("deterministic report route missing payload schema", "src/app/api/ai-report/route.ts")
 }
 if (!aiReportRoute.includes("consumeReportCredit")) {
-  add("AI report route missing user budget check", "src/app/api/ai-report/route.ts")
+  add("deterministic report route missing user budget check", "src/app/api/ai-report/route.ts")
 }
-const aiReportService = read("src/lib/dna/aiReportService.ts")
-if (!/max_output_tokens:\s*\d+/.test(aiReportService)) {
-  add("legacy AI path missing output token limit", "src/lib/dna/aiReportService.ts")
+const deterministicReportEngine = read("src/lib/dna/reportEngine.ts")
+if (!aiReportRoute.includes("buildAdvancedReport")) {
+  add("deterministic report builder missing", "src/app/api/ai-report/route.ts")
+}
+if (/OPENAI_API_KEY|from\s+["']openai["']|rewriteClinicalReport|generateAIClinicalReport/i.test(`${aiReportRoute}\n${deterministicReportEngine}`)) {
+  add("external model runtime found in production report path", "src/app/api/ai-report/route.ts")
 }
 
 const audit = spawnSync("npm", ["audit", "--omit=dev", "--audit-level=high"], {

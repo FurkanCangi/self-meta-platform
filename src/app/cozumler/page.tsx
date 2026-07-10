@@ -52,17 +52,17 @@ const platformCards: PlatformCard[] = [
     visual: "certificate",
   },
   {
-    badge: "AI PLATFORMU",
+    badge: "KLİNİK KARAR DESTEĞİ",
     title: "DNA Intelligence",
-    description: "AI destekli değerlendirme, analiz ve raporlama ile klinik karar süreçlerinizi hızlandırır.",
+    description: "Açıklanabilir deterministik değerlendirme, analiz ve raporlama ile klinik karar süreçlerini yapılandırır.",
     bullets: [
-      "Akıllı veri analizi ve içgörüler",
-      "AI destekli klinik raporlar",
+      "Kural tabanlı veri analizi ve içgörüler",
+      "Deterministik klinik raporlar",
       "Standartlara uyumlu çıktılar",
       "Zaman kazandıran otomasyon",
       "Güvenli veri altyapısı",
     ],
-    cta: "AI Çözümlerini İncele",
+    cta: "Raporlama Sistemini İncele",
     href: "#ecosystem-solutions",
     icon: BrainCircuit,
     accent: "#7C3AED",
@@ -77,13 +77,13 @@ const ecosystemModules = [
     icon: ClipboardCheck,
   },
   {
-    title: "AI Destekli Analiz",
-    text: "Veri odaklı derin analiz ve anlamlı içgörüler üretimi.",
+    title: "Açıklanabilir Analiz",
+    text: "Doğrulanmış kurallarla veri örüntülerini ve kanıt sınırlarını görünür kılar.",
     icon: BrainCircuit,
   },
   {
     title: "Klinik Raporlama",
-    text: "Profesyonel formatta AI destekli rapor üretimi ve çıktı yönetimi.",
+    text: "Profesyonel formatta deterministik rapor üretimi ve çıktı yönetimi.",
     icon: FileText,
   },
   {
@@ -115,8 +115,8 @@ const workflowSteps = [
     icon: ClipboardCheck,
   },
   {
-    title: "AI Raporlama",
-    text: "AI destekli analiz ile hızlı, doğru ve profesyonel raporlar oluşturun.",
+    title: "Deterministik Raporlama",
+    text: "Açıklanabilir analiz kurallarıyla hızlı, tutarlı ve profesyonel raporlar oluşturun.",
     icon: BrainCircuit,
   },
   {
@@ -139,7 +139,7 @@ const advantages = [
   },
   {
     title: "Zaman Tasarrufu",
-    text: "AI destekli otomasyon ile klinik iş yükünüz azalır.",
+    text: "Deterministik otomasyon ile klinik dokümantasyon iş yükünüz azalır.",
     icon: TimerReset,
   },
   {
@@ -198,8 +198,8 @@ function HeroVisual() {
             <article>
               <BrainCircuit size={20} strokeWidth={2.2} />
               <div>
-                <strong>AI Analiz</strong>
-                <span>Örüntü ve içgörü</span>
+                <strong>Kural Tabanlı Analiz</strong>
+                <span>Açıklanabilir örüntü ve içgörü</span>
               </div>
             </article>
             <article>
@@ -265,7 +265,7 @@ export default function CozumlerPage() {
               Klinik pratiğinizi bilim ve teknolojiyle <span>dönüştürün.</span>
             </h1>
             <p>
-              DNA ekosistemi; eğitimden değerlendirmeye, AI destekli raporlamadan klinik karar desteğine
+              DNA ekosistemi; eğitimden değerlendirmeye, deterministik raporlamadan klinik karar desteğine
               kadar uçtan uca entegre çözümler sunar.
             </p>
           </div>
@@ -359,7 +359,7 @@ export default function CozumlerPage() {
             <span>DNA EKOSİSTEMİYLE</span>
             <h2>Klinik pratiğinizde fark yaratın, danışanlarınız için daha iyi sonuçlar elde edin.</h2>
             <p>
-              DNA ekosistemiyle bilimsel yaklaşımı, yapay zeka gücünü ve kullanıcı dostu teknolojiyi bir
+              DNA ekosistemiyle bilimsel yaklaşımı, açıklanabilir karar kurallarını ve kullanıcı dostu teknolojiyi bir
               araya getiriyoruz.
             </p>
           </div>

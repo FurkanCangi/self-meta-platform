@@ -4,7 +4,7 @@ export default function PrivacyPage() {
   return (
     <LegalDocumentPage
       title="Gizlilik Politikası"
-      description="DNA Intelligence platformunun hesap, klinik değerlendirme, rapor üretimi, yapay zeka destekli çıktı, denetim ve destek süreçlerinde kişisel verileri nasıl işlediğini açıklar."
+      description="DNA Intelligence platformunun hesap, klinik değerlendirme, deterministik rapor üretimi, denetim ve destek süreçlerinde kişisel verileri nasıl işlediğini açıklar."
       sections={[
         {
           title: "1. Kapsam",
@@ -31,9 +31,9 @@ export default function PrivacyPage() {
           ],
         },
         {
-          title: "4. Yapay Zeka ve Altyapı Sağlayıcıları",
+          title: "4. Deterministik Raporlama ve Altyapı Sağlayıcıları",
           body: [
-            "Rapor üretiminde OpenAI veya benzeri LLM/API sağlayıcıları kullanılabilir. Bu durumda rapor üretimi için gerekli sınırlı içerik API sağlayıcısına aktarılabilir ve çıktı uzman kullanıcıya karar destek metni olarak sunulur.",
+            "Klinik raporlar uygulamanın kendi sunucu tarafı kuralları ve yerel klinik bilgi tabanı ile deterministik olarak oluşturulur. Rapor üretimi amacıyla anamnez, değerlendirme cevapları veya rapor içeriği harici bir üretken yapay zeka ya da LLM sağlayıcısına gönderilmez.",
             "Veriler Supabase gibi veritabanı, kimlik doğrulama ve depolama sağlayıcıları; Vercel gibi barındırma/dağıtım sağlayıcıları; ileride entegre edilecek ödeme/fatura sağlayıcıları ve güvenlik/monitoring araçlarıyla işlenebilir.",
             "Sağlayıcı seçimi yapılırken erişim yetkileri, güvenlik, saklama ve aktarım riskleri gözetilir. Yurt dışı aktarım gerektiren süreçler açık rıza ve ilgili mevzuat çerçevesinde ayrıca ele alınır.",
           ],

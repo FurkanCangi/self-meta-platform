@@ -373,8 +373,8 @@ function buildKnowledgeEvidence(wordRagChunkCoverage: string): ReportEvidenceSou
   return createEvidenceSource({
     id: "evidence.knowledge_base.word_rag",
     kind: "knowledge_base",
-    label: "Deterministic Knowledge Base",
-    summary: `Word RAG içeriği runtime retrieval olmadan deterministic bilgi tabanı olarak kullanıldı (${wordRagChunkCoverage}).`,
+    label: "Yerel Klinik Bilgi Tabanı",
+    summary: `Yerel Word klinik içeriği çalışma zamanı dış servis çağrısı olmadan deterministik bilgi tabanı olarak kullanıldı (${wordRagChunkCoverage}).`,
     sourceRef: wordRagChunkCoverage,
     confidence: "orta",
   })
@@ -769,7 +769,7 @@ export function buildReportTrace(params: {
     ...buildMicroRuleHits(params.itemLevelAnalysis),
     createRuleHit({
       id: "rule.knowledge_base.word_rag_deterministic",
-      description: "Word RAG bilgisi canlı retrieval olmadan deterministic knowledge base olarak kullanıldı.",
+      description: "Yerel Word klinik bilgisi canlı dış servis çağrısı olmadan deterministik bilgi tabanı olarak kullanıldı.",
       ruleType: "knowledge_base",
       outcome: "selected",
       evidenceIds: ["evidence.knowledge_base.word_rag"],

@@ -22,7 +22,7 @@ Faz 8 mevcut kod tabaninda kismen hazir. Auth/session, cihaz limiti, RLS SQL'ler
 | RLS | Operasyonel dogrulama gerekli | `sql/core_data_rls.sql`, `sql/account_session_policy.sql`, `sql/legal_acceptances.sql`, `sql/kvkk_operational_security.sql` | Production Supabase'te migration uygulama ve tablo bazli RLS kontrolu kanitlanmali. |
 | KVKK/legal acceptance | Kismi | Signup checkbox'lari, `/api/legal/accept`, `legal_acceptances` | Post-login legal status blocker eklenmeli. |
 | Owner audit | Hazir ama hassas | `sql/owner_audit_retention.sql`, `/api/owner-audit/export`, `OWNER_AUDIT_EMAILS` | Allowlist canli ortamda dar tutulmali; export testi audit event uretmeli. |
-| Klinik veri loglanmamasi | Kismi/hazir | `src/lib/dna/reportLogger.ts`, `security:smoke` redaction testi | Production env'de `OPENAI_REPORT_DEBUG=false`, `DNA_REPORT_DEBUG=false` dogrulanmali. |
+| Klinik veri loglanmamasi | Kismi/hazir | `src/lib/dna/reportLogger.ts`, `security:smoke` redaction testi | Production env'de `DNA_REPORT_DEBUG=false` dogrulanmali. |
 | API rate limit | Kismi | `src/lib/security/rateLimit.ts` ve route kullanimlari | Redis/Upstash/Supabase tabanli paylasimli rate limit'e gecilmeli. |
 | Rapor maliyet kontrolu | Kismi | `/api/ai-report` ownership, 60 cevap validasyonu, saatlik limit, tek rapor lock | Paket/rapor kredisi server-side decrement ve atomic ledger eklenmeli. |
 | Service role izolasyonu | Hazir | `src/lib/supabase/admin.ts`, server route kullanimlari | Build artifact/env leak kontrolu release checklist'te kalmali. |
@@ -69,11 +69,10 @@ Bu mekanizma KVKK metinlerinde ve retention policy'de acik olmalidir. Terapist a
 
 ## Klinik Veri Loglari
 
-AI/report debug logger hassas anahtarlar icin redaction yapiyor: email, token, anamnez, report, client, child, name, notes, clinical, session gibi alanlar `[redacted]` olur. `security:smoke` bu davranisi test ediyor.
+Rapor debug logger hassas anahtarlar icin redaction yapiyor: email, token, anamnez, report, client, child, name, notes, clinical, session gibi alanlar `[redacted]` olur. `security:smoke` bu davranisi test ediyor.
 
 Yine de production'da klinik veri loglamama politikasinin guvenli olmasi icin:
 
-- `OPENAI_REPORT_DEBUG=false`
 - `DNA_REPORT_DEBUG=false`
 - API catch bloklari raw request body, anamnez, report text veya assessment payload loglamamali.
 - Owner audit export loglari sadece metadata/count yazmali; export icerigi application log'a basilmamali.

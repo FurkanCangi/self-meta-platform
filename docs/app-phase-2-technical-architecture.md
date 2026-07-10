@@ -29,10 +29,10 @@ Bu modelde app store uygulaması kendi içinde klinik iş mantığı taşımaz. 
 | Store wrapper | App icon, splash, native shell, webview açılışı, gerekirse deep link | iOS/Android |
 | Mobile app shell | Login sonrası terapist panelinin mobil layout'u, tab/stack hissi, app mode navigasyon | Next.js client/server |
 | Protected web panel | Mevcut desktop terapist paneli | Next.js |
-| API boundary | AI rapor, session, legal, education, billing, video observation proxy | Next.js route handlers |
+| API boundary | Deterministik rapor, session, legal, education, billing, video observation proxy | Next.js route handlers |
 | Data layer | RLS ile tenant izolasyonu, auth, storage, audit tabloları | Supabase |
 | Rapor motoru | DNA scoring, deterministic report, literature section, quality gates | Server-side TypeScript |
-| External services | OpenAI, video observation service, payment provider | Server-to-server |
+| External services | Video observation service, payment provider | Server-to-server |
 
 ## App Mode Yapısı
 
@@ -172,7 +172,7 @@ Bu kullanımda RLS ve ownership kontrolleri authoritative kalır. App client tar
 Bu işler client tarafında doğrudan yapılmamalıdır:
 
 - App session/device kaydı: `/api/security/session/register`
-- AI/deterministic rapor üretimi: `/api/ai-report`
+- Deterministik rapor üretimi: `/api/ai-report` (eski istemciler için korunan uyumluluk yolu)
 - Legal kabul yazımı: `/api/legal/accept`
 - Legal durum kontrolü: `/api/legal/status`
 - Eğitim video listesi/access/playback eventleri: `/api/education/videos...`
@@ -184,7 +184,7 @@ Bu işler client tarafında doğrudan yapılmamalıdır:
 ### Client'ın Asla Yapmaması Gerekenler
 
 - `SUPABASE_SERVICE_ROLE_KEY` kullanmak.
-- OpenAI API key kullanmak.
+- Harici üretken model veya LLM API anahtarı kullanmak.
 - Payment webhook doğrulamak.
 - Eğitim video signed URL/token üretmek.
 - Owner audit export üretmek.
@@ -196,7 +196,7 @@ Bu işler client tarafında doğrudan yapılmamalıdır:
 
 | İş | Neden server'da kalmalı |
 |---|---|
-| Rapor üretimi | Klinik veri, rate limit, ownership, age validation, report lock ve OpenAI/server-side logic içerir. |
+| Rapor üretimi | Klinik veri, rate limit, ownership, age validation, report lock ve deterministik server-side klinik kurallar içerir. |
 | Report lock kontrolü | Tek rapor kuralı client'a bırakılamaz. |
 | Service role işlemleri | Browser/app bundle'a secret sızmamalı. |
 | Payment webhook | İmza doğrulama ve entitlement grant/revoke server-to-server olmalı. |
@@ -260,9 +260,7 @@ App mode için öneri:
 Server ortamında kalacaklar:
 
 - `SUPABASE_SERVICE_ROLE_KEY`
-- `OPENAI_API_KEY`
-- `OPENAI_REPORT_MODEL`
-- `OPENAI_REPORT_DEBUG`
+- `DNA_REPORT_DEBUG`
 - `PAYMENT_WEBHOOK_SECRET`
 - `OWNER_AUDIT_EMAILS`
 - `VIDEO_OBS_API_BASE_URL`

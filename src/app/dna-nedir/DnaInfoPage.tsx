@@ -52,9 +52,9 @@ const approachSystems = [
 
 const approachPillLabels = [
   "Dynamic Neuro-Regulation: eğitim modeli",
-  "DNA Intelligence: AI sistemleri",
+  "DNA Intelligence: deterministik karar destek sistemi",
   "Değerlendirme ve analiz",
-  "AI destekli raporlama",
+  "Deterministik raporlama",
 ];
 
 const approachFlow = [
@@ -72,7 +72,7 @@ const approachFlow = [
   },
   {
     step: "03",
-    title: "AI sentez",
+    title: "Kural tabanlı sentez",
     text: "DNA Intelligence veriyi özetler, örüntüleri ayırır ve rapor diline hazırlar.",
     Icon: BrainCircuit,
   },
@@ -92,10 +92,10 @@ const conceptColumns = [
     points: ["Klinik eğitim ve kavramsal çerçeve", "Regülasyon çekirdeği ve alan ilişkileri", "Vaka formülasyonu ve müdahale düşüncesi"],
   },
   {
-    label: "AI sistemleri",
+    label: "Deterministik sistem",
     title: "DNA Intelligence",
     text: "Bu klinik dili dijital değerlendirme, veri sentezi ve rapor üretimi için kullanır; tanı koymaz, kararın yerini almaz.",
-    points: ["Değerlendirme verisini yapılandırır", "Örüntüleri ve öncelikleri görünür kılar", "AI destekli rapor taslağı üretir"],
+    points: ["Değerlendirme verisini yapılandırır", "Örüntüleri ve öncelikleri görünür kılar", "Açıklanabilir klinik rapor taslağı üretir"],
   },
 ];
 
@@ -371,8 +371,8 @@ const interventionGains = [
   "Ölçülebilir ilerleme ve klinik etkinlik",
 ];
 
-const aiReportHighlights = [
-  { title: "Akıllı Analiz", text: "AI destekli örüntü tanıma", Icon: BrainCircuit },
+const reportHighlights = [
+  { title: "Açıklanabilir Analiz", text: "Kural tabanlı örüntü analizi", Icon: BrainCircuit },
   { title: "Klinik Güvenilirlik", text: "Kanıt temelli ve tutarlı yapı", Icon: ShieldCheck },
   { title: "Zaman Tasarrufu", text: "Raporlama yükünü azaltır", Icon: TimerReset },
 ];
@@ -426,7 +426,7 @@ const aiProcessSteps = [
   },
   {
     title: "Otomatik Analiz",
-    text: "AI, verileri analiz eder ve örüntüleri belirler.",
+    text: "Deterministik motor, verileri doğrulanmış kurallarla analiz eder ve örüntüleri belirler.",
     Icon: BrainCircuit,
   },
   {
@@ -446,7 +446,7 @@ const aiProcessSteps = [
   },
 ];
 
-const aiReportGains = [
+const reportGains = [
   {
     title: "Zaman Tasarrufu",
     text: "Raporlama süresini önemli ölçüde azaltır.",
@@ -639,7 +639,7 @@ const labsFlowSteps = [
   },
   {
     title: "Rapor Desteği",
-    text: "AI destekli raporlama ile klinik içgörü desteklenir.",
+    text: "Açıklanabilir raporlama ile klinik içgörü desteklenir.",
     Icon: FileText,
   },
 ];
@@ -672,10 +672,10 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
     : isInterventionPage
       ? "Vagal fren, regülasyon kapasitesi ve vaka formülasyonu üzerinden müdahale planınızı daha izlenebilir hale getirelim."
     : isAiReportPage
-      ? "AI destekli raporlama ile klinik etkinliğinizi artırın, zamanınızı danışanlarınıza ayırın."
+      ? "Deterministik raporlama ile dokümantasyon süresini azaltın, zamanınızı danışanlarınıza ayırın."
     : isFutureModulesPage
       ? "DNA Labs yolculuğunu takip edin, erken erişim fırsatlarından ilk siz haberdar olun."
-    : "Eğitim modelinden ölçüm formuna, AI analizden rapor diline kadar klinik sürecin nasıl kurulacağını birlikte netleştirebiliriz.";
+    : "Eğitim modelinden ölçüm formuna, deterministik analizden rapor diline kadar klinik sürecin nasıl kurulacağını birlikte netleştirebiliriz.";
   const primaryActionLabel = isEducationPage
     ? "Programa Başvur"
     : isAssessmentPage
@@ -730,7 +730,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
                 <div className={styles.eyebrow}>{page.eyebrow}</div>
                 <h1>{page.title}</h1>
                 <p>{page.intro}</p>
-                <div className={styles.approachPills} aria-label="Eğitim modeli ve AI sistemi ayrımı">
+                <div className={styles.approachPills} aria-label="Eğitim modeli ve deterministik sistem ayrımı">
                   {approachPillLabels.map((label) => (
                     <span key={label}>{label}</span>
                   ))}
@@ -740,7 +740,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
               <div className={styles.approachBlueprint} aria-label="Dynamic Neuro-Regulation ve DNA Intelligence klinik akış yapısı">
                 <div className={styles.blueprintHeader}>
                   <span>Regülasyon çekirdeği</span>
-                  <strong>Dynamic Neuro-Regulation eğitimi + DNA Intelligence AI</strong>
+                  <strong>Dynamic Neuro-Regulation eğitimi + DNA Intelligence karar desteği</strong>
                 </div>
                 <div className={styles.blueprintBody}>
                   <div className={styles.blueprintMark}>
@@ -769,7 +769,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
                 <div className={styles.blueprintFooter} aria-hidden="true">
                   <span>Eğitim dili</span>
                   <span>DNA Intelligence analizi</span>
-                  <span>AI rapor çıktısı</span>
+                  <span>Deterministik rapor çıktısı</span>
                 </div>
               </div>
             </section>
@@ -780,7 +780,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
                 <h2>Önce klinik çerçeve, sonra ölçüm, analiz ve rapor.</h2>
                 <p>
                   Dynamic Neuro-Regulation Approach klinisyene self-regülasyonu okuma dilini verir. DNA Intelligence
-                  bu dili veri düzenleme ve AI destekli raporlamada kullanır.
+                  bu dili veri düzenleme ve açıklanabilir deterministik raporlamada kullanır.
                 </p>
               </div>
               <div className={styles.flowMap} aria-label="Eğitimden raporlamaya klinik akış">
@@ -1486,7 +1486,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
           <>
             <section className={styles.aiReportHero}>
               <div className={styles.aiReportHeroCopy}>
-                <div className={styles.eyebrow}>AI Raporlama</div>
+                <div className={styles.eyebrow}>Deterministik Raporlama</div>
                 <h1>
                   Klinik verilerden anlamlı <span>içgörülere, okunabilir raporlara.</span>
                 </h1>
@@ -1494,8 +1494,8 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
                   DNA Intelligence, çok boyutlu klinik verileri analiz eder, klinik muhakemeyi destekleyen tutarlı ve
                   yapılandırılmış raporlar üretir.
                 </p>
-                <div className={styles.aiReportHighlights} aria-label="AI raporlama vurguları">
-                  {aiReportHighlights.map((item) => (
+                <div className={styles.aiReportHighlights} aria-label="Deterministik raporlama vurguları">
+                  {reportHighlights.map((item) => (
                     <article key={item.title}>
                       <item.Icon size={20} strokeWidth={2.1} />
                       <strong>{item.title}</strong>
@@ -1617,7 +1617,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
 
             <section className={styles.aiCollaborationProcess}>
               <article className={styles.aiCollaborationCard}>
-                <h2>İnsan + AI İş Birliği</h2>
+                <h2>Uzman + Deterministik Sistem İş Birliği</h2>
                 <div className={styles.aiCollaborationLoop} aria-hidden="true">
                   <div className={styles.collabNode}>
                     <UserRound size={24} strokeWidth={2} />
@@ -1637,7 +1637,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
                   </div>
                 </div>
                 <p>
-                  AI, veriyi düzenler ve anlamlandırır; <strong>son karar her zaman terapiste aittir.</strong>
+                  Sistem, veriyi açıklanabilir kurallarla düzenler ve anlamlandırır; <strong>son karar her zaman terapiste aittir.</strong>
                 </p>
               </article>
 
@@ -1660,10 +1660,10 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
 
             <section className={styles.aiGainsSection}>
               <div className={styles.aiSectionTitle}>
-                <h2>AI Raporlama ile Kazanımlarınız</h2>
+                <h2>Deterministik Raporlama ile Kazanımlarınız</h2>
               </div>
               <div className={styles.aiGainsRow}>
-                {aiReportGains.map((gain) => (
+                {reportGains.map((gain) => (
                   <article className={styles.aiGainItem} key={gain.title}>
                     <gain.Icon size={22} strokeWidth={2} />
                     <div>
@@ -1822,7 +1822,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
                 <h3>Bu sayfa klinik akışta nereye oturur?</h3>
                 <p>
                   Dynamic Neuro-Regulation Approach klinik dili kurar; DNA Intelligence bu dili değerlendirme, analiz
-                  ve AI destekli raporlama modüllerinde kullanır.
+                  ve deterministik raporlama modüllerinde kullanır.
                 </p>
               </article>
 

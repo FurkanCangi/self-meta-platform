@@ -1,0 +1,24 @@
+{
+  "clientCode": "PROF-02-CONFLICT",
+  "clientName": "Cross Source Conflict",
+  "ageMonths": 58,
+  "anamnez": {
+    "ad_soyad": "Ornek Danisan Iki",
+    "client_code": "PROF-02-CONFLICT",
+    "age": "58 ay",
+    "diagnosis": "Ortamlar arasi performans farki",
+    "referral_reason": "Bakimveren evde gecis, bekleme ve cok basamakli gorevlerde belirgin zorlanma bildirirken okul ve terapi ortaminda daha duzenli performans aktarilmaktadir.",
+    "parent_concerns_goals": "Ev rutinlerinde baslatma, sirayi koruma ve tamamlamada daha az yetiskin yardimi hedeflenmektedir.",
+    "therapist_comments": "Yapilandirilmis bire bir degerlendirmede gorevde kalma ve esneklik korunmus; serbest ve hizli gecisli etkinliklerde ek ipucu gereksinimi artiyor.",
+    "strengths": "Gorsel program, kisa yonerge ve ongorulebilir sirada bagimsiz performans belirgin bicimde artiyor.",
+    "external_clinical_findings": "Test adi: BRIEF-P\nPuan / sonuc: 47\n\nTest adi: ABAS-3\nPuan / sonuc: Genel Uyumsal Bilesik standart skoru 103.\nKlinik yorum / resmi bulgu ozeti: Genel uyumsal islev yas beklentisi icinde korunmustur."
+  },
+  "scores": {
+    "physiological": 36,
+    "sensory": 35,
+    "emotional": 29,
+    "cognitive": 27,
+    "executive": 28,
+    "interoception": 35
+  }
+}

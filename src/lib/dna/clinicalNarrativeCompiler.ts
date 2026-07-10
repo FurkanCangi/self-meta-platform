@@ -5,6 +5,10 @@ export type CompiledClinicalNarrative = {
   decisionSentence: string
   formulationSentence: string
   conclusionSentence: string
+  functionalImpactSentence: string
+  contextContrastSentence: string
+  decisionBoundarySentence: string
+  verificationSentence: string
   differential?: DifferentialFormulation | null
   ruleIds: string[]
 }
@@ -14,6 +18,8 @@ type MechanismNarrativeParts = {
   context: string
   spread: string
   limit: string
+  functionalImpact: string
+  verification: string
 }
 
 const MECHANISM_PARTS: Record<ClinicalMechanismType | "balanced", MechanismNarrativeParts> = {
@@ -22,60 +28,80 @@ const MECHANISM_PARTS: Record<ClinicalMechanismType | "balanced", MechanismNarra
     context: "yeni veya çok basamaklı motor görevlerde",
     spread: "yürütücü organizasyon, görev sürdürme ve duygusal toparlanma süreçlerine yayılır",
     limit: "yapılandırılmış bağlamdaki korunmuş kapasite varsa genellenmiş bir kapasite düşüklüğü gibi okunmaz",
+    functionalImpact: "yeni hareket dizilerini başlatma, giyinme ve araç-gereç kullanımında adımları organize etme ve motor görevi tamamlamaya kadar sürdürme",
+    verification: "yeni ve çok basamaklı bir motor görevde, model desteği azaltılarak başlatma süresi, adım sırası ve toparlanma gereksiniminin karşılaştırılması",
   },
   adaptive_daily_living: {
     mechanism: "öz bakım ve günlük yaşam akışını başlatma-sürdürme süreçlerinde belirginleşen self-regülasyon zorluğu",
     context: "rutin, sıra ve sorumluluk talebi arttığında",
     spread: "yürütücü organizasyon, beden farkındalığı ve duygusal toparlanmaya yayılır",
     limit: "korunmuş test veya gözlem verisi varsa yorum doğal ortam bağlamıyla sınırlı tutulur",
+    functionalImpact: "öz bakım rutinini başlatma, adımları sıraya koyma, tamamlanana kadar sürdürme ve günlük sorumluluklara geçiş yapma",
+    verification: "bir doğal yaşam rutininin farklı gün ve ortamlarda başlatma, ipucu gereksinimi ve tamamlama süresi açısından izlenmesi",
   },
   social_pragmatic: {
     mechanism: "sosyal karşılıklılık ve pragmatik esneklik taleplerinde belirginleşen self-regülasyon zorluğu",
     context: "sosyal talep, grup akışı veya bağlama uyum beklentisi arttığında",
     spread: "bilişsel düzenleme, duygusal toparlanma ve davranış ayarlama süreçlerine yansır",
     limit: "bire bir iş birliği korunuyorsa genellenmiş sosyal kapasite düşüklüğü gibi genişletilmez",
+    functionalImpact: "akran oyununa girme, karşılıklılığı sürdürme, sıra ve konu değişimine uyum sağlama ve grup etkinliğinde kalma",
+    verification: "bire bir etkileşim ile akran grubu bağlamının karşılıklılık, esneklik ve etkinlikte kalma ölçütleriyle karşılaştırılması",
   },
   language_communication: {
     mechanism: "sözel talep ve yönerge karmaşıklığı arttığında belirginleşen self-regülasyon zorluğu",
     context: "anlama, zihinde tutma ve çok adımlı görev talebi arttığında",
-    spread: "bilgiyi işleme, görevde kalma ve frustrasyon toleransına yansır",
+    spread: "bilgiyi işleme, görevde kalma ve engellenmeye dayanma kapasitesine yansır",
     limit: "yorum genel öğrenme kapasitesi hükmüne genişletilmez",
+    functionalImpact: "çok adımlı yönergeyi zihinde tutma, görevi başlatma, sözel bilgi yükü altında görevde kalma ve işi tamamlama",
+    verification: "aynı görevin kısa-görsel yönerge ve uzun-sözel yönerge koşullarında doğruluk, bağımsızlık ve görevde kalma açısından karşılaştırılması",
   },
   language_social_pragmatic: {
     mechanism: "dilsel talep ile sosyal-pragmatik beklentinin birlikte zorladığı self-regülasyon zorluğu",
     context: "anlama, karşılıklılığı sürdürme ve bağlama uyum aynı anda beklendiğinde",
     spread: "bilişsel organizasyon, etkileşim sürekliliği ve duygusal toparlanmaya yayılır",
     limit: "dilsel ya da sosyal tek başlıkla daraltılmadan bağlam içinde yorumlanır",
+    functionalImpact: "grup konuşmasını izleme, bağlama uygun yanıt üretme, karşılıklı etkileşimi sürdürme ve sosyal görev değişikliklerine uyum sağlama",
+    verification: "yapısal dil talebi ile sosyal-pragmatik talebin ayrı ve birlikte sunulduğu koşullarda katılımın karşılaştırılması",
   },
   physiological_interoceptive: {
     mechanism: "bedensel toparlanma ve içsel sinyalleri düzenlemeye katma süreçlerinde belirginleşen self-regülasyon zorluğu",
     context: "yorgunluk, beden sinyali veya toparlanma talebi arttığında",
     spread: "dikkat, günlük işlev akışı ve duygusal toparlanmaya yayılır",
     limit: "medikal nedensellik ya da tek kaynaklı açıklama üretmeden yorumlanır",
+    functionalImpact: "yorgunluk, açlık, uyku ve diğer beden sinyalleri değiştiğinde günlük ritmi sürdürme, dikkati koruma ve toparlanma",
+    verification: "beden sinyali ve yorgunluk düzeyi değişen zaman dilimlerinde görev katılımı, sinyali fark etme ve toparlanma süresinin izlenmesi",
   },
   selective_interoception: {
     mechanism: "içsel bedensel sinyal farkındalığında seçici self-regülasyon zorluğu",
     context: "bedensel ihtiyaçların düzenleme sürecine zamanında katılması gerektiğinde",
     spread: "toparlanma, günlük ritim ve işlevsel dalgalanmaya seçici biçimde yansır",
     limit: "yaygın bir düzenleme yetersizliği gibi genişletilmez",
+    functionalImpact: "açlık, susama, tuvalet ve yorgunluk sinyallerini zamanında fark edip günlük davranışı buna göre ayarlama",
+    verification: "farklı beden sinyallerinde fark etme zamanı, sözel bildirim, uygun yanıt ve dış hatırlatıcı gereksiniminin ayrı ayrı izlenmesi",
   },
   evidence_limited_mixed: {
-    mechanism: "kanıt sınırlı ve bağlama duyarlı self-regülasyon dalgalanması",
-    context: "dış test, anamnez ve gözlem aynı yönde güçlü biçimde yakınsamadığında",
-    spread: "yürütücü organizasyon, bilişsel düzenleme ve duygusal toparlanma alanlarında değişken görünür",
-    limit: "dış test kanıtı ana kararı tek başına büyütmez",
+    mechanism: "bağlama göre değişen self-regülasyon güçlüğü",
+    context: "dış test, anamnez ve gözlem tam örtüşmediğinde",
+    spread: "görevi başlatma, zihinsel organizasyonu sürdürme ve duygusal toparlanmada değişken görünür",
+    limit: "yorum yalnız ortaklaşan görev ve bağlamlarla sınırlandırılır",
+    functionalImpact: "görevi başlatma, sürdürme, geçiş yapma ve talep arttığında farklı ortamlarda tutarlı performans gösterme",
+    verification: "aynı işlevsel görevin ev, klinik ve eğitim ortamlarında ortak ölçütlerle tekrarlanarak kaynaklar arası ayrışmanın sınanması",
   },
   default: {
-    mechanism: "birincil klinik eksende toplanan self-regülasyon zorluğu",
+    mechanism: "öncelikli alanda belirginleşen regülasyon güçlüğü",
     context: "görev ve bağlam talebi arttığında",
-    spread: "yakın düzenleyici alanlara işlevsel olarak yansır",
+    spread: "görevi başlatma, sürdürme ve geçiş yapma performansını etkiler",
     limit: "tek puan ya da tek veri kaynağı üzerinden genişletilmez",
+    functionalImpact: "görevi başlatma, katılımı sürdürme, geçiş yapma ve talep sonrasında yeniden organize olma",
+    verification: "zorlanmanın bildirildiği doğal görevde başlatma, bağımsızlık, görevde kalma ve toparlanma ölçütlerinin tekrarlı gözlenmesi",
   },
   balanced: {
     mechanism: "korunmuş ve dengeli düzenleme zemini",
     context: "bağlamsal hassasiyetler görünse bile",
     spread: "günlük işlevde geniş bir risk iddiasına dönüşmez",
     limit: "yorum korunmuş kapasite sınırında kalır",
+    functionalImpact: "temel günlük rutinleri ve yapılandırılmış görevleri yaşa uygun katılım düzeyinde sürdürebilme",
+    verification: "yalnız bildirilen hassasiyetin görüldüğü doğal bağlamda hedefli gözlem yapılarak korunmuş performans ile güçlük arasındaki ayrımın doğrulanması",
   },
 }
 
@@ -124,9 +150,9 @@ function contextTrigger(evidenceMap: ClinicalEvidenceMap, key: ClinicalMechanism
 }
 
 function limitOverride(evidenceMap: ClinicalEvidenceMap, fallback: string): string {
-  if (evidenceMap.counterEvidenceLines?.length) return "bu nedenle yorum bağlamla sınırlı ve temkinli tutulur"
-  if (evidenceMap.preservedCapacityLines?.length) return "korunmuş kapasite verisi, yorumun her bağlama genellenmemesi gerektiğini gösterir"
-  if (evidenceMap.confidenceLevel === "sınırlı") return "veri güveni sınırlı olduğu için yorum temkinli kurulur"
+  if (evidenceMap.counterEvidenceLines?.length) return "korunmuş veya çelişkili bulgular nedeniyle sonuç tüm görev ve ortamlara genellenmez"
+  if (evidenceMap.preservedCapacityLines?.length) return "korunmuş kapasite görülen koşullar ayrıca dikkate alınır"
+  if (evidenceMap.confidenceLevel === "sınırlı") return "vaka içi kanıt az olduğu için sonuç yalnız değerlendirilen koşullarla sınırlıdır"
   return fallback
 }
 
@@ -135,36 +161,139 @@ function sentenceCase(value: string): string {
   return value.charAt(0).toLocaleUpperCase("tr-TR") + value.slice(1)
 }
 
+function buildContextContrastSentence(evidenceMap: ClinicalEvidenceMap): string {
+  const contexts = evidenceMap.contextMatrix || []
+  const loading = contexts.find((entry) => entry.valence === "loads") || contexts.find((entry) => entry.valence === "mixed")
+  const organizing = contexts.find((entry) => entry.valence === "organizes")
+
+  if (loading && organizing) {
+    return `${sentenceCase(loading.label)} koşullarında performans düşerken ${organizing.label} koşullarında performans daha düzenlidir. Bu fark, sabit bir kapasite kaybından çok görev talebine duyarlı bir değişkenliği gösterir.`
+  }
+  if (loading) {
+    return `${sentenceCase(loading.label)} zorlanmanın belirginleştiği bağlamdır; başka bir koşulda korunmuş performansı gösteren karşılaştırmalı veri sınırlı olduğu için bağlam etkisi genellenemez.`
+  }
+  if (organizing) {
+    return `${sentenceCase(organizing.label)} korunmuş kapasiteyi göstermektedir. Zorlanmayı artıran karşılaştırmalı koşul yeterince örneklenmediği için bu bulgu tek başına genellenmez.`
+  }
+  return "Zorlanmayı artıran ve performansı organize eden koşullar karşılaştırmalı olarak belgelenmediği için bağlamsal ayrım henüz sınırlıdır."
+}
+
+function buildDecisionBoundarySentence(evidenceMap: ClinicalEvidenceMap): string {
+  const hasExternalConcern = evidenceMap.externalTestSupport.length > 0
+  const hasRichTriangulation =
+    hasExternalConcern &&
+    evidenceMap.therapistObservationEvidence.length > 0 &&
+    evidenceMap.anamnesisEvidence.length > 0 &&
+    Boolean(evidenceMap.contextMatrix?.length)
+  if (evidenceMap.primaryAxisKind === "balanced" && hasExternalConcern) {
+    return "DNA Intelligence puanlarının korunmuş olması, dış test veya doğal bağlamda bildirilen seçici güçlüğü dışlamaz; kaynaklar arasındaki ayrışma hedefli işlevsel gözlem yapılmadan genel kapasite ya da tanı hükmüne dönüştürülemez."
+  }
+  if (hasRichTriangulation) {
+    return "Skor örüntüsü, anamnez, terapist gözlemi, dış test ve bağlam karşılaştırması aynı klinik yorumu desteklemektedir; yine de korunmuş koşullar nedeniyle güçlük her görev ve ortama genellenemez."
+  }
+  if (evidenceMap.confidenceLevel === "sınırlı") {
+    return "Skor örüntüsü klinik önem taşımakla birlikte vaka içi bağlamsal kanıt sınırlıdır; bu nedenle hipotezin genellenebilirliği düşüktür ve profil tanı ya da sabit kapasite kaybı olarak yorumlanamaz."
+  }
+  if (evidenceMap.counterEvidenceLines?.length || evidenceMap.preservedCapacityLines?.length) {
+    return "Korunmuş ve sınırlayıcı bulgular, güçlüğün her görev ve ortamda aynı biçimde ortaya çıktığı sonucuna izin vermez; karar bağlam, görev talebi ve bağımsızlık düzeyiyle sınırlandırılır."
+  }
+  return "Bu klinik hipotez mevcut skor, anamnez ve gözlem örüntüsünü açıklar; ancak tek başına tanı, nedensellik veya değişmez kapasite hükmü oluşturmaz."
+}
+
+function defaultFunctionalImpact(evidenceMap: ClinicalEvidenceMap, fallback: string): string {
+  const axis = evidenceMap.primaryAxis.toLocaleLowerCase("tr-TR")
+  if (/yaygın çoklu alan/.test(axis)) {
+    return "günlük görevleri başlatma, katılımı sürdürme, geçiş yapma, beden ve duygu sinyallerini düzenlemeye katma ve talep sonrasında yeniden organize olma"
+  }
+  if (/duyusal/.test(axis)) {
+    return "çevresel uyaranları filtrelerken göreve başlama, katılımı sürdürme, kaçınma gereksinimini düzenleme ve yüklenme sonrasında yeniden organize olma"
+  }
+  if (/yürütücü|bilişsel/.test(axis)) {
+    return "çok adımlı yönergeyi zihinde tutma, görevi başlatma, adımları sıraya koyma, tamamlanana kadar sürdürme ve geçiş yapma"
+  }
+  if (/duygusal/.test(axis)) {
+    return "engellenme ve beklenmeyen değişiklik sırasında etkinlikte kalma, yardım kullanma ve duygusal yükselme sonrasında yeniden katılım gösterme"
+  }
+  if (/fizyolojik|interosep/.test(axis)) {
+    return "beden sinyalleri ve yorgunluk değiştiğinde günlük ritmi sürdürme, dikkati koruma ve uygun toparlanma davranışını başlatma"
+  }
+  return fallback
+}
+
+function defaultVerification(evidenceMap: ClinicalEvidenceMap, fallback: string): string {
+  const axis = evidenceMap.primaryAxis.toLocaleLowerCase("tr-TR")
+  if (/yaygın çoklu alan/.test(axis)) {
+    return "aynı doğal görevlerin iki farklı ortamda başlatma, bağımsızlık, görevde kalma, geçiş ve toparlanma ölçütleriyle tekrarlı olarak karşılaştırılması"
+  }
+  if (/duyusal/.test(axis)) {
+    return "aynı görevin düşük uyaranlı ve yoğun uyaranlı koşullarda katılım, kaçınma, ipucu gereksinimi ve toparlanma süresi açısından karşılaştırılması"
+  }
+  if (/yürütücü|bilişsel/.test(axis)) {
+    return "aynı görevin kısa-görsel ve uzun-sözel yönerge koşullarında başlatma süresi, çalışma belleği yükü, doğruluk ve bağımsızlık açısından karşılaştırılması"
+  }
+  return fallback
+}
+
 export function compileClinicalNarrative(
   evidenceMap: ClinicalEvidenceMap,
   differential?: DifferentialFormulation | null
 ): CompiledClinicalNarrative {
   const key = mechanismKey(evidenceMap)
   const parts = MECHANISM_PARTS[key]
+  const mechanism =
+    key === "default" && /yaygın çoklu alan/i.test(evidenceMap.primaryAxis)
+      ? "birden fazla regülasyon alanına yayılan güçlük"
+      : key === "default" && evidenceMap.primaryAxis
+      ? `${evidenceMap.primaryAxis.toLocaleLowerCase("tr-TR")} alanında belirginleşen güçlük`
+      : parts.mechanism
   const context = key === "default" || key === "balanced" ? parts.context : contextTrigger(evidenceMap, key, parts.context)
   const limit = limitOverride(evidenceMap, parts.limit)
   const mechanismWithContext =
     key === "language_communication"
-      ? parts.mechanism
-      : `${context} ${parts.mechanism}`
+      ? mechanism
+      : `${context} ${mechanism}`
+  const isEvidenceLimitedMixed = key === "evidence_limited_mixed"
   const decisionSentence =
     key === "balanced"
-      ? `Bu vaka, ${parts.mechanism} gösterir; ${context} ${parts.spread} ve ${limit}.`
-      : `Bu vaka, ${mechanismWithContext} ile açıklanır. Bu zorlanma ${parts.spread}; ${limit}.`
+      ? `Bulgular ${mechanism} göstermektedir. ${sentenceCase(context)} ${parts.spread}; ${limit}.`
+      : isEvidenceLimitedMixed
+      ? `Dış test, anamnez ve gözlem tam örtüşmediği için ${parts.spread}. ${sentenceCase(limit)}.`
+      : `${sentenceCase(mechanismWithContext)}, ${parts.spread}. ${sentenceCase(limit)}.`
   const formulationSentence =
     key === "balanced"
-      ? `${sentenceCase(parts.mechanism)}, ${context} ${parts.spread}; ${limit}.`
-      : `${sentenceCase(mechanismWithContext)} öne çıkar. Bu zorlanma ${parts.spread}; ${limit}.`
+      ? `${sentenceCase(mechanism)}, ${context} ${parts.spread}; ${limit}.`
+      : isEvidenceLimitedMixed
+      ? `Bağlama göre değişen self-regülasyon güçlüğü öne çıkar. ${sentenceCase(limit)}.`
+      : `${sentenceCase(mechanismWithContext)} öne çıkar. Bu güçlük ${parts.spread}; ${limit}.`
   const conclusionSentence =
     key === "balanced"
-      ? `Sonuç olarak profil, ${parts.mechanism} ile açıklanır; ${limit}.`
-      : `Sonuç olarak klinik odak, ${parts.mechanism} ve bunun günlük işlevdeki yansımaları üzerinden açıklanır.`
+      ? `Sonuç olarak profil, ${mechanism} ile açıklanır; ${limit}.`
+      : isEvidenceLimitedMixed
+      ? "Sonuç olarak klinik odak, bağlama göre değişen self-regülasyon güçlüğü üzerinden açıklanır."
+      : `Sonuç olarak klinik odak, ${mechanism} ve bunun günlük işlevdeki yansımaları üzerinden açıklanır.`
+  const functionalImpact = key === "default" ? defaultFunctionalImpact(evidenceMap, parts.functionalImpact) : parts.functionalImpact
+  const verification = key === "default" ? defaultVerification(evidenceMap, parts.verification) : parts.verification
+  const functionalImpactSentence = `${sentenceCase(functionalImpact)}.`
+  const contextContrastSentence = buildContextContrastSentence(evidenceMap)
+  const decisionBoundarySentence = buildDecisionBoundarySentence(evidenceMap)
+  const verificationSentence = `${sentenceCase(verification)}.`
 
   return {
     decisionSentence,
     formulationSentence,
     conclusionSentence,
+    functionalImpactSentence,
+    contextContrastSentence,
+    decisionBoundarySentence,
+    verificationSentence,
     differential,
-    ruleIds: [`rule.narrative_compiler.${key}`, ...(differential?.ruleIds || [])],
+    ruleIds: [
+      `rule.narrative_compiler.${key}`,
+      "rule.narrative_compiler.functional_impact",
+      "rule.narrative_compiler.context_contrast",
+      "rule.narrative_compiler.decision_boundary",
+      "rule.narrative_compiler.verification",
+      ...(differential?.ruleIds || []),
+    ],
   }
 }

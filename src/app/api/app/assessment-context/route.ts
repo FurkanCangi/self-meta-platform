@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { requireConfirmedUser, requireTrustedMutation } from "@/lib/security/apiGuards"
 import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
+import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { isOwnerAuditEmail } from "@/lib/owner/ownerAccess"
 
@@ -134,11 +135,8 @@ export async function POST(request: Request) {
   })
   if (!rateLimit.ok) return rateLimitResponse(rateLimit.resetAt)
 
-  const body = await request.json().catch(() => null)
-  const parsed = createAssessmentSchema.safeParse(body)
-  if (!parsed.success) {
-    return NextResponse.json({ ok: false, error: "invalid_input" }, { status: 400 })
-  }
+  const parsed = await readJsonWithSchema(request, createAssessmentSchema)
+  if (!parsed.ok) return parsed.response
 
   const access = await getAccessibleClient({
     userId: auth.user.id,
