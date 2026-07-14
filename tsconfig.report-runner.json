@@ -19,8 +19,12 @@
     "scripts/run-report-forbidden-imports.ts",
     "scripts/run-report-determinism.ts",
     "scripts/run-report-privacy.ts",
+    "scripts/run-assessment-scoring-tests.ts",
+    "scripts/run-report-50-case-audit.ts",
+    "scripts/run-literature-integrity-tests.ts",
     "scripts/report-quality-cases.ts",
-    "src/lib/dna/**/*.ts"
+    "src/lib/dna/**/*.ts",
+    "src/lib/assessment/**/*.ts"
   ],
   "exclude": [
     "node_modules",

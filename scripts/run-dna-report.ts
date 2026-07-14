@@ -140,7 +140,10 @@ export async function runSingleFixture(fixturePath: string, _deterministicOnly =
     throw new Error("clinicalAnalysis olusmadi.");
   }
 
-  const literatureSection = buildLiteratureAlignedSection(report.clinicalAnalysis);
+  const literatureSection = buildLiteratureAlignedSection(report.clinicalAnalysis, {
+    ageMonths: fixture.ageMonths,
+    stableSeed: fixture.clientCode,
+  });
   const finalSafety = validateAndNormalizeClinicalReport(
     sanitizeFinalReportLanguage(
       normalizeClinicalReportText(appendOptionalSection(report.deterministicReport, literatureSection?.text))

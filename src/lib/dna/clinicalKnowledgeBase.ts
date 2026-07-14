@@ -152,7 +152,7 @@ const levelComments: ClinicalKnowledgeChunk[] = [
     domain: "emotional",
     purpose: "level_comment",
     level: "relative_strength",
-    text: "Göreli duygusal korunmuşluk, bazı zorlayıcı durumlarda yeniden dengeye dönüşün daha yönetilebilir olabileceğini düşündürür; bu alan, diğer regülasyon yüklerini dengeleyen bir bağlam olarak yazılabilir.",
+    text: "Göreli duygusal korunmuşluk, bazı zorlayıcı durumlarda yeniden dengeye dönüşün daha yönetilebilir olabileceğini düşündürür; bu alan, diğer self-regülasyon güçlüklerini dengeleyen bir bağlam olarak değerlendirilir.",
     useIn: ["domain_comment", "conclusion"],
   },
   {
@@ -251,7 +251,7 @@ export const CLINICAL_KNOWLEDGE_CHUNKS: ClinicalKnowledgeChunk[] = [
   {
     id: "REGULATION_REPORT_STYLE",
     purpose: "report_language",
-    text: "Rapor dili skor ile günlük yaşam arasındaki köprüyü kurmalı; çocuğu sabit etiketlerle tanımlamadan örüntüyü, bağlamı ve işlevsel karşılığı görünür kılmalıdır.",
+    text: "Skor örüntüsü, günlük yaşamda görülen işlevsel karşılıklar ve bağlamla birlikte değerlendirilir; bulgular çocuğu sabit bir etiketle tanımlamaz.",
     useIn: ["decision", "formulation", "conclusion"],
   },
   {
@@ -349,13 +349,13 @@ export const CLINICAL_KNOWLEDGE_CHUNKS: ClinicalKnowledgeChunk[] = [
   {
     id: "CROSS_SCALE_SENSORY_EMOTIONAL",
     purpose: "cross_scale",
-    text: "Duyusal ve duygusal alanlar birlikte zorlandığında, çevresel uyaran yükünün duygusal toparlanmayı zorlaştırdığı bir klinik örüntü kurulabilir; bu ilişki nedensellik değil, anlamlı birliktelik olarak ele alınır.",
+    text: "Duyusal ve duygusal alanlar birlikte zorlandığında, çevresel uyaran yoğunluğu ile uzayan duygusal toparlanma arasında işlevsel bir birliktelik değerlendirilir; bu ilişki nedensellik göstermez.",
     useIn: ["decision", "formulation", "prioritization", "conclusion"],
   },
   {
     id: "CROSS_SCALE_PHYSIOLOGICAL_EMOTIONAL",
     purpose: "cross_scale",
-    text: "Fizyolojik ve duygusal alanlar birlikte zorlandığında, uyku, yorgunluk, açlık veya bedensel dengenin duygusal eşikleri düşürebilen bağlamsal bir zemin oluşturabileceği yazılabilir.",
+    text: "Fizyolojik ve duygusal alanlar birlikte zorlandığında, uyku, yorgunluk, açlık veya bedensel dengesizlik duygusal eşiği düşürebilen bağlamsal etkenler olarak değerlendirilir.",
     useIn: ["formulation", "anamnesis_fit", "conclusion"],
   },
   {
@@ -367,7 +367,7 @@ export const CLINICAL_KNOWLEDGE_CHUNKS: ClinicalKnowledgeChunk[] = [
   {
     id: "CROSS_SCALE_INTEROCEPTION_EMOTIONAL",
     purpose: "cross_scale",
-    text: "İnterosepsiyon ve duygusal regülasyon birlikte zorlandığında, içsel gerilimi erken fark etme güçlüğü duygusal yükselme ve toparlanma sürecini anlamlandıran ikincil bir zemin olarak yazılabilir.",
+    text: "İnterosepsiyon ve duygusal regülasyon birlikte zorlandığında, içsel gerilimi erken fark etme güçlüğü duygusal yükselme ve toparlanma sürecini açıklayan ikincil bir etken olarak değerlendirilir.",
     useIn: ["formulation", "anamnesis_fit", "prioritization"],
   },
   {
@@ -427,7 +427,7 @@ export const CLINICAL_KNOWLEDGE_CHUNKS: ClinicalKnowledgeChunk[] = [
   {
     id: "RISK_PROFILE_PROTECTIVE_FACTORS",
     purpose: "risk_profile",
-    text: "Rapor yalnız kırılganlık haritası değil, işlevsel denge haritası da sunmalıdır; korunmuş alanlar ve iyi işleyen bağlamlar kısa ama açık biçimde belirtilmelidir.",
+    text: "Korunmuş alanlar ve iyi işleyen bağlamlar, güçlüklerin hangi koşullarda belirginleştiğini sınırlayan dengeleyici kanıt sağlar.",
     useIn: ["evidence_profile", "formulation", "conclusion"],
   },
   {

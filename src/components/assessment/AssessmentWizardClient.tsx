@@ -488,8 +488,6 @@ export default function AssessmentWizardClient() {
           toplam: result.toplam,
           siniflama: advancedReport.globalLevel,
           age_months: clientInfo.ageMonths,
-          norm_source: advancedReport.normSource,
-          age_band_label: advancedReport.ageBandLabel,
           domain_levels: advancedReport.domainLevels ?? advancedReport.domains,
         },
         deterministicReport: advancedReport.deterministicReport,

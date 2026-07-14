@@ -1,10 +1,23 @@
+export type QuestionScale =
+  | "fizyolojik"
+  | "duyusal"
+  | "duygusal"
+  | "bilissel"
+  | "yurutucu"
+  | "intero"
+
+export type QuestionScoringDirection = "reverse" | "direct"
+
 export type Question = {
   id: number
   text: string
-  scale: string
+  scale: QuestionScale
+  scoringDirection: QuestionScoringDirection
 }
 
-export const questions: Question[] = [
+type QuestionDefinition = Omit<Question, "scoringDirection">
+
+const questionDefinitions: QuestionDefinition[] = [
 
 /* FİZYOLOJİK REGÜLASYON */
 
@@ -85,3 +98,26 @@ export const questions: Question[] = [
 { id:60, scale:"intero", text:"Rahatladığında bunu fark eder." }
 
 ]
+
+const SCALE_SCORING_DIRECTIONS: Record<QuestionScale, QuestionScoringDirection> = {
+  fizyolojik: "reverse",
+  duyusal: "reverse",
+  duygusal: "reverse",
+  bilissel: "reverse",
+  yurutucu: "reverse",
+  intero: "direct",
+}
+
+// Güçlük bildiren ilk beş alanda yüksek sıklık daha fazla güçlük anlamına
+// gelir ve ters puanlanır. Beceri bildiren interosepsiyon maddeleri doğrudandır.
+export const questions: Question[] = questionDefinitions.map((question) => ({
+  ...question,
+  scoringDirection: SCALE_SCORING_DIRECTIONS[question.scale],
+}))
+
+if (
+  questions.length !== 60 ||
+  questions.some((question, index) => question.id !== index + 1)
+) {
+  throw new Error("DNA soru seti 1-60 arasında sıralı ve eksiksiz olmalıdır")
+}

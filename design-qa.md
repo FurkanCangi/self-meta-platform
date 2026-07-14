@@ -1,110 +1,61 @@
-# Design QA
+# DNA Intelligence Page Design QA
 
-Target: site-wide cookie consent
+## Scope
 
-Reference: KVKK cookie consent requirement / first-visit consent pattern
+- Route: `/dna-nedir`
+- Selected visual source: `/Users/furkancangi/.codex/generated_images/019ecfb7-080f-7730-8baf-3ef7e620363f/exec-acabe6a1-844c-474e-839d-3a6e2820583f.png`
+- Desktop lower-section capture: `.tmp/design-qa/dna-nedir-desktop-v2.png`
+- Mobile model-section capture: `.tmp/design-qa/dna-nedir-mobile-v2.png`
+- Full comparison: `.tmp/design-qa/dna-nedir-comparison.png`
+- Focused hero comparison: `.tmp/design-qa/dna-nedir-comparison-hero.png`
+- Desktop verification viewport: `1280 x 720`
+- Mobile viewport: `390 x 844`
+- Interaction state: default page state with focused checks on the clinical pathway and model bridge
 
-Checks:
-- Root layout now renders a site-wide cookie consent banner on first visit.
-- Banner separates mandatory cookies from analytics and marketing categories.
-- Users can reject non-essential cookies, accept all, or open the preference modal.
-- New `/cerez-politikasi` legal page is public and linked from the banner and footer.
-- Desktop and mobile first-visit Chrome screenshots show the banner without blocking primary navigation.
-- `npm run lint` and `npm run build` pass.
+## Visual Comparison
 
-Final result: passed
+The selected hero direction was preserved. The two lower layers were then inspected separately at desktop and mobile sizes after user feedback identified the dark workflow strip and text-heavy model section as the weak parts of the page.
 
----
+### Fidelity
 
-Target: `/arastirma/arastirma-notlari`
+- **Layout:** The first layer remains unchanged: compact shared header, left-aligned decision statement, and right-side radial regulation map. The second layer is now one connected clinical pathway; the third is one continuous two-column model bridge with an integrated outcome strip.
+- **Typography:** Heading hierarchy, line breaks, weight, and density match the selected direction. Supporting text is intentionally product-specific Turkish copy and remains short enough to preserve the reference rhythm.
+- **Color:** White clinical surface, light neutral pathway band, navy typography, and restrained cyan/blue/purple accents maintain the selected clinical palette. Dark navy is reserved for the final shared outcome rather than an entire navigation-like band.
+- **Imagery:** The production DNA Intelligence brand asset is used as the regulation core. No placeholder or generated substitute remains in the implementation.
+- **Icons:** Existing Lucide icons are used consistently for semantic UI signals and workflow steps. Stroke weights and sizes remain visually coherent.
+- **Surfaces:** The hero stays unframed. The workflow uses a shared line instead of separate cards, while the model distinction uses one continuous canvas and one outcome strip.
+- **Responsive behavior:** At `390 x 844`, the pathway becomes a vertical timeline and the model bridge becomes a linear sequence. Document and viewport widths both remain `390px`; no horizontal overflow or overlapping production content was detected.
 
-Reference: `/Users/furkancangi/Downloads/ChatGPT Image 8 Haz 2026 10_53_24.png`
+## Interaction And Accessibility Checks
 
-Checks:
-- Page now uses an archive-style research notes layout with hero illustration, category filters, evidence filters, search, sort, article cards, pagination, and research collaboration CTA.
-- The content stays scientific and clinical; DNA Labs and product-development language are not mixed into the research notes page.
-- Category, evidence, search, sort, pagination, and bookmark controls render as interactive UI.
-- Desktop and 390px mobile Chrome checks show no horizontal overflow.
-- `npm run lint` and `npm run build` pass.
+- `Nasıl çalışır` resolves to `#klinik-akis` and moves to the workflow band.
+- `Eğitim modeli` points to `/dna-nedir/egitim-programi`.
+- Header navigation retains its existing keyboard-accessible links and menu buttons.
+- The regulation image has descriptive alt text; decorative icons are hidden from assistive technology.
+- Desktop and mobile document widths match their viewport widths; no horizontal scroll was detected.
+- Browser console errors and warnings: none.
+- TypeScript lint: passed.
+- Production build: passed after the lower-section redesign.
 
-Final result: passed
+## Comparison History
 
----
+### Iteration 1
 
-Target: `/dna-nedir/testler`
+- **P2 - Header density:** The shared header initially used the full marketing height and the longer `DNA Intelligence Nedir?` label, reducing the reference hero's open space.
+- **Fix:** Added a route-scoped compact header mode and shortened only this route's visible navigation label to `DNA Intelligence`.
+- **Post-fix evidence:** `.tmp/design-qa/dna-nedir-desktop.png` and `.tmp/design-qa/dna-nedir-comparison-hero.png`.
 
-Reference: `/Users/furkancangi/Downloads/ChatGPT Image 8 Haz 2026 10_35_25.png`
+### Iteration 2
 
-Checks:
-- Page is redesigned as a clinical evaluation tools surface, not a dense table or separate profile concept.
-- Hero uses the requested tests and scales messaging with a soft clinical form mockup.
-- Assessment areas, evaluation flow, upcoming tools, and contact CTA use the DNA cyan, blue, violet, and navy palette.
-- No `DNA Profile`, age details, cut-off language, diagnosis claim, or automatic decision claim is used on the page.
-- Shared header and footer remain intact.
-- Desktop and 390px mobile Chrome screenshots show the hero, tool cards, flow, upcoming tools, and CTA without horizontal overflow.
-- `npm run lint` and `npm run build` pass.
+- **P2 - Lower-layer hierarchy:** The dark four-step strip resembled navigation and the following two-column explanation repeated too much copy.
+- **Fix:** Replaced the strip with a light connected clinical pathway. Combined model distinction, shared outcome, and actions into one structured section with shorter labels and no duplicate final CTA.
+- **Post-fix evidence:** `.tmp/design-qa/dna-nedir-desktop-v2.png` and `.tmp/design-qa/dna-nedir-mobile-v2.png`.
 
-Final result: passed
+## Remaining Notes
 
----
+- **P3:** The small Next.js development indicator visible in the local captures is development-only and is absent from production builds.
+- The implementation intentionally uses the existing production logo and shared marketing header rather than duplicating the reference as a separate one-off component.
 
-Target: `/iletisim`
+No unresolved P0, P1, or P2 findings remain.
 
-Reference: `/Users/furkancangi/Downloads/ChatGPT Image 8 Haz 2026 10_26_04.png`
-
-Checks:
-- Page now uses a split contact hero with DNA Intelligence messaging on the left and a large contact form panel on the right.
-- Contact cards, form fields, paper-plane icon language, and soft cyan/lavender background match the requested reference direction.
-- Existing shared header and footer remain in place.
-- Desktop and forced 390px mobile Chrome checks show no horizontal overflow.
-- `npm run lint` and `npm run build` pass.
-
-Final result: passed
-
----
-
-Target: `/dna-nedir/ai-raporlama`
-
-Reference: `/Users/furkancangi/Downloads/ChatGPT Image 8 Haz 2026 10_07_51.png`
-
-Checks:
-- Hero uses the requested AI reporting message and a ham veri to klinik rapor flow.
-- Visual language keeps the DNA cyan, blue, violet, navy palette on a white soft-gradient surface.
-- Report content is shown as a large report mockup with side explanations instead of a dense card grid.
-- Human + AI collaboration clearly states that the final decision remains with the therapist.
-- Desktop and 390px mobile checks show no horizontal overflow.
-- `npm run lint` and `npm run build` pass.
-
-Final result: passed
-
----
-
-Target: `/cozumler`
-
-Reference: `/var/folders/7j/kgq_1qrj27n39d0yjmkfh1_40000gn/T/TemporaryItems/NSIRD_screencaptureui_VZuaD8/Ekran Resmi 2026-06-08 10.15.45.png`
-
-Checks:
-- Hero visual no longer reads as an unfinished generic brain panel.
-- The right visual now explains the DNA ecosystem as education, evaluation, DNA Intelligence, AI analysis, and therapist-approved reporting.
-- White, cyan, blue, violet, and navy theme remains consistent with the rest of the marketing pages.
-- Desktop and 390px mobile checks show no horizontal overflow.
-- `npm run lint` and `npm run build` pass.
-
-Final result: passed
-
----
-
-Target: `/dna-nedir/gelecek-moduller`
-
-Reference: `/Users/furkancangi/Downloads/ChatGPT Image 8 Haz 2026 10_17_15.png`
-
-Checks:
-- Page now uses a DNA Labs / future modules concept instead of the default white card layout.
-- Hero stays light and includes the requested clinical limitation notice.
-- Module journey uses dark navy premium cards with cyan, blue, and violet accents.
-- Clinical flow uses connected round nodes on a white, soft-gradient surface.
-- Final CTA uses a dark gradient and DNA Labs roadmap language without diagnosis or automatic decision claims.
-- Desktop and 390px mobile Chrome headless screenshots show no hero text clipping or module card overlap.
-- `npm run lint` and `npm run build` pass.
-
-Final result: passed
+final result: passed

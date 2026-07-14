@@ -49,6 +49,8 @@ export function countWeakHedges(text: string): number {
 
 export function hasForbiddenClinicalDetermination(text: string): boolean {
   const normalized = normalizeText(text)
+    .replace(/(?:bu rapor|bu değerlendirme)?\s*tek başına tanı koymaz/g, " ")
+    .replace(/tanısal bir etiket değildir/g, " ")
   return /tanı konur|tanısı konur|tanı koy|tedavi edilmelidir|tedavi planı|müdahale planı|kesin olarak|mutlaka uygulanmalıdır|ilaç tedavisi|terapi önerilir|haftada \d+ seans/.test(
     normalized
   )

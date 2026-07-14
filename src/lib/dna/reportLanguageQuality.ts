@@ -1019,8 +1019,25 @@ function capitalizeSentenceStarts(text: string): string {
   );
 }
 
+const INTERNAL_NORMATIVE_DISCLOSURE_PATTERN =
+  /\b(?:normatif|standardize edilmiş norm(?:atif)?|tanı eşiği|yaş-duyarlı yorum|sistem içi (?:sabit )?eşik|sistem içi yorum bandı)\b/i;
+
+function removeInternalNormativeDisclosure(text: string): string {
+  return String(text || "")
+    .split("\n")
+    .map((line) =>
+      line
+        .split(/(?<=[.!?])\s+/)
+        .filter((sentence) => !INTERNAL_NORMATIVE_DISCLOSURE_PATTERN.test(sentence))
+        .join(" ")
+        .trim()
+    )
+    .join("\n")
+    .replace(/\n{3,}/g, "\n\n");
+}
+
 export function sanitizeFinalReportLanguage(text: string): string {
-  let sanitized = String(text || "");
+  let sanitized = removeInternalNormativeDisclosure(text);
   sanitized = applyReplacements(sanitized, INTERNAL_INSTRUCTION_REPLACEMENTS);
   sanitized = normalizeRepeatedMechanismLabels(sanitized);
   sanitized = replaceInternalMechanismIds(sanitized);
@@ -1212,7 +1229,7 @@ export function sanitizeFinalReportLanguage(text: string): string {
     .replace(/Korunmuş işlev alanları açısından\s+Net bilgi verilmedi\.?/gi, "Korunmuş alanlara ilişkin yeterli bilgi verilmemiştir.")
     .replace(/Korunmuş işlev alanlarına ilişkin bilgi:\s+Net bilgi verilmedi\.?/gi, "Korunmuş alanlara ilişkin yeterli bilgi verilmemiştir.")
     .replace(/Anamnezde korunmuş kapasite veya güçlü alan bildirilmesi, yorumun her bağlama genellenmemesi gerektiğini gösterir/gi, "Korunmuş alan bilgisi, yorumun bağlama göre yapılmasını gerektirir")
-    .replace(/Anamnez teması:\s*Anamnezde korunmuş\/güçlü işlev alanları tarif edilmektedir\./gi, "Anamnez teması: Korunmuş alanlara ilişkin veri sınırlıdır.")
+    .replace(/Anamnez teması:\s*Anamnezde korunmuş\/güçlü işlev alanları tarif edilmektedir\./gi, "Anamnez teması: Korunmuş işlev alanları bildirilmektedir.")
     .replace(/Anamnezde korunmuş veya destekleyici olabilecek güçlü yönler tarif edilmektedir; bunlar test sonuçlarıyla birlikte yorumlandığında profile denge kazandırabilir\./gi, "Korunmuş veya destekleyici alanlara ilişkin bilgiler, yeterli ayrıntı içerdiğinde profilin her bağlama genellenmemesi için dengeleyici veri sağlar.")
     .replace(/Başvuru nedeni ve birincil ebeveyn endişeleri, testte öne çıkan alanların günlük yaşam karşılığını anlamlandırmak açısından yüksek değerli klinik veri sunmaktadır\./gi, "Başvuru nedeni ve aile endişeleri, yeterli ayrıntı içerdiği ölçüde testte öne çıkan alanların günlük yaşam karşılığını anlamlandırmaya katkı sağlar.")
     .replace(/Anamnezde çevresel veya dokunsal uyaran altında belirgin duyusal hassasiyet\/arayış örüntüsü tarif edilmektedir\./gi, "Anamnezde çevresel veya dokunsal uyaranlara verilen yanıtta belirgin duyusal reaktivite örüntüsü tarif edilmektedir.")

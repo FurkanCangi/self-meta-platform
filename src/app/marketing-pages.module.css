@@ -594,6 +594,973 @@
   padding:22px;
 }
 
+/* DNA Intelligence signal-map direction */
+.signalPage{
+  background:#ffffff;
+}
+
+.signalPage .main{
+  width:min(1320px, calc(100% - 64px));
+  padding:0 0 72px;
+}
+
+.signalHero{
+  min-height:646px;
+  display:grid;
+  grid-template-columns:minmax(0, .82fr) minmax(600px, 1.18fr);
+  gap:54px;
+  align-items:center;
+  padding:62px 0 48px;
+}
+
+.signalHeroCopy{
+  min-width:0;
+}
+
+.signalEyebrow{
+  display:block;
+  color:#075fd8;
+  font-size:12px;
+  line-height:1.2;
+  font-weight:900;
+  letter-spacing:0;
+  text-transform:uppercase;
+}
+
+.signalHeroCopy h1{
+  margin:22px 0 0;
+  color:#06183c;
+  font-size:58px;
+  line-height:1;
+  font-weight:920;
+  letter-spacing:0;
+}
+
+.signalHeroCopy h2{
+  margin:34px 0 0;
+  color:#06183c;
+  font-size:50px;
+  line-height:1.12;
+  font-weight:900;
+  letter-spacing:0;
+}
+
+.signalHeroCopy h2::after{
+  content:"";
+  display:block;
+  width:52px;
+  height:3px;
+  margin-top:28px;
+  background:#1769ff;
+}
+
+.signalHeroCopy p{
+  max-width:570px;
+  margin:20px 0 0;
+  color:#50617e;
+  font-size:16px;
+  line-height:1.65;
+}
+
+.signalActions{
+  display:flex;
+  align-items:center;
+  gap:30px;
+  margin-top:28px;
+}
+
+.signalPrimaryAction,
+.signalSecondaryAction{
+  min-height:50px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:12px;
+  color:#ffffff;
+  text-decoration:none;
+  font-size:15px;
+  font-weight:850;
+  transition:transform .18s ease, box-shadow .18s ease, color .18s ease;
+}
+
+.signalPrimaryAction{
+  min-width:172px;
+  padding:0 20px;
+  border-radius:6px;
+  background:linear-gradient(100deg, #0875ee 0%, #315ff3 62%, #6631e8 100%);
+  box-shadow:0 14px 28px rgba(37,99,235,.18);
+}
+
+.signalPrimaryAction:hover{
+  transform:translateY(-2px);
+  box-shadow:0 18px 34px rgba(37,99,235,.24);
+}
+
+.signalSecondaryAction{
+  position:relative;
+  min-width:auto;
+  color:#28405f;
+}
+
+.signalSecondaryAction::after{
+  content:"";
+  position:absolute;
+  left:0;
+  right:0;
+  bottom:7px;
+  height:2px;
+  background:#16a8db;
+}
+
+.signalSecondaryAction:hover{
+  color:#075fd8;
+}
+
+.signalMap{
+  min-width:0;
+  margin:0;
+}
+
+.signalPriority{
+  width:max-content;
+  max-width:100%;
+  min-height:48px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  margin:0 auto;
+  padding:0 18px;
+  border-radius:999px;
+  color:#48607f;
+  background:#ffffff;
+  border:1px solid #d8e3f4;
+  box-shadow:0 10px 24px rgba(46,78,123,.06);
+  font-size:14px;
+}
+
+.signalPriority svg{
+  color:#1769ff;
+}
+
+.signalPriority strong{
+  color:#075fd8;
+  font-weight:900;
+}
+
+.signalMapCanvas{
+  position:relative;
+  height:494px;
+  margin-top:10px;
+}
+
+.signalCore{
+  position:absolute;
+  left:50%;
+  top:50%;
+  z-index:2;
+  width:230px;
+  height:230px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:#ffffff;
+  border:1px solid #dfe8f7;
+  transform:translate(-50%, -48%);
+}
+
+.signalCore::before,
+.signalCore::after{
+  content:"";
+  position:absolute;
+  border-radius:50%;
+  pointer-events:none;
+}
+
+.signalCore::before{
+  inset:-34px;
+  border:1px solid #d8e6fa;
+}
+
+.signalCore::after{
+  inset:-70px;
+  border:1px dashed #cbdcf7;
+}
+
+.signalCore img{
+  position:relative;
+  z-index:1;
+  width:174px;
+  height:auto;
+  object-fit:contain;
+  filter:drop-shadow(0 18px 24px rgba(37,99,235,.12));
+}
+
+.signalDomain{
+  --signal-color:#1769ff;
+  --signal-level:60%;
+  position:absolute;
+  z-index:3;
+  width:174px;
+  color:#06183c;
+}
+
+.signalDomain[data-position="left-top"]{
+  left:1%;
+  top:66px;
+}
+
+.signalDomain[data-position="left-middle"]{
+  left:-2%;
+  top:270px;
+}
+
+.signalDomain[data-position="right-top"]{
+  right:0;
+  top:66px;
+}
+
+.signalDomain[data-position="right-middle"]{
+  right:-2%;
+  top:270px;
+}
+
+.signalDomain[data-position="bottom"]{
+  left:50%;
+  bottom:0;
+  transform:translateX(-50%);
+}
+
+.signalDomain::after{
+  content:"";
+  position:absolute;
+  top:24px;
+  width:88px;
+  height:1px;
+  background:color-mix(in srgb, var(--signal-color) 46%, #d8e3f4);
+}
+
+.signalDomain[data-position^="left"]::after{
+  left:calc(100% - 2px);
+}
+
+.signalDomain[data-position^="right"]::after{
+  right:calc(100% - 2px);
+}
+
+.signalDomain[data-position="bottom"]::after{
+  left:50%;
+  top:-64px;
+  width:1px;
+  height:58px;
+}
+
+.signalDomainTitle{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-size:14px;
+  font-weight:900;
+}
+
+.signalDomainTitle > span:first-child{
+  width:40px;
+  height:40px;
+  display:grid;
+  place-items:center;
+  flex:0 0 auto;
+  border-radius:50%;
+  color:var(--signal-color);
+  background:color-mix(in srgb, var(--signal-color) 8%, #ffffff);
+  border:1px solid color-mix(in srgb, var(--signal-color) 18%, #dce6f5);
+}
+
+.signalPulse{
+  display:block;
+  margin:8px 0 0 38px;
+  color:color-mix(in srgb, var(--signal-color) 64%, #8aa4c8);
+}
+
+.signalLevel{
+  width:116px;
+  height:4px;
+  display:block;
+  overflow:hidden;
+  margin:4px 0 0 38px;
+  border-radius:999px;
+  background:#edf1f8;
+}
+
+.signalLevel i{
+  width:var(--signal-level);
+  height:100%;
+  display:block;
+  border-radius:inherit;
+  background:var(--signal-color);
+}
+
+.clinicalPathway{
+  position:relative;
+  left:50%;
+  width:100vw;
+  margin-left:-50vw;
+  padding:68px 0 72px;
+  border-top:1px solid #e4ebf5;
+  border-bottom:1px solid #e4ebf5;
+  background:#f6f9fd;
+}
+
+.clinicalPathwayHeader,
+.clinicalTrack{
+  width:min(1320px, calc(100% - 64px));
+  margin-right:auto;
+  margin-left:auto;
+}
+
+.clinicalPathwayHeader{
+  display:grid;
+  grid-template-columns:minmax(300px, .8fr) minmax(380px, 1.2fr);
+  gap:72px;
+  align-items:end;
+}
+
+.clinicalPathwayHeader span,
+.modelBridgeHeader > span{
+  color:#0868db;
+  font-size:12px;
+  font-weight:900;
+  text-transform:uppercase;
+}
+
+.clinicalPathwayHeader h2{
+  margin:12px 0 0;
+  color:#06183c;
+  font-size:36px;
+  line-height:1.12;
+  font-weight:900;
+  letter-spacing:0;
+}
+
+.clinicalPathwayHeader p{
+  max-width:650px;
+  margin:0;
+  color:#53627d;
+  font-size:15px;
+  line-height:1.65;
+}
+
+.clinicalTrack{
+  position:relative;
+  display:grid;
+  grid-template-columns:repeat(4, minmax(0, 1fr));
+  margin-top:48px;
+}
+
+.clinicalTrack::before{
+  content:"";
+  position:absolute;
+  top:23px;
+  right:12.5%;
+  left:12.5%;
+  height:1px;
+  background:#cbdaf0;
+}
+
+.clinicalTrackItem{
+  position:relative;
+  z-index:1;
+  display:grid;
+  grid-template-columns:48px minmax(0, 1fr);
+  gap:16px;
+  padding-right:30px;
+}
+
+.clinicalTrackMarker{
+  width:48px;
+  height:48px;
+  display:grid;
+  place-items:center;
+  border:1px solid #bfd2ee;
+  border-radius:50%;
+  color:#1769ff;
+  background:#ffffff;
+  box-shadow:0 7px 18px rgba(21,70,139,.08);
+}
+
+.clinicalTrackItem:nth-child(2) .clinicalTrackMarker,
+.clinicalTrackItem:nth-child(4) .clinicalTrackMarker{
+  color:#6d39e9;
+}
+
+.clinicalTrackItem span{
+  color:#1181e9;
+  font-size:11px;
+  font-weight:900;
+}
+
+.clinicalTrackItem h3{
+  margin:5px 0 0;
+  color:#06183c;
+  font-size:17px;
+  line-height:1.25;
+  font-weight:850;
+  letter-spacing:0;
+}
+
+.clinicalTrackItem p{
+  max-width:210px;
+  margin:7px 0 0;
+  color:#62718a;
+  font-size:13px;
+  line-height:1.5;
+}
+
+.modelBridgeSection{
+  padding:88px 0 80px;
+}
+
+.modelBridgeHeader{
+  max-width:760px;
+  margin:0 auto;
+  text-align:center;
+}
+
+.modelBridgeHeader h2{
+  margin:14px 0 0;
+  color:#06183c;
+  font-size:40px;
+  line-height:1.1;
+  font-weight:900;
+  letter-spacing:0;
+}
+
+.modelBridgeHeader p{
+  max-width:670px;
+  margin:17px auto 0;
+  color:#53627d;
+  font-size:15px;
+  line-height:1.65;
+}
+
+.modelBridgeCanvas{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) 150px minmax(0, 1fr);
+  align-items:stretch;
+  margin-top:48px;
+  border-top:1px solid #dbe5f3;
+  border-bottom:1px solid #dbe5f3;
+}
+
+.modelBridgeColumn{
+  min-width:0;
+  padding:38px 36px 40px;
+}
+
+.modelBridgeColumn:first-child{
+  padding-left:0;
+}
+
+.modelBridgeColumn:last-child{
+  padding-right:0;
+}
+
+.modelBridgeColumnTop{
+  display:flex;
+  align-items:center;
+  gap:13px;
+}
+
+.modelBridgeColumnTop > span{
+  width:44px;
+  height:44px;
+  display:grid;
+  flex:0 0 auto;
+  place-items:center;
+  border:1px solid #c9daf2;
+  border-radius:50%;
+  color:#1769ff;
+  background:#f6f9fd;
+}
+
+.modelBridgeColumn:last-child .modelBridgeColumnTop > span{
+  color:#6d39e9;
+}
+
+.modelBridgeColumnTop small{
+  color:#62718a;
+  font-size:11px;
+  line-height:1.35;
+  font-weight:850;
+  text-transform:uppercase;
+}
+
+.modelBridgeColumn h3{
+  margin:20px 0 0;
+  color:#06183c;
+  font-size:26px;
+  line-height:1.14;
+  font-weight:900;
+  letter-spacing:0;
+}
+
+.modelBridgeColumn ul{
+  display:grid;
+  gap:13px;
+  margin:24px 0 0;
+  padding:0;
+  list-style:none;
+}
+
+.modelBridgeColumn li{
+  display:flex;
+  gap:10px;
+  align-items:flex-start;
+  color:#324764;
+  font-size:14px;
+  line-height:1.48;
+  font-weight:720;
+}
+
+.modelBridgeColumn li svg{
+  flex:0 0 auto;
+  margin-top:1px;
+  color:#1685ed;
+}
+
+.modelBridgeConnector{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  border-right:1px solid #dbe5f3;
+  border-left:1px solid #dbe5f3;
+  color:#1769ff;
+  background:#f7faff;
+}
+
+.modelBridgeConnector span{
+  color:#667791;
+  font-size:11px;
+  font-weight:800;
+}
+
+.modelBridgeConnector strong{
+  color:#06183c;
+  font-size:12px;
+  font-weight:850;
+}
+
+.modelBridgeOutcome{
+  display:flex;
+  gap:30px;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:30px;
+  padding:24px 28px;
+  border-radius:6px;
+  color:#ffffff;
+  background:#061a3c;
+}
+
+.modelBridgeOutcomeCopy{
+  display:flex;
+  gap:15px;
+  align-items:center;
+}
+
+.modelBridgeOutcomeCopy > span{
+  width:44px;
+  height:44px;
+  display:grid;
+  flex:0 0 auto;
+  place-items:center;
+  border:1px solid rgba(155,190,255,.34);
+  border-radius:50%;
+  color:#34d4e6;
+}
+
+.modelBridgeOutcomeCopy small{
+  display:block;
+  color:#8fb3dc;
+  font-size:11px;
+  font-weight:850;
+  text-transform:uppercase;
+}
+
+.modelBridgeOutcomeCopy strong{
+  display:block;
+  margin-top:4px;
+  color:#ffffff;
+  font-size:17px;
+  line-height:1.4;
+  font-weight:800;
+}
+
+.modelBridgeActions{
+  display:flex;
+  flex:0 0 auto;
+  gap:12px;
+  align-items:center;
+}
+
+.modelBridgeActions .primary,
+.modelBridgeActions .secondary{
+  min-height:48px;
+}
+
+.modelBridgeActions .secondary{
+  color:#ffffff;
+  border-color:rgba(255,255,255,.3);
+  background:transparent;
+}
+
+.modelBridgeActions .secondary:hover{
+  border-color:#ffffff;
+  background:rgba(255,255,255,.08);
+}
+
+@media (max-width: 1180px){
+  .signalHero{
+    grid-template-columns:minmax(0, .8fr) minmax(520px, 1.2fr);
+    gap:30px;
+  }
+
+  .signalHeroCopy h1{
+    font-size:50px;
+  }
+
+  .signalHeroCopy h2{
+    font-size:44px;
+  }
+
+  .signalDomain{
+    width:154px;
+  }
+
+  .signalDomain::after{
+    width:62px;
+  }
+
+  .clinicalTrackItem{
+    padding-right:18px;
+  }
+
+  .modelBridgeColumn{
+    padding-right:26px;
+    padding-left:26px;
+  }
+}
+
+@media (max-width: 960px){
+  .signalPage .main{
+    width:min(760px, calc(100% - 40px));
+    padding-top:0;
+  }
+
+  .signalHero{
+    min-height:auto;
+    grid-template-columns:1fr;
+    gap:42px;
+    padding:54px 0 48px;
+  }
+
+  .signalHeroCopy{
+    max-width:650px;
+  }
+
+  .signalMap{
+    width:100%;
+    max-width:700px;
+    margin:0 auto;
+  }
+
+  .clinicalPathwayHeader,
+  .clinicalTrack{
+    width:min(760px, calc(100% - 40px));
+  }
+
+  .clinicalPathwayHeader{
+    grid-template-columns:1fr;
+    gap:16px;
+  }
+
+  .clinicalPathwayHeader p{
+    max-width:640px;
+  }
+
+  .clinicalTrack{
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:34px 28px;
+    margin-top:38px;
+  }
+
+  .clinicalTrack::before{
+    display:none;
+  }
+
+  .clinicalTrackItem{
+    padding:22px 0 0;
+    border-top:1px solid #d7e2f2;
+  }
+
+  .modelBridgeSection{
+    padding:68px 0 64px;
+  }
+
+  .modelBridgeCanvas{
+    grid-template-columns:1fr;
+  }
+
+  .modelBridgeColumn,
+  .modelBridgeColumn:first-child,
+  .modelBridgeColumn:last-child{
+    padding:32px 20px;
+  }
+
+  .modelBridgeConnector{
+    min-height:76px;
+    flex-direction:row;
+    border-top:1px solid #dbe5f3;
+    border-right:0;
+    border-bottom:1px solid #dbe5f3;
+    border-left:0;
+  }
+
+  .modelBridgeOutcome{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .modelBridgeActions{
+    width:100%;
+  }
+}
+
+@media (max-width: 620px){
+  .signalPage .main{
+    width:calc(100% - 32px);
+    padding-bottom:54px;
+  }
+
+  .signalHero{
+    gap:34px;
+    padding:38px 0 34px;
+  }
+
+  .signalEyebrow{
+    font-size:11px;
+  }
+
+  .signalHeroCopy h1{
+    margin-top:16px;
+    font-size:38px;
+  }
+
+  .signalHeroCopy h2{
+    margin-top:24px;
+    font-size:37px;
+    line-height:1.14;
+  }
+
+  .signalHeroCopy h2::after{
+    margin-top:22px;
+  }
+
+  .signalHeroCopy p{
+    font-size:15px;
+  }
+
+  .signalActions{
+    align-items:stretch;
+    flex-direction:column;
+    gap:10px;
+  }
+
+  .signalPrimaryAction,
+  .signalSecondaryAction{
+    width:100%;
+  }
+
+  .signalSecondaryAction::after{
+    left:calc(50% - 52px);
+    right:calc(50% - 52px);
+  }
+
+  .signalPriority{
+    width:100%;
+    min-height:54px;
+    flex-wrap:wrap;
+    gap:4px 8px;
+    padding:8px 14px;
+    text-align:center;
+  }
+
+  .signalMapCanvas{
+    height:auto;
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:0 16px;
+    margin-top:26px;
+  }
+
+  .signalCore{
+    position:relative;
+    left:auto;
+    top:auto;
+    width:176px;
+    height:176px;
+    grid-column:1 / -1;
+    margin:34px auto 54px;
+    transform:none;
+  }
+
+  .signalCore::before{
+    inset:-24px;
+  }
+
+  .signalCore::after{
+    inset:-46px;
+  }
+
+  .signalCore img{
+    width:132px;
+  }
+
+  .signalDomain,
+  .signalDomain[data-position="left-top"],
+  .signalDomain[data-position="left-middle"],
+  .signalDomain[data-position="right-top"],
+  .signalDomain[data-position="right-middle"],
+  .signalDomain[data-position="bottom"]{
+    position:relative;
+    inset:auto;
+    width:auto;
+    min-width:0;
+    padding:15px 0;
+    border-top:1px solid #e2e9f4;
+    transform:none;
+  }
+
+  .signalDomain[data-position="left-top"]{ order:1; }
+  .signalDomain[data-position="right-top"]{ order:2; }
+  .signalDomain[data-position="left-middle"]{ order:3; }
+  .signalDomain[data-position="right-middle"]{ order:4; }
+  .signalDomain[data-position="bottom"]{
+    order:5;
+    grid-column:1 / -1;
+    width:calc(50% - 8px);
+    justify-self:center;
+  }
+
+  .signalDomain::after{
+    display:none;
+  }
+
+  .signalDomainTitle{
+    gap:7px;
+    font-size:13px;
+  }
+
+  .signalDomainTitle > span:first-child{
+    width:34px;
+    height:34px;
+  }
+
+  .signalPulse{
+    margin-left:29px;
+  }
+
+  .signalLevel{
+    width:calc(100% - 36px);
+    margin-left:29px;
+  }
+
+  .clinicalPathway{
+    padding:52px 0 56px;
+  }
+
+  .clinicalPathwayHeader,
+  .clinicalTrack{
+    width:calc(100% - 32px);
+  }
+
+  .clinicalPathwayHeader h2{
+    font-size:30px;
+  }
+
+  .clinicalTrack{
+    grid-template-columns:1fr;
+    gap:25px;
+    margin-top:34px;
+  }
+
+  .clinicalTrack::before{
+    top:24px;
+    bottom:24px;
+    left:23px;
+    width:1px;
+    height:auto;
+    display:block;
+  }
+
+  .clinicalTrackItem{
+    grid-template-columns:48px minmax(0, 1fr);
+    padding:0;
+    border-top:0;
+  }
+
+  .clinicalTrackItem p{
+    max-width:none;
+  }
+
+  .modelBridgeSection{
+    padding:58px 0 50px;
+  }
+
+  .modelBridgeHeader h2{
+    font-size:32px;
+  }
+
+  .modelBridgeCanvas{
+    margin-top:36px;
+  }
+
+  .modelBridgeColumn,
+  .modelBridgeColumn:first-child,
+  .modelBridgeColumn:last-child{
+    padding:28px 4px;
+  }
+
+  .modelBridgeColumn h3{
+    font-size:23px;
+  }
+
+  .modelBridgeConnector{
+    margin-right:-16px;
+    margin-left:-16px;
+  }
+
+  .modelBridgeConnector svg{
+    transform:rotate(90deg);
+  }
+
+  .modelBridgeOutcome{
+    margin-right:-4px;
+    margin-left:-4px;
+    padding:22px 18px;
+  }
+
+  .modelBridgeActions{
+    flex-direction:column;
+  }
+
+  .modelBridgeActions .primary,
+  .modelBridgeActions .secondary{
+    width:100%;
+  }
+}
+
 .educationHero{
   position:relative;
   display:grid;

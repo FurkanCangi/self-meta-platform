@@ -247,19 +247,128 @@ function hasAny(text: string, patterns: RegExp[]): boolean {
   return patterns.some((p) => p.test(text));
 }
 
-function countMatches(text: string, patterns: RegExp[]): number {
-  return patterns.reduce((count, pattern) => count + (pattern.test(text) ? 1 : 0), 0)
+const EXECUTIVE_CUES = [
+  /dikkat|odak/i,
+  /görev|gorev/i,
+  /başlat|baslat/i,
+  /sürdür|surdur|bitir/i,
+  /yönerge|yonerge/i,
+  /oyunda kal|oyunu bırak|oyunu birak/i,
+  /dağıl|dagil|kop/i,
+];
+
+const SENSORY_CUES = [
+  /duyusal/i,
+  /gürültü|gurultu|ses/i,
+  /kalabalık|kalabalik/i,
+  /dokun|dokunsal|etiket/i,
+  /saç kes|sac kes|tırnak|tirnak|banyo/i,
+  /uyaran tolerans|çevresel uyaran|cevresel uyaran/i,
+  /duyusal arayış|duyusal arayis|sıçrama|zipla|koşuştur/i,
+  /sensory profile|spm|sensory processing/i,
+];
+
+const TRANSITION_CUES = [
+  /geçiş|gecis|bir etkinlikten diğerine/i,
+  /ayrıl|ayril|vedalaş/i,
+  /bekleme|sıra alma|sira alma/i,
+  /bitirirken|oyunu bırak|oyunu birak/i,
+];
+
+const COREGULATION_CUES = [
+  /anne|baba|ebeveyn|bakımveren|bakimveren/i,
+  /sarıl|saril|teselli|eşlik|eslik/i,
+  /yanına gel|yanina gel|yakın destek|yakin destek/i,
+  /birlikte sakin|ko-?reg/i,
+];
+
+const ADAPTIVE_CUES = [
+  /öz bakım|oz bakim|özbakım|ozbakim/i,
+  /giyin|fermuar|düğme|dugme|ayakkabı|ayakkabi/i,
+  /tuvalet|diş fırça|dis firca|kaşık|kasik|çatal|catal/i,
+  /masa düzeni|masa duzeni|kendi kendine yemek|kendi kendine yeme/i,
+];
+
+const LANGUAGE_CUES = [
+  /yönerge|yonerge/i,
+  /anlama|sözel yük|sozel yuk|dilsel talep/i,
+  /ifad[ea]|konuş|konus/i,
+  /soru sorulduğunda|soru soruldugunda|anlatmakta/i,
+];
+
+const SOCIAL_CUES = [
+  /akran|arkadaş|arkadas/i,
+  /sıra alma|sira alma|karşılıklılık|karsiliklilik/i,
+  /ortak dikkat|sosyal ipucu|pragmatik/i,
+  /sohbete katıl|oyuna katıl|oyuna katil|esneklik/i,
+];
+
+const PRAXIS_CUES = [
+  /praksi|somatodispraks|somatodysprax/i,
+  /motor plan|sekans|sırala|sirala/i,
+  /iki taraflı|iki tarafli koordinasyon/i,
+  /beden organizasyon|araç gereç|arac gerec/i,
+];
+
+const EMOTIONAL_CUES = [
+  /ağla|agla|öfke|ofke|sinir|kriz|sakinleş|sakinles|toparlan|taşma|tasma|duygusal/i,
+];
+
+const BODY_INTERO_CUES = [
+  /uyku|iştah|istah|beslen|açlık|aclik|susama|yorgun|tuvalet|kabız|kabiz|ishal|kolik|nöbet|nobet|epilepsi|alerji/i,
+];
+
+const BODY_FUNCTIONAL_CUES = [
+  /uyku|iştah|istah|beslen|açlık|aclik|susama|yorgun|tuvalet|kabız|kabiz|ishal|kolik/i,
+];
+
+const PRESERVED_OR_NEGATED_PATTERNS = [
+  /\b(?:yok|değil|degil)\b/i,
+  /gözlemlemiyor|gozlemlemiyor|gözlenmiyor|gozlenmiyor/i,
+  /görülmüyor|gorulmuyor|izlenmiyor|saptanmad[\u0131i]|bildirilmi?yor|bildirilmedi/i,
+  /tarif edilmiyor|belirlenmedi|tespit edilmedi/i,
+  /zorlanmıyor|zorlanmiyor|güçlük çekmiyor|gucluk cekmiyor/i,
+  /sorun yaşamıyor|sorun yasamiyor|etkilenmiyor/i,
+  /korunmuş|korunmus|korunuyor|beklenen (?:düzey|aralık)|beklenen (?:duzey|aralik)/i,
+  /yaşa uygun|yasa uygun|sorunsuz|düzenli|duzenli/i,
+  /uyum sağlıyor|uyum sagliyor|tamamlayabiliyor|sürdürebiliyor|surdurebiliyor/i,
+  /performans(?:ı|i)? (?:artıyor|artiyor|iyileşiyor|iyilesiyor|düzeliyor|duzeliyor)/i,
+  /toparlanıyor|toparlaniyor/i,
+];
+
+const PRESERVATION_DOUBLE_NEGATION = [
+  /(?:korunmuş|korunmus|korunuyor|düzenli|duzenli|sorunsuz|yaşa uygun|yasa uygun).{0,32}(?:değil|degil|görünmüyor|gorunmuyor)/i,
+  /(?:zorlanmıyor|zorlanmiyor|sorun yaşamıyor|sorun yasamiyor).{0,16}(?:değil|degil)/i,
+];
+
+function splitClinicalClauses(text: string): string[] {
+  return cleanMeaningfulText(text)
+    .split(/\s*(?:\||\n|[.!?;]+|\b(?:ama|ancak|fakat|buna karşın|buna karsin|oysa|oysa ki)\b)\s*/gi)
+    .map((clause) => clause.trim())
+    .filter(Boolean);
+}
+
+function isExplicitlyPreservedClause(clause: string): boolean {
+  if (hasAny(clause, PRESERVATION_DOUBLE_NEGATION)) return false;
+  return hasAny(clause, PRESERVED_OR_NEGATED_PATTERNS);
+}
+
+function hasAffirmedCue(text: string, patterns: RegExp[]): boolean {
+  return splitClinicalClauses(text).some(
+    (clause) => !isExplicitlyPreservedClause(clause) && hasAny(clause, patterns)
+  );
+}
+
+function countAffirmedMatches(text: string, patterns: RegExp[]): number {
+  const clauses = splitClinicalClauses(text).filter((clause) => !isExplicitlyPreservedClause(clause));
+  return patterns.reduce(
+    (count, pattern) => count + (clauses.some((clause) => pattern.test(clause)) ? 1 : 0),
+    0
+  );
 }
 
 function hasExplicitSensoryCue(text: string): boolean {
-  return hasAny(text, [
-    /duyusal/i,
-    /dokun|dokunsal|etiket/i,
-    /gürültü|gurultu|ses/i,
-    /kalabalık|kalabalik/i,
-    /çevresel uyaran|cevresel uyaran|tetikleyici çevresel|tetikleyici cevresel/i,
-    /sensory profile|spm|sensory processing/i,
-  ])
+  return hasAffirmedCue(text, SENSORY_CUES);
 }
 
 function collectClinicalContext(record: AnamnezRecord) {
@@ -368,92 +477,33 @@ function parseExternalFindingEntries(rawValue: unknown): ExternalFindingEntry[] 
 }
 
 export function getAnamnezThemeSignals(record: AnamnezRecord): AnamnezThemeSignals {
-  const { themeNarrative, bodyNarrative, allNarrative, strengths, referral, concerns, therapistComments, medical } =
+  const { themeNarrative, bodyNarrative, strengths, referral, concerns, therapistComments, medical } =
     collectClinicalContext(record)
 
-  const executiveCueCount = countMatches(themeNarrative, [
-    /dikkat|odak/i,
-    /görev|gorev/i,
-    /başlat|baslat/i,
-    /sürdür|surdur|bitir/i,
-    /yönerge|yonerge/i,
-    /oyunda kal|oyunu bırak|oyunu birak/i,
-    /dağıl|dagil|kop/i,
-  ])
+  const executiveCueCount = countAffirmedMatches(themeNarrative, EXECUTIVE_CUES)
+  const sensoryCueCount = countAffirmedMatches(themeNarrative, SENSORY_CUES)
+  const transitionCueCount = countAffirmedMatches(themeNarrative, TRANSITION_CUES)
+  const coregCueCount = countAffirmedMatches(themeNarrative, COREGULATION_CUES)
+  const adaptiveCueCount = countAffirmedMatches(themeNarrative, ADAPTIVE_CUES)
+  const languageCueCount = countAffirmedMatches(themeNarrative, LANGUAGE_CUES)
+  const socialCueCount = countAffirmedMatches(themeNarrative, SOCIAL_CUES)
+  const praxisCueCount = countAffirmedMatches(themeNarrative, PRAXIS_CUES)
 
-  const sensoryCueCount = countMatches(allNarrative, [
-    /gürültü|gurultu|ses/i,
-    /kalabalık|kalabalik/i,
-    /dokun|dokunsal|etiket/i,
-    /saç kes|sac kes|tırnak|tirnak|banyo/i,
-    /duyusal arayış|duyusal arayis|sıçrama|zipla|koşuştur/i,
-  ])
+  const sensory = sensoryCueCount >= 1
 
-  const transitionCueCount = countMatches(allNarrative, [
-    /geçiş|gecis|bir etkinlikten diğerine/i,
-    /ayrıl|ayril|vedalaş/i,
-    /bekleme|sıra alma|sira alma/i,
-    /bitirirken|oyunu bırak|oyunu birak/i,
-  ])
-
-  const coregCueCount = countMatches(allNarrative, [
-    /anne|baba|ebeveyn|bakımveren|bakimveren/i,
-    /sarıl|saril|teselli|eşlik|eslik/i,
-    /yanına gel|yanina gel|yakın destek|yakin destek/i,
-    /birlikte sakin|ko-?reg/i,
-  ])
-
-  const adaptiveCueCount = countMatches(allNarrative, [
-    /öz bakım|oz bakim|özbakım|ozbakim/i,
-    /giyin|fermuar|düğme|dugme|ayakkabı|ayakkabi/i,
-    /tuvalet|diş fırça|dis firca|kaşık|kasik|çatal|catal/i,
-    /masa düzeni|masa duzeni|kendi kendine yemek|kendi kendine yeme/i,
-  ])
-
-  const languageCueCount = countMatches(allNarrative, [
-    /yönerge|yonerge/i,
-    /anlama|sözel yük|sozel yuk|dilsel talep/i,
-    /ifad[ea]|konuş|konus/i,
-    /soru sorulduğunda|soru soruldugunda|anlatmakta/i,
-  ])
-
-  const socialCueCount = countMatches(allNarrative, [
-    /akran|arkadaş|arkadas/i,
-    /sıra alma|sira alma|karşılıklılık|karsiliklilik/i,
-    /ortak dikkat|sosyal ipucu|pragmatik/i,
-    /sohbete katıl|oyuna katıl|oyuna katil|esneklik/i,
-  ])
-
-  const praxisCueCount = countMatches(allNarrative, [
-    /praksi|somatodispraks|somatodysprax/i,
-    /motor plan|sekans|sırala|sirala/i,
-    /iki taraflı|iki tarafli koordinasyon/i,
-    /beden organizasyon|araç gereç|arac gerec/i,
-  ])
-
-  const sensory =
-    sensoryCueCount >= 1 ||
-    hasAny(String(referral).toLowerCase(), [/duyusal yük|duyusal hassas|duyusal arayış|duyusal arayis/i])
-
-  const emotional =
-    hasAny(themeNarrative, [
-      /ağla|agla|öfke|ofke|sinir|kriz|sakinleş|sakinles|toparlan|taşma|tasma|duygusal/i,
-    ])
+  const emotional = hasAffirmedCue(themeNarrative, EMOTIONAL_CUES)
 
   const cognitiveExecutive =
     executiveCueCount >= 2 ||
-    hasAny(themeNarrative, [/çok uyaran|cok uyaran/i]) &&
-      hasAny(themeNarrative, [/kop|dağıl|dagil|zorlan|takip|başlat|baslat|sürdür|surdur/i])
+    (hasAffirmedCue(themeNarrative, [/çok uyaran|cok uyaran/i]) &&
+      hasAffirmedCue(themeNarrative, [/kop|dağıl|dagil|zorlan|takip|başlat|baslat|sürdür|surdur/i]))
 
-  const bodyIntero =
-    hasAny(bodyNarrative, [
-      /uyku|iştah|istah|beslen|açlık|aclik|susama|yorgun|tuvalet|kabız|kabiz|ishal|kolik|nöbet|nobet|epilepsi|alerji/i,
-    ])
+  const bodyIntero = hasAffirmedCue(bodyNarrative, BODY_INTERO_CUES)
 
   const transitionCoregulation = transitionCueCount >= 1 && coregCueCount >= 1
   const adaptiveDailyLiving =
     adaptiveCueCount >= 2 ||
-    hasAny(allNarrative, [
+    hasAffirmedCue(themeNarrative, [
       /öz bakım|oz bakim|özbakım|ozbakim/i,
       /giyinme|tuvalet rutini|bagimsiz baslatma|bağımsız başlatma/i,
     ])
@@ -478,13 +528,41 @@ export function getAnamnezThemeSignals(record: AnamnezRecord): AnamnezThemeSigna
   }
 }
 
+export function extractAnamnezCounterEvidence(record: AnamnezRecord): string[] {
+  const { referral, concerns, therapistComments } = collectClinicalContext(record)
+  const functionalCuePatterns = [
+    ...EXECUTIVE_CUES,
+    ...SENSORY_CUES,
+    ...TRANSITION_CUES,
+    ...ADAPTIVE_CUES,
+    ...LANGUAGE_CUES,
+    ...SOCIAL_CUES,
+    ...PRAXIS_CUES,
+    ...EMOTIONAL_CUES,
+    ...BODY_FUNCTIONAL_CUES,
+  ]
+
+  return Array.from(
+    new Set(
+      splitClinicalClauses([referral, concerns, therapistComments].filter(Boolean).join(" | "))
+        .filter((clause) => isExplicitlyPreservedClause(clause) && hasAny(clause, functionalCuePatterns))
+        .map((clause) => truncateClinicalSupport(clause, 220))
+        .filter(Boolean)
+    )
+  ).slice(0, 3)
+}
+
 export function extractTherapistInsights(record: AnamnezRecord): string[] {
   const { therapistComments } = collectClinicalContext(record);
   const clean = cleanMeaningfulText(therapistComments);
   if (!clean) return [];
 
-  const lowered = clean.toLowerCase();
-  const lines = [`Terapist gözlemi: ${truncateClinicalSupport(clean, 240)}`];
+  const affirmedClauses = splitClinicalClauses(clean).filter((clause) => !isExplicitlyPreservedClause(clause));
+  if (affirmedClauses.length === 0) return [];
+
+  const affirmedText = affirmedClauses.join("; ");
+  const lowered = affirmedText.toLowerCase();
+  const lines = [`Terapist gözlemi: ${truncateClinicalSupport(affirmedText, 240)}`];
 
   if (/praksi|praxi|somatodispraks|somatodysprax|motor plan|sekans|siralama|iki tarafli koordinasyon|beden organizasyon/i.test(lowered)) {
     lines.push("Terapist gözleminde praksi, motor planlama veya beden organizasyonu alanına ilişkin klinik ipucu bulunmaktadır.");

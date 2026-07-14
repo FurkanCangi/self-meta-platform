@@ -84,15 +84,17 @@ function getClinicalMainText(text: string): string {
 }
 
 function collectInlineCitations(text: string): string[] {
-  return Array.from(
-    new Set(
-      Array.from(
-        String(text || "").matchAll(
-          /\([A-ZÇĞİÖŞÜ][A-Za-zÇĞİÖŞÜçğıöşü'’-]+(?:\s+(?:&|and)\s+[A-ZÇĞİÖŞÜ][A-Za-zÇĞİÖŞÜçğıöşü'’-]+|\s+et al\.)?,\s*(?:19|20)\d{2}\)/g
-        )
-      ).map((match) => match[0])
-    )
+  const haystack = String(text || "");
+  const citationLikeText = Array.from(
+    haystack.matchAll(/\(([^()\n]*(?:19|20)\d{2}[^()\n]*)\)/g)
+  ).flatMap((match) =>
+    String(match[1] || "")
+      .split(/\s*;\s*/)
+      .map((part) => part.trim())
+      .filter((part) => /^[A-ZÇĞİÖŞÜ].*,\s*(?:19|20)\d{2}$/.test(part))
+      .map((part) => `(${part})`)
   );
+  return Array.from(new Set(citationLikeText));
 }
 
 function listApaReferences(rawSectionText: string): string[] {
@@ -105,12 +107,14 @@ function listApaReferences(rawSectionText: string): string[] {
 
 function validateRegistryOnlyLiterature(rawSectionText: string): string[] {
   const failures: string[] = [];
-  const allowedInline = new Set(Object.values(VERIFIED_LITERATURE_SOURCES).map((source) => source.inlineCitation));
-  const allowedReferences = new Set(Object.values(VERIFIED_LITERATURE_SOURCES).map((source) => source.apaReference));
-  const inlineCitations = collectInlineCitations(rawSectionText);
+  const sources = Object.values(VERIFIED_LITERATURE_SOURCES);
+  const sourceByInline = new Map(sources.map((source) => [source.inlineCitation, source]));
+  const sourceByReference = new Map(sources.map((source) => [source.apaReference, source]));
+  const bodyText = rawSectionText.split(/Kaynaklar\s*\(APA 7\)\s*:/i)[0] || "";
+  const inlineCitations = collectInlineCitations(bodyText);
   const references = listApaReferences(rawSectionText);
-  const externalInline = inlineCitations.filter((citation) => !allowedInline.has(citation));
-  const externalReferences = references.filter((reference) => !allowedReferences.has(reference));
+  const externalInline = inlineCitations.filter((citation) => !sourceByInline.has(citation));
+  const externalReferences = references.filter((reference) => !sourceByReference.has(reference));
 
   if (!rawSectionText.trim()) {
     failures.push("Literatür bölümü bulunamadı.");
@@ -125,6 +129,29 @@ function validateRegistryOnlyLiterature(rawSectionText: string): string[] {
     failures.push("Literatür bölümünde registry citation/reference çifti görünmüyor.");
   }
 
+  const referenceSet = new Set(references);
+  const bodyCitationSet = new Set(inlineCitations);
+  const duplicateReferences = references.filter(
+    (reference, index) => references.indexOf(reference) !== index
+  );
+  if (duplicateReferences.length > 0) {
+    failures.push(`Yinelenen APA kaynak bulundu: ${Array.from(new Set(duplicateReferences)).join(" | ")}`);
+  }
+
+  for (const citation of inlineCitations) {
+    const source = sourceByInline.get(citation);
+    if (source && !referenceSet.has(source.apaReference)) {
+      failures.push(`Metindeki atıfın APA kaynağı eksik: ${citation}`);
+    }
+  }
+
+  for (const reference of references) {
+    const source = sourceByReference.get(reference);
+    if (source && !bodyCitationSet.has(source.inlineCitation)) {
+      failures.push(`Metinde kullanılmayan APA kaynağı bulundu: ${source.id}`);
+    }
+  }
+
   return failures;
 }
 
@@ -136,7 +163,7 @@ function requiresClassificationExplanation(
 }
 
 function hasClassificationExplanation(decisionSection: string): boolean {
-  return /toplam skor/i.test(decisionSection) && /alan.*(kendi|50 puanlık|puan eşi|eşiğ|eşi)/i.test(decisionSection);
+  return /toplam skor/i.test(decisionSection) && /alanların dağılımı/i.test(decisionSection);
 }
 
 async function readMetricsText(outputDir: string): Promise<string> {
@@ -235,6 +262,52 @@ function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof r
     failures.push("6. Klinik Önceliklendirme Notu kanıt/veri güveni özetini üretmiyor.");
   }
 
+  const clinicalReasoningFrameChecks: Array<[string, RegExp, string]> = [
+    [
+      "1. Klinik Karar Özeti",
+      /Profil adı alan puanlarının dağılımını özetler; klinik karar/i,
+      "profil adı ile işlevsel klinik karar arasındaki ayrımı açıklamıyor.",
+    ],
+    [
+      "2. Klinik Kanıt Profili",
+      /Kanıtların karardaki rolü:/i,
+      "puan, anamnez, gözlem ve dış testlerin karardaki rolünü açıklamıyor.",
+    ],
+    [
+      "3. Alan Bazlı Klinik Yorum",
+      /Alanlar arası klinik ilişki:/i,
+      "alanların temel mekanizma, işlevsel sonuç ve korunmuş bilgi rollerini sentezlemiyor.",
+    ],
+    [
+      "4. Klinik Örüntü ve Formülasyon",
+      /Temel formülasyon:[\s\S]*Günlük işlevsel sonuç:[\s\S]*Bağlamsal sınır:/i,
+      "mekanizma, günlük işlev ve bağlam sınırını ardışık biçimde göstermiyor.",
+    ],
+    [
+      "5. Anamnez, Gözlem ve Test Uyumunun Değerlendirilmesi",
+      /Kanıtların ortak sonucu:/i,
+      "kaynakların ortaklaştığı veya ayrıştığı klinik sonucu başta özetlemiyor.",
+    ],
+    [
+      "7. Klinik Sonuç",
+      /tanısal bir etiket değildir[\s\S]*Günlük işlevde klinik karşılık:[\s\S]*Kararı sınırlayan bağlam:/i,
+      "profil etiketi, işlevsel sonuç ve karar sınırını birlikte taşımıyor.",
+    ],
+  ];
+  const clinicalReasoningSections = new Map<string, string>([
+    ["1. Klinik Karar Özeti", decisionSummarySection],
+    ["2. Klinik Kanıt Profili", evidenceProfileSection],
+    ["3. Alan Bazlı Klinik Yorum", domainSection],
+    ["4. Klinik Örüntü ve Formülasyon", patternSection],
+    ["5. Anamnez, Gözlem ve Test Uyumunun Değerlendirilmesi", fitSection],
+    ["7. Klinik Sonuç", conclusionSection],
+  ]);
+  for (const [sectionName, pattern, message] of clinicalReasoningFrameChecks) {
+    if (!pattern.test(clinicalReasoningSections.get(sectionName) || "")) {
+      failures.push(`${sectionName} ${message}`);
+    }
+  }
+
   if (spec.requireProfessorDecisionFrame) {
     const professorFrameText = `${decisionSummarySection}\n${prioritizationSection}`;
     const requiredDecisionLabels = [
@@ -268,9 +341,22 @@ function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof r
     [/vaka dışı görev/i, "Doğal ödev ifadesi yapay güvenlik metnine dönüştürüldü."],
     [/Bu vaka,[^.]+ ile açıklanır/i, "Klinik karar öznesi belirsiz açıklama kalıbına döndü."],
     [/İşlevsel karşılık:\s*İşlevsel olarak/i, "İşlevsel karşılık etiketi cümle içinde gereksiz yere tekrarlandı."],
+    [/Günlük yaşama yansıyan alanlar:[^\n]+,\s*temel bulguyla ilişkili işlevsel etkilerin görüldüğü alanlardır/i, "Günlük yaşama yansıyan alan cümlesi tekil/çoğul uyumsuz eski kalıba döndü."],
+    [/\b(?:yazılabilir|klinik örüntü kurulabilir)\b/i, "Klinik raporda sonucu açıklamak yerine metnin nasıl yazılacağını anlatan üst-dil kullanıldı."],
+    [/\bRapor (?:dili|yalnız)[^\n]*(?:kurmalı|sunmalıdır|belirtilmelidir)/i, "Klinik rapora editör veya rapor yazım talimatı sızdı."],
   ];
   for (const [pattern, message] of clarityRegressions) {
     if (pattern.test(clinicalMainText)) failures.push(message);
+  }
+  if (
+    /\b(?:normatif|standardize edilmiş norm(?:atif)?|tanı eşiği|yaş-duyarlı yorum|sistem içi (?:sabit )?eşik|sistem içi yorum bandı)\b/i.test(
+      finalText
+    )
+  ) {
+    failures.push("Rapora normatif teknik açıklama sızdı.");
+  }
+  if (!/tek başına tanı koymaz/i.test(clinicalMainText)) {
+    failures.push("Rapor güvenli tanı sınırı cümlesini taşımıyor.");
   }
 
   if (spec.key === "prof-04-executive-context-contrast") {
@@ -298,6 +384,31 @@ function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof r
     if (!/tek bir temel alan seçilmez/i.test(domainSection)) {
       failures.push("Çok alanlı ve yakın puanlı vakada alan yorumunun tek odak seçmediği açıkça belirtilmedi.");
     }
+    if (/Güçlük öncelikle\s+[^.]+\s+alanında belirginleşmekte/i.test(patternSection)) {
+      failures.push("Homojen çok alanlı vakada örüntü bölümü yanlışlıkla tek bir alanı önceliklendirdi.");
+    }
+    if (!/Güçlük tek bir alanda önceliklendirilmez/i.test(patternSection)) {
+      failures.push("Homojen çok alanlı vakada örüntünün alanlar birlikte değerlendirilerek kurulduğu açık değil.");
+    }
+    const homogeneousStatementCount = (
+      patternSection.match(/Alt alan puanları arasında belirgin bir ayrışma saptanmamıştır/gi) || []
+    ).length;
+    if (homogeneousStatementCount > 1) {
+      failures.push("Homojen çok alanlı vakada aynı ayrışma cümlesi gereksiz biçimde tekrarlandı.");
+    }
+  }
+
+  if (spec.key === "prof-02-cross-source-conflict") {
+    if (/Karar sınırı:[^\n]*aynı klinik yorumu desteklemektedir/i.test(finalText)) {
+      failures.push("Çelişkili kaynak vakasında karar sınırı yanlışlıkla tam kaynak uyumu bildiriyor.");
+    }
+    if (
+      !/Karar sınırı:[^\n]*(?:aynı klinik yoruma tam olarak yakınsamamaktadır|yalnız ortaklaşan görev ve bağlamlarla sınırlandırılır)/i.test(
+        finalText
+      )
+    ) {
+      failures.push("Çelişkili kaynak vakasında kararın ortaklaşan görev ve bağlamlarla sınırlandığı açık değil.");
+    }
   }
 
   if (spec.expectedVisibleConfidence) {
@@ -311,7 +422,7 @@ function validateCase(spec: QualityCaseSpec, result: Awaited<ReturnType<typeof r
   }
 
   if (requiresClassificationExplanation(result) && !hasClassificationExplanation(`${evidenceProfileSection}\n${prioritizationSection}`)) {
-    failures.push("Global/domain sınıflama farkı kanıt profili veya karar notunda toplam skor ve alan eşiği farkıyla açıklanmıyor.");
+    failures.push("Genel sonuç ile alan sonuçlarının farkı, toplam skor ve alan dağılımı birlikte açıklanarak gösterilmiyor.");
   }
 
   if (hasForbiddenClinicalCitation(clinicalMainText)) {

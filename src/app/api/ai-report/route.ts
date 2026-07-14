@@ -158,6 +158,8 @@ import { extractAgeMonthsFromAnamnez, isSupportedAgeMonths } from "@/lib/dna/age
 import { buildLiteratureAlignedSection } from "@/lib/dna/literatureNote"
 import { normalizeClinicalReportText } from "@/lib/dna/reportText"
 import { validateAndNormalizeClinicalReport } from "@/lib/dna/clinicalSafetyValidator"
+import { calculateAssessment } from "@/lib/assessment/assessmentEngine"
+import { ASSESSMENT_SCORING_VERSION } from "@/lib/assessment/itemScoring"
 
 async function createSupabaseServerClient() {
   const cookieStore = await cookies()
@@ -198,27 +200,14 @@ function validateInputDna(body: any) {
 
   if (!body) errors.push("body_missing")
 
-  const scores = body?.scores || {}
-  const domains = ["fizyolojik", "duyusal", "duygusal", "bilissel", "yurutucu", "intero"]
-
-  for (const domain of domains) {
-    const value = scores[domain]
-    if (value == null) errors.push(`${domain}_missing`)
-    if (typeof value === "number" && (value < 10 || value > 50)) {
-      errors.push(`${domain}_out_of_range`)
-    }
-  }
-
-  if (body?.answers != null) {
-    if (!Array.isArray(body.answers) || body.answers.length !== 60) {
-      errors.push("answers_invalid")
-    } else if (
-      body.answers.some(
-        (value: unknown) => !Number.isFinite(Number(value)) || Number(value) < 1 || Number(value) > 5
-      )
-    ) {
-      errors.push("answers_out_of_range")
-    }
+  if (!Array.isArray(body?.answers) || body.answers.length !== 60) {
+    errors.push("answers_invalid")
+  } else if (
+    body.answers.some(
+      (value: unknown) => !Number.isInteger(Number(value)) || Number(value) < 1 || Number(value) > 5
+    )
+  ) {
+    errors.push("answers_out_of_range")
   }
 
   return errors
@@ -261,7 +250,7 @@ const deterministicReportPayloadSchema = z
     age_months: z.coerce.number().int().min(0).max(240).optional().nullable(),
     ageMonths: z.coerce.number().int().min(0).max(240).optional().nullable(),
     anamnez: z.string().max(20000).optional(),
-    answers: z.array(z.coerce.number()).max(80).optional(),
+    answers: z.array(z.coerce.number().int().min(1).max(5)).length(60),
     scores: z.record(z.string(), z.unknown()).optional(),
   })
   .passthrough()
@@ -415,8 +404,34 @@ if (__validationErrors.length > 0) {
   return new Response(JSON.stringify({ error: 'invalid_input', details: __validationErrors }), { status: 400 })
 }
 
-    const numericScores = normalizeDnaScores(body?.scores)
-    const scoreAgeMonths = Number(numericScores.age_months ?? numericScores.ageMonths)
+    const incomingScores = normalizeDnaScores(body?.scores)
+    const calculatedScores = calculateAssessment(body.answers)
+    const numericScores = {
+      fizyolojik: calculatedScores.fizyolojik,
+      duyusal: calculatedScores.duyusal,
+      duygusal: calculatedScores.duygusal,
+      bilissel: calculatedScores.bilissel,
+      yurutucu: calculatedScores.yurutucu,
+      intero: calculatedScores.intero,
+      toplam: calculatedScores.toplam,
+    }
+    const scoreAgeMonths = Number(incomingScores.age_months ?? incomingScores.ageMonths)
+    const scoreKeys = ["fizyolojik", "duyusal", "duygusal", "bilissel", "yurutucu", "intero", "toplam"] as const
+    const scoreMismatch = Boolean(body?.scores) && scoreKeys.some((key) => {
+      const incoming = Number(incomingScores[key])
+      return Number.isFinite(incoming) && incoming !== numericScores[key]
+    })
+
+    if (scoreMismatch) {
+      await recordAccountSecurityEvent({
+        userId: user.id,
+        eventType: "assessment_score_mismatch",
+        metadata: {
+          route: "/api/ai-report",
+          scoring_version: ASSESSMENT_SCORING_VERSION,
+        },
+      })
+    }
     const incomingAgeMonths =
       typeof body?.ageMonths === "number"
         ? body.ageMonths
@@ -440,7 +455,7 @@ if (__validationErrors.length > 0) {
       clientCode: body?.clientCode || "",
       ageMonths: incomingAgeMonths,
       anamnez: body?.anamnez || "",
-      answers: Array.isArray(body?.answers) ? body.answers : undefined,
+      answers: body.answers,
       scores: numericScores,
     })
 
@@ -451,7 +466,10 @@ if (__validationErrors.length > 0) {
       )
     }
 
-    const literatureSection = buildLiteratureAlignedSection(report.clinicalAnalysis)
+    const literatureSection = buildLiteratureAlignedSection(report.clinicalAnalysis, {
+      ageMonths: incomingAgeMonths ?? undefined,
+      stableSeed: `${String(body?.clientCode || body?.client_code || "")}|${assessmentId}`,
+    })
     const finalText = cleanRenderedReport(
       appendOptionalSection(report.deterministicReport, literatureSection?.text)
     )
@@ -485,11 +503,10 @@ if (__validationErrors.length > 0) {
 
     const snapshotJson = {
       client_code: String(body?.clientCode || body?.client_code || ""),
-      answers: Array.isArray(body?.answers) ? body.answers : [],
+      answers: body.answers,
       scores: numericScores,
       age_months: incomingAgeMonths,
-      norm_source: report.normSource,
-      age_band_label: report.ageBandLabel,
+      scoring_version: ASSESSMENT_SCORING_VERSION,
       domain_levels: report.domainLevels ?? report.domains,
       weak_domains: report.weakDomains,
       strong_domains: report.strongDomains,

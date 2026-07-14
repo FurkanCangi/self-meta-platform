@@ -77,6 +77,11 @@ const CRITICAL_PATTERNS: Array<{ code: string; pattern: RegExp; message: string 
     message: "Teknik ölçek/madde dili final raporda kalmış.",
   },
   {
+    code: "internal_normative_disclosure",
+    pattern: /\b(?:normatif|standardize edilmiş norm(?:atif)?|tanı eşiği|yaş-duyarlı yorum|sistem içi (?:sabit )?eşik|sistem içi yorum bandı)\b/i,
+    message: "Final raporda kullanıcıya gösterilmemesi gereken normatif teknik açıklama kalmış.",
+  },
+  {
     code: "kb_instruction_leak",
     pattern: /\b(?:anlatmalı|göstermeli|yazılmalı|yazılmalıdır|açıklamalı|kurmamalıdır|üretmemelidir)\b/i,
     message: "KB yönerge dili final rapora sızmış.",

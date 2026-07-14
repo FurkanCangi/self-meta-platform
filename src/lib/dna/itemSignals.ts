@@ -1,6 +1,7 @@
 import { cleanMeaningfulText, type AnamnezRecord } from "./anamnezUtils"
 import type { ClinicalMechanismType } from "./clinicalAnalysis"
 import { questions } from "./questions"
+import { getConcernSeverity, isCriticalConcern, isElevatedConcern } from "../assessment/itemScoring"
 
 type DomainContext = {
   key: string
@@ -367,6 +368,19 @@ const ITEM_SIGNAL_DEFINITIONS: Record<number, ItemSignalDefinition> = {
   60: def(60, "intero", "rahatlama_farkindalik", "intero_stress_recovery", ["physiological_interoceptive"]),
 }
 
+const invalidSignalDefinitions = questions.filter((question) => {
+  const definition = ITEM_SIGNAL_DEFINITIONS[question.id]
+  return !definition || definition.questionId !== question.id || definition.domainKey !== question.scale
+})
+
+if (invalidSignalDefinitions.length > 0) {
+  throw new Error(
+    `DNA madde-sinyal eşlemesi eksik veya hatalı: ${invalidSignalDefinitions
+      .map((question) => question.id)
+      .join(", ")}`
+  )
+}
+
 function def(
   questionId: number,
   domainKey: string,
@@ -458,7 +472,7 @@ function scoreItem(
   const domainWeight = isNonTypical(item.domainLevel) ? 10 : 0
   const contextWeight = item.matchedContext ? 12 : 0
   const clusterWeight = clusterCount >= 2 ? 14 : 0
-  const criticalWeight = item.answer === 1 ? 20 : 8
+  const criticalWeight = item.isCritical ? 20 : 8
   const mechanismWeight =
     mechanismMatchesDomain(clinicalMechanism, item.domainKey) || mechanismMatchesAffinity(clinicalMechanism, item.mechanismAffinity)
       ? 10
@@ -509,17 +523,19 @@ export function analyzeItemLevelSignals(params: {
       return {
         ...definition,
         answer,
-        concernScore: 6 - answer,
+        concernScore: getConcernSeverity(question.id, answer),
         matchedContext,
         domainLevel,
-        isCritical: answer === 1,
+        isCritical: isCriticalConcern(question.id, answer),
         isEligible: false,
         selectionWeight: 0,
       }
     })
     .filter((item): item is ItemSignal => Boolean(item))
 
-  const badSignals = rawSignals.filter((signal) => signal.answer <= 2)
+  const badSignals = rawSignals.filter((signal) =>
+    isElevatedConcern(signal.questionId, signal.answer)
+  )
   if (!badSignals.length) return null
 
   const clusterCounts = new Map<MicroEvidenceCluster, number>()
@@ -535,8 +551,8 @@ export function analyzeItemLevelSignals(params: {
         mechanismMatchesAffinity(params.clinicalMechanism, signal.mechanismAffinity)
       const isEligible =
         clusterCount >= 2 ||
-        (signal.answer === 1 && isNonTypical(signal.domainLevel)) ||
-        (signal.answer === 1 && signal.matchedContext) ||
+        (signal.isCritical && isNonTypical(signal.domainLevel)) ||
+        (signal.isCritical && signal.matchedContext) ||
         domainMechanismMatch
 
       return {
@@ -548,7 +564,7 @@ export function analyzeItemLevelSignals(params: {
     .filter((signal) => signal.isEligible)
     .sort((a, b) => {
       if (b.selectionWeight !== a.selectionWeight) return b.selectionWeight - a.selectionWeight
-      if (a.answer !== b.answer) return a.answer - b.answer
+      if (a.concernScore !== b.concernScore) return b.concernScore - a.concernScore
       return a.questionId - b.questionId
     })
 

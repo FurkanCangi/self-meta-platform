@@ -110,7 +110,7 @@ const researchMenuItems = [
   },
 ];
 
-export default function LandingHeader() {
+export default function LandingHeader({ compact = false }: { compact?: boolean }) {
   const pathname = usePathname() || "/";
   const [openMenu, setOpenMenu] = useState<"dna" | "research" | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -158,7 +158,7 @@ export default function LandingHeader() {
   }`;
 
   return (
-    <header className={`smiHeaderWrap${mobileMenuOpen ? " smiMobileMenuOpen" : ""}`}>
+    <header className={`smiHeaderWrap${compact ? " smiHeaderCompact" : ""}${mobileMenuOpen ? " smiMobileMenuOpen" : ""}`}>
       <div className="smiHeaderInner">
         <div className="smiHeaderLeft">
           <Link href="/" className="smiBrandLink" aria-label="DNA ana sayfa">
@@ -199,7 +199,7 @@ export default function LandingHeader() {
               aria-expanded={openMenu === "dna"}
               onClick={() => setOpenMenu((current) => (current === "dna" ? null : "dna"))}
             >
-              DNA Intelligence Nedir?
+              {compact ? "DNA Intelligence" : "DNA Intelligence Nedir?"}
             </button>
             {openMenu === "dna" ? (
               <div className="smiDropdownMenu smiMegaMenu">

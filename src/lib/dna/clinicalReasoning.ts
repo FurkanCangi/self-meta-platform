@@ -141,7 +141,12 @@ function contextTagsFromText(text: string): ContextTag[] {
   if (hasAny(value, [/geçiş|gecis|rutin değiş|rutin degis|bekleme|sıra|sira|aktivite sonlandır/i])) tags.push("transition")
   if (hasAny(value, [/sözel|sozel|yönerge|yonerge|komut|dilsel|anlama|cümle|cumle/i])) tags.push("verbal_load")
   if (hasAny(value, [/motor|praksi|koordinasyon|sekans|beden organizasyonu|giyinme|ince motor|kaba motor/i])) tags.push("motor_task_load")
-  if (hasAny(value, [/yorgun|uyku|açlık|aclik|susuz|tuvalet|ağrı|agri|bedensel|toparlan/i])) tags.push("body_signal_fatigue")
+  if (
+    hasAny(value, [
+      /yorgun|uyku|açlık|aclik|susuz|tuvalet|ağrı|agri/i,
+      /bedensel|beden sinyal|interosep|fizyolojik|otonom/i,
+    ])
+  ) tags.push("body_signal_fatigue")
   if (hasAny(value, [/sosyal|pragmatik|karşılıklılık|karsiliklilik|oyun|akran|esneklik/i])) tags.push("social_pragmatic_demand")
   if (hasAny(value, [/öz bakım|oz bakim|günlük yaşam|gunluk yasam|yemek|beslenme|banyo|tuvalet|giyinme|rutin/i])) tags.push("daily_routine")
   return unique(tags)
@@ -214,7 +219,9 @@ function buildAnamnesisAtoms(params: {
   therapistInsights: string[]
   loadingContextTexts?: string[]
   preservedContextTexts?: string[]
+  counterEvidenceTexts?: string[]
   selectedMechanism: ClinicalMechanismType
+  primaryAxis: string
 }): ClinicalReasoningAtom[] {
   const loadingText = [
     ...params.anamnezFlags,
@@ -222,6 +229,8 @@ function buildAnamnesisAtoms(params: {
     ...(params.loadingContextTexts || []),
   ].join(" ")
   const preservedText = (params.preservedContextTexts || []).join(" ")
+  const counterEvidenceTexts = (params.counterEvidenceTexts || []).filter(Boolean)
+  const balancedProfile = params.primaryAxis === "Korunmuş / dengeli self-regülasyon zemini"
   const preservedTags = contextTagsFromText(preservedText)
   const tags = contextTagsFromText(loadingText).filter((tag) => !preservedTags.includes(tag))
   const signalKeys: Array<keyof AnamnezThemeSignals> = [
@@ -270,6 +279,38 @@ function buildAnamnesisAtoms(params: {
       traceId: "anamnesis.strengths",
       safety: "internal_only",
       summary: "Korunmuş ya da sınırlayıcı veri, yorumun her bağlama genellenmemesi gerektiğini gösterir.",
+    })
+  }
+  for (const [index, counterText] of counterEvidenceTexts.slice(0, 2).entries()) {
+    const counterTags = contextTagsFromText(counterText)
+    const directFunctionalContradiction =
+      /gözlemlemiyor|gozlemlemiyor|gözlenmiyor|gozlenmiyor|görülmüyor|gorulmuyor|zorlanmıyor|zorlanmiyor|güçlük çekmiyor|gucluk cekmiyor|sorun yaşamıyor|sorun yasamiyor|yaşa uygun|yasa uygun|sorunsuz|düzenli|duzenli|doğal.{0,100}korun|dogal.{0,100}korun|uyaran tolerans.{0,60}korun/i.test(
+        counterText
+      )
+    atoms.push({
+      id: `reason.anamnesis.counter.${index + 1}`,
+      sourceType: "preserved_capacity",
+      candidateMechanism: params.selectedMechanism,
+      direction: balancedProfile || !directFunctionalContradiction ? "limits" : "contradicts",
+      strength: counterTags.length ? 3 : 2,
+      reliability: 2,
+      specificity: counterTags.length ? 3 : 2,
+      contextTags: counterTags,
+      ageFit: "unknown",
+      scoreInterpretability: "not_applicable",
+      traceId: `anamnesis.counter.${index + 1}`,
+      safety: "internal_only",
+      summary: balancedProfile
+        ? counterTags.length
+          ? `${CONTEXT_LABELS[counterTags[0]]} bağlamında işlevin korunmuş olduğu bildirilmiştir; bu bulgu korunmuş genel profil ile uyumludur.`
+          : "Anamnez veya gözlemde ilgili işlevin korunmuş olduğu bildirilmiştir; bu bulgu korunmuş genel profil ile uyumludur."
+        : !directFunctionalContradiction
+        ? counterTags.length
+          ? `${CONTEXT_LABELS[counterTags[0]]} bağlamında performansın daha düzenli olması, güçlüğün her koşula genellenmemesi gerektiğini gösterir.`
+          : "Destekleyici bir koşulda performansın toparlanması, güçlüğün her koşula genellenmemesi gerektiğini gösterir."
+        : counterTags.length
+        ? `${CONTEXT_LABELS[counterTags[0]]} bağlamında işlevin korunmuş olduğu bildirilmiştir; bu bulgu skor temelli güçlük yorumunu sınırlar.`
+        : "Anamnez veya gözlemde ilgili işlevin korunmuş olduğu bildirilmiştir; bu bulgu skor temelli güçlük yorumunu sınırlar.",
     })
   }
   return atoms
@@ -400,7 +441,9 @@ function buildConfidenceSubscores(params: {
     ? Math.max(...params.domainResults.map((domain) => domain.score)) - Math.min(...params.domainResults.map((domain) => domain.score))
     : 0
   const supportMechanisms = unique(params.atoms.filter((atom) => atom.direction === "supports").map((atom) => atom.candidateMechanism))
-  const limitingCount = params.atoms.filter((atom) => atom.direction === "limits" || atom.direction === "contradicts").length
+  const limitingCount = params.atoms.filter(
+    (atom) => atom.direction === "contradicts" || (atom.direction === "limits" && atom.sourceType !== "score")
+  ).length
   const external = params.externalTestAnalysis
   const validExternal = external?.decisionCompatible.length || 0
   const limitedExternal = external?.matches.filter((match) => !external.decisionCompatibleIds.includes(match.id)).length || 0
@@ -424,6 +467,7 @@ export function buildClinicalReasoning(params: {
   therapistInsights: string[]
   loadingContextTexts?: string[]
   preservedContextTexts?: string[]
+  counterEvidenceTexts?: string[]
   externalTestAnalysis?: ExternalTestAnalysis
   itemLevelAnalysis?: ItemLevelAnalysis | null
 }): ClinicalReasoningResult {

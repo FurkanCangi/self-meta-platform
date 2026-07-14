@@ -2,6 +2,7 @@ import { Fragment, type CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
+  Activity,
   ArrowRight,
   BarChart3,
   Award,
@@ -43,43 +44,71 @@ import type { dnaPages } from "./content";
 type DnaPage = (typeof dnaPages)[keyof typeof dnaPages];
 
 const approachSystems = [
-  { title: "Fizyolojik", text: "Uyku, enerji, toparlanma" },
-  { title: "Duyusal", text: "Uyaran yükü ve tolerans" },
-  { title: "Duygusal", text: "Yoğunluk ve toparlanma" },
-  { title: "Bilişsel", text: "Dikkat ve görev sürdürme" },
-  { title: "Yürütücü", text: "Planlama ve esneklik" },
-];
-
-const approachPillLabels = [
-  "Dynamic Neuro-Regulation: eğitim modeli",
-  "DNA Intelligence: deterministik karar destek sistemi",
-  "Değerlendirme ve analiz",
-  "Deterministik raporlama",
+  {
+    title: "Fizyolojik",
+    text: "Uyku, enerji ve toparlanma kapasitesi",
+    position: "left-top",
+    color: "#1769ff",
+    level: "82%",
+    Icon: HeartPulse,
+  },
+  {
+    title: "Duyusal",
+    text: "Uyaran yükü ve tolerans",
+    position: "left-middle",
+    color: "#00a9d6",
+    level: "68%",
+    Icon: Eye,
+  },
+  {
+    title: "Duygusal",
+    text: "Yoğunluk ve toparlanma",
+    position: "bottom",
+    color: "#6d39e9",
+    level: "58%",
+    Icon: Smile,
+  },
+  {
+    title: "Bilişsel",
+    text: "Dikkat ve görev sürdürme",
+    position: "right-middle",
+    color: "#2d72f3",
+    level: "50%",
+    Icon: Brain,
+  },
+  {
+    title: "Yürütücü",
+    text: "Planlama ve bilişsel esneklik",
+    position: "right-top",
+    color: "#7538e8",
+    level: "64%",
+    Icon: Target,
+  },
 ];
 
 const approachFlow = [
   {
     step: "01",
     title: "Klinik çerçeve",
-    text: "Eğitimde regülasyon alanları, vaka formülasyonu ve müdahale düşüncesi ortak bir dile oturur.",
+    text: "Klinik çerçeve ve vaka dili ortaklaşır.",
     Icon: GraduationCap,
   },
   {
     step: "02",
-    title: "Veri toplama",
-    text: "Ölçek, anamnez ve gözlem notları aynı self-regülasyon alan yapısına göre düzenlenir.",
+    title: "Veriyi birleştirme",
+    text: "Ölçek, anamnez ve gözlem tek yapıda buluşur.",
     Icon: ClipboardCheck,
   },
   {
     step: "03",
-    title: "Kural tabanlı sentez",
-    text: "DNA Intelligence veriyi özetler, örüntüleri ayırır ve rapor diline hazırlar.",
+    title: "Örüntüyü ayırma",
+    text: "Örüntüler ayrılır, öncelikler görünür olur.",
     Icon: BrainCircuit,
   },
   {
     step: "04",
     title: "Klinik rapor",
-    text: "Son karar terapiste ait kalır; çıktı değerlendirme, takip ve paylaşım için okunabilir hale gelir.",
+    text: "Gerekçeli çıktı klinik karara hazırlanır.",
     Icon: FileText,
   },
 ];
@@ -720,111 +749,160 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
     : "/cozumler";
 
   return (
-    <div className={styles.page}>
-      <LandingHeader />
+    <div className={`${styles.page} ${isApproachPage ? styles.signalPage : ""}`}>
+      <LandingHeader compact={isApproachPage} />
       <main className={styles.main}>
         {isApproachPage ? (
           <>
-            <section className={styles.approachHero}>
-              <div className={styles.approachCopy}>
-                <div className={styles.eyebrow}>{page.eyebrow}</div>
-                <h1>{page.title}</h1>
-                <p>{page.intro}</p>
-                <div className={styles.approachPills} aria-label="Eğitim modeli ve deterministik sistem ayrımı">
-                  {approachPillLabels.map((label) => (
-                    <span key={label}>{label}</span>
-                  ))}
+            <section className={styles.signalHero}>
+              <div className={styles.signalHeroCopy}>
+                <span className={styles.signalEyebrow}>Klinik karar desteği</span>
+                <h1>DNA Intelligence</h1>
+                <h2>
+                  Örüntüyü görün.
+                  <br />
+                  Önceliği belirleyin.
+                  <br />
+                  Raporu netleştirin.
+                </h2>
+                <p>
+                  Dynamic Neuro-Regulation Approach klinik çerçeveyi kurar; DNA Intelligence veriyi düzenler,
+                  öncelikleri görünür kılar ve rapora taşır.
+                </p>
+                <div className={styles.signalActions}>
+                  <Link className={styles.signalPrimaryAction} href="#klinik-akis">
+                    Nasıl çalışır
+                    <ArrowRight size={18} strokeWidth={2.2} />
+                  </Link>
+                  <Link className={styles.signalSecondaryAction} href="/dna-nedir/egitim-programi">
+                    Eğitim modeli
+                  </Link>
                 </div>
               </div>
 
-              <div className={styles.approachBlueprint} aria-label="Dynamic Neuro-Regulation ve DNA Intelligence klinik akış yapısı">
-                <div className={styles.blueprintHeader}>
-                  <span>Regülasyon çekirdeği</span>
-                  <strong>Dynamic Neuro-Regulation eğitimi + DNA Intelligence karar desteği</strong>
-                </div>
-                <div className={styles.blueprintBody}>
-                  <div className={styles.blueprintMark}>
+              <figure className={styles.signalMap} aria-labelledby="signal-map-title">
+                <figcaption className={styles.signalPriority} id="signal-map-title">
+                  <Target size={19} strokeWidth={2.2} aria-hidden="true" />
+                  <span>Birincil öncelik</span>
+                  <strong>Fizyolojik toparlanma</strong>
+                </figcaption>
+                <div className={styles.signalMapCanvas}>
+                  <div className={styles.signalCore} aria-label="Regülasyon çekirdeği">
                     <Image
                       src="/images/brand/dna-logo-intelligence-symbol-transparent.png"
-                      alt=""
+                      alt="DNA Intelligence regülasyon çekirdeği"
                       width={585}
                       height={657}
-                      aria-hidden="true"
+                      priority
                     />
-                    <span>Regülasyon çekirdeği</span>
                   </div>
-                  <div className={styles.blueprintStack}>
-                    {approachSystems.map((system, index) => (
-                      <article
-                        className={styles.blueprintLayer}
-                        key={system.title}
-                        style={{ "--layer": index } as CSSProperties}
-                      >
+                  {approachSystems.map((system) => (
+                    <article
+                      className={styles.signalDomain}
+                      data-position={system.position}
+                      key={system.title}
+                      style={{
+                        "--signal-color": system.color,
+                        "--signal-level": system.level,
+                      } as CSSProperties}
+                      aria-label={`${system.title}: ${system.text}`}
+                    >
+                      <div className={styles.signalDomainTitle}>
+                        <span aria-hidden="true">
+                          <system.Icon size={19} strokeWidth={2} />
+                        </span>
                         <span>{system.title}</span>
-                        <p>{system.text}</p>
-                      </article>
-                    ))}
-                  </div>
+                      </div>
+                      <Activity className={styles.signalPulse} size={58} strokeWidth={1.4} aria-hidden="true" />
+                      <span className={styles.signalLevel} aria-hidden="true">
+                        <i />
+                      </span>
+                    </article>
+                  ))}
                 </div>
-                <div className={styles.blueprintFooter} aria-hidden="true">
-                  <span>Eğitim dili</span>
-                  <span>DNA Intelligence analizi</span>
-                  <span>Deterministik rapor çıktısı</span>
-                </div>
-              </div>
+              </figure>
             </section>
 
-            <section className={styles.approachFlow}>
-              <div className={styles.flowHeader}>
-                <span>Uygulama akışı</span>
-                <h2>Önce klinik çerçeve, sonra ölçüm, analiz ve rapor.</h2>
-                <p>
-                  Dynamic Neuro-Regulation Approach klinisyene self-regülasyonu okuma dilini verir. DNA Intelligence
-                  bu dili veri düzenleme ve açıklanabilir deterministik raporlamada kullanır.
-                </p>
+            <section className={styles.clinicalPathway} id="klinik-akis" aria-label="Klinik karar desteği akışı">
+              <div className={styles.clinicalPathwayHeader}>
+                <div>
+                  <span>Klinik akış</span>
+                  <h2>Veriden karara, tek çizgide.</h2>
+                </div>
+                <p>Dört adım, tek bir klinik mantık: çerçeveyi kur, veriyi birleştir, örüntüyü ayır ve raporu netleştir.</p>
               </div>
-              <div className={styles.flowMap} aria-label="Eğitimden raporlamaya klinik akış">
-                {approachFlow.map((item, index) => (
-                  <Fragment key={item.step}>
-                    <article className={styles.flowStep}>
-                      <div className={styles.flowBadge}>
-                        <item.Icon size={21} strokeWidth={2} />
-                        <span>{item.step}</span>
-                      </div>
+              <div className={styles.clinicalTrack}>
+                {approachFlow.map((item) => (
+                  <article className={styles.clinicalTrackItem} key={item.step}>
+                    <div className={styles.clinicalTrackMarker} aria-hidden="true">
+                      <item.Icon size={22} strokeWidth={1.9} />
+                    </div>
+                    <div>
+                      <span>{item.step}</span>
                       <h3>{item.title}</h3>
                       <p>{item.text}</p>
-                    </article>
-                    {index < approachFlow.length - 1 ? <div className={styles.flowConnector} aria-hidden="true" /> : null}
-                  </Fragment>
+                    </div>
+                  </article>
                 ))}
               </div>
             </section>
 
-            <section className={styles.conceptMatrix} aria-label="Dynamic Neuro-Regulation ve DNA Intelligence ayrımı">
-              <article className={styles.conceptColumn}>
-                <span>{conceptColumns[0].label}</span>
-                <h2>{conceptColumns[0].title}</h2>
-                <p>{conceptColumns[0].text}</p>
-                <ul>
-                  {conceptColumns[0].points.map((point) => (
-                    <li key={point}>{point}</li>
-                  ))}
-                </ul>
-              </article>
-              <div className={styles.conceptBridge} aria-hidden="true">
-                <span>Klinik dil</span>
-                <strong>veriye ve rapora taşınır</strong>
+            <section className={styles.modelBridgeSection} id="model-ayrimi" aria-label="Eğitim modeli ve karar destek sistemi ayrımı">
+              <div className={styles.modelBridgeHeader}>
+                <span>İki tamamlayıcı katman</span>
+                <h2>Tek klinik karar, iki tamamlayıcı güç.</h2>
+                <p>Eğitim düşünme çerçevesini kurar; DNA Intelligence bu çerçeveyi düzenli, izlenebilir bir çıktıya taşır.</p>
               </div>
-              <article className={styles.conceptColumn}>
-                <span>{conceptColumns[1].label}</span>
-                <h2>{conceptColumns[1].title}</h2>
-                <p>{conceptColumns[1].text}</p>
-                <ul>
-                  {conceptColumns[1].points.map((point) => (
-                    <li key={point}>{point}</li>
-                  ))}
-                </ul>
-              </article>
+              <div className={styles.modelBridgeCanvas}>
+                {conceptColumns.map((column, index) => (
+                  <Fragment key={column.title}>
+                    <article className={styles.modelBridgeColumn}>
+                      <div className={styles.modelBridgeColumnTop}>
+                        <span aria-hidden="true">
+                          {index === 0 ? <GraduationCap size={24} strokeWidth={1.8} /> : <BrainCircuit size={24} strokeWidth={1.8} />}
+                        </span>
+                        <small>{String(index + 1).padStart(2, "0")} · {column.label}</small>
+                      </div>
+                      <h3>{column.title}</h3>
+                      <ul>
+                        {column.points.map((point) => (
+                          <li key={point}>
+                            <CheckCircle2 size={17} strokeWidth={2} aria-hidden="true" />
+                            {point}
+                          </li>
+                        ))}
+                      </ul>
+                    </article>
+                    {index === 0 ? (
+                      <div className={styles.modelBridgeConnector} aria-hidden="true">
+                        <span>Klinik dil</span>
+                        <ArrowRight size={26} strokeWidth={1.7} />
+                        <strong>veriye dönüşür</strong>
+                      </div>
+                    ) : null}
+                  </Fragment>
+                ))}
+              </div>
+              <div className={styles.modelBridgeOutcome}>
+                <div className={styles.modelBridgeOutcomeCopy}>
+                  <span aria-hidden="true">
+                    <Target size={23} strokeWidth={1.8} />
+                  </span>
+                  <div>
+                    <small>Ortak çıktı</small>
+                    <strong>Öncelikleri görünür, gerekçesi izlenebilir klinik rapor.</strong>
+                  </div>
+                </div>
+                <div className={styles.modelBridgeActions}>
+                  <Link className={styles.primary} href={primaryActionHref}>
+                    {primaryActionLabel}
+                    <ArrowRight size={18} />
+                  </Link>
+                  <Link className={styles.secondary} href={secondaryActionHref}>
+                    {secondaryActionLabel}
+                  </Link>
+                </div>
+              </div>
             </section>
           </>
         ) : isEducationPage ? (
@@ -1854,8 +1932,8 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
           </>
         )}
 
-        {!isTestsPage ? (
-          <section className={`${styles.callout} ${isAiReportPage ? styles.aiFinalCta : ""} ${isFutureModulesPage ? styles.labsFinalCta : ""}`}>
+        {!isTestsPage && !isApproachPage ? (
+          <section className={`${styles.callout} ${isApproachPage ? styles.signalCallout : ""} ${isAiReportPage ? styles.aiFinalCta : ""} ${isFutureModulesPage ? styles.labsFinalCta : ""}`}>
             <h2>{calloutTitle}</h2>
             <p>{calloutText}</p>
             <div className={styles.actions}>

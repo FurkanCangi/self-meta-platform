@@ -1156,6 +1156,12 @@ export function analyzeExternalClinicalTests(rawText: unknown, ageMonths?: numbe
     const resultText = match.reportedResult
       ? `Bildirilen sonuç: ${match.reportedResult}.`
       : "Bildirilen sonuç alanı yapılandırılmış biçimde yakalanmadı."
+    const hasReportedScore = Boolean(match.reportedResult?.match(
+      /(?:t\s*skor(?:u)?|standart skor|ölçek puanı|ham puan|skor|puan|persentil|percentil)\s*(?:[:=]?\s*)?[-+]?\d+(?:[.,]\d+)?(?:\s*\/\s*\d+(?:[.,]\d+)?)?/i
+    ))
+    const scoreText = hasReportedScore
+      ? "Bildirilen puan: Sayısal değer sonuç alanında yer almaktadır."
+      : "Bildirilen puan: Ayrı bir sayısal puan girilmedi."
     const relation =
       match.ageCompatible === false
         ? "Bu bulgu ana klinik değerlendirmeyi desteklemez; yalnız temkinli yan bilgi olarak kayda geçirilir."
@@ -1164,7 +1170,7 @@ export function analyzeExternalClinicalTests(rawText: unknown, ageMonths?: numbe
         : match.resultDirection === "expected_or_preserved"
         ? "Korunmuş/yaş uyumlu sonuç, raporda risk büyütmek yerine işlevsel denge kanıtı olarak kullanılır."
         : match.dnaRelation
-    return `${match.name}: ${ageText}; resmi kullanım aralığı ${match.ageRange}. Ölçtüğü alanlar: ${match.domainsMeasured.slice(0, 4).join(", ")}. Puan sistemi: ${match.scoreSystem} ${resultText} Rapor ilişkisi: ${relation} Yorum sınırı: ${match.interpretationBoundaries}`.replace(/\.\s*\./g, ".")
+    return `${match.name}: ${ageText}; resmi kullanım aralığı ${match.ageRange}. Ölçtüğü alanlar: ${match.domainsMeasured.slice(0, 4).join(", ")}. ${scoreText} ${resultText} Rapor ilişkisi: ${relation} Yorum sınırı: ${match.interpretationBoundaries}`.replace(/\.\s*\./g, ".")
   })
   const qualityFlagLines = [
     ...ageConditionalCautionLines,
