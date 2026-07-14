@@ -20,7 +20,6 @@ import {
   HeartPulse,
   Layers3,
   ListChecks,
-  LockKeyhole,
   PenLine,
   Route,
   ShieldCheck,
@@ -379,191 +378,147 @@ const interventionValuePoints = [
   { title: "Ölçülebilir yanıt", text: "Değişimi tanımlı göstergelerle izleyin.", Icon: BarChart3 },
 ];
 
-const reportHighlights = [
-  { title: "Açıklanabilir Analiz", text: "Kural tabanlı örüntü analizi", Icon: BrainCircuit },
-  { title: "Klinik Güvenilirlik", text: "Kanıt temelli ve tutarlı yapı", Icon: ShieldCheck },
-  { title: "Zaman Tasarrufu", text: "Raporlama yükünü azaltır", Icon: TimerReset },
+const aiReportSignals = [
+  { title: "Çoklu veri okuması", text: "Anamnez, ölçüm ve gözlem aynı bağlamda", Icon: Layers3 },
+  { title: "AI klinik sentezi", text: "Örüntüler ve öncelikler görünür", Icon: Sparkles },
+  { title: "Terapist onaylı çıktı", text: "Düzenlenebilir profesyonel rapor", Icon: ShieldCheck },
 ];
 
-const rawDataInputs = [
+const aiReportSources = [
   { title: "Anamnez", Icon: BookOpen },
-  { title: "Ölçekler", Icon: ClipboardCheck },
-  { title: "Video Gözlem", Icon: Eye },
-  { title: "Terapist Notları", Icon: PenLine },
-  { title: "Diğer Veriler", Icon: Database },
+  { title: "Ölçüm sonuçları", Icon: ClipboardCheck },
+  { title: "Gözlem verisi", Icon: Eye },
+  { title: "Terapist notları", Icon: PenLine },
 ];
 
-const clinicalReportOutputs = [
-  { title: "Klinik Özet", Icon: FileText },
-  { title: "Öncelikli Alanlar", Icon: Target },
-  { title: "Klinik Yorum", Icon: BrainCircuit },
+const aiReportSections = [
+  { title: "Klinik özet", Icon: FileText },
+  { title: "Öncelikli alanlar", Icon: Target },
   { title: "Hedefler", Icon: ListChecks },
-  { title: "Rapor", Icon: FileCheck2 },
+  { title: "Takip göstergeleri", Icon: BarChart3 },
 ];
 
-const reportContentNotes = [
+const aiCapabilities = [
   {
-    title: "Yapılandırılmış Klinik Özet",
-    text: "Danışanın genel profilini net ve anlaşılır şekilde özetler.",
-    side: "left",
+    step: "01",
+    eyebrow: "Birleştirir",
+    title: "Dağınık klinik veriyi tek bir vaka bağlamında toplar.",
+    text: "Anamnez, ölçüm sonuçları, gözlem ve terapist notları birbirinden kopmadan birlikte ele alınır.",
+    outcome: "Tek ve bütünlüklü klinik veri görünümü",
+    Icon: Layers3,
   },
   {
-    title: "Regülasyon Analizi",
-    text: "Güçlü ve destek alanlarını görselleştirerek öncelikleri ortaya koyar.",
-    side: "left",
-  },
-  {
-    title: "Klinik Öncelikler",
-    text: "Müdahale öncelikleri ve hedefler belirginleştirilir.",
-    side: "right",
-  },
-  {
-    title: "Takip Önerileri",
-    text: "İzleme noktaları ve önerilerle sürdürülebilir ilerleme desteklenir.",
-    side: "right",
-  },
-];
-
-const reportSidebarItems = ["Klinik Özet", "Regülasyon Analizi", "Klinik Öncelikler", "Takip Önerileri"];
-
-const aiProcessSteps = [
-  {
-    title: "Veri Toplama",
-    text: "Anamnez, ölçek, gözlem ve notlar sisteme alınır.",
-    Icon: Database,
-  },
-  {
-    title: "Otomatik Analiz",
-    text: "Deterministik motor, verileri doğrulanmış kurallarla analiz eder ve örüntüleri belirler.",
+    step: "02",
+    eyebrow: "Analiz eder",
+    title: "Klinik örüntüleri, güçlü alanları ve öncelikleri görünür kılar.",
+    text: "AI, veriler arasındaki ilişkileri düzenleyerek terapistin dikkat etmesi gereken alanları daha hızlı görmesine yardımcı olur.",
+    outcome: "Açık öncelikler ve daha güçlü klinik muhakeme",
     Icon: BrainCircuit,
   },
   {
-    title: "Klinik Taslak",
-    text: "Yapılandırılmış rapor taslağı oluşturulur.",
-    Icon: FileText,
-  },
-  {
-    title: "Terapist Onayı",
-    text: "Terapist düzenler, yorumlar ve onaylar.",
-    Icon: UserRound,
-  },
-  {
-    title: "Final Rapor",
-    text: "Klinik rapor güvenli şekilde saklanır ve paylaşılır.",
+    step: "03",
+    eyebrow: "Raporlaştırır",
+    title: "Klinik dili koruyan profesyonel bir rapor taslağı hazırlar.",
+    text: "Özet, klinik öncelikler, hedefler ve takip göstergeleri okunabilir bir rapor akışında yapılandırılır.",
+    outcome: "Terapist incelemesine hazır rapor taslağı",
     Icon: FileCheck2,
   },
 ];
 
-const reportGains = [
+const aiReportJourney = [
   {
-    title: "Zaman Tasarrufu",
-    text: "Raporlama süresini önemli ölçüde azaltır.",
-    Icon: TimerReset,
+    title: "Klinik veriyi girin",
+    text: "Danışana ait değerlendirme, anamnez ve gözlem verilerini tamamlayın.",
+    Icon: Database,
   },
   {
-    title: "Tutarlılık",
-    text: "Kanıta dayalı ve tutarlı rapor yapısı sağlar.",
-    Icon: Route,
+    title: "AI analizini çalıştırın",
+    text: "Sistem verileri birlikte okuyarak örüntüleri ve öncelikleri düzenlesin.",
+    Icon: Sparkles,
   },
   {
-    title: "Klinik Netlik",
-    text: "Karmaşık veriyi net ve anlaşılır hale getirir.",
-    Icon: BrainCircuit,
+    title: "Taslağı klinik gözle inceleyin",
+    text: "Rapor dilini, hedefleri ve yorumları vaka bağlamına göre değerlendirin.",
+    Icon: UserRound,
   },
   {
-    title: "Güvenli ve Gizli",
-    text: "Verileriniz güvenli standartlara uygundur.",
-    Icon: LockKeyhole,
-  },
-  {
-    title: "İzlenebilirlik",
-    text: "Rapor geçmişi ve değişiklikler takip edilebilir.",
-    Icon: ClipboardCheck,
+    title: "Raporu onaylayın",
+    text: "Son düzenlemeyi yapın; onaylı raporu güvenli şekilde saklayın ve paylaşın.",
+    Icon: FileCheck2,
   },
 ];
 
-const labsOrbitModules = [
-  {
-    title: "Video Gözlem",
-    text: "Seans içi gözlemin yapılandırılması",
-    Icon: Eye,
-  },
-  {
-    title: "Görüntü İşleme",
-    text: "Davranış ve hareket sinyallerinin analizi",
-    Icon: Target,
-  },
-  {
-    title: "Gelişim Takip",
-    text: "Zaman içindeki değişimin izlenmesi",
-    Icon: Route,
-  },
+const aiValuePoints = [
+  { title: "Daha hızlı dokümantasyon", text: "Tekrarlayan rapor yazım yükünü azaltın.", Icon: TimerReset },
+  { title: "Daha net klinik anlatım", text: "Karmaşık veriyi anlaşılır bir rapor akışına taşıyın.", Icon: BrainCircuit },
+  { title: "Kontrol sizde", text: "AI taslağını inceleyin, düzenleyin ve yalnızca siz onaylayın.", Icon: ShieldCheck },
 ];
 
 const labModules = [
   {
     step: "01",
     title: "Video Gözlem",
-    badge: "Planlanan Modül",
-    text: "Seans içi davranış, regülasyon tepkileri ve katılım örüntülerinin yapılandırılmış biçimde izlenmesini hedefler.",
-    value: "Terapistin gözlemini destekler, seansın kritik anlarını daha net anlamlandırmayı sağlar.",
-    limit: "Tanı koyma veya otomatik klinik karar verme amacı taşımaz.",
-    progress: 40,
+    status: "Öncelikli geliştirme",
+    text: "Seans içi davranış, regülasyon tepkileri ve katılım örüntülerini yapılandırılmış gözlem başlıklarında toplar.",
+    contribution: "Kritik anları daha sonra karşılaştırılabilir bir klinik kayda dönüştürür.",
     Icon: Eye,
-    visual: "video",
-    accent: "#7c3aed",
   },
   {
     step: "02",
     title: "Görüntü İşleme",
-    badge: "Planlanan Modül",
-    text: "Postür, hareket, motor yanıt ve gözlemsel davranış göstergelerini klinik bağlamla ilişkilendirecek altyapı olarak planlanır.",
-    value: "Klinik veriyi daha zenginleştirerek değerlendirme sürecine destek olur.",
-    limit: "Otomatik değerlendirme veya karar üretmez; terapistin yorumuna destek sağlar.",
-    progress: 30,
+    status: "Altyapı araştırması",
+    text: "Postür, hareket ve motor yanıt gibi gözlemsel işaretleri klinik bağlamla ilişkilendirecek veri altyapısını geliştirir.",
+    contribution: "Gözlem verisini terapistin yorumlayabileceği daha düzenli işaretlerle zenginleştirir.",
     Icon: Target,
-    visual: "motion",
-    accent: "#2563eb",
   },
   {
     step: "03",
-    title: "Gelişim Takip",
-    badge: "Planlanan Modül",
-    text: "Zaman içindeki değişimi; değerlendirme sonuçları, raporlar ve klinik gözlem notlarıyla birlikte izlemeyi amaçlar.",
-    value: "İlerlemeyi görünür kılar, müdahale planlarının etkinliğini değerlendirmeye yardımcı olur.",
-    limit: "Terapistin klinik muhakemesinin yerini almaz; destekleyici bir araçtır.",
-    progress: 20,
+    title: "Gelişim Takibi",
+    status: "Akış tasarımı",
+    text: "Değerlendirme sonuçlarını, raporları ve klinik gözlem notlarını zaman çizgisinde bir araya getirir.",
+    contribution: "Değişimi tek seans yerine süreç boyunca görünür ve izlenebilir hale getirir.",
     Icon: Route,
-    visual: "growth",
-    accent: "#00c8d7",
   },
 ];
 
-const labsFlowSteps = [
+const labsIntegrationSteps = [
   {
-    title: "Gözlem",
-    text: "Seans içi gözlem, notlar ve diğer veriler toplanır.",
+    title: "Gözlemi yakala",
+    text: "Seans notları ve gözlemsel veriler tek kayıt altında toplanır.",
     Icon: Eye,
   },
   {
-    title: "Yapılandırma",
-    text: "Veriler sistemde yapılandırılır ve düzenlenir.",
+    title: "Veriyi yapılandır",
+    text: "Klinik işaretler ortak başlıklarda düzenlenir.",
     Icon: Layers3,
   },
   {
-    title: "Klinik Profil",
-    text: "Çok boyutlu klinik profil oluşturulur.",
-    Icon: BrainCircuit,
+    title: "Değişimi karşılaştır",
+    text: "Farklı değerlendirme ve seanslar zaman içinde birlikte okunur.",
+    Icon: BarChart3,
   },
   {
-    title: "Takip",
-    text: "İlerleme düzenli olarak izlenir ve değerlendirilir.",
+    title: "Rapor akışına taşı",
+    text: "İzlenen değişim klinik özet ve takip göstergelerine bağlanır.",
+    Icon: FileText,
+  },
+];
+
+const labsPrinciples = [
+  {
+    title: "Terapist merkezli",
+    text: "Modüller klinik kararı otomatikleştirmek için değil, terapistin değerlendirmesini güçlendirmek için tasarlanır.",
+    Icon: UserRound,
+  },
+  {
+    title: "Aşamalı geliştirme",
+    text: "Her modül gerçek kullanım senaryolarıyla doğrulanarak kontrollü biçimde ana sisteme eklenir.",
     Icon: Route,
   },
   {
-    title: "Rapor Desteği",
-    text: "Açıklanabilir raporlama ile klinik içgörü desteklenir.",
-    Icon: FileText,
+    title: "Tek veri akışı",
+    text: "Yeni araçlar ayrı ekranlar üretmek yerine mevcut değerlendirme, takip ve rapor sürecine bağlanır.",
+    Icon: Layers3,
   },
 ];
 
@@ -583,9 +538,9 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
     : isInterventionPage
       ? "Müdahale planınızı daha net ve izlenebilir kurun."
     : isAiReportPage
-      ? "Klinik verinizin gücünü anlamlı raporlara dönüştürün."
+      ? "AI destekli klinik raporlama akışınızı birlikte kuralım."
     : isFutureModulesPage
-      ? "Gelişen modüllerle klinik geleceği birlikte inşa ediyoruz."
+      ? "Yeni modülleri klinik ihtiyaçlarla birlikte şekillendirelim."
     : "Değerlendirme ve raporlama akışınızı birlikte yapılandıralım.";
   const calloutText = isEducationPage
     ? "Öz-düzenleme alanında güçlü bir çerçeveye sahip olmak, etkili müdahalenin ve kalıcı değişimin anahtarıdır."
@@ -594,9 +549,9 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
     : isInterventionPage
       ? "Değerlendirme bulgusundan klinik hedefe, uygulamadan takip göstergesine uzanan akışı birlikte yapılandıralım."
     : isAiReportPage
-      ? "Deterministik raporlama ile dokümantasyon süresini azaltın, zamanınızı danışanlarınıza ayırın."
+      ? "Klinik veriyi birleştiren, öncelikleri görünür kılan ve terapist onayına hazır rapor taslağı oluşturan AI deneyimini yakından inceleyin."
     : isFutureModulesPage
-      ? "DNA Labs yolculuğunu takip edin, erken erişim fırsatlarından ilk siz haberdar olun."
+      ? "DNA Labs yol haritasını inceleyin; kullanım senaryoları, pilot çalışmalar ve erken erişim hakkında bilgi alın."
     : "Eğitim modelinden ölçüm formuna, deterministik analizden rapor diline kadar klinik sürecin nasıl kurulacağını birlikte netleştirebiliriz.";
   const primaryActionLabel = isEducationPage
     ? "Programa Başvur"
@@ -607,7 +562,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
     : isAiReportPage
       ? "İletişime Geç"
     : isFutureModulesPage
-      ? "Gelişen Modüller Hakkında Bilgi Al"
+      ? "DNA Labs Hakkında Bilgi Al"
       : "İletişime Geç";
   const primaryActionHref = isEducationPage
     ? "/signup"
@@ -627,9 +582,9 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
     : isInterventionPage
       ? "Eğitim Programı"
     : isAiReportPage
-      ? "Detaylı Bilgi Al"
+      ? "Sistemi İncele"
     : isFutureModulesPage
-      ? "DNA Labs Yol Haritasını Takip Et"
+      ? "Modül Akışını İncele"
       : "Çözümleri İncele";
   const secondaryActionHref = isEducationPage
     ? "/iletisim"
@@ -638,7 +593,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
     : isAiReportPage
       ? "/cozumler"
     : isFutureModulesPage
-      ? "#labs-flow"
+      ? "#labs-integration"
     : "/cozumler";
 
   return (
@@ -1351,192 +1306,148 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
           </>
         ) : isAiReportPage ? (
           <>
-            <section className={styles.aiReportHero}>
-              <div className={styles.aiReportHeroCopy}>
-                <div className={styles.eyebrow}>Deterministik Raporlama</div>
-                <h1>
-                  Klinik verilerden anlamlı <span>içgörülere, okunabilir raporlara.</span>
-                </h1>
+            <section className={styles.aiModernHero}>
+              <div className={styles.aiModernHeroCopy}>
+                <div className={styles.eyebrow}>AI Destekli Klinik Raporlama</div>
+                <h1>Klinik veriyi AI ile anlamlandırın. <span>Raporu netleştirin.</span></h1>
                 <p>
-                  DNA Intelligence, çok boyutlu klinik verileri analiz eder, klinik muhakemeyi destekleyen tutarlı ve
-                  yapılandırılmış raporlar üretir.
+                  DNA Intelligence AI; anamnez, ölçüm, gözlem ve terapist notlarını aynı klinik bağlamda birleştirir,
+                  örüntüleri görünür kılar ve uzman incelemesine hazır bir rapor taslağı oluşturur.
                 </p>
-                <div className={styles.aiReportHighlights} aria-label="Deterministik raporlama vurguları">
-                  {reportHighlights.map((item) => (
+                <div className={styles.aiModernActions}>
+                  <Link className={styles.primary} href="#ai-rapor-akisi">
+                    Nasıl çalışır <ArrowRight size={18} strokeWidth={2.2} aria-hidden="true" />
+                  </Link>
+                  <Link className={styles.secondary} href="/iletisim">Bilgi Al</Link>
+                </div>
+                <div className={styles.aiModernSignals} aria-label="AI raporlama özellikleri">
+                  {aiReportSignals.map((item) => (
                     <article key={item.title}>
-                      <item.Icon size={20} strokeWidth={2.1} />
-                      <strong>{item.title}</strong>
-                      <span>{item.text}</span>
+                      <item.Icon size={19} strokeWidth={2} aria-hidden="true" />
+                      <div><strong>{item.title}</strong><span>{item.text}</span></div>
                     </article>
                   ))}
                 </div>
               </div>
 
-              <div className={styles.aiFlowVisual} aria-label="Ham veriden klinik rapora veri akışı">
-                <div className={`${styles.aiFlowColumn} ${styles.aiFlowInput}`}>
-                  <h2>Ham Veri</h2>
-                  {rawDataInputs.map((item) => (
-                    <article key={item.title}>
-                      <item.Icon size={17} strokeWidth={2} />
-                      <span>{item.title}</span>
-                    </article>
-                  ))}
-                </div>
-
-                <div className={styles.aiCore} aria-label="DNA Intelligence çekirdeği">
-                  <span className={styles.aiCoreRing} />
-                  <Image
-                    src="/images/brand/dna-logo-intelligence-symbol-transparent.png"
-                    alt=""
-                    width={585}
-                    height={657}
-                    aria-hidden="true"
-                  />
-                  <strong>DNA Intelligence</strong>
-                </div>
-
-                <div className={`${styles.aiFlowColumn} ${styles.aiFlowOutput}`}>
-                  <h2>Klinik Rapor</h2>
-                  {clinicalReportOutputs.map((item) => (
-                    <article key={item.title}>
-                      <item.Icon size={17} strokeWidth={2} />
-                      <span>{item.title}</span>
-                    </article>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            <section className={styles.aiReportContentSection}>
-              <div className={styles.aiSectionTitle}>
-                <h2>Raporun İçeriği</h2>
-              </div>
-              <div className={styles.aiReportMockupGrid}>
-                <div className={styles.reportCalloutsLeft}>
-                  {reportContentNotes
-                    .filter((note) => note.side === "left")
-                    .map((note) => (
-                      <article className={styles.reportCalloutNote} key={note.title}>
-                        <h3>{note.title}</h3>
-                        <p>{note.text}</p>
-                      </article>
+              <aside className={styles.aiClinicalWorkspace} aria-label="AI destekli klinik raporlama örneği">
+                <header>
+                  <div>
+                    <Image
+                      src="/images/brand/dna-logo-intelligence-symbol-transparent.png"
+                      alt=""
+                      width={585}
+                      height={657}
+                      aria-hidden="true"
+                    />
+                    <div><span>DNA Intelligence AI</span><strong>Klinik rapor çalışma alanı</strong></div>
+                  </div>
+                  <span>AI aktif</span>
+                </header>
+                <div className={styles.aiWorkspaceSources}>
+                  <span>Klinik veri</span>
+                  <div>
+                    {aiReportSources.map((item) => (
+                      <div key={item.title}><item.Icon size={16} strokeWidth={2} aria-hidden="true" />{item.title}</div>
                     ))}
-                </div>
-
-                <article className={styles.reportMockup} aria-label="Klinik rapor örnek mockupı">
-                  <aside className={styles.reportMockSidebar}>
-                    <div className={styles.reportAvatar}>ÇD</div>
-                    <strong>Çocuk Danışanı</strong>
-                    <span>7 yaş 3 ay</span>
-                    <nav aria-label="Rapor bölümleri">
-                      {reportSidebarItems.map((item, index) => (
-                        <span className={index === 0 ? styles.reportSidebarActive : ""} key={item}>
-                          {item}
-                        </span>
-                      ))}
-                    </nav>
-                  </aside>
-                  <div className={styles.reportMockBody}>
-                    <div className={styles.reportMockHeader}>
-                      <span>Klinik Özet</span>
-                      <strong>Terapist onayı bekliyor</strong>
-                    </div>
-                    <p>
-                      Danışanın regülasyon profili genel olarak orta düzeydedir. Duyusal regülasyon ve yürütücü
-                      işlevlerde destek ihtiyacı; sosyal katılım ve fizyolojik düzenleme alanlarında güçlü yönler
-                      bulunmuştur.
-                    </p>
-                    <div className={styles.reportBarsGrid}>
-                      <div>
-                        <h3>Güçlü Alanlar</h3>
-                        {["Fizyolojik Düzenleme", "Sosyal Katılım", "Duyusal Regülasyon"].map((item, index) => (
-                          <div className={styles.reportBarRow} key={item}>
-                            <span>{item}</span>
-                            <i style={{ "--bar": `${74 - index * 10}%` } as CSSProperties} />
-                          </div>
-                        ))}
-                      </div>
-                      <div>
-                        <h3>Destek Alanları</h3>
-                        {["Duygusal Regülasyon", "Yürütücü İşlevler", "Bilişsel Organizasyon"].map((item, index) => (
-                          <div className={styles.reportBarRow} key={item}>
-                            <span>{item}</span>
-                            <i style={{ "--bar": `${58 - index * 8}%` } as CSSProperties} />
-                          </div>
-                        ))}
-                      </div>
-                    </div>
                   </div>
-                </article>
-
-                <div className={styles.reportCalloutsRight}>
-                  {reportContentNotes
-                    .filter((note) => note.side === "right")
-                    .map((note) => (
-                      <article className={styles.reportCalloutNote} key={note.title}>
-                        <h3>{note.title}</h3>
-                        <p>{note.text}</p>
-                      </article>
+                </div>
+                <div className={styles.aiWorkspaceCore}>
+                  <span><Sparkles size={17} strokeWidth={2} aria-hidden="true" /> AI klinik sentezi</span>
+                  <h2>Veriyi ilişkilendirir, örüntüyü görünür kılar, rapor diline taşır.</h2>
+                  <div><span>Güçlü alanlar</span><span>Destek ihtiyaçları</span><span>Klinik öncelikler</span></div>
+                </div>
+                <div className={styles.aiWorkspaceOutput}>
+                  <div><span>Rapor taslağı</span><strong>Terapist incelemesine hazır</strong></div>
+                  <ul>
+                    {aiReportSections.map((item) => (
+                      <li key={item.title}><item.Icon size={16} strokeWidth={2} aria-hidden="true" />{item.title}</li>
                     ))}
+                  </ul>
                 </div>
-              </div>
+                <footer>
+                  <ShieldCheck size={18} strokeWidth={2} aria-hidden="true" />
+                  <span>Son klinik yorum ve rapor onayı terapiste aittir.</span>
+                </footer>
+              </aside>
             </section>
 
-            <section className={styles.aiCollaborationProcess}>
-              <article className={styles.aiCollaborationCard}>
-                <h2>Uzman + Deterministik Sistem İş Birliği</h2>
-                <div className={styles.aiCollaborationLoop} aria-hidden="true">
-                  <div className={styles.collabNode}>
-                    <UserRound size={24} strokeWidth={2} />
-                    <span>Terapist</span>
-                  </div>
-                  <div className={styles.collabNode}>
-                    <Database size={24} strokeWidth={2} />
-                    <span>Klinik Veri</span>
-                  </div>
-                  <div className={styles.collabNode}>
-                    <BrainCircuit size={24} strokeWidth={2} />
-                    <span>DNA Intelligence</span>
-                  </div>
-                  <div className={styles.collabCenter}>
-                    <FileText size={30} strokeWidth={2} />
-                    <strong>Klinik Rapor</strong>
-                  </div>
-                </div>
-                <p>
-                  Sistem, veriyi açıklanabilir kurallarla düzenler ve anlamlandırır; <strong>son karar her zaman terapiste aittir.</strong>
-                </p>
-              </article>
-
-              <section className={styles.aiProcessSection} aria-label="Rapor üretim süreci">
-                <h2>Rapor Üretim Süreci</h2>
-                <div className={styles.aiProcessLine}>
-                  {aiProcessSteps.map((step, index) => (
-                    <article className={styles.aiProcessStep} key={step.title}>
-                      <div>
-                        <step.Icon size={24} strokeWidth={2} />
-                      </div>
-                      <span>{index + 1}</span>
-                      <h3>{step.title}</h3>
-                      <p>{step.text}</p>
-                    </article>
-                  ))}
-                </div>
-              </section>
-            </section>
-
-            <section className={styles.aiGainsSection}>
-              <div className={styles.aiSectionTitle}>
-                <h2>Deterministik Raporlama ile Kazanımlarınız</h2>
+            <section className={styles.aiCapabilitySection} aria-labelledby="ai-yetenekler-baslik">
+              <div className={styles.aiCapabilityIntro}>
+                <span>AI ne yapar?</span>
+                <h2 id="ai-yetenekler-baslik">Klinik muhakemeyi hızlandıran üç temel görev.</h2>
+                <p>AI, klinisyenin yerine karar vermez; veriyi daha hızlı okumasına ve raporlamasına yardımcı olur.</p>
               </div>
-              <div className={styles.aiGainsRow}>
-                {reportGains.map((gain) => (
-                  <article className={styles.aiGainItem} key={gain.title}>
-                    <gain.Icon size={22} strokeWidth={2} />
+              <div className={styles.aiCapabilityList}>
+                {aiCapabilities.map((item) => (
+                  <article key={item.step}>
+                    <span>{item.step}</span>
+                    <item.Icon size={22} strokeWidth={1.9} aria-hidden="true" />
                     <div>
-                      <h3>{gain.title}</h3>
-                      <p>{gain.text}</p>
+                      <small>{item.eyebrow}</small>
+                      <h3>{item.title}</h3>
+                      <p>{item.text}</p>
+                      <strong><CheckCircle2 size={16} strokeWidth={2} aria-hidden="true" />{item.outcome}</strong>
                     </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className={styles.aiReportPreviewSection} aria-labelledby="ai-rapor-onizleme-baslik">
+              <header>
+                <div><span>AI rapor taslağı</span><h2 id="ai-rapor-onizleme-baslik">Karmaşık veriden okunabilir klinik özet.</h2></div>
+                <strong><Sparkles size={16} strokeWidth={2} aria-hidden="true" /> AI tarafından yapılandırıldı</strong>
+              </header>
+              <div className={styles.aiReportPreviewBody}>
+                <aside aria-label="Rapor bölümleri">
+                  {aiReportSections.map((item, index) => (
+                    <div className={index === 0 ? styles.aiReportPreviewActive : ""} key={item.title}>
+                      <item.Icon size={17} strokeWidth={2} aria-hidden="true" />{item.title}
+                    </div>
+                  ))}
+                </aside>
+                <div className={styles.aiReportPreviewContent}>
+                  <div><span>Klinik özet</span><strong>Uzman onayı bekliyor</strong></div>
+                  <p>
+                    Değerlendirme verileri, duyusal yük ve yürütücü talepler arttığında düzenleme kapasitesinin
+                    zorlandığını; yapılandırılmış çevre ve öngörülebilir görev akışında katılımın güçlendiğini göstermektedir.
+                  </p>
+                  <div className={styles.aiReportPreviewFindings}>
+                    <article><span>Öncelikli örüntü</span><strong>Duyusal yük altında görev sürdürme</strong></article>
+                    <article><span>İlk klinik hedef</span><strong>Geçişleri daha öngörülebilir hale getirme</strong></article>
+                    <article><span>Takip göstergesi</span><strong>Göreve başlama süresi ve gereken yardım</strong></article>
+                  </div>
+                </div>
+              </div>
+              <footer><ShieldCheck size={18} strokeWidth={2} aria-hidden="true" />AI taslağı düzenlenebilir; nihai içerik yalnızca terapistin inceleme ve onayıyla tamamlanır.</footer>
+            </section>
+
+            <section className={styles.aiJourneySection} id="ai-rapor-akisi">
+              <div className={styles.aiJourneyIntro}>
+                <span>Raporlama akışı</span>
+                <h2>Dört adımda veriden onaylı rapora.</h2>
+                <p>Her adım görünür, düzenlenebilir ve klinisyenin kontrolündedir.</p>
+              </div>
+              <div className={styles.aiJourneyList}>
+                {aiReportJourney.map((item, index) => (
+                  <article key={item.title}>
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <item.Icon size={21} strokeWidth={1.9} aria-hidden="true" />
+                    <div><h3>{item.title}</h3><p>{item.text}</p></div>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className={styles.aiValueSection} aria-label="AI raporlamanın klinik katkıları">
+              <div><span>Klinik katkı</span><h2>Daha az yazım yükü, daha net klinik iletişim.</h2></div>
+              <div className={styles.aiValueList}>
+                {aiValuePoints.map((item, index) => (
+                  <article key={item.title}>
+                    <span>{String(index + 1).padStart(2, "0")}</span>
+                    <item.Icon size={20} strokeWidth={1.9} aria-hidden="true" />
+                    <div><h3>{item.title}</h3><p>{item.text}</p></div>
                   </article>
                 ))}
               </div>
@@ -1544,130 +1455,108 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
           </>
         ) : isFutureModulesPage ? (
           <>
-            <section className={styles.labsHero}>
-              <div className={styles.labsHeroCopy}>
+            <section className={styles.labsModernHero}>
+              <div className={styles.labsModernHeroCopy}>
                 <div className={styles.eyebrow}>DNA Labs</div>
-                <h1>
-                  DNA Labs: Klinik gözlemden gelişim takibine uzanan <span>yeni nesil modüller.</span>
-                </h1>
+                <h1>Klinik akışı geleceğe hazırlayan <span>yeni modüller.</span></h1>
                 <p>
-                  DNA Intelligence ekosistemi, klinik uygulamayı güçlendirmek için sürekli gelişir. Yeni modüller;
-                  gözlemden takibe uzanan süreci daha yapılandırılmış, daha anlamlı ve daha erişilebilir hale getirmek
-                  üzere tasarlanır.
+                  DNA Labs; seans gözlemini yapılandıran, değişimi zaman içinde izleyen ve elde edilen veriyi mevcut
+                  rapor akışına bağlayan klinik teknoloji yol haritasıdır.
                 </p>
-                <div className={styles.labsNotice}>
-                  <ShieldCheck size={22} strokeWidth={2.1} />
-                  <span>
-                    Gelecek modüller terapistin klinik muhakemesini desteklemek için tasarlanır; tanı koyma ya da
-                    otomatik tedavi kararı verme amacı taşımaz.
-                  </span>
+                <div className={styles.labsModernActions}>
+                  <Link className={styles.primary} href="#labs-modules">
+                    Modülleri incele <ArrowRight size={18} strokeWidth={2.2} aria-hidden="true" />
+                  </Link>
+                  <Link className={styles.secondary} href="/iletisim">Bilgi al</Link>
+                </div>
+                <div className={styles.labsModernSignals} aria-label="DNA Labs yol haritası özeti">
+                  <div><strong>3</strong><span>planlanan modül</span></div>
+                  <div><strong>1</strong><span>birleşik klinik akış</span></div>
+                  <div><ShieldCheck size={19} strokeWidth={2} aria-hidden="true" /><span>terapist kontrollü</span></div>
                 </div>
               </div>
 
-              <div className={styles.labsOrbit} aria-label="DNA Labs gelecek modül orbit görseli">
-                <span className={styles.labsOrbitRing} />
-                <span className={styles.labsOrbitRing} />
-                <span className={styles.labsOrbitRing} />
-                <div className={styles.labsOrbitCore}>
-                  <Image
-                    src="/images/brand/dna-logo-intelligence-symbol-transparent.png"
-                    alt=""
-                    width={585}
-                    height={657}
-                    aria-hidden="true"
-                  />
-                  <strong>DNA Labs</strong>
-                </div>
-                {labsOrbitModules.map((module, index) => (
-                  <article
-                    className={styles.labsOrbitModule}
-                    key={module.title}
-                    style={{ "--orbit-index": index } as CSSProperties}
-                  >
-                    <module.Icon size={24} strokeWidth={2.1} />
+              <aside className={styles.labsRoadmapPanel} aria-label="DNA Labs klinik teknoloji yol haritası">
+                <header>
+                  <div>
+                    <Image
+                      src="/images/brand/dna-logo-intelligence-symbol-transparent.png"
+                      alt=""
+                      width={585}
+                      height={657}
+                      aria-hidden="true"
+                    />
                     <div>
-                      <h2>{module.title}</h2>
+                      <span>DNA Labs</span>
+                      <strong>Klinik teknoloji yol haritası</strong>
+                    </div>
+                  </div>
+                  <span>Geliştiriliyor</span>
+                </header>
+                <div className={styles.labsRoadmapList}>
+                  {labModules.map((module) => (
+                    <article key={module.step}>
+                      <span>{module.step}</span>
+                      <module.Icon size={22} strokeWidth={1.9} aria-hidden="true" />
+                      <div><strong>{module.title}</strong><small>{module.status}</small></div>
+                    </article>
+                  ))}
+                </div>
+                <footer>
+                  <ShieldCheck size={18} strokeWidth={2} aria-hidden="true" />
+                  <span>Modüller ayrı araçlar olarak değil, aynı klinik sürecin parçaları olarak tasarlanır.</span>
+                </footer>
+              </aside>
+            </section>
+
+            <section className={styles.labsModulesSection} id="labs-modules" aria-labelledby="labs-modules-title">
+              <div className={styles.labsModulesIntro}>
+                <span>Geliştirme alanları</span>
+                <h2 id="labs-modules-title">Üç modül, tek klinik amaç.</h2>
+                <p>Gözlemi daha düzenli kaydetmek, değişimi izlemek ve klinik yorumu daha güçlü verilerle desteklemek.</p>
+              </div>
+              <div className={styles.labsModulesList}>
+                {labModules.map((module) => (
+                  <article key={module.step}>
+                    <span>{module.step}</span>
+                    <module.Icon size={23} strokeWidth={1.9} aria-hidden="true" />
+                    <div>
+                      <header><h3>{module.title}</h3><small>{module.status}</small></header>
                       <p>{module.text}</p>
+                      <strong><CheckCircle2 size={16} strokeWidth={2} aria-hidden="true" />{module.contribution}</strong>
                     </div>
                   </article>
                 ))}
               </div>
             </section>
 
-            <section className={styles.labsModuleJourney} id="lab-modules">
-              <div className={styles.labsSectionTitle}>
-                <h2>Modül Yolculuğu</h2>
-              </div>
-              <div className={styles.labsModuleGrid}>
-                {labModules.map((module) => {
-                  const visualClass =
-                    module.visual === "video"
-                      ? styles.labVisualVideo
-                      : module.visual === "motion"
-                        ? styles.labVisualMotion
-                        : styles.labVisualGrowth;
-
-                  return (
-                    <article
-                      className={styles.labModuleCard}
-                      key={module.title}
-                      style={
-                        {
-                          "--accent": module.accent,
-                          "--progress": `${module.progress}%`,
-                        } as CSSProperties
-                      }
-                    >
-                      <div className={styles.labCardTopline}>
-                        <span>{module.step}</span>
-                        <b>{module.badge}</b>
-                      </div>
-                      <div className={`${styles.labCardVisual} ${visualClass}`} aria-hidden="true">
-                        <module.Icon size={34} strokeWidth={1.9} />
-                        <span />
-                        <span />
-                        <span />
-                      </div>
-                      <h3>{module.title}</h3>
-                      <p>{module.text}</p>
-                      <div className={styles.labInsightBlock}>
-                        <strong>Klinik Değer</strong>
-                        <span>{module.value}</span>
-                      </div>
-                      <div className={styles.labInsightBlock}>
-                        <strong>Sınır</strong>
-                        <span>{module.limit}</span>
-                      </div>
-                      <div className={styles.labProgress}>
-                        <div>
-                          <span>Gelişim aşaması</span>
-                          <strong>%{module.progress}</strong>
-                        </div>
-                        <i />
-                      </div>
-                    </article>
-                  );
-                })}
+            <section className={styles.labsIntegrationSection} id="labs-integration" aria-labelledby="labs-integration-title">
+              <header className={styles.labsIntegrationHeader}>
+                <div><span>Birleşik klinik akış</span><h2 id="labs-integration-title">Yeni modüller birlikte nasıl çalışacak?</h2></div>
+                <p>Her modül aynı klinik kayda katkı verir; bilgi parçalanmadan değerlendirme ve rapor sürecine ilerler.</p>
+              </header>
+              <div className={styles.labsIntegrationFlow}>
+                {labsIntegrationSteps.map((step, index) => (
+                  <article key={step.title}>
+                    <div><span>{String(index + 1).padStart(2, "0")}</span><step.Icon size={22} strokeWidth={1.9} aria-hidden="true" /></div>
+                    <h3>{step.title}</h3>
+                    <p>{step.text}</p>
+                  </article>
+                ))}
               </div>
             </section>
 
-            <section className={styles.labsClinicalFlow} id="labs-flow">
-              <div className={styles.labsSectionTitle}>
-                <h2>Klinik Akışta Gelecek Modüller</h2>
+            <section className={styles.labsPrinciplesSection} aria-labelledby="labs-principles-title">
+              <div className={styles.labsPrinciplesIntro}>
+                <span>Tasarım ilkeleri</span>
+                <h2 id="labs-principles-title">Yeni özellik değil, daha bütünlüklü bir klinik deneyim.</h2>
               </div>
-              <div className={styles.labsFlowLine} aria-label="Klinik akışta gelecek modüller">
-                {labsFlowSteps.map((step, index) => (
-                  <article
-                    className={styles.labsFlowStep}
-                    key={step.title}
-                    style={{ "--flow-index": index } as CSSProperties}
-                  >
-                    <div>
-                      <step.Icon size={30} strokeWidth={2.1} />
-                    </div>
+              <div className={styles.labsPrinciplesList}>
+                {labsPrinciples.map((item, index) => (
+                  <article key={item.title}>
                     <span>{String(index + 1).padStart(2, "0")}</span>
-                    <h3>{step.title}</h3>
-                    <p>{step.text}</p>
+                    <item.Icon size={21} strokeWidth={1.9} aria-hidden="true" />
+                    <div><h3>{item.title}</h3><p>{item.text}</p></div>
                   </article>
                 ))}
               </div>
@@ -1722,7 +1611,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
         )}
 
         {!isApproachPage ? (
-          <section className={`${styles.callout} ${isApproachPage ? styles.signalCallout : ""} ${isAiReportPage ? styles.aiFinalCta : ""} ${isFutureModulesPage ? styles.labsFinalCta : ""}`}>
+          <section className={`${styles.callout} ${isApproachPage ? styles.signalCallout : ""} ${isAiReportPage ? styles.aiModernFinalCta : ""} ${isFutureModulesPage ? styles.labsModernFinalCta : ""}`}>
             <h2>{calloutTitle}</h2>
             <p>{calloutText}</p>
             <div className={styles.actions}>

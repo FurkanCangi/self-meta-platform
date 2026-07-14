@@ -50,8 +50,8 @@ const dnaMenuItems = [
   },
   {
     href: "/dna-nedir/ai-raporlama",
-    title: "Deterministik Raporlama",
-    description: "Klinik verilerden kural tabanlı rapor ve açıklanabilir karar desteği üretimi.",
+    title: "AI Destekli Raporlama",
+    description: "Klinik verilerden AI destekli analiz, önceliklendirme ve profesyonel rapor taslağı.",
     icon: FileText,
     accent: "#2563EB",
   },

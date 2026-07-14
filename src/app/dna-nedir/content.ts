@@ -111,24 +111,24 @@ export const dnaPages = {
   "ai-raporlama": {
     slug: "ai-raporlama",
     route: "/dna-nedir/ai-raporlama",
-    eyebrow: "Deterministik Raporlama",
-    title: "Klinik verilerden anlamlı içgörülere, okunabilir raporlara.",
+    eyebrow: "AI Destekli Klinik Raporlama",
+    title: "Klinik veriyi AI ile anlamlandırın, raporu netleştirin.",
     intro:
-      "DNA Intelligence, çok boyutlu klinik verileri analiz eder, klinik muhakemeyi destekleyen tutarlı ve yapılandırılmış raporlar üretir.",
+      "DNA Intelligence AI; anamnez, ölçüm, gözlem ve terapist notlarını aynı klinik bağlamda birleştirir, örüntüleri görünür kılar ve profesyonel rapor taslağı hazırlar.",
     icon: FileText,
     accent: "#2563EB",
     sections: [
       {
-        title: "Klinik sentez",
-        text: "Kural tabanlı motor veri içindeki örüntüyü görünür kılar; kesin tanı veya klinik hüküm üretmez.",
+        title: "AI klinik sentezi",
+        text: "Farklı kaynaklardan gelen klinik verileri birlikte okuyarak güçlü alanları, destek ihtiyaçlarını ve öncelikleri görünür kılar.",
       },
       {
-        title: "Tutarlı rapor yapısı",
-        text: "Raporlar uzman okuyucuya uygun, izlenebilir ve bölüm yapısı tutarlı olacak şekilde düzenlenir.",
+        title: "Profesyonel rapor taslağı",
+        text: "Klinik özeti, öncelikli alanları, hedefleri ve takip göstergelerini okunabilir bir rapor yapısında düzenler.",
       },
       {
-        title: "Kanıt sınırı",
-        text: "Literatür ve klinik dayanak alanları kontrollü kaynak yapısına bağlı şekilde ele alınır.",
+        title: "Terapist kontrolü",
+        text: "AI tarafından hazırlanan taslak terapist tarafından incelenir, düzenlenir ve yalnızca uzman onayıyla tamamlanır.",
       },
     ],
   },
@@ -136,23 +136,23 @@ export const dnaPages = {
     slug: "gelecek-moduller",
     route: "/dna-nedir/gelecek-moduller",
     eyebrow: "DNA Labs",
-    title: "DNA Labs: Klinik gözlemden gelişim takibine uzanan yeni nesil modüller.",
+    title: "Klinik akışı geleceğe hazırlayan yeni modüller.",
     intro:
-      "DNA Intelligence ekosistemi, klinik uygulamayı güçlendirmek için sürekli gelişir. Yeni modüller; gözlemden takibe uzanan süreci daha yapılandırılmış, daha anlamlı ve daha erişilebilir hale getirmek üzere tasarlanır.",
+      "DNA Labs; seans gözlemini yapılandıran, değişimi zaman içinde izleyen ve elde edilen veriyi mevcut rapor akışına bağlayan klinik teknoloji yol haritasıdır.",
     icon: Sparkles,
     accent: "#00C8D7",
     sections: [
       {
-        title: "Video analizi",
-        text: "Hareket, davranış ve seans içi gözlem verilerinin daha yapılandırılmış izlenmesini hedefler.",
+        title: "Video gözlem",
+        text: "Seans içi davranış, regülasyon tepkileri ve katılım örüntülerinin yapılandırılmış biçimde kaydedilmesini hedefler.",
       },
       {
         title: "Görüntü işleme",
-        text: "Postür, motor beceri ve hareket örüntülerini klinik karar desteğine bağlayacak altyapı planlanır.",
+        text: "Postür, hareket ve motor yanıt gibi gözlemsel işaretleri klinik bağlamla ilişkilendirecek altyapı planlanır.",
       },
       {
-        title: "Gelişim takip",
-        text: "Zaman içindeki değişimi izleyen dashboard yapılarıyla klinik sürecin sürekliliği desteklenir.",
+        title: "Gelişim takibi",
+        text: "Değerlendirme, rapor ve gözlem kayıtlarını zaman çizgisinde birleştirerek değişimi görünür kılmayı hedefler.",
       },
     ],
   },
