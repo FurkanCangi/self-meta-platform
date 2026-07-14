@@ -14,7 +14,6 @@ import {
   Layers3,
   MapPinned,
   Menu,
-  Microscope,
   Sparkles,
   X,
 } from "lucide-react";
@@ -40,13 +39,6 @@ const dnaMenuItems = [
     title: "Değerlendirme Sistemi",
     description: "Regülasyon profilini çok boyutlu değerlendirme yapısı.",
     icon: ClipboardCheck,
-    accent: "#2563EB",
-  },
-  {
-    href: "/dna-nedir/testler",
-    title: "Testler ve Ölçekler",
-    description: "DNA Intelligence kapsamında kullanılan klinik değerlendirme araçları.",
-    icon: Microscope,
     accent: "#2563EB",
   },
   {

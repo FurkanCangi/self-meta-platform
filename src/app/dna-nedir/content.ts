@@ -4,7 +4,6 @@ import {
   FileText,
   GraduationCap,
   Layers3,
-  Microscope,
   Sparkles,
 } from "lucide-react";
 
@@ -82,30 +81,6 @@ export const dnaPages = {
       {
         title: "Karar desteği",
         text: "Sistem, terapistin hangi alanları önceliklendireceğini daha net görmesine destek olur.",
-      },
-    ],
-  },
-  testler: {
-    slug: "testler",
-    route: "/dna-nedir/testler",
-    eyebrow: "Testler ve Ölçekler",
-    title: "Klinik değerlendirmede kullandığımız araçlar.",
-    intro:
-      "Regülasyonun çok boyutlu yapısını anlamak için seçkin, geçerli ve güvenilir ölçme araçları kullanıyoruz.",
-    icon: Microscope,
-    accent: "#2563EB",
-    sections: [
-      {
-        title: "Geçerli araçlar",
-        text: "Klinik değerlendirme sürecini destekleyen seçilmiş ölçme araçları kullanılır.",
-      },
-      {
-        title: "Klinik bağlam",
-        text: "Test ve ölçek sonuçları klinik gözlem ve terapist muhakemesiyle birlikte ele alınır.",
-      },
-      {
-        title: "Yapılandırılmış süreç",
-        text: "Formlar, gözlem ve ölçümler daha anlaşılır bir klinik akışa dönüştürülür.",
       },
     ],
   },

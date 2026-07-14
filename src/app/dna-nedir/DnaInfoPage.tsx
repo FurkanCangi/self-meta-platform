@@ -21,19 +21,15 @@ import {
   Layers3,
   ListChecks,
   LockKeyhole,
-  Mail,
   PenLine,
-  Phone,
   Route,
   ShieldCheck,
   Smile,
-  SlidersHorizontal,
   Sparkles,
   Target,
   TimerReset,
   UserRound,
   Users,
-  Video,
   Zap,
 } from "lucide-react";
 import FooterContact from "../components/FooterContact";
@@ -128,70 +124,56 @@ const conceptColumns = [
   },
 ];
 
-const educationBadges = ["Kanıta Dayalı", "Klinik Uygulamalı", "40 Saatlik Kapsamlı Eğitim"];
+const educationBadges = ["40 saat", "9 modül", "Klinik uygulama odaklı"];
 
-const programSummary = [
-  { label: "Toplam Süre", value: "40 Saat", Icon: Clock },
-  { label: "Eğitim Modeli", value: "Teori + Değerlendirme + Müdahale", Icon: GraduationCap },
-  { label: "Modül Sayısı", value: "9 Modül", Icon: Route },
-  { label: "Uygulama Odaklılık", value: "Vaka, analiz ve klinik karar pratiği", Icon: Target },
-  { label: "Sertifika", value: "DNA Intelligence Eğitim Katılım Sertifikası", Icon: Award },
-];
-
-const overviewCards = [
+const educationRoute = [
   {
-    title: "Bütüncül Çerçeve",
-    text: "Fizyolojiden bilişe uzanan bütünleşik bir öz-düzenleme modeli sunar.",
+    step: "01",
+    title: "Regülasyonu okuyun",
+    text: "Fizyolojik, duyusal ve duygusal sistemi birlikte görün.",
+    Icon: HeartPulse,
+  },
+  {
+    step: "02",
+    title: "Vakayı yapılandırın",
+    text: "Veriyi klinik örüntüye ve önceliğe dönüştürün.",
     Icon: BrainCircuit,
   },
   {
-    title: "Klinik Düşünme",
-    text: "Formülasyon merkezli eğitimle neden-sonuç ilişkisini güçlendirir.",
-    Icon: Brain,
-  },
-  {
-    title: "Uygulamaya Hazır",
-    text: "Gerçek vaka, uygulama ve analizle klinik pratiğe doğrudan aktarılır.",
-    Icon: CheckCircle2,
+    step: "03",
+    title: "Müdahaleyi gerekçelendirin",
+    text: "Hedefi, stratejiyi ve takip dilini aynı çizgide kurun.",
+    Icon: Target,
   },
 ];
 
-const curriculumModules = [
+const curriculumStages = [
   {
-    title: "Fizyolojik Düzenleme",
-    text: "Otonom sinir sistemi, arousal, stres yanıtı ve beden farkındalığı.",
+    number: "01",
+    range: "Modül 01-03",
+    title: "Regülasyonun temelini okuyun",
+    text: "Davranışı tek bir belirti olarak değil, birbiriyle etkileşen düzenleme sistemlerinin çıktısı olarak ele alın.",
+    modules: ["Fizyolojik düzenleme", "Duyusal işleme", "Duygusal regülasyon"],
+    outcome: "Çocuğun zorlandığı alanın altında hangi düzenleme ihtiyacının bulunduğunu ayırt edin.",
+    Icon: Activity,
   },
   {
-    title: "Duyusal İşleme",
-    text: "İnterosepsiyon, duyusal profiller ve duyusal düzenleme stratejileri.",
+    number: "02",
+    range: "Modül 04-06",
+    title: "Klinik örüntüyü yapılandırın",
+    text: "Dikkat, yürütücü işlev, anamnez ve gözlem verilerini tek bir vaka formülasyonunda birleştirin.",
+    modules: ["Bilişsel organizasyon", "Yürütücü işlevler", "Vaka formülasyonu"],
+    outcome: "Dağınık bulguları önceliği ve gerekçesi açık bir klinik hipoteze dönüştürün.",
+    Icon: BrainCircuit,
   },
   {
-    title: "Duygusal Regülasyon",
-    text: "Duyguların tanımı, ifade etme ve düzenleme süreçleri.",
-  },
-  {
-    title: "Bilişsel Organizasyon",
-    text: "Dikkat, çalışma belleği, esneklik ve bilişsel planlama.",
-  },
-  {
-    title: "Yürütücü İşlevler",
-    text: "Planlama, başlatma, izleme ve hedefe yönelik davranış.",
-  },
-  {
-    title: "Vaka Formülasyonu",
-    text: "İzlem, anamnez ve ölçek verilerini klinik hipoteze dönüştürme.",
-  },
-  {
-    title: "Müdahale Planlama",
-    text: "Hedef belirleme, müdahale stratejisi seçimi ve uygulama kurgusu.",
-  },
-  {
-    title: "Video Vaka Analizi",
-    text: "Gerçek vaka videoları üzerinden analiz ve tartışma.",
-  },
-  {
-    title: "Klinik Karar Dili",
-    text: "Klinik iletişim, karar verme ve raporlama dilini geliştirme.",
+    number: "03",
+    range: "Modül 07-09",
+    title: "Kararı uygulamaya taşıyın",
+    text: "Hedef seçimini, müdahale zamanlamasını ve seans içi kararları video vakalar üzerinden çalışın.",
+    modules: ["Müdahale planlama", "Video vaka analizi", "Klinik karar dili"],
+    outcome: "Ne yapacağınızı değil, neden ve ne zaman yapacağınızı açıklayan bir müdahale planı kurun.",
+    Icon: Route,
   },
 ];
 
@@ -203,13 +185,7 @@ const teachingSegments = [
 
 const teachingChecks = ["Vaka bazlı öğrenme", "Uygulamalı örnekler", "Tartışma ve geri bildirim", "Klinik düşünme pratiği"];
 
-const audienceList = [
-  "Ergoterapistler",
-  "Çocuk gelişimi uzmanları",
-  "Dil ve konuşma terapistleri",
-  "Psikologlar ve psikolojik danışmanlar",
-  "Klinik uygulamada güçlü bir öz-düzenleme çerçevesi arayan profesyoneller",
-];
+const audienceList = ["Ergoterapistler", "Çocuk gelişimi uzmanları", "Dil ve konuşma terapistleri", "Psikologlar ve psikolojik danışmanlar"];
 
 const participantGains = [
   "Ortak bir klinik dil ve kavramsal çerçeve",
@@ -217,16 +193,7 @@ const participantGains = [
   "Müdahale önceliklendirme becerisi",
   "Yapılandırılmış klinik akıl yürütme",
   "Güvenli, etkili ve hedefe yönelik müdahale planlama",
-  "DNA Intelligence Eğitim Katılım Sertifikası",
-];
-
-const programIncludes = [
-  "Zengin eğitim materyalleri ve sunumlar",
-  "Örnek vaka içerikleri ve analizler",
-  "Uygulama oturumları ve etkileşimli çalışmalar",
-  "Uzman eğitmen desteği ve geri bildirim",
-  "Katılım sertifikası",
-  "Platform geçişine hazırlayıcı içerikler",
+  "Açıklanabilir klinik karar ve raporlama dili",
 ];
 
 const practicalInfo = [
@@ -234,7 +201,6 @@ const practicalInfo = [
   { label: "Eğitim Formatı", value: "Çevrim içi / senkron", Icon: GraduationCap },
   { label: "Katılım Koşulu", value: "İlgili lisans mezuniyeti", Icon: Users },
   { label: "Sertifika", value: "DNA Intelligence Eğitim Katılım Sertifikası", Icon: Award },
-  { label: "Erişim", value: "Eğitim süresince canlı katılım ve kayıt erişimi", Icon: BookOpen },
 ];
 
 const assessmentScores = [
@@ -246,158 +212,171 @@ const assessmentScores = [
   { label: "Sosyal Katılım", score: 71 },
 ];
 
-const assessmentFlowSteps = [
-  {
-    title: "Alan bazlı veri",
-    text: "Regülasyon alanlarından yapılandırılmış veriler toplanır.",
-    Icon: Layers3,
-  },
+const assessmentSources = [
   {
     title: "Anamnez",
-    text: "Gelişim öyküsü ve yaşam bağlamı sistematik kayda alınır.",
+    text: "Gelişim öyküsü ve günlük yaşam bağlamı",
     Icon: BookOpen,
   },
   {
-    title: "Gözlem",
-    text: "Seans içi klinik gözlemler değerlendirmeye bağlanır.",
+    title: "Klinik gözlem",
+    text: "Seans içi performans ve davranış örüntüsü",
     Icon: Eye,
   },
   {
-    title: "Ölçekler",
-    text: "Standart ölçümler kantitatif veri katmanı sağlar.",
-    Icon: FileText,
+    title: "Alan ölçekleri",
+    text: "Yapılandırılmış yanıtlar ve alan puanları",
+    Icon: ClipboardCheck,
   },
   {
-    title: "Terapist yorumu",
-    text: "Uzman klinik bağlam ve yorum sisteme dahil edilir.",
+    title: "Terapist notu",
+    text: "Uzman yorumu ve klinik bağlam",
     Icon: UserRound,
   },
+];
+
+const assessmentBadges = ["4 veri kaynağı", "6 regülasyon alanı", "Açıklanabilir çıktı"];
+
+const assessmentStages = [
   {
-    title: "Klinik profil",
-    text: "Tüm veriler bütüncül bir regülasyon profilinde birleşir.",
+    number: "01",
+    label: "Veriyi yapılandırın",
+    title: "Dağınık bulguları ortak bir klinik dile getirin.",
+    text: "Anamnez, gözlem, ölçek ve terapist notları aynı değerlendirme çerçevesinde bir araya gelir.",
+    items: ["Anamnez", "Klinik gözlem", "Alan ölçekleri", "Terapist notu"],
+    outcome: "Her bulgunun kaynağı ve klinik bağlamı korunur.",
+    Icon: Layers3,
+  },
+  {
+    number: "02",
+    label: "Örüntüyü ayırın",
+    title: "Altı regülasyon alanının birbirini nasıl etkilediğini görün.",
+    text: "Alanlar tek bir toplam puana indirgenmeden karşılaştırılır; öncelik, eşlik eden güçlükler ve güçlü yönler birlikte okunur.",
+    items: ["Fizyolojik", "Duyusal", "Duygusal", "Bilişsel", "Yürütücü", "Sosyal katılım"],
+    outcome: "Birincil güçlük, eşlik eden alanlar ve koruyucu güçlü yönler ayrışır.",
     Icon: BrainCircuit,
-    final: true,
+  },
+  {
+    number: "03",
+    label: "Önceliği netleştirin",
+    title: "Profil bilgisini gerekçeli klinik karara taşıyın.",
+    text: "Görünür örüntü; müdahale hedefi, takip göstergesi ve rapor dili için düzenli bir karar izine dönüşür.",
+    items: ["Klinik öncelik", "Müdahale hedefi", "Takip göstergesi", "Rapor özeti"],
+    outcome: "Terapist neyi önce ele alacağını ve nedenini daha açık görür.",
+    Icon: Target,
   },
 ];
 
 const assessmentProfileNotes = [
   {
-    title: "Standartize veri",
-    text: "Ölçek, gözlem ve ölçümler ortak dilde toplanır; karşılaştırılabilir, güvenilir veri üretir.",
+    title: "Yapılandırılmış veri",
+    text: "Farklı kaynaklardan gelen bilgiler aynı alan yapısında düzenlenir.",
     Icon: ClipboardCheck,
   },
   {
     title: "Klinik bağlam",
-    text: "Anamnez, gözlem ve terapist yorumu ile veriler kişi odaklı değerlendirme içinde anlam kazanır.",
+    text: "Puanlar; anamnez, gözlem ve terapist yorumuyla birlikte anlam kazanır.",
     Icon: Users,
   },
   {
-    title: "Karar desteği",
-    text: "Regülasyon haritası, müdahale hedeflerinin belirlenmesini ve planlamanın önceliklendirilmesini destekler.",
+    title: "Açıklanabilir karar",
+    text: "Öncelik ve müdahale gerekçesi izlenebilir bir klinik dile dönüşür.",
     Icon: Target,
   },
 ];
 
-const interventionHighlights = [
-  { title: "Bütüncül", text: "Regülasyon odaklı", Icon: BrainCircuit },
-  { title: "Kanıta Dayalı", text: "Bilimsel temelli", Icon: CheckCircle2 },
-  { title: "Klinik Uygulamalı", text: "Pratiğe dönük", Icon: ClipboardCheck },
+const assessmentReadout = [
+  { label: "Birincil öncelik", value: "Yürütücü işlevler" },
+  { label: "Eşlik eden alan", value: "Duyusal regülasyon" },
+  { label: "Koruyucu alan", value: "Fizyolojik düzenleme" },
+  { label: "Takip odağı", value: "Göreve geçiş ve sürdürme" },
 ];
 
-const regulationDomains = [
-  { title: "Fizyolojik Düzenleme", Icon: HeartPulse },
-  { title: "Duyusal Regülasyon", Icon: Eye },
-  { title: "Duygusal Regülasyon", Icon: Smile },
-  { title: "Bilişsel Organizasyon", Icon: BrainCircuit },
-  { title: "Yürütücü İşlevler", Icon: Zap },
-  { title: "Sosyal Katılım", Icon: Users },
+const interventionHeroSignals = [
+  { title: "6 klinik alan", text: "tek örüntüde", Icon: BrainCircuit },
+  { title: "Kişiye özel hedef", text: "gerekçeli planda", Icon: Target },
+  { title: "Görünür değişim", text: "tanımlı takipte", Icon: BarChart3 },
 ];
 
-const vagalBenefits = [
-  "Güven hissi ve sosyal etkileşimi destekler",
-  "Stres yanıtını düzenler ve sistemin toparlanmasını sağlar",
-  "Öğrenme ve esnek davranışı kolaylaştırır",
-];
-
-const vagalOutcomeList = [
-  "Daha iyi stres yönetimi",
-  "Duygusal denge",
-  "Sosyal katılım",
-  "Dikkat ve odaklanma",
-  "Öğrenme kapasitesi",
-  "Davranışsal esneklik",
-];
-
-const interventionProcess = [
+const interventionLayers = [
   {
-    title: "Değerlendir",
-    text: "Çok boyutlu değerlendirme ile güçlü ve destek alanları belirlenir.",
-    Icon: ClipboardCheck,
+    number: "01",
+    label: "Dengeyi kurun",
+    title: "Bedensel güvenlik ve toparlanmayı önceleyin.",
+    text: "Uyarılma düzeyi, fizyolojik durum ve duyusal yük birlikte okunur; çocuğun sakinleşmeye ve etkileşime hazır olduğu koşullar düzenlenir.",
+    domains: ["Fizyolojik düzenleme", "Duyusal tolerans"],
+    Icon: HeartPulse,
   },
   {
-    title: "Önceliklendir",
-    text: "Regülasyon kırılganlıkları ve müdahale öncelikleri netleştirilir.",
-    Icon: Target,
-  },
-  {
-    title: "Planla",
-    text: "Kişiye özel, hedef odaklı müdahale planı oluşturulur.",
-    Icon: FileText,
-  },
-  {
-    title: "Uygula",
-    text: "Kanıta dayalı stratejilerle uygulama gerçekleştirilir.",
-    Icon: Layers3,
-  },
-  {
-    title: "İzle & Değerlendir",
-    text: "İlerleme düzenli izlenir ve plan veriye göre güncellenir.",
-    Icon: Eye,
-  },
-];
-
-const interventionPrinciples = [
-  {
-    title: "Bütüncül Bakış",
-    text: "Fizyolojik, duyusal, duygusal, bilişsel ve sosyal sistemleri birlikte ele alırız.",
+    number: "02",
+    label: "Kapasiteyi genişletin",
+    title: "Duygusal yoğunluğu ve bilişsel yükü yönetilebilir hale getirin.",
+    text: "Toparlanma, dikkat ve görev sürdürme kapasitesi; çocuğun mevcut düzenleme sınırına uygun desteklerle aşamalı olarak güçlendirilir.",
+    domains: ["Duygusal düzenleme", "Bilişsel organizasyon"],
     Icon: BrainCircuit,
   },
   {
-    title: "Regülasyon Odaklı",
-    text: "Amaç davranışı değiştirmekten önce regülasyon kapasitesini güçlendirmektir.",
+    number: "03",
+    label: "Katılıma taşıyın",
+    title: "Kazanımı günlük yaşama ve işlevsel katılıma aktarın.",
+    text: "Planlama, esneklik ve sosyal katılım hedefleri gerçek yaşam bağlamında izlenir; stratejiler performansa göre güncellenir.",
+    domains: ["Yürütücü işlevler", "Sosyal katılım"],
+    Icon: Users,
+  },
+];
+
+const interventionJourney = [
+  {
+    number: "01",
+    label: "Profili okuyun",
+    title: "Davranışın arkasındaki düzenleme ihtiyacını ayırın.",
+    text: "Anamnez, gözlem ve alan skorları birlikte değerlendirilir; zorlanmanın ne zaman ve hangi koşullarda arttığı görünür hale gelir.",
+    outcome: "Birincil örüntü ve destekleyici güçlü alanlar",
+    Icon: ClipboardCheck,
+  },
+  {
+    number: "02",
+    label: "Önceliği seçin",
+    title: "Aynı anda her şeyi değil, işlevi en çok etkileyen alanı hedefleyin.",
+    text: "Klinik önem, günlük yaşama etkisi ve değişime açıklık birlikte ele alınarak ilk müdahale odağı belirlenir.",
+    outcome: "Gerekçesi açık ilk klinik hedef",
     Icon: Target,
   },
   {
-    title: "Kişiye Özel",
-    text: "Her bireyin profilini dikkate alan esnek ve kişiselleştirilmiş planlar oluştururuz.",
-    Icon: UserRound,
+    number: "03",
+    label: "Planı uygulayın",
+    title: "Stratejiyi çocuğun profiline, bağlama ve hedefe göre eşleştirin.",
+    text: "Çevresel düzenleme, terapötik etkileşim, görev yapısı ve doz; hedeflenen yanıtı destekleyecek biçimde birlikte planlanır.",
+    outcome: "Hedef, strateji ve uygulama koşulları",
+    Icon: Layers3,
   },
   {
-    title: "Dinamik ve Esnek",
-    text: "Sistem değiştikçe plan güncellenir, ihtiyaçlara göre yönlendirilir.",
-    Icon: Route,
-  },
-  {
-    title: "Veriyle Güçlenen",
-    text: "Değerlendirme verileri, klinik karar ve müdahale sürecini destekler.",
-    Icon: ClipboardCheck,
+    number: "04",
+    label: "Yanıtı izleyin",
+    title: "Değişimi tanımlı göstergelerle izleyin ve planı gerektiğinde güncelleyin.",
+    text: "Seans içi yanıt, günlük yaşama aktarım ve yardım düzeyi izlenir; klinik hedef karşılanmıyorsa müdahale mantığı yeniden değerlendirilir.",
+    outcome: "İzlenebilir ilerleme ve güncellenen plan",
+    Icon: BarChart3,
   },
 ];
 
-const interventionAudience = [
-  "Ergoterapistler",
-  "Çocuk gelişimi uzmanları",
-  "Dil ve konuşma terapistleri",
-  "Psikologlar ve psikolojik danışmanlar",
-  "Öz-düzenleme temelli müdahale uygulayan tüm profesyoneller",
+const interventionCaseRows = [
+  { label: "Gözlenen örüntü", value: "Geçişlerde yükselen uyarılma", Icon: Eye },
+  { label: "İlk klinik hedef", value: "Toparlanmayı ve göreve geçişi kolaylaştırmak", Icon: Target },
+  { label: "Müdahale mantığı", value: "Ön düzenleme, çevresel yapı ve tempo ayarı", Icon: Layers3 },
+  { label: "Takip göstergesi", value: "Göreve geçiş süresi ve gereken yardım", Icon: BarChart3 },
 ];
 
-const interventionGains = [
-  "Daha güçlü klinik formülasyon",
-  "Hedefe yönelik müdahale planları",
-  "Regülasyon kapasitesinde kalıcı artış",
-  "Daha iyi katılım ve işlevsellik",
-  "Ölçülebilir ilerleme ve klinik etkinlik",
+const interventionReviewTriggers = [
+  "Hedeflenen yanıt birkaç uygulamada görünmüyorsa",
+  "Yeni bir zorlanma örüntüsü ortaya çıkıyorsa",
+  "Kazanım farklı ortam ve kişilere taşınmıyorsa",
+];
+
+const interventionValuePoints = [
+  { title: "Net öncelik", text: "Neye önce müdahale edileceğini görün.", Icon: Target },
+  { title: "Gerekçeli plan", text: "Hedef ile strateji arasındaki bağı koruyun.", Icon: Route },
+  { title: "Ölçülebilir yanıt", text: "Değişimi tanımlı göstergelerle izleyin.", Icon: BarChart3 },
 ];
 
 const reportHighlights = [
@@ -503,91 +482,6 @@ const reportGains = [
   },
 ];
 
-const testToolHighlights = [
-  { title: "Geçerli", text: "Bilimsel geçerliliği yüksek araçlar", Icon: ShieldCheck },
-  { title: "Klinik Odaklı", text: "Klinik karar sürecini destekleyen ölçümler", Icon: Target },
-  { title: "Yapılandırılmış", text: "Standartize formlar ile anlamlı veri toplama", Icon: ListChecks },
-];
-
-const testAssessmentAreas = [
-  {
-    title: "Fizyolojik Regülasyon",
-    text: "Vücut temelli düzenleme becerilerini değerlendiren araçlar.",
-    Icon: HeartPulse,
-  },
-  {
-    title: "Duyusal Regülasyon",
-    text: "Duyusal işleme ve duyusal yanıt örüntülerini ölçen araçlar.",
-    Icon: SlidersHorizontal,
-  },
-  {
-    title: "Duygusal Regülasyon",
-    text: "Duygu düzenleme süreçlerini değerlendiren ölçekler.",
-    Icon: Smile,
-  },
-  {
-    title: "Yürütücü İşlevler",
-    text: "Planlama, odaklanma ve davranış kontrolünü değerlendiren araçlar.",
-    Icon: Zap,
-  },
-  {
-    title: "Bilişsel Beceriler",
-    text: "Kavramsal, dikkat ve problem çözme ile ilgili ölçme araçları.",
-    Icon: BrainCircuit,
-  },
-  {
-    title: "Klinik Gözlem",
-    text: "Yapılandırılmış klinik gözlem ve kayıt formları.",
-    Icon: ClipboardCheck,
-  },
-];
-
-const testProcessSteps = [
-  {
-    title: "Seçim",
-    text: "Uygun araçlar klinik ihtiyaca göre belirlenir.",
-    Icon: Target,
-  },
-  {
-    title: "Uygulama",
-    text: "Seçilen ölçek ve formlar uygulanır.",
-    Icon: PenLine,
-  },
-  {
-    title: "Değerlendirme",
-    text: "Veriler klinik bağlamda yorumlanır.",
-    Icon: Brain,
-  },
-  {
-    title: "Raporlama",
-    text: "Bulgular anlaşılır ve yapılandırılmış şekilde sunulur.",
-    Icon: FileText,
-  },
-  {
-    title: "Klinik Kullanım",
-    text: "Sonuçlar müdahale planlamasına katkı sağlar.",
-    Icon: Sparkles,
-  },
-];
-
-const upcomingTestTools = [
-  {
-    title: "Video Gözlem",
-    text: "Seans içi davranış örüntülerini izlemeye yönelik araçlar.",
-    Icon: Video,
-  },
-  {
-    title: "Görüntü İşleme",
-    text: "Hareket ve postüre dair nesnel göstergeleri analiz eden araçlar.",
-    Icon: Target,
-  },
-  {
-    title: "Gelişim Takip",
-    text: "Zaman içindeki değişimi izlemeye yönelik takip modülleri.",
-    Icon: BarChart3,
-  },
-];
-
 const labsOrbitModules = [
   {
     title: "Video Gözlem",
@@ -679,7 +573,6 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
   const isApproachPage = page.slug === "dna-yaklasimi";
   const isEducationPage = page.slug === "egitim-programi";
   const isAssessmentPage = page.slug === "degerlendirme-sistemi";
-  const isTestsPage = page.slug === "testler";
   const isInterventionPage = page.slug === "mudahale-yaklasimi";
   const isAiReportPage = page.slug === "ai-raporlama";
   const isFutureModulesPage = page.slug === "gelecek-moduller";
@@ -688,7 +581,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
     : isAssessmentPage
       ? "Değerlendirme ve raporlama akışınızı birlikte yapılandıralım."
     : isInterventionPage
-      ? "Regülasyon odaklı müdahale yaklaşımımızla klinik etkinliğinizi güçlendirin."
+      ? "Müdahale planınızı daha net ve izlenebilir kurun."
     : isAiReportPage
       ? "Klinik verinizin gücünü anlamlı raporlara dönüştürün."
     : isFutureModulesPage
@@ -699,7 +592,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
     : isAssessmentPage
       ? "Eğitim modelinden ölçüm formuna, profil yorumundan rapor diline kadar klinik sürecin nasıl kurulacağını birlikte netleştirebiliriz."
     : isInterventionPage
-      ? "Vagal fren, regülasyon kapasitesi ve vaka formülasyonu üzerinden müdahale planınızı daha izlenebilir hale getirelim."
+      ? "Değerlendirme bulgusundan klinik hedefe, uygulamadan takip göstergesine uzanan akışı birlikte yapılandıralım."
     : isAiReportPage
       ? "Deterministik raporlama ile dokümantasyon süresini azaltın, zamanınızı danışanlarınıza ayırın."
     : isFutureModulesPage
@@ -732,7 +625,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
     : isAssessmentPage
       ? "Çözümleri İncele"
     : isInterventionPage
-      ? "Detaylı Bilgi Al"
+      ? "Eğitim Programı"
     : isAiReportPage
       ? "Detaylı Bilgi Al"
     : isFutureModulesPage
@@ -910,14 +803,13 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
             <section className={styles.educationHero}>
               <div className={styles.educationHeroCopy}>
                 <div className={styles.eyebrow}>{page.eyebrow}</div>
-                <h1>
-                  Dynamic Neuro-Regulation Approach <span>Eğitim Programı</span>
-                </h1>
-                <strong>Klinik akla, fizyolojik temele ve uygulamaya dayalı kapsamlı bir eğitim.</strong>
+                <h1>Dynamic Neuro-Regulation Approach</h1>
+                <h2>
+                  Regülasyonu okuyun. Vakayı yapılandırın. <span>Müdahaleyi gerekçelendirin.</span>
+                </h2>
                 <p>
-                  Terapistlerin öz-düzenleme süreçlerini fizyolojik temellerden bilişsel organizasyona kadar bütüncül
-                  şekilde anlamasını; değerlendirme, formülasyon ve müdahaleyi bilimsel ve uygulanabilir bir çerçevede
-                  kurmasını sağlar.
+                  Fizyolojik temelden klinik karara uzanan 40 saatlik program; değerlendirme, vaka formülasyonu ve
+                  müdahale planlamasını tek bir klinik çizgide birleştirir.
                 </p>
                 <div className={styles.educationActions}>
                   <Link className={styles.primary} href="/signup">
@@ -938,100 +830,95 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
                 </div>
               </div>
 
-              <div className={styles.programSummary} aria-label="Program özeti">
-                <div className={styles.summaryCopy}>
-                  <h2>Program Özeti</h2>
-                  <div className={styles.summaryList}>
-                    {programSummary.map((item) => (
-                      <div className={styles.summaryItem} key={item.label}>
-                        <item.Icon size={19} strokeWidth={2} />
-                        <div>
-                          <span>{item.label}</span>
-                          <strong>{item.value}</strong>
-                        </div>
-                      </div>
-                    ))}
+              <div className={styles.educationRoutePanel} aria-label="Eğitim rotası">
+                <div className={styles.educationRouteHeader}>
+                  <div>
+                    <span>Eğitim rotası</span>
+                    <strong>Temelden klinik karara</strong>
+                  </div>
+                  <div className={styles.educationRouteMark} aria-hidden="true">
+                    <Image
+                      src="/images/brand/dna-logo-intelligence-symbol-transparent.png"
+                      alt=""
+                      width={585}
+                      height={657}
+                    />
                   </div>
                 </div>
-                <div className={styles.summaryVisual} aria-hidden="true">
-                  <Image
-                    src="/images/brand/dna-logo-intelligence-symbol-transparent.png"
-                    alt=""
-                    width={585}
-                    height={657}
-                  />
+                <div className={styles.educationRouteStages}>
+                  {educationRoute.map((item) => (
+                    <article className={styles.educationRouteStep} key={item.step}>
+                      <span>{item.step}</span>
+                      <div className={styles.educationRouteIcon} aria-hidden="true">
+                        <item.Icon size={21} strokeWidth={1.9} />
+                      </div>
+                      <div>
+                        <h3>{item.title}</h3>
+                        <p>{item.text}</p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+                <div className={styles.educationRouteMetrics} aria-label="Program kısa bilgileri">
+                  <div><strong>40</strong><span>saat</span></div>
+                  <div><strong>9</strong><span>modül</span></div>
+                  <div><strong>3</strong><span>öğrenme evresi</span></div>
                 </div>
               </div>
             </section>
 
-            <section className={styles.programOverview}>
-              <div className={styles.overviewCopy}>
-                <h2>Program Genel Bakış</h2>
+            <section className={styles.educationJourney} id="mufredat">
+              <div className={styles.educationJourneyIntro}>
+                <span>Program akışı</span>
+                <h2>Dokuz modül.<br />Üç net öğrenme evresi.</h2>
                 <p>
-                  Bu program, öz-düzenlemeyi yalnızca davranışsal bir çıktı olarak değil; sinirsel, duyusal, duygusal ve
-                  bilişsel sistemlerin dinamik etkileşimi olarak ele alır.
-                </p>
-                <p>
-                  Terapistlere; değerlendirmeden müdahaleye uzanan klinik akışta güçlü bir çerçeve, ortak bir dil ve
-                  uygulanabilir beceriler kazandırır.
+                  İçerik başlık başlık sıralanmaz; her evre bir sonraki klinik kararı hazırlayacak şekilde ilerler.
                 </p>
               </div>
-              <div className={styles.overviewCards}>
-                {overviewCards.map((card) => (
-                  <article className={styles.overviewCard} key={card.title}>
-                    <card.Icon size={22} strokeWidth={2} />
-                    <h3>{card.title}</h3>
-                    <p>{card.text}</p>
+              <div className={styles.educationJourneyList}>
+                {curriculumStages.map((stage) => (
+                  <article className={styles.educationJourneyStage} key={stage.number}>
+                    <div className={styles.educationStageNumber}>{stage.number}</div>
+                    <div className={styles.educationStageBody}>
+                      <div className={styles.educationStageTopline}>
+                        <span>{stage.range}</span>
+                        <stage.Icon size={21} strokeWidth={1.9} aria-hidden="true" />
+                      </div>
+                      <h3>{stage.title}</h3>
+                      <p>{stage.text}</p>
+                      <ul className={styles.educationStageModules}>
+                        {stage.modules.map((module) => <li key={module}>{module}</li>)}
+                      </ul>
+                      <div className={styles.educationStageOutcome}>
+                        <Target size={17} strokeWidth={2} aria-hidden="true" />
+                        <span><strong>Klinik karşılığı:</strong> {stage.outcome}</span>
+                      </div>
+                    </div>
                   </article>
                 ))}
               </div>
             </section>
 
-            <section className={styles.curriculumRoadmap} id="mufredat">
-              <div className={styles.educationSectionTitle}>
-                <h2>Müfredat Yol Haritası</h2>
-                <p>9 modül ile öz-düzenleme anlayışınızı derinleştirin ve klinik uygulamanızı güçlendirin.</p>
+            <section className={styles.educationMethod} aria-label="40 saatlik öğretim modeli">
+              <div className={styles.educationMethodHeader}>
+                <div>
+                  <span>Öğretim modeli</span>
+                  <h2>40 saat, tek öğrenme döngüsü.</h2>
+                </div>
+                <p>Bilgiyi öğrenin, vaka üzerinde sınayın ve müdahale kararına dönüştürün.</p>
               </div>
-              <div className={styles.curriculumLine} aria-hidden="true">
-                {curriculumModules.map((module, index) => (
-                  <span key={module.title}>{String(index + 1).padStart(2, "0")}</span>
-                ))}
-              </div>
-              <div className={styles.curriculumGrid}>
-                {curriculumModules.map((module, index) => (
-                  <article className={styles.curriculumCard} key={module.title}>
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    <h3>{module.title}</h3>
-                    <p>{module.text}</p>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <section className={styles.teachingModel}>
-              <div className={styles.teachingIntro}>
-                <h2>Öğretim Modeli</h2>
-                <p>Teori, değerlendirme ve müdahale öğrenme döngüsü ile kalıcı ve uygulanabilir bir öğrenim deneyimi.</p>
-              </div>
-              <div className={styles.hoursFormula} aria-label="20 saat teori artı 10 saat değerlendirme artı 10 saat müdahale eşittir 40 saat toplam eğitim">
-                {teachingSegments.map((segment, index) => (
-                  <Fragment key={segment.label}>
-                    <article className={styles.hourBubble}>
-                      <strong>{segment.hours}</strong>
+              <div className={styles.educationHoursBar}>
+                {teachingSegments.map((segment) => (
+                  <article className={styles.educationHourSegment} key={segment.label}>
+                    <strong>{segment.hours}</strong>
+                    <div>
                       <span>{segment.label}</span>
                       <p>{segment.text}</p>
-                    </article>
-                    {index < teachingSegments.length - 1 ? <b aria-hidden="true">+</b> : null}
-                  </Fragment>
+                    </div>
+                  </article>
                 ))}
-                <b aria-hidden="true">=</b>
-                <article className={`${styles.hourBubble} ${styles.totalHours}`}>
-                  <strong>40</strong>
-                  <span>Saat</span>
-                  <p>Toplam Eğitim</p>
-                </article>
               </div>
-              <ul className={styles.teachingChecks}>
+              <ul className={styles.educationMethodChecks}>
                 {teachingChecks.map((item) => (
                   <li key={item}>
                     <CheckCircle2 size={16} strokeWidth={2.2} />
@@ -1041,45 +928,38 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
               </ul>
             </section>
 
-            <section className={styles.educationInfoGrid} aria-label="Program detayları">
-              <article className={styles.educationInfoCard}>
-                <h2>Kimler İçin?</h2>
-                <ul>
+            <section className={styles.educationDecision} aria-label="Program karar bilgileri">
+              <div className={styles.educationDecisionHeader}>
+                <span>Size uygun mu?</span>
+                <h2>Klinik çerçevesini güçlendirmek isteyen profesyoneller için.</h2>
+              </div>
+              <div className={styles.educationDecisionGrid}>
+                <article className={styles.educationAudience}>
+                  <h3>Kimler katılabilir?</h3>
+                  <ul>
                   {audienceList.map((item) => (
                     <li key={item}>
                       <Users size={17} strokeWidth={2} />
                       {item}
                     </li>
                   ))}
-                </ul>
-              </article>
-              <article className={styles.educationInfoCard}>
-                <h2>Katılımcılar Ne Kazanır?</h2>
-                <ul>
+                  </ul>
+                </article>
+                <article className={styles.educationOutcomes}>
+                  <h3>Program sonunda</h3>
+                  <ul>
                   {participantGains.map((item) => (
                     <li key={item}>
                       <CheckCircle2 size={17} strokeWidth={2.2} />
                       {item}
                     </li>
                   ))}
-                </ul>
-              </article>
-              <article className={styles.educationInfoCard}>
-                <h2>Programda Neler Var?</h2>
-                <ul>
-                  {programIncludes.map((item) => (
-                    <li key={item}>
-                      <ClipboardCheck size={17} strokeWidth={2} />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </article>
-              <article className={styles.educationInfoCard}>
-                <h2>Pratik Bilgiler</h2>
-                <div className={styles.practicalList}>
+                  </ul>
+                </article>
+              </div>
+              <div className={styles.educationFacts} aria-label="Pratik bilgiler">
                   {practicalInfo.map((item) => (
-                    <div className={styles.practicalItem} key={item.label}>
+                  <div className={styles.educationFact} key={item.label}>
                       <item.Icon size={17} strokeWidth={2} />
                       <div>
                         <span>{item.label}</span>
@@ -1087,476 +967,385 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
                       </div>
                     </div>
                   ))}
-                </div>
-              </article>
+              </div>
             </section>
           </>
         ) : isAssessmentPage ? (
           <>
-            <section className={styles.assessmentHero}>
-              <div className={styles.assessmentHeroCopy}>
-                <div className={styles.eyebrow}>Çok Boyutlu Değerlendirme</div>
-                <h1>
-                  Regülasyon profilini çok boyutlu değerlendirme yapısı.
-                </h1>
+            <section className={styles.evaluationHero}>
+              <div className={styles.evaluationHeroCopy}>
+                <div className={styles.eyebrow}>{page.eyebrow}</div>
+                <h1>DNA Intelligence Değerlendirme Sistemi</h1>
+                <h2>
+                  Veriyi toplayın. Örüntüyü görün. <span>Klinik önceliği netleştirin.</span>
+                </h2>
                 <p>
-                  DNA Intelligence, farklı regülasyon alanlarından gelen verileri tek bir klinik profil altında
-                  düzenler, anlamlandırır ve bütüncül bir bakış sunar.
+                  Anamnez, gözlem, ölçek ve terapist yorumunu altı regülasyon alanında birleştirin; dağınık bulguları
+                  gerekçesi açık bir klinik profile dönüştürün.
                 </p>
-              </div>
-
-              <div className={styles.assessmentSignalVisual} aria-hidden="true">
-                <span className={styles.signalLine} />
-                <span className={styles.signalLine} />
-                <span className={styles.signalLine} />
-                <div className={styles.signalOrb}>
-                  <Image
-                    src="/images/brand/dna-logo-intelligence-symbol-transparent.png"
-                    alt=""
-                    width={585}
-                    height={657}
-                  />
+                <div className={styles.evaluationActions}>
+                  <Link className={styles.primary} href="#degerlendirme-akisi">
+                    Akışı İncele
+                    <ArrowRight size={18} />
+                  </Link>
+                  <Link className={styles.secondary} href="/dna-nedir/egitim-programi">
+                    Eğitim Programı
+                  </Link>
                 </div>
-              </div>
-            </section>
-
-            <section className={styles.assessmentSystemFlow} id="degerlendirme-sureci">
-              <div className={styles.assessmentSectionTitle}>
-                <h2>Değerlendirme Sistemi Nasıl Çalışır?</h2>
-                <p>Çok yönlü veriler, bütüncül bir klinik profile dönüşür.</p>
-              </div>
-              <div className={styles.connectedFlow} aria-label="Değerlendirme sistemi akışı">
-                {assessmentFlowSteps.map((step, index) => (
-                  <article className={`${styles.connectedNode} ${step.final ? styles.connectedNodeFinal : ""}`} key={step.title}>
-                    <div>
-                      <span>{String(index + 1).padStart(2, "0")}</span>
-                      <step.Icon size={26} strokeWidth={2} />
-                    </div>
-                    <h3>{step.title}</h3>
-                    <p>{step.text}</p>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <section className={styles.assessmentProfileSection}>
-              <div className={styles.profileMockup} aria-label="Regülasyon profili örnek arayüz mockupı">
-                <div className={styles.profileMockupHeader}>
-                  <span>Regülasyon Profili</span>
-                  <strong>Örnek UI mockup</strong>
-                </div>
-                <div className={styles.profileDashboard}>
-                  <div className={styles.radarPanel} aria-hidden="true">
-                    <div className={styles.radarChart}>
-                      <span className={styles.radarLabel}>Fizyolojik Düzenleme</span>
-                      <span className={styles.radarLabel}>Duyusal Regülasyon</span>
-                      <span className={styles.radarLabel}>Duygusal Regülasyon</span>
-                      <span className={styles.radarLabel}>Bilişsel Organizasyon</span>
-                      <span className={styles.radarLabel}>Yürütücü İşlevler</span>
-                      <span className={styles.radarLabel}>Sosyal Katılım</span>
-                      <div className={styles.radarShape} />
-                    </div>
-                  </div>
-
-                  <div className={styles.scorePanel}>
-                    <h3>Alan Skorları</h3>
-                    {assessmentScores.map((score) => (
-                      <div className={styles.scoreRow} key={score.label}>
-                        <div>
-                          <span>{score.label}</span>
-                          <strong>{score.score}</strong>
-                        </div>
-                        <div className={styles.scoreTrack}>
-                          <span style={{ "--score": `${score.score}%` } as CSSProperties} />
-                        </div>
-                      </div>
-                    ))}
-                    <div className={styles.generalScore}>
-                      <span>Genel Değerlendirme</span>
-                      <strong>65</strong>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className={styles.profileInsightRail}>
-                {assessmentProfileNotes.map((note) => (
-                  <article className={styles.profileInsight} key={note.title}>
-                    <note.Icon size={27} strokeWidth={2} />
-                    <div>
-                      <h3>{note.title}</h3>
-                      <p>{note.text}</p>
-                    </div>
-                  </article>
-                ))}
-                <div className={styles.assessmentLimitNote}>
-                  <Target size={22} strokeWidth={2} />
-                  <p>Sistem klinik yargının yerini almaz; terapistin uzmanlığını güçlendirir.</p>
-                </div>
-              </div>
-            </section>
-          </>
-        ) : isTestsPage ? (
-          <>
-            <section className={styles.testToolsHero}>
-              <div className={styles.testToolsHeroCopy}>
-                <div className={styles.eyebrow}>Testler ve Ölçekler</div>
-                <h1>
-                  Klinik değerlendirmede kullandığımız <span>araçlar.</span>
-                </h1>
-                <p>
-                  Regülasyonun çok boyutlu yapısını anlamak için seçkin, geçerli ve güvenilir ölçme araçları
-                  kullanıyoruz.
-                </p>
-                <div className={styles.testToolsHighlights} aria-label="Klinik değerlendirme araçları vurguları">
-                  {testToolHighlights.map((item) => (
-                    <article key={item.title}>
-                      <item.Icon size={21} strokeWidth={2.1} />
-                      <div>
-                        <strong>{item.title}</strong>
-                        <span>{item.text}</span>
-                      </div>
-                    </article>
+                <div className={styles.evaluationPills} aria-label="Değerlendirme sistemi özellikleri">
+                  {assessmentBadges.map((badge) => (
+                    <span key={badge}>
+                      <CheckCircle2 size={15} strokeWidth={2.2} />
+                      {badge}
+                    </span>
                   ))}
                 </div>
               </div>
 
-              <div className={styles.testToolsMockup} aria-label="Klinik form kartları ve değerlendirme araçları mockupı">
-                <span className={styles.testToolsOrbit} />
-                <span className={styles.testToolsOrbit} />
-                <span className={styles.testToolsDot} />
-                <span className={styles.testToolsDot} />
-                <div className={styles.testToolsFloatingIcon}>
-                  <BrainCircuit size={32} strokeWidth={2.1} />
-                </div>
-                <div className={styles.testToolsFloatingIcon}>
-                  <HeartPulse size={32} strokeWidth={2.1} />
-                </div>
-                <div className={styles.testToolsFloatingIcon}>
-                  <SlidersHorizontal size={32} strokeWidth={2.1} />
-                </div>
-                <div className={styles.testToolsFloatingIcon}>
-                  <Smile size={32} strokeWidth={2.1} />
-                </div>
-                <article className={styles.testFormStack}>
-                  <div className={styles.testFormCardBack} />
-                  <div className={styles.testFormCardMiddle} />
-                  <div className={styles.testFormCard}>
-                    <div className={styles.testFormHeader}>
-                      <ClipboardCheck size={24} strokeWidth={2} />
-                      <span>Klinik değerlendirme formu</span>
-                    </div>
-                    <div className={styles.testFormRows}>
-                      <span />
-                      <span />
-                      <span />
-                    </div>
-                    <div className={styles.testFormMiniGrid}>
-                      <span />
-                      <span />
-                    </div>
-                    <div className={styles.testFormTrack}>
-                      <i />
-                    </div>
-                  </div>
-                </article>
-              </div>
-            </section>
-
-            <section className={styles.testAreaSection}>
-              <div className={styles.testSectionTitle}>
-                <h2>Klinik değerlendirme alanları</h2>
-              </div>
-              <div className={styles.testAreaGrid}>
-                {testAssessmentAreas.map((area) => (
-                  <article className={styles.testAreaCard} key={area.title}>
-                    <area.Icon size={34} strokeWidth={2.1} />
-                    <h3>{area.title}</h3>
-                    <p>{area.text}</p>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <section className={styles.testProcessSection}>
-              <div className={styles.testSectionTitle}>
-                <h2>Değerlendirme süreci nasıl işler?</h2>
-              </div>
-              <div className={styles.testProcessLine} aria-label="Değerlendirme süreci akışı">
-                {testProcessSteps.map((step, index) => (
-                  <article className={styles.testProcessStep} key={step.title}>
-                    <div>
-                      <step.Icon size={28} strokeWidth={2.1} />
-                    </div>
-                    <span>{String(index + 1).padStart(2, "0")}</span>
-                    <h3>{step.title}</h3>
-                    <p>{step.text}</p>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <section className={styles.testUpcomingSection}>
-              <div className={styles.testSectionTitle}>
-                <h2>Yakında kullanıma sunulacak araçlar</h2>
-              </div>
-              <div className={styles.testUpcomingGrid}>
-                {upcomingTestTools.map((tool) => (
-                  <article className={styles.testUpcomingCard} key={tool.title}>
-                    <tool.Icon size={34} strokeWidth={2.1} />
-                    <div>
-                      <h3>{tool.title}</h3>
-                      <p>{tool.text}</p>
-                      <span>Yakında</span>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <section className={styles.testContactCta}>
-              <div className={styles.testContactLead}>
-                <Mail size={30} strokeWidth={2} />
-                <h2>Sorularınız veya iş birliği talepleriniz için bizimle iletişime geçin.</h2>
-              </div>
-              <div className={styles.testContactCards}>
-                <a href="mailto:self.metacognition.institute@gmail.com" className={styles.testContactCard}>
-                  <Mail size={22} strokeWidth={2} />
+              <div className={styles.evaluationMap} aria-label="Değerlendirme verilerinin klinik profile dönüşümü">
+                <div className={styles.evaluationMapHeader}>
                   <div>
-                    <span>E-posta</span>
-                    <strong>self.metacognition.institute@gmail.com</strong>
+                    <span>Değerlendirme haritası</span>
+                    <strong>Dağınık veriden bütüncül profile</strong>
                   </div>
-                  <ArrowRight size={18} />
-                </a>
-                <a href="tel:+905306766654" className={styles.testContactCard}>
-                  <Phone size={22} strokeWidth={2} />
-                  <div>
-                    <span>Telefon</span>
-                    <strong>+90 530 676 66 54</strong>
+                  <div className={styles.evaluationMapMark} aria-hidden="true">
+                    <Image
+                      src="/images/brand/dna-logo-intelligence-symbol-transparent.png"
+                      alt=""
+                      width={585}
+                      height={657}
+                    />
                   </div>
-                  <ArrowRight size={18} />
-                </a>
+                </div>
+                <div className={styles.evaluationSourceGrid}>
+                  {assessmentSources.map((source) => (
+                    <article className={styles.evaluationSource} key={source.title}>
+                      <source.Icon size={19} strokeWidth={1.9} aria-hidden="true" />
+                      <div>
+                        <h3>{source.title}</h3>
+                        <p>{source.text}</p>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+                <div className={styles.evaluationMapBridge} aria-hidden="true">
+                  <span />
+                  <ArrowRight size={19} strokeWidth={1.8} />
+                  <span />
+                </div>
+                <div className={styles.evaluationMapResult}>
+                  <div className={styles.evaluationMapResultTitle}>
+                    <BrainCircuit size={22} strokeWidth={1.9} aria-hidden="true" />
+                    <div>
+                      <span>Klinik profil</span>
+                      <strong>Önceliği ve gerekçeyi görünür kılar</strong>
+                    </div>
+                  </div>
+                  <ul>
+                    <li>Birincil öncelik</li>
+                    <li>Eşlik eden örüntü</li>
+                    <li>Koruyucu güçlü alan</li>
+                  </ul>
+                </div>
+                <div className={styles.evaluationMapMetrics} aria-label="Değerlendirme sistemi kısa bilgileri">
+                  <div><strong>4</strong><span>veri kaynağı</span></div>
+                  <div><strong>6</strong><span>regülasyon alanı</span></div>
+                  <div><strong>1</strong><span>bütüncül profil</span></div>
+                </div>
+              </div>
+            </section>
+
+            <section className={styles.evaluationJourney} id="degerlendirme-akisi">
+              <div className={styles.evaluationJourneyIntro}>
+                <span>Değerlendirme akışı</span>
+                <h2>Üç aşamada bulgudan klinik önceliğe.</h2>
+                <p>
+                  Sistem yalnızca puanları yan yana koymaz; her aşama bir sonraki klinik kararı hazırlayacak şekilde
+                  ilerler.
+                </p>
+              </div>
+              <div className={styles.evaluationJourneyList}>
+                {assessmentStages.map((stage) => (
+                  <article className={styles.evaluationJourneyStage} key={stage.number}>
+                    <div className={styles.evaluationStageNumber}>{stage.number}</div>
+                    <div className={styles.evaluationStageBody}>
+                      <div className={styles.evaluationStageTopline}>
+                        <span>{stage.label}</span>
+                        <stage.Icon size={21} strokeWidth={1.9} aria-hidden="true" />
+                      </div>
+                      <h3>{stage.title}</h3>
+                      <p>{stage.text}</p>
+                      <ul className={styles.evaluationStageItems}>
+                        {stage.items.map((item) => <li key={item}>{item}</li>)}
+                      </ul>
+                      <div className={styles.evaluationStageOutcome}>
+                        <Target size={17} strokeWidth={2} aria-hidden="true" />
+                        <span><strong>Bu aşamanın çıktısı:</strong> {stage.outcome}</span>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className={styles.evaluationProfile} aria-label="Örnek değerlendirme profili">
+              <div className={styles.evaluationProfileHeader}>
+                <div>
+                  <span>Örnek profil görünümü</span>
+                  <h2>Tek toplam puan değil, klinik örüntü.</h2>
+                </div>
+                <p>Alanlar karşılaştırılır; öncelik, eşlik eden güçlük ve güçlü yön aynı görünümde ayrışır.</p>
+              </div>
+              <div className={styles.evaluationProfileBody}>
+                <div className={styles.evaluationScorePanel}>
+                  <div className={styles.evaluationPanelTopline}>
+                    <span>Alan görünümü</span>
+                    <strong>Temsili profil</strong>
+                  </div>
+                  <div className={styles.evaluationScoreList}>
+                  {assessmentScores.map((score) => (
+                    <div className={styles.evaluationScoreRow} key={score.label}>
+                      <div>
+                        <span>{score.label}</span>
+                        <strong>{score.score}</strong>
+                      </div>
+                      <div className={styles.evaluationScoreTrack}>
+                        <span style={{ "--score": `${score.score}%` } as CSSProperties} />
+                      </div>
+                    </div>
+                  ))}
+                  </div>
+                </div>
+                <div className={styles.evaluationReadout}>
+                  <div className={styles.evaluationPanelTopline}>
+                    <span>Klinik okuma</span>
+                    <strong>Örnek çıktı</strong>
+                  </div>
+                  <div className={styles.evaluationReadoutList}>
+                    {assessmentReadout.map((item, index) => (
+                      <article key={item.label}>
+                        <span>{String(index + 1).padStart(2, "0")}</span>
+                        <div>
+                          <small>{item.label}</small>
+                          <strong>{item.value}</strong>
+                        </div>
+                      </article>
+                    ))}
+                  </div>
+                  <div className={styles.evaluationLimitNote}>
+                    <ShieldCheck size={20} strokeWidth={2} aria-hidden="true" />
+                    <div>
+                      <strong>Klinik karar terapiste aittir.</strong>
+                      <p>Sistem veriyi düzenler, gerekçeyi görünür kılar ve uzman değerlendirmesini destekler.</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section className={styles.evaluationPrinciples} aria-label="Değerlendirme sisteminin üç ilkesi">
+              <div className={styles.evaluationPrinciplesHeader}>
+                <span>Klinik bütünlük</span>
+                <h2>Sayıları değil, klinik anlamı birlikte okuyun.</h2>
+              </div>
+              <div className={styles.evaluationPrinciplesGrid}>
+                {assessmentProfileNotes.map((note, index) => (
+                  <article key={note.title}>
+                    <div>
+                      <span>{String(index + 1).padStart(2, "0")}</span>
+                      <note.Icon size={21} strokeWidth={1.9} aria-hidden="true" />
+                    </div>
+                    <h3>{note.title}</h3>
+                    <p>{note.text}</p>
+                  </article>
+                ))}
               </div>
             </section>
           </>
         ) : isInterventionPage ? (
           <>
-            <section className={styles.interventionHero}>
-              <div className={styles.interventionHeroCopy}>
-                <div className={styles.eyebrow}>Müdahale Yaklaşımı</div>
+            <section className={styles.interventionModernHero}>
+              <div className={styles.interventionModernHeroCopy}>
+                <div className={styles.eyebrow}>{page.eyebrow}</div>
                 <h1>
-                  Bilime dayalı. Kişiye özel. Regülasyonu hedefleyen <span>müdahale yaklaşımı.</span>
+                  Önceliği belirleyin. Müdahaleyi gerekçelendirin. <span>Yanıtı izleyin.</span>
                 </h1>
                 <p>
-                  Dynamic Neuro-Regulation Approach, fizyolojiden bilişsel organizasyona uzanan regülasyon sistemini
-                  bütüncül olarak ele alır ve müdahale planını bu anlayış üzerine inşa eder.
+                  Dynamic Neuro-Regulation Approach, davranışın arkasındaki düzenleme ihtiyacını görünür kılar;
+                  değerlendirme bulgusunu kişiye özel hedefe, uygulanabilir stratejiye ve takip göstergesine bağlar.
                 </p>
-                <div className={styles.interventionHighlights} aria-label="Müdahale yaklaşımı özellikleri">
-                  {interventionHighlights.map((item) => (
-                    <article key={item.title}>
-                      <item.Icon size={19} strokeWidth={2.2} />
-                      <div>
-                        <strong>{item.title}</strong>
-                        <span>{item.text}</span>
+                <div className={styles.interventionModernActions}>
+                  <Link className={styles.primary} href="#mudahale-akisi">
+                    Müdahale Akışını İncele
+                    <ArrowRight size={18} />
+                  </Link>
+                  <Link className={styles.secondary} href="/dna-nedir/egitim-programi">
+                    Eğitim Programı
+                  </Link>
+                </div>
+                <div className={styles.interventionHeroSignals} aria-label="Müdahale yaklaşımı kısa bilgileri">
+                  {interventionHeroSignals.map((item) => (
+                    <div key={item.title}>
+                      <item.Icon size={18} strokeWidth={2} aria-hidden="true" />
+                      <span><strong>{item.title}</strong>{item.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className={styles.interventionDecisionMap} aria-label="Temsili müdahale karar haritası">
+                <div className={styles.interventionDecisionHeader}>
+                  <div>
+                    <span>Klinik karar haritası</span>
+                    <strong>Bulgudan izlenebilir müdahaleye</strong>
+                  </div>
+                  <div aria-hidden="true">
+                    <Image
+                      src="/images/brand/dna-logo-intelligence-symbol-transparent.png"
+                      alt=""
+                      width={585}
+                      height={657}
+                    />
+                  </div>
+                </div>
+                <div className={styles.interventionDecisionTrace}>
+                  <article>
+                    <span>Gözlenen örüntü</span>
+                    <strong>Geçişlerde yükselen uyarılma</strong>
+                    <ul>
+                      <li>Duyusal yük artıyor</li>
+                      <li>Toparlanma yavaşlıyor</li>
+                    </ul>
+                  </article>
+                  <div aria-hidden="true">
+                    <ArrowRight size={21} strokeWidth={1.8} />
+                  </div>
+                  <article>
+                    <span>İlk müdahale odağı</span>
+                    <strong>Ön düzenleme ve geçiş desteği</strong>
+                    <ul>
+                      <li>Çevresel yapı</li>
+                      <li>Tempo ayarı</li>
+                    </ul>
+                  </article>
+                </div>
+                <div className={styles.interventionDecisionResult}>
+                  <div>
+                    <Target size={19} strokeWidth={2} aria-hidden="true" />
+                    <span><small>Hedeflenen yanıt</small><strong>Daha düzenli göreve geçiş</strong></span>
+                  </div>
+                  <div>
+                    <BarChart3 size={19} strokeWidth={2} aria-hidden="true" />
+                    <span><small>Takip göstergesi</small><strong>Süre + yardım düzeyi</strong></span>
+                  </div>
+                </div>
+                <div className={styles.interventionDecisionNote}>
+                  <ShieldCheck size={18} strokeWidth={2} aria-hidden="true" />
+                  <span>Amaç davranışı bastırmak değil, düzenlenebilirliği ve işlevsel katılımı artırmaktır.</span>
+                </div>
+              </div>
+            </section>
+
+            <section className={styles.interventionLayerSection} aria-labelledby="mudahale-mantigi-baslik">
+              <div className={styles.interventionLayerHeader}>
+                <span>Müdahale mantığı</span>
+                <h2 id="mudahale-mantigi-baslik">Davranıştan önce düzenleme ihtiyacını okuyun.</h2>
+                <p>Altı regülasyon alanını üç klinik katmanda ele alın; hedefi çocuğun hazır oluşuna ve işlevsel ihtiyacına göre sıralayın.</p>
+              </div>
+              <div className={styles.interventionLayerGrid}>
+                {interventionLayers.map((layer) => (
+                  <article key={layer.number}>
+                    <div className={styles.interventionLayerTopline}>
+                      <span>{layer.number}</span>
+                      <layer.Icon size={22} strokeWidth={1.9} aria-hidden="true" />
+                    </div>
+                    <small>{layer.label}</small>
+                    <h3>{layer.title}</h3>
+                    <p>{layer.text}</p>
+                    <ul>
+                      {layer.domains.map((domain) => <li key={domain}>{domain}</li>)}
+                    </ul>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className={styles.interventionJourneySection} id="mudahale-akisi">
+              <div className={styles.interventionJourneyIntro}>
+                <span>Uygulama döngüsü</span>
+                <h2>Dört adımda klinik bulgudan ölçülebilir yanıta.</h2>
+                <p>
+                  Her adım bir sonraki kararı hazırlar. Hedef, strateji ve takip göstergesi aynı klinik mantık içinde
+                  kalır.
+                </p>
+              </div>
+              <div className={styles.interventionJourneyList}>
+                {interventionJourney.map((step) => (
+                  <article key={step.number}>
+                    <div className={styles.interventionJourneyNumber}>{step.number}</div>
+                    <div className={styles.interventionJourneyBody}>
+                      <div className={styles.interventionJourneyTopline}>
+                        <span>{step.label}</span>
+                        <step.Icon size={21} strokeWidth={1.9} aria-hidden="true" />
                       </div>
+                      <h3>{step.title}</h3>
+                      <p>{step.text}</p>
+                      <div className={styles.interventionJourneyOutcome}>
+                        <CheckCircle2 size={17} strokeWidth={2} aria-hidden="true" />
+                        <span><strong>Bu adımın çıktısı:</strong> {step.outcome}</span>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
+
+            <section className={styles.interventionTrackingSection} aria-label="Temsili müdahale takip görünümü">
+              <div className={styles.interventionTrackingHeader}>
+                <div>
+                  <span>Temsili vaka akışı</span>
+                  <h2>Planı yalnızca yazmayın; klinik yanıtla sınayın.</h2>
+                </div>
+                <p>Başlangıç örüntüsü, hedef, müdahale mantığı ve takip göstergesi aynı görünümde tutulur.</p>
+              </div>
+              <div className={styles.interventionTrackingBody}>
+                <div className={styles.interventionCaseRows}>
+                  {interventionCaseRows.map((row, index) => (
+                    <article key={row.label}>
+                      <span>{String(index + 1).padStart(2, "0")}</span>
+                      <row.Icon size={20} strokeWidth={1.9} aria-hidden="true" />
+                      <div><small>{row.label}</small><strong>{row.value}</strong></div>
                     </article>
                   ))}
                 </div>
-              </div>
-
-              <div className={styles.regulationOrbit} aria-label="Regülasyon alanları klinik haritası">
-                <div className={styles.regulationMapHeader}>
-                  <span>Regülasyon Haritası</span>
-                  <strong>6 alan birlikte okunur</strong>
-                </div>
-                <div className={styles.regulationMapBody}>
-                  <div className={styles.regulationColumn}>
-                    {regulationDomains.slice(0, 3).map((domain) => (
-                      <article className={styles.regulationDomainCard} key={domain.title}>
-                        <domain.Icon size={20} strokeWidth={2.2} />
-                        <span>{domain.title}</span>
-                      </article>
+                <aside className={styles.interventionReviewPanel}>
+                  <span>Plan ne zaman yeniden değerlendirilir?</span>
+                  <ul>
+                    {interventionReviewTriggers.map((trigger) => (
+                      <li key={trigger}><CheckCircle2 size={16} strokeWidth={2} aria-hidden="true" />{trigger}</li>
                     ))}
+                  </ul>
+                  <div>
+                    <ShieldCheck size={19} strokeWidth={2} aria-hidden="true" />
+                    <p><strong>Klinik karar terapiste aittir.</strong> Sistem, kararın gerekçesini ve takip izini düzenlemeye destek olur.</p>
                   </div>
-                  <div className={styles.regulationCoreCard}>
-                    <BrainCircuit size={42} strokeWidth={2} />
-                    <strong>Regülasyon Dengesi</strong>
-                    <p>Güçlü alanlar, destek alanları ve müdahale öncelikleri aynı klinik çerçevede görülür.</p>
-                  </div>
-                  <div className={styles.regulationColumn}>
-                    {regulationDomains.slice(3).map((domain) => (
-                      <article className={styles.regulationDomainCard} key={domain.title}>
-                        <domain.Icon size={20} strokeWidth={2.2} />
-                        <span>{domain.title}</span>
-                      </article>
-                    ))}
-                  </div>
-                </div>
-                <div className={styles.regulationMapFooter}>
-                  <span>Değerlendirme</span>
-                  <ArrowRight size={16} strokeWidth={2.4} />
-                  <span>Öncelik</span>
-                  <ArrowRight size={16} strokeWidth={2.4} />
-                  <span>Müdahale Planı</span>
-                </div>
+                </aside>
               </div>
             </section>
 
-            <section className={styles.vagalBrakeSection}>
-              <div className={styles.vagalCopy}>
-                <div className={styles.eyebrow}>Vagal Fren Kavramı</div>
-                <h2>
-                  Regülasyonun temelinde <span>vagal fren</span> mekanizması.
-                </h2>
-                <p>
-                  Vagal fren, otonom sinir sisteminin dengeleyici gücüdür. Güçlü vagal fren; daha iyi stres toleransı,
-                  dikkat, duygusal denge ve öğrenme kapasitesi ile ilişkilidir.
-                </p>
-                <ul>
-                  {vagalBenefits.map((benefit) => (
-                    <li key={benefit}>
-                      <CheckCircle2 size={17} strokeWidth={2.2} />
-                      {benefit}
-                    </li>
-                  ))}
-                </ul>
+            <section className={styles.interventionValueSection} aria-label="Müdahale yaklaşımının klinik katkıları">
+              <div>
+                <span>Klinik katkı</span>
+                <h2>Daha az dağınıklık, daha açık bir müdahale mantığı.</h2>
               </div>
-
-              <div className={styles.vagalIllustration} aria-label="Vagal fren mekanizması şeması">
-                <div className={styles.vagalPanelHeader}>
-                  <span>Otonom Denge Şeması</span>
-                  <strong>Stres yanıtı → toparlanma</strong>
-                </div>
-                <div className={styles.vagalBodyMap}>
-                  <div className={styles.vagalNode}>
-                    <BrainCircuit size={27} strokeWidth={2.1} />
-                    <span>Beyin</span>
-                  </div>
-                  <div className={styles.vagalNerveLine}>
-                    <span />
-                    <span />
-                    <span />
-                  </div>
-                  <div className={styles.vagalBodyCard}>
-                    <HeartPulse size={30} strokeWidth={2} />
-                    <div>
-                      <strong>Vagal fren</strong>
-                      <p>Bedensel uyarılma, sakinleşme ve sosyal katılım arasında düzenleyici hat.</p>
-                    </div>
-                  </div>
-                  <div className={styles.vagalMetricRow}>
-                    <span>Sakinleşme</span>
-                    <span>Dikkat</span>
-                    <span>Katılım</span>
-                  </div>
-                </div>
-              </div>
-
-              <article className={styles.vagalOutcomeCard}>
-                <h3>Vagal fren gücü arttıkça</h3>
-                <ul>
-                  {vagalOutcomeList.map((item) => (
-                    <li key={item}>
-                      <span />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </article>
-            </section>
-
-            <section className={styles.interventionProcessSection}>
-              <div className={styles.interventionSectionTitle}>
-                <h2>Müdahale Sürecimiz</h2>
-              </div>
-              <div className={styles.interventionProcessLine} aria-label="Müdahale süreci">
-                {interventionProcess.map((step, index) => (
-                  <article className={styles.interventionProcessStep} key={step.title}>
+              <div className={styles.interventionValueGrid}>
+                {interventionValuePoints.map((item, index) => (
+                  <article key={item.title}>
                     <span>{String(index + 1).padStart(2, "0")}</span>
-                    <div>
-                      <step.Icon size={26} strokeWidth={2.1} />
-                    </div>
-                    <h3>{step.title}</h3>
-                    <p>{step.text}</p>
+                    <item.Icon size={21} strokeWidth={1.9} aria-hidden="true" />
+                    <div><h3>{item.title}</h3><p>{item.text}</p></div>
                   </article>
                 ))}
-              </div>
-            </section>
-
-            <section className={styles.interventionPrinciples}>
-              <div className={styles.interventionSectionTitle}>
-                <h2>Yaklaşımımızın Temel İlkeleri</h2>
-              </div>
-              <div className={styles.principlesGrid}>
-                {interventionPrinciples.map((principle) => (
-                  <article className={styles.principleCard} key={principle.title}>
-                    <principle.Icon size={28} strokeWidth={2.1} />
-                    <h3>{principle.title}</h3>
-                    <p>{principle.text}</p>
-                  </article>
-                ))}
-              </div>
-            </section>
-
-            <section className={styles.interventionInfoGrid}>
-              <article className={styles.interventionListCard}>
-                <h2>Kimler İçin?</h2>
-                <ul>
-                  {interventionAudience.map((item) => (
-                    <li key={item}>
-                      <Users size={17} strokeWidth={2} />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </article>
-
-              <article className={styles.interventionListCard}>
-                <h2>Ne Kazanırsınız?</h2>
-                <ul>
-                  {interventionGains.map((item) => (
-                    <li key={item}>
-                      <CheckCircle2 size={17} strokeWidth={2.2} />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </article>
-
-              <div className={styles.interventionNetworkPanel} aria-label="Müdahale takibi mini paneli">
-                <div className={styles.interventionMiniHeader}>
-                  <span>Klinik Takip Paneli</span>
-                  <strong>Plan veriye göre güncellenir</strong>
-                </div>
-                <div className={styles.interventionMiniRows}>
-                  <article>
-                    <ClipboardCheck size={20} strokeWidth={2.2} />
-                    <div>
-                      <strong>Değerlendirme verisi</strong>
-                      <span>Ölçek, gözlem ve klinik notlar</span>
-                    </div>
-                  </article>
-                  <article>
-                    <Target size={20} strokeWidth={2.2} />
-                    <div>
-                      <strong>Müdahale hedefi</strong>
-                      <span>Öncelikli regülasyon alanları</span>
-                    </div>
-                  </article>
-                  <article>
-                    <BarChart3 size={20} strokeWidth={2.2} />
-                    <div>
-                      <strong>İlerleme takibi</strong>
-                      <span>Seanslar arası görünür değişim</span>
-                    </div>
-                  </article>
-                </div>
-                <div className={styles.interventionMiniChart}>
-                  <span />
-                  <span />
-                  <span />
-                  <span />
-                </div>
               </div>
             </section>
           </>
@@ -1932,7 +1721,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
           </>
         )}
 
-        {!isTestsPage && !isApproachPage ? (
+        {!isApproachPage ? (
           <section className={`${styles.callout} ${isApproachPage ? styles.signalCallout : ""} ${isAiReportPage ? styles.aiFinalCta : ""} ${isFutureModulesPage ? styles.labsFinalCta : ""}`}>
             <h2>{calloutTitle}</h2>
             <p>{calloutText}</p>

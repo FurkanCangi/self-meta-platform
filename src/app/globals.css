@@ -771,7 +771,7 @@ html[data-theme="dark"] .dna-shell .shadow-sm {
   }
 }
 
-@media (max-width: 640px){
+@media (max-width: 900px){
   .smiHeaderWrap{
     position:sticky;
     top:0;
