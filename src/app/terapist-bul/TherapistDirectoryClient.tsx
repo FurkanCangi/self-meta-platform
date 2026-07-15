@@ -4,14 +4,12 @@ import dynamic from "next/dynamic"
 import {
   Building2,
   Filter,
-  GraduationCap,
   LocateFixed,
   Mail,
   MapPin,
   Phone,
   RotateCcw,
   Search,
-  ShieldCheck,
 } from "lucide-react"
 import type { FormEvent } from "react"
 import { useEffect, useMemo, useState } from "react"
@@ -166,7 +164,8 @@ function TherapistRow({
   selected: boolean
   onLocate: () => void
 }) {
-  const location = [therapist.district, therapist.city].filter(Boolean).join(" / ")
+  const cityLabel = [therapist.district, therapist.city].filter(Boolean).join(" / ")
+  const location = [therapist.shortAddress, cityLabel].filter(Boolean).join(" · ")
 
   return (
     <article
@@ -204,7 +203,7 @@ function TherapistRow({
 
       {therapist.specialties.length > 0 ? (
         <div className={styles.tags}>
-          {therapist.specialties.slice(0, 3).map((tag) => (
+          {therapist.specialties.map((tag) => (
             <span key={tag}>{tag}</span>
           ))}
         </div>
@@ -234,8 +233,6 @@ function TherapistRow({
 
 export default function TherapistDirectoryClient() {
   const [liveTherapists, setLiveTherapists] = useState<DirectoryTherapist[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState("")
   const [draftQuery, setDraftQuery] = useState("")
   const [query, setQuery] = useState("")
   const [selectedCity, setSelectedCity] = useState("Tümü")
@@ -258,11 +255,7 @@ export default function TherapistDirectoryClient() {
         }
       } catch {
         if (active) {
-          setError("Canlı uzman kayıtları şu anda alınamadı.")
-        }
-      } finally {
-        if (active) {
-          setLoading(false)
+          setLiveTherapists([])
         }
       }
     }
@@ -325,6 +318,7 @@ export default function TherapistDirectoryClient() {
         therapist.profession,
         therapist.title,
         therapist.workplace,
+        therapist.shortAddress,
         therapist.city,
         therapist.district,
         therapist.specialties.join(" "),
@@ -345,6 +339,8 @@ export default function TherapistDirectoryClient() {
           workplace: therapist.workplace,
           city: therapist.city,
           district: therapist.district,
+          shortAddress: therapist.shortAddress,
+          specialties: therapist.specialties,
           latitude,
           longitude,
           isExample: therapist.isExample,
@@ -404,34 +400,6 @@ export default function TherapistDirectoryClient() {
 
   return (
     <section className={styles.directoryPanel}>
-      <div className={styles.directoryHeader}>
-        <div>
-          <div className={styles.eyebrow}>Uzman Dizini</div>
-          <h2>Uzmanı bulun, haritada görün, profili inceleyin.</h2>
-          <p>Şehir, meslek veya uzmanlık alanına göre filtreleyin. Harita yaklaşık şehir merkezlerini gösterir.</p>
-        </div>
-        <div className={styles.safetyNote}>
-          <ShieldCheck size={21} />
-          <span>
-            <strong>Kontrollü görünürlük</strong>
-            Canlı dizinde yalnızca eğitim ve yayın onayı tamamlanan profiller yer alır.
-          </span>
-        </div>
-      </div>
-
-      {usingExamples ? (
-        <div className={styles.previewNotice} role="status">
-          <GraduationCap size={18} />
-          <span>
-            {loading
-              ? "Onaylı uzman kayıtları kontrol edilirken harita örnek profillerle gösteriliyor."
-              : error
-                ? "Harita deneyimini inceleyebilmeniz için temsili uzman profilleri gösteriliyor."
-                : "Henüz yayında onaylı profil olmadığı için harita temsili uzman profilleriyle gösteriliyor."}
-          </span>
-        </div>
-      ) : null}
-
       <form className={styles.filters} onSubmit={handleSearch}>
         <label className={styles.searchBox}>
           <Search size={18} />
@@ -515,7 +483,7 @@ export default function TherapistDirectoryClient() {
         <div className={styles.mapPanel} aria-label="Uzman haritası">
           <div className={styles.mapTopbar}>
             <div>
-              <span>Canlı uzman haritası</span>
+              <span>{usingExamples ? "Örnek uzman haritası" : "Canlı uzman haritası"}</span>
               <strong>{selectedCity === "Tümü" ? "Türkiye geneli" : selectedCity}</strong>
             </div>
             <div className={styles.mapSummary}>

@@ -23,8 +23,9 @@ create table if not exists public.therapist_directory_profiles (
   updated_at timestamptz not null default now()
 );
 
-create index if not exists therapist_directory_public_idx
-  on public.therapist_directory_profiles (publication_status, public_listing_enabled, education_completed_at, city);
+drop index if exists public.therapist_directory_public_idx;
+create index therapist_directory_public_idx
+  on public.therapist_directory_profiles (publication_status, public_listing_enabled, city);
 
 alter table public.therapist_directory_profiles enable row level security;
 

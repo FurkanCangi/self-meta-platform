@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import {
   AiOutlineBarChart,
   AiOutlineHome,
-  AiOutlinePlayCircle,
+  AiOutlineMessage,
   AiOutlineUser,
   AiOutlineMenu,
 } from "react-icons/ai";
@@ -30,10 +30,10 @@ const tabs = [
     active: (pathname: string) => pathname === "/reports",
   },
   {
-    href: "/education?surface=app",
-    label: "Eğitim",
-    icon: AiOutlinePlayCircle,
-    active: (pathname: string) => pathname === "/education",
+    href: "/dna-asistani?surface=app",
+    label: "Asistan",
+    icon: AiOutlineMessage,
+    active: (pathname: string) => pathname === "/dna-asistani",
   },
   {
     href: "/profile?surface=app",

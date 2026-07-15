@@ -111,6 +111,7 @@ export const config = {
     "/clients/:path*",
     "/assessments/:path*",
     "/reports",
+    "/dna-asistani",
     "/report-packages",
     "/education",
     "/profile",

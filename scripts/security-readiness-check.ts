@@ -116,6 +116,7 @@ for (const sqlFile of [
   "sql/kvkk_operational_security.sql",
   "sql/support_tickets.sql",
   "sql/owner_bulk_email.sql",
+  "sql/dna_chat_v1.sql",
 ]) {
   if (!exists(sqlFile)) add("missing SQL migration file", sqlFile)
 }
@@ -225,6 +226,30 @@ if (!aiReportRoute.includes("buildAdvancedReport")) {
 }
 if (/OPENAI_API_KEY|from\s+["']openai["']|rewriteClinicalReport|generateAIClinicalReport/i.test(`${aiReportRoute}\n${deterministicReportEngine}`)) {
   add("external model runtime found in production report path", "src/app/api/ai-report/route.ts")
+}
+
+const dnaChatRoute = read("src/app/api/app/dna-chat/route.ts")
+const dnaChatSnapshot = read("src/lib/dna/chat/reportSnapshot.ts")
+const dnaChatRuntime = [
+  dnaChatRoute,
+  read("src/lib/dna/chat/engine.ts"),
+  read("src/lib/dna/chat/router.ts"),
+  read("src/lib/dna/chat/knowledge.ts"),
+].join("\n")
+if (!dnaChatRoute.includes("dnaChatPostSchema") || !dnaChatRoute.includes("safeParse") || !dnaChatRoute.includes(".strict()")) {
+  add("DNA chat route missing strict Zod validation", "src/app/api/app/dna-chat/route.ts")
+}
+if (!dnaChatRoute.includes("requireConfirmedUser") || !dnaChatRoute.includes("requireTrustedMutation")) {
+  add("DNA chat route missing auth or same-origin guard", "src/app/api/app/dna-chat/route.ts")
+}
+if (!dnaChatRoute.includes('errorResponse("audit_unavailable", 503)')) {
+  add("DNA chat case audit is not fail-closed", "src/app/api/app/dna-chat/route.ts")
+}
+if (!dnaChatSnapshot.includes('"dna-chat-context@1"') || /evidenceMap\.(?:caseEvidenceLines|counterEvidenceLines|preservedCapacityLines|dataLimitations)/.test(dnaChatSnapshot)) {
+  add("DNA chat snapshot is missing or copies raw clinical evidence text", "src/lib/dna/chat/reportSnapshot.ts")
+}
+if (/OPENAI_API_KEY|from\s+["']openai["']|anthropic|ollama|langchain|pinecone|vector(?:store|db)|fetch\s*\(\s*["']https?:/i.test(dnaChatRuntime)) {
+  add("external model or runtime retrieval found in DNA chat", "src/lib/dna/chat")
 }
 
 const audit = spawnSync("npm", ["audit", "--omit=dev", "--audit-level=high"], {

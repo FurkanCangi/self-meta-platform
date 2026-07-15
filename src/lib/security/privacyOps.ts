@@ -41,7 +41,7 @@ export async function getPrivacyAuditContext() {
 }
 
 export async function recordDataAccessAuditEvent(input: DataAccessAuditInput) {
-  await input.admin.from("data_access_audit_events").insert({
+  const { error } = await input.admin.from("data_access_audit_events").insert({
     actor_user_id: input.actorUserId || null,
     subject_user_id: input.subjectUserId || null,
     action: input.action,
@@ -52,6 +52,17 @@ export async function recordDataAccessAuditEvent(input: DataAccessAuditInput) {
     user_agent: input.userAgent || null,
     metadata: input.metadata || {},
   })
+
+  if (error) {
+    console.error("[privacy-audit] data access audit insert failed", {
+      action: input.action,
+      resourceType: input.resourceType,
+      errorCode: error.code || null,
+    })
+    return { ok: false as const, error: "audit_insert_failed" as const }
+  }
+
+  return { ok: true as const }
 }
 
 export async function createPrivacyDataRequest(input: {

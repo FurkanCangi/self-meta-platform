@@ -1,6 +1,13 @@
 "use client"
 
+import { Plus, X } from "lucide-react"
 import { useEffect, useMemo, useState } from "react"
+import {
+  DIRECTORY_REQUIRED_FIELD_LABELS,
+  MAX_DIRECTORY_SPECIALTIES,
+  MAX_DIRECTORY_SPECIALTY_LENGTH,
+  parseDirectorySpecialties,
+} from "@/lib/therapists/directory"
 
 type TherapistProfile = {
   firstName: string
@@ -80,12 +87,11 @@ function Field({
 }
 
 function statusLabel(profile: TherapistProfile) {
-  if (!profile.educationCompletedAt) return "Eğitim tamamlanma bilgisi bekleniyor"
-  if (!profile.publicListingEnabled) return "Public liste kapalı"
+  if (!profile.publicListingEnabled) return "Terapist Bul görünürlüğü kapalı"
   if (profile.publicationStatus === "approved") return "Terapist Bul sayfasında yayında"
-  if (profile.publicationStatus === "rejected") return "Yayın başvurusu yeniden inceleme bekliyor"
-  if (profile.publicationStatus === "hidden") return "Public görünürlük gizli"
-  return "Admin onayı bekliyor"
+  if (profile.publicationStatus === "rejected") return "Profil yayın için uygun bulunmadı"
+  if (profile.publicationStatus === "hidden") return "Profil yönetici tarafından gizlendi"
+  return "Eksik alanlar tamamlanınca otomatik yayınlanır"
 }
 
 function profileErrorMessage(errorCode?: string) {
@@ -103,6 +109,8 @@ function profileErrorMessage(errorCode?: string) {
       return "Profil bilgileri alınamadı. Lütfen sayfayı yenileyin."
     case "directory_profile_save_failed":
       return "Profil kaydedilemedi. Lütfen bilgileri kontrol edip tekrar deneyin."
+    case "too_many_specialties":
+      return `En fazla ${MAX_DIRECTORY_SPECIALTIES} uzmanlık alanı ekleyebilirsiniz.`
     default:
       return "Profil işlemi tamamlanamadı. Lütfen tekrar deneyin."
   }
@@ -115,6 +123,8 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState("")
   const [savedAt, setSavedAt] = useState("")
+  const [publicationMessage, setPublicationMessage] = useState("")
+  const [specialtyDraft, setSpecialtyDraft] = useState("")
 
   useEffect(() => {
     let active = true
@@ -173,14 +183,38 @@ export default function ProfilePage() {
     return [profile.firstName, profile.lastName].filter(Boolean).join(" ").trim() || "Terapist"
   }, [profile.firstName, profile.lastName])
 
+  const specialtyList = useMemo(() => parseDirectorySpecialties(profile.specialties), [profile.specialties])
+
   const handleChange = (key: keyof TherapistProfile, value: string | boolean) => {
     setProfile((prev) => ({ ...prev, [key]: value as never }))
     setSavedAt("")
+    setPublicationMessage("")
   }
 
   const handleReportChange = (key: keyof TherapistReportProfile, value: string) => {
     setReportProfile((prev) => ({ ...prev, [key]: value }))
     setSavedAt("")
+  }
+
+  const addSpecialty = () => {
+    const candidate = specialtyDraft.trim()
+    if (!candidate || specialtyList.length >= MAX_DIRECTORY_SPECIALTIES) return
+
+    const next = parseDirectorySpecialties([...specialtyList, candidate])
+    if (next.length === specialtyList.length) {
+      setSpecialtyDraft("")
+      return
+    }
+
+    handleChange("specialties", next.join(", "))
+    setSpecialtyDraft("")
+  }
+
+  const removeSpecialty = (specialty: string) => {
+    handleChange(
+      "specialties",
+      specialtyList.filter((item) => item !== specialty).join(", "),
+    )
   }
 
   const handleSave = async () => {
@@ -208,6 +242,23 @@ export default function ProfilePage() {
         window.localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify({ ...currentSettings, ...reportProfile }))
       } catch {}
       setSavedAt(new Date().toLocaleString("tr-TR"))
+      const missingFields = Array.isArray(payload?.publication?.missingFields)
+        ? payload.publication.missingFields
+        : []
+      if (payload?.publication?.visible) {
+        setPublicationMessage("Profiliniz kaydedildi ve Terapist Bul sayfasında yayınlandı.")
+      } else if (profile.publicListingEnabled && missingFields.length > 0) {
+        const labels = missingFields.map(
+          (field: string) => DIRECTORY_REQUIRED_FIELD_LABELS[field] || field,
+        )
+        setPublicationMessage(`Profil kaydedildi. Yayın için tamamlayın: ${labels.join(", ")}.`)
+      } else if (profile.publicListingEnabled && payload?.profile?.publicationStatus === "hidden") {
+        setPublicationMessage("Profil kaydedildi. Görünürlük yönetici tarafından kapalı tutuluyor.")
+      } else if (profile.publicListingEnabled && payload?.profile?.publicationStatus === "rejected") {
+        setPublicationMessage("Profil kaydedildi. Yayın durumu yönetici incelemesinde.")
+      } else {
+        setPublicationMessage("Profil kaydedildi. Terapist Bul görünürlüğü kapalı.")
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Profil kaydedilemedi.")
     } finally {
@@ -232,8 +283,7 @@ export default function ProfilePage() {
           <div className="text-sm font-semibold uppercase tracking-wide text-blue-600">Profil</div>
           <h1 className="mt-2 text-3xl font-bold text-slate-900">Terapist Profil Bilgileri</h1>
           <p className="mt-3 max-w-3xl text-slate-600">
-            Bu bilgiler terapist panelinizde saklanır. Açık rıza verdiğinizde, eğitim tamamlanma ve admin onayı sonrası
-            Terapist Bul sayfasında public olarak gösterilir.
+            Profil bilgilerinizi ve rapor çıktısında kullanılacak kurum bilgilerini tek yerden yönetin.
           </p>
         </div>
 
@@ -268,16 +318,67 @@ export default function ProfilePage() {
             <Field label="Kısa Adres" value={profile.shortAddress} onChange={(v) => handleChange("shortAddress", v)} placeholder="Mahalle / kurum adresi" />
           </div>
 
+          <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/50 px-5 py-4 text-sm leading-6 text-slate-700">
+            Kurum adı, kısa adres ve uzmanlık alanlarınız <strong>Terapist Bul</strong> sayfasında aynen görünür.
+            Danışanların okuyacağı şekilde güncel ve açık yazın.
+          </div>
+
           <div className="mt-5">
-            <label className="block">
-              <div className="mb-2 text-sm font-medium text-slate-700">Uzmanlık Alanları</div>
-              <textarea
-                value={profile.specialties}
-                onChange={(e) => handleChange("specialties", e.target.value)}
-                placeholder="Örn. pediatrik ergoterapi, duyu bütünleme, gelişimsel değerlendirme"
-                className="min-h-[120px] w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-slate-900 outline-none transition focus:border-blue-500"
+            <div className="mb-2 flex items-center justify-between gap-4">
+              <div className="text-sm font-medium text-slate-700">Uzmanlık Alanları</div>
+              <div className="text-xs font-semibold text-slate-500">
+                {specialtyList.length}/{MAX_DIRECTORY_SPECIALTIES}
+              </div>
+            </div>
+            {specialtyList.length > 0 ? (
+              <div className="mb-3 flex flex-wrap gap-2" aria-label="Eklenen uzmanlık alanları">
+                {specialtyList.map((specialty) => (
+                  <span
+                    key={specialty}
+                    className="inline-flex min-h-9 items-center gap-2 rounded-full border border-blue-100 bg-blue-50 px-3 text-sm font-semibold text-blue-800"
+                  >
+                    {specialty}
+                    <button
+                      type="button"
+                      onClick={() => removeSpecialty(specialty)}
+                      className="grid h-6 w-6 place-items-center rounded-full text-blue-600 transition hover:bg-blue-100"
+                      aria-label={`${specialty} uzmanlığını kaldır`}
+                    >
+                      <X size={14} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            ) : null}
+            <div className="flex gap-2">
+              <input
+                value={specialtyDraft}
+                maxLength={MAX_DIRECTORY_SPECIALTY_LENGTH}
+                onChange={(event) => setSpecialtyDraft(event.target.value.replace(/[,;\n]/g, ""))}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === ",") {
+                    event.preventDefault()
+                    addSpecialty()
+                  }
+                }}
+                placeholder="Örn. Duyu bütünleme"
+                disabled={specialtyList.length >= MAX_DIRECTORY_SPECIALTIES}
+                className="h-12 min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-4 text-slate-900 outline-none transition focus:border-blue-500 disabled:bg-slate-50"
               />
-            </label>
+              <button
+                type="button"
+                onClick={addSpecialty}
+                disabled={!specialtyDraft.trim() || specialtyList.length >= MAX_DIRECTORY_SPECIALTIES}
+                className="inline-flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-blue-600 text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-40"
+                aria-label="Uzmanlık alanı ekle"
+                title="Uzmanlık alanı ekle"
+              >
+                <Plus size={20} />
+              </button>
+            </div>
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Her alanı ayrı ekleyin. En fazla {MAX_DIRECTORY_SPECIALTIES} uzmanlık alanı yayınlanır.
+            </p>
           </div>
 
           <div className="mt-6 rounded-2xl border border-slate-200 bg-slate-50 px-5 py-5">
@@ -327,8 +428,8 @@ export default function ProfilePage() {
             <span>
               <span className="block font-semibold text-slate-900">Terapist Bul sayfasında görünmek istiyorum.</span>
               <span className="mt-1 block text-sm leading-6 text-slate-600">
-                Ad, soyad, meslek, kurum, şehir, telefon ve e-posta bilgilerimin public dizinde gösterilmesine izin
-                veriyorum. Yayın için eğitim tamamlanma ve admin onayı gerekir.
+                Ad, soyad, meslek, kurum, şehir, adres, uzmanlık, telefon ve e-posta bilgilerimin herkese açık dizinde
+                gösterilmesine izin veriyorum. Gerekli alanları tamamlayıp kaydettiğinizde profiliniz otomatik yayınlanır.
               </span>
             </span>
           </label>
@@ -344,6 +445,12 @@ export default function ProfilePage() {
 
             {savedAt ? <div className="text-sm text-cyan-700">Son kayıt: {savedAt}</div> : null}
           </div>
+
+          {publicationMessage ? (
+            <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-semibold text-slate-700" role="status">
+              {publicationMessage}
+            </div>
+          ) : null}
         </div>
 
       </div>

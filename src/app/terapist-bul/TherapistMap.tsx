@@ -15,6 +15,8 @@ export type TherapistMapPoint = {
   workplace: string
   city: string
   district: string
+  shortAddress: string
+  specialties: string[]
   latitude: number
   longitude: number
   isExample: boolean
@@ -115,13 +117,22 @@ export default function TherapistMap({ points, selectedId, onSelect }: Therapist
                 </div>
                 <p>
                   <MapPin size={15} />
-                  {[point.district, point.city].filter(Boolean).join(" / ")}
+                  {[point.shortAddress, [point.district, point.city].filter(Boolean).join(" / ")]
+                    .filter(Boolean)
+                    .join(" · ")}
                 </p>
                 {point.workplace ? (
                   <p>
                     <Building2 size={15} />
                     {point.workplace}
                   </p>
+                ) : null}
+                {point.specialties.length > 0 ? (
+                  <div className={styles.mapPopupTags} aria-label="Uzmanlık alanları">
+                    {point.specialties.map((specialty) => (
+                      <span key={specialty}>{specialty}</span>
+                    ))}
+                  </div>
                 ) : null}
                 {point.isExample ? (
                   <em>

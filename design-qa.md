@@ -60,6 +60,29 @@ No unresolved P0, P1, or P2 findings remain.
 
 final result: passed
 
+## Therapist Profile And Directory Publication
+
+### Design Result
+
+- Institution name, short public address, profession, city and up to 10 specialties are collected in the therapist profile and reused by the Therapist Finder directory.
+- Specialties use a compact add/remove chip editor so therapists can enter their own areas without a fixed predefined list.
+- The profile clearly explains which fields become visible in Therapist Finder before public listing is enabled.
+- A complete profile is published automatically after the therapist enables public visibility and saves; hidden or rejected owner decisions remain protected.
+- Directory cards and map popups show institution, address and specialties with the existing visual system.
+
+### Verification
+
+- Specialty normalization, duplicate removal and 10-item limit: passed.
+- Required public field and publication-readiness contract: passed.
+- Directory API completeness filtering: passed.
+- Existing database field compatibility: passed; no new profile column is required.
+- Lint and focused directory contract tests: passed.
+- Horizontal overflow in the public directory desktop view: none.
+
+No unresolved P0, P1, or P2 findings remain.
+
+final result: passed
+
 ---
 
 # Therapist Directory Map Design QA
@@ -77,7 +100,8 @@ final result: passed
 
 ## Design Result
 
-- The text-heavy opening was replaced with a compact directory introduction that leaves the map and specialist search visible in the first workflow.
+- The text-heavy opening was replaced with a single compact directory introduction; search controls and the map now begin immediately beneath it.
+- The duplicate directory heading, standalone visibility card, and separate example-profile notice were removed. Example/live status is communicated once inside the map header.
 - A real interactive Turkey map now uses CARTO light tiles with OpenStreetMap attribution, pan and zoom controls, metric scale, city markers, tooltips, and specialist detail popups.
 - Five clearly labelled example profiles cover Istanbul, Ankara, Izmir, Bursa, and Antalya without publishing fabricated phone or email details.
 - Example profiles appear only while the approved live directory is empty. They disappear automatically as soon as real approved profiles are returned by the existing public API.
@@ -90,6 +114,7 @@ final result: passed
 - Five example specialists and city coordinates: passed.
 - Istanbul filter returns one profile and updates the map summary to `1 Profil`, `1 Sehir`, and `1 Meslek`: passed.
 - Map and list selection synchronization: passed.
+- Desktop first viewport contains the hero, complete filter controls, city shortcuts, and the start of the live map: passed.
 - Desktop horizontal overflow: none.
 - Mobile viewport and document width both remain `390px`; no horizontal overflow or incoherent overlap was detected.
 - Therapist-specific accessible labels are present on map focus controls.
@@ -99,6 +124,13 @@ final result: passed
 - `git diff --check`: passed before this QA entry.
 - The user Chrome profile emitted stale Supabase auth refresh logs unrelated to this route; no map-specific rendering or runtime failure was observed.
 - Mobile screenshot capture timed out in the browser bridge, so mobile layout was verified from live DOM dimensions, viewport geometry, and overflow measurements.
+
+## Compact Layer Follow-up
+
+- Reduced the opening to one visual layer and removed the second `Uzman Dizini` introduction.
+- Placed filtering directly after the hero and eliminated the intervening safety and preview panels.
+- Tightened desktop spacing and hid nonessential hero facts on narrow mobile screens so users reach the map faster.
+- Preserved search, filtering, map/list synchronization, and example-profile disclosure behavior.
 
 No unresolved P0, P1, or P2 findings remain.
 

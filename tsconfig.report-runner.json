@@ -22,6 +22,9 @@
     "scripts/run-assessment-scoring-tests.ts",
     "scripts/run-report-50-case-audit.ts",
     "scripts/run-literature-integrity-tests.ts",
+    "scripts/run-dna-chat-quality-tests.ts",
+    "scripts/run-dna-chat-security-tests.ts",
+    "scripts/run-dna-chat-determinism-tests.ts",
     "scripts/report-quality-cases.ts",
     "src/lib/dna/**/*.ts",
     "src/lib/assessment/**/*.ts"

@@ -21,9 +21,13 @@
     "report:50-case-audit": "tsc -p tsconfig.report-runner.json --outDir .tmp/report-runner-50-case && node .tmp/report-runner-50-case/scripts/run-report-50-case-audit.js",
     "report:literature-integrity": "tsc -p tsconfig.report-runner.json --outDir .tmp/report-runner-literature && node .tmp/report-runner-literature/scripts/run-literature-integrity-tests.js",
     "report:literature-verify-online": "tsc -p tsconfig.report-runner.json --outDir .tmp/report-runner-literature-online && node .tmp/report-runner-literature-online/scripts/run-literature-integrity-tests.js --online",
+    "chat:quality": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-chat-quality && node .tmp/dna-chat-quality/scripts/run-dna-chat-quality-tests.js",
+    "chat:security": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-chat-security && node .tmp/dna-chat-security/scripts/run-dna-chat-security-tests.js",
+    "chat:determinism": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-chat-determinism && node .tmp/dna-chat-determinism/scripts/run-dna-chat-determinism-tests.js",
     "security:smoke": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/security-smoke-tests.js",
     "security:readiness": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/security-readiness-check.js",
     "security:owner-scenarios": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/owner-security-scenario-tests.js",
+    "directory:contract": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/therapist-directory-contract-tests.js",
     "live:health": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/live-backend-health.js"
   },
   "dependencies": {

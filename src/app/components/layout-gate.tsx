@@ -47,6 +47,7 @@ const APP_SHELL_ROUTES = [
   "/clients",
   "/assessments",
   "/reports",
+  "/dna-asistani",
   "/education",
   "/profile",
   "/profile-setting",

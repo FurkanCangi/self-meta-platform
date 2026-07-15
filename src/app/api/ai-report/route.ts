@@ -154,6 +154,7 @@ import { consumeReportCredit, grantReportCredits } from "@/lib/security/reportCr
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { isOwnerAuditEmail } from "@/lib/owner/ownerAccess"
 import { buildAdvancedReport } from "@/lib/dna/reportEngine"
+import { buildDnaChatSnapshotContext } from "@/lib/dna/chat/reportSnapshot"
 import { extractAgeMonthsFromAnamnez, isSupportedAgeMonths } from "@/lib/dna/ageUtils"
 import { buildLiteratureAlignedSection } from "@/lib/dna/literatureNote"
 import { normalizeClinicalReportText } from "@/lib/dna/reportText"
@@ -512,6 +513,7 @@ if (__validationErrors.length > 0) {
       strong_domains: report.strongDomains,
       patterns: report.patterns,
       anamnez_flags: report.anamnezFlags,
+      chat_context: buildDnaChatSnapshotContext(report),
       ai_report_text: finalText,
       saved_by: "api/ai-report",
     }

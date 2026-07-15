@@ -15,7 +15,9 @@
     "scripts/security-readiness-check.ts",
     "scripts/owner-security-scenario-tests.ts",
     "scripts/live-backend-health.ts",
+    "scripts/therapist-directory-contract-tests.ts",
     "src/lib/owner/ownerSecurityCore.ts",
+    "src/lib/therapists/directory.ts",
     "src/lib/dna/reportLogger.ts"
   ],
   "exclude": [

@@ -7,6 +7,7 @@ import {
   FileText,
   GraduationCap,
   LifeBuoy,
+  MessagesSquare,
   PlayCircle,
   Search,
   Settings,
@@ -50,6 +51,13 @@ const cards = [
     href: "/reports",
     icon: BarChart3,
     accent: "from-blue-500 to-cyan-500",
+  },
+  {
+    title: "DNA Asistanı",
+    text: "Teoriyi, DNA kavramlarını ve kendi son vaka raporlarınızı kaynak kontrollü biçimde tartışın.",
+    href: "/dna-asistani",
+    icon: MessagesSquare,
+    accent: "from-cyan-500 via-blue-600 to-violet-600",
   },
   {
     title: "Eğitim Kütüphanesi",
@@ -120,6 +128,27 @@ export default function StarterPage() {
             <div className="mt-1 text-xs font-semibold leading-5 text-slate-500">Vaka listesi</div>
           </Link>
         </section>
+
+        <Link
+          href="/dna-asistani?surface=app"
+          className="relative block min-h-[154px] overflow-hidden rounded-[24px] border border-blue-100 bg-gradient-to-br from-cyan-50 via-blue-50 to-violet-50 p-5 shadow-[0_18px_44px_rgba(37,99,235,0.12)]"
+        >
+          <div className="absolute -right-10 -top-12 h-40 w-40 rounded-full bg-white/65 blur-2xl" />
+          <div className="relative flex items-start gap-4">
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-cyan-500 via-blue-600 to-violet-600 text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)]">
+              <MessagesSquare size={23} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="text-lg font-black text-[#071b3a]">DNA Asistanı</div>
+              <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
+                Teori sor, DNA kavramlarını incele veya kendi son raporun üzerinden tartış.
+              </p>
+              <div className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-xl bg-white/80 px-3 text-xs font-black text-blue-700 shadow-sm">
+                Asistanı aç <ChevronRight size={16} />
+              </div>
+            </div>
+          </div>
+        </Link>
 
         <section className="rounded-[22px] border border-slate-200 bg-white p-3 shadow-sm">
           <div className="px-1 pb-2 pt-1 dna-app-section-title">Hızlı işlemler</div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
 import ClinicalReportView from "@/components/report/ClinicalReportView";
@@ -150,6 +151,20 @@ export default function ReportsPage() {
 
   const visibleReportCountLabel = loading ? "Yükleniyor" : `${visibleRows.length} kayıt`;
 
+  const chatEligibleReportIds = useMemo(() => {
+    return new Set(
+      [...rows]
+        .filter((row) => Boolean(row.report_text))
+        .sort((left, right) => {
+          const dateDifference = Date.parse(right.created_at || "") - Date.parse(left.created_at || "");
+          if (Number.isFinite(dateDifference) && dateDifference !== 0) return dateDifference;
+          return right.id.localeCompare(left.id);
+        })
+        .slice(0, 10)
+        .map((row) => row.id)
+    );
+  }, [rows]);
+
   const selected = useMemo(
     () => visibleRows.find((x) => x.id === selectedId) || null,
     [visibleRows, selectedId]
@@ -270,6 +285,19 @@ export default function ReportsPage() {
                 reportDate={extractReportDate(selected)}
               />
 
+              {chatEligibleReportIds.has(selected.id) ? (
+                <Link
+                  href={`/dna-asistani?mode=case&report_id=${encodeURIComponent(selected.id)}&surface=app`}
+                  className="dna-btn mt-4 flex min-h-12 w-full items-center justify-center px-4 text-sm font-black"
+                >
+                  Rapora sor
+                </Link>
+              ) : (
+                <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-900">
+                  DNA Asistanı yalnız bu hesaptaki son 10 aktif raporla çalışır.
+                </div>
+              )}
+
               <button
                 type="button"
                 onClick={() => handleDeleteReport(selected)}
@@ -373,6 +401,18 @@ export default function ReportsPage() {
             <h2 className="text-lg font-semibold text-slate-900">Seçilen Rapor</h2>
             {selected ? (
               <div className="flex flex-col gap-2 sm:flex-row">
+                {chatEligibleReportIds.has(selected.id) ? (
+                  <Link
+                    href={`/dna-asistani?mode=case&report_id=${encodeURIComponent(selected.id)}`}
+                    className="dna-btn inline-flex min-h-11 w-full items-center justify-center px-4 py-2 text-sm font-semibold sm:w-auto"
+                  >
+                    Rapora sor
+                  </Link>
+                ) : (
+                  <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
+                    Yalnız son 10 aktif rapor Asistana açılır.
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={() => window.print()}

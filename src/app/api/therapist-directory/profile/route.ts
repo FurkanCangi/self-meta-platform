@@ -6,7 +6,14 @@ import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
-import { mapDirectoryRow, normalizeDirectoryInput } from "@/lib/therapists/directory"
+import {
+  getDirectoryPublicationMissingFields,
+  hasTooManyDirectorySpecialties,
+  mapDirectoryRow,
+  MAX_DIRECTORY_SPECIALTIES,
+  MAX_DIRECTORY_SPECIALTY_LENGTH,
+  normalizeDirectoryInput,
+} from "@/lib/therapists/directory"
 
 const therapistDirectoryPayloadSchema = z
   .object({
@@ -20,7 +27,13 @@ const therapistDirectoryPayloadSchema = z
     publicPhone: z.string().max(80).optional().nullable(),
     publicEmail: z.string().max(180).optional().nullable(),
     shortAddress: z.string().max(320).optional().nullable(),
-    specialties: z.string().max(900).optional().nullable(),
+    specialties: z
+      .union([
+        z.string().max(900),
+        z.array(z.string().trim().min(1).max(MAX_DIRECTORY_SPECIALTY_LENGTH)).max(MAX_DIRECTORY_SPECIALTIES),
+      ])
+      .optional()
+      .nullable(),
     publicListingEnabled: z.boolean().optional(),
   })
   .passthrough()
@@ -107,12 +120,17 @@ export async function PUT(request: Request) {
       )
     }
 
+    if (hasTooManyDirectorySpecialties(body.specialties)) {
+      return NextResponse.json({ ok: false, error: "too_many_specialties" }, { status: 400 })
+    }
+
     const input = normalizeDirectoryInput(body || {})
+    const missingFields = getDirectoryPublicationMissingFields(input)
     const admin = createSupabaseAdminClient()
 
     const { data: existing, error: existingError } = await admin
       .from("therapist_directory_profiles")
-      .select("publication_status, education_completed_at")
+      .select("publication_status")
       .eq("user_id", user.id)
       .maybeSingle()
 
@@ -126,12 +144,14 @@ export async function PUT(request: Request) {
       throw existingError
     }
 
-    const publicationStatus =
-      existing?.publication_status === "approved" && input.public_listing_enabled
+    const ownerBlocked = existing?.publication_status === "hidden" || existing?.publication_status === "rejected"
+    const publicationStatus = ownerBlocked
+      ? existing.publication_status
+      : input.public_listing_enabled && missingFields.length === 0
         ? "approved"
-        : existing?.publication_status === "rejected"
-          ? "pending"
-          : existing?.publication_status || "pending"
+        : existing?.publication_status === "approved" && !input.public_listing_enabled
+          ? "approved"
+          : "pending"
 
     const { data, error } = await admin
       .from("therapist_directory_profiles")
@@ -156,7 +176,15 @@ export async function PUT(request: Request) {
       throw error
     }
 
-    return NextResponse.json({ ok: true, profile: mapDirectoryRow(data) })
+    return NextResponse.json({
+      ok: true,
+      profile: mapDirectoryRow(data),
+      publication: {
+        visible:
+          input.public_listing_enabled && publicationStatus === "approved" && missingFields.length === 0,
+        missingFields,
+      },
+    })
   } catch (error) {
     console.error("[therapist-directory] profile save failed", {
       error: error instanceof Error ? error.message : "unknown",

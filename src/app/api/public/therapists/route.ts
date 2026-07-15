@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { checkRateLimit, getClientRateLimitKey, rateLimitResponse } from "@/lib/security/rateLimit"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
-import { mapPublicTherapist } from "@/lib/therapists/directory"
+import { isPublicTherapistComplete, mapPublicTherapist } from "@/lib/therapists/directory"
 
 function isMissingDirectoryTable(error: unknown) {
   if (!error || typeof error !== "object") return false
@@ -35,7 +35,6 @@ export async function GET(request: Request) {
       )
       .eq("public_listing_enabled", true)
       .eq("publication_status", "approved")
-      .not("education_completed_at", "is", null)
       .order("city", { ascending: true })
       .order("last_name", { ascending: true })
       .limit(500)
@@ -53,7 +52,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       ok: true,
-      therapists: (data || []).map(mapPublicTherapist),
+      therapists: (data || []).map(mapPublicTherapist).filter(isPublicTherapistComplete),
     })
   } catch {
     return NextResponse.json({ ok: false, therapists: [], error: "therapist_list_failed" }, { status: 500 })

@@ -149,6 +149,12 @@ export default function Sidebar({ toggle = true }: SidebarProps) {
               active={pathname === "/reports"}
             />
             <Item
+              href="/dna-asistani"
+              label="DNA Asistanı"
+              icon={<AiOutlineMessage />}
+              active={pathname === "/dna-asistani"}
+            />
+            <Item
               href="/report-packages"
               label="Rapor Paketleri"
               icon={<AiOutlineShoppingCart />}
