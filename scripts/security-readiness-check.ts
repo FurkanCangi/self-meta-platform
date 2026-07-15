@@ -121,6 +121,17 @@ for (const sqlFile of [
   if (!exists(sqlFile)) add("missing SQL migration file", sqlFile)
 }
 
+const paymentSecuritySql = read("sql/payment_security.sql")
+for (const signature of [
+  "public.get_report_credit_balance(uuid)",
+  "public.consume_report_credit(uuid, uuid, uuid, jsonb)",
+]) {
+  const escapedSignature = signature.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  if (!new RegExp(`revoke execute on function ${escapedSignature} from anon, authenticated;`).test(paymentSecuritySql)) {
+    add("service-only payment RPC missing explicit client revoke", signature)
+  }
+}
+
 if (!exists("CLAUDE.md")) {
   add("missing persistent security rules", "CLAUDE.md")
 } else {

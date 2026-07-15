@@ -91,6 +91,13 @@ export function createDnaChatSafeCaseContext(
   }
 
   const raw = input as DnaChatCaseContextInput
+  const previousSafeContext = input as Partial<DnaChatSafeCaseContext>
+  const inheritedRedactionCount =
+    previousSafeContext.safe === true &&
+    Number.isSafeInteger(previousSafeContext.redactionCount) &&
+    Number(previousSafeContext.redactionCount) > 0
+      ? Number(previousSafeContext.redactionCount)
+      : 0
   const chat = raw.chatContext ?? {}
   const caseId = sanitizeCaseId(raw.caseId)
   const themes = sanitizeList(raw.themes)
@@ -115,7 +122,7 @@ export function createDnaChatSafeCaseContext(
 
   const age = Number(raw.ageMonths)
   const ageMonths = Number.isFinite(age) && age >= 0 && age <= 216 ? Math.round(age) : null
-  const redactionCount = [
+  const detectedRedactionCount = [
     caseId.redactions,
     themes.redactions,
     observations.redactions,
@@ -134,6 +141,10 @@ export function createDnaChatSafeCaseContext(
     strongDomains.redactions,
     patterns.redactions,
   ].reduce((sum, count) => sum + count, 0)
+  const redactionCount = Math.min(
+    Number.MAX_SAFE_INTEGER,
+    inheritedRedactionCount + detectedRedactionCount,
+  )
 
   return Object.freeze({
     safe: true as const,

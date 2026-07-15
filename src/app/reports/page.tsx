@@ -20,6 +20,12 @@ type ReportRow = {
   preview?: string | null;
 };
 
+type DnaChatReportOption = {
+  id: string;
+};
+
+type ChatEligibilityStatus = "loading" | "ready" | "unavailable";
+
 function formatDate(value?: string | null) {
   if (!value) return "—";
   const d = new Date(value);
@@ -91,6 +97,8 @@ export default function ReportsPage() {
   const [deletingReportId, setDeletingReportId] = useState<string>("");
   const [appReaderOpen, setAppReaderOpen] = useState(false);
   const [clientFilter, setClientFilter] = useState({ id: "", code: "" });
+  const [chatEligibleReportIds, setChatEligibleReportIds] = useState<Set<string>>(new Set());
+  const [chatEligibilityStatus, setChatEligibilityStatus] = useState<ChatEligibilityStatus>("loading");
 
   useEffect(() => {
     let mounted = true;
@@ -99,6 +107,7 @@ export default function ReportsPage() {
       setLoading(true);
       setErr("");
       setNotice("");
+      setChatEligibilityStatus("loading");
 
       try {
         const params = new URLSearchParams(window.location.search);
@@ -108,12 +117,18 @@ export default function ReportsPage() {
         };
         if (mounted) setClientFilter(nextClientFilter);
 
-        const response = await fetch("/api/app/clinical-workspace", { cache: "no-store" });
-        const payload = await response.json().catch(() => ({}));
+        const [response, dnaChatResponse] = await Promise.all([
+          fetch("/api/app/clinical-workspace", { cache: "no-store" }),
+          fetch("/api/app/dna-chat", { cache: "no-store" }),
+        ]);
+        const [payload, dnaChatPayload] = await Promise.all([
+          response.json().catch(() => ({})),
+          dnaChatResponse.json().catch(() => ({})),
+        ]);
 
         if (!mounted) return;
 
-        if (response.status === 401) {
+        if (response.status === 401 || dnaChatResponse.status === 401) {
           setLoading(false);
           router.replace("/app-login");
           return;
@@ -127,11 +142,24 @@ export default function ReportsPage() {
         const initialRows = safeRows.filter((row) => reportMatchesClientFilter(row, nextClientFilter));
         setRows(safeRows);
         setSelectedId(initialRows[0]?.id || "");
+
+        if (dnaChatResponse.ok && dnaChatPayload?.ok) {
+          const eligibleIds = ((dnaChatPayload.reports || []) as DnaChatReportOption[])
+            .map((report) => String(report?.id || "").trim())
+            .filter(Boolean);
+          setChatEligibleReportIds(new Set(eligibleIds));
+          setChatEligibilityStatus("ready");
+        } else {
+          setChatEligibleReportIds(new Set());
+          setChatEligibilityStatus("unavailable");
+        }
       } catch (error) {
         if (mounted) {
           setErr(error instanceof Error ? error.message : "Raporlar alınamadı.");
           setRows([]);
           setSelectedId("");
+          setChatEligibleReportIds(new Set());
+          setChatEligibilityStatus("unavailable");
         }
       } finally {
         if (mounted) setLoading(false);
@@ -150,20 +178,6 @@ export default function ReportsPage() {
   }, [rows, clientFilter]);
 
   const visibleReportCountLabel = loading ? "Yükleniyor" : `${visibleRows.length} kayıt`;
-
-  const chatEligibleReportIds = useMemo(() => {
-    return new Set(
-      [...rows]
-        .filter((row) => Boolean(row.report_text))
-        .sort((left, right) => {
-          const dateDifference = Date.parse(right.created_at || "") - Date.parse(left.created_at || "");
-          if (Number.isFinite(dateDifference) && dateDifference !== 0) return dateDifference;
-          return right.id.localeCompare(left.id);
-        })
-        .slice(0, 10)
-        .map((row) => row.id)
-    );
-  }, [rows]);
 
   const selected = useMemo(
     () => visibleRows.find((x) => x.id === selectedId) || null,
@@ -285,16 +299,24 @@ export default function ReportsPage() {
                 reportDate={extractReportDate(selected)}
               />
 
-              {chatEligibleReportIds.has(selected.id) ? (
+              {chatEligibilityStatus === "loading" ? (
+                <div role="status" className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs font-semibold leading-5 text-slate-600">
+                  DNA Asistanı uygunluğu doğrulanıyor…
+                </div>
+              ) : chatEligibilityStatus === "ready" && chatEligibleReportIds.has(selected.id) ? (
                 <Link
                   href={`/dna-asistani?mode=case&report_id=${encodeURIComponent(selected.id)}&surface=app`}
                   className="dna-btn mt-4 flex min-h-12 w-full items-center justify-center px-4 text-sm font-black"
                 >
                   Rapora sor
                 </Link>
-              ) : (
+              ) : chatEligibilityStatus === "ready" ? (
                 <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-900">
-                  DNA Asistanı yalnız bu hesaptaki son 10 aktif raporla çalışır.
+                  DNA Asistanı yalnız bu hesaba ait son 10 aktif raporla çalışır.
+                </div>
+              ) : (
+                <div role="status" className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-xs font-semibold leading-5 text-slate-600">
+                  DNA Asistanı uygunluğu şu anda doğrulanamıyor.
                 </div>
               )}
 
@@ -401,16 +423,24 @@ export default function ReportsPage() {
             <h2 className="text-lg font-semibold text-slate-900">Seçilen Rapor</h2>
             {selected ? (
               <div className="flex flex-col gap-2 sm:flex-row">
-                {chatEligibleReportIds.has(selected.id) ? (
+                {chatEligibilityStatus === "loading" ? (
+                  <div role="status" className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
+                    Asistan uygunluğu doğrulanıyor…
+                  </div>
+                ) : chatEligibilityStatus === "ready" && chatEligibleReportIds.has(selected.id) ? (
                   <Link
                     href={`/dna-asistani?mode=case&report_id=${encodeURIComponent(selected.id)}`}
                     className="dna-btn inline-flex min-h-11 w-full items-center justify-center px-4 py-2 text-sm font-semibold sm:w-auto"
                   >
                     Rapora sor
                   </Link>
-                ) : (
+                ) : chatEligibilityStatus === "ready" ? (
                   <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">
-                    Yalnız son 10 aktif rapor Asistana açılır.
+                    Yalnız bu hesaba ait son 10 aktif rapor Asistana açılır.
+                  </div>
+                ) : (
+                  <div role="status" className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-600">
+                    Asistan uygunluğu doğrulanamıyor.
                   </div>
                 )}
                 <button

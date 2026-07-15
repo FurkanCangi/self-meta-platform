@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Sparkles,
 } from "lucide-react"
+import Link from "next/link"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { useAppSurface } from "@/app/components/app-shell/useAppSurface"
 import { DNA_CHAT_STARTER_QUESTIONS } from "@/lib/dna/chat/suggestions"
@@ -190,13 +191,16 @@ export default function DnaAssistantClient({
   const [selectedReportId, setSelectedReportId] = useState("")
   const [reportsLoading, setReportsLoading] = useState(true)
   const [reportsError, setReportsError] = useState("")
+  const [reportsErrorCode, setReportsErrorCode] = useState("")
   const [reportSelectionNotice, setReportSelectionNotice] = useState("")
   const [question, setQuestion] = useState("")
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [previousTopic, setPreviousTopic] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState("")
+  const [sendErrorCode, setSendErrorCode] = useState("")
   const messageEndRef = useRef<HTMLDivElement>(null)
+  const questionInputRef = useRef<HTMLTextAreaElement>(null)
   const requestSequenceRef = useRef(0)
   const activeRequestRef = useRef<AbortController | null>(null)
 
@@ -206,6 +210,7 @@ export default function DnaAssistantClient({
   async function loadReports(signal?: AbortSignal) {
     setReportsLoading(true)
     setReportsError("")
+    setReportsErrorCode("")
     try {
       const response = await fetch("/api/app/dna-chat", {
         method: "GET",
@@ -237,6 +242,7 @@ export default function DnaAssistantClient({
     } catch (error) {
       if ((error as Error)?.name === "AbortError") return
       const code = error instanceof Error ? error.message : "dna_chat_failed"
+      setReportsErrorCode(code)
       setReportsError(ERROR_MESSAGES[code] || ERROR_MESSAGES.dna_chat_failed)
     } finally {
       setReportsLoading(false)
@@ -255,8 +261,17 @@ export default function DnaAssistantClient({
   }, [])
 
   useEffect(() => {
-    messageEndRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false
+    messageEndRef.current?.scrollIntoView({
+      behavior: reduceMotion ? "auto" : "smooth",
+      block: "nearest",
+    })
   }, [messages, sending])
+
+  function moveQuestionFocus(nextQuestion?: string) {
+    if (typeof nextQuestion === "string") setQuestion(nextQuestion)
+    requestAnimationFrame(() => questionInputRef.current?.focus())
+  }
 
   function cancelPendingResponse() {
     requestSequenceRef.current += 1
@@ -273,6 +288,7 @@ export default function DnaAssistantClient({
     setPreviousTopic(null)
     setQuestion("")
     setSendError("")
+    setSendErrorCode("")
   }
 
   function moveModeFocus(currentMode: DnaChatMode, key: string) {
@@ -304,6 +320,7 @@ export default function DnaAssistantClient({
 
     setSending(true)
     setSendError("")
+    setSendErrorCode("")
     setQuestion("")
     setMessages((current) => [...current, { id: messageId("user"), role: "user", text: cleanQuestion }])
 
@@ -347,11 +364,13 @@ export default function DnaAssistantClient({
     } catch (error) {
       if ((error as Error)?.name === "AbortError" || requestSequenceRef.current !== requestId) return
       const code = error instanceof Error ? error.message : "dna_chat_failed"
+      setSendErrorCode(code)
       setSendError(ERROR_MESSAGES[code] || ERROR_MESSAGES.dna_chat_failed)
     } finally {
       if (requestSequenceRef.current === requestId) {
         activeRequestRef.current = null
         setSending(false)
+        moveQuestionFocus()
       }
     }
   }
@@ -363,7 +382,7 @@ export default function DnaAssistantClient({
         <div className="pointer-events-none absolute -right-10 -top-16 h-52 w-52 rounded-full bg-violet-100/45 blur-3xl" />
         <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
-            <div className="inline-flex min-h-9 items-center gap-2 rounded-full border border-blue-100 bg-white/80 px-3 text-[11px] font-black uppercase tracking-[0.14em] text-blue-700">
+            <div className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-3 text-[11px] font-black uppercase tracking-[0.14em] text-blue-700">
               <Sparkles size={15} aria-hidden="true" /> Deterministik klinik bilgi alanı
             </div>
             <h1 className="mt-3 text-3xl font-black tracking-tight text-[#071b3a] md:text-4xl">DNA Asistanı</h1>
@@ -371,7 +390,7 @@ export default function DnaAssistantClient({
               Haricî modele veri göndermez. Onaylı bilgi blokları ve yalnız seçtiğiniz rapordaki güvenli bağlamla çalışır.
             </p>
           </div>
-          <div className="flex min-h-12 shrink-0 items-center gap-3 rounded-2xl border border-emerald-200 bg-white/80 px-4 text-sm font-bold text-emerald-800">
+          <div className="flex min-h-12 shrink-0 items-center gap-3 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-4 text-sm font-bold text-[var(--sm-text-soft)]">
             <ShieldCheck size={20} aria-hidden="true" /> Mesajlar kaydedilmez
           </div>
         </div>
@@ -425,12 +444,17 @@ export default function DnaAssistantClient({
             <div className="mt-3 border-t border-[var(--sm-border)] px-2 pt-4">
               <label htmlFor="dna-report-select" className="text-xs font-black text-[var(--sm-text)]">Son DNA raporları</label>
               {reportsLoading ? (
-                <div className="mt-2 flex min-h-12 items-center gap-2 rounded-2xl bg-[var(--sm-surface-soft)] px-3 text-xs font-semibold text-[var(--sm-text-muted)]">
+                <div role="status" className="mt-2 flex min-h-12 items-center gap-2 rounded-2xl bg-[var(--sm-surface-soft)] px-3 text-xs font-semibold text-[var(--sm-text-muted)]">
                   <LoaderCircle className="animate-spin" size={17} aria-hidden="true" /> Raporlar yükleniyor
                 </div>
               ) : reportsError ? (
-                <div className="mt-2 rounded-2xl border border-rose-200 bg-rose-50 p-3 text-xs font-semibold leading-5 text-rose-700">
+                <div role="alert" className="mt-2 rounded-2xl border border-rose-200 bg-[var(--sm-surface-soft)] p-3 text-xs font-semibold leading-5 text-[var(--sm-text)]">
                   {reportsError}
+                  {reportsErrorCode === "unauthorized" || reportsErrorCode === "session_expired" ? (
+                    <Link href="/app-login" className="mt-2 flex min-h-11 items-center font-black text-blue-700 underline-offset-4 hover:underline">
+                      Yeniden giriş yap
+                    </Link>
+                  ) : null}
                   <button type="button" onClick={() => void loadReports()} className="mt-2 flex min-h-11 items-center gap-2 font-black">
                     <RefreshCw size={15} aria-hidden="true" /> Yeniden dene
                   </button>
@@ -438,7 +462,7 @@ export default function DnaAssistantClient({
               ) : reports.length ? (
                 <>
                   {reportSelectionNotice ? (
-                    <div className="mt-2 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-900">
+                    <div role="status" className="mt-2 rounded-2xl border border-amber-200 bg-[var(--sm-surface-soft)] p-3 text-xs font-semibold leading-5 text-[var(--sm-text-soft)]">
                       {reportSelectionNotice}
                     </div>
                   ) : null}
@@ -473,7 +497,7 @@ export default function DnaAssistantClient({
                   ) : null}
                 </>
               ) : (
-                <div className="mt-2 rounded-2xl bg-[var(--sm-surface-soft)] p-3 text-xs font-semibold leading-5 text-[var(--sm-text-muted)]">
+                <div role="status" className="mt-2 rounded-2xl bg-[var(--sm-surface-soft)] p-3 text-xs font-semibold leading-5 text-[var(--sm-text-muted)]">
                   Bu hesapta tartışılabilecek aktif DNA raporu bulunmuyor.
                 </div>
               )}
@@ -509,7 +533,7 @@ export default function DnaAssistantClient({
           <div
             className={[
               "min-h-[420px] space-y-4 bg-[var(--sm-surface-soft)]/60 px-3 py-4 md:min-h-[520px] md:px-6 md:py-6",
-              isAppSurface ? "pb-40 lg:pb-6" : "",
+              isAppSurface ? "pb-40" : "",
             ].join(" ")}
             role="log"
             aria-live="polite"
@@ -526,7 +550,7 @@ export default function DnaAssistantClient({
                     <button
                       key={suggestion}
                       type="button"
-                      onClick={() => setQuestion(suggestion)}
+                      onClick={() => moveQuestionFocus(suggestion)}
                       className="min-h-11 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-3 py-2 text-left text-xs font-bold leading-5 text-[var(--sm-text-soft)] transition hover:border-blue-200 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                     >
                       {suggestion}
@@ -542,7 +566,7 @@ export default function DnaAssistantClient({
                   {message.text}
                 </div>
               ) : (
-                <AssistantAnswer key={message.id} answer={message.answer} onSuggestion={setQuestion} />
+                <AssistantAnswer key={message.id} answer={message.answer} mode={mode} onSuggestion={moveQuestionFocus} />
               )
             )}
 
@@ -559,18 +583,24 @@ export default function DnaAssistantClient({
             className={[
               "z-20 border-t border-[var(--sm-border)] bg-[var(--sm-surface)]/96 p-3 shadow-[0_-16px_36px_rgba(7,27,58,0.08)] backdrop-blur-xl md:p-4",
               isAppSurface
-                ? "fixed inset-x-3 bottom-[calc(78px+env(safe-area-inset-bottom))] mx-auto max-w-[406px] rounded-t-[22px] md:inset-x-8 md:max-w-[704px] lg:sticky lg:inset-x-auto lg:bottom-2 lg:mx-0 lg:max-w-none lg:rounded-none"
+                ? "fixed inset-x-3 bottom-[calc(78px+env(safe-area-inset-bottom))] mx-auto max-w-[406px] rounded-t-[22px] md:inset-x-8 md:max-w-[704px] lg:sticky lg:inset-x-auto lg:bottom-[88px] lg:mx-0 lg:max-w-none lg:rounded-none"
                 : "sticky bottom-2",
             ].join(" ")}
           >
             {sendError ? (
-              <div role="alert" className="mb-2 rounded-2xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-bold leading-5 text-rose-700">
+              <div role="alert" className="mb-2 rounded-2xl border border-rose-200 bg-[var(--sm-surface-soft)] px-3 py-2 text-xs font-bold leading-5 text-[var(--sm-text)]">
                 {sendError}
+                {sendErrorCode === "unauthorized" || sendErrorCode === "session_expired" ? (
+                  <Link href="/app-login" className="ml-2 inline-flex min-h-11 items-center font-black text-blue-700 underline-offset-4 hover:underline">
+                    Yeniden giriş yap
+                  </Link>
+                ) : null}
               </div>
             ) : null}
             <div className="flex items-end gap-2">
               <label htmlFor="dna-chat-question" className="sr-only">DNA Asistanına sorunuzu yazın</label>
               <textarea
+                ref={questionInputRef}
                 id="dna-chat-question"
                 value={question}
                 onChange={(event) => setQuestion(event.target.value.slice(0, 600))}
@@ -606,8 +636,20 @@ export default function DnaAssistantClient({
   )
 }
 
-function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSuggestion: (value: string) => void }) {
-  const meta = CLASSIFICATION_META[answer.classification]
+function AssistantAnswer({
+  answer,
+  mode,
+  onSuggestion,
+}: {
+  answer: DnaAnswer
+  mode: DnaChatMode
+  onSuggestion: (value: string) => void
+}) {
+  const baseMeta = CLASSIFICATION_META[answer.classification]
+  const meta =
+    answer.classification === "not_available" && mode !== "case"
+      ? { ...baseMeta, label: "Kapsam Dışı" }
+      : baseMeta
 
   return (
     <article className="max-w-[94%] rounded-[24px] rounded-bl-md border border-[var(--sm-border)] bg-[var(--sm-surface)] p-4 shadow-sm md:max-w-[84%] md:p-5">
@@ -631,9 +673,9 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
       ) : null}
 
       {answer.caseEvidence.length ? (
-        <div className="mt-4 rounded-2xl border border-cyan-100 bg-cyan-50/70 p-3">
-          <div className="text-[11px] font-black uppercase tracking-[0.1em] text-cyan-800">Rapordaki dayanak</div>
-          <ul className="mt-2 space-y-1.5 text-xs font-semibold leading-5 text-cyan-950">
+        <div className="mt-4 rounded-2xl border border-cyan-200 bg-[var(--sm-surface-soft)] p-3">
+          <div className="text-[11px] font-black uppercase tracking-[0.1em] text-cyan-700">Rapordaki dayanak</div>
+          <ul className="mt-2 space-y-1.5 text-xs font-semibold leading-5 text-[var(--sm-text-soft)]">
             {answer.caseEvidence.map((evidence) => <li key={evidence}>• {evidence}</li>)}
           </ul>
         </div>
@@ -672,7 +714,7 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
       ) : null}
 
       {answer.limitations.length ? (
-        <div className="mt-3 rounded-2xl border border-amber-200 bg-amber-50/80 p-3 text-xs font-semibold leading-5 text-amber-950">
+        <div className="mt-3 rounded-2xl border border-amber-200 bg-[var(--sm-surface-soft)] p-3 text-xs font-semibold leading-5 text-[var(--sm-text-soft)]">
           <div className="font-black">Sınırlılıklar</div>
           {answer.limitations.map((limitation) => <p key={limitation} className="mt-1">{limitation}</p>)}
         </div>

@@ -225,6 +225,8 @@ $$;
 
 revoke all on function public.get_report_credit_balance(uuid) from public;
 revoke all on function public.consume_report_credit(uuid, uuid, uuid, jsonb) from public;
+revoke execute on function public.get_report_credit_balance(uuid) from anon, authenticated;
+revoke execute on function public.consume_report_credit(uuid, uuid, uuid, jsonb) from anon, authenticated;
 grant execute on function public.get_report_credit_balance(uuid) to service_role;
 grant execute on function public.consume_report_credit(uuid, uuid, uuid, jsonb) to service_role;
 

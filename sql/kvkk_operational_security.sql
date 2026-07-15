@@ -171,6 +171,7 @@ create or replace function public.mask_email_for_privacy(value text)
 returns text
 language sql
 immutable
+set search_path = ''
 as $$
   select case
     when value is null or position('@' in value) = 0 then null

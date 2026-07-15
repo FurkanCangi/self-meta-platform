@@ -6,7 +6,18 @@ const theory = (
   patterns: readonly string[],
   sourceIds: readonly string[],
   threshold = 0.5,
-): DnaChatIntentDefinition => ({ id, route: "theory", labelTr, patterns, sourceIds, threshold })
+): DnaChatIntentDefinition => ({
+  id,
+  route: "theory",
+  labelTr,
+  patterns,
+  sourceIds,
+  threshold,
+  suggestedQuestions: [
+    `${labelTr} başlığını biraz daha açıkla.`,
+    `${labelTr} ile ilgili devam et.`,
+  ],
+})
 
 const dna = (
   id: string,
@@ -62,7 +73,7 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
   theory(
     "theory_sensory",
     "Duyusal regülasyon",
-    ["duyusal regulasyon nedir", "duyusal hassasiyet nasil yorumlanir", "uyaran filtreleme ne demek"],
+    ["duyusal regulasyon nedir", "duyusal duzenleme nedir", "duyusal hassasiyet nasil yorumlanir", "uyaran filtreleme ne demek"],
     ["kb:SENSORY_REGULATION_CONSTRUCT", "lit:CARPENTER_ET_AL_2019"],
   ),
   theory(
@@ -86,13 +97,13 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
   theory(
     "theory_interoception",
     "İnterosepsiyon",
-    ["interosepsiyon nedir", "beden sinyallerini fark etme", "aclik susuzluk farkindaligi"],
+    ["interosepsiyon nedir", "interoseptif farkindalik nedir", "beden sinyallerini fark etme", "aclik susuzluk farkindaligi"],
     ["kb:INTEROCEPTION_CONSTRUCT", "lit:PINNA_EDWARDS_2020"],
   ),
   theory(
     "theory_nervous_system_frame",
     "MSS ve OSS genel çerçevesi",
-    ["mss ve oss nedir", "merkezi ve otonom sinir sistemi", "sinir sistemi regulasyonu nasil etkiler"],
+    ["mss ve oss nedir", "mss ile oss arasindaki fark", "mss oss farki", "merkezi ve otonom sinir sistemi", "sinir sistemi regulasyonu nasil etkiler"],
     ["chat:sinir-sistemi-genel-cerceve", "kb:REGULATION_OVERVIEW"],
   ),
   theory(
@@ -104,7 +115,7 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
   theory(
     "theory_sympathetic_parasympathetic",
     "Sempatik ve parasempatik işleyiş",
-    ["sempatik parasempatik nedir", "sempatik ve parasempatik nasil calisir", "sempatik ve parasempatik sistem self regulasyonda nasil calisir", "otonom dallar ne yapar"],
+    ["sempatik parasempatik nedir", "sempatik ve parasempatik nasil calisir", "parasempatik sistem ne ise yarar", "sempatik sistem ne ise yarar", "sempatik ve parasempatik sistem self regulasyonda nasil calisir", "otonom dallar ne yapar"],
     ["chat:sempatik-parasempatik-isleyis", "lit:KAHLE_ET_AL_2018"],
   ),
   theory(
@@ -122,7 +133,7 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
   theory(
     "theory_recovery",
     "Toparlanma",
-    ["toparlanma nedir", "stres sonrasi toparlanma", "sakinlesme suresi neyi anlatir", "uyarilma ile toparlanma arasindaki fark nedir"],
+    ["toparlanma nedir", "stres sonrasi toparlanma", "sakinlesme suresi neyi anlatir", "uyarilma ile toparlanma arasindaki fark nedir", "reaksiyon ve toparlanma arasindaki fark nedir"],
     ["chat:toparlanma", "lit:KAHLE_ET_AL_2018"],
   ),
   theory(
@@ -140,7 +151,7 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
   theory(
     "theory_coregulation",
     "Eş-regülasyon",
-    ["es regulasyon nedir", "bakimveren es regulasyonu", "yetiskin destegi ve regulasyon", "ko regulasyon neden gelisimsel olarak onemlidir"],
+    ["es regulasyon nedir", "ko regulasyon nedir", "ko regulasyon ne demek", "bakimveren es regulasyonu", "yetiskin destegi ve regulasyon", "ko regulasyon neden gelisimsel olarak onemlidir"],
     ["kb:ANAMNESIS_PARENTING_AND_CO_REGULATION", "lit:ROSANBALM_MURRAY_2017"],
   ),
   theory(
@@ -148,6 +159,12 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
     "Alanlar arası ilişki",
     ["regulasyon alanlari nasil etkilesir", "alanlar arasi iliski", "duyusal duygusal iliski", "bilissel yurutucu iliski"],
     ["kb:CROSS_SCALE_SENSORY_EMOTIONAL", "kb:CROSS_SCALE_COGNITIVE_EXECUTIVE"],
+  ),
+  theory(
+    "theory_functional_context",
+    "Günlük işlevsel karşılık",
+    ["bir ornek ver", "ornek verir misin", "uygulamadaki karsiligi ne", "gunluk yasamdaki karsiligi ne"],
+    ["kb:REGULATION_REPORT_STYLE", "kb:REGULATION_INTERPRETATION_BOUNDARY"],
   ),
   theory(
     "theory_literature",
@@ -159,7 +176,7 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
   dna(
     "dna_purpose",
     "DNA değerlendirmesinin amacı",
-    ["dna ne ise yarar", "dna degerlendirmesi nedir", "dna nin amaci", "bu arac neyi degerlendirir"],
+    ["dna nedir", "dna ne ise yarar", "dna neyi degerlendirir", "dna degerlendirmesi nedir", "dna nin amaci", "bu arac neyi degerlendirir", "bu test neyi olcuyor", "bu test neyi degerlendiriyor"],
     ["dna:assessment_overview", "kb:REGULATION_OVERVIEW"],
     "DNA, self-regülasyon profilini altı işlevsel alanda betimleyen yapılandırılmış bir değerlendirmedir.",
     ["Sonuçlar tek başına tanı veya tedavi kararı üretmez.", "Skor örüntüsü vaka bağlamı ve klinisyen gözlemiyle birlikte okunur."],
@@ -168,7 +185,7 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
   dna(
     "dna_domains",
     "DNA alanları",
-    ["dna hangi alanlari olcer", "dna hangi alti alani degerlendirir", "dna nin alti regulasyon alani nelerdir", "alti alan nedir", "dna boyutlari neler", "degerlendirme alanlari"],
+    ["dna hangi alanlari olcer", "dna hangi alanlari degerlendirir", "dna hangi alti alani degerlendirir", "dna nin alti regulasyon alani nelerdir", "alti alan nedir", "dna boyutlari neler", "degerlendirme alanlari", "alanlar arasi iliski nasil yorumlanir"],
     ["dna:domain_contract"],
     "DNA; fizyolojik, duyusal, duygusal, bilişsel, yürütücü işlev ve interosepsiyon alanlarını birlikte ele alır.",
     ["Alanlar ayrı skorlanır ancak yorumda birbirlerinden bağımsız kabul edilmez."],
@@ -177,7 +194,7 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
   dna(
     "dna_interoception_domain",
     "DNA interosepsiyon alanı",
-    ["interosepsiyon alani neyi degerlendirir", "dna interosepsiyon alani", "interosepsiyon dna da ne demek"],
+    ["interosepsiyon nedir", "interosepsiyon alani neyi degerlendirir", "dna interosepsiyon alani", "interosepsiyon dna da ne demek", "interosepsiyon diger alanlarla nasil iliskilidir"],
     ["kb:INTEROCEPTION_CONSTRUCT", "dna:domain_contract"],
     "DNA'daki interosepsiyon alanı, içsel beden sinyallerini fark etme ve bu sinyalleri günlük düzenlemeye katma örüntüsünü betimler.",
     ["Bu alan doğrudan fizyolojik ölçüm yapmaz ve tek başına tanı, neden veya tıbbi durum göstermez."],
@@ -195,7 +212,7 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
   dna(
     "dna_scoring",
     "DNA puanlama çerçevesi",
-    ["dna nasil puanlanir", "puanlar ne anlama gelir", "skor nasil yorumlanir", "dusuk puan ne demek"],
+    ["dna nasil puanlanir", "dna puanlamasi nasil calisir", "puanlar ne anlama gelir", "skor nasil yorumlanir", "dusuk puan ne demek", "dusuk skor ne anlama geliyor", "sonuclari nasil okuyacagim", "vaka skorlarini nasil tartisabilirim"],
     ["dna:scoring_contract", "kb:REGULATION_INTERPRETATION_BOUNDARY"],
     "Puanlar, ilgili alandaki göreli korunmuşluk veya zorlanma örüntüsünü betimlemek için kullanılır.",
     ["Tek puan tanı, neden veya tedavi gerekliliği göstermez.", "Yaş, anamnez, gözlem ve veri güveni yorum sınırını belirler."],
@@ -204,7 +221,7 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
   dna(
     "dna_report",
     "DNA raporu",
-    ["dna raporu ne icerir", "rapor nasil olusur", "raporda neler var", "rapor ne anlatir"],
+    ["dna raporu ne icerir", "dna raporu nasil yorumlanir", "rapor nasil olusur", "raporda neler var", "rapor ne anlatir"],
     ["dna:report_contract", "kb:REPORT_OUTPUT_STRUCTURE"],
     "DNA raporu skor, anamnez, gözlem ve varsa ek test verilerini kaynak bağlı bir klinik sentezde birleştirir.",
     ["Rapor; ana örüntü, destekleyici ve sınırlayıcı veriler, korunmuş kapasite ve veri sınırlılıklarını görünür kılar."],
@@ -213,7 +230,7 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
   dna(
     "dna_report_confidence",
     "DNA raporu güven düzeyi",
-    ["raporun guven duzeyi nasil yorumlanir", "raporun guven duzeyi ne demek", "dna raporu guveni"],
+    ["raporun guven duzeyi nasil yorumlanir", "raporun guven duzeyi ne demek", "dna raporu guveni", "vaka guven duzeyi nasil yorumlanir"],
     ["kb:ANAMNESIS_CONTRADICTION_RULE", "dna:report_contract"],
     "Raporun güven düzeyi, yapılandırılmış skorların ve güvenli kanıt kanallarının ne ölçüde yakınsadığını; karşı kanıt ve eksik verinin yorumu ne kadar sınırlandırdığını gösterir.",
     ["Güven düzeyi tanısal kesinlik değildir; raporun hangi sınırlar içinde okunması gerektiğini açıklar."],
@@ -222,7 +239,7 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
   dna(
     "dna_limits",
     "DNA güvenlik sınırları",
-    ["dna tani koyar mi", "dna tedavi onerir mi", "dna nin sinirlari", "rapor tani koyar mi", "neden tani koymaz"],
+    ["dna tani koyar mi", "dna tedavi onerir mi", "dna nin sinirlari", "dna raporunun sinirlari nelerdir", "dna asistaninin sinirlari nelerdir", "dna asistani neyi cevaplamaz", "rapor tani koyar mi", "bu rapor tani mi", "rapordaki sinirliliklar nelerdir", "neden tani koymaz"],
     ["kb:REPORT_SAFETY_RULE", "kb:REGULATION_INTERPRETATION_BOUNDARY"],
     "DNA tanı, kesin neden, prognoz, ilaç, tedavi veya seans planı üretmez.",
     ["Çıktı, klinisyen değerlendirmesini destekleyen betimleyici ve kaynak bağlı bir çerçevedir."],
@@ -231,7 +248,7 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
   dna(
     "dna_evidence",
     "DNA kaynak ve kanıt yaklaşımı",
-    ["dna cevaplari neye dayanir", "kaynaklar nasil secilir", "klinik bilgi tabani", "literatur nasil kullanilir"],
+    ["dna cevaplari neye dayanir", "kaynaklar nasil secilir", "klinik bilgi tabani", "literatur nasil kullanilir", "literatur destegi nasil kullanilir", "bilimsel kaynaklari gosterebilir misin"],
     ["dna:evidence_contract", "kb:REPORT_LANGUAGE_RULE", "lit:BLAIR_RAVER_2015"],
     "Yanıtlar kilitli klinik bilgi parçaları, doğrulanmış literatür kayıtları ve açık vakadaki kimliksiz verilerle sınırlandırılır.",
     ["Kaynak bulunmadığında sistem yeni klinik bilgi uydurmaz; açıklama ister veya bilgi bulunmadığını söyler."],
@@ -240,7 +257,7 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
   dna(
     "dna_privacy",
     "DNA mahremiyet sınırı",
-    ["vaka verisi nasil korunur", "mahremiyet nasil saglanir", "kisisel bilgi yazabilir miyim", "danisan gizliligi"],
+    ["vaka verisi nasil korunur", "verilerim guvende mi", "mahremiyet nasil saglanir", "kisisel bilgi yazabilir miyim", "danisan gizliligi", "kimliksiz vaka baglami neleri icerebilir"],
     ["dna:privacy_contract"],
     "Sohbet yalnız sentetik veya kimliksizleştirilmiş vaka bağlamını kabul eder.",
     ["Ad, soyad, iletişim, adres, doğum tarihi, kimlik ve protokol numarası kullanılmamalıdır.", "Başka danışanlarla çapraz karşılaştırma yapılmaz."],
@@ -253,7 +270,7 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
     ["kb:REGULATION_EARLY_CHILDHOOD_FRAME", "dna:age_contract"],
     "Yaş ve gelişim dönemi, regülasyon bulgularının anlamını ve yorum güvenini etkileyen bağlamsal değişkenlerdir.",
     ["Özellikle erken çocuklukta çevresel yapı ve bakımveren eş-regülasyonu yorumun merkezinde tutulur."],
-    ["Eş-regülasyon nedir?", "Vaka güven düzeyi nasıl yorumlanır?"],
+    ["Erken çocuklukta yorum nasıl yapılır?", "Vaka güven düzeyi nasıl yorumlanır?"],
   ),
   dna(
     "dna_use",
@@ -269,20 +286,20 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
   caseIntent("case_weak_domains", "Zorlanan alanlar", ["hangi alanlar zorlaniyor", "zayif alanlar hangileri", "riskli alanlari soyle", "en dusuk alan hangisi"], ["kb:RISK_PROFILE_SINGLE_DOMAIN"]),
   caseIntent("case_strengths", "Göreli güçlü alanlar", ["guclu alanlar hangileri", "korunmus alanlar", "vakanin guclu yonleri", "dengeleyici alan"], ["kb:RISK_PROFILE_PROTECTIVE_FACTORS"]),
   caseIntent("case_counter_evidence", "Karşı kanıt", ["karsi kanit ne", "sinirlayici bulgular neler", "hipoteze uymayan bulgu", "karsi kanitlari ozetle", "bu bulguyu sinirlayan karsi kanit var mi"], ["kb:ANAMNESIS_CONTRADICTION_RULE"]),
-  caseIntent("case_preserved_capacity", "Korunmuş kapasite bulguları", ["korunmus kapasite ne", "korunmus kapasite bulgulari", "hangi beceriler korunmus", "dengeleyici bulgular neler", "raporda korunmus kapasite olarak ne goruluyor"], ["kb:RISK_PROFILE_PROTECTIVE_FACTORS"]),
+  caseIntent("case_preserved_capacity", "Korunmuş kapasite bulguları", ["korunmus kapasite ne", "korunmus kapasite bulgulari", "korunan yonler neler", "korunmus yonler neler", "hangi beceriler korunmus", "dengeleyici bulgular neler", "raporda korunmus kapasite olarak ne goruluyor"], ["kb:RISK_PROFILE_PROTECTIVE_FACTORS"]),
   caseIntent("case_scores", "Vaka skorları", ["vaka skorlari ne", "puanlari ozetle", "alan puanlarini goster", "skor profili nasil"], ["dna:scoring_contract"]),
   caseIntent("case_anamnesis", "Anamnez temaları", ["anamnez ne soyluyor", "anamnez temalari", "bakimveren bildirimi", "gunluk yasam baglami"], ["kb:ANAMNESIS_INTEGRATION_GENERAL_RULE"]),
   caseIntent("case_observations", "Klinik gözlemler", ["gozlemde ne var", "terapist ne gozlemlemis", "vaka gozlemleri", "gozlem bulgulari"], ["kb:REPORT_TONE_RULE"]),
   caseIntent("case_external_findings", "Ek değerlendirme bulguları", ["ek testler ne diyor", "dis test bulgulari", "harici degerlendirme", "ek klinik bulgular"], ["dna:evidence_contract"]),
-  caseIntent("case_confidence", "Veri güveni", ["vaka guveni ne", "guven duzeyi nasil", "bu yorum ne kadar guvenli", "kanit guveni"], ["kb:ANAMNESIS_CONTRADICTION_RULE"]),
-  caseIntent("case_limitations", "Vaka sınırlılıkları", ["vakanin sinirlari ne", "eksik veri var mi", "veri sinirliliklari", "neyi bilmiyoruz"], ["kb:REGULATION_INTERPRETATION_BOUNDARY"]),
+  caseIntent("case_confidence", "Veri güveni", ["vaka guveni ne", "guven duzeyi nasil", "veri guveni bu raporda nasil", "bu yorum ne kadar guvenli", "kanit guveni"], ["kb:ANAMNESIS_CONTRADICTION_RULE"]),
+  caseIntent("case_limitations", "Vaka sınırlılıkları", ["vakanin sinirlari ne", "eksik veri var mi", "bu raporda eksik ne var", "raporda eksik ne var", "veri sinirliliklari", "neyi bilmiyoruz"], ["kb:REGULATION_INTERPRETATION_BOUNDARY"]),
   caseIntent("case_physiological", "Vaka fizyolojik alanı", ["bu vakada fizyolojik alan", "fizyolojik skoru yorumla", "uyku toparlanma profili"], ["kb:PHYSIOLOGICAL_REGULATION_CONSTRUCT"], 0.5, "physiological"),
-  caseIntent("case_sensory", "Vaka duyusal alanı", ["bu vakada duyusal alan", "duyusal skoru yorumla", "uyaran hassasiyeti vakada"], ["kb:SENSORY_REGULATION_CONSTRUCT"], 0.5, "sensory"),
+  caseIntent("case_sensory", "Vaka duyusal alanı", ["bu vakada duyusal alan", "duyusal alani anlat", "duyusal skoru yorumla", "uyaran hassasiyeti vakada"], ["kb:SENSORY_REGULATION_CONSTRUCT"], 0.5, "sensory"),
   caseIntent("case_emotional", "Vaka duygusal alanı", ["bu vakada duygusal alan", "duygusal skoru yorumla", "sakinlesme profili vakada"], ["kb:EMOTIONAL_REGULATION_CONSTRUCT"], 0.5, "emotional"),
   caseIntent("case_cognitive", "Vaka bilişsel alanı", ["bu vakada bilissel alan", "bilissel skoru yorumla", "dikkat profili vakada"], ["kb:COGNITIVE_REGULATION_CONSTRUCT"], 0.5, "cognitive"),
   caseIntent("case_executive", "Vaka yürütücü alanı", ["bu vakada yurutucu islev", "yurutucu skoru yorumla", "planlama profili vakada"], ["kb:EXECUTIVE_FUNCTION_CONSTRUCT"], 0.5, "executive"),
   caseIntent("case_interoception", "Vaka interosepsiyon alanı", ["bu vakada interosepsiyon", "interosepsiyon skorunu yorumla", "beden sinyalleri vakada"], ["kb:INTEROCEPTION_CONSTRUCT"], 0.5, "interoception"),
-  caseIntent("case_literature", "Vaka için literatür çerçevesi", ["bu vaka icin literatur", "vakayi kaynakla acikla", "vaka bulgularinin bilimsel dayanagi"], ["lit:BLAIR_RAVER_2015", "kb:REGULATION_INTERPRETATION_BOUNDARY"], 0.5),
+  caseIntent("case_literature", "Vaka için literatür çerçevesi", ["bu vaka icin literatur", "bu vaka icin kaynaklari goster", "vakayi kaynakla acikla", "vaka bulgularinin bilimsel dayanagi"], ["lit:BLAIR_RAVER_2015", "kb:REGULATION_INTERPRETATION_BOUNDARY"], 0.5),
 ] as const
 
 export const DNA_CHAT_INTENT_BY_ID = new Map(DNA_CHAT_INTENTS.map((intent) => [intent.id, intent]))

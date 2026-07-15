@@ -36,6 +36,7 @@ function Item({
     <li>
       <Link
         href={href}
+        aria-current={active ? "page" : undefined}
         className={[
           "group flex items-center gap-3 rounded-2xl px-4 py-3 text-[15px] font-semibold transition",
           active
@@ -65,6 +66,7 @@ export default function Sidebar({ toggle = true }: SidebarProps) {
   return (
     <aside
       aria-hidden={!toggle}
+      inert={!toggle ? true : undefined}
       className={[
         "hidden overflow-hidden md:flex md:flex-col border-r bg-white/94 text-[#071b3a] backdrop-blur-xl transition-[width,min-width,opacity,transform,border-color,box-shadow] duration-300 ease-out",
         toggle

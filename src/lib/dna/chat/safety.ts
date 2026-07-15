@@ -1,4 +1,5 @@
 import { redactReportTextForPrivacy } from "../reportPrivacy"
+import { VERIFIED_LITERATURE_SOURCES } from "../literatureNote"
 import { normalizeDnaChatText } from "./text"
 import type { DnaChatSafetyCategory, DnaChatSafetyResult } from "./types"
 
@@ -8,7 +9,8 @@ const LABELED_NAME_PATTERN = /\b(?:ad(?:\s+soyad)?|soyad|isim|hasta(?:\s+ad(?:ı
 const LABELED_RECORD_PATTERN = /\b(?:protokol|dosya|hasta)\s*(?:no|numarası|numarasi)?\s*[:=-]\s*[A-Z0-9/-]{4,}\b/gi
 const TITLE_CASE_FULL_NAME_PATTERN = /(?<![A-Za-zÇĞİÖŞÜçğıöşü])[A-ZÇĞİÖŞÜ][a-zçğıöşü]{1,}\s+[A-ZÇĞİÖŞÜ][a-zçğıöşü]{1,}(?=(?:['’](?:ın|in|un|ün)(?![A-Za-zÇĞİÖŞÜçğıöşü]))|\s*(?:,|$)|\s+(?:bu|için|adlı|isimli|raporu|raporunda|vakası|vakasi|vakayı|vakayi|çocuğu|cocugu|danışanı|danisani|okulda|evde|klinikte|değerlendirmesi|degerlendirmesi|hakkında|hakkinda|açısından|acisindan|self[-\s]?regülasyon|self[-\s]?regulasyon|interosepsiyon|duyusal|fizyolojik|otonom|sempatik|parasempatik)(?![A-Za-zÇĞİÖŞÜçğıöşü]))/g
 const UPPERCASE_FULL_NAME_PATTERN = /(?<![A-Za-zÇĞİÖŞÜçğıöşü])[A-ZÇĞİÖŞÜ]{2,}\s+[A-ZÇĞİÖŞÜ]{2,}(?=(?:['’](?:IN|İN|UN|ÜN)(?![A-Za-zÇĞİÖŞÜçğıöşü]))|\s*(?:,|$)|\s+(?:BU|İÇİN|ICIN|ADLI|İSİMLİ|ISIMLI|RAPORU|RAPORUNDA|VAKASI|VAKAYI|HAKKINDA|AÇISINDAN|ACISINDAN|SELF[-\s]?REGÜLASYON|SELF[-\s]?REGULASYON|İNTEROSEPSİYON|INTEROSEPSIYON)(?![A-Za-zÇĞİÖŞÜçğıöşü]))/g
-const LOWERCASE_CONTEXTUAL_FULL_NAME_PATTERN = /(?<![A-Za-zÇĞİÖŞÜçğıöşü])[a-zçğıöşü]{2,}\s+[a-zçğıöşü]{2,}(?=\s*(?:,\s*)?(?:bu\s+(?:vaka(?:yı|yi|ya|da|de)?|rapor(?:u|da|de)?)|vakayı|vakayi|raporu|vakası|vakasi|hakkında|hakkinda|açısından|acisindan|için)(?![A-Za-zÇĞİÖŞÜçğıöşü]))/g
+const INITIAL_SURNAME_PATTERN = /(?<![A-Za-zÇĞİÖŞÜçğıöşü])[A-ZÇĞİÖŞÜ]\.?\s+[A-ZÇĞİÖŞÜ][a-zçğıöşü]{1,}(?=(?:['’](?:ın|in|un|ün)(?![A-Za-zÇĞİÖŞÜçğıöşü]))|\s*(?:,|$)|\s+(?:bu|için|raporu|vakası|vakayı|hakkında|açısından|self[-\s]?regülasyon|self[-\s]?regulasyon)(?![A-Za-zÇĞİÖŞÜçğıöşü]))/g
+const LOWERCASE_CONTEXTUAL_FULL_NAME_PATTERN = /(?<![A-Za-zÇĞİÖŞÜçğıöşü])[a-zçğıöşü]{2,}\s+[a-zçğıöşü]{2,}(?=\s*(?:,\s*)?(?:bu\s+(?:vaka(?:yı|yi|ya|da|de)?|rapor(?:u|da|de)?)|vakayı|vakayi|raporu|vakası|vakasi|hakkında|hakkinda|açısından|acisindan|için|self[-\s]?regülasyon|self[-\s]?regulasyon|interosepsiyon|duyusal|fizyolojik)(?![A-Za-zÇĞİÖŞÜçğıöşü]))/g
 const ALLOWED_CLINICAL_TITLE_PAIRS = new Set([
   "Duyusal Regülasyon",
   "Fizyolojik Regülasyon",
@@ -43,9 +45,23 @@ const ALLOWED_CLINICAL_TITLE_PAIRS = new Set([
   "Klinik Gözlem",
   "Bilimsel Kaynak",
   "Literatür Kaynağı",
+  "Erken Çocukluk",
+  "Günlük Yaşam",
+  "Klinik Değerlendirme",
+  "Alan Skorları",
   "DNA Asistanı",
   "DNA Raporu",
 ].map(normalizeDnaChatText))
+
+const VERIFIED_LITERATURE_SURNAMES = new Set(
+  Object.values(VERIFIED_LITERATURE_SOURCES).flatMap((source) =>
+    normalizeDnaChatText(source.inlineCitation)
+      .split(" ")
+      .filter((token) => token.length >= 3 && !/^\d+$/.test(token) && !["et", "al"].includes(token)),
+  ),
+)
+
+const LITERATURE_CONTEXT_PATTERNS = ["literatur", "makale", "yazar", "kaynak", "calisma", "doi"] as const
 
 const LOWERCASE_NON_NAME_TOKENS = new Set([
   "acaba",
@@ -78,8 +94,11 @@ const LOWERCASE_NON_NAME_TOKENS = new Set([
   "vaka",
 ].map(normalizeDnaChatText))
 
-function redactLikelyFullName(match: string): string {
-  return ALLOWED_CLINICAL_TITLE_PAIRS.has(normalizeDnaChatText(match))
+function redactLikelyFullName(match: string, literatureContext: boolean): string {
+  const normalized = normalizeDnaChatText(match)
+  const surname = normalized.split(" ").at(-1) ?? ""
+  return ALLOWED_CLINICAL_TITLE_PAIRS.has(normalized) ||
+    (literatureContext && VERIFIED_LITERATURE_SURNAMES.has(surname))
     ? match
     : "[kişisel bilgi gizlendi]"
 }
@@ -122,6 +141,9 @@ const MANIPULATION_PATTERNS = [
   "trace ve audit",
   "audit kaydini goster",
   "trace verisini goster",
+  "talimatlarini goster",
+  "talimatlari goster",
+  "kurallarini goster",
 ] as const
 
 const INTERNAL_DATA_PATTERNS = [
@@ -135,6 +157,10 @@ const INTERNAL_DATA_PATTERNS = [
   "router esiklerini",
   "gizli trace",
   "gizli audit",
+  "madde yanitlarini",
+  "madde yanitlari",
+  "soru yanitlarini",
+  "soru yanitlari",
 ] as const
 
 const CROSS_CASE_PATTERNS = [
@@ -148,11 +174,17 @@ const CROSS_CASE_PATTERNS = [
   "diger danisanla kiyasla",
   "baska danisanin raporuyla kiyasla",
   "diger danisanin raporuyla kiyasla",
+  "baska danisanin raporuyla karsilastir",
+  "diger danisanin raporuyla karsilastir",
   "diger danisanlarin",
   "baska danisanlarin",
   "bu raporu baska",
   "bu raporu diger",
   "tum vakalarla karsilastir",
+  "diger raporla",
+  "baska raporla",
+  "diger rapor ile",
+  "baska rapor ile",
 ] as const
 
 const PROGNOSIS_PATTERNS = [
@@ -164,6 +196,11 @@ const PROGNOSIS_PATTERNS = [
   "kac ayda duzelir",
   "prognozu ne",
   "klinik gidisi",
+  "ne zaman iyiles",
+  "iyilesme suresi",
+  "kac ayda normale",
+  "kac ayda iyiles",
+  "normale doner",
 ] as const
 
 const CAUSALITY_PATTERNS = [
@@ -173,6 +210,8 @@ const CAUSALITY_PATTERNS = [
   "neden kaynaklaniyor",
   "asil sebebi",
   "dogrudan nedeni",
+  "kesin sebebi",
+  "sebebi nedir",
 ] as const
 
 const CRISIS_PATTERNS = [
@@ -187,6 +226,11 @@ const CRISIS_PATTERNS = [
 
 const DIAGNOSIS_PATTERNS = [
   "tani koy",
+  "tanisi koy",
+  "tanisini koy",
+  "hangi tani",
+  "tani uyar",
+  "tani uygun",
   "kesin tanisi",
   "otizmli mi",
   "adhd mi",
@@ -194,6 +238,23 @@ const DIAGNOSIS_PATTERNS = [
   "tani ne olabilir",
   "sence tanisi",
   "bu bulgu otizm",
+  "teshis koy",
+  "teshis et",
+  "tani ver",
+  "taniyi soyle",
+  "otizm var mi",
+  "otizm olabilir",
+  "otizm dusundur",
+  "otizmle uyumlu",
+  "otizm ile uyumlu",
+  "otistik mi",
+  "dehb mi",
+  "dehb olabilir",
+  "dehb dusundur",
+  "dehb ile uyumlu",
+  "dehb uyumlu",
+  "adhd olabilir",
+  "adhd dusundur",
 ] as const
 
 const TREATMENT_PATTERNS = [
@@ -207,6 +268,11 @@ const TREATMENT_PATTERNS = [
   "ne tedavi",
   "tedavi oner",
   "mudahale oner",
+  "terapi oner",
+  "terapi yaz",
+  "seans oner",
+  "tedavide ne yap",
+  "tedavi icin ne yap",
 ] as const
 
 const MEDICATION_PATTERNS = [
@@ -216,6 +282,17 @@ const MEDICATION_PATTERNS = [
   "dozu ne",
   "dozunu",
   "recete yaz",
+  "ilac ver",
+  "ilac kullansin",
+  "ilac gerekir",
+  "ritalin",
+  "concerta",
+  "medikinet",
+  "strattera",
+  "metilfenidat",
+  "atomoksetin",
+  "risperidon",
+  "aripiprazol",
 ] as const
 
 const BOUNDARY_QUESTION_PATTERNS = [
@@ -232,6 +309,10 @@ const BOUNDARY_QUESTION_PATTERNS = [
 
 function includesAny(value: string, patterns: readonly string[]): boolean {
   return patterns.some((pattern) => value.includes(normalizeDnaChatText(pattern)))
+}
+
+function equalsAny(value: string, patterns: readonly string[]): boolean {
+  return patterns.some((pattern) => value === normalizeDnaChatText(pattern))
 }
 
 function safetyResult(
@@ -251,17 +332,29 @@ function safetyResult(
 
 export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
   const source = String(question || "").trim().slice(0, 600)
+  const normalizedSource = normalizeDnaChatText(source)
+  const literatureContext = LITERATURE_CONTEXT_PATTERNS.some((pattern) => normalizedSource.includes(pattern))
+  const redactContextualName = (match: string) => redactLikelyFullName(match, literatureContext)
   let redactedQuestion = redactReportTextForPrivacy(source)
   redactedQuestion = redactedQuestion
     .replace(NATIONAL_ID_PATTERN, "[kişisel bilgi gizlendi]")
     .replace(BIRTH_DATE_PATTERN, "[kişisel bilgi gizlendi]")
     .replace(LABELED_NAME_PATTERN, "[kişisel bilgi gizlendi]")
     .replace(LABELED_RECORD_PATTERN, "[kişisel bilgi gizlendi]")
-    .replace(TITLE_CASE_FULL_NAME_PATTERN, redactLikelyFullName)
-    .replace(UPPERCASE_FULL_NAME_PATTERN, redactLikelyFullName)
+    .replace(TITLE_CASE_FULL_NAME_PATTERN, redactContextualName)
+    .replace(UPPERCASE_FULL_NAME_PATTERN, redactContextualName)
+    .replace(INITIAL_SURNAME_PATTERN, redactContextualName)
     .replace(LOWERCASE_CONTEXTUAL_FULL_NAME_PATTERN, redactLikelyLowercaseFullName)
   const normalized = normalizeDnaChatText(redactedQuestion)
 
+  if (includesAny(normalizedSource, CRISIS_PATTERNS)) {
+    return safetyResult(
+      redactedQuestion,
+      "crisis",
+      "urgent_risk_out_of_scope",
+      "DNA Asistanı acil durum yönetimi yapmaz. Acil veya yakın risk varsa yerel acil yardım ve yetkili klinik ekip ile doğrudan iletişim kurulmalıdır.",
+    )
+  }
   if (redactedQuestion !== source) {
     return safetyResult(
       redactedQuestion,
@@ -294,15 +387,7 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
       "Vaka gizliliği nedeniyle başka danışanlar veya raporlarla çapraz karşılaştırma yapılmaz. Yalnız açık ve kimliksiz vaka bağlamı tartışılabilir.",
     )
   }
-  if (includesAny(normalized, CRISIS_PATTERNS)) {
-    return safetyResult(
-      redactedQuestion,
-      "crisis",
-      "urgent_risk_out_of_scope",
-      "DNA Asistanı acil durum yönetimi yapmaz. Acil veya yakın risk varsa yerel acil yardım ve yetkili klinik ekip ile doğrudan iletişim kurulmalıdır.",
-    )
-  }
-  if (includesAny(normalized, BOUNDARY_QUESTION_PATTERNS)) {
+  if (equalsAny(normalized, BOUNDARY_QUESTION_PATTERNS)) {
     return safetyResult(
       redactedQuestion,
       "none",

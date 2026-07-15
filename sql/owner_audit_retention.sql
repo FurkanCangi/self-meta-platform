@@ -31,6 +31,7 @@ create or replace function owner_audit.jsonb_changed_fields(old_row jsonb, new_r
 returns jsonb
 language sql
 immutable
+set search_path = ''
 as $$
   select coalesce(
     (

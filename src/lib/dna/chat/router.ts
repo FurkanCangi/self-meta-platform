@@ -52,10 +52,39 @@ const CONTINUATION_PATTERNS = [
   "biraz daha acikla",
   "bunu acikla",
   "peki bu alan",
+  "devam",
   "devam et",
   "daha ayrintili",
   "bunun anlami ne",
 ] as const
+
+const CROSS_DOMAIN_FOLLOW_UP_PATTERNS = [
+  "bu kavram dna alanlariyla nasil iliskilidir",
+  "dna alanlariyla nasil iliskilidir",
+] as const
+
+const FUNCTIONAL_FOLLOW_UP_PATTERNS = [
+  "bir ornek ver",
+  "ornek verir misin",
+  "uygulamadaki karsiligi ne",
+  "gunluk yasamdaki karsiligi ne",
+] as const
+
+const GENERIC_LITERATURE_QUESTIONS = new Set([
+  "literatur ne diyor",
+  "bilimsel dayanagi nedir",
+  "bilimsel kaynaklari goster",
+  "bilimsel kaynaklari gosterir misin",
+  "bilimsel kaynaklari gosterebilir misin",
+  "kaynaklari goster",
+  "kanit duzeyi nedir",
+])
+
+function includesPhrase(normalized: string, patterns: readonly string[]): boolean {
+  return patterns.some(
+    (pattern) => normalized === pattern || ` ${normalized} `.includes(` ${pattern} `),
+  )
+}
 
 function hasRouteSignal(question: string, route: Exclude<DnaChatRoute, "unknown">): boolean {
   const normalized = normalizeDnaChatText(question)
@@ -69,6 +98,56 @@ function emptyMatch(): DnaChatRouteResult["match"] {
     tokenScore: 0,
     ngramScore: 0,
     pattern: null,
+  }
+}
+
+function contextRouteResult(
+  intent: DnaChatIntentDefinition,
+  pattern: string,
+  routeScores: Record<DnaChatRoute, number>,
+): DnaChatRouteResult {
+  routeScores[intent.route] = 0.9
+  return {
+    route: intent.route,
+    intent,
+    match: {
+      score: 0.9,
+      method: "context",
+      tokenScore: 0,
+      ngramScore: 0,
+      pattern,
+    },
+    threshold: intent.threshold,
+    runnerUpScore: 0,
+    ambiguityGap: 0.9,
+    candidateTopics: [intent.labelTr],
+    routeScores,
+  }
+}
+
+function expandedTheoryIntent(intent: DnaChatIntentDefinition): DnaChatIntentDefinition {
+  if (intent.route !== "theory" || intent.sourceIds.length < 2) return intent
+  return {
+    ...intent,
+    sourceIds: [...intent.sourceIds.slice(1), intent.sourceIds[0]],
+  }
+}
+
+function topicLiteratureIntent(intent: DnaChatIntentDefinition): DnaChatIntentDefinition {
+  const literature = DNA_CHAT_INTENT_BY_ID.get("theory_literature")
+  if (!literature) return intent
+  const sourceIds = [...new Set([
+    ...intent.sourceIds,
+    ...literature.sourceIds,
+  ])]
+  return {
+    ...intent,
+    id: `theory_literature_context:${intent.id}`,
+    labelTr: intent.labelTr,
+    sourceIds: [
+      ...sourceIds.filter((sourceId) => sourceId.startsWith("lit:")),
+      ...sourceIds.filter((sourceId) => !sourceId.startsWith("lit:")),
+    ],
   }
 }
 
@@ -98,26 +177,62 @@ export function routeDnaChatQuestion(input: {
         (intent) => normalizeDnaChatText(intent.labelTr) === normalizeDnaChatText(input.previousTopic ?? ""),
       )
     : null
-  const continuation = CONTINUATION_PATTERNS.some((pattern) => normalized.includes(pattern))
+  const previousMatchesMode = Boolean(
+    previous && (!input.mode || input.mode === previous.route),
+  )
+  const continuation = includesPhrase(normalized, CONTINUATION_PATTERNS)
 
-  if (previous && continuation && (!input.mode || input.mode === previous.route)) {
-    routeScores[previous.route] = 0.9
-    return {
-      route: previous.route,
-      intent: previous,
-      match: {
-        score: 0.9,
-        method: "context",
-        tokenScore: 0,
-        ngramScore: 0,
-        pattern: input.previousTopic ?? null,
-      },
-      threshold: previous.threshold,
-      runnerUpScore: 0,
-      ambiguityGap: 0.9,
-      candidateTopics: [previous.labelTr],
-      routeScores,
+  if ((!input.mode || input.mode === "theory") && GENERIC_LITERATURE_QUESTIONS.has(normalized)) {
+    if (previous?.route === "theory" && previousMatchesMode) {
+      return contextRouteResult(
+        topicLiteratureIntent(previous),
+        input.previousTopic ?? normalized,
+        routeScores,
+      )
     }
+    const literature = DNA_CHAT_INTENT_BY_ID.get("theory_literature")
+    if (literature) {
+      routeScores.theory = 0.7
+      return {
+        route: "theory",
+        intent: literature,
+        match: {
+          score: 0.7,
+          method: "weighted",
+          tokenScore: 0.7,
+          ngramScore: 0.7,
+          pattern: normalized,
+        },
+        threshold: literature.threshold,
+        runnerUpScore: 0,
+        ambiguityGap: 0.7,
+        candidateTopics: ["Self-regülasyon", "İnterosepsiyon"],
+        routeScores,
+      }
+    }
+  }
+
+  if (previous?.route === "theory" && previousMatchesMode) {
+    if (includesPhrase(normalized, CROSS_DOMAIN_FOLLOW_UP_PATTERNS)) {
+      const crossDomain = DNA_CHAT_INTENT_BY_ID.get("theory_cross_domain")
+      if (crossDomain) {
+        return contextRouteResult(crossDomain, input.previousTopic ?? normalized, routeScores)
+      }
+    }
+    if (includesPhrase(normalized, FUNCTIONAL_FOLLOW_UP_PATTERNS)) {
+      const functional = DNA_CHAT_INTENT_BY_ID.get("theory_functional_context")
+      if (functional) {
+        return contextRouteResult(functional, input.previousTopic ?? normalized, routeScores)
+      }
+    }
+  }
+
+  if (previous && continuation && previousMatchesMode) {
+    return contextRouteResult(
+      expandedTheoryIntent(previous),
+      input.previousTopic ?? normalized,
+      routeScores,
+    )
   }
 
   const candidates = DNA_CHAT_INTENTS

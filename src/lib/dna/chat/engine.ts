@@ -188,6 +188,7 @@ function theoryResponse(
   safety: DnaChatSafetyResult,
 ): DnaChatResponse {
   let sources = resolveDnaChatSources(intent.sourceIds)
+  const isContextLiterature = intent.id.startsWith("theory_literature_context:")
   if (intent.id === "theory_literature") {
     const ranked = findDnaChatLiteratureSources(question, 2)
     sources = stableSources([...ranked, ...sources], 4)
@@ -196,7 +197,7 @@ function theoryResponse(
   const summary = primary?.excerptTr ?? "Bu kavram için kilitli bilgi tabanında yeterli kaynak bulunamadı."
   const details = sources.slice(1, 3).map((source) => source.excerptTr)
   const classification: DnaChatClassification =
-    intent.id === "theory_literature" ? "literature" : "dna_concept"
+    intent.id === "theory_literature" || isContextLiterature ? "literature" : "dna_concept"
   return makeResponse({
     route: "theory",
     outcome: sources.length ? "answered" : "not_available",
@@ -249,11 +250,14 @@ function stableSources(sources: readonly DnaChatSourceRef[], limit = 4): DnaChat
 const CHAT_BOUNDARY_LANGUAGE =
   /\b(?:uretmez|onermez|degildir|cikarilamaz|gostermez|saglamaz|yerine gecmez|olusturmaz|acilmaz|kapsam disidir)\b/
 const CHAT_AFFIRMATIVE_UNSAFE_LANGUAGE =
-  /\b(?:tani koyar|tani konur|tanisi vardir|tedavi edilmelidir|mudahale uygulanmalidir|ilac baslanmalidir|seans plani uygulanmalidir)\b/
+  /\b(?:tani koyar|tani konur|tanisi vardir|tedavi edilmelidir|mudahale uygulanmalidir|ilac baslanmalidir|seans plani uygulanmalidir|otizmle uyumludur|dehb ile uyumludur)\b/
 const CHAT_PRACTICE_LANGUAGE =
-  /\b(?:tedavi|mudahale|terapi|seans|ilac|recete|danismanlik|destek plani|uygulama yonergesi|program|protokol|egzersiz listesi|odev|seans akisi)\b/
+  /\b(?:tedavi\w*|mudahale\w*|terapi\w*|seans\w*|ilac\w*|recete\w*|danismanlik|destek plani|uygulama yonergesi|program\w*|protokol\w*|egzersiz\w*|odev\w*)\b/
 const CHAT_DIRECTIVE_LANGUAGE =
-  /\b(?:yapilmalidir|uygulanmalidir|baslanmalidir|verilmelidir|onerilmelidir|gerekir)\b/
+  /\b(?:\w*(?:malidir|melidir|mali|meli)|yapilmali|uygulanmali|baslanmali|baslanmasi|verilmeli|onerilmeli|calisilmali|gerekir|uygundur)\b/
+const CHAT_DIAGNOSTIC_LANGUAGE = /\b(?:tani\w*|teshis\w*|otizm\w*|otistik\w*|dehb\w*|adhd\w*)\b/
+const CHAT_DIAGNOSTIC_ASSERTION =
+  /\b(?:uyumludur|uyumlu|vardir|var|gosterir|belirtisidir|dusundurur|olabilir)\b/
 
 function evaluateDnaChatClaimGuard(parts: readonly string[]) {
   const issues: ReturnType<typeof evaluateClaimGuard> = []
@@ -264,14 +268,23 @@ function evaluateDnaChatClaimGuard(parts: readonly string[]) {
     const affirmativeUnsafe = CHAT_AFFIRMATIVE_UNSAFE_LANGUAGE.test(normalized)
     const directivePractice =
       CHAT_PRACTICE_LANGUAGE.test(normalized) && CHAT_DIRECTIVE_LANGUAGE.test(normalized)
-    if (CHAT_BOUNDARY_LANGUAGE.test(normalized) && !affirmativeUnsafe && !directivePractice) {
+    const diagnosticAssertion =
+      CHAT_DIAGNOSTIC_LANGUAGE.test(normalized) && CHAT_DIAGNOSTIC_ASSERTION.test(normalized)
+    if (
+      CHAT_BOUNDARY_LANGUAGE.test(normalized) &&
+      !affirmativeUnsafe &&
+      !directivePractice &&
+      !diagnosticAssertion
+    ) {
       continue
     }
-    if (affirmativeUnsafe || directivePractice) {
+    if (affirmativeUnsafe || directivePractice || diagnosticAssertion) {
       issues.push({
-        code: "chat_practice_direction_claim",
+        code: diagnosticAssertion ? "chat_diagnostic_claim" : "chat_practice_direction_claim",
         severity: "critical",
-        message: "Sohbet yanıtında uygulama veya yönlendirme çağrışımı yapan ifade bulunmamalı.",
+        message: diagnosticAssertion
+          ? "Sohbet yanıtında tanısal çağrışım yapan ifade bulunmamalı."
+          : "Sohbet yanıtında uygulama veya yönlendirme çağrışımı yapan ifade bulunmamalı.",
         evidence: sentence.trim(),
       })
       continue
@@ -303,12 +316,14 @@ function scoreRows(context: DnaChatSafeCaseContext) {
 
 function weakDomainLabels(context: DnaChatSafeCaseContext): string[] {
   if (context.chatContext.weakDomains.length) return context.chatContext.weakDomains
-  const levelBased = scoreRows(context)
+  const rows = scoreRows(context)
+  const levelBased = rows
     .filter((entry) => entry.level === "Riskli" || entry.level === "Atipik")
     .map((entry) => entry.label)
-  if (levelBased.length) return levelBased
-  return scoreRows(context)
-    .filter((entry) => entry.score !== undefined)
+  if (rows.some((entry) => Boolean(entry.level))) return levelBased
+  const scored = rows.filter((entry) => entry.score !== undefined)
+  if (scored.length < 2) return []
+  return scored
     .sort((left, right) => Number(left.score) - Number(right.score) || left.domain.localeCompare(right.domain))
     .slice(0, 2)
     .map((entry) => entry.label)
@@ -316,12 +331,14 @@ function weakDomainLabels(context: DnaChatSafeCaseContext): string[] {
 
 function strongDomainLabels(context: DnaChatSafeCaseContext): string[] {
   if (context.chatContext.strongDomains.length) return context.chatContext.strongDomains
-  const levelBased = scoreRows(context)
+  const rows = scoreRows(context)
+  const levelBased = rows
     .filter((entry) => entry.level === "Tipik")
     .map((entry) => entry.label)
-  if (levelBased.length) return levelBased
-  return scoreRows(context)
-    .filter((entry) => entry.score !== undefined)
+  if (rows.some((entry) => Boolean(entry.level))) return levelBased
+  const scored = rows.filter((entry) => entry.score !== undefined)
+  if (scored.length < 2) return []
+  return scored
     .sort((left, right) => Number(right.score) - Number(left.score) || left.domain.localeCompare(right.domain))
     .slice(0, 2)
     .map((entry) => entry.label)
@@ -356,13 +373,15 @@ function caseDraft(
 
   if (intent.id === "case_overview") {
     const weak = weakDomainLabels(context)
-    const strong = strongDomainLabels(context)
+    const strong = strongDomainLabels(context).filter((label) => !weak.includes(label))
     const axis = context.chatContext.primaryAxis
     const summary = axis
       ? `Açık vaka bağlamındaki ana çalışma hipotezi: ${axis}`
       : weak.length
         ? `Açık vaka bağlamında göreli zorlanma ${weak.slice(0, 2).join(" ve ")} çevresinde yoğunlaşıyor.`
-        : "Açık vaka bağlamında genel örüntüyü özetlemek için yeterli alan bilgisi bulunmuyor."
+        : strong.length
+          ? `Mevcut düzey etiketlerinde Riskli veya Atipik alan bulunmuyor; göreli korunmuş alanlar ${strong.slice(0, 3).join(", ")}.`
+          : "Açık vaka bağlamında genel örüntüyü özetlemek için yeterli alan bilgisi bulunmuyor."
     const evidence = context.chatContext.evidence.slice(0, 3)
     const details = [
       context.chatContext.mechanismSummary ?? "",
@@ -370,7 +389,7 @@ function caseDraft(
       ...evidence,
     ].filter(Boolean)
     return {
-      available: Boolean(axis || weak.length || evidence.length),
+      available: Boolean(axis || weak.length || strong.length || evidence.length),
       summary,
       details,
       evidence,
@@ -403,7 +422,10 @@ function caseDraft(
 
   if (intent.id === "case_weak_domains" || intent.id === "case_strengths") {
     const weak = intent.id === "case_weak_domains"
-    const labels = weak ? weakDomainLabels(context) : strongDomainLabels(context)
+    const opposingLabels = new Set(weak ? strongDomainLabels(context) : weakDomainLabels(context))
+    const labels = (weak ? weakDomainLabels(context) : strongDomainLabels(context)).filter(
+      (label) => !opposingLabels.has(label),
+    )
     const kind = weak ? "göreli zorlanma" : "göreli korunmuşluk"
     return {
       available: labels.length > 0,
@@ -614,6 +636,12 @@ export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
     return clarificationResponse(
       safety,
       "Soru 2-600 karakter arasında olmalı ve tek bir açık başlığa odaklanmalıdır.",
+    )
+  }
+  if (normalizeDnaChatText(question).replace(/\d/g, "").length < 2) {
+    return clarificationResponse(
+      safety,
+      "Lütfen en az bir anlamlı kavram içeren kısa ve açık bir soru yazın.",
     )
   }
 

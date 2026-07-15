@@ -25,7 +25,7 @@ create or replace function public.check_api_rate_limit(
 returns table(ok boolean, remaining integer, reset_at timestamptz)
 language plpgsql
 security definer
-set search_path = public
+set search_path = ''
 as $$
 declare
   now_ts timestamptz := now();
@@ -46,8 +46,7 @@ begin
   set
     count = case
       when limits.reset_at <= now_ts then 1
-      when limits.count >= p_limit then limits.count
-      else limits.count + 1
+      else least(limits.count + 1, p_limit + 1)
     end,
     reset_at = case
       when limits.reset_at <= now_ts then now_ts + window_interval
@@ -64,4 +63,5 @@ end;
 $$;
 
 revoke all on function public.check_api_rate_limit(text, integer, integer) from public;
+revoke execute on function public.check_api_rate_limit(text, integer, integer) from anon, authenticated;
 grant execute on function public.check_api_rate_limit(text, integer, integer) to service_role;

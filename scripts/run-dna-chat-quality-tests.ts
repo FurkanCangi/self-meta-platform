@@ -249,6 +249,29 @@ for (const [mode, questions] of Object.entries(DNA_CHAT_STARTER_QUESTIONS) as Ar
   }
 }
 
+let suggestedQuestionCount = 0
+for (const intent of DNA_CHAT_INTENTS) {
+  const seed = resolveDnaChat({
+    mode: intent.route,
+    question: intent.patterns[0],
+    ...(intent.route === "case" ? { caseContext: benchmarkCase } : {}),
+  })
+  for (const suggestedQuestion of seed.suggestedQuestions) {
+    const followUp = resolveDnaChat({
+      mode: intent.route,
+      question: suggestedQuestion,
+      previousTopic: seed.topic,
+      ...(intent.route === "case" ? { caseContext: benchmarkCase } : {}),
+    })
+    suggestedQuestionCount += 1
+    assert.ok(
+      !["not_available", "clarification", "refusal"].includes(followUp.classification),
+      `Sistem kendi önerisini cevaplayamadı: ${intent.id}/${suggestedQuestion} -> ${followUp.classification}`,
+    )
+  }
+}
+assert.ok(suggestedQuestionCount >= 100, `Öneri sözleşmesi beklenenden küçük: ${suggestedQuestionCount}`)
+
 const privacyReport = buildAdvancedReport({
   clientName: "Ali Yılmaz",
   clientCode: "PRIVACY-CHECK",
@@ -300,6 +323,48 @@ const basic = resolveDnaChat({
 })
 assert.equal(basic.classification, "case_finding", "Basic snapshot skor cevabı üretmeli")
 
+const allTypicalOverview = resolveDnaChat({
+  mode: "case",
+  question: "bu vakayi ozetle",
+  caseContext: {
+    dataStatus: "deidentified",
+    scores: { physiological: 34, sensory: 36, cognitive: 39 },
+    levels: { physiological: "Tipik", sensory: "Tipik", cognitive: "Tipik" },
+  },
+})
+assert.equal(allTypicalOverview.classification, "case_finding")
+assert.doesNotMatch(allTypicalOverview.summary, /zorlanma/i, "Tümü Tipik profilde yapay zorlanma üretilmemeli")
+
+const allRiskOverview = resolveDnaChat({
+  mode: "case",
+  question: "bu vakayi ozetle",
+  caseContext: {
+    dataStatus: "deidentified",
+    scores: { physiological: 24, sensory: 20, cognitive: 26 },
+    levels: { physiological: "Riskli", sensory: "Atipik", cognitive: "Riskli" },
+  },
+})
+assert.equal(allRiskOverview.classification, "case_finding")
+assert.ok(
+  !allRiskOverview.details.some((detail) => /korunmuş kapasite/i.test(detail)),
+  "Tümü Riskli/Atipik profilde yapay korunmuş kapasite üretilmemeli",
+)
+
+const singleAtypicalOverview = resolveDnaChat({
+  mode: "case",
+  question: "bu vakayi ozetle",
+  caseContext: {
+    dataStatus: "deidentified",
+    scores: { sensory: 20 },
+    levels: { sensory: "Atipik" },
+  },
+})
+assert.match(singleAtypicalOverview.summary, /Duyusal regülasyon/i)
+assert.ok(
+  !singleAtypicalOverview.details.some((detail) => /Duyusal regülasyon/.test(detail) && /korunmuş/i.test(detail)),
+  "Tek Atipik alan aynı anda korunmuş kapasite gösterilmemeli",
+)
+
 const caseLiterature = resolveDnaChat({
   mode: "case",
   question: "bu vaka icin literatur",
@@ -319,6 +384,28 @@ assert.equal(
   "Kesin MSS/OSS eşleşmesi kısa phrase adayından önce gelmeli",
 )
 
+const selfRegulationSeed = resolveDnaChat({ mode: "theory", question: "self regulasyon nedir" })
+const selfRegulationLiterature = resolveDnaChat({
+  mode: "theory",
+  question: "Literatür ne diyor?",
+  previousTopic: selfRegulationSeed.topic,
+})
+assert.equal(selfRegulationLiterature.classification, "literature")
+assert.equal(selfRegulationLiterature.topic, selfRegulationSeed.topic, "Literatür takibi kanonik topic değerini korumalı")
+assert.ok(
+  selfRegulationLiterature.sources.some((source) => source.id === "lit:BLAIR_RAVER_2015"),
+  "Konuya bağlı literatür isteği ilgili kaynağı taşımalı",
+)
+const selfRegulationContinuation = resolveDnaChat({
+  mode: "theory",
+  question: "devam",
+  previousTopic: selfRegulationLiterature.topic,
+})
+assert.notEqual(selfRegulationContinuation.classification, "not_available", "Literatür yanıtından sonraki devam bağlamı kaybolmamalı")
+
+const genericLiterature = resolveDnaChat({ mode: "theory", question: "Literatür ne diyor?" })
+assert.equal(genericLiterature.classification, "clarification", "Konusuz literatür sorusu konu seçtirmeli")
+
 const mockApiDurations: number[] = []
 for (let index = 0; index < 100; index += 1) {
   const startedAt = performance.now()
@@ -334,5 +421,6 @@ console.log(JSON.stringify({
   benchmark: { total: 120, correct, accuracy: Number((accuracy * 100).toFixed(2)), securityCorrect },
   performance: { engineP95Ms: Number(engineP95.toFixed(3)), mockApiP95Ms: Number(mockApiP95.toFixed(3)) },
   fixtures: fixtureFiles.length,
+  suggestedQuestions: { total: suggestedQuestionCount, answerable: suggestedQuestionCount },
   knowledge: { chunks: CLINICAL_KNOWLEDGE_CHUNKS.length, literature: Object.keys(VERIFIED_LITERATURE_SOURCES).length, chatEntries: DNA_CHAT_KNOWLEDGE_ENTRIES.length },
 }, null, 2))
