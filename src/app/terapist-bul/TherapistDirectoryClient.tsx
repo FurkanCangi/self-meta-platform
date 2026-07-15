@@ -1,10 +1,32 @@
 "use client"
 
-import { Filter, Mail, MapPin, Phone, Search, ShieldCheck, UserRoundCheck } from "lucide-react"
+import dynamic from "next/dynamic"
+import {
+  Building2,
+  Filter,
+  GraduationCap,
+  LocateFixed,
+  Mail,
+  MapPin,
+  Phone,
+  RotateCcw,
+  Search,
+  ShieldCheck,
+} from "lucide-react"
 import type { FormEvent } from "react"
 import { useEffect, useMemo, useState } from "react"
 import type { PublicTherapist } from "@/lib/therapists/directory"
+import type { TherapistMapPoint } from "./TherapistMap"
 import styles from "./page.module.css"
+
+const TherapistMap = dynamic(() => import("./TherapistMap"), {
+  ssr: false,
+  loading: () => <div className={styles.mapLoading}>Harita hazırlanıyor...</div>,
+})
+
+type DirectoryTherapist = PublicTherapist & {
+  isExample: boolean
+}
 
 const defaultCities = [
   "İstanbul",
@@ -19,70 +41,162 @@ const defaultCities = [
   "Trabzon",
   "Diyarbakır",
   "Erzurum",
+  "Kayseri",
+  "Eskişehir",
+  "Mersin",
 ]
 
-const cityPoints: Record<string, { x: number; y: number; labelX?: number; labelY?: number }> = {
-  İstanbul: { x: 24, y: 34, labelX: -24, labelY: -16 },
-  Ankara: { x: 49, y: 47, labelX: -12, labelY: -18 },
-  İzmir: { x: 21, y: 58, labelX: -18, labelY: 16 },
-  Bursa: { x: 30, y: 44, labelX: -26, labelY: 4 },
-  Antalya: { x: 39, y: 76, labelX: -16, labelY: 18 },
-  Adana: { x: 61, y: 72, labelX: -10, labelY: 18 },
-  Gaziantep: { x: 72, y: 69, labelX: 10, labelY: 18 },
-  Konya: { x: 47, y: 64, labelX: -14, labelY: 18 },
-  Samsun: { x: 59, y: 31, labelX: -12, labelY: -18 },
-  Trabzon: { x: 78, y: 32, labelX: 8, labelY: -16 },
-  Diyarbakır: { x: 79, y: 61, labelX: 10, labelY: 4 },
-  Erzurum: { x: 85, y: 45, labelX: 10, labelY: -8 },
-  Kayseri: { x: 59, y: 57, labelX: 8, labelY: -12 },
-  Eskişehir: { x: 39, y: 49, labelX: -28, labelY: -8 },
-  Mersin: { x: 57, y: 76, labelX: -22, labelY: 18 },
+const cityCoordinates: Record<string, [number, number]> = {
+  İstanbul: [41.0082, 28.9784],
+  Ankara: [39.9334, 32.8597],
+  İzmir: [38.4237, 27.1428],
+  Bursa: [40.195, 29.06],
+  Antalya: [36.8969, 30.7133],
+  Adana: [37.0001, 35.3213],
+  Gaziantep: [37.0662, 37.3833],
+  Konya: [37.8746, 32.4932],
+  Samsun: [41.2867, 36.33],
+  Trabzon: [41.0027, 39.7168],
+  Diyarbakır: [37.9144, 40.2306],
+  Erzurum: [39.9043, 41.2679],
+  Kayseri: [38.7205, 35.4826],
+  Eskişehir: [39.7767, 30.5206],
+  Mersin: [36.8121, 34.6415],
 }
 
-const fallbackPoints = [
-  { x: 27, y: 50 },
-  { x: 35, y: 38 },
-  { x: 45, y: 56 },
-  { x: 55, y: 39 },
-  { x: 66, y: 53 },
-  { x: 76, y: 47 },
-  { x: 70, y: 74 },
+const demoTherapists: DirectoryTherapist[] = [
+  {
+    id: "demo-istanbul",
+    firstName: "Selin",
+    lastName: "Acar",
+    fullName: "Uzm. Ergoterapist Selin Acar",
+    profession: "Ergoterapist",
+    title: "Uzm. Ergoterapist",
+    workplace: "DNA Uygulama Ağı",
+    city: "İstanbul",
+    district: "Kadıköy",
+    phone: "",
+    email: "",
+    shortAddress: "",
+    specialties: ["Duyu bütünleme", "Öz düzenleme", "Pediatrik uygulama"],
+    isExample: true,
+  },
+  {
+    id: "demo-ankara",
+    firstName: "Mert",
+    lastName: "Yalın",
+    fullName: "Uzm. Fizyoterapist Mert Yalın",
+    profession: "Fizyoterapist",
+    title: "Uzm. Fizyoterapist",
+    workplace: "DNA Uygulama Ağı",
+    city: "Ankara",
+    district: "Çankaya",
+    phone: "",
+    email: "",
+    shortAddress: "",
+    specialties: ["Motor planlama", "Postüral kontrol", "Gelişimsel destek"],
+    isExample: true,
+  },
+  {
+    id: "demo-izmir",
+    firstName: "Derya",
+    lastName: "Işık",
+    fullName: "Psikolojik Danışman Derya Işık",
+    profession: "Psikolojik Danışman",
+    title: "Psikolojik Danışman",
+    workplace: "DNA Uygulama Ağı",
+    city: "İzmir",
+    district: "Bornova",
+    phone: "",
+    email: "",
+    shortAddress: "",
+    specialties: ["Duygusal düzenleme", "Ebeveyn danışmanlığı", "Okul uyumu"],
+    isExample: true,
+  },
+  {
+    id: "demo-bursa",
+    firstName: "Elif",
+    lastName: "Demir",
+    fullName: "Çocuk Gelişim Uzmanı Elif Demir",
+    profession: "Çocuk Gelişim Uzmanı",
+    title: "Çocuk Gelişim Uzmanı",
+    workplace: "DNA Uygulama Ağı",
+    city: "Bursa",
+    district: "Nilüfer",
+    phone: "",
+    email: "",
+    shortAddress: "",
+    specialties: ["Erken çocukluk", "Gelişimsel izlem", "Aile rehberliği"],
+    isExample: true,
+  },
+  {
+    id: "demo-antalya",
+    firstName: "Can",
+    lastName: "Eren",
+    fullName: "Dil ve Konuşma Terapisti Can Eren",
+    profession: "Dil ve Konuşma Terapisti",
+    title: "Dil ve Konuşma Terapisti",
+    workplace: "DNA Uygulama Ağı",
+    city: "Antalya",
+    district: "Muratpaşa",
+    phone: "",
+    email: "",
+    shortAddress: "",
+    specialties: ["Dil gelişimi", "İletişim becerileri", "Sosyal katılım"],
+    isExample: true,
+  },
 ]
 
 function normalize(value: string) {
   return value.toLocaleLowerCase("tr-TR").trim()
 }
 
-function getCityPoint(city: string, index: number) {
-  return cityPoints[city] || fallbackPoints[index % fallbackPoints.length]
+function getCoordinates(city: string, index: number): [number, number] {
+  const base = cityCoordinates[city] || [39.05, 35.15]
+  const offset = ((index % 5) - 2) * 0.035
+  return [base[0] + offset, base[1] - offset]
 }
 
-function TherapistCard({ therapist }: { therapist: PublicTherapist }) {
+function TherapistRow({
+  therapist,
+  selected,
+  onLocate,
+}: {
+  therapist: DirectoryTherapist
+  selected: boolean
+  onLocate: () => void
+}) {
   const location = [therapist.district, therapist.city].filter(Boolean).join(" / ")
 
   return (
-    <article className={styles.therapistCard}>
-      <div className={styles.cardTop}>
+    <article
+      className={`${styles.therapistRow} ${selected ? styles.therapistRowSelected : ""}`}
+      id={`therapist-${therapist.id}`}
+    >
+      <div className={styles.rowHeading}>
         <div className={styles.avatar} aria-hidden="true">
           {therapist.firstName.charAt(0)}
           {therapist.lastName.charAt(0)}
         </div>
         <div>
+          <div className={styles.rowBadges}>
+            {therapist.isExample ? <span>Örnek profil</span> : <span className={styles.approvedBadge}>Onaylı profil</span>}
+          </div>
           <h3>{therapist.fullName}</h3>
           <p>{therapist.title || therapist.profession || "DNA eğitim katılımcısı"}</p>
         </div>
       </div>
 
-      <div className={styles.cardMeta}>
+      <div className={styles.rowMeta}>
         {therapist.workplace ? (
           <span>
-            <UserRoundCheck size={16} />
+            <Building2 size={15} />
             {therapist.workplace}
           </span>
         ) : null}
         {location ? (
           <span>
-            <MapPin size={16} />
+            <MapPin size={15} />
             {location}
           </span>
         ) : null}
@@ -96,17 +210,21 @@ function TherapistCard({ therapist }: { therapist: PublicTherapist }) {
         </div>
       ) : null}
 
-      <div className={styles.contactRows}>
-        {therapist.phone ? (
-          <a href={`tel:${therapist.phone.replace(/\s/g, "")}`}>
+      <div className={styles.rowActions}>
+        <button type="button" onClick={onLocate} aria-label={`${therapist.fullName} haritada göster`}>
+          <LocateFixed size={16} />
+          Haritada göster
+        </button>
+        {!therapist.isExample && therapist.phone ? (
+          <a href={`tel:${therapist.phone.replace(/\s/g, "")}`} aria-label={`${therapist.fullName} telefon numarası`}>
             <Phone size={16} />
-            {therapist.phone}
+            Ara
           </a>
         ) : null}
-        {therapist.email ? (
-          <a href={`mailto:${therapist.email}`}>
+        {!therapist.isExample && therapist.email ? (
+          <a href={`mailto:${therapist.email}`} aria-label={`${therapist.fullName} e-posta adresi`}>
             <Mail size={16} />
-            {therapist.email}
+            E-posta
           </a>
         ) : null}
       </div>
@@ -115,13 +233,14 @@ function TherapistCard({ therapist }: { therapist: PublicTherapist }) {
 }
 
 export default function TherapistDirectoryClient() {
-  const [therapists, setTherapists] = useState<PublicTherapist[]>([])
+  const [liveTherapists, setLiveTherapists] = useState<DirectoryTherapist[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [draftQuery, setDraftQuery] = useState("")
   const [query, setQuery] = useState("")
   const [selectedCity, setSelectedCity] = useState("Tümü")
   const [selectedProfession, setSelectedProfession] = useState("Tümü")
+  const [selectedTherapistId, setSelectedTherapistId] = useState("")
 
   useEffect(() => {
     let active = true
@@ -134,11 +253,12 @@ export default function TherapistDirectoryClient() {
           throw new Error(payload?.error || "Terapist listesi alınamadı.")
         }
         if (active) {
-          setTherapists(Array.isArray(payload?.therapists) ? payload.therapists : [])
+          const rows = Array.isArray(payload?.therapists) ? payload.therapists : []
+          setLiveTherapists(rows.map((therapist: PublicTherapist) => ({ ...therapist, isExample: false })))
         }
-      } catch (err) {
+      } catch {
         if (active) {
-          setError(err instanceof Error ? err.message : "Terapist listesi alınamadı.")
+          setError("Canlı uzman kayıtları şu anda alınamadı.")
         }
       } finally {
         if (active) {
@@ -153,6 +273,12 @@ export default function TherapistDirectoryClient() {
       active = false
     }
   }, [])
+
+  const usingExamples = liveTherapists.length === 0
+  const therapists = useMemo(
+    () => (usingExamples ? demoTherapists : liveTherapists),
+    [liveTherapists, usingExamples],
+  )
 
   const cities = useMemo(() => {
     const allCities = new Set([...defaultCities, ...therapists.map((item) => item.city).filter(Boolean)])
@@ -176,6 +302,11 @@ export default function TherapistDirectoryClient() {
       return acc
     }, {})
   }, [therapists])
+
+  const populatedCities = useMemo(
+    () => Object.keys(cityCounts).sort((a, b) => a.localeCompare(b, "tr")),
+    [cityCounts],
+  )
 
   const filtered = useMemo(() => {
     const q = normalize(query)
@@ -203,30 +334,103 @@ export default function TherapistDirectoryClient() {
     })
   }, [query, selectedCity, selectedProfession, therapists])
 
-  const visibleCities = cities.filter((city) => city !== "Tümü")
-  const selectedCityCount = selectedCity === "Tümü" ? therapists.length : cityCounts[selectedCity] || 0
+  const mapPoints = useMemo<TherapistMapPoint[]>(
+    () =>
+      filtered.map((therapist, index) => {
+        const [latitude, longitude] = getCoordinates(therapist.city, index)
+        return {
+          id: therapist.id,
+          fullName: therapist.fullName,
+          profession: therapist.title || therapist.profession,
+          workplace: therapist.workplace,
+          city: therapist.city,
+          district: therapist.district,
+          latitude,
+          longitude,
+          isExample: therapist.isExample,
+        }
+      }),
+    [filtered],
+  )
+
+  const filteredCityCount = useMemo(
+    () => new Set(filtered.map((therapist) => therapist.city).filter(Boolean)).size,
+    [filtered],
+  )
+
+  const filteredProfessionCount = useMemo(
+    () =>
+      new Set(
+        filtered
+          .map((therapist) => therapist.profession || therapist.title)
+          .filter(Boolean),
+      ).size,
+    [filtered],
+  )
+
+  useEffect(() => {
+    if (selectedTherapistId && !filtered.some((therapist) => therapist.id === selectedTherapistId)) {
+      setSelectedTherapistId("")
+    }
+  }, [filtered, selectedTherapistId])
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setQuery(draftQuery)
+    setSelectedTherapistId("")
+  }
+
+  function resetFilters() {
+    setDraftQuery("")
+    setQuery("")
+    setSelectedCity("Tümü")
+    setSelectedProfession("Tümü")
+    setSelectedTherapistId("")
+  }
+
+  function locateTherapist(id: string) {
+    setSelectedTherapistId(id)
+    window.requestAnimationFrame(() => {
+      document.querySelector(`.${styles.mapPanel}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    })
+  }
+
+  function selectTherapistFromMap(id: string) {
+    setSelectedTherapistId(id)
+    window.requestAnimationFrame(() => {
+      document.getElementById(`therapist-${id}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" })
+    })
   }
 
   return (
     <section className={styles.directoryPanel}>
       <div className={styles.directoryHeader}>
         <div>
-          <div className={styles.eyebrow}>Terapist Bul</div>
-          <h2>DNA eğitimini tamamlayan uzmanlar</h2>
-          <p>
-            Liste, eğitim bilgisi tamamlanan ve public görünürlük için açık rıza/onay süreci tamamlanan uzmanları
-            gösterir.
-          </p>
+          <div className={styles.eyebrow}>Uzman Dizini</div>
+          <h2>Uzmanı bulun, haritada görün, profili inceleyin.</h2>
+          <p>Şehir, meslek veya uzmanlık alanına göre filtreleyin. Harita yaklaşık şehir merkezlerini gösterir.</p>
         </div>
         <div className={styles.safetyNote}>
-          <ShieldCheck size={22} />
-          Liste bilgilendirme amaçlıdır; hizmet seçimi ve klinik süreç kişinin kendi değerlendirmesine bağlıdır.
+          <ShieldCheck size={21} />
+          <span>
+            <strong>Kontrollü görünürlük</strong>
+            Canlı dizinde yalnızca eğitim ve yayın onayı tamamlanan profiller yer alır.
+          </span>
         </div>
       </div>
+
+      {usingExamples ? (
+        <div className={styles.previewNotice} role="status">
+          <GraduationCap size={18} />
+          <span>
+            {loading
+              ? "Onaylı uzman kayıtları kontrol edilirken harita örnek profillerle gösteriliyor."
+              : error
+                ? "Harita deneyimini inceleyebilmeniz için temsili uzman profilleri gösteriliyor."
+                : "Henüz yayında onaylı profil olmadığı için harita temsili uzman profilleriyle gösteriliyor."}
+          </span>
+        </div>
+      ) : null}
 
       <form className={styles.filters} onSubmit={handleSearch}>
         <label className={styles.searchBox}>
@@ -234,12 +438,20 @@ export default function TherapistDirectoryClient() {
           <input
             value={draftQuery}
             onChange={(event) => setDraftQuery(event.target.value)}
-            placeholder="İsim, meslek, kurum veya şehir ara..."
+            placeholder="İsim, meslek, kurum veya uzmanlık ara"
+            aria-label="Uzman ara"
           />
         </label>
         <label className={styles.selectBox}>
           <MapPin size={18} />
-          <select value={selectedCity} onChange={(event) => setSelectedCity(event.target.value)}>
+          <select
+            value={selectedCity}
+            onChange={(event) => {
+              setSelectedCity(event.target.value)
+              setSelectedTherapistId("")
+            }}
+            aria-label="Şehir seç"
+          >
             {cities.map((city) => (
               <option key={city} value={city}>
                 {city === "Tümü" ? "Tüm şehirler" : city}
@@ -249,7 +461,14 @@ export default function TherapistDirectoryClient() {
         </label>
         <label className={styles.selectBox}>
           <Filter size={18} />
-          <select value={selectedProfession} onChange={(event) => setSelectedProfession(event.target.value)}>
+          <select
+            value={selectedProfession}
+            onChange={(event) => {
+              setSelectedProfession(event.target.value)
+              setSelectedTherapistId("")
+            }}
+            aria-label="Meslek seç"
+          >
             {professions.map((profession) => (
               <option key={profession} value={profession}>
                 {profession === "Tümü" ? "Tüm meslekler" : profession}
@@ -258,111 +477,101 @@ export default function TherapistDirectoryClient() {
           </select>
         </label>
         <button type="submit" className={styles.searchButton}>
+          <Search size={17} />
           Ara
+        </button>
+        <button type="button" className={styles.resetButton} onClick={resetFilters} aria-label="Filtreleri temizle">
+          <RotateCcw size={17} />
         </button>
       </form>
 
+      <div className={styles.cityFilters} aria-label="Hızlı şehir filtresi">
+        <button
+          type="button"
+          className={selectedCity === "Tümü" ? styles.cityActive : ""}
+          onClick={() => {
+            setSelectedCity("Tümü")
+            setSelectedTherapistId("")
+          }}
+        >
+          Türkiye geneli <span>{therapists.length}</span>
+        </button>
+        {populatedCities.map((city) => (
+          <button
+            type="button"
+            key={city}
+            className={selectedCity === city ? styles.cityActive : ""}
+            onClick={() => {
+              setSelectedCity(city)
+              setSelectedTherapistId("")
+            }}
+          >
+            {city} <span>{cityCounts[city]}</span>
+          </button>
+        ))}
+      </div>
+
       <div className={styles.mapGrid}>
-        <div className={styles.mapPanel} aria-label="DNA şehir haritası">
+        <div className={styles.mapPanel} aria-label="Uzman haritası">
           <div className={styles.mapTopbar}>
             <div>
-              <span>DNA şehir haritası</span>
+              <span>Canlı uzman haritası</span>
               <strong>{selectedCity === "Tümü" ? "Türkiye geneli" : selectedCity}</strong>
             </div>
-            <small>{selectedCityCount} uzman</small>
+            <div className={styles.mapSummary}>
+              <span>{filtered.length} profil</span>
+              <small>Yaklaşık şehir merkezi</small>
+            </div>
           </div>
-          <div className={styles.mapCanvas}>
-            <div className={styles.mapGlow} />
-            <svg viewBox="0 0 100 64" role="img" aria-label="Türkiye şehir yoğunluk haritası">
-              <defs>
-                <linearGradient id="turkeyStroke" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor="#00c8d7" />
-                  <stop offset="48%" stopColor="#2563eb" />
-                  <stop offset="100%" stopColor="#7c3aed" />
-                </linearGradient>
-              </defs>
-              <path
-                className={styles.mapShape}
-                d="M7 35 L12 29 L20 28 L27 31 L35 29 L42 24 L51 24 L58 27 L66 25 L76 29 L88 31 L94 37 L90 44 L81 47 L73 45 L65 49 L56 48 L49 53 L39 51 L31 47 L24 50 L16 47 L10 42 Z"
-              />
-              <path
-                className={styles.mapLine}
-                d="M15 36 C26 30 38 33 47 28 C59 22 71 30 86 37"
-              />
-              <path
-                className={styles.mapLineAlt}
-                d="M18 44 C33 40 44 46 58 41 C68 38 77 43 86 46"
-              />
-            </svg>
-
-            {visibleCities.map((city, index) => {
-              const point = getCityPoint(city, index)
-              const active = selectedCity === city
-              const count = cityCounts[city] || 0
-              return (
-                <button
-                  type="button"
-                  key={city}
-                  className={`${styles.pin} ${active ? styles.pinActive : ""} ${count === 0 ? styles.pinMuted : ""}`}
-                  style={{ left: `${point.x}%`, top: `${point.y}%` }}
-                  onClick={() => setSelectedCity(city)}
-                  title={`${city} (${count})`}
-                >
-                  <span>{count}</span>
-                  <em
-                    style={{
-                      transform: `translate(${point.labelX || 8}px, ${point.labelY || -18}px)`,
-                    }}
-                  >
-                    {city}
-                  </em>
-                </button>
-              )
-            })}
+          <div className={styles.mapViewport}>
+            <TherapistMap points={mapPoints} selectedId={selectedTherapistId} onSelect={selectTherapistFromMap} />
           </div>
-
-          <div className={styles.cityFilters} aria-label="Hızlı şehir filtresi">
-            {cities.map((city) => (
-              <button
-                type="button"
-                key={city}
-                className={selectedCity === city ? styles.cityActive : ""}
-                onClick={() => setSelectedCity(city)}
-              >
-                {city}
-                {city !== "Tümü" ? <span>{cityCounts[city] || 0}</span> : null}
-              </button>
-            ))}
-          </div>
-
           <div className={styles.mapStats}>
             <span>
-              <strong>{therapists.length}</strong>
-              Uzman
+              <strong>{filtered.length}</strong>
+              Profil
             </span>
             <span>
-              <strong>{visibleCities.length}</strong>
+              <strong>{filteredCityCount}</strong>
               Şehir
             </span>
             <span>
-              <strong>{filtered.length}</strong>
-              Sonuç
+              <strong>{filteredProfessionCount}</strong>
+              Meslek
             </span>
           </div>
         </div>
 
         <div className={styles.listPanel}>
-          {loading ? (
-            <div className={styles.empty}>Terapist listesi yükleniyor...</div>
-          ) : error ? (
-            <div className={styles.empty}>{error}</div>
-          ) : filtered.length === 0 ? (
-            <div className={styles.empty}>
-              Bu filtreyle yayında olan terapist bulunamadı. Yeni uzmanlar onaylandıkça liste güncellenecek.
+          <div className={styles.listHeader}>
+            <div>
+              <span>Sonuçlar</span>
+              <strong>{filtered.length} profil bulundu</strong>
             </div>
-          ) : (
-            filtered.map((therapist) => <TherapistCard therapist={therapist} key={therapist.id} />)
-          )}
+            {usingExamples ? <em>Örnek görünüm</em> : null}
+          </div>
+
+          <div className={styles.listRows}>
+            {filtered.length === 0 ? (
+              <div className={styles.empty}>
+                <MapPin size={24} />
+                <strong>Bu filtreyle eşleşen profil yok.</strong>
+                <span>Filtreleri temizleyip yeniden deneyin.</span>
+                <button type="button" onClick={resetFilters}>
+                  Filtreleri temizle
+                </button>
+              </div>
+            ) : (
+              filtered.map((therapist) => (
+                <TherapistRow
+                  therapist={therapist}
+                  key={therapist.id}
+                  selected={selectedTherapistId === therapist.id}
+                  onLocate={() => locateTherapist(therapist.id)}
+                />
+              ))
+            )}
+          </div>
         </div>
       </div>
     </section>

@@ -1,3 +1,4 @@
+import { GraduationCap, MapPinned, ShieldCheck } from "lucide-react"
 import FooterContact from "../components/FooterContact"
 import LandingHeader from "../components/LandingHeader"
 import TherapistDirectoryClient from "./TherapistDirectoryClient"
@@ -14,18 +15,27 @@ export default function TherapistDirectoryPage() {
       <LandingHeader />
       <main className={styles.main}>
         <section className={styles.hero}>
-          <div>
-            <div className={styles.label}>TERAPİST BUL</div>
-            <h1>DNA eğitimini tamamlayan uzmanları şehir bazlı keşfedin.</h1>
-            <p>
-              Eğitimi tamamlanan, görünürlük izni veren ve onay süreci tamamlanan uzmanları DNA şehir haritası
-              üzerinden inceleyin.
-            </p>
+          <div className={styles.heroCopy}>
+            <div className={styles.label}>DNA Uzman Ağı</div>
+            <h1>Size uygun uzmanı harita üzerinde keşfedin.</h1>
+            <p>Şehir, meslek ve uzmanlık alanına göre arayın; profilleri tek ekranda karşılaştırın.</p>
           </div>
-          <div className={styles.heroCard}>
-            <span>Public dizin</span>
-            <strong>Şehir · Meslek · Kurum · İletişim</strong>
-            <p>Harita gerçek konum takibi yapmaz; şehir bazlı bilgilendirme sunar.</p>
+          <div className={styles.heroFacts} aria-label="Uzman dizini özellikleri">
+            <span>
+              <MapPinned size={20} />
+              <strong>Haritada keşfet</strong>
+              Şehir bazlı sonuçları görün.
+            </span>
+            <span>
+              <GraduationCap size={20} />
+              <strong>Eğitim bilgisi</strong>
+              DNA eğitim sürecini tamamlayanlar.
+            </span>
+            <span>
+              <ShieldCheck size={20} />
+              <strong>Onaylı yayın</strong>
+              Yalnızca izin verilen profiller.
+            </span>
           </div>
         </section>
 
