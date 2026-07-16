@@ -45,6 +45,8 @@ const ROUTE_SIGNALS: Record<Exclude<DnaChatRoute, "unknown">, readonly string[]>
     "bulgu",
     "puanlari ozetle",
     "skoru yorumla",
+    "raporumu",
+    "sectigim rapor",
   ],
 }
 
@@ -235,8 +237,11 @@ export function routeDnaChatQuestion(input: {
     )
   }
 
+  // Theory/DNA modes keep their legacy hard filter for deterministic backward
+  // compatibility. Case mode is only a preference so an older client carrying
+  // a report id cannot force an otherwise theoretical question to read it.
   const candidates = DNA_CHAT_INTENTS
-    .filter((intent) => !input.mode || intent.route === input.mode)
+    .filter((intent) => !input.mode || input.mode === "case" || intent.route === input.mode)
     .map((intent) => {
       const match = scoreDnaTextMatch(input.question, intent.patterns)
       let adjustedScore = match.score

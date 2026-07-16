@@ -7,9 +7,10 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import {
   createDnaChatSafeCaseContext,
-  resolveDnaChat,
+  readDnaChatRequestBody,
+  resolveDnaChatApiRequest,
   type DnaChatCaseContextInput,
-  type DnaChatResponse,
+  type DnaChatApiAuditInput,
 } from "@/lib/dna/chat"
 
 export const dynamic = "force-dynamic"
@@ -27,7 +28,7 @@ const NO_STORE_HEADERS = {
 
 const dnaChatPostSchema = z
   .object({
-    mode: z.enum(["theory", "dna", "case"]),
+    mode: z.enum(["theory", "dna", "case"]).optional(),
     question: z.string().trim().min(2).max(600),
     reportId: z.string().uuid().optional(),
     context: z
@@ -39,7 +40,6 @@ const dnaChatPostSchema = z
   })
   .strict()
 
-type DnaChatPayload = z.infer<typeof dnaChatPostSchema>
 type JsonRecord = Record<string, unknown>
 type ReportRow = {
   id: string
@@ -92,25 +92,17 @@ async function normalizeAuthFailure(response: NextResponse) {
 }
 
 async function readPayload(request: Request) {
-  const declaredLength = Number(request.headers.get("content-length"))
-  if (Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES) {
-    return { ok: false as const, response: errorResponse("payload_too_large", 413) }
-  }
-
-  let raw = ""
-  try {
-    raw = await request.text()
-  } catch {
-    return { ok: false as const, response: errorResponse("invalid_payload", 400) }
-  }
-
-  if (new TextEncoder().encode(raw).byteLength > MAX_BODY_BYTES) {
-    return { ok: false as const, response: errorResponse("payload_too_large", 413) }
+  const body = await readDnaChatRequestBody(request, MAX_BODY_BYTES)
+  if (!body.ok) {
+    return {
+      ok: false as const,
+      response: errorResponse(body.error, body.error === "payload_too_large" ? 413 : 400),
+    }
   }
 
   let value: unknown
   try {
-    value = JSON.parse(raw)
+    value = JSON.parse(body.raw)
   } catch {
     return { ok: false as const, response: errorResponse("invalid_payload", 400) }
   }
@@ -163,16 +155,6 @@ function ageBandFromSnapshot(snapshotValue: unknown): string | null {
   if (months >= 48 && months <= 59) return "48-59 ay"
   if (months >= 60 && months <= 71) return "60-71 ay"
   return null
-}
-
-function sourceIdsFromAnswer(answer: DnaChatResponse): string[] {
-  const sourceIds: string[] = []
-  const sources: unknown[] = Array.isArray(answer.sources) ? answer.sources : []
-  for (const source of sources) {
-    const sourceId = stringValue(asRecord(source).id)
-    if (sourceId) sourceIds.push(sourceId)
-  }
-  return Array.from(new Set<string>(sourceIds)).slice(0, 16)
 }
 
 async function enforceQuestionRateLimits(userId: string) {
@@ -389,14 +371,7 @@ function caseContextFromSnapshot(snapshotValue: unknown): DnaChatCaseContextInpu
 
 async function writeDnaChatAudit(params: {
   userId: string
-  requestId: string
-  mode: DnaChatPayload["mode"]
-  intentId: string | null
-  classification: DnaChatResponse["classification"]
-  outcome: DnaChatResponse["outcome"]
-  engineVersion: string
-  sourceIds: string[]
-}) {
+} & DnaChatApiAuditInput) {
   try {
     const admin = createSupabaseAdminClient()
     return await recordDataAccessAuditEvent({
@@ -459,64 +434,33 @@ export async function POST(request: Request) {
     const parsed = await readPayload(request)
     if (!parsed.ok) return parsed.response
     const payload = parsed.data
+    const resolution = await resolveDnaChatApiRequest(payload, {
+      createRequestId: () => crypto.randomUUID(),
+      loadCaseContext: async (reportId) => {
+        const recentReports = await listOwnReports(auth.user.id)
+        if (!recentReports.ok) return { ok: false, status: 500, error: "dna_chat_failed" }
+        if (!recentReports.reports.some((report) => report.id === reportId)) {
+          return { ok: false, status: 404, error: "report_not_found" }
+        }
 
-    if ((payload.mode === "case" && !payload.reportId) || (payload.mode !== "case" && payload.reportId)) {
-      return errorResponse("mode_report_mismatch", 400)
-    }
+        const access = await loadOwnCaseReport(auth.user.id, reportId)
+        if (!access.ok) {
+          return access.kind === "not_found"
+            ? { ok: false, status: 404, error: "report_not_found" }
+            : { ok: false, status: 500, error: "dna_chat_failed" }
+        }
 
-    let caseContext: ReturnType<typeof createDnaChatSafeCaseContext> | undefined
-    if (payload.mode === "case") {
-      const recentReports = await listOwnReports(auth.user.id)
-      if (!recentReports.ok) return errorResponse("dna_chat_failed", 500)
-      if (!recentReports.reports.some((report) => report.id === payload.reportId)) {
-        return errorResponse("report_not_found", 404)
-      }
-      const access = await loadOwnCaseReport(auth.user.id, String(payload.reportId))
-      if (!access.ok) {
-        return access.kind === "not_found"
-          ? errorResponse("report_not_found", 404)
-          : errorResponse("dna_chat_failed", 500)
-      }
-      caseContext = createDnaChatSafeCaseContext(caseContextFromSnapshot(access.report.snapshot_json))
-    }
-
-    const answer = await resolveDnaChat({
-      mode: payload.mode,
-      question: payload.question,
-      previousTopic: payload.context?.previousTopic || null,
-      caseContext,
+        return {
+          ok: true,
+          caseContext: createDnaChatSafeCaseContext(
+            caseContextFromSnapshot(access.report.snapshot_json),
+          ),
+        }
+      },
+      writeAudit: (auditInput) => writeDnaChatAudit({ userId: auth.user.id, ...auditInput }),
     })
 
-    const requestId = crypto.randomUUID()
-    const audit = await writeDnaChatAudit({
-      userId: auth.user.id,
-      requestId,
-      mode: payload.mode,
-      intentId: answer.intentId,
-      classification: answer.classification,
-      outcome: answer.outcome,
-      engineVersion: answer.engineVersion,
-      sourceIds: sourceIdsFromAnswer(answer),
-    })
-
-    if (!audit.ok && payload.mode === "case") {
-      return errorResponse("audit_unavailable", 503)
-    }
-
-    return json({
-      ok: true,
-      requestId,
-      classification: answer.classification,
-      summary: answer.summary,
-      details: answer.details,
-      sources: answer.sources,
-      caseEvidence: answer.caseEvidence,
-      limitations: answer.limitations,
-      safetyBoundary: answer.safetyBoundary,
-      suggestedQuestions: answer.suggestedQuestions,
-      engineVersion: answer.engineVersion,
-      topic: answer.topic,
-    })
+    return json(resolution.body, { status: resolution.status })
   } catch (error) {
     console.error("[dna-chat] request failed", error instanceof Error ? error.message : "unknown")
     return errorResponse("dna_chat_failed", 500)

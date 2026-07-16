@@ -406,20 +406,20 @@ assert.notEqual(selfRegulationContinuation.classification, "not_available", "Lit
 const genericLiterature = resolveDnaChat({ mode: "theory", question: "Literatür ne diyor?" })
 assert.equal(genericLiterature.classification, "clarification", "Konusuz literatür sorusu konu seçtirmeli")
 
-const mockApiDurations: number[] = []
+const caseAssemblyDurations: number[] = []
 for (let index = 0; index < 100; index += 1) {
   const startedAt = performance.now()
   const mockDbResult = { report: benchmarkCase }
   resolveDnaChat({ mode: "case", question: "bu vakayi ozetle", caseContext: mockDbResult.report })
-  mockApiDurations.push(performance.now() - startedAt)
+  caseAssemblyDurations.push(performance.now() - startedAt)
 }
-const mockApiP95 = percentile(mockApiDurations, 0.95)
-assert.ok(mockApiP95 < 1_000, `Mock DB API p95 ${mockApiP95.toFixed(3)} ms; hedef <1000 ms`)
+const caseAssemblyP95 = percentile(caseAssemblyDurations, 0.95)
+assert.ok(caseAssemblyP95 < 25, `Vaka cevap birleştirme p95 ${caseAssemblyP95.toFixed(3)} ms; hedef <25 ms`)
 
 console.log(JSON.stringify({
   ok: true,
   benchmark: { total: 120, correct, accuracy: Number((accuracy * 100).toFixed(2)), securityCorrect },
-  performance: { engineP95Ms: Number(engineP95.toFixed(3)), mockApiP95Ms: Number(mockApiP95.toFixed(3)) },
+  performance: { engineP95Ms: Number(engineP95.toFixed(3)), caseAssemblyP95Ms: Number(caseAssemblyP95.toFixed(3)) },
   fixtures: fixtureFiles.length,
   suggestedQuestions: { total: suggestedQuestionCount, answerable: suggestedQuestionCount },
   knowledge: { chunks: CLINICAL_KNOWLEDGE_CHUNKS.length, literature: Object.keys(VERIFIED_LITERATURE_SOURCES).length, chatEntries: DNA_CHAT_KNOWLEDGE_ENTRIES.length },

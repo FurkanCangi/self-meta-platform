@@ -179,22 +179,46 @@ check(
 )
 
 const dnaChatRoute = read("src/app/api/app/dna-chat/route.ts")
+const dnaChatApiResolver = read("src/lib/dna/chat/apiResolver.ts")
 const dnaChatSnapshot = read("src/lib/dna/chat/reportSnapshot.ts")
+const dnaChatCatalogFiles = fs
+  .readdirSync(path.join(root, "src/lib/dna/chat/catalog"))
+  .filter((file) => file.endsWith(".ts"))
+  .sort()
+  .map((file) => `src/lib/dna/chat/catalog/${file}`)
 const dnaChatEngine = [
+  "src/lib/dna/chat/apiResolver.ts",
   "src/lib/dna/chat/engine.ts",
+  "src/lib/dna/chat/catalogReasoning.ts",
   "src/lib/dna/chat/router.ts",
   "src/lib/dna/chat/knowledge.ts",
   "src/lib/dna/chat/safety.ts",
+  ...dnaChatCatalogFiles,
 ].map(read).join("\n")
 check("DNA chat requires confirmed app session", dnaChatRoute.includes("requireConfirmedUser"), "DNA chat auth guard missing")
 check("DNA chat POST requires trusted mutation", dnaChatRoute.includes("requireTrustedMutation"), "DNA chat trusted mutation guard missing")
 check("DNA chat payload uses strict Zod schema", dnaChatRoute.includes("dnaChatPostSchema") && dnaChatRoute.includes(".strict()") && dnaChatRoute.includes("safeParse"), "DNA chat strict schema missing")
-check("DNA chat enforces 8 KB body limit", dnaChatRoute.includes("MAX_BODY_BYTES = 8 * 1024") && dnaChatRoute.includes("TextEncoder"), "DNA chat body limit missing")
+check(
+  "DNA chat enforces streaming 8 KB body limit",
+  dnaChatRoute.includes("MAX_BODY_BYTES = 8 * 1024") &&
+    dnaChatRoute.includes("readDnaChatRequestBody") &&
+    dnaChatApiResolver.includes("request.body.getReader()") &&
+    dnaChatApiResolver.includes("totalBytes > maxBytes"),
+  "DNA chat streaming body limit missing",
+)
 check("DNA chat has burst and hourly rate limits", dnaChatRoute.includes("limit: 12") && dnaChatRoute.includes("windowMs: 10_000") && dnaChatRoute.includes("limit: 120"), "DNA chat dual rate limit missing")
 check("DNA chat responses are no-store", dnaChatRoute.includes('"Cache-Control": "private, no-store'), "DNA chat no-store header missing")
 check("DNA chat ownership chain has no role bypass", dnaChatRoute.includes('.eq("owner_id", userId)') && dnaChatRoute.includes('.from("assessments_v2")') && dnaChatRoute.includes('.from("reports")') && !dnaChatRoute.includes("isAdminRole"), "DNA chat strict ownership chain missing")
 check("DNA chat uses authenticated RLS client for report reads", dnaChatRoute.includes("createSupabaseServerClient") && !dnaChatRoute.includes('.from("profiles")'), "DNA chat RLS read path missing")
-check("DNA chat case answers fail closed when audit is unavailable", dnaChatRoute.includes('errorResponse("audit_unavailable", 503)') && dnaChatRoute.includes('payload.mode === "case"'), "DNA chat fail-closed audit missing")
+check(
+  "DNA chat case answers fail closed when audit is unavailable",
+  dnaChatRoute.includes("resolveDnaChatApiRequest(payload") &&
+    dnaChatApiResolver.includes('error: "audit_unavailable"') &&
+    dnaChatApiResolver.includes("let accessedCaseReport = false") &&
+    dnaChatApiResolver.includes("accessedCaseReport = true") &&
+    dnaChatApiResolver.includes("!audit.ok && accessedCaseReport"),
+  "DNA chat fail-closed audit missing",
+)
 check("DNA chat audit excludes question and answer text", !/metadata:\s*\{[\s\S]{0,800}\b(question|answer|client_code|report_id|snapshot|anamnez)\s*:/i.test(dnaChatRoute), "DNA chat audit metadata contains clinical content")
 check("DNA chat runtime has no external model dependency", !/OPENAI_API_KEY|from\s+["']openai["']|anthropic|ollama|langchain|pinecone|vector(?:store|db)|fetch\s*\(\s*["']https?:/i.test(`${dnaChatRoute}\n${dnaChatEngine}`), "external model or runtime retrieval found in DNA chat")
 check("DNA report snapshot contains versioned safe chat context", aiReportRoute.includes("buildDnaChatSnapshotContext(report)") && dnaChatSnapshot.includes('"dna-chat-context@1"') && dnaChatSnapshot.includes("caseEvidenceLines") && dnaChatSnapshot.includes("counterEvidenceLines") && dnaChatSnapshot.includes("preservedCapacityLines"), "safe DNA chat snapshot context missing")

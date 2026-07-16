@@ -2,6 +2,13 @@ import { evaluateClaimGuard } from "../clinicalClaimRegistry"
 import { redactReportTextForPrivacy } from "../reportPrivacy"
 import { createDnaChatSafeCaseContext, hasUsableDnaCaseContext } from "./caseContext"
 import {
+  classifyEmbeddedCatalogQueryKind,
+  classifyDnaChatQueryKind,
+  resolveDnaCatalogReasoning,
+  type DnaCatalogReasoningDraft,
+} from "./catalogReasoning"
+import { DNA_CHAT_INTENT_BY_ID } from "./intents"
+import {
   findDnaChatLiteratureSources,
   resolveDnaChatSources,
 } from "./knowledge"
@@ -13,7 +20,9 @@ import {
   DNA_CHAT_ENGINE_VERSION,
   DNA_CHAT_SCHEMA_VERSION,
   type DnaChatClassification,
+  type DnaChatContextRequest,
   type DnaChatDomainKey,
+  type DnaChatEvidenceSummary,
   type DnaChatIntentDefinition,
   type DnaChatOutcome,
   type DnaChatRequest,
@@ -70,6 +79,10 @@ function makeResponse(input: {
   limitations?: readonly string[]
   safety: DnaChatSafetyResult
   suggestedQuestions?: readonly string[]
+  topic?: string | null
+  intentId?: string | null
+  contextRequest?: DnaChatContextRequest
+  evidenceSummary?: DnaChatEvidenceSummary
 }): DnaChatResponse {
   const details = stableUnique((input.details ?? []).map(cleanOutput), 6)
   const sources = [...(input.sources ?? [])].slice(0, 4)
@@ -81,8 +94,8 @@ function makeResponse(input: {
     route: input.route ?? "unknown",
     outcome: input.outcome,
     classification: input.classification,
-    topic: input.intent?.labelTr ?? null,
-    intentId: input.intent?.id ?? null,
+    topic: input.topic === undefined ? (input.intent?.labelTr ?? null) : input.topic,
+    intentId: input.intentId === undefined ? (input.intent?.id ?? null) : input.intentId,
     summary,
     details,
     answerTr: [summary, ...details].filter(Boolean).join("\n\n"),
@@ -93,6 +106,8 @@ function makeResponse(input: {
     safetyBoundary: input.safety.boundaryTr,
     suggestedQuestions: stableUnique(input.suggestedQuestions ?? [], 4),
     safety: input.safety,
+    ...(input.contextRequest ? { contextRequest: input.contextRequest } : {}),
+    ...(input.evidenceSummary ? { evidenceSummary: input.evidenceSummary } : {}),
   }
 }
 
@@ -182,6 +197,32 @@ function notAvailableResponse(
   })
 }
 
+function missingCaseContextResponse(
+  safety: DnaChatSafetyResult,
+  intent: DnaChatIntentDefinition,
+): DnaChatResponse {
+  return makeResponse({
+    route: "case",
+    outcome: "clarification",
+    classification: "clarification",
+    intent,
+    summary: "Bu soruyu yanıtlamak için kendi DNA raporlarınızdan birini seçin.",
+    details: [
+      "Rapor seçilmeden danışana özgü bulgu okunmaz veya klinik içerik üretilmez.",
+    ],
+    sources: [],
+    limitations: [
+      "Yalnız hesabınıza ait, sohbet için yapılandırılmış ve kimliksiz rapor bağlamı kullanılabilir.",
+    ],
+    safety,
+    contextRequest: { type: "report", preferNewest: true },
+    suggestedQuestions: [
+      "Son raporumu özetle.",
+      "Seçtiğim rapordaki göreli zorlanmaları açıkla.",
+    ],
+  })
+}
+
 function theoryResponse(
   intent: DnaChatIntentDefinition,
   question: string,
@@ -238,6 +279,51 @@ function dnaResponse(
   })
 }
 
+function catalogResponse(
+  draft: DnaCatalogReasoningDraft,
+  safety: DnaChatSafetyResult,
+): DnaChatResponse {
+  const hasSources = draft.sources.length > 0
+  const answered = draft.classification !== "not_available" && hasSources
+  if (answered) {
+    const blocked = catalogClaimGuardBlocked([
+      draft.summary,
+      ...draft.details,
+      ...draft.limitations,
+      ...draft.sources.flatMap((source) => [source.excerptTr, source.claimBoundary ?? ""]),
+    ])
+    if (blocked) {
+      return makeResponse({
+        route: draft.route,
+        outcome: "not_available",
+        classification: "not_available",
+        topic: draft.topicTitle,
+        intentId: null,
+        summary: "Bu konu için güvenli sınırlar içinde kaynak bağlı yanıt oluşturulamadı.",
+        limitations: ["Olası tanısal, yönlendirici veya kesinlik içeren ifade çıktı korumasınca engellendi."],
+        safety,
+        evidenceSummary: draft.evidenceSummary,
+        suggestedQuestions: draft.suggestedQuestions,
+      })
+    }
+  }
+
+  return makeResponse({
+    route: draft.route,
+    outcome: answered ? "answered" : "not_available",
+    classification: answered ? draft.classification : "not_available",
+    topic: draft.topicTitle,
+    intentId: `catalog:${draft.topicId}:${draft.queryKind}`,
+    summary: draft.summary,
+    details: draft.details,
+    sources: answered ? draft.sources : [],
+    limitations: draft.limitations,
+    safety,
+    evidenceSummary: draft.evidenceSummary,
+    suggestedQuestions: draft.suggestedQuestions,
+  })
+}
+
 function stableSources(sources: readonly DnaChatSourceRef[], limit = 4): DnaChatSourceRef[] {
   const seen = new Set<string>()
   return sources.filter((source) => {
@@ -245,6 +331,25 @@ function stableSources(sources: readonly DnaChatSourceRef[], limit = 4): DnaChat
     seen.add(source.id)
     return true
   }).slice(0, limit)
+}
+
+function balancedStableSources(
+  groups: readonly (readonly DnaChatSourceRef[])[],
+  limit = 4,
+): DnaChatSourceRef[] {
+  const result: DnaChatSourceRef[] = []
+  const seen = new Set<string>()
+  const maxGroupLength = Math.max(0, ...groups.map((group) => group.length))
+  for (let index = 0; index < maxGroupLength && result.length < limit; index += 1) {
+    for (const group of groups) {
+      const source = group[index]
+      if (!source || seen.has(source.id)) continue
+      seen.add(source.id)
+      result.push(source)
+      if (result.length >= limit) break
+    }
+  }
+  return result
 }
 
 const CHAT_BOUNDARY_LANGUAGE =
@@ -292,6 +397,28 @@ function evaluateDnaChatClaimGuard(parts: readonly string[]) {
     issues.push(...evaluateClaimGuard(sentence).filter((issue) => issue.severity === "critical"))
   }
   return issues
+}
+
+function catalogClaimGuardBlocked(parts: readonly string[]): boolean {
+  const sentences = parts.flatMap((part) => String(part || "").split(/(?<=[.!?;])\s+/))
+  return sentences.some((sentence) => {
+    const normalized = normalizeDnaChatText(sentence)
+    if (!normalized) return false
+    const affirmativeUnsafe = CHAT_AFFIRMATIVE_UNSAFE_LANGUAGE.test(normalized)
+    const directivePractice =
+      CHAT_PRACTICE_LANGUAGE.test(normalized) && CHAT_DIRECTIVE_LANGUAGE.test(normalized)
+    const diagnosticAssertion =
+      CHAT_DIAGNOSTIC_LANGUAGE.test(normalized) && CHAT_DIAGNOSTIC_ASSERTION.test(normalized)
+    if (
+      CHAT_BOUNDARY_LANGUAGE.test(normalized) &&
+      !affirmativeUnsafe &&
+      !directivePractice &&
+      !diagnosticAssertion
+    ) {
+      return false
+    }
+    return affirmativeUnsafe || directivePractice || diagnosticAssertion
+  })
 }
 
 function caseSource(id: string, title: string, excerpt: string): DnaChatSourceRef {
@@ -628,23 +755,78 @@ function guardedCaseResponse(
   })
 }
 
-export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
-  const question = String(request?.question ?? "").trim()
-  const safety = emptySafety(question)
-  if (safety.blocked) return refusalResponse(safety)
-  if (question.length < 2 || question.length > 600) {
-    return clarificationResponse(
+function catalogCaseTheoryResponse(
+  intent: DnaChatIntentDefinition,
+  question: string,
+  previousTopic: string | null | undefined,
+  context: DnaChatSafeCaseContext,
+  safety: DnaChatSafetyResult,
+): DnaChatResponse {
+  const caseAnswer = guardedCaseResponse(intent, question, context, safety)
+  if (caseAnswer.outcome !== "answered") return caseAnswer
+
+  const draft = resolveDnaCatalogReasoning({
+    question,
+    previousTopic,
+    queryKind: classifyEmbeddedCatalogQueryKind(question),
+    ageMonths: context.ageMonths,
+  })
+  if (!draft) {
+    return makeResponse({
+      route: "case",
+      outcome: caseAnswer.outcome,
+      classification: caseAnswer.classification,
+      topic: caseAnswer.topic,
+      intentId: caseAnswer.intentId,
+      summary: caseAnswer.summary,
+      details: caseAnswer.details,
+      sources: caseAnswer.sources,
+      caseEvidence: caseAnswer.caseEvidence,
+      limitations: [
+        "Bu vakada biyolojik mekanizma doğrudan ölçülmedi.",
+        ...caseAnswer.limitations,
+      ],
       safety,
-      "Soru 2-600 karakter arasında olmalı ve tek bir açık başlığa odaklanmalıdır.",
-    )
-  }
-  if (normalizeDnaChatText(question).replace(/\d/g, "").length < 2) {
-    return clarificationResponse(
-      safety,
-      "Lütfen en az bir anlamlı kavram içeren kısa ve açık bir soru yazın.",
-    )
+      suggestedQuestions: caseAnswer.suggestedQuestions,
+    })
   }
 
+  const theoryAnswer = catalogResponse(draft, safety)
+  if (theoryAnswer.outcome !== "answered") return theoryAnswer
+
+  return makeResponse({
+    route: "case",
+    outcome: "answered",
+    classification: "hypothesis",
+    topic: `${caseAnswer.topic ?? "Rapor bulgusu"} · ${theoryAnswer.topic ?? "Genel teori"}`,
+    intentId: null,
+    summary: caseAnswer.summary,
+    details: [
+      ...caseAnswer.details,
+      `Genel teori çerçevesi: ${theoryAnswer.summary}`,
+      ...theoryAnswer.details.slice(0, 2),
+    ],
+    sources: balancedStableSources([caseAnswer.sources, theoryAnswer.sources], 4),
+    caseEvidence: caseAnswer.caseEvidence,
+    limitations: [
+      "Bu vakada biyolojik mekanizma doğrudan ölçülmedi.",
+      ...caseAnswer.limitations,
+      ...theoryAnswer.limitations,
+    ],
+    safety,
+    evidenceSummary: theoryAnswer.evidenceSummary,
+    suggestedQuestions: stableUnique([
+      ...caseAnswer.suggestedQuestions,
+      ...theoryAnswer.suggestedQuestions,
+    ], 4),
+  })
+}
+
+function resolveSingleDnaChat(
+  request: DnaChatRequest,
+  question: string,
+  safety: DnaChatSafetyResult,
+): DnaChatResponse {
   let caseContext: DnaChatSafeCaseContext | null = null
   if (request.caseContext) {
     try {
@@ -669,12 +851,63 @@ export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
     }
   }
 
+  const queryKind = classifyDnaChatQueryKind(question)
   const routed = routeDnaChatQuestion({
     question,
     mode: request.mode,
     previousTopic: request.previousTopic,
     hasCaseContext: Boolean(caseContext && hasUsableDnaCaseContext(caseContext)),
   })
+
+  const legacyNonCaseMatch = Boolean(
+    request.mode &&
+    request.mode !== "case" &&
+    routed.route === request.mode &&
+    routed.intent,
+  )
+  const isCaseQuery = !legacyNonCaseMatch && (
+    queryKind === "case_finding" ||
+    queryKind === "case_theory" ||
+    (routed.route === "case" && Boolean(routed.intent))
+  )
+  if (isCaseQuery) {
+    const intent =
+      routed.route === "case" && routed.intent
+        ? routed.intent
+        : DNA_CHAT_INTENT_BY_ID.get("case_overview") ?? null
+    if (!intent) return unmatchedResponse(safety)
+    if (!caseContext) return missingCaseContextResponse(safety, intent)
+    if (!hasUsableDnaCaseContext(caseContext)) {
+      return notAvailableResponse(
+        safety,
+        intent,
+        "Bu raporda sohbet için yeterli yapılandırılmış veri yok.",
+      )
+    }
+    const preserveLegacyCaseAnswer = Boolean(
+      request.mode === "case" && routed.route === "case" && routed.intent,
+    )
+    return queryKind === "case_theory" && !preserveLegacyCaseAnswer
+      ? catalogCaseTheoryResponse(intent, question, request.previousTopic, caseContext, safety)
+      : guardedCaseResponse(intent, question, caseContext, safety)
+  }
+
+  // Calls carrying a legacy mode keep their established exact/phrase route so
+  // existing integrations and benchmark fixtures remain stable. Unknown new
+  // topics still continue into Catalog V2.
+  const preferLegacy = Boolean(
+    request.mode && routed.intent && routed.route !== "unknown",
+  )
+  if (!preferLegacy) {
+    const catalogDraft = resolveDnaCatalogReasoning({
+      question,
+      previousTopic: request.previousTopic,
+      queryKind,
+      ageMonths: caseContext?.ageMonths,
+    })
+    if (catalogDraft) return catalogResponse(catalogDraft, safety)
+  }
+
   if (!routed.intent || routed.route === "unknown") {
     return unmatchedResponse(safety)
   }
@@ -695,19 +928,138 @@ export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
 
   if (routed.route === "theory") return theoryResponse(routed.intent, question, safety)
   if (routed.route === "dna") return dnaResponse(routed.intent, safety)
-  if (!caseContext) {
-    return notAvailableResponse(
+  return caseContext
+    ? guardedCaseResponse(routed.intent, question, caseContext, safety)
+    : missingCaseContextResponse(safety, routed.intent)
+}
+
+function splitDnaChatQuestion(question: string): { parts: string[]; overflow: boolean } {
+  const questionMarkParts = question
+    .split(/\?+/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+  const semicolonParts = question
+    .split(/\s*;\s*/)
+    .map((part) => part.trim())
+    .filter(Boolean)
+  const conjunctionParts = question
+    .split(/\s+ve\s+/giu)
+    .map((part) => part.trim())
+    .filter(Boolean)
+  const questionMarker = /\b(?:nedir|ne demek|nasil|neden|hangi|neyi|olur mu|midir|mudur|misin|gosterir mi|iliskili mi)\b/
+  const hasIndependentQuestions = conjunctionParts.length > 1 && conjunctionParts.every((part) =>
+    questionMarker.test(normalizeDnaChatText(part)),
+  )
+  const parts = questionMarkParts.length > 1
+    ? questionMarkParts
+    : semicolonParts.length > 1
+      ? semicolonParts
+      : hasIndependentQuestions
+        ? conjunctionParts
+        : [question]
+  return { parts: parts.slice(0, 2), overflow: parts.length > 2 }
+}
+
+function combinedEvidenceSummary(responses: readonly DnaChatResponse[]): DnaChatEvidenceSummary | undefined {
+  const summaries = responses.flatMap((response) => response.evidenceSummary ? [response.evidenceSummary] : [])
+  if (!summaries.length) return undefined
+  return {
+    level: stableUnique(summaries.map((summary) => summary.level), 3).join(" · "),
+    ageScope: stableUnique(summaries.map((summary) => summary.ageScope), 3).join(" · "),
+    boundary: stableUnique(summaries.map((summary) => summary.boundary), 3).join(" "),
+  }
+}
+
+function combineDnaChatResponses(
+  responses: readonly DnaChatResponse[],
+  safety: DnaChatSafetyResult,
+): DnaChatResponse {
+  const contextRequest = responses.find((response) => response.contextRequest)?.contextRequest
+  const answered = responses.filter((response) => response.outcome === "answered")
+  const mixedCaseTheory =
+    responses.some((response) => response.route === "case") &&
+    responses.some((response) => response.route === "theory" || response.route === "dna")
+  const route: DnaChatResponse["route"] = responses.some((response) => response.route === "case")
+    ? "case"
+    : responses.some((response) => response.route === "dna")
+      ? "dna"
+      : "theory"
+  const classification: DnaChatClassification = contextRequest
+    ? "clarification"
+    : mixedCaseTheory && answered.length
+      ? "hypothesis"
+    : answered.some((response) => response.classification === "hypothesis")
+      ? "hypothesis"
+      : answered.some((response) => response.classification === "case_finding")
+        ? "case_finding"
+        : answered.some((response) => response.classification === "literature")
+          ? "literature"
+          : answered.length
+            ? "dna_concept"
+            : responses.some((response) => response.classification === "clarification")
+              ? "clarification"
+              : "not_available"
+  const outcome: DnaChatOutcome = contextRequest || classification === "clarification"
+    ? "clarification"
+    : answered.length
+      ? "answered"
+      : "not_available"
+
+  return makeResponse({
+    route,
+    outcome,
+    classification,
+    topic: stableUnique(responses.flatMap((response) => response.topic ? [response.topic] : []), 2).join(" · ") || null,
+    intentId: null,
+    summary: contextRequest
+      ? "Sorunuzun vakaya özgü bölümünü yanıtlamak için bir DNA raporu seçin."
+      : "Sorunuzdaki iki başlık ayrı ayrı değerlendirildi.",
+    details: responses.flatMap((response, index) => [
+      `${index + 1}. ${response.topic ?? "Başlık"}: ${response.summary}`,
+      ...response.details.slice(0, 2),
+    ]),
+    sources: balancedStableSources(responses.map((response) => response.sources), 4),
+    caseEvidence: stableUnique(responses.flatMap((response) => response.caseEvidence), 6),
+    limitations: stableUnique([
+      ...(mixedCaseTheory ? ["Bu vakada biyolojik mekanizma doğrudan ölçülmedi."] : []),
+      ...responses.flatMap((response) => response.limitations),
+    ], 6),
+    safety,
+    contextRequest,
+    evidenceSummary: combinedEvidenceSummary(responses),
+    suggestedQuestions: stableUnique(responses.flatMap((response) => response.suggestedQuestions), 4),
+  })
+}
+
+export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
+  const question = String(request?.question ?? "").trim()
+  const safety = emptySafety(question)
+  if (safety.blocked) return refusalResponse(safety)
+  if (question.length < 2 || question.length > 600) {
+    return clarificationResponse(
       safety,
-      routed.intent,
-      "Vaka tartışması için açık ve kimliksiz bir DNA rapor bağlamı seçilmelidir.",
+      "Soru 2-600 karakter arasında olmalı ve en fazla iki açık başlığa odaklanmalıdır.",
     )
   }
-  if (!hasUsableDnaCaseContext(caseContext)) {
-    return notAvailableResponse(
+  if (normalizeDnaChatText(question).replace(/\d/g, "").length < 2) {
+    return clarificationResponse(
       safety,
-      routed.intent,
-      "Bu raporda sohbet için yeterli yapılandırılmış veri yok.",
+      "Lütfen en az bir anlamlı kavram içeren kısa ve açık bir soru yazın.",
     )
   }
-  return guardedCaseResponse(routed.intent, question, caseContext, safety)
+
+  const split = splitDnaChatQuestion(question)
+  if (split.overflow) {
+    return clarificationResponse(
+      safety,
+      "Tek mesajda en fazla iki soru ele alınabilir. Lütfen soruları iki ayrı mesaja bölün.",
+    )
+  }
+  if (split.parts.length === 2) {
+    return combineDnaChatResponses(
+      split.parts.map((part) => resolveSingleDnaChat({ ...request, question: part }, part, emptySafety(part))),
+      safety,
+    )
+  }
+  return resolveSingleDnaChat(request, question, safety)
 }

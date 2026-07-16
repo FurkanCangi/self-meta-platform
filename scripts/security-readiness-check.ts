@@ -240,12 +240,22 @@ if (/OPENAI_API_KEY|from\s+["']openai["']|rewriteClinicalReport|generateAIClinic
 }
 
 const dnaChatRoute = read("src/app/api/app/dna-chat/route.ts")
+const dnaChatApiResolver = read("src/lib/dna/chat/apiResolver.ts")
 const dnaChatSnapshot = read("src/lib/dna/chat/reportSnapshot.ts")
+const dnaChatCatalogRuntime = fs
+  .readdirSync(path.join(root, "src/lib/dna/chat/catalog"))
+  .filter((file) => file.endsWith(".ts"))
+  .sort()
+  .map((file) => read(`src/lib/dna/chat/catalog/${file}`))
 const dnaChatRuntime = [
   dnaChatRoute,
+  dnaChatApiResolver,
   read("src/lib/dna/chat/engine.ts"),
+  read("src/lib/dna/chat/catalogReasoning.ts"),
   read("src/lib/dna/chat/router.ts"),
   read("src/lib/dna/chat/knowledge.ts"),
+  read("src/lib/dna/chat/safety.ts"),
+  ...dnaChatCatalogRuntime,
 ].join("\n")
 if (!dnaChatRoute.includes("dnaChatPostSchema") || !dnaChatRoute.includes("safeParse") || !dnaChatRoute.includes(".strict()")) {
   add("DNA chat route missing strict Zod validation", "src/app/api/app/dna-chat/route.ts")
@@ -253,7 +263,20 @@ if (!dnaChatRoute.includes("dnaChatPostSchema") || !dnaChatRoute.includes("safeP
 if (!dnaChatRoute.includes("requireConfirmedUser") || !dnaChatRoute.includes("requireTrustedMutation")) {
   add("DNA chat route missing auth or same-origin guard", "src/app/api/app/dna-chat/route.ts")
 }
-if (!dnaChatRoute.includes('errorResponse("audit_unavailable", 503)')) {
+if (
+  !dnaChatRoute.includes("readDnaChatRequestBody(request, MAX_BODY_BYTES)") ||
+  !dnaChatApiResolver.includes("request.body.getReader()") ||
+  !dnaChatApiResolver.includes("totalBytes > maxBytes")
+) {
+  add("DNA chat route missing streaming body-size enforcement", "src/app/api/app/dna-chat/route.ts")
+}
+if (
+  !dnaChatRoute.includes("resolveDnaChatApiRequest(payload") ||
+  !dnaChatApiResolver.includes('error: "audit_unavailable"') ||
+  !dnaChatApiResolver.includes("let accessedCaseReport = false") ||
+  !dnaChatApiResolver.includes("accessedCaseReport = true") ||
+  !dnaChatApiResolver.includes("!audit.ok && accessedCaseReport")
+) {
   add("DNA chat case audit is not fail-closed", "src/app/api/app/dna-chat/route.ts")
 }
 if (!dnaChatSnapshot.includes('"dna-chat-context@1"') || /evidenceMap\.(?:caseEvidenceLines|counterEvidenceLines|preservedCapacityLines|dataLimitations)/.test(dnaChatSnapshot)) {

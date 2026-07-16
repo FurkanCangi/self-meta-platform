@@ -1,5 +1,6 @@
 export { createDnaChatSafeCaseContext, hasUsableDnaCaseContext } from "./caseContext"
 export { resolveDnaChat } from "./engine"
+export { readDnaChatRequestBody, resolveDnaChatApiRequest } from "./apiResolver"
 export {
   buildDnaChatSnapshotContext,
   DNA_CHAT_REPORT_CONTEXT_VERSION,
@@ -16,14 +17,26 @@ export {
 } from "./types"
 
 export type {
+  DnaChatApiAuditInput,
+  DnaChatApiPayload,
+  DnaChatApiResolution,
+  DnaChatApiResolverDependencies,
+  DnaChatBodyReadResult,
+  DnaChatCaseLoadResult,
+} from "./apiResolver"
+
+export type {
   DnaChatCaseContextInput,
   DnaChatClassification,
+  DnaChatContextRequest,
   DnaChatDomainKey,
   DnaChatDomainLevel,
   DnaChatEvidenceStatus,
+  DnaChatEvidenceSummary,
   DnaChatKnowledgeEntry,
   DnaChatMode,
   DnaChatOutcome,
+  DnaChatQueryKind,
   DnaChatRequest,
   DnaChatResponse,
   DnaChatRoute,

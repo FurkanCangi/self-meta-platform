@@ -281,7 +281,7 @@ export const DNA_CHAT_INTENTS: readonly DnaChatIntentDefinition[] = [
     ["Sistem klinik kararın veya uzman değerlendirmesinin yerine geçmez."],
     ["DNA raporu ne içerir?", "DNA Asistanı neyi cevaplamaz?"],
   ),
-  caseIntent("case_overview", "Vaka özeti", ["bu vakayi ozetle", "bu vakadaki ana bulgu nedir", "bu raporun ana bulgusu nedir", "vaka profili nasil", "bu vakada ne goruyoruz", "genel vaka ozeti"], ["kb:RISK_PROFILE_GENERAL_RULE"]),
+  caseIntent("case_overview", "Vaka özeti", ["bu vakayi ozetle", "bu vakadaki ana bulgu nedir", "bu raporun ana bulgusu nedir", "vaka profili nasil", "bu vakada ne goruyoruz", "genel vaka ozeti", "son raporumu ozetle", "raporumu ozetle", "sectigim raporu ozetle"], ["kb:RISK_PROFILE_GENERAL_RULE"]),
   caseIntent("case_primary_axis", "Ana klinik eksen", ["ana klinik eksen ne", "birincil hipotez ne", "vakanin ana oruntusu", "baskin klinik tema"], ["kb:RISK_PROFILE_SUMMARY_RULE"]),
   caseIntent("case_weak_domains", "Zorlanan alanlar", ["hangi alanlar zorlaniyor", "zayif alanlar hangileri", "riskli alanlari soyle", "en dusuk alan hangisi"], ["kb:RISK_PROFILE_SINGLE_DOMAIN"]),
   caseIntent("case_strengths", "Göreli güçlü alanlar", ["guclu alanlar hangileri", "korunmus alanlar", "vakanin guclu yonleri", "dengeleyici alan"], ["kb:RISK_PROFILE_PROTECTIVE_FACTORS"]),

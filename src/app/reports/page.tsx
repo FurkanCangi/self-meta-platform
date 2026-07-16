@@ -305,7 +305,7 @@ export default function ReportsPage() {
                 </div>
               ) : chatEligibilityStatus === "ready" && chatEligibleReportIds.has(selected.id) ? (
                 <Link
-                  href={`/dna-asistani?mode=case&report_id=${encodeURIComponent(selected.id)}&surface=app`}
+                  href={`/dna-asistani?report_id=${encodeURIComponent(selected.id)}&surface=app`}
                   className="dna-btn mt-4 flex min-h-12 w-full items-center justify-center px-4 text-sm font-black"
                 >
                   Rapora sor
@@ -429,7 +429,7 @@ export default function ReportsPage() {
                   </div>
                 ) : chatEligibilityStatus === "ready" && chatEligibleReportIds.has(selected.id) ? (
                   <Link
-                    href={`/dna-asistani?mode=case&report_id=${encodeURIComponent(selected.id)}`}
+                    href={`/dna-asistani?report_id=${encodeURIComponent(selected.id)}`}
                     className="dna-btn inline-flex min-h-11 w-full items-center justify-center px-4 py-2 text-sm font-semibold sm:w-auto"
                   >
                     Rapora sor

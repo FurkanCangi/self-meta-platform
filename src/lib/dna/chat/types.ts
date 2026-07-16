@@ -1,5 +1,5 @@
 export const DNA_CHAT_SCHEMA_VERSION = "1.0" as const
-export const DNA_CHAT_ENGINE_VERSION = "dna-chat-engine@1.0.0" as const
+export const DNA_CHAT_ENGINE_VERSION = "dna-chat-engine@2" as const
 export const DNA_CHAT_KNOWLEDGE_CONTRACT_VERSION = "dna-chat-knowledge@1.0.0" as const
 
 export const DNA_CHAT_DOMAIN_KEYS = [
@@ -25,11 +25,25 @@ export type DnaChatClassification =
   | "not_available"
   | "refusal"
 
+export type DnaChatQueryKind =
+  | "definition"
+  | "comparison"
+  | "relation"
+  | "measurement"
+  | "development"
+  | "evidence"
+  | "misconception"
+  | "dna_relation"
+  | "case_finding"
+  | "case_theory"
+  | "unknown"
+
 export type DnaChatSourceType =
   | "clinical_kb"
   | "literature"
   | "dna_contract"
   | "knowledge_entry"
+  | "catalog"
   | "case"
 
 export type DnaChatEvidenceStatus = "approved" | "verified" | "bounded"
@@ -141,6 +155,9 @@ export type DnaChatSafetyCategory =
   | "crisis"
   | "manipulation"
   | "unsafe_case_context"
+  | "biological_inference"
+  | "measurement_overreach"
+  | "internal_reasoning"
 
 export type DnaChatSafetyResult = {
   blocked: boolean
@@ -158,6 +175,18 @@ export type DnaChatDiagnostics = {
   threshold: number
   tokenScore: number
   ngramScore: number
+  queryKind?: DnaChatQueryKind
+}
+
+export type DnaChatContextRequest = {
+  type: "report"
+  preferNewest: boolean
+}
+
+export type DnaChatEvidenceSummary = {
+  level: string
+  ageScope: string
+  boundary: string
 }
 
 export type DnaChatResponse = {
@@ -178,6 +207,8 @@ export type DnaChatResponse = {
   safetyBoundary: string
   suggestedQuestions: string[]
   safety: DnaChatSafetyResult
+  contextRequest?: DnaChatContextRequest
+  evidenceSummary?: DnaChatEvidenceSummary
 }
 
 export type DnaChatIntentDefinition = {

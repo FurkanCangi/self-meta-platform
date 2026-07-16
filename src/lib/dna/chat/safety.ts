@@ -1,5 +1,9 @@
 import { redactReportTextForPrivacy } from "../reportPrivacy"
 import { VERIFIED_LITERATURE_SOURCES } from "../literatureNote"
+import {
+  DNA_CHAT_CATALOG_SAFETY_RULES,
+  classifyCatalogQueryKind,
+} from "./catalog"
 import { normalizeDnaChatText } from "./text"
 import type { DnaChatSafetyCategory, DnaChatSafetyResult } from "./types"
 
@@ -70,13 +74,21 @@ const LOWERCASE_NON_NAME_TOKENS = new Set([
   "bana",
   "bence",
   "biraz",
+  "bir",
   "bu",
   "burada",
   "çok",
+  "çocukluk",
+  "çocuklukta",
+  "çocuk",
+  "cocuk",
+  "erken",
   "genel",
   "hangi",
   "her",
+  "ile",
   "kendi",
+  "kontrol",
   "kısaca",
   "lütfen",
   "nasıl",
@@ -85,13 +97,20 @@ const LOWERCASE_NON_NAME_TOKENS = new Set([
   "önce",
   "peki",
   "rapor",
+  "rapordaki",
+  "bulgu",
+  "bulguyu",
   "sadece",
   "sence",
+  "self",
   "şimdi",
   "sonra",
   "temel",
   "teorik",
+  "regülasyon",
+  "regulasyon",
   "vaka",
+  "vakadaki",
 ].map(normalizeDnaChatText))
 
 function redactLikelyFullName(match: string, literatureContext: boolean): string {
@@ -201,6 +220,7 @@ const PROGNOSIS_PATTERNS = [
   "kac ayda normale",
   "kac ayda iyiles",
   "normale doner",
+  "ileride okul basarisi",
 ] as const
 
 const CAUSALITY_PATTERNS = [
@@ -255,6 +275,9 @@ const DIAGNOSIS_PATTERNS = [
   "dehb uyumlu",
   "adhd olabilir",
   "adhd dusundur",
+  "bu rapora gore hastaligi nedir",
+  "bu profil hangi klinik tabloyu dusunduruyor",
+  "bu rapordan tanisal sonuc cikar",
 ] as const
 
 const TREATMENT_PATTERNS = [
@@ -273,6 +296,7 @@ const TREATMENT_PATTERNS = [
   "seans oner",
   "tedavide ne yap",
   "tedavi icin ne yap",
+  "bu vakada ne yapmaliyim",
 ] as const
 
 const MEDICATION_PATTERNS = [
@@ -307,12 +331,145 @@ const BOUNDARY_QUESTION_PATTERNS = [
   "tani koymadan ne soyler",
 ] as const
 
+const DNA_PHYSIOLOGY_OVERREACH_PATTERNS = [
+  "dna ile vagal ton",
+  "dna vagal ton",
+  "dna hrv olcer",
+  "dna eda olcer",
+  "dna beyin agini olcer",
+] as const
+
 function includesAny(value: string, patterns: readonly string[]): boolean {
   return patterns.some((pattern) => value.includes(normalizeDnaChatText(pattern)))
 }
 
 function equalsAny(value: string, patterns: readonly string[]): boolean {
   return patterns.some((pattern) => value === normalizeDnaChatText(pattern))
+}
+
+const EXPLAINABLE_BIOLOGICAL_CONCEPTS = [
+  "dorsal vagal",
+  "ventral vagal",
+  "vagal shutdown",
+  "sempatik baskin",
+  "parasempatik yetersiz",
+] as const
+
+const SAFE_BIOLOGICAL_THEORY_KINDS = new Set([
+  "definition",
+  "evidence",
+  "comparison",
+])
+
+const BIOLOGICAL_ATTRIBUTION_PATTERNS = [
+  "bu vaka",
+  "bu rapor",
+  "bu profil",
+  "bu cocuk",
+  "vakada",
+  "raporda",
+  "profilde",
+  "cocukta",
+  "cocugun",
+  "danisan",
+  "kisiye",
+  "kiside",
+  "bana",
+  "benim",
+  "bende",
+  "bizde",
+  "onun",
+  "kendisinin",
+  "miyim",
+  "miyiz",
+  "durumum",
+  "durumumu",
+  "durumumuz",
+  "davranisina",
+  "davranislarina",
+  "davranistan",
+  "hangi durumda",
+  "hangisinde",
+  "durumda mi",
+  "geciyor mu",
+  "gecmis mi",
+  "etkilenmis",
+  "hasarli",
+  "sorunu",
+  "problemi",
+] as const
+
+const BIOLOGICAL_MEASUREMENT_PATTERNS = [
+  "olc",
+  "kac",
+  "deger",
+  "skor",
+  "seviye",
+  "vagal ton",
+  "oran",
+] as const
+
+const SECOND_CLAUSE_MARKERS = [
+  " ve ",
+  " sonra ",
+  " ayrica ",
+  " ama ",
+  " fakat ",
+  " ancak ",
+] as const
+
+function isBoundedBiologicalTheoryQuestion(
+  normalized: string,
+  source: string,
+): boolean {
+  const queryKind = classifyCatalogQueryKind(source)
+  const questionMarkCount = (source.match(/\?/g) ?? []).length
+  const hasRawClauseSeparator = /[;,\n]|[.!?]\s+\S/u.test(source)
+  const hasConceptComparison =
+    queryKind === "comparison" &&
+    EXPLAINABLE_BIOLOGICAL_CONCEPTS.filter((concept) =>
+      normalized.includes(normalizeDnaChatText(concept)),
+    ).length >= 2
+  const andCount = normalized.match(/\sve\s/g)?.length ?? 0
+  const hasSafeConceptConjunction =
+    hasConceptComparison &&
+    andCount === 1 &&
+    /\b(?:dorsal vagal|ventral vagal|vagal shutdown|sempatik baskin|parasempatik yetersiz)\s+ve\s+(?:dorsal vagal|ventral vagal|vagal shutdown|sempatik baskin|parasempatik yetersiz)\b/.test(normalized)
+  const hasUnsafeSecondClause =
+    SECOND_CLAUSE_MARKERS.filter((marker) => marker !== " ve ")
+      .some((marker) => normalized.includes(marker)) ||
+    (andCount > 0 && !hasSafeConceptConjunction)
+  const hasGlobalUnsafeRequest = includesAny(normalized, [
+    ...PROGNOSIS_PATTERNS,
+    ...CAUSALITY_PATTERNS,
+    ...MEDICATION_PATTERNS,
+    ...TREATMENT_PATTERNS,
+    ...DIAGNOSIS_PATTERNS,
+  ])
+
+  return (
+    SAFE_BIOLOGICAL_THEORY_KINDS.has(queryKind) &&
+    includesAny(normalized, EXPLAINABLE_BIOLOGICAL_CONCEPTS) &&
+    questionMarkCount <= 1 &&
+    !hasRawClauseSeparator &&
+    !hasUnsafeSecondClause &&
+    !includesAny(normalized, BIOLOGICAL_ATTRIBUTION_PATTERNS) &&
+    !includesAny(normalized, BIOLOGICAL_MEASUREMENT_PATTERNS) &&
+    !hasGlobalUnsafeRequest
+  )
+}
+
+const CATALOG_RULE_PRIORITY = [
+  "internal_reasoning",
+  "diagnosis",
+  "treatment",
+  "measurement_overreach",
+  "causality",
+  "biological_inference",
+] as const
+
+function catalogRulePriority(category: (typeof DNA_CHAT_CATALOG_SAFETY_RULES)[number]["category"]): number {
+  return CATALOG_RULE_PRIORITY.indexOf(category)
 }
 
 function safetyResult(
@@ -393,6 +550,42 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
       "none",
       null,
       "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yalnız kaynak bağlı ve tanısal olmayan açıklama sunar.",
+    )
+  }
+  if (includesAny(normalized, DNA_PHYSIOLOGY_OVERREACH_PATTERNS)) {
+    return safetyResult(
+      redactedQuestion,
+      "measurement_overreach",
+      "catalog_measurement_overreach",
+      "DNA davranışsal ve ölçek temelli işlevsel profil sunar; HRV, EDA, vagal ton veya ağ aktivitesi ölçmez.",
+    )
+  }
+  const matchingCatalogRules = DNA_CHAT_CATALOG_SAFETY_RULES.filter((rule) =>
+    includesAny(normalized, rule.patterns),
+  )
+  const boundedBiologicalTheoryQuestion =
+    matchingCatalogRules.length > 0 &&
+    matchingCatalogRules.every((rule) => rule.category === "biological_inference") &&
+    isBoundedBiologicalTheoryQuestion(normalized, source)
+  const catalogRule = boundedBiologicalTheoryQuestion
+    ? null
+    : [...matchingCatalogRules].sort(
+        (left, right) => catalogRulePriority(left.category) - catalogRulePriority(right.category),
+      )[0] ?? null
+  if (catalogRule) {
+    const category: DnaChatSafetyCategory =
+      catalogRule.category === "measurement_overreach"
+        ? "measurement_overreach"
+        : catalogRule.category === "internal_reasoning"
+          ? "internal_reasoning"
+          : catalogRule.category === "biological_inference"
+            ? "biological_inference"
+            : catalogRule.category
+    return safetyResult(
+      redactedQuestion,
+      category,
+      `catalog_${catalogRule.category}`,
+      catalogRule.response,
     )
   }
   if (includesAny(normalized, PROGNOSIS_PATTERNS)) {

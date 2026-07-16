@@ -1,8 +1,6 @@
 "use client"
 
 import {
-  BookOpen,
-  BrainCircuit,
   ChevronDown,
   CircleAlert,
   FileSearch,
@@ -11,13 +9,13 @@ import {
   Send,
   ShieldCheck,
   Sparkles,
+  X,
 } from "lucide-react"
 import Link from "next/link"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { useAppSurface } from "@/app/components/app-shell/useAppSurface"
 import { DNA_CHAT_STARTER_QUESTIONS } from "@/lib/dna/chat/suggestions"
 
-type DnaChatMode = "theory" | "dna" | "case"
 type DnaChatClassification =
   | "dna_concept"
   | "literature"
@@ -50,6 +48,17 @@ type SourceRef = {
   claimBoundary?: string
 }
 
+type ContextRequest = {
+  type: "report"
+  preferNewest: boolean
+}
+
+type EvidenceSummary = {
+  level: string
+  ageScope: string
+  boundary: string
+}
+
 type DnaAnswer = {
   classification: DnaChatClassification
   summary: string
@@ -61,49 +70,22 @@ type DnaAnswer = {
   suggestedQuestions: string[]
   engineVersion: string
   topic: string | null
+  contextRequest?: ContextRequest
+  evidenceSummary?: EvidenceSummary
 }
 
 type ChatMessage =
   | { id: string; role: "user"; text: string }
   | { id: string; role: "assistant"; answer: DnaAnswer }
 
-const MODES: Array<{
-  id: DnaChatMode
-  label: string
-  mobileLabel: string
-  short: string
-  description: string
-  icon: typeof BookOpen
-  suggestions: string[]
-}> = [
-  {
-    id: "theory",
-    label: "Teori",
-    mobileLabel: "Teori",
-    short: "Temel çerçeve",
-    description: "Nörofizyoloji, uyarılma, toparlanma ve gelişimsel self-regülasyon.",
-    icon: BookOpen,
-    suggestions: [...DNA_CHAT_STARTER_QUESTIONS.theory],
-  },
-  {
-    id: "dna",
-    label: "DNA Bilgisi",
-    mobileLabel: "DNA",
-    short: "Kavram ve yöntem",
-    description: "Altı alan, kanıt hiyerarşisi, güven düzeyi ve raporun sınırları.",
-    icon: BrainCircuit,
-    suggestions: [...DNA_CHAT_STARTER_QUESTIONS.dna],
-  },
-  {
-    id: "case",
-    label: "Vaka Raporu",
-    mobileLabel: "Vaka",
-    short: "Raporla tartış",
-    description: "Seçili rapordaki güvenli bulguları, karşı kanıtı ve sınırlılıkları incele.",
-    icon: FileSearch,
-    suggestions: [...DNA_CHAT_STARTER_QUESTIONS.case],
-  },
-]
+const STARTER_QUESTIONS = [
+  DNA_CHAT_STARTER_QUESTIONS.theory[0],
+  DNA_CHAT_STARTER_QUESTIONS.dna[0],
+  DNA_CHAT_STARTER_QUESTIONS.theory[1],
+  DNA_CHAT_STARTER_QUESTIONS.dna[1],
+  DNA_CHAT_STARTER_QUESTIONS.case[0],
+  DNA_CHAT_STARTER_QUESTIONS.case[1],
+].filter((question): question is string => Boolean(question))
 
 const CLASSIFICATION_META: Record<DnaChatClassification, { label: string; className: string }> = {
   dna_concept: { label: "DNA Kavramı", className: "border-blue-200 bg-blue-50 text-blue-700" },
@@ -111,13 +93,13 @@ const CLASSIFICATION_META: Record<DnaChatClassification, { label: string; classN
   case_finding: { label: "Rapor Bulgusu", className: "border-cyan-200 bg-cyan-50 text-cyan-700" },
   hypothesis: { label: "Hipotez", className: "border-amber-200 bg-amber-50 text-amber-800" },
   clarification: { label: "Açıklama Gerekli", className: "border-slate-200 bg-slate-50 text-slate-700" },
-  not_available: { label: "Raporda Yok", className: "border-slate-200 bg-slate-50 text-slate-700" },
+  not_available: { label: "Bilgi Bulunamadı", className: "border-slate-200 bg-slate-50 text-slate-700" },
   refusal: { label: "Kapsam Dışı", className: "border-rose-200 bg-rose-50 text-rose-700" },
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_payload: "Soru biçimi doğrulanamadı. Lütfen daha kısa ve açık biçimde yeniden yazın.",
-  mode_report_mismatch: "Vaka modunda bir rapor seçilmelidir.",
+  mode_report_mismatch: "Rapor sorusu için bir rapor seçilmelidir.",
   unauthorized: "Oturum doğrulanamadı. Yeniden giriş yapmanız gerekiyor.",
   session_expired: "Uygulama oturumunuz sona erdi. Yeniden giriş yapın.",
   report_not_found: "Rapor bulunamadı veya bu hesap için erişilebilir değil.",
@@ -150,6 +132,26 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
   const classification = String(row.classification || "") as DnaChatClassification
   if (!(classification in CLASSIFICATION_META)) return null
 
+  const rawContextRequest = row.contextRequest
+  const contextRequest =
+    rawContextRequest &&
+    typeof rawContextRequest === "object" &&
+    (rawContextRequest as Record<string, unknown>).type === "report"
+      ? {
+          type: "report" as const,
+          preferNewest: (rawContextRequest as Record<string, unknown>).preferNewest !== false,
+        }
+      : undefined
+  const rawEvidenceSummary = row.evidenceSummary
+  const evidenceSummary =
+    rawEvidenceSummary && typeof rawEvidenceSummary === "object"
+      ? {
+          level: String((rawEvidenceSummary as Record<string, unknown>).level || "").trim(),
+          ageScope: String((rawEvidenceSummary as Record<string, unknown>).ageScope || "").trim(),
+          boundary: String((rawEvidenceSummary as Record<string, unknown>).boundary || "").trim(),
+        }
+      : undefined
+
   return {
     classification,
     summary: String(row.summary || "Yanıt oluşturuldu.").trim(),
@@ -159,37 +161,24 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
     limitations: normalizeStringList(row.limitations),
     safetyBoundary: String(row.safetyBoundary || "").trim(),
     suggestedQuestions: normalizeStringList(row.suggestedQuestions),
-    engineVersion: String(row.engineVersion || "dna-chat-engine@1").trim(),
+    engineVersion: String(row.engineVersion || "dna-chat-engine@2").trim(),
     topic: typeof row.topic === "string" && row.topic.trim() ? row.topic.trim() : null,
+    ...(contextRequest ? { contextRequest } : {}),
+    ...(evidenceSummary && Object.values(evidenceSummary).some(Boolean) ? { evidenceSummary } : {}),
   }
-}
-
-function welcomeForMode(mode: DnaChatMode) {
-  if (mode === "case") {
-    return "Son DNA raporlarından birini seçin. Yalnız raporda bulunan güvenli bulgular, karşı kanıtlar, korunmuş kapasite ve sınırlılıklar üzerinden ilerlerim."
-  }
-  if (mode === "theory") {
-    return "Self-regülasyonun nörofizyolojik ve gelişimsel çerçevesi hakkında kaynak kontrollü sorular sorabilirsiniz."
-  }
-  return "DNA'nın altı alanı, değerlendirme yaklaşımı, kanıt düzeyi ve rapor okuma sınırları hakkında sorular sorabilirsiniz."
 }
 
 function sourceTitle(source: SourceRef) {
   return source.title || source.labelTr || source.citation || source.id
 }
 
-export default function DnaAssistantClient({
-  initialMode,
-  initialReportId,
-}: {
-  initialMode: DnaChatMode
-  initialReportId: string
-}) {
+export default function DnaAssistantClient({ initialReportId }: { initialReportId: string }) {
   const isAppSurface = useAppSurface(false)
-  const [mode, setMode] = useState<DnaChatMode>(initialMode)
   const [reports, setReports] = useState<ReportOption[]>([])
   const [selectedReportId, setSelectedReportId] = useState("")
-  const [reportsLoading, setReportsLoading] = useState(true)
+  const [reportPickerOpen, setReportPickerOpen] = useState(false)
+  const [pendingReportQuestion, setPendingReportQuestion] = useState<string | null>(null)
+  const [reportsLoading, setReportsLoading] = useState(false)
   const [reportsError, setReportsError] = useState("")
   const [reportsErrorCode, setReportsErrorCode] = useState("")
   const [reportSelectionNotice, setReportSelectionNotice] = useState("")
@@ -201,13 +190,15 @@ export default function DnaAssistantClient({
   const [sendErrorCode, setSendErrorCode] = useState("")
   const messageEndRef = useRef<HTMLDivElement>(null)
   const questionInputRef = useRef<HTMLTextAreaElement>(null)
+  const reportPickerRef = useRef<HTMLElement>(null)
+  const firstReportButtonRef = useRef<HTMLButtonElement>(null)
+  const reportPickerFocusPendingRef = useRef(false)
   const requestSequenceRef = useRef(0)
   const activeRequestRef = useRef<AbortController | null>(null)
 
-  const activeMode = useMemo(() => MODES.find((item) => item.id === mode) || MODES[1], [mode])
   const selectedReport = reports.find((report) => report.id === selectedReportId) || null
 
-  async function loadReports(signal?: AbortSignal) {
+  const loadReports = useCallback(async (signal?: AbortSignal, linkedReportId = "") => {
     setReportsLoading(true)
     setReportsError("")
     setReportsErrorCode("")
@@ -221,44 +212,49 @@ export default function DnaAssistantClient({
       const payload = (await response.json().catch(() => null)) as
         | { ok?: boolean; reports?: ReportOption[]; error?: string }
         | null
-      if (!response.ok || !payload?.ok) {
-        throw new Error(payload?.error || "dna_chat_failed")
-      }
+      if (!response.ok || !payload?.ok) throw new Error(payload?.error || "dna_chat_failed")
+
       const nextReports = Array.isArray(payload.reports) ? payload.reports.slice(0, 10) : []
       setReports(nextReports)
       const linkedReportAvailable = Boolean(
-        initialReportId && nextReports.some((report) => report.id === initialReportId),
-      )
-      setReportSelectionNotice(
-        initialReportId && !linkedReportAvailable
-          ? "Bağlantıdaki rapor son 10 aktif DNA raporu içinde değil. Tartışmak için listeden bir rapor seçin."
-          : "",
+        linkedReportId && nextReports.some((report) => report.id === linkedReportId),
       )
       setSelectedReportId((current) => {
+        if (linkedReportAvailable) return linkedReportId
         if (current && nextReports.some((report) => report.id === current)) return current
-        if (linkedReportAvailable) return initialReportId
-        return initialReportId ? "" : nextReports[0]?.id || ""
+        return ""
       })
+      if (linkedReportId && !linkedReportAvailable) {
+        reportPickerFocusPendingRef.current = true
+        setReportSelectionNotice(
+          "Bağlantıdaki rapor son 10 aktif DNA raporu içinde değil. Tartışmak için listeden bir rapor seçin.",
+        )
+        setReportPickerOpen(true)
+      } else {
+        setReportSelectionNotice("")
+      }
+      return nextReports
     } catch (error) {
-      if ((error as Error)?.name === "AbortError") return
+      if ((error as Error)?.name === "AbortError") return null
       const code = error instanceof Error ? error.message : "dna_chat_failed"
       setReportsErrorCode(code)
       setReportsError(ERROR_MESSAGES[code] || ERROR_MESSAGES.dna_chat_failed)
+      return null
     } finally {
       setReportsLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     const controller = new AbortController()
-    void loadReports(controller.signal)
+    if (initialReportId) void loadReports(controller.signal, initialReportId)
     return () => {
       controller.abort()
       requestSequenceRef.current += 1
       activeRequestRef.current?.abort()
       activeRequestRef.current = null
     }
-  }, [])
+  }, [initialReportId, loadReports])
 
   useEffect(() => {
     const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false
@@ -266,7 +262,14 @@ export default function DnaAssistantClient({
       behavior: reduceMotion ? "auto" : "smooth",
       block: "nearest",
     })
-  }, [messages, sending])
+  }, [messages, sending, reportPickerOpen])
+
+  useEffect(() => {
+    if (!reportPickerOpen || reportsLoading || !reportPickerFocusPendingRef.current) return
+    const target = firstReportButtonRef.current ?? reportPickerRef.current
+    requestAnimationFrame(() => target?.focus())
+    reportPickerFocusPendingRef.current = false
+  }, [reportPickerOpen, reports.length, reportsLoading])
 
   function moveQuestionFocus(nextQuestion?: string) {
     if (typeof nextQuestion === "string") setQuestion(nextQuestion)
@@ -280,58 +283,54 @@ export default function DnaAssistantClient({
     setSending(false)
   }
 
-  function changeMode(nextMode: DnaChatMode) {
-    if (nextMode === mode) return
+  function clearConversation() {
     cancelPendingResponse()
-    setMode(nextMode)
     setMessages([])
     setPreviousTopic(null)
+    setPendingReportQuestion(null)
     setQuestion("")
     setSendError("")
     setSendErrorCode("")
   }
 
-  function moveModeFocus(currentMode: DnaChatMode, key: string) {
-    const currentIndex = MODES.findIndex((item) => item.id === currentMode)
-    let nextIndex = currentIndex
-    if (key === "ArrowRight" || key === "ArrowDown") nextIndex = (currentIndex + 1) % MODES.length
-    if (key === "ArrowLeft" || key === "ArrowUp") nextIndex = (currentIndex - 1 + MODES.length) % MODES.length
-    if (key === "Home") nextIndex = 0
-    if (key === "End") nextIndex = MODES.length - 1
-    if (nextIndex === currentIndex) return false
-    const nextMode = MODES[nextIndex].id
-    changeMode(nextMode)
-    requestAnimationFrame(() => document.getElementById(`dna-mode-${nextMode}`)?.focus())
-    return true
+  function removeReportContext() {
+    clearConversation()
+    setSelectedReportId("")
+    setReportPickerOpen(false)
+    setReportSelectionNotice("")
+    moveQuestionFocus()
   }
 
-  async function submitQuestion(event?: React.FormEvent) {
-    event?.preventDefault()
-    const cleanQuestion = question.trim()
+  function changeReportContext() {
+    clearConversation()
+    setSelectedReportId("")
+    reportPickerFocusPendingRef.current = true
+    setReportPickerOpen(true)
+    setReportSelectionNotice("")
+    void loadReports()
+  }
+
+  async function sendQuestion(
+    cleanQuestion: string,
+    options: { reportId?: string; appendUser?: boolean; previousTopic?: string | null } = {},
+  ) {
     if (sending || cleanQuestion.length < 2) return
-    if (mode === "case" && reportsLoading) {
-      setSendError("Rapor listesi doğrulanırken bekleyin.")
-      return
-    }
-    if (mode === "case" && !selectedReportId) {
-      setSendError("Vaka sorusu için önce bir rapor seçin.")
-      return
-    }
 
     setSending(true)
     setSendError("")
     setSendErrorCode("")
     setQuestion("")
-    setMessages((current) => [...current, { id: messageId("user"), role: "user", text: cleanQuestion }])
+    if (options.appendUser !== false) {
+      setMessages((current) => [...current, { id: messageId("user"), role: "user", text: cleanQuestion }])
+    }
 
     const requestId = requestSequenceRef.current + 1
     requestSequenceRef.current = requestId
     const controller = new AbortController()
     activeRequestRef.current?.abort()
     activeRequestRef.current = controller
-    const requestMode = mode
-    const requestReportId = selectedReportId
-    const requestPreviousTopic = previousTopic
+    const requestReportId = options.reportId ?? selectedReportId
+    const requestPreviousTopic = options.previousTopic === undefined ? previousTopic : options.previousTopic
 
     try {
       const response = await fetch("/api/app/dna-chat", {
@@ -344,23 +343,25 @@ export default function DnaAssistantClient({
         },
         signal: controller.signal,
         body: JSON.stringify({
-          mode: requestMode,
           question: cleanQuestion,
-          ...(requestMode === "case" ? { reportId: requestReportId } : {}),
+          ...(requestReportId ? { reportId: requestReportId } : {}),
           ...(requestPreviousTopic ? { context: { previousTopic: requestPreviousTopic } } : {}),
         }),
       })
       const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null
-      if (!response.ok || !payload?.ok) {
-        const code = String(payload?.error || "dna_chat_failed")
-        throw new Error(code)
-      }
+      if (!response.ok || !payload?.ok) throw new Error(String(payload?.error || "dna_chat_failed"))
       const answer = normalizeAnswer(payload)
       if (!answer) throw new Error("dna_chat_failed")
       if (requestSequenceRef.current !== requestId) return
 
       setMessages((current) => [...current, { id: messageId("assistant"), role: "assistant", answer }])
       setPreviousTopic(answer.topic)
+      if (answer.contextRequest?.type === "report" && !requestReportId) {
+        setPendingReportQuestion(cleanQuestion)
+        reportPickerFocusPendingRef.current = true
+        setReportPickerOpen(true)
+        await loadReports(controller.signal)
+      }
     } catch (error) {
       if ((error as Error)?.name === "AbortError" || requestSequenceRef.current !== requestId) return
       const code = error instanceof Error ? error.message : "dna_chat_failed"
@@ -370,24 +371,50 @@ export default function DnaAssistantClient({
       if (requestSequenceRef.current === requestId) {
         activeRequestRef.current = null
         setSending(false)
-        moveQuestionFocus()
+        if (!reportPickerFocusPendingRef.current) moveQuestionFocus()
       }
     }
   }
 
+  async function chooseReport(reportId: string) {
+    const waitingQuestion = pendingReportQuestion
+    clearConversation()
+    setSelectedReportId(reportId)
+    reportPickerFocusPendingRef.current = false
+    setReportPickerOpen(false)
+    setReportSelectionNotice("")
+    if (waitingQuestion) {
+      await sendQuestion(waitingQuestion, { reportId, previousTopic: null })
+    } else {
+      moveQuestionFocus()
+    }
+  }
+
+  function submitQuestion(event?: React.FormEvent) {
+    event?.preventDefault()
+    const cleanQuestion = question.trim()
+    if (sending || cleanQuestion.length < 2) return
+    if (pendingReportQuestion) {
+      setPendingReportQuestion(null)
+      reportPickerFocusPendingRef.current = false
+      setReportPickerOpen(false)
+    }
+    void sendQuestion(cleanQuestion)
+  }
+
   return (
-    <div className="mx-auto w-full max-w-[1480px] pb-2">
+    <div className="mx-auto w-full max-w-[1180px] pb-2">
       <header className="relative mb-4 overflow-hidden rounded-[28px] border border-cyan-100/80 bg-[var(--sm-surface)] p-5 shadow-[0_20px_54px_rgba(37,99,235,0.10)] md:mb-5 md:p-7">
         <div className="pointer-events-none absolute -left-12 -top-20 h-52 w-52 rounded-full bg-cyan-100/45 blur-3xl" />
         <div className="pointer-events-none absolute -right-10 -top-16 h-52 w-52 rounded-full bg-violet-100/45 blur-3xl" />
         <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div className="min-w-0">
             <div className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-3 text-[11px] font-black uppercase tracking-[0.14em] text-blue-700">
-              <Sparkles size={15} aria-hidden="true" /> Deterministik klinik bilgi alanı
+              <Sparkles size={15} aria-hidden="true" /> Kaynak kontrollü klinik bilgi alanı
             </div>
             <h1 className="mt-3 text-3xl font-black tracking-tight text-[#071b3a] md:text-4xl">DNA Asistanı</h1>
             <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-slate-600 md:text-[15px]">
-              Haricî modele veri göndermez. Onaylı bilgi blokları ve yalnız seçtiğiniz rapordaki güvenli bağlamla çalışır.
+              Teori, DNA kavramları ve kendi raporlarınız hakkındaki soruları tek alanda yanıtlar; gerekli bağlamı kendisi belirler.
             </p>
           </div>
           <div className="flex min-h-12 shrink-0 items-center gap-3 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-4 text-sm font-bold text-[var(--sm-text-soft)]">
@@ -396,260 +423,243 @@ export default function DnaAssistantClient({
         </div>
       </header>
 
-      <div className="grid min-w-0 gap-4 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start">
-        <aside className="dna-card min-w-0 p-3 lg:sticky lg:top-5" aria-label="DNA Asistanı bağlamı">
-          <div className="px-2 pb-2 pt-1 text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">Çalışma modu</div>
-          <div className="grid grid-cols-3 gap-2 lg:grid-cols-1" role="tablist" aria-label="DNA Asistanı modu">
-            {MODES.map((item) => {
-              const Icon = item.icon
-              const active = item.id === mode
-              return (
-                <button
-                  key={item.id}
-                  id={`dna-mode-${item.id}`}
-                  type="button"
-                  role="tab"
-                  aria-selected={active}
-                  aria-label={item.label}
-                  aria-controls="dna-chat-panel"
-                  tabIndex={active ? 0 : -1}
-                  onClick={() => changeMode(item.id)}
-                  onKeyDown={(event) => {
-                    if (moveModeFocus(item.id, event.key)) event.preventDefault()
-                  }}
-                  className={[
-                    "flex min-h-12 min-w-0 items-center justify-center gap-2 rounded-2xl border px-2 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 lg:min-h-[68px] lg:justify-start lg:px-3",
-                    active
-                      ? "border-blue-200 bg-gradient-to-r from-cyan-50 via-blue-50 to-violet-50 text-[#071b3a] shadow-sm"
-                      : "border-transparent text-slate-600 hover:border-slate-200 hover:bg-slate-50",
-                  ].join(" ")}
-                >
-                  <span className={[
-                    "grid h-9 w-9 shrink-0 place-items-center rounded-xl",
-                    active ? "bg-white text-blue-700 shadow-sm" : "bg-slate-100 text-slate-500",
-                  ].join(" ")}>
-                    <Icon size={18} aria-hidden="true" />
-                  </span>
-                  <span className="hidden min-w-0 lg:block">
-                    <span className="block text-sm font-black">{item.label}</span>
-                    <span className="mt-0.5 block truncate text-[11px] font-semibold text-slate-500">{item.short}</span>
-                  </span>
-                  <span className="truncate text-xs font-black lg:hidden">{item.mobileLabel}</span>
-                </button>
-              )
-            })}
-          </div>
+      <section className="dna-card min-w-0 overflow-visible" aria-label="DNA Asistanı sohbeti">
+        <div className="border-b border-[var(--sm-border)] px-4 py-4 md:px-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex min-w-0 items-center gap-3">
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-cyan-500 via-blue-600 to-violet-600 text-white shadow-[0_12px_26px_rgba(37,99,235,0.22)]">
+                <Sparkles size={21} aria-hidden="true" />
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-base font-black text-[var(--sm-text)]">Nasıl yardımcı olabilirim?</h2>
+                <p className="mt-0.5 text-xs font-semibold leading-5 text-[var(--sm-text-muted)]">
+                  Genel bilgi ile rapor bağlamını otomatik olarak ayırırım.
+                </p>
+              </div>
+            </div>
 
-          {mode === "case" ? (
-            <div className="mt-3 border-t border-[var(--sm-border)] px-2 pt-4">
-              <label htmlFor="dna-report-select" className="text-xs font-black text-[var(--sm-text)]">Son DNA raporları</label>
+            {selectedReport ? (
+              <div role="status" className="flex min-h-12 items-center gap-2 rounded-2xl border border-cyan-200 bg-cyan-50 px-3 text-xs font-bold text-cyan-900">
+                <FileSearch size={17} aria-hidden="true" />
+                <span className="min-w-0">
+                  <span className="block truncate font-black">{selectedReport.clientCode || "Danışan kodu yok"}</span>
+                  <span className="block text-[10px] text-cyan-700">{formatDate(selectedReport.createdAt)}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={changeReportContext}
+                  className="min-h-11 rounded-xl px-2 font-black text-blue-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                >
+                  Değiştir
+                </button>
+                <button
+                  type="button"
+                  onClick={removeReportContext}
+                  aria-label="Rapor bağlamını kaldır ve yeni sohbet başlat"
+                  className="grid min-h-11 min-w-11 place-items-center rounded-xl text-slate-500 hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                >
+                  <X size={17} aria-hidden="true" />
+                </button>
+              </div>
+            ) : reportsLoading && initialReportId && !reportPickerOpen ? (
+              <div role="status" className="flex min-h-12 items-center gap-2 rounded-2xl bg-[var(--sm-surface-soft)] px-3 text-xs font-bold text-[var(--sm-text-muted)]">
+                <LoaderCircle className="animate-spin" size={17} aria-hidden="true" /> Rapor bağlantısı doğrulanıyor
+              </div>
+            ) : null}
+          </div>
+        </div>
+
+        <div
+          className={[
+            "min-h-[440px] space-y-4 bg-[var(--sm-surface-soft)]/60 px-3 py-4 md:min-h-[560px] md:px-6 md:py-6",
+            isAppSurface ? "pb-40" : "",
+          ].join(" ")}
+          role="log"
+          aria-live="polite"
+          aria-relevant="additions text"
+        >
+          {messages.length === 0 && !reportPickerOpen ? (
+            <div className="mx-auto max-w-3xl rounded-[24px] border border-blue-100 bg-[var(--sm-surface)] p-5 shadow-sm">
+              <div className="flex items-center gap-2 text-sm font-black text-blue-700">
+                <Sparkles size={18} aria-hidden="true" /> Örnek sorular
+              </div>
+              <p className="mt-3 text-sm font-medium leading-6 text-[var(--sm-text-soft)]">
+                Nörofizyoloji, self-regülasyon, DNA değerlendirme yaklaşımı veya bir raporunuz hakkında doğal biçimde sorabilirsiniz.
+              </p>
+              <div className="mt-4 grid gap-2 md:grid-cols-2">
+                {STARTER_QUESTIONS.map((suggestion) => (
+                  <button
+                    key={suggestion}
+                    type="button"
+                    onClick={() => moveQuestionFocus(suggestion)}
+                    className="min-h-11 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-3 py-2 text-left text-xs font-bold leading-5 text-[var(--sm-text-soft)] transition hover:border-blue-200 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  >
+                    {suggestion}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {messages.map((message) =>
+            message.role === "user" ? (
+              <div key={message.id} className="ml-auto max-w-[88%] rounded-[22px] rounded-br-md bg-gradient-to-br from-blue-600 to-blue-700 px-4 py-3 text-sm font-semibold leading-6 text-white shadow-[0_12px_24px_rgba(37,99,235,0.18)] md:max-w-[72%]">
+                {message.text}
+              </div>
+            ) : (
+              <AssistantAnswer key={message.id} answer={message.answer} onSuggestion={moveQuestionFocus} />
+            ),
+          )}
+
+          {reportPickerOpen ? (
+            <section
+              ref={reportPickerRef}
+              tabIndex={-1}
+              className="max-w-3xl rounded-[24px] rounded-bl-md border border-cyan-200 bg-[var(--sm-surface)] p-4 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-blue-500 md:p-5"
+              aria-labelledby="dna-report-picker-title"
+            >
+              <div className="flex items-start gap-3">
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-cyan-50 text-cyan-700">
+                  <FileSearch size={19} aria-hidden="true" />
+                </span>
+                <div>
+                  <h3 id="dna-report-picker-title" className="text-sm font-black text-[var(--sm-text)]">Hangi raporla devam edelim?</h3>
+                  <p className="mt-1 text-xs font-semibold leading-5 text-[var(--sm-text-muted)]">
+                    Yalnız hesabınıza ait son 10 aktif DNA raporu gösterilir. Rapor içeriği seçimden önce açılmaz.
+                  </p>
+                </div>
+              </div>
+
+              {reportSelectionNotice ? (
+                <div role="status" className="mt-3 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-900">
+                  {reportSelectionNotice}
+                </div>
+              ) : null}
+
               {reportsLoading ? (
-                <div role="status" className="mt-2 flex min-h-12 items-center gap-2 rounded-2xl bg-[var(--sm-surface-soft)] px-3 text-xs font-semibold text-[var(--sm-text-muted)]">
+                <div role="status" className="mt-3 flex min-h-12 items-center gap-2 rounded-2xl bg-[var(--sm-surface-soft)] px-3 text-xs font-semibold text-[var(--sm-text-muted)]">
                   <LoaderCircle className="animate-spin" size={17} aria-hidden="true" /> Raporlar yükleniyor
                 </div>
               ) : reportsError ? (
-                <div role="alert" className="mt-2 rounded-2xl border border-rose-200 bg-[var(--sm-surface-soft)] p-3 text-xs font-semibold leading-5 text-[var(--sm-text)]">
+                <div role="alert" className="mt-3 rounded-2xl border border-rose-200 bg-[var(--sm-surface-soft)] p-3 text-xs font-semibold leading-5 text-[var(--sm-text)]">
                   {reportsError}
                   {reportsErrorCode === "unauthorized" || reportsErrorCode === "session_expired" ? (
                     <Link href="/app-login" className="mt-2 flex min-h-11 items-center font-black text-blue-700 underline-offset-4 hover:underline">
                       Yeniden giriş yap
                     </Link>
-                  ) : null}
-                  <button type="button" onClick={() => void loadReports()} className="mt-2 flex min-h-11 items-center gap-2 font-black">
-                    <RefreshCw size={15} aria-hidden="true" /> Yeniden dene
-                  </button>
+                  ) : (
+                    <button type="button" onClick={() => void loadReports()} className="mt-2 flex min-h-11 items-center gap-2 font-black text-blue-700">
+                      <RefreshCw size={15} aria-hidden="true" /> Yeniden dene
+                    </button>
+                  )}
                 </div>
               ) : reports.length ? (
-                <>
-                  {reportSelectionNotice ? (
-                    <div role="status" className="mt-2 rounded-2xl border border-amber-200 bg-[var(--sm-surface-soft)] p-3 text-xs font-semibold leading-5 text-[var(--sm-text-soft)]">
-                      {reportSelectionNotice}
+                <div className="mt-3 max-h-72 space-y-2 overflow-y-auto pr-1" role="list" aria-label="Son DNA raporları">
+                  {reports.map((report, index) => (
+                    <div key={report.id} role="listitem">
+                      <button
+                        ref={index === 0 ? firstReportButtonRef : undefined}
+                        type="button"
+                        onClick={() => void chooseReport(report.id)}
+                        className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-3 py-2 text-left transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate text-xs font-black text-[var(--sm-text)]">
+                            {report.clientCode || "Danışan kodu yok"}
+                            {index === 0 ? <span className="ml-2 text-[10px] uppercase tracking-wide text-blue-700">En yeni</span> : null}
+                          </span>
+                          <span className="mt-1 block text-[11px] font-semibold text-[var(--sm-text-muted)]">
+                            {formatDate(report.createdAt)} · {report.ageBand || "Yaş bandı yok"} · Sürüm {report.version ?? "—"}
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-xs font-black text-blue-700">Seç</span>
+                      </button>
                     </div>
-                  ) : null}
-                  <div className="relative mt-2">
-                    <select
-                      id="dna-report-select"
-                      value={selectedReportId}
-                      onChange={(event) => {
-                        cancelPendingResponse()
-                        setSelectedReportId(event.target.value)
-                        setReportSelectionNotice("")
-                        setMessages([])
-                        setPreviousTopic(null)
-                        setSendError("")
-                      }}
-                      className="min-h-12 w-full appearance-none rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface)] px-3 pr-10 text-sm font-bold text-[var(--sm-text)] outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-                    >
-                      <option value="" disabled>Rapor seçin</option>
-                      {reports.map((report) => (
-                        <option key={report.id} value={report.id}>
-                          {report.clientCode || "Kod yok"} · {formatDate(report.createdAt)}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} aria-hidden="true" />
-                  </div>
-                  {selectedReport ? (
-                    <div className="mt-2 rounded-2xl bg-[var(--sm-surface-soft)] p-3 text-xs font-semibold leading-5 text-[var(--sm-text-muted)]">
-                      <div className="font-black text-[var(--sm-text)]">{selectedReport.clientCode || "Danışan kodu yok"}</div>
-                      <div>{selectedReport.ageBand || "Yaş bandı yok"} · Sürüm {selectedReport.version ?? "—"}</div>
-                    </div>
-                  ) : null}
-                </>
+                  ))}
+                </div>
               ) : (
-                <div role="status" className="mt-2 rounded-2xl bg-[var(--sm-surface-soft)] p-3 text-xs font-semibold leading-5 text-[var(--sm-text-muted)]">
+                <div role="status" className="mt-3 rounded-2xl bg-[var(--sm-surface-soft)] p-3 text-xs font-semibold leading-5 text-[var(--sm-text-muted)]">
                   Bu hesapta tartışılabilecek aktif DNA raporu bulunmuyor.
                 </div>
               )}
-            </div>
+            </section>
           ) : null}
 
-          <div className="mt-3 border-t border-[var(--sm-border)] px-2 pt-4">
-            <div className="flex items-start gap-2 text-xs font-semibold leading-5 text-[var(--sm-text-muted)]">
-              <CircleAlert className="mt-0.5 shrink-0 text-blue-600" size={16} aria-hidden="true" />
-              <span>Ad, T.C. kimlik, telefon, adres veya protokol numarası yazmayın. Tanı, ilaç ve tedavi planı kapsam dışıdır.</span>
+          {sending ? (
+            <div className="flex max-w-[84%] items-center gap-3 rounded-[22px] rounded-bl-md border border-[var(--sm-border)] bg-[var(--sm-surface)] px-4 py-3 text-sm font-semibold text-[var(--sm-text-muted)]">
+              <LoaderCircle className="animate-spin text-blue-600" size={18} aria-hidden="true" /> Kaynak kontrollü yanıt hazırlanıyor
             </div>
-          </div>
-        </aside>
+          ) : null}
+          <div ref={messageEndRef} />
+        </div>
 
-        <section
-          id="dna-chat-panel"
-          role="tabpanel"
-          aria-labelledby={`dna-mode-${mode}`}
-          className="dna-card min-w-0 overflow-visible"
+        <form
+          onSubmit={submitQuestion}
+          className={[
+            "z-20 border-t border-[var(--sm-border)] bg-[var(--sm-surface)]/96 p-3 shadow-[0_-16px_36px_rgba(7,27,58,0.08)] backdrop-blur-xl md:p-4",
+            isAppSurface
+              ? "fixed inset-x-3 bottom-[calc(78px+env(safe-area-inset-bottom))] mx-auto max-w-[406px] rounded-t-[22px] md:inset-x-8 md:max-w-[704px] lg:sticky lg:inset-x-auto lg:bottom-[88px] lg:mx-0 lg:max-w-none lg:rounded-none"
+              : "sticky bottom-2",
+          ].join(" ")}
         >
-          <div className="border-b border-[var(--sm-border)] px-4 py-4 md:px-6">
-            <div className="flex items-center gap-3">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-cyan-500 via-blue-600 to-violet-600 text-white shadow-[0_12px_26px_rgba(37,99,235,0.22)]">
-                <activeMode.icon size={21} aria-hidden="true" />
-              </span>
-              <div className="min-w-0">
-                <h2 className="text-base font-black text-[var(--sm-text)]">{activeMode.label}</h2>
-                <p className="mt-0.5 text-xs font-semibold leading-5 text-[var(--sm-text-muted)]">{activeMode.description}</p>
-              </div>
+          {sendError ? (
+            <div role="alert" className="mb-2 rounded-2xl border border-rose-200 bg-[var(--sm-surface-soft)] px-3 py-2 text-xs font-bold leading-5 text-[var(--sm-text)]">
+              {sendError}
+              {sendErrorCode === "unauthorized" || sendErrorCode === "session_expired" ? (
+                <Link href="/app-login" className="ml-2 inline-flex min-h-11 items-center font-black text-blue-700 underline-offset-4 hover:underline">
+                  Yeniden giriş yap
+                </Link>
+              ) : null}
             </div>
+          ) : null}
+          <div className="flex items-end gap-2">
+            <label htmlFor="dna-chat-question" className="sr-only">DNA Asistanına sorunuzu yazın</label>
+            <textarea
+              ref={questionInputRef}
+              id="dna-chat-question"
+              value={question}
+              onChange={(event) => setQuestion(event.target.value.slice(0, 600))}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault()
+                  submitQuestion()
+                }
+              }}
+              rows={2}
+              maxLength={600}
+              disabled={sending}
+              placeholder={selectedReport ? "Raporla veya genel bilgiyle ilgili sorun…" : "Teori, DNA veya raporlarınız hakkında sorun…"}
+              className="min-h-[52px] max-h-40 min-w-0 flex-1 resize-y rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-4 py-3 text-sm font-semibold leading-6 text-[var(--sm-text)] outline-none placeholder:text-[var(--sm-text-muted)] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 disabled:opacity-60"
+            />
+            <button
+              type="submit"
+              disabled={sending || question.trim().length < 2}
+              aria-label="Soruyu gönder"
+              className="dna-btn grid min-h-[52px] min-w-[52px] shrink-0 place-items-center disabled:cursor-not-allowed disabled:opacity-45"
+            >
+              {sending ? <LoaderCircle className="animate-spin" size={19} aria-hidden="true" /> : <Send size={19} aria-hidden="true" />}
+            </button>
           </div>
-
-          <div
-            className={[
-              "min-h-[420px] space-y-4 bg-[var(--sm-surface-soft)]/60 px-3 py-4 md:min-h-[520px] md:px-6 md:py-6",
-              isAppSurface ? "pb-40" : "",
-            ].join(" ")}
-            role="log"
-            aria-live="polite"
-            aria-relevant="additions text"
-          >
-            {messages.length === 0 ? (
-              <div className="mx-auto max-w-2xl rounded-[24px] border border-blue-100 bg-[var(--sm-surface)] p-5 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-black text-blue-700">
-                  <Sparkles size={18} aria-hidden="true" /> Bu modda neler sorabilirsiniz?
-                </div>
-                <p className="mt-3 text-sm font-medium leading-6 text-[var(--sm-text-soft)]">{welcomeForMode(mode)}</p>
-                <div className="mt-4 grid gap-2">
-                  {activeMode.suggestions.map((suggestion) => (
-                    <button
-                      key={suggestion}
-                      type="button"
-                      onClick={() => moveQuestionFocus(suggestion)}
-                      className="min-h-11 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-3 py-2 text-left text-xs font-bold leading-5 text-[var(--sm-text-soft)] transition hover:border-blue-200 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                    >
-                      {suggestion}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-
-            {messages.map((message) =>
-              message.role === "user" ? (
-                <div key={message.id} className="ml-auto max-w-[88%] rounded-[22px] rounded-br-md bg-gradient-to-br from-blue-600 to-blue-700 px-4 py-3 text-sm font-semibold leading-6 text-white shadow-[0_12px_24px_rgba(37,99,235,0.18)] md:max-w-[72%]">
-                  {message.text}
-                </div>
-              ) : (
-                <AssistantAnswer key={message.id} answer={message.answer} mode={mode} onSuggestion={moveQuestionFocus} />
-              )
-            )}
-
-            {sending ? (
-              <div className="flex max-w-[84%] items-center gap-3 rounded-[22px] rounded-bl-md border border-[var(--sm-border)] bg-[var(--sm-surface)] px-4 py-3 text-sm font-semibold text-[var(--sm-text-muted)]">
-                <LoaderCircle className="animate-spin text-blue-600" size={18} aria-hidden="true" /> Kaynak kontrollü yanıt hazırlanıyor
-              </div>
-            ) : null}
-            <div ref={messageEndRef} />
+          <div className="mt-2 flex flex-col gap-2 px-1 text-[10px] font-bold text-[var(--sm-text-muted)] sm:flex-row sm:items-center sm:justify-between">
+            <span>Enter gönderir · Shift + Enter yeni satır</span>
+            <span>{question.length}/600</span>
           </div>
-
-          <form
-            onSubmit={submitQuestion}
-            className={[
-              "z-20 border-t border-[var(--sm-border)] bg-[var(--sm-surface)]/96 p-3 shadow-[0_-16px_36px_rgba(7,27,58,0.08)] backdrop-blur-xl md:p-4",
-              isAppSurface
-                ? "fixed inset-x-3 bottom-[calc(78px+env(safe-area-inset-bottom))] mx-auto max-w-[406px] rounded-t-[22px] md:inset-x-8 md:max-w-[704px] lg:sticky lg:inset-x-auto lg:bottom-[88px] lg:mx-0 lg:max-w-none lg:rounded-none"
-                : "sticky bottom-2",
-            ].join(" ")}
-          >
-            {sendError ? (
-              <div role="alert" className="mb-2 rounded-2xl border border-rose-200 bg-[var(--sm-surface-soft)] px-3 py-2 text-xs font-bold leading-5 text-[var(--sm-text)]">
-                {sendError}
-                {sendErrorCode === "unauthorized" || sendErrorCode === "session_expired" ? (
-                  <Link href="/app-login" className="ml-2 inline-flex min-h-11 items-center font-black text-blue-700 underline-offset-4 hover:underline">
-                    Yeniden giriş yap
-                  </Link>
-                ) : null}
-              </div>
-            ) : null}
-            <div className="flex items-end gap-2">
-              <label htmlFor="dna-chat-question" className="sr-only">DNA Asistanına sorunuzu yazın</label>
-              <textarea
-                ref={questionInputRef}
-                id="dna-chat-question"
-                value={question}
-                onChange={(event) => setQuestion(event.target.value.slice(0, 600))}
-                onKeyDown={(event) => {
-                  if (event.key === "Enter" && !event.shiftKey) {
-                    event.preventDefault()
-                    void submitQuestion()
-                  }
-                }}
-                rows={2}
-                maxLength={600}
-                disabled={sending}
-                placeholder={mode === "case" ? "Seçili rapor hakkında sorun…" : "Sorunuzu yazın…"}
-                className="min-h-[52px] max-h-40 min-w-0 flex-1 resize-y rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-4 py-3 text-sm font-semibold leading-6 text-[var(--sm-text)] outline-none placeholder:text-[var(--sm-text-muted)] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 disabled:opacity-60"
-              />
-              <button
-                type="submit"
-                disabled={sending || question.trim().length < 2 || (mode === "case" && (reportsLoading || !selectedReportId))}
-                aria-label="Soruyu gönder"
-                className="dna-btn grid min-h-[52px] min-w-[52px] shrink-0 place-items-center disabled:cursor-not-allowed disabled:opacity-45"
-              >
-                {sending ? <LoaderCircle className="animate-spin" size={19} aria-hidden="true" /> : <Send size={19} aria-hidden="true" />}
-              </button>
-            </div>
-            <div className="mt-2 flex items-center justify-between gap-3 px-1 text-[10px] font-bold text-[var(--sm-text-muted)]">
-              <span>Enter gönderir · Shift + Enter yeni satır</span>
-              <span>{question.length}/600</span>
-            </div>
-          </form>
-        </section>
-      </div>
+          <div className="mt-2 flex items-start gap-2 rounded-xl bg-[var(--sm-surface-soft)] px-3 py-2 text-[10px] font-semibold leading-4 text-[var(--sm-text-muted)]">
+            <CircleAlert className="mt-0.5 shrink-0 text-blue-600" size={14} aria-hidden="true" />
+            <span>Ad, T.C. kimlik, telefon veya adres yazmayın. Tanı, ilaç ve tedavi planı kapsam dışıdır.</span>
+          </div>
+        </form>
+      </section>
     </div>
   )
 }
 
-function AssistantAnswer({
-  answer,
-  mode,
-  onSuggestion,
-}: {
-  answer: DnaAnswer
-  mode: DnaChatMode
-  onSuggestion: (value: string) => void
-}) {
+function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSuggestion: (value: string) => void }) {
   const baseMeta = CLASSIFICATION_META[answer.classification]
-  const meta =
-    answer.classification === "not_available" && mode !== "case"
-      ? { ...baseMeta, label: "Kapsam Dışı" }
-      : baseMeta
+  const reportScopedNotAvailable =
+    answer.classification === "not_available" &&
+    (answer.caseEvidence.length > 0 || answer.limitations.some((item) => /\b(?:rapor|vaka)\b/i.test(item)))
+  const meta = reportScopedNotAvailable ? { ...baseMeta, label: "Raporda Yok" } : baseMeta
 
   return (
     <article className="max-w-[94%] rounded-[24px] rounded-bl-md border border-[var(--sm-border)] bg-[var(--sm-surface)] p-4 shadow-sm md:max-w-[84%] md:p-5">
@@ -670,6 +680,20 @@ function AssistantAnswer({
             </li>
           ))}
         </ul>
+      ) : null}
+
+      {answer.evidenceSummary ? (
+        <div className="mt-4 grid gap-2 rounded-2xl border border-violet-200 bg-[var(--sm-surface-soft)] p-3 text-xs leading-5 sm:grid-cols-2">
+          {answer.evidenceSummary.level ? (
+            <div><span className="font-black text-[var(--sm-text)]">Kanıt düzeyi:</span> <span className="font-semibold text-[var(--sm-text-soft)]">{answer.evidenceSummary.level}</span></div>
+          ) : null}
+          {answer.evidenceSummary.ageScope ? (
+            <div><span className="font-black text-[var(--sm-text)]">Yaş kapsamı:</span> <span className="font-semibold text-[var(--sm-text-soft)]">{answer.evidenceSummary.ageScope}</span></div>
+          ) : null}
+          {answer.evidenceSummary.boundary ? (
+            <div className="sm:col-span-2"><span className="font-black text-[var(--sm-text)]">İddia sınırı:</span> <span className="font-semibold text-[var(--sm-text-soft)]">{answer.evidenceSummary.boundary}</span></div>
+          ) : null}
+        </div>
       ) : null}
 
       {answer.caseEvidence.length ? (

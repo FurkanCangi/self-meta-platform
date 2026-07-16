@@ -26,6 +26,7 @@ export default function RetentionPolicyPage() {
           body: [
             "Platformda oluşturulan, güncellenen veya silinen `clients`, `assessments_v2` ve `reports` kayıtları owner-only append-only audit katmanında snapshot olarak tutulabilir.",
             "Bu katman kullanıcı arayüzünde gösterilmez; yalnız yetkili owner/admin erişimiyle güvenlik, denetim, veri bütünlüğü, yasal saklama, destek ve uyuşmazlık amaçlarıyla kullanılabilir.",
+            "DNA Asistanı erişim audit kayıtları 24 ay saklanır. Bu kayıtlarda yalnız istek kimliği, yönlendirme türü, cevap sınıfı, motor sürümü, ret durumu ve kullanılan kaynak kimlikleri tutulur; soru, cevap, danışan kodu veya klinik içerik tutulmaz.",
           ],
         },
         {
