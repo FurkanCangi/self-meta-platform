@@ -60,6 +60,44 @@ No unresolved P0, P1, or P2 findings remain.
 
 final result: passed
 
+---
+
+# Research Detail Pages Design QA
+
+## Scope
+
+- Routes: `/arastirma/veri-agi` and `/arastirma/tez-ve-proje-destegi`
+- Data Network source screenshot: `/var/folders/7j/kgq_1qrj27n39d0yjmkfh1_40000gn/T/TemporaryItems/NSIRD_screencaptureui_kb5HJ8/Ekran Resmi 2026-07-16 19.48.05.png`
+- Project Support source screenshot: `/var/folders/7j/kgq_1qrj27n39d0yjmkfh1_40000gn/T/TemporaryItems/NSIRD_screencaptureui_LIP9Lv/Ekran Resmi 2026-07-16 19.48.42.png`
+- Data Network desktop capture: `/tmp/selfmeta-data-network-desktop.png`
+- Project Support desktop capture: `/tmp/selfmeta-project-support-desktop.png`
+- Desktop verification viewport: `1440 x 900`
+- Mobile verification viewport: `390 x 844`
+
+## Design Result
+
+- The generic pastel introduction and repeated four-card grid were replaced with a shared research-detail design system built around a dark, unframed first viewport.
+- Data Network now presents a controlled multi-centre protocol: centres, measurement standard, secure data layer, and aggregated analysis are visible in one operational diagram.
+- Project Support now presents a distinct project file: research question, method plan, data interpretation, and scientific output form one coherent methodological line.
+- Both pages use a four-decision evidence section, a five-step working model, explicit responsibility boundaries, and one focused final action.
+- Existing shared navigation, footer, production DNA symbol, typography, routes, and Lucide icon language are preserved.
+- Content density was reduced without removing the methodological meaning of either page.
+
+## Verification
+
+- Source and implementation screenshots were compared together for both routes.
+- Desktop hierarchy, spacing, text fit, and layer transitions: passed.
+- Mobile document width remains within the `390px` viewport; no horizontal overflow or incoherent overlap was detected.
+- Navigation, section anchors, `/iletisim`, and `/arastirma` actions remain valid.
+- Browser console errors and warnings: none.
+- TypeScript lint: passed.
+- Production build: passed with both pages served through `/arastirma/[slug]`.
+- `git diff --check`: passed.
+
+No unresolved P0, P1, or P2 findings remain.
+
+final result: passed
+
 ## Therapist Profile And Directory Publication
 
 ### Design Result

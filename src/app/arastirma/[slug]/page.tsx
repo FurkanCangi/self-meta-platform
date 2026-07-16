@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import FooterContact from "../../components/FooterContact";
 import LandingHeader from "../../components/LandingHeader";
 import styles from "../../marketing-pages.module.css";
+import DataNetworkPage from "../DataNetworkPage";
+import ProjectSupportPage from "../ProjectSupportPage";
 import ResearchNotesClient from "../ResearchNotesClient";
 import { getResearchPage, researchPages } from "../researchContent";
 
@@ -43,6 +45,14 @@ export default async function ResearchDetailPage({ params }: ResearchDetailPageP
         <FooterContact />
       </div>
     );
+  }
+
+  if (slug === "veri-agi") {
+    return <DataNetworkPage />;
+  }
+
+  if (slug === "tez-ve-proje-destegi") {
+    return <ProjectSupportPage />;
   }
 
   const HeroIcon = page.icon;
