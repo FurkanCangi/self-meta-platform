@@ -219,3 +219,52 @@ final result: passed
 No unresolved P0, P1, or P2 findings remain.
 
 final result: passed
+
+---
+
+# Shared Footer Design QA
+
+## Scope
+
+- Component: `FooterContact`
+- Verification route: `/iletisim`
+- Selected visual reference: `/Users/furkancangi/.codex/generated_images/019ecfb7-080f-7730-8baf-3ef7e620363f/exec-5451c75e-79c8-44b2-82f1-6972e89dbed4.png`
+- Source and implementation comparison: `.tmp/design-qa/footer-comparison.png`
+- Desktop capture: `.tmp/design-qa/footer-desktop.png`
+- Tablet capture: `.tmp/design-qa/footer-tablet.png`
+- Mobile captures: `.tmp/design-qa/footer-mobile-top.png`, `.tmp/design-qa/footer-mobile.png`
+- Desktop verification viewport: `1440 x 900`
+- Tablet verification viewport: `1024 x 768`
+- Mobile verification viewport: `390 x 844`
+
+## Design Result
+
+- Replaced the floating rounded footer card with a full-width light institutional band.
+- Added a restrained cyan-to-blue-to-violet top rail while keeping the content surface neutral and readable.
+- Organized the desktop footer into four stable columns for brand, menu, solutions, and contact information.
+- Added subtle vertical separators and a dedicated lower legal/social rail without nesting cards.
+- Preserved all existing routes, contact information, legal links, social controls, real logo asset, and semantic content.
+- Converted the layout to a two-column tablet grid and a clean single-column mobile stack.
+
+## Verification
+
+- Reference and implementation comparison completed in one visual artifact.
+- Desktop document width and viewport width both remain `1440px`; horizontal overflow: none.
+- Tablet document width and viewport width both remain `1024px`; horizontal overflow: none.
+- Mobile document width and viewport width both remain `390px`; horizontal overflow: none.
+- Contact addresses wrap inside their column without clipping or overlapping.
+- Legal links and social controls remain visible and usable at every tested breakpoint.
+- Browser runtime errors related to the footer: none.
+- The only console notice was the existing development-only LCP recommendation for the header logo; it is outside this footer change.
+- Lint: passed.
+- `git diff --check`: passed before this QA entry.
+
+## Iterations
+
+- Removed the prior outer glow, oversized radius, and card-within-background presentation.
+- Matched the selected reference hierarchy while retaining the site's current DNA typography and content.
+- Increased footer logo legibility and tightened link, contact, and bottom-rail spacing across breakpoints.
+
+No unresolved P0, P1, or P2 findings remain.
+
+final result: passed
