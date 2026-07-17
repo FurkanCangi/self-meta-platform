@@ -1642,7 +1642,7 @@
 
 .signalDomain[data-position="bottom"]{
   left:50%;
-  bottom:0;
+  bottom:-12px;
   transform:translateX(-50%);
 }
 

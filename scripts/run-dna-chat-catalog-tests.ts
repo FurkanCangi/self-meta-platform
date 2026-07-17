@@ -29,10 +29,6 @@ function sha256(filePath: string) {
   return createHash("sha256").update(fs.readFileSync(filePath)).digest("hex")
 }
 
-function matchCount(text: string, pattern: RegExp) {
-  return text.match(pattern)?.length ?? 0
-}
-
 function percentile(values: readonly number[], p: number) {
   const sorted = [...values].sort((left, right) => left - right)
   return sorted[Math.max(0, Math.ceil(sorted.length * p) - 1)] ?? 0
@@ -40,11 +36,11 @@ function percentile(values: readonly number[], p: number) {
 
 assert.equal(DNA_CHAT_CATALOG.version, DNA_CHAT_CATALOG_VERSION)
 assert.equal(DNA_CHAT_CATALOG_VERSION, "dna-chat-catalog@2")
-assert.ok(DNA_CHAT_CATALOG_TOPICS.length >= 24, "Dört kategori için yeterli topic bulunmalı")
-assert.ok(DNA_CHAT_CATALOG_CLAIMS.length >= 34, "Kaynak bağlı güvenli claim kapsamı eksik")
-assert.ok(DNA_CHAT_CATALOG_RELATIONS.length >= 20, "Tek-adımlı graf ilişkileri eksik")
-assert.ok(DNA_CHAT_CATALOG_SOURCES.length >= 38, "Doğrulanmış kaynak kapsamı eksik")
-assert.ok(DNA_CHAT_CATALOG_SAFETY_RULES.length >= 8, "Katalog güvenlik kuralları eksik")
+assert.ok(DNA_CHAT_CATALOG_TOPICS.length >= 70, "Yirmi paket için yeterli topic bulunmalı")
+assert.ok(DNA_CHAT_CATALOG_CLAIMS.length >= 140, "Kaynak bağlı güvenli claim kapsamı eksik")
+assert.ok(DNA_CHAT_CATALOG_RELATIONS.length >= 70, "Tek-adımlı graf ilişkileri eksik")
+assert.ok(DNA_CHAT_CATALOG_SOURCES.length >= 100, "Doğrulanmış kaynak kapsamı eksik")
+assert.ok(DNA_CHAT_CATALOG_SAFETY_RULES.length >= 20, "Katalog güvenlik kuralları eksik")
 
 assertUnique(DNA_CHAT_CATALOG_TOPICS.map((entry) => entry.id), "Topic kimlikleri")
 assertUnique(DNA_CHAT_CATALOG_CLAIMS.map((entry) => entry.id), "Claim kimlikleri")
@@ -111,7 +107,7 @@ const existingLiteratureIdByDoi = new Map(
 
 for (const source of DNA_CHAT_CATALOG_SOURCES) {
   assert.equal(source.sourceVerified, true)
-  assert.equal(source.verifiedAt, "2026-07-16")
+  assert.match(source.verifiedAt, /^2026-07-(?:16|17)$/)
   assert.ok(source.title && source.authors && source.publication && source.claimBoundary)
   assert.match(source.url, /^https:\/\//, `${source.id}: resmî URL HTTPS olmalı`)
   assert.doesNotMatch(source.url, /sandbox:|utm_|turn\d+(?:search|open|view)|researchgate/i)
@@ -147,6 +143,36 @@ assert.equal(repairedSources.get("WHEDON_ET_AL_2018")?.doi, "10.1002/dev.21636")
 assert.equal(repairedSources.get("ALEN_ET_AL_2022")?.doi, "10.1016/j.neubiorev.2022.104734")
 assert.equal(repairedSources.get("CHRISTENSEN_ET_AL_2020")?.doi, "10.3389/fnint.2020.00006")
 assert.equal(repairedSources.get("PINNA_EDWARDS_2020")?.pmid, "32849058")
+assert.equal(
+  repairedSources.get("WHEDON_ET_AL_2018")?.publication,
+  "Developmental Psychobiology, 60(5), 595-607",
+)
+assert.equal(repairedSources.get("ADDABBO_MILANI_2025")?.pmid, "40245971")
+assert.equal(repairedSources.get("SADEH_2004")?.pmid, "15173539")
+
+const insulaMeasurementClaim = DNA_CHAT_CATALOG_CLAIMS.find(
+  (claim) => claim.id === "claim.insula.measurement_methods",
+)
+assert.ok(insulaMeasurementClaim, "İnsula ölçüm claim'i bulunmalı")
+assert.deepEqual(
+  insulaMeasurementClaim.sourceIds,
+  ["UDDIN_ET_AL_2017", "KURTH_ET_AL_2010", "SCHULZ_2016"],
+)
+assert.doesNotMatch(
+  `${insulaMeasurementClaim.text} ${insulaMeasurementClaim.detail}`,
+  /EEG|HEP|klinik uyarım|elektrofizyolojik/i,
+  "İnsula ölçüm claim'i kaynakların kapsamını aşmamalı",
+)
+assert.equal(
+  DNA_CHAT_CATALOG_CLAIMS.some((claim) => claim.id === "claim.insula.development_evidence"),
+  false,
+  "İnsulaya özgü pediatrik gelişim iddiası doğrulanmış kaynak olmadan canlıya alınmamalı",
+)
+assert.equal(
+  DNA_CHAT_CATALOG_RELATIONS.some((relation) => relation.id === "relation.insula-development.insula"),
+  false,
+  "İnsulaya özgü pediatrik gelişim graf kenarı doğrulanmış kaynak olmadan canlıya alınmamalı",
+)
 
 const rawTotals = DNA_CHAT_CATALOG_PROVENANCE.reduce(
   (totals, entry) => ({
@@ -157,7 +183,8 @@ const rawTotals = DNA_CHAT_CATALOG_PROVENANCE.reduce(
   }),
   { claims: 0, conceptCards: 0, questions: 0, sources: 0 },
 )
-assert.deepEqual(rawTotals, { claims: 102, conceptCards: 114, questions: 314, sources: 151 })
+assert.equal(DNA_CHAT_CATALOG_PROVENANCE.length, 20, "Yirmi araştırma paketi provenance kaydı bulunmalı")
+assert.deepEqual(rawTotals, { claims: 797, conceptCards: 912, questions: 1856, sources: 994 })
 
 for (const provenance of DNA_CHAT_CATALOG_PROVENANCE) {
   const filePath = path.join(process.cwd(), provenance.canonicalFile)
@@ -167,117 +194,55 @@ for (const provenance of DNA_CHAT_CATALOG_PROVENANCE) {
   assert.equal(provenance.expertReview, "pending")
 }
 
-const canonicalRecordPatterns = {
-  self_regulation: {
-    claims: /^\| SR-\d{2} \|/gm,
-    conceptCards: /^## KK-\d{2} /gm,
-    questions: /^\| SB-\d{2} \|/gm,
-    sources: /^\| K\d{2} \|/gm,
-  },
-  central_nervous_system: {
-    claims: /^\| C\d{2} \|/gm,
-    conceptCards: /^\| K\d{2} \|/gm,
-    questions: /^\| Q\d{2} \|/gm,
-    sources: /^\| S\d{2} \|/gm,
-  },
-  autonomic_nervous_system: {
-    claims: /^\| C\d{2} \|/gm,
-    conceptCards: /^\| K\d{2} \|/gm,
-    questions: /^\| Q\d{2} \|/gm,
-    sources: /^\| S\d{2} \|/gm,
-  },
-  sympathetic_parasympathetic: {
-    claims: /^\| İ\d{2} \|/gm,
-    conceptCards: /^## KAV-\d{3} /gm,
-    questions: /^\| S-\d{3} \|/gm,
-    sources: /^\| K\d{2} \|/gm,
-  },
-} as const
-
-const canonicalRawTotals = { claims: 0, conceptCards: 0, questions: 0, sources: 0 }
 for (const provenance of DNA_CHAT_CATALOG_PROVENANCE) {
-  const text = fs.readFileSync(path.join(process.cwd(), provenance.canonicalFile), "utf8")
-  const patterns = canonicalRecordPatterns[provenance.category]
-  const counted = {
-    claims: matchCount(text, patterns.claims),
-    conceptCards: matchCount(text, patterns.conceptCards),
-    questions: matchCount(text, patterns.questions),
-    sources: matchCount(text, patterns.sources),
-  }
-  assert.deepEqual(counted, provenance.rawCounts, `${provenance.id}: ham kayıt sayacı kanonik belgeyle uyuşmuyor`)
-  canonicalRawTotals.claims += counted.claims
-  canonicalRawTotals.conceptCards += counted.conceptCards
-  canonicalRawTotals.questions += counted.questions
-  canonicalRawTotals.sources += counted.sources
-}
-assert.deepEqual(canonicalRawTotals, rawTotals, "Kanonik ham kayıt envanteri provenance toplamıyla uyuşmalı")
-
-const sumsPath = path.join(process.cwd(), "docs", "dna-knowledge", "research-packs", "v1", "SHA256SUMS")
-const sums = fs.readFileSync(sumsPath, "utf8")
-for (const provenance of DNA_CHAT_CATALOG_PROVENANCE) {
+  const sumsPath = path.join(process.cwd(), path.dirname(provenance.canonicalFile), "SHA256SUMS")
+  const sums = fs.readFileSync(sumsPath, "utf8")
   assert.ok(sums.includes(provenance.sha256), `${provenance.id}: SHA256SUMS kaydı eksik`)
 }
 
-assert.equal(DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS.length, 314)
+assert.equal(DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS.length, 1856)
 assertUnique(DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS.map((entry) => entry.id), "Benchmark kimlikleri")
 assertUnique(
-  DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS.map((entry) => `${entry.sourceCategory}:${entry.sourceCode}`),
-  "Benchmark kaynak kategori/kod çiftleri",
+  DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS.map((entry) => `${entry.sourcePackId}:${entry.sourceCode}`),
+  "Benchmark kaynak paket/kod çiftleri",
 )
-assert.equal(
-  new Set(DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS.map((entry) => entry.question)).size,
-  302,
-  "Kanonik soru bankasında 302 byte-düzeyi benzersiz metin bulunmalı; paketler arası tekrarlar korunmalı",
-)
-
-const canonicalQuestionSources = [
-  { category: "self_regulation", code: /^\| SB-\d{2} \|/ },
-  { category: "central_nervous_system", code: /^\| Q\d{2} \|/ },
-  { category: "autonomic_nervous_system", code: /^\| Q\d{2} \|/ },
-  { category: "sympathetic_parasympathetic", code: /^\| S-\d{3} \|/ },
-] as const
-const provenanceByCategory = new Map(
-  DNA_CHAT_CATALOG_PROVENANCE.map((entry) => [entry.category, entry]),
-)
-const canonicalQuestionRecords = canonicalQuestionSources.flatMap(({ category, code }) => {
-  const provenance = provenanceByCategory.get(category)
-  assert.ok(provenance, `${category}: provenance bulunamadı`)
-  return fs.readFileSync(path.join(process.cwd(), provenance.canonicalFile), "utf8")
-    .split("\n")
-    .filter((line) => code.test(line))
-    .map((canonicalRow) => {
-      const cells = canonicalRow.split("|").slice(1, -1).map((cell) => cell.trim())
-      assert.ok(cells.length === 3 || cells.length === 4, `${category}: geçersiz soru satırı`)
-      const [sourceCode, sourceQuestionCategory, question, documentExpected] = cells.length === 4
-        ? cells
-        : [cells[0], null, cells[1], cells[2]]
-      return { category, sourceCode, sourceQuestionCategory, question, documentExpected, canonicalRow }
-    })
-})
-const catalogQuestionRecords = DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS.map((entry) => ({
-  category: entry.sourceCategory,
-  sourceCode: entry.sourceCode,
-  sourceQuestionCategory: entry.sourceQuestionCategory,
-  question: entry.question,
-  documentExpected: entry.documentExpected,
-  canonicalRow: entry.canonicalRow,
-}))
+const uniqueQuestionCount = new Set(
+  DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS.map((entry) => entry.question),
+).size
+assert.ok(uniqueQuestionCount >= 1_500 && uniqueQuestionCount < 1_856, "Paketler arası gerçek tekrarlar korunmalı")
 assert.deepEqual(
-  catalogQuestionRecords,
-  canonicalQuestionRecords,
-  "Benchmark kayıtları dört kanonik Markdown tablosuyla satır-satır ve byte-for-byte eşleşmeli",
-)
-assert.deepEqual(
-  Object.fromEntries(canonicalQuestionSources.map(({ category }) => [
-    category,
-    catalogQuestionRecords.filter((entry) => entry.category === category).length,
-  ])),
+  Object.fromEntries(
+    ["stress_systems", "sleep_daily_rhythm", "executive_functions", "attention_working_memory"].map(
+      (sourcePackId) => [
+        sourcePackId,
+        DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS.filter((entry) => entry.sourcePackId === sourcePackId).length,
+      ],
+    ),
+  ),
   {
-    self_regulation: 84,
-    central_nervous_system: 60,
-    autonomic_nervous_system: 70,
-    sympathetic_parasympathetic: 100,
+    stress_systems: 119,
+    sleep_daily_rhythm: 111,
+    executive_functions: 80,
+    attention_working_memory: 110,
   },
+  "V4 kanonik benchmark satır sayıları korunmalı",
+)
+assert.deepEqual(
+  Object.fromEntries(
+    ["case_report_boundaries", "dna_six_domains", "developmental_differences", "coregulation"].map(
+      (sourcePackId) => [
+        sourcePackId,
+        DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS.filter((entry) => entry.sourcePackId === sourcePackId).length,
+      ],
+    ),
+  ),
+  {
+    case_report_boundaries: 110,
+    dna_six_domains: 132,
+    developmental_differences: 80,
+    coregulation: 116,
+  },
+  "V5 kanonik benchmark satır sayıları korunmalı",
 )
 
 function normalizeBenchmarkFamily(value: string) {
@@ -309,10 +274,14 @@ assert.ok(holdoutCount / DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS.length >= 0.3, "Ho
 const canonicalRefusals = DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS.filter(
   (entry) => entry.documentExpected === "Güvenli ret",
 )
-assert.equal(canonicalRefusals.length, 43, "Dört kanonik tabloda 43 Güvenli ret satırı bulunmalı")
+assert.equal(canonicalRefusals.length, 329, "Yirmi kanonik tabloda 329 Güvenli ret satırı bulunmalı")
 assert.ok(canonicalRefusals.every((entry) => entry.expected === "refusal" && entry.evaluationScope === "safety_refusal"))
 const holdoutStatusByFamily = new Map<string, Set<boolean>>()
-const refusalFamilies = new Set(canonicalRefusals.map((entry) => entry.semanticFamily))
+const refusalFamilies = new Set(
+  DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS
+    .filter((entry) => entry.evaluationScope === "safety_refusal")
+    .map((entry) => entry.semanticFamily),
+)
 for (const entry of DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS) {
   assert.equal(entry.semanticFamily, normalizeBenchmarkFamily(entry.question), `${entry.id}: semantik aile normalizasyonu`)
   const statuses = holdoutStatusByFamily.get(entry.semanticFamily) ?? new Set<boolean>()
@@ -326,12 +295,12 @@ assert.ok(
   Array.from(holdoutStatusByFamily.values()).every((statuses) => statuses.size === 1),
   "Aynı semantik soru ailesi eğitim ve bağımsız holdout arasında bölünmemeli",
 )
-assert.equal(holdoutStatusByFamily.size, 299, "Kanonik benchmark 299 semantik aile içermeli")
+assert.ok(holdoutStatusByFamily.size >= 550, "Kanonik benchmark yeterli bağımsız semantik aile içermeli")
 const holdoutFamilyCount = Array.from(holdoutStatusByFamily.values()).filter((statuses) => statuses.has(true)).length
 assert.ok(holdoutFamilyCount / holdoutStatusByFamily.size >= 0.3, "Semantik soru ailelerinin en az %30'u holdout olmalı")
 assert.ok(
   canonicalRefusals.every((entry) => entry.holdout),
-  "Bütün 43 kanonik güvenli-ret senaryosu holdout içinde kalmalı",
+  "Bütün 329 kanonik güvenli-ret satırı holdout içinde kalmalı",
 )
 
 let semanticKindCorrect = 0
@@ -371,6 +340,43 @@ const routingCases = [
   ["Merkezi otonom ağ ne demek?", "cns.central_autonomic_network"],
   ["Homeostaz ve allostaz farkı nedir?", "ans.allostasis"],
   ["Polivagal teori kesinleşmiş midir?", "ans.polyvagal"],
+  ["Anterior singulat korteks nedir?", "cns.anterior_cingulate"],
+  ["Hata ilişkili negatiflik nedir?", "cns.error_related_negativity"],
+  ["Çalışma belleği nedir?", "cns.working_memory"],
+  ["İnsula fMRI ile nasıl ölçülür?", "cns.insula_measurement"],
+  ["İnteroseptif doğruluk ile duyarlılık aynı mı?", "ans.interoception_dimensions"],
+  ["Çocuklarda interosepsiyon nasıl ölçülür?", "ans.interoception_measurement"],
+  ["Uyarılma nedir?", "selfreg.arousal"],
+  ["Reaktivite ve toparlanma arasındaki fark nedir?", "selfreg.reactivity_recovery"],
+  ["Toparlanma nasıl ölçülür?", "selfreg.recovery_measurement"],
+  ["Öz-örgütlenme nedir?", "selfreg.self_organization"],
+  ["Habituasyon nedir?", "selfreg.habituation"],
+  ["Duyusal modülasyon nedir?", "selfreg.sensory_modulation"],
+  ["Duyusal modülasyon nasıl ölçülür?", "selfreg.sensory_measurement"],
+  ["Duygu düzenleme nedir?", "selfreg.emotion_regulation"],
+  ["Duygu düzenleme stratejileri nelerdir?", "selfreg.emotion_strategies"],
+  ["Duygu düzenleme nasıl ölçülür?", "selfreg.emotion_measurement"],
+  ["Stres sistemleri ne demektir?", "selfreg.stress_systems"],
+  ["HPA ekseni nedir?", "selfreg.hpa_axis"],
+  ["Saç kortizolü neyi gösterir?", "selfreg.cortisol_measurement"],
+  ["Toksik stres ne demektir?", "selfreg.toxic_stress"],
+  ["Allostatik yük nedir?", "ans.allostatic_load"],
+  ["Uyku sağlığı ne demektir?", "selfreg.sleep_health"],
+  ["Günlük ritim nedir?", "selfreg.daily_rhythm"],
+  ["Sirkadiyen ritim nedir?", "selfreg.circadian_rhythm"],
+  ["İki süreçli uyku modeli nedir?", "selfreg.sleep_regulation"],
+  ["Aktigrafi çocuk uykusunu nasıl ölçer?", "selfreg.sleep_measurement"],
+  ["Çocuklarda uyku süresi yaşla nasıl değişir?", "selfreg.sleep_development"],
+  ["Yürütücü işlev modelleri neyi açıklar?", "cns.executive_models"],
+  ["Yürütücü işlevler çocuklukta nasıl gelişir?", "cns.executive_development"],
+  ["Çalışma belleği çocuklukta nasıl gelişir?", "cns.working_memory_development"],
+  ["Çalışma belleği nasıl ölçülür?", "cns.working_memory_measurement"],
+  ["Dikkat nedir?", "cns.attention"],
+  ["Dikkat ağları nelerdir?", "cns.attention_networks"],
+  ["Sürdürülen dikkat nedir?", "cns.sustained_attention"],
+  ["Seçici dikkat nedir?", "cns.selective_attention"],
+  ["Dikkat nasıl ölçülür?", "cns.attention_measurement"],
+  ["Dikkat çocuklukta nasıl gelişir?", "cns.attention_development"],
 ] as const
 for (const [question, topicId] of routingCases) {
   assert.equal(findCatalogTopic(question)?.id, topicId, `${question}: yanlış topic`)

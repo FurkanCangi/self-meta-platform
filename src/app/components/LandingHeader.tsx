@@ -12,7 +12,6 @@ import {
   GraduationCap,
   Handshake,
   Layers3,
-  MapPinned,
   Menu,
   Sparkles,
   X,
@@ -65,13 +64,6 @@ const dnaMenuItems = [
 ];
 
 const researchMenuItems = [
-  {
-    href: "/terapist-bul",
-    title: "Terapist Bul",
-    description: "DNA eğitimini tamamlayan ve public görünürlük onayı olan uzmanlar.",
-    icon: MapPinned,
-    accent: "#00C8D7",
-  },
   {
     href: "/arastirma/arastirma-notlari",
     title: "Araştırma Notları",
@@ -146,7 +138,7 @@ export default function LandingHeader({ compact = false }: { compact?: boolean }
     pathname.startsWith("/dna-nedir") ? " smiNavLinkActive" : ""
   }`;
   const researchClass = `smiNavLink smiDropdownTrigger${
-    pathname.startsWith("/arastirma") || pathname.startsWith("/terapist-bul") ? " smiNavLinkActive" : ""
+    pathname.startsWith("/arastirma") ? " smiNavLinkActive" : ""
   }`;
 
   return (
@@ -264,6 +256,9 @@ export default function LandingHeader({ compact = false }: { compact?: boolean }
               </div>
             ) : null}
           </div>
+          <Link href="/terapist-bul" className={linkClass("/terapist-bul")} onClick={closeMobileNavigation}>
+            Terapist Bul
+          </Link>
           <Link href="/iletisim" className={linkClass("/iletisim")} onClick={closeMobileNavigation}>
             İletişim
           </Link>

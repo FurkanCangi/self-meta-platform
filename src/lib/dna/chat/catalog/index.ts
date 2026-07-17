@@ -32,6 +32,7 @@ export {
 } from "./rawReviewManifest"
 export type {
   DnaChatRawReviewCategory,
+  DnaChatRawReviewPackId,
   DnaChatRawReviewRecord,
   DnaChatRawReviewRecordType,
 } from "./rawReviewManifest"

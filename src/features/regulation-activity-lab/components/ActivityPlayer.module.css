@@ -1,0 +1,443 @@
+.player {
+  --activity-cyan: #06b6d4;
+  --activity-blue: #2563eb;
+  --activity-violet: #7c3aed;
+  --activity-ink: #172554;
+  --activity-muted: #52627a;
+  overflow: hidden;
+  color: var(--activity-ink);
+  background: rgba(255, 255, 255, 0.94);
+  border: 1px solid rgba(148, 163, 184, 0.34);
+  border-radius: 28px;
+  box-shadow: 0 28px 70px rgba(30, 64, 175, 0.13);
+  font-family: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+}
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 24px 26px 20px;
+}
+
+.headingBlock {
+  min-width: 0;
+}
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 5px 10px;
+  color: #1d4ed8;
+  background: #dbeafe;
+  border: 1px solid #bfdbfe;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 780;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.title {
+  margin: 10px 0 6px;
+  color: #172554;
+  font-size: clamp(1.35rem, 3vw, 2rem);
+  font-weight: 820;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+}
+
+.instruction {
+  max-width: 780px;
+  margin: 0;
+  color: var(--activity-muted);
+  font-size: 0.94rem;
+  line-height: 1.58;
+}
+
+.headerMeta {
+  display: grid;
+  flex: 0 0 auto;
+  gap: 7px;
+  justify-items: end;
+  color: #334155;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.headerMeta span {
+  padding: 6px 9px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.stage {
+  position: relative;
+  width: calc(100% - 28px);
+  margin: 0 14px;
+  overflow: hidden;
+  background: #eff6ff;
+  border: 1px solid rgba(96, 165, 250, 0.36);
+  border-radius: 22px;
+  aspect-ratio: 16 / 9;
+  isolation: isolate;
+}
+
+.stage[data-selected="false"] .scene {
+  filter: saturate(0.72);
+  opacity: 0.78;
+}
+
+.scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+  transition: filter 180ms ease, opacity 180ms ease;
+}
+
+.sceneOrbCyan {
+  fill: #67e8f9;
+  opacity: 0.16;
+}
+
+.sceneOrbViolet {
+  fill: #c4b5fd;
+  opacity: 0.18;
+}
+
+.roomLine {
+  fill: #ffffff;
+  opacity: 0.7;
+}
+
+.roomAccent {
+  fill: none;
+  stroke: #ffffff;
+  stroke-linecap: round;
+  stroke-width: 12;
+  opacity: 0.56;
+}
+
+.stageBadges {
+  position: absolute;
+  z-index: 3;
+  top: 16px;
+  right: 16px;
+  display: grid;
+  gap: 7px;
+  justify-items: end;
+  pointer-events: none;
+}
+
+.reducedBadge,
+.inactiveBadge {
+  padding: 7px 10px;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  border-radius: 999px;
+  box-shadow: 0 7px 18px rgba(15, 23, 42, 0.16);
+  font-size: 0.74rem;
+  font-weight: 760;
+  backdrop-filter: blur(10px);
+}
+
+.reducedBadge {
+  background: rgba(76, 29, 149, 0.84);
+}
+
+.inactiveBadge {
+  background: rgba(15, 23, 42, 0.78);
+}
+
+.cueCard {
+  position: absolute;
+  z-index: 2;
+  left: clamp(12px, 3vw, 28px);
+  bottom: clamp(12px, 3vw, 28px);
+  display: grid;
+  width: min(410px, calc(100% - 24px));
+  gap: 3px;
+  padding: 13px 16px;
+  color: #172554;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  box-shadow: 0 14px 34px rgba(30, 64, 175, 0.16);
+  backdrop-filter: blur(14px);
+}
+
+.cueCard strong {
+  font-size: 0.98rem;
+  letter-spacing: -0.015em;
+}
+
+.cueCard > span:last-child {
+  color: #475569;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.cueCount {
+  color: #2563eb;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.controls {
+  display: grid;
+  gap: 14px;
+  padding: 18px 22px 22px;
+}
+
+.transportRow,
+.lowerControls,
+.cueControls,
+.characterGroup,
+.speedGroup {
+  display: flex;
+  align-items: center;
+}
+
+.transportRow {
+  flex-wrap: wrap;
+  gap: 9px;
+}
+
+.primaryButton,
+.secondaryButton,
+.segmentButton,
+.characterButton {
+  min-height: 40px;
+  padding: 8px 13px;
+  border-radius: 12px;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 760;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease, background 140ms ease;
+}
+
+.primaryButton {
+  min-width: 96px;
+  color: #ffffff;
+  background: linear-gradient(135deg, var(--activity-cyan), var(--activity-blue) 52%, var(--activity-violet));
+  border: 0;
+  box-shadow: 0 9px 20px rgba(37, 99, 235, 0.24);
+}
+
+.secondaryButton,
+.segmentButton,
+.characterButton {
+  color: #1e3a8a;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+}
+
+.primaryButton:hover:not(:disabled),
+.secondaryButton:hover:not(:disabled),
+.segmentButton:hover:not(:disabled),
+.characterButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+  border-color: #60a5fa;
+  box-shadow: 0 7px 16px rgba(37, 99, 235, 0.13);
+}
+
+.primaryButton:focus-visible,
+.secondaryButton:focus-visible,
+.segmentButton:focus-visible,
+.characterButton:focus-visible,
+.range:focus-visible {
+  outline: 3px solid rgba(34, 211, 238, 0.52);
+  outline-offset: 2px;
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.segmentButton:disabled,
+.characterButton:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.36);
+  opacity: 0.48;
+}
+
+.speedGroup {
+  gap: 4px;
+  margin-left: auto;
+  padding: 3px;
+  background: #f1f5f9;
+  border-radius: 14px;
+}
+
+.segmentButton {
+  min-height: 34px;
+  padding: 6px 11px;
+  background: transparent;
+  border-color: transparent;
+}
+
+.segmentButton[data-active="true"],
+.characterButton[data-active="true"] {
+  color: #ffffff;
+  background: #312e81;
+  border-color: #312e81;
+  box-shadow: 0 5px 12px rgba(49, 46, 129, 0.2);
+}
+
+.timelineControl {
+  display: grid;
+  grid-template-columns: auto minmax(100px, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.range {
+  width: 100%;
+  height: 24px;
+  margin: 0;
+  accent-color: var(--activity-blue);
+  cursor: pointer;
+}
+
+.timeValue {
+  min-width: 34px;
+  color: #475569;
+  font-family: "Geist Mono", ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.lowerControls {
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.cueControls {
+  gap: 8px;
+}
+
+.characterGroup {
+  gap: 5px;
+  padding: 3px;
+  background: #f1f5f9;
+  border-radius: 14px;
+}
+
+.characterGroup > span {
+  padding: 0 7px;
+  color: #64748b;
+  font-size: 0.73rem;
+  font-weight: 720;
+}
+
+.characterButton {
+  min-height: 34px;
+  padding: 6px 11px;
+  background: transparent;
+  border-color: transparent;
+}
+
+.modeNote {
+  margin: -7px 22px 20px;
+  padding: 10px 12px;
+  color: #5b21b6;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 700px) {
+  .player {
+    border-radius: 20px;
+  }
+
+  .header {
+    display: grid;
+    gap: 13px;
+    padding: 18px 17px 15px;
+  }
+
+  .headerMeta {
+    display: flex;
+    flex-wrap: wrap;
+    justify-items: start;
+  }
+
+  .stage {
+    width: calc(100% - 16px);
+    margin: 0 8px;
+    margin-bottom: 72px;
+    overflow: visible;
+    border-radius: 16px;
+  }
+
+  .scene {
+    overflow: hidden;
+    border-radius: inherit;
+  }
+
+  .controls {
+    padding: 15px 14px 18px;
+  }
+
+  .speedGroup {
+    margin-left: 0;
+  }
+
+  .lowerControls {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .cueControls,
+  .characterGroup {
+    width: 100%;
+  }
+
+  .cueControls > button,
+  .characterButton {
+    flex: 1;
+  }
+
+  .cueCard {
+    top: calc(100% + 8px);
+    right: 0;
+    bottom: auto;
+    left: 0;
+    width: 100%;
+    padding: 9px 11px;
+    border-color: #dbeafe;
+  }
+
+  .cueCard > span:last-child {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scene,
+  .primaryButton,
+  .secondaryButton,
+  .segmentButton,
+  .characterButton {
+    transition: none;
+  }
+}

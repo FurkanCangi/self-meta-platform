@@ -690,6 +690,27 @@ html[data-theme="dark"] .dna-shell .shadow-sm {
   transform:scale(1.02);
 }
 
+@media (min-width: 901px) and (max-width: 1320px){
+  .smiHeaderInner{
+    padding:0 24px;
+    gap:14px;
+  }
+
+  .smiNav{
+    gap:16px;
+  }
+
+  .smiNavLink{
+    font-size:14px;
+  }
+
+  .smiSignupPill,
+  .smiLoginPill{
+    padding:0 18px;
+    font-size:14px;
+  }
+}
+
 @media (max-width: 1100px){
   .smiHeaderInner{
     gap:12px;

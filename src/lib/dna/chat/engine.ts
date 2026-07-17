@@ -7,6 +7,7 @@ import {
   resolveDnaCatalogReasoning,
   type DnaCatalogReasoningDraft,
 } from "./catalogReasoning"
+import { getCatalogTopicById } from "./catalog"
 import { DNA_CHAT_INTENT_BY_ID } from "./intents"
 import {
   findDnaChatLiteratureSources,
@@ -172,6 +173,11 @@ function unmatchedResponse(safety: DnaChatSafetyResult): DnaChatResponse {
     safety,
     suggestedQuestions: ["DNA hangi alanları değerlendirir?", "Self-regülasyon nedir?"],
   })
+}
+
+function isStandaloneFollowUp(question: string): boolean {
+  const normalized = normalizeDnaChatText(question)
+  return /^(?:peki bu|biraz daha acikla|bununla iliskisi ne|bunun iliskisi ne|bunun fizyolojik regulasyonla iliskisi ne|buna ornek verir misin|cocuklarda da ayni mi|bu cocuklarda da gecerli mi|kaniti guclu mu|hangi yas icin gecerli|hangi olcumle gosterilmis|bireysel olarak ne anlama gelir|bunun tersi de olabilir mi|bunun tersi ne|erken cocukluk icin ne degisiyor|peki erken cocuklukta nasil|erken cocuklukta nasil degisir|bunu erken cocukluk icin anlatir misin|okul caginda nasil yorumlariz|dna ile nasil baglariz ama abartmadan|bunu neden soyleyemiyoruz|bu neden tani koydurmuyor|bundan ne sonuc cikarabiliriz|bu kavramin cocuklardaki gelisimi ne zaman hizlanir|cevresel talepler bu surecleri degistirir mi|bu nedensellik gosterir mi)$/.test(normalized)
 }
 
 function notAvailableResponse(
@@ -851,6 +857,13 @@ function resolveSingleDnaChat(
     }
   }
 
+  if (!request.previousTopic && isStandaloneFollowUp(question)) {
+    return clarificationResponse(
+      safety,
+      "Takip sorusunun hangi kavram veya önceki bulguya gönderme yaptığı açık değil.",
+    )
+  }
+
   const queryKind = classifyDnaChatQueryKind(question)
   const routed = routeDnaChatQuestion({
     question,
@@ -868,7 +881,7 @@ function resolveSingleDnaChat(
   const isCaseQuery = !legacyNonCaseMatch && (
     queryKind === "case_finding" ||
     queryKind === "case_theory" ||
-    (routed.route === "case" && Boolean(routed.intent))
+    (request.mode === "case" && routed.route === "case" && Boolean(routed.intent))
   )
   if (isCaseQuery) {
     const intent =
@@ -960,6 +973,73 @@ function splitDnaChatQuestion(question: string): { parts: string[]; overflow: bo
   return { parts: parts.slice(0, 2), overflow: parts.length > 2 }
 }
 
+function catalogTopicIdFromResponse(response: DnaChatResponse): string | null {
+  const match = /^catalog:([^:]+):/.exec(response.intentId ?? "")
+  return match?.[1] ?? null
+}
+
+function isEllipticalSecondQuestion(question: string): boolean {
+  const normalized = normalizeDnaChatText(question)
+  return /^(?:cocuklukta\b|kanit\w*\b|kaynak\w*\b|nasil\b|hangi\b|alanlar\b|surecler\b|stratejiler\b|bunlar\b|bunun\b|bu\b|peki\b)/.test(
+    normalized,
+  )
+}
+
+function contextualCatalogTopicId(topicId: string, question: string): string {
+  const normalized = normalizeDnaChatText(question)
+  const desiredSuffix = /\b(?:cocukluk|gelis\w*|olgunlas\w*)\b/.test(normalized)
+    ? "development"
+    : /\b(?:olc\w*|degerlendir\w*)\b/.test(normalized)
+      ? "measurement"
+      : /\bstrateji\w*\b/.test(normalized)
+        ? "strategies"
+        : null
+  if (!desiredSuffix) return topicId
+
+  const roots = [
+    topicId,
+    topicId.replace(/_(?:control|models|overview|regulation|health)$/, ""),
+  ]
+  for (const root of roots) {
+    const candidateId = `${root}_${desiredSuffix}`
+    if (getCatalogTopicById(candidateId)) return candidateId
+  }
+  return topicId
+}
+
+function resolveSecondDnaChatQuestion(
+  request: DnaChatRequest,
+  question: string,
+  firstResponse: DnaChatResponse,
+): DnaChatResponse {
+  const direct = resolveSingleDnaChat(
+    { ...request, question },
+    question,
+    emptySafety(question),
+  )
+  if (direct.outcome === "answered" || !isEllipticalSecondQuestion(question)) return direct
+
+  const firstTopicId = catalogTopicIdFromResponse(firstResponse)
+  if (!firstTopicId || firstResponse.outcome !== "answered") return direct
+  const contextualTopicId = contextualCatalogTopicId(firstTopicId, question)
+  const contextualTopic = getCatalogTopicById(contextualTopicId)
+  if (!contextualTopic) return direct
+
+  // İlk yanıtın açık katalog kimliği yalnız ikinci, öznesi düşmüş soruyu
+  // yönlendirmek için kullanılır. Vaka erişimi ve sahiplik kontrolü bu değere
+  // hiçbir zaman dayanmaz.
+  const routingQuestion = `${contextualTopic.title}: ${question}`
+  return resolveSingleDnaChat(
+    {
+      ...request,
+      question: routingQuestion,
+      previousTopic: contextualTopic.id,
+    },
+    routingQuestion,
+    emptySafety(question),
+  )
+}
+
 function combinedEvidenceSummary(responses: readonly DnaChatResponse[]): DnaChatEvidenceSummary | undefined {
   const summaries = responses.flatMap((response) => response.evidenceSummary ? [response.evidenceSummary] : [])
   if (!summaries.length) return undefined
@@ -976,6 +1056,7 @@ function combineDnaChatResponses(
 ): DnaChatResponse {
   const contextRequest = responses.find((response) => response.contextRequest)?.contextRequest
   const answered = responses.filter((response) => response.outcome === "answered")
+  const partiallyAnswered = answered.length > 0 && answered.length < responses.length
   const mixedCaseTheory =
     responses.some((response) => response.route === "case") &&
     responses.some((response) => response.route === "theory" || response.route === "dna")
@@ -986,6 +1067,8 @@ function combineDnaChatResponses(
       : "theory"
   const classification: DnaChatClassification = contextRequest
     ? "clarification"
+    : partiallyAnswered
+      ? "clarification"
     : mixedCaseTheory && answered.length
       ? "hypothesis"
     : answered.some((response) => response.classification === "hypothesis")
@@ -1013,6 +1096,8 @@ function combineDnaChatResponses(
     intentId: null,
     summary: contextRequest
       ? "Sorunuzun vakaya özgü bölümünü yanıtlamak için bir DNA raporu seçin."
+      : partiallyAnswered
+        ? "Sorunuzun bir bölümü yanıtlandı; diğer bölüm için daha açık bir başlık veya doğrulanmış katalog bağlantısı gerekiyor."
       : "Sorunuzdaki iki başlık ayrı ayrı değerlendirildi.",
     details: responses.flatMap((response, index) => [
       `${index + 1}. ${response.topic ?? "Başlık"}: ${response.summary}`,
@@ -1022,6 +1107,7 @@ function combineDnaChatResponses(
     caseEvidence: stableUnique(responses.flatMap((response) => response.caseEvidence), 6),
     limitations: stableUnique([
       ...(mixedCaseTheory ? ["Bu vakada biyolojik mekanizma doğrudan ölçülmedi."] : []),
+      ...(partiallyAnswered ? ["Yanıtlanamayan bölüm, yanıtlanan başlığın bilgisiyle tamamlanmadı."] : []),
       ...responses.flatMap((response) => response.limitations),
     ], 6),
     safety,
@@ -1056,8 +1142,14 @@ export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
     )
   }
   if (split.parts.length === 2) {
+    const firstResponse = resolveSingleDnaChat(
+      { ...request, question: split.parts[0] },
+      split.parts[0],
+      emptySafety(split.parts[0]),
+    )
+    const secondResponse = resolveSecondDnaChatQuestion(request, split.parts[1], firstResponse)
     return combineDnaChatResponses(
-      split.parts.map((part) => resolveSingleDnaChat({ ...request, question: part }, part, emptySafety(part))),
+      [firstResponse, secondResponse],
       safety,
     )
   }

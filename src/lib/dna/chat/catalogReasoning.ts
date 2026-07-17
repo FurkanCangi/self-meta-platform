@@ -1,4 +1,5 @@
 import {
+  DNA_CHAT_CATALOG_TOPICS,
   DNA_CHAT_CATALOG_SOURCES,
   classifyCatalogQueryKind,
   findCatalogTopic,
@@ -54,12 +55,56 @@ export type DnaCatalogReasoningDraft = {
   evidenceSummary: DnaChatEvidenceSummary
 }
 
+function hasExplicitComparisonCue(normalizedQuestion: string): boolean {
+  return /\barasindaki fark(?: ne| nedir| nedir acaba)?\b/.test(normalizedQuestion) ||
+    /\b(?:ayni|ayni bir) (?:biyolojik )?(?:sey|surec|yapi|kavram|terim|islev|bilesen|mekanizma)(?: mi| midir| mudur)\b/.test(normalizedQuestion) ||
+    /\bbirbirine (?:tamamen )?ters(?: mi| midir| mudur)\b/.test(normalizedQuestion) ||
+    /\bbirbirinden (?:tamamen )?(?:bagimsiz|ayri|farkli)(?: mi| midir| mudur)\b/.test(normalizedQuestion)
+}
+
+function hasSafeDefinitionCue(normalizedQuestion: string): boolean {
+  const asksForExplanation =
+    /\b(?:sade(?:ce)? )?anlat(?:ir|abilir)? misin\b/.test(normalizedQuestion) ||
+    /\bacikla(?:r|yabilir)? misin\b/.test(normalizedQuestion) ||
+    /\bsadelestir(?:ir|ebilir)? misin\b/.test(normalizedQuestion) ||
+    /\b(?:ne|hangi) is\w* yapar\b/.test(normalizedQuestion) ||
+    /\bne yap(?:ar|iyor)\b/.test(normalizedQuestion) ||
+    /\bne oluyor\b/.test(normalizedQuestion) ||
+    /\bneyi kaps(?:ar|iyor)\b/.test(normalizedQuestion)
+  if (!asksForExplanation) return false
+
+  // Bu kısa kalıplar yalnız tanım isteğini esnekleştirir. Açık neden, kanıt,
+  // ölçüm, gelişim veya ilişki sorusunu genel tanıma indirgemez.
+  return !/\b(?:neden|niye|kanit|bilimsel|kaynak|olc\w*|gelis\w*|hangi yas|ilisk\w*|baglanti\w*|etkile\w*)\b/.test(
+    normalizedQuestion,
+  )
+}
+
 export function classifyDnaChatQueryKind(question: string): DnaChatQueryKind {
-  return classifyCatalogQueryKind(question) as CatalogQueryKind
+  const normalized = normalizeDnaChatText(question)
+  if (hasExplicitComparisonCue(normalized)) return "comparison"
+
+  const catalogKind = classifyCatalogQueryKind(question) as CatalogQueryKind
+  if (
+    catalogKind === "comparison" &&
+    /\bgelisimsel farklilik\w*\b/.test(normalized) &&
+    /\b(?:acikla|anlat|sadelestir)\w*\b/.test(normalized)
+  ) {
+    return "definition"
+  }
+  if (hasSafeDefinitionCue(normalized)) {
+    // "Gelişimsel farklılıklardaki ... anlatır mısın?" ifadesindeki
+    // "farklılık" tek başına iki öğeli karşılaştırma değildir.
+    if (catalogKind === "unknown") {
+      return "definition"
+    }
+  }
+  return catalogKind
 }
 
 export function classifyEmbeddedCatalogQueryKind(question: string): DnaChatQueryKind {
   const normalized = normalizeDnaChatText(question)
+  if (hasExplicitComparisonCue(normalized)) return "comparison"
   if (/\b(?:fark|ayni sey|karsilastir|arasindaki)\b/.test(normalized)) return "comparison"
   if (/\b(?:iliski|iliskili|iliskisini|iliskisiyle|baglanti|baglantisi|etkilesim)\b/.test(normalized)) {
     return "relation"
@@ -75,6 +120,7 @@ export function classifyEmbeddedCatalogQueryKind(question: string): DnaChatQuery
     return "misconception"
   }
   if (/\b(?:dna ile|dna skoru|dna alani|dna olcer)\b/.test(normalized)) return "dna_relation"
+  if (hasSafeDefinitionCue(normalized)) return "definition"
   return "definition"
 }
 
@@ -99,7 +145,32 @@ function containsTopicPattern(normalizedQuestion: string, pattern: string): bool
 
 function questionMentionsTopic(question: string, topic: DnaChatCatalogTopic): boolean {
   const normalized = normalizeDnaChatText(question)
+  // "Dikkatle kullanmak/yorumlamak" bir kullanım biçimidir; dikkat konusu değildir.
+  // Bu ayrım özellikle polivagal kavramların ihtiyatlı diline ilişkin kanıt
+  // sorularının yanlışlıkla çapraz-konu sorusu sayılmasını önler.
+  if (
+    topic.id === "cns.attention" &&
+    /\bdikkatle\s+(?:kullan|yorumla|ele\s+al)[a-z]*/.test(normalized)
+  ) {
+    return false
+  }
   return topicIdentityPatterns(topic).some((pattern) => containsTopicPattern(normalized, pattern))
+}
+
+function topicsShareFamily(leftId: string, rightId: string): boolean {
+  return leftId === rightId ||
+    leftId.startsWith(`${rightId}_`) ||
+    rightId.startsWith(`${leftId}_`)
+}
+
+function distinctMentionedTopics(
+  question: string,
+  selectedTopic: DnaChatCatalogTopic,
+): DnaChatCatalogTopic[] {
+  return DNA_CHAT_CATALOG_TOPICS.filter((candidate) =>
+    !topicsShareFamily(candidate.id, selectedTopic.id) &&
+    questionMentionsTopic(question, candidate)
+  )
 }
 
 function otherTopicForRelation(
@@ -147,7 +218,7 @@ function supportsInternalComparison(
   )
   if (mentionedTopicTerms.size < 2) return false
   const hasExplicitDistinction = claims.some((claim) =>
-    /\b(?:ayni degildir|ayni sey degildir|farkli|ayri|iken|ise)\b/.test(
+    /\b(?:ayni degildir|ayni sey degildir|farkli|ayri|birbirinden ayril\w*|iken|ise)\b/.test(
       normalizeDnaChatText(`${claim.text} ${claim.detail}`),
     ),
   )
@@ -239,20 +310,73 @@ function hasExplicitAssociationClaim(
   })
 }
 
+function relationMatchesExplicitTarget(
+  relation: DnaChatCatalogRelation,
+  selectedTopic: DnaChatCatalogTopic,
+  explicitTargets: readonly DnaChatCatalogTopic[],
+): boolean {
+  const otherTopic = otherTopicForRelation(relation, selectedTopic.id)
+  if (!otherTopic) return false
+  return explicitTargets.some((target) => topicsShareFamily(otherTopic.id, target.id))
+}
+
+function hasAssociationClaimForTopics(
+  explicitTargets: readonly DnaChatCatalogTopic[],
+  claims: readonly DnaChatCatalogClaim[],
+): boolean {
+  if (!explicitTargets.length) return false
+  return claims.some((claim) => {
+    if (claim.claimType !== "association") return false
+    const normalizedClaim = normalizeDnaChatText(`${claim.text} ${claim.detail}`)
+    return explicitTargets.some((target) =>
+      topicIdentityPatterns(target)
+        .filter((pattern) => pattern.length >= 4)
+        .some((pattern) => containsTopicPattern(normalizedClaim, pattern))
+    )
+  })
+}
+
 function claimsForKind(
   claims: readonly DnaChatCatalogClaim[],
   queryKind: DnaChatQueryKind,
+  question: string,
 ): DnaChatCatalogClaim[] {
   const selected = claims.filter((claim) => {
     if (queryKind === "definition") return claim.claimType === "definition"
     if (queryKind === "development") return claim.claimType === "development"
-    if (queryKind === "measurement") return claim.claimType === "measurement_boundary"
-    if (queryKind === "misconception") return claim.claimType === "misconception_correction"
+    if (queryKind === "measurement") {
+      if (claim.claimType === "measurement_boundary") return true
+      if (claim.claimType !== "definition") return false
+      const normalizedClaimText = normalizeDnaChatText(claim.text)
+      return /\b(?:olcumudur|olcer\w*|hesaplanir|kaydedilir)\b/.test(normalizedClaimText) ||
+        (claim.topicId.includes("measurement") && /\bincelenir\b/.test(normalizedClaimText))
+    }
+    if (queryKind === "misconception") {
+      return claim.claimType === "misconception_correction" ||
+        claim.claimType === "measurement_boundary" ||
+        claim.claimType === "product_boundary"
+    }
     if (queryKind === "dna_relation") return claim.dnaRelation !== "none"
     if (queryKind === "evidence") return claim.sourceIds.length > 0
     return true
   })
-  return (selected.length ? selected : [...claims]).slice(0, 3)
+  const ranked = [...selected].sort((left, right) => {
+    const questionTokens = normalizeDnaChatText(question)
+      .split(" ")
+      .filter((token) => token.length >= 4 && !isRelationStopToken(token))
+    const score = (claim: DnaChatCatalogClaim) => {
+      const corpus = normalizeDnaChatText(`${claim.text} ${claim.detail}`)
+      return questionTokens.reduce(
+        (total, token) => total + (containsTopicPattern(corpus, token) ? 1 : 0),
+        0,
+      )
+    }
+    return score(right) - score(left) || left.id.localeCompare(right.id)
+  })
+  if (["development", "measurement", "misconception", "dna_relation"].includes(queryKind)) {
+    return ranked.slice(0, 3)
+  }
+  return (ranked.length ? ranked : [...claims]).slice(0, 3)
 }
 
 function sourceRef(source: DnaChatCatalogSource, excerpt: string): DnaChatSourceRef {
@@ -361,6 +485,11 @@ export function resolveDnaCatalogReasoning(input: {
 
   const topic = findCatalogTopic(input.question, input.previousTopic)
   if (!topic) return null
+  const normalizedQuestion = normalizeDnaChatText(input.question)
+  const explicitRelationTargets = ["comparison", "relation", "evidence", "dna_relation"].includes(queryKind)
+    ? distinctMentionedTopics(input.question, topic)
+    : []
+  const crossTopicEvidence = queryKind === "evidence" && explicitRelationTargets.length > 0
   const ageGuard = ageScopeGuard(topic, input.ageMonths)
   if (ageGuard.blocked) {
     return {
@@ -381,7 +510,25 @@ export function resolveDnaCatalogReasoning(input: {
   const allClaims = getClaimsForTopic(topic.id).filter(
     (claim) => claim.sourceVerified && claim.safetyStatus === "safe",
   )
-  const selectedClaims = claimsForKind(allClaims, queryKind)
+  const selectedClaims = claimsForKind(allClaims, queryKind, input.question)
+  if (
+    ["development", "measurement", "misconception", "dna_relation"].includes(queryKind) &&
+    selectedClaims.length === 0
+  ) {
+    return {
+      queryKind,
+      route: queryKind === "dna_relation" ? "dna" : "theory",
+      classification: "not_available",
+      topicId: topic.id,
+      topicTitle: topic.title,
+      summary: "Bu soru türü için doğrulanmış katalogda doğrudan bir iddia bulunmuyor.",
+      details: [],
+      sources: [],
+      limitations: ["Sistem konuya ait genel bilgiyi sorulan özgül iddianın kanıtı gibi sunmadı."],
+      suggestedQuestions: [`${topic.title} nedir?`, `${topic.title} için kanıt düzeyi nedir?`],
+      evidenceSummary: evidenceSummary(topic),
+    }
+  }
   const claimAgeGuards = selectedClaims.map((claim) => ({
     claim,
     guard: ageScopeGuard(claim, input.ageMonths),
@@ -409,8 +556,21 @@ export function resolveDnaCatalogReasoning(input: {
     }
   }
   const selectedRelations =
-    queryKind === "comparison" || queryKind === "relation"
-      ? rankedRelations(input.question, topic, queryKind).slice(0, 2)
+    queryKind === "comparison" || queryKind === "relation" || queryKind === "dna_relation"
+      ? rankedRelations(input.question, topic, queryKind)
+          .filter((relation) =>
+            explicitRelationTargets.length === 0 ||
+            relationMatchesExplicitTarget(relation, topic, explicitRelationTargets)
+          )
+          .slice(0, 2)
+      : crossTopicEvidence
+        ? rankedRelations(input.question, topic, "relation")
+            .filter((relation) => relationMatchesExplicitTarget(
+              relation,
+              topic,
+              explicitRelationTargets,
+            ))
+            .slice(0, 2)
       : []
   const relationAgeGuards = selectedRelations.map((relation) => ({
     relation,
@@ -443,10 +603,101 @@ export function resolveDnaCatalogReasoning(input: {
   const explicitComparison =
     queryKind === "comparison" && hasExplicitSourceBackedTarget(input.question, topic, claims)
   const explicitAssociation =
-    queryKind === "relation" && (
-      hasExplicitAssociationClaim(input.question, topic, claims) ||
-      hasExplicitSourceBackedTarget(input.question, topic, claims)
-    )
+    crossTopicEvidence
+      ? hasAssociationClaimForTopics(explicitRelationTargets, claims)
+      : queryKind === "relation" && explicitRelationTargets.length > 0
+        ? hasAssociationClaimForTopics(explicitRelationTargets, claims)
+        : queryKind === "relation" && hasExplicitAssociationClaim(input.question, topic, claims)
+  const unsupportedInfantPhysiologyExecutiveFunction =
+    /\b(?:infant|bebek|yenidogan)\w* fizyoloji\w*\b/.test(normalizedQuestion) &&
+    /\b(?:ef|yurutucu islev)\w*\b/.test(normalizedQuestion)
+  const unsupportedPrematurityAutonomicDevelopment =
+    /\b(?:prematur\w*|erken dogum)\b/.test(normalizedQuestion) &&
+    /\botonom(?: sinir sistemi)? gelisim\w*\b/.test(normalizedQuestion)
+  const unsupportedActivationCausality =
+    /\b(?:fmri|bold|aktivasyon\w*)\b/.test(normalizedQuestion) &&
+    /\b(?:gerekli|zorunlu|nedensel\w*|nedensellik)\b/.test(normalizedQuestion)
+  const unsupportedNociceptionPainComparison =
+    /\bnosisepsiyon\b/.test(normalizedQuestion) &&
+    /\bagri\b/.test(normalizedQuestion) &&
+    /\b(?:fark\w*|ayni(?: sey| kavram)?)\b/.test(normalizedQuestion)
+  const unsupportedUncuratedExposure =
+    /\b(?:psikolojik stresor\w*|cocukluk adversitesi|ongorulemezlik|sosyal degerlendirme\w*|fiziksel aktivite|ekran suresi|ebeveyn destegi|sosyoekonomik durum|matematik|sosyal beceri\w*|akademik basari|ev ici kaos|yorgunluk|duygusal yuk)\b/.test(normalizedQuestion) &&
+    ["evidence", "relation", "unknown"].includes(queryKind) &&
+    !hasExplicitAssociationClaim(input.question, topic, claims)
+  const unsupportedUncuratedProductMapping =
+    queryKind === "dna_relation" &&
+    relations.length === 0 &&
+    /\b(?:hangi alan\w*|alti alan|fizyolojik regulasyon alan\w*|duyusal regulasyon alan\w*|bilissel regulasyon alan\w*|duygusal regulasyon alan\w*)\b/.test(normalizedQuestion)
+  const unsupportedUncuratedSpecificRelation =
+    /\b(?:uyku veya stres\b.+\bacc|metabilis\w*\b.+\byurutucu islev\w*|beynin olgunlasmasi\b.+\byurutucu islev\w*|sicak ve soguk ef|gorsel ipucu\w*\b.+\bcalisma bellegi|duygusal durum\b.+\bcalisma bellegi\b.+\bdna|uyku gecisi\w*|ekran kapat\w*\b.+\buyku sorun\w*|duyusal hassasiyet\w*\b.+\bkotu uyur|gunduz uykululugu\b.+\byorgunluk|gunduz uykusu\b.+\bbellek|yatakta gecirilen sure\b.+\buyku suresi|(?:yatis|yatma) saati\b.+\buyku baslangici|korunmus yurutucu kapasite\w*|dna duygusal regulasyon alani\b.+\bans|dna duygusal regulasyon alani\b.+\bhrv|reaktivite\b.+\bdna\w* yurutucu islev alani|toparlanma\b.+\bdna\w* bilissel regulasyon alani|stres sistem\w*\b.+\bdna\w* interosepsiyon alani|dna ile es regulasyon\b.+\bdogrudan validasyon|akran es regulasyonu\b.+\bhangi yas)\b/.test(normalizedQuestion)
+  const unsupportedKnownCatalogGap =
+    /\b(?:dna alti alan faktor yapisi dogrulandi mi|reaktivite dna\w*(?: \w+){0,2} yurutucu islev alaniyla|toparlanma dna\w*(?: \w+){0,2} bilissel regulasyon alaniyla|stres sistemleri dna\w*(?: \w+){0,2} interosepsiyon alaniyla|akran es regulasyonu hangi yaslarda arastirilmistir)\b/.test(normalizedQuestion)
+  const unsupportedSpecificQuestion =
+    (queryKind === "evidence" &&
+      /\bcocuk ve ebeveyn rapor\w*.+\bne kadar uyus\w*/.test(normalizedQuestion) &&
+      !hasExplicitSourceBackedTarget(input.question, topic, claims)) ||
+    (queryKind === "misconception" && /\b(?:sakin|sessiz|hareketli) cocuk\b/.test(normalizedQuestion)) ||
+    unsupportedInfantPhysiologyExecutiveFunction ||
+    unsupportedPrematurityAutonomicDevelopment ||
+    unsupportedActivationCausality ||
+    unsupportedNociceptionPainComparison ||
+    unsupportedUncuratedExposure ||
+    unsupportedUncuratedProductMapping ||
+    unsupportedUncuratedSpecificRelation ||
+    unsupportedKnownCatalogGap ||
+    /\bcocugun az tepki vermesi duyusal hiporeaktivite\b/.test(normalizedQuestion) ||
+    /\btoparlanmayi olcmek icin en guclu tek gosterge\b/.test(normalizedQuestion) ||
+    /\berken cocuklukta hangi duzenleme yollari\b/.test(normalizedQuestion)
+
+  if (unsupportedSpecificQuestion) {
+    return {
+      queryKind,
+      route: "theory",
+      classification: "not_available",
+      topicId: topic.id,
+      topicTitle: topic.title,
+      summary: "Bu özgül iddia için doğrulanmış katalogda yeterli dayanak bulunmuyor.",
+      details: [],
+      sources: [],
+      limitations: ["Sistem genel konu bilgisini sorulan özgül ilişki veya grup farkının kanıtı gibi sunmadı."],
+      suggestedQuestions: [`${topic.title} nedir?`, `${topic.title} için kanıt düzeyi nedir?`],
+      evidenceSummary: evidenceSummary(topic),
+    }
+  }
+
+  if (crossTopicEvidence && relations.length === 0 && !explicitAssociation) {
+    return {
+      queryKind,
+      route: "theory",
+      classification: "not_available",
+      topicId: topic.id,
+      topicTitle: topic.title,
+      summary: "Bu iki konu arasındaki ilişki için doğrulanmış katalogda açık bir kanıt bağlantısı bulunmuyor.",
+      details: [],
+      sources: [],
+      limitations: ["Konu kaynaklarının ayrı ayrı bulunması, aralarındaki özgül ilişkinin kanıtı sayılmadı."],
+      suggestedQuestions: [`${topic.title} nedir?`, `${topic.title} için kanıt düzeyi nedir?`],
+      evidenceSummary: evidenceSummary(topic),
+    }
+  }
+
+
+  if (queryKind === "dna_relation" && explicitRelationTargets.length > 0 && relations.length === 0) {
+    return {
+      queryKind,
+      route: "dna",
+      classification: "not_available",
+      topicId: topic.id,
+      topicTitle: topic.title,
+      summary: "Bu DNA alanı ile adı geçen ikinci konu arasında doğrulanmış katalogda açık bir ilişki kaydı bulunmuyor.",
+      details: [],
+      sources: [],
+      limitations: ["Ayrı ayrı konu kayıtları bulunması, aralarındaki özgül ilişkinin veya DNA geçerliğinin kanıtı sayılmadı."],
+      suggestedQuestions: [`${topic.title} nedir?`, `${topic.title} için DNA ilişkisinin sınırı nedir?`],
+      evidenceSummary: evidenceSummary(topic),
+    }
+  }
 
   // Relationship answers may use only explicitly curated one-hop edges. If a
   // relationship is not in the graph, callers fall back to a bounded
@@ -487,6 +738,7 @@ export function resolveDnaCatalogReasoning(input: {
   const sources = collectSources(topic, claims, relations)
   const limitations = stableUnique([
     topic.claimBoundary,
+    ...relations.map((relation) => relation.claimBoundary),
     ...(ageGuard.limitation ? [ageGuard.limitation] : []),
     ...claimAgeLimitations,
     ...relationAgeLimitations,
