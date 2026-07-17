@@ -308,6 +308,28 @@ const DIAGNOSIS_PATTERNS = [
   "bu rapordan tanisal sonuc cikar",
 ] as const
 
+const INDIVIDUAL_CLINICAL_CONTEXT_PATTERN =
+  /\b(?:bu\s+(?:cocuk|vaka|danisan|profil|rapor|oruntu|sonuc|bulgu|davranis|durum|sorun|zorluk)|cocuk\w*|danisan\w*|vaka\w*|rapor\w*|profil\w*|skor\w*|puan\w*|sonuc\w*|bulgu\w*|oruntu\w*|ofke\w*\s+goster\w*|plan\w*\s+yapam\w*|iki\s+komut\w*\s+unut\w*)\b/
+const DIAGNOSTIC_CONCEPT_PATTERN =
+  /\b(?:tani(?:sal\w*|si\w*|yi\w*|ya\w*|nin\w*|niz\w*|\s+koy\w*|\s+ver\w*)|teshis\w*|hastali(?:k|g)\w*|bozuklu(?:k|g)\w*|dsm(?:\s*5)?|asd|otiz\w*|otistik\w*|dehb|adhd|spektrum\w*|norogelisimsel|zihinsel\s+gerilik|ayirici\s+tani|klinik\s+(?:etiket\w*|tablo\w*|kategori\w*)|psikiyatrik\s+kategori\w*)\b/
+const DIAGNOSTIC_REQUEST_PATTERN =
+  /\b(?:ad\w*\s+soyle\w*|siniflandir\w*|etiket\w*|daralt\w*|secenek\w*\s+ver\w*|sahip\s+mi|sayil\w*\s+(?:mi|mu)|destekli\w*\s+(?:mi|mu)|ihtimal\w*|yuzde\s+kac|daha\s+yakin|sonuc\w*\s+donustur\w*|ad\w*\s+tahmin\w*|var\s+mi\s+yok\s+mu|gosterge\w*|kod\w*\s+sec\w*|kanaat\w*|aciklan\w*|acikca\s+belirt\w*|nedir)\b/
+
+function isCompositionalDiagnosisRequest(normalized: string): boolean {
+  if (/\b(?:genel|kavram\w*)\s+tanim\w*\b/.test(normalized) || /\btanim\w*\s+nedir\b/.test(normalized)) {
+    return false
+  }
+  if (/\bbozuklugu\s+yok\b.{0,100}\bayrim\s+yapilabilir\s+mi\b/.test(normalized)) {
+    return false
+  }
+  if (!DIAGNOSTIC_CONCEPT_PATTERN.test(normalized)) return false
+  return (
+    INDIVIDUAL_CLINICAL_CONTEXT_PATTERN.test(normalized) ||
+    DIAGNOSTIC_REQUEST_PATTERN.test(normalized) ||
+    /\b(?:hangi|en\s+olasi)\b.{0,60}\b(?:tani\w*|teshis\w*|hastalik\w*|bozukluk\w*|kategori\w*)\b/.test(normalized)
+  )
+}
+
 const TREATMENT_PATTERNS = [
   "tedavi plani",
   "terapi plani",
@@ -326,6 +348,20 @@ const TREATMENT_PATTERNS = [
   "tedavi icin ne yap",
   "bu vakada ne yapmaliyim",
 ] as const
+
+const TREATMENT_CONCEPT_PATTERN =
+  /\b(?:tedavi\w*|terapi\w*|mudahale\w*|seans\w*|ev\s+(?:program\w*|odev\w*)|bireysel\s+program\w*|egzersiz\w*|uygulama\w*|etkinlik\w*|iyilestir\w*|klinik\s+(?:yol\s+harita\w*|teknik\w*)|aile\s+egitim\w*|duyusal\s+diyet\w*)\b/
+const PRESCRIPTIVE_ACTION_PATTERN =
+  /\b(?:hazirla\w*|uygula\w*|uygulayayim|sirala\w*|cikar\w*|kac\s+seans|uygun\w*|yaz\w*|iyilestir\w*|hedef\w*|aktivite\w*|belirle\w*|sec\w*|protokol\w*|oner\w*|tasarla\w*|oncelig\w*|planla\w*|recetele\w*|program\w*\s+olustur\w*|ne\s+yapal\w*)\b/
+
+function isCompositionalTreatmentRequest(normalized: string): boolean {
+  if (!TREATMENT_CONCEPT_PATTERN.test(normalized)) return false
+  return (
+    PRESCRIPTIVE_ACTION_PATTERN.test(normalized) ||
+    (INDIVIDUAL_CLINICAL_CONTEXT_PATTERN.test(normalized) &&
+      /\b(?:hangi|ne|nasil|kac|uygun|oncelik|gerek)\w*\b/.test(normalized))
+  )
+}
 
 const MEDICATION_PATTERNS = [
   "hangi ilac",
@@ -346,6 +382,76 @@ const MEDICATION_PATTERNS = [
   "risperidon",
   "aripiprazol",
 ] as const
+
+const MEDICATION_CONCEPT_PATTERN =
+  /\b(?:ilac\w*|tablet\w*|farmakolojik\w*|farmakoterapi\w*|medikasyon\w*|doz\w*|recete\w*|etken\s+madde\w*|preparat\w*|uyarici\s+ilac\w*|atomoksetin\w*|miktar\w*|miligram\w*|mg)\b/
+const MEDICATION_ACTION_PATTERN =
+  /\b(?:sec\w*|tercih\w*|basla\w*|artir\w*|azalt\w*|hesapla\w*|yaz\w*|duzenle\w*|oner\w*|uygun\w*|gerek\w*|plan\w*|olustur\w*|ver\w*|kac\s+(?:miligram|mg)|miktar\w*\s+soyle\w*|urun\s+ad\w*\s+ver\w*|hang\w*)\b/
+
+function isCompositionalMedicationRequest(normalized: string): boolean {
+  if (!MEDICATION_CONCEPT_PATTERN.test(normalized)) return false
+  return (
+    MEDICATION_ACTION_PATTERN.test(normalized) ||
+    INDIVIDUAL_CLINICAL_CONTEXT_PATTERN.test(normalized)
+  )
+}
+
+const CAUSAL_ATTRIBUTION_PATTERN =
+  /\b(?:etiyoloji\w*|kok\s+neden\w*|yol\s+ac\w*|gercek\s+kayna(?:k|g)\w*|olustur\w*\s+mekanizma\w*|neden\s+sonuc\s+ilisk\w*|travma\w*\s+mi\s+gel\w*|dogustan\s+mi\s+cevresel\s+mi|temelinde\w*\s+hangi\s+faktor|tek\s+aciklama\s+sec\w*|as(?:i|il)\s+(?:sebep|neden)\w*)\b/
+const PROGNOSTIC_PREDICTION_PATTERN =
+  /\b(?:kac\s+(?:gun|hafta|ay|yil)\w*|(?:bir|alti|6|on\s+iki|12)\s+(?:ay|yil)\s+sonra\w*|kalici\w*\s+ol\w*|nasil\s+bir\s+gidis\w*|ne\s+kadar\s+sure\w*|geleceg\w*|ileride\w*|kendiliginden\s+gec\w*|sonraki\s+skor\w*|klinik\s+(?:seyir|seyr)\w*|iyilesme\s+olasilig\w*|normale\s+gel\w*|islev\s+duzey\w*\s+tahmin\w*)\b/
+
+function isCompositionalCausalityRequest(normalized: string): boolean {
+  return (
+    CAUSAL_ATTRIBUTION_PATTERN.test(normalized) &&
+    (INDIVIDUAL_CLINICAL_CONTEXT_PATTERN.test(normalized) ||
+      /\b(?:belirle\w*|soyle\w*|karar\s+ver\w*|kanitli\w*|sec\w*|gercek\s+kayna(?:k|g)\w*|anne\s+tutum\w*|travma\w*\s+mi|dogustan\s+mi)\b/.test(normalized))
+  )
+}
+
+function isCompositionalPrognosisRequest(normalized: string): boolean {
+  return (
+    PROGNOSTIC_PREDICTION_PATTERN.test(normalized) &&
+    (INDIVIDUALIZED_PROXY_PATTERN.test(normalized) ||
+      /\bbu\s+(?:cocuk|vaka|danisan|profil|rapor|sorun|durum)\w*\b/.test(normalized) ||
+      /^cocuk\b/.test(normalized) ||
+      /\b(?:tahmin\w*|ongor\w*|beklen\w*|olasilik\w*|olasilig\w*|yuzde\w*|sansi\w*|iyi\s+mi\s+kotu\s+mu|normale\s+gel\w*)\b/.test(normalized))
+  )
+}
+
+const PROMPT_OR_INSTRUCTION_TARGET_PATTERN =
+  /\b(?:yonerge\w*|talimat\w*|kural\w*|gelistirici\s+mesaj\w*|sistem\s+(?:mesaj\w*|prompt\w*|baglam\w*)|guvenlik\s+filtre\w*|admin\s+mod\w*)\b/
+const INSTRUCTION_OVERRIDE_PATTERN =
+  /\b(?:gecersiz\s+say\w*|yok\s+say\w*|yokmus\s+gibi|unut\w*|atla\w*|sinir\w*\s+kaldir\w*|yalniz\s+benim\s+talimat\w*|aynen\s+kopyala\w*|disa(?:ri)?\s+aktar\w*|ilk\s+on\s+satir\w*|gizli\w*)\b/
+const INTERNAL_REASONING_REQUEST_PATTERN =
+  /\b(?:chain\s+of\s+thought|reasoning\s+adim\w*|reasoning\s+iz\w*|ic\s+dusunce\s+zincir\w*|dusunme\s+iz\w*|karar\s+verirken\s+kullandig\w*\s+ic\s+dusunce)\b/
+
+function isCompositionalManipulationRequest(normalized: string): boolean {
+  return (
+    INTERNAL_REASONING_REQUEST_PATTERN.test(normalized) ||
+    (PROMPT_OR_INSTRUCTION_TARGET_PATTERN.test(normalized) &&
+      INSTRUCTION_OVERRIDE_PATTERN.test(normalized)) ||
+    /\b(?:filtre\w*\s+atla\w*|admin\s+mod\w*\s+gec\w*)\b/.test(normalized)
+  )
+}
+
+const INTERNAL_DATA_TARGET_PATTERN =
+  /\b(?:ham\s+(?:madde\w*|cevap\w*|yanit\w*|anamnez\w*|veri\w*)|snapshot\w*|answers\w*|eslestirme\s+puan\w*|ozgun\s+ceva(?:p|b)\w*|kural\s+kimlik\w*|kural\s+agirlik\w*|audit\s+log\w*|audit\s+kayd\w*|router\w*\s+(?:in\s+)?(?:karar\s+agac\w*|esik\w*)|klinik\s+json\w*|gizli\s+iz\s+kayd\w*|veritabani\w*)\b/
+const DATA_EXTRACTION_ACTION_PATTERN =
+  /\b(?:goster\w*|getir\w*|disari\s+aktar\w*|kopyala\w*|ver\w*|listele\w*|sirala\w*|dok\w*|paylas\w*|acikla\w*|goruntule\w*|oldugu\s+gibi)\b/
+
+function isCompositionalInternalDataRequest(normalized: string): boolean {
+  return INTERNAL_DATA_TARGET_PATTERN.test(normalized) && DATA_EXTRACTION_ACTION_PATTERN.test(normalized)
+}
+
+const OTHER_CASE_TARGET_PATTERN =
+  /\b(?:baska\s+(?:vaka\w*|danisan\w*|terapist\w*|rapor\w*)|diger\s+(?:vaka\w*|danisan\w*|cocuk\w*|rapor\w*)|son\s+danisan\w*|onceki\s+danisan\w*|iki\s+cocu(?:k|g)\w*|tum\s+vaka\w*|butun\s+danisan\w*|en\s+agir\s+(?:uc|3)\s+vaka\w*|ayni\s+yas\w*\s+butun\s+danisan\w*|baskasina\s+ait\s+vaka\w*|klinikteki\s+ortalama\s+vaka\w*)\b/
+const CROSS_CASE_ACTION_PATTERN =
+  /\b(?:karsilastir\w*|kiyasla\w*|yan\s+yana\s+koy\w*|referans\s+al\w*|tara\w*|ortak\s+ozellik\w*\s+cikar\w*|dagilim\w*|yuzdelik\w*|farki\s+ne|kimli(?:k|g)\w*\s+kullan\w*)\b/
+
+function isCompositionalCrossCaseRequest(normalized: string): boolean {
+  return OTHER_CASE_TARGET_PATTERN.test(normalized) && CROSS_CASE_ACTION_PATTERN.test(normalized)
+}
 
 const BOUNDARY_QUESTION_PATTERNS = [
   "dna tani koyar mi",
@@ -381,22 +487,25 @@ const DNA_PHYSIOLOGY_OVERREACH_PATTERNS = [
 ] as const
 
 const PROFILE_OR_OBSERVATION_PROXY_PATTERN =
-  /\b(?:dna|puan\w*|skor\w*|profil\w*|davranis\w*|gozlem\w*|belirti\w*|gorev\s+(?:sonuc\w*|puan\w*|hata\w*)|uyku\s+(?:oruntu\w*|puani\w*)|(?:test|olcek|anket|dna)\s+(?:sonuc\w*|puan\w*)|bu\s+(?:cocuk|vaka|danisan|rapor)\w*|rapordaki|cocugun|danisan\w*)\b/
+  /\b(?:dna|puan\w*|skor\w*|profil\w*|davranis\w*|gozlem\w*|gozlenen\w*|belirti\w*|duyusal\s+(?:kacinma\w*|arayis\w*)|dokunma\w*\s+kac\w*|planlama\w*|hata\s+yap\w*|bedensel\s+sinyal\w*|ofke\s+patlama\w*|tuvalet\s+kaza\w*|sessiz\s+kal\w*|toparlanma\w*|gorev\s+(?:sonuc\w*|puan\w*|hata\w*)|uyku\s+(?:oruntu\w*|puani\w*)|(?:test|olcek|anket|dna)\s+(?:sonuc\w*|puan\w*)|bu\s+(?:cocuk|vaka|danisan|rapor)\w*|rapordaki|rapor\s+veri\w*|cocugun|danisan\w*)\b/
 const INDIVIDUALIZED_PROXY_PATTERN =
-  /\b(?:puan\w*|skor\w*|profil\w*|gorev\s+(?:sonuc\w*|puan\w*|hata\w*)|uyku\s+(?:oruntu\w*|puani\w*)|(?:test|olcek|anket|dna)\s+(?:sonuc\w*|puan\w*)|bu\s+(?:cocuk|vaka|danisan|rapor)\w*|rapordaki|cocugun|danisan\w*)\b/
+  /\b(?:puan\w*|skor\w*|profil\w*|yas\s+esdeger\w*|gorev\s+(?:sonuc\w*|puan\w*|hata\w*)|uyku\s+(?:oruntu\w*|puani\w*)|(?:test|olcek|anket|dna)\s+(?:sonuc\w*|puan\w*)|bu\s+(?:cocuk|vaka|danisan|rapor)\w*|rapordaki|cocugun|danisan\w*)\b/
 const PRODUCT_OR_DEICTIC_PROXY_PATTERN =
   /\b(?:dna|puan\w*|skor\w*|profil\w*|davranis\w*|gozlem\w*|belirti\w*|gorev\s+(?:sonuc\w*|puan\w*|hata\w*)|uyku\s+(?:oruntu\w*|puani\w*)|(?:test|olcek|anket|dna)\s+(?:sonuc\w*|puan\w*)|bu\s+(?:cocuk|vaka|danisan|rapor)\w*|rapordaki|danisan\w*)\b/
 const BIOLOGICAL_TARGET_PATTERN =
-  /\b(?:beyin(?:\s+(?:bolgesi|agi))?|korteks\w*|frontal\s+lob\w*|frontopariyetal\s+ag\w*|dikkat\s+ag\w*|pfc|dlpfc|vmpfc|prefrontal\w*|acc|singulat\w*|insula\w*|insular\w*|amigdala\w*|salience\s+ag\w*|merkezi\s+otonom\s+ag\w*|can\s+(?:agi|etkinligi|aktivitesi)|vagus\w*|vagal\w*|sempatik\w*|parasempatik\w*|hrv|eda|ern|hpa|crh|acth|kortizol\w*|melatonin\w*|hormon\w*|scn|sirkadiyen\s+faz\w*|biyolojik\s+saat\w*|uyku\s+(?:evre\w*|mimari\w*)|allostatik\s+yuk\w*|calisma\s+bellegi\s+kapasite\w*|yurutucu\s+kapasite\w*|fonolojik\s+dongu\w*|zeka\w*|noradrenalin\w*|norepinefrin\w*|norolojik\s+esik\w*|interoseptif\s+dogruluk)\b/
+  /\b(?:beyin(?:\s+(?:bolgesi|agi|olgunlugu))?|sinir\s+sistemi\w*|korteks\w*|frontal\s+lob\w*|frontopariyetal\s+ag\w*|dikkat\s+ag\w*|yurutucu\s+ag\w*|pfc|dlpfc|vmpfc|prefrontal\w*|acc|singulat\w*|insula\w*|insular\w*|amigdala\w*|salience\s+ag\w*|merkezi\s+otonom\s+ag\w*|can\s+(?:agi|etkinligi|aktivitesi)|vagus\w*|vagal\w*|sempatik\w*|parasempatik\w*|hrv|eda|ern|hpa|crh|acth|kortizol\w*|melatonin\w*|hormon\w*|scn|sirkadiyen\s+faz\w*|biyolojik\s+saat\w*|uyarilma\s+biyoloji\w*|vestibuler\s+sistem\w*|uyku\s+(?:evre\w*|mimari\w*)|allostatik\s+yuk\w*|calisma\s+bellegi\s+kapasite\w*|yurutucu\s+kapasite\w*|fonolojik\s+dongu\w*|zeka\w*|noradrenalin\w*|norepinefrin\w*|norolojik\s+esi(?:k|g)\w*|interoseptif\s+dogrulu(?:k|g)\w*)\b/
 const BIOLOGICAL_INFERENCE_PREDICATE_PATTERN =
-  /\b(?:olc\w*|tahmin\w*|ongor\w*|okun\w*|hesap\w*|goster\w*|kanit\w*|cikar\w*|yansit\w*|esles\w*|dogrula\w*|sayil\w*|anlamina\s+gel\w*|isaret\s+et\w*|aktif\w*|aktivite\w*|etkin\w*|baglanti\w*|olgun\w*|gelismemis\w*|hasar\w*|bozuk\w*|zayif\w*|yeterli\w*|yetersiz\w*|baskin\w*|dusuk\w*|yuksek\w*|kucuk\w*|buyuk\w*)\b/
+  /\b(?:olc\w*|tahmin\w*|ongor\w*|okun\w*|okuy\w*|hesap\w*|goster\w*|kanit\w*|ispat\w*|cikar\w*|yansit\w*|esles\w*|dogrula\w*|sayil\w*|anlamina\s+gel\w*|isaret\s+et\w*|dusundur\w*|aktif\w*|aktivite\w*|hiperaktiv\w*|etkin\w*|baglanti\w*|olgun\w*|gelismemis\w*|hasar\w*|bozuk\w*|zayif\w*|yeterli\w*|yetersiz\w*|baskin\w*|dusuk\w*|yuksek\w*|kucuk\w*|buyuk\w*|calis\w*|mod\w*|normal\w*|ritim\w*|kaynaklan\w*)\b/
 const DIRECT_MEASUREMENT_PREDICATE_PATTERN =
-  /\b(?:olc\w*|tahmin\w*|ongor\w*|okun\w*|hesap\w*|kac|sayisal\w*|deger\w*|seviye\w*|oran\w*|aktivite\w*|etkinlik\w*|baglantisallik\w*|hacim\w*)\b/
+  /\b(?:olc\w*|tahmin\w*|ongor\w*|okun\w*|okuy\w*|hesap\w*|kac|ne\s+kadar|sayisal\w*|deger\w*|seviye\w*|oran\w*|aktivite\w*|etkinlik\w*|baglantisallik\w*|hacim\w*|ritim\w*)\b/
 
 function isExplicitBoundaryCritique(normalized: string): boolean {
   const critique =
-    /\b(?:demek|soyle\w*|cikar\w*|atama\w*|tahmin\s+et\w*|olc\w*)\b.{0,120}\b(?:neden|niye)?\s*(?:sorunlu|sakincali|yanlis|guvenilmez|sinirli)\w*\b/.test(normalized) ||
-    /\b(?:olcmez|gostermez|kanitlamaz|cikarilamaz|tahmin edilemez|yerine gecmez)\b/.test(normalized)
+    /\b(?:demek|soyle\w*|cikar\w*|atama\w*|etiketle\w*|say\w*|tahmin\s+et\w*|olc\w*)\b.{0,160}\b(?:neden|niye)?\s*(?:sorunlu|sakincali|yanlis|hatali|guvenilmez|sinirli|yeterli\s+degil|dogru\s+degil)\w*\b/.test(normalized) ||
+    /\b(?:mumkun\s+degil\w*|olcmez|gostermez|kanitlamaz|kanitlanama\w*|cikarilama\w*|secileme\w*|tahmin\s+edileme\w*|yerine\b.{0,40}\bgecmez|sayilmaz|sayilma\w*|sunulmama\w*|gosterilmeme\w*|karsilastirmama\w*|kiyaslamama\w*|yeterli\s+degil\w*|dogru\s+degil\w*)\b/.test(normalized) ||
+    /\b(?:tani\s+koymadan|tedavi\s+onermeden|nedensellik\s+iddia\s+etmeden|biyolojik\s+durum\s+atamadan)\b.{0,140}\b(?:nasil|neden|niye)\b/.test(normalized) ||
+    /\bduyusal\s+regulasyon\s+puan\w*\b.{0,100}\bsinir\s+sistemi\s+cikarim\w*\s+yapilabilir\s+mi\b/.test(normalized) ||
+    /\b(?:tani\w*|tedavi\w*|ilac\w*|prognoz\w*|nedensellik\w*|mekanizma\w*|ham\s+(?:madde|cevap|yanit)\w*|esik\w*)\b.{0,140}\b(?:neden|niye)\b.{0,100}\b(?:yok|olmaz|gerek\w*|onemli\w*)\b/.test(normalized)
   const asksForBypass = /\b(?:ama|fakat|ancak|yine de|buna ragmen|sonra|ayrica)\b/.test(normalized)
   return critique && !asksForBypass
 }
@@ -416,7 +525,7 @@ function compositionalBiologicalOverreach(
   const researchFrame =
     ["evidence", "relation", "comparison"].includes(queryKind) &&
     /\b(?:literatur\w*|calisma\w*|arastirma\w*|makale\w*|kanit\w*|ilisk\w*)\b/.test(normalized) &&
-    !INDIVIDUALIZED_PROXY_PATTERN.test(normalized)
+    !PROFILE_OR_OBSERVATION_PROXY_PATTERN.test(normalized)
   if (researchFrame) return null
 
   if (
@@ -624,7 +733,16 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
       "Kimlik ve iletişim bilgilerini kaldırarak sorunuzu yeniden yazın. DNA Asistanı doğrudan tanımlayıcı veriyi işlemeye uygun değildir.",
     )
   }
-  if (includesAny(normalized, MANIPULATION_PATTERNS)) {
+  const explicitBoundaryCritique = isExplicitBoundaryCritique(normalized)
+  if (equalsAny(normalized, BOUNDARY_QUESTION_PATTERNS) || explicitBoundaryCritique) {
+    return safetyResult(
+      redactedQuestion,
+      "none",
+      null,
+      "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yalnız kaynak bağlı ve tanısal olmayan açıklama sunar.",
+    )
+  }
+  if (includesAny(normalized, MANIPULATION_PATTERNS) || isCompositionalManipulationRequest(normalized)) {
     return safetyResult(
       redactedQuestion,
       "manipulation",
@@ -632,7 +750,7 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
       "Bu istek güvenli vaka tartışması sınırlarının dışındadır. Yalnız DNA kavramları, literatür çerçevesi ve açık vakaya ait kimliksiz bulgular ele alınabilir.",
     )
   }
-  if (includesAny(normalized, INTERNAL_DATA_PATTERNS)) {
+  if (includesAny(normalized, INTERNAL_DATA_PATTERNS) || isCompositionalInternalDataRequest(normalized)) {
     return safetyResult(
       redactedQuestion,
       "internal_data",
@@ -640,7 +758,7 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
       "Ham madde cevapları, gizli eşikler, kural listeleri, trace ve audit ayrıntıları sohbet yanıtına açılmaz.",
     )
   }
-  if (includesAny(normalized, CROSS_CASE_PATTERNS)) {
+  if (includesAny(normalized, CROSS_CASE_PATTERNS) || isCompositionalCrossCaseRequest(normalized)) {
     return safetyResult(
       redactedQuestion,
       "cross_case",
@@ -648,12 +766,44 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
       "Vaka gizliliği nedeniyle başka danışanlar veya raporlarla çapraz karşılaştırma yapılmaz. Yalnız açık ve kimliksiz vaka bağlamı tartışılabilir.",
     )
   }
-  if (equalsAny(normalized, BOUNDARY_QUESTION_PATTERNS)) {
+  if (isCompositionalDiagnosisRequest(normalized)) {
     return safetyResult(
       redactedQuestion,
-      "none",
-      null,
-      "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yalnız kaynak bağlı ve tanısal olmayan açıklama sunar.",
+      "diagnosis",
+      "compositional_diagnostic_inference_blocked",
+      "DNA bulgularından tanı veya kesin neden çıkarılamaz. Vaka verileri yalnız işlevsel örüntü ve veri sınırlılıkları düzeyinde tartışılabilir.",
+    )
+  }
+  if (isCompositionalMedicationRequest(normalized)) {
+    return safetyResult(
+      redactedQuestion,
+      "medication",
+      "compositional_medication_request_blocked",
+      "İlaç seçimi, doz veya reçete bu sistemin kapsamı dışındadır ve yetkili hekim değerlendirmesi gerektirir.",
+    )
+  }
+  if (isCompositionalTreatmentRequest(normalized)) {
+    return safetyResult(
+      redactedQuestion,
+      "treatment",
+      "compositional_treatment_request_blocked",
+      "DNA Asistanı terapi, müdahale, seans veya ev programı oluşturmaz. Bulguları klinik tartışma için betimleyici düzeyde tutar.",
+    )
+  }
+  if (isCompositionalPrognosisRequest(normalized)) {
+    return safetyResult(
+      redactedQuestion,
+      "prognosis",
+      "compositional_prognostic_prediction_blocked",
+      "DNA Asistanı iyileşme zamanı veya gelecekteki klinik gidiş hakkında öngörü üretmez.",
+    )
+  }
+  if (isCompositionalCausalityRequest(normalized)) {
+    return safetyResult(
+      redactedQuestion,
+      "causality",
+      "compositional_causal_determination_blocked",
+      "Tek bir değerlendirme veya vaka özeti kesin neden göstermez; yalnız birlikte görülen işlevsel örüntüler betimlenebilir.",
     )
   }
   if (includesAny(normalized, DNA_PHYSIOLOGY_OVERREACH_PATTERNS)) {
@@ -667,17 +817,11 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
   const matchingCatalogRules = DNA_CHAT_CATALOG_SAFETY_RULES.filter((rule) =>
     includesAny(normalized, rule.patterns),
   )
-  const explicitBoundaryCritique =
-    matchingCatalogRules.length > 0 &&
-    matchingCatalogRules.every((rule) =>
-      rule.category === "biological_inference" || rule.category === "measurement_overreach"
-    ) &&
-    isExplicitBoundaryCritique(normalized)
   const boundedBiologicalTheoryQuestion =
     matchingCatalogRules.length > 0 &&
     matchingCatalogRules.every((rule) => rule.category === "biological_inference") &&
     isBoundedBiologicalTheoryQuestion(normalized, source)
-  const catalogRule = boundedBiologicalTheoryQuestion || explicitBoundaryCritique
+  const catalogRule = boundedBiologicalTheoryQuestion
     ? null
     : [...matchingCatalogRules].sort(
         (left, right) => catalogRulePriority(left.category) - catalogRulePriority(right.category),

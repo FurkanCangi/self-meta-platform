@@ -778,6 +778,17 @@ export const DNA_CHAT_CATALOG_RELATIONS: readonly DnaChatCatalogRelation[] = Obj
     claimBoundary: "Uyku süresi veya kalitesi tek çocukta yürütücü güçlüğün nedeni, tanısı ya da prognozu değildir.",
   }),
   relation({
+    id: "relation.sleep-health.attention",
+    fromTopicId: "selfreg.sleep_health",
+    toTopicId: "cns.attention",
+    predicate: "associated_with",
+    summary: "Çocuklukta uyku örüntüleri ile dikkat performansı arasında grup düzeyinde ilişkiler bildirilmiştir.",
+    sourceIds: ["ASTILL_ET_AL_2012", "INHULSEN_ET_AL_2022"],
+    evidenceLevel: "moderate",
+    ageScope: "childhood",
+    claimBoundary: "Uyku ritmi veya dikkat davranışı tek çocukta neden, tanı, prognoz ya da doğrudan biyolojik mekanizma göstermez.",
+  }),
+  relation({
     id: "relation.executive-models.executive-functions",
     fromTopicId: "cns.executive_models",
     toTopicId: "selfreg.executive_functions",

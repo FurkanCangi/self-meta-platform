@@ -74,6 +74,13 @@ function errorResponse(error: string, status: number, extra?: Record<string, unk
   return json({ ok: false, error, ...(extra || {}) }, { status })
 }
 
+function hasDeclaredOversizeBody(request: Request) {
+  const rawLength = request.headers.get("content-length")
+  if (!rawLength) return false
+  const declaredLength = Number(rawLength)
+  return Number.isFinite(declaredLength) && declaredLength > MAX_BODY_BYTES
+}
+
 function tooManyRequestsResponse(resetAt: number) {
   const retryAfter = Math.max(1, Math.ceil((resetAt - Date.now()) / 1_000))
   const response = errorResponse("too_many_requests", 429, { retryAfter })
@@ -422,6 +429,13 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    // Reject an explicitly oversized body before authentication or rate-limit
+    // work. Streaming requests without Content-Length are still bounded by
+    // readDnaChatRequestBody below.
+    if (hasDeclaredOversizeBody(request)) {
+      return errorResponse("payload_too_large", 413)
+    }
+
     const trusted = await requireTrustedMutation(request)
     if (trusted) return errorResponse("unauthorized", 401)
 

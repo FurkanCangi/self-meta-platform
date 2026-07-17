@@ -11,6 +11,7 @@ import {
   DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS,
   getCatalogTopicById,
 } from "../src/lib/dna/chat/catalog"
+import { classifyDnaChatQueryKind } from "../src/lib/dna/chat/catalogReasoning"
 
 const caseContext = createDnaChatSafeCaseContext({
   dataStatus: "synthetic",
@@ -241,6 +242,61 @@ const hrvSourceIds = new Set(resolveDnaChat({ question: "HRV nedir?" }).sources.
 assert.ok(conjunctionQuestions.sources.some((source) => insulaSourceIds.has(source.id)))
 assert.ok(conjunctionQuestions.sources.some((source) => hrvSourceIds.has(source.id)))
 
+for (const question of [
+  "Self-regülasyonla self-kontrol arasındaki fark ne?",
+  "Merkezi sinir sistemiyle otonom sinir sistemi arasındaki fark ne?",
+  "Sempatik ve parasempatik sistemler birbirine tamamen ters mi?",
+  "Toparlanmayla öz-örgütlenme aynı süreç mi?",
+  "Akut stresle kronik stres aynı biyolojik süreç mi?",
+] as const) {
+  assert.equal(
+    classifyDnaChatQueryKind(question),
+    "comparison",
+    `${question}: doğal karşılaştırma kalıbı comparison olmalı`,
+  )
+}
+
+for (const question of [
+  "Merkezi sinir sisteminin işleyişini sade anlatır mısın?",
+  "Anterior singulat korteksin işlevlerini sadeleştirir misin?",
+  "İnterosepsiyondaki temel boyutları anlatır mısın?",
+] as const) {
+  assert.equal(
+    classifyDnaChatQueryKind(question),
+    "definition",
+    `${question}: güvenli açıklama isteği definition olmalı`,
+  )
+}
+assert.equal(
+  classifyDnaChatQueryKind("Gelişimsel farklılıklardaki bireysel çeşitliliği açıklar mısın?"),
+  "definition",
+  "Gelişimsel farklılık sözcüğü tek başına comparison sayılmamalı",
+)
+
+for (const question of [
+  "Prefrontal kontrol nedir? Çocuklukta nasıl gelişir?",
+  "İnsular korteks nedir? Kanıtlar daha çok hangi yaşlardan geliyor?",
+  "İnterosepsiyon nedir? Nasıl ölçülebilir?",
+  "Duygu düzenleme nedir? Hangi stratejiler bağlama göre değişir?",
+  "Yürütücü işlevler nedir? Çocuklukta ne zaman gelişir?",
+  "DNA'nın altı alanı nedir? Alanlar birbirinden tamamen bağımsız mı?",
+  "Eş-regülasyon nedir? Çocuklukta nasıl gelişir?",
+] as const) {
+  const response = resolveDnaChat({ question })
+  assert.equal(response.outcome, "answered", `${question}: iki eliptik bölüm de yanıtlanmalı`)
+  assert.notEqual(response.classification, "clarification", `${question}: gereksiz açıklama istememeli`)
+  assert.ok(response.sources.length > 0, `${question}: kaynak bağlı kalmalı`)
+  assert.doesNotMatch(response.answerTr, /yeterli eşleşme bulunamadı/i)
+}
+
+const partiallyAnsweredCompound = resolveDnaChat({
+  question: "İnsular korteks nedir? Bunun serotoninle ilişkisi nedir?",
+})
+assert.equal(partiallyAnsweredCompound.outcome, "clarification")
+assert.equal(partiallyAnsweredCompound.classification, "clarification")
+assert.ok(partiallyAnsweredCompound.sources.length > 0, "Yanıtlanan ilk bölümün kaynağı korunmalı")
+assert.match(partiallyAnsweredCompound.summary, /bir bölümü yanıtlandı/i)
+
 const splitCaseTheory = resolveDnaChat({
   question: "Son raporumu özetle? İnsula nedir?",
   caseContext,
@@ -273,6 +329,17 @@ const supportedInsulaInteroceptionEvidence = resolveDnaChat({
 assert.equal(supportedInsulaInteroceptionEvidence.classification, "literature")
 assert.equal(supportedInsulaInteroceptionEvidence.outcome, "answered")
 assert.ok(supportedInsulaInteroceptionEvidence.sources.length > 0)
+
+const supportedSleepAttentionRelation = resolveDnaChat({
+  question: "Uyku ritmi dikkat süreçleriyle nasıl ilişkilidir?",
+})
+assert.equal(supportedSleepAttentionRelation.outcome, "answered")
+assert.equal(supportedSleepAttentionRelation.classification, "dna_concept")
+assert.ok(supportedSleepAttentionRelation.sources.length > 0)
+assert.ok(
+  supportedSleepAttentionRelation.limitations.some((line) => /uyku ritmi.*tek çocukta/i.test(line)),
+  "Uyku-dikkat ilişkisi kendi iddia sınırını kullanıcıya göstermeli",
+)
 
 for (const question of [
   "Self-regülasyon ile performans izleme arasında bilimsel kanıt var mı?",

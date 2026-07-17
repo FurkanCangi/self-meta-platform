@@ -55,12 +55,56 @@ export type DnaCatalogReasoningDraft = {
   evidenceSummary: DnaChatEvidenceSummary
 }
 
+function hasExplicitComparisonCue(normalizedQuestion: string): boolean {
+  return /\barasindaki fark(?: ne| nedir| nedir acaba)?\b/.test(normalizedQuestion) ||
+    /\b(?:ayni|ayni bir) (?:biyolojik )?(?:sey|surec|yapi|kavram|terim|islev|bilesen|mekanizma)(?: mi| midir| mudur)\b/.test(normalizedQuestion) ||
+    /\bbirbirine (?:tamamen )?ters(?: mi| midir| mudur)\b/.test(normalizedQuestion) ||
+    /\bbirbirinden (?:tamamen )?(?:bagimsiz|ayri|farkli)(?: mi| midir| mudur)\b/.test(normalizedQuestion)
+}
+
+function hasSafeDefinitionCue(normalizedQuestion: string): boolean {
+  const asksForExplanation =
+    /\b(?:sade(?:ce)? )?anlat(?:ir|abilir)? misin\b/.test(normalizedQuestion) ||
+    /\bacikla(?:r|yabilir)? misin\b/.test(normalizedQuestion) ||
+    /\bsadelestir(?:ir|ebilir)? misin\b/.test(normalizedQuestion) ||
+    /\b(?:ne|hangi) is\w* yapar\b/.test(normalizedQuestion) ||
+    /\bne yap(?:ar|iyor)\b/.test(normalizedQuestion) ||
+    /\bne oluyor\b/.test(normalizedQuestion) ||
+    /\bneyi kaps(?:ar|iyor)\b/.test(normalizedQuestion)
+  if (!asksForExplanation) return false
+
+  // Bu kısa kalıplar yalnız tanım isteğini esnekleştirir. Açık neden, kanıt,
+  // ölçüm, gelişim veya ilişki sorusunu genel tanıma indirgemez.
+  return !/\b(?:neden|niye|kanit|bilimsel|kaynak|olc\w*|gelis\w*|hangi yas|ilisk\w*|baglanti\w*|etkile\w*)\b/.test(
+    normalizedQuestion,
+  )
+}
+
 export function classifyDnaChatQueryKind(question: string): DnaChatQueryKind {
-  return classifyCatalogQueryKind(question) as CatalogQueryKind
+  const normalized = normalizeDnaChatText(question)
+  if (hasExplicitComparisonCue(normalized)) return "comparison"
+
+  const catalogKind = classifyCatalogQueryKind(question) as CatalogQueryKind
+  if (
+    catalogKind === "comparison" &&
+    /\bgelisimsel farklilik\w*\b/.test(normalized) &&
+    /\b(?:acikla|anlat|sadelestir)\w*\b/.test(normalized)
+  ) {
+    return "definition"
+  }
+  if (hasSafeDefinitionCue(normalized)) {
+    // "Gelişimsel farklılıklardaki ... anlatır mısın?" ifadesindeki
+    // "farklılık" tek başına iki öğeli karşılaştırma değildir.
+    if (catalogKind === "unknown") {
+      return "definition"
+    }
+  }
+  return catalogKind
 }
 
 export function classifyEmbeddedCatalogQueryKind(question: string): DnaChatQueryKind {
   const normalized = normalizeDnaChatText(question)
+  if (hasExplicitComparisonCue(normalized)) return "comparison"
   if (/\b(?:fark|ayni sey|karsilastir|arasindaki)\b/.test(normalized)) return "comparison"
   if (/\b(?:iliski|iliskili|iliskisini|iliskisiyle|baglanti|baglantisi|etkilesim)\b/.test(normalized)) {
     return "relation"
@@ -76,6 +120,7 @@ export function classifyEmbeddedCatalogQueryKind(question: string): DnaChatQuery
     return "misconception"
   }
   if (/\b(?:dna ile|dna skoru|dna alani|dna olcer)\b/.test(normalized)) return "dna_relation"
+  if (hasSafeDefinitionCue(normalized)) return "definition"
   return "definition"
 }
 
@@ -693,6 +738,7 @@ export function resolveDnaCatalogReasoning(input: {
   const sources = collectSources(topic, claims, relations)
   const limitations = stableUnique([
     topic.claimBoundary,
+    ...relations.map((relation) => relation.claimBoundary),
     ...(ageGuard.limitation ? [ageGuard.limitation] : []),
     ...claimAgeLimitations,
     ...relationAgeLimitations,
