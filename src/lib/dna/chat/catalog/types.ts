@@ -7,6 +7,29 @@ export const DNA_CHAT_CATALOG_CATEGORIES = [
   "sympathetic_parasympathetic",
 ] as const
 
+export const DNA_CHAT_RESEARCH_PACK_IDS = [
+  "self_regulation",
+  "central_nervous_system",
+  "autonomic_nervous_system",
+  "sympathetic_parasympathetic",
+  "prefrontal_processes",
+  "anterior_cingulate_cortex",
+  "insular_cortex",
+  "interoception",
+  "arousal_reactivity",
+  "recovery_self_organization",
+  "sensory_modulation",
+  "emotion_regulation",
+  "stress_systems",
+  "sleep_daily_rhythm",
+  "executive_functions",
+  "attention_working_memory",
+  "case_report_boundaries",
+  "dna_six_domains",
+  "developmental_differences",
+  "coregulation",
+] as const
+
 export const DNA_CHAT_QUERY_KINDS = [
   "definition",
   "comparison",
@@ -57,11 +80,36 @@ export const DNA_CHAT_DNA_RELATIONS = [
 ] as const
 
 export type DnaChatCatalogCategory = (typeof DNA_CHAT_CATALOG_CATEGORIES)[number]
+export type DnaChatResearchPackId = (typeof DNA_CHAT_RESEARCH_PACK_IDS)[number]
 export type DnaChatQueryKind = (typeof DNA_CHAT_QUERY_KINDS)[number]
 export type DnaChatCatalogEvidenceLevel = (typeof DNA_CHAT_EVIDENCE_LEVELS)[number]
 export type DnaChatCatalogAgeScope = (typeof DNA_CHAT_AGE_SCOPES)[number]
 export type DnaChatCatalogClaimType = (typeof DNA_CHAT_CLAIM_TYPES)[number]
 export type DnaChatCatalogDnaRelation = (typeof DNA_CHAT_DNA_RELATIONS)[number]
+
+/** Research packs keep their own identity while topics use four broad categories. */
+export const DNA_CHAT_RESEARCH_PACK_CATEGORIES = Object.freeze({
+  self_regulation: "self_regulation",
+  central_nervous_system: "central_nervous_system",
+  autonomic_nervous_system: "autonomic_nervous_system",
+  sympathetic_parasympathetic: "sympathetic_parasympathetic",
+  prefrontal_processes: "central_nervous_system",
+  anterior_cingulate_cortex: "central_nervous_system",
+  insular_cortex: "central_nervous_system",
+  interoception: "autonomic_nervous_system",
+  arousal_reactivity: "self_regulation",
+  recovery_self_organization: "self_regulation",
+  sensory_modulation: "self_regulation",
+  emotion_regulation: "self_regulation",
+  stress_systems: "self_regulation",
+  sleep_daily_rhythm: "self_regulation",
+  executive_functions: "central_nervous_system",
+  attention_working_memory: "central_nervous_system",
+  case_report_boundaries: "self_regulation",
+  dna_six_domains: "self_regulation",
+  developmental_differences: "self_regulation",
+  coregulation: "self_regulation",
+} as const satisfies Readonly<Record<DnaChatResearchPackId, DnaChatCatalogCategory>>)
 
 export type DnaChatCatalogReviewStatus = "source_verified_expert_pending" | "expert_approved"
 export type DnaChatCatalogPublicationStatus = "published" | "consensus" | "practice_brief"
@@ -158,7 +206,9 @@ export type DnaChatCatalogSafetyRule = {
 export type DnaChatCatalogBenchmarkQuestion = {
   readonly version: typeof DNA_CHAT_CATALOG_VERSION
   readonly id: string
-  /** The research-pack category that owns this canonical question row. */
+  /** The canonical research pack that owns this question row. */
+  readonly sourcePackId: DnaChatResearchPackId
+  /** The stable broad catalog category assigned to the source pack. */
   readonly sourceCategory: DnaChatCatalogCategory
   /** The question code exactly as written in the canonical Markdown table. */
   readonly sourceCode: string
@@ -166,6 +216,10 @@ export type DnaChatCatalogBenchmarkQuestion = {
   readonly sourceQuestionCategory: string | null
   /** The answer label exactly as written in the canonical Markdown table. */
   readonly documentExpected: string
+  /** Optional source-authored answer guidance retained from five-column tables. */
+  readonly sourceAnswerGuidance: string | null
+  /** Optional source codes retained from six-column canonical question tables. */
+  readonly sourceCitationCodes: string | null
   /** The complete Markdown row, retained so audit tests can compare bytes. */
   readonly canonicalRow: string
   /** Normalized question text used only to keep duplicate semantic families together. */
@@ -184,6 +238,7 @@ export type DnaChatCatalogBenchmarkQuestion = {
 export type DnaChatCatalogProvenance = {
   readonly version: typeof DNA_CHAT_CATALOG_VERSION
   readonly id: string
+  readonly sourcePackId: DnaChatResearchPackId
   readonly category: DnaChatCatalogCategory
   readonly canonicalFile: string
   readonly sha256: string

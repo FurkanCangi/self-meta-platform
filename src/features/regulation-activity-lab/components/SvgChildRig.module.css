@@ -1,0 +1,142 @@
+.rig {
+  isolation: isolate;
+}
+
+.motionNode {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  will-change: transform, opacity;
+}
+
+.shadow {
+  fill: #0f172a;
+  opacity: 0.13;
+}
+
+.breathHaloOuter,
+.breathHaloInner {
+  fill: none;
+  pointer-events: none;
+}
+
+.breathHaloOuter {
+  stroke: #22d3ee;
+  stroke-width: 8;
+  opacity: 0.2;
+}
+
+.breathHaloInner {
+  fill: #dff9ff;
+  stroke: #60a5fa;
+  stroke-width: 5;
+  opacity: 0.26;
+}
+
+.skin,
+.face,
+.ear,
+.hand {
+  fill: #f2c39f;
+  stroke: #7c4a3b;
+  stroke-width: 3;
+}
+
+.joint {
+  fill: #edb88f;
+  opacity: 0.96;
+}
+
+.shirt {
+  stroke: #1e40af;
+  stroke-width: 4;
+  stroke-linejoin: round;
+}
+
+.shirtHighlight {
+  fill: none;
+  stroke: #cffafe;
+  stroke-linecap: round;
+  stroke-width: 6;
+  opacity: 0.65;
+}
+
+.waistband {
+  fill: #312e81;
+  stroke: #1e1b4b;
+  stroke-width: 3;
+}
+
+.sleeve {
+  fill: #2563eb;
+  stroke: #1e40af;
+  stroke-width: 3;
+}
+
+.trouser,
+.trouserAlt {
+  stroke: #312e81;
+  stroke-width: 3;
+}
+
+.trouser {
+  fill: #7c3aed;
+}
+
+.trouserAlt {
+  fill: #6366f1;
+}
+
+.sock {
+  fill: #f8fafc;
+  stroke: #cbd5e1;
+  stroke-width: 3;
+}
+
+.shoe {
+  fill: #0f172a;
+  stroke: #020617;
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+.shoeAccent {
+  fill: none;
+  stroke: #22d3ee;
+  stroke-linecap: round;
+  stroke-width: 5;
+}
+
+.handDetail,
+.nose,
+.smile {
+  fill: none;
+  stroke: #7c4a3b;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 3;
+}
+
+.hairBack,
+.hairFront {
+  fill: #1e293b;
+  stroke: #0f172a;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
+.eyeWhite {
+  fill: #ffffff;
+}
+
+.eye {
+  fill: #172554;
+}
+
+.eyeGlint {
+  fill: #ffffff;
+}
+
+.cheek {
+  fill: #fb7185;
+  opacity: 0.2;
+}

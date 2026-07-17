@@ -1,0 +1,44 @@
+.motionNode {
+  transform-box: view-box;
+  transform-origin: 0 0;
+  will-change: transform, opacity;
+}
+
+.wallLine,
+.basketWeave,
+.cushionSeam {
+  fill: none;
+  stroke: #ffffff;
+  stroke-linecap: round;
+  stroke-width: 2;
+  opacity: 0.42;
+}
+
+.markerRing {
+  fill: none;
+  stroke: #ffffff;
+  stroke-width: 2;
+  opacity: 0.72;
+}
+
+.coneStripe {
+  fill: none;
+  stroke: #ffffff;
+  stroke-linecap: round;
+  stroke-width: 5;
+  opacity: 0.84;
+}
+
+.cardAccent {
+  fill: none;
+  stroke: #22d3ee;
+  stroke-linecap: round;
+  stroke-width: 3;
+}
+
+.cardLabel {
+  fill: #172554;
+  font-family: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  font-weight: 760;
+  letter-spacing: -0.02em;
+}

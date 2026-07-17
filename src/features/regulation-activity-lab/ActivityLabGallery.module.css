@@ -1,0 +1,1023 @@
+.page {
+  --lab-ink: #13243a;
+  --lab-muted: #617087;
+  --lab-line: #dce7ed;
+  --lab-surface: rgba(255, 255, 255, 0.92);
+  --lab-teal: #0f766e;
+  --lab-teal-deep: #115e59;
+  --lab-teal-soft: #e9f7f4;
+  --lab-indigo: #4f46e5;
+  --lab-coral: #be5d4b;
+  isolation: isolate;
+  position: relative;
+  width: 100%;
+  color: var(--lab-ink);
+}
+
+.page::before {
+  position: absolute;
+  z-index: -1;
+  top: -3.5rem;
+  right: -2rem;
+  width: 18rem;
+  height: 18rem;
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(45, 212, 191, 0.14), rgba(45, 212, 191, 0));
+  content: "";
+  pointer-events: none;
+}
+
+.hero {
+  overflow: hidden;
+  position: relative;
+  padding: clamp(1.5rem, 4vw, 3rem);
+  border: 1px solid rgba(191, 219, 226, 0.9);
+  border-radius: 2rem;
+  background:
+    radial-gradient(circle at 88% 18%, rgba(94, 234, 212, 0.22), transparent 25%),
+    radial-gradient(circle at 75% 90%, rgba(129, 140, 248, 0.14), transparent 33%),
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(242, 250, 249, 0.94));
+  box-shadow: 0 22px 60px rgba(45, 71, 91, 0.1);
+}
+
+.hero::after {
+  position: absolute;
+  right: clamp(1rem, 5vw, 4.5rem);
+  bottom: -4.5rem;
+  width: 13rem;
+  height: 13rem;
+  border: 1px solid rgba(15, 118, 110, 0.12);
+  border-radius: 999px;
+  box-shadow:
+    0 0 0 1.4rem rgba(255, 255, 255, 0.28),
+    0 0 0 2.8rem rgba(15, 118, 110, 0.04);
+  content: "";
+  pointer-events: none;
+}
+
+.eyebrowRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  align-items: center;
+  margin-bottom: 1.15rem;
+}
+
+.statusBadge,
+.localBadge,
+.selectedBadge,
+.metaBadge,
+.skillBadge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 750;
+  letter-spacing: 0.055em;
+}
+
+.statusBadge {
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #f0d4a8;
+  background: #fff9ec;
+  color: #8a5a13;
+  text-transform: uppercase;
+}
+
+.statusBadge::before {
+  width: 0.48rem;
+  height: 0.48rem;
+  border-radius: 999px;
+  background: #d59b35;
+  box-shadow: 0 0 0 0.22rem rgba(213, 155, 53, 0.13);
+  content: "";
+}
+
+.localBadge {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #cde9e5;
+  background: rgba(235, 249, 247, 0.9);
+  color: var(--lab-teal-deep);
+}
+
+.title {
+  max-width: 50rem;
+  margin: 0;
+  color: #102a40;
+  font-size: clamp(2.05rem, 5vw, 4.15rem);
+  font-weight: 760;
+  letter-spacing: -0.047em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.intro {
+  max-width: 46rem;
+  margin: 1.25rem 0 0;
+  color: #56687c;
+  font-size: clamp(0.98rem, 1.7vw, 1.12rem);
+  line-height: 1.75;
+}
+
+.summaryStrip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+  max-width: 45rem;
+  margin-top: 1.7rem;
+}
+
+.summaryItem {
+  min-width: 0;
+  padding: 0.9rem 1rem;
+  border: 1px solid rgba(201, 222, 226, 0.88);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.74);
+  backdrop-filter: blur(8px);
+}
+
+.summaryValue {
+  display: block;
+  color: #12364a;
+  font-size: 1rem;
+  font-weight: 760;
+}
+
+.summaryLabel {
+  display: block;
+  margin-top: 0.2rem;
+  color: #718093;
+  font-size: 0.73rem;
+  line-height: 1.35;
+}
+
+.reviewGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.65fr) minmax(18rem, 0.8fr);
+  gap: 1rem;
+  align-items: stretch;
+  margin-top: 1rem;
+}
+
+.playerPanel,
+.clinicalPanel,
+.catalogSection {
+  border: 1px solid var(--lab-line);
+  background: var(--lab-surface);
+  box-shadow: 0 16px 44px rgba(45, 71, 91, 0.08);
+}
+
+.playerPanel {
+  min-width: 0;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  border-radius: 1.75rem;
+}
+
+.panelHeader,
+.catalogHeader {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.sectionKicker {
+  margin: 0 0 0.35rem;
+  color: var(--lab-teal);
+  font-size: 0.7rem;
+  font-weight: 780;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.panelTitle,
+.clinicalTitle,
+.catalogTitle {
+  margin: 0;
+  color: #162d43;
+  font-weight: 740;
+  letter-spacing: -0.025em;
+  line-height: 1.15;
+}
+
+.panelTitle {
+  font-size: clamp(1.32rem, 2.5vw, 1.75rem);
+}
+
+.clinicalTitle,
+.catalogTitle {
+  font-size: clamp(1.25rem, 2vw, 1.55rem);
+}
+
+.selectedBadge {
+  flex: none;
+  gap: 0.38rem;
+  padding: 0.45rem 0.65rem;
+  background: var(--lab-teal-soft);
+  color: var(--lab-teal-deep);
+}
+
+.panelMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.85rem;
+}
+
+.metaBadge {
+  padding: 0.42rem 0.62rem;
+  border: 1px solid #dce7ec;
+  background: #f6f9fa;
+  color: #5e7185;
+  font-size: 0.66rem;
+  letter-spacing: 0.025em;
+}
+
+.selectedBadge::before {
+  width: 0.42rem;
+  height: 0.42rem;
+  border-radius: 999px;
+  background: #14b8a6;
+  content: "";
+}
+
+.playerSurface {
+  margin-top: 1rem;
+}
+
+.instructionBand {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
+  align-items: flex-start;
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid #d8e8ea;
+  border-radius: 1.1rem;
+  background: #f6fbfb;
+}
+
+.instructionMark {
+  display: grid;
+  width: 2.2rem;
+  height: 2.2rem;
+  place-items: center;
+  border-radius: 0.75rem;
+  background: #dff4f1;
+  color: var(--lab-teal-deep);
+  font-size: 0.86rem;
+  font-weight: 800;
+}
+
+.detailLabel {
+  display: block;
+  margin: 0;
+  color: #607186;
+  font-size: 0.68rem;
+  font-weight: 780;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.instructionText,
+.detailText {
+  margin: 0.3rem 0 0;
+  color: #344b5e;
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.controlGuide {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  margin-top: 0.75rem;
+}
+
+.controlItem {
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 0.75rem;
+  border: 1px solid #e2e9ed;
+  border-radius: 0.9rem;
+  background: #fbfcfd;
+  color: #617286;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+.controlItem strong {
+  color: #30485d;
+  font-weight: 760;
+}
+
+.controlNumber {
+  display: grid;
+  width: 1.35rem;
+  height: 1.35rem;
+  flex: none;
+  place-items: center;
+  border-radius: 999px;
+  background: #e9f4f3;
+  color: var(--lab-teal-deep);
+  font-size: 0.62rem;
+  font-weight: 800;
+}
+
+.clinicalPanel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: clamp(1rem, 2.5vw, 1.4rem);
+  border-radius: 1.75rem;
+}
+
+.clinicalIntro {
+  margin: 0.7rem 0 0;
+  color: var(--lab-muted);
+  font-size: 0.82rem;
+  line-height: 1.55;
+}
+
+.detailStack {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.detailCard {
+  padding: 0.95rem;
+  border: 1px solid #e1e9ee;
+  border-radius: 1rem;
+  background: #fbfdfe;
+}
+
+.supervisionCard {
+  border-color: #cfe8e4;
+  background: #f3faf8;
+}
+
+.stopCard {
+  border-color: #f0d7cf;
+  background: #fff8f5;
+}
+
+.detailList,
+.stopList,
+.cueList {
+  margin: 0.55rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.materialList {
+  display: grid;
+  gap: 0.65rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.materialList li {
+  padding: 0.65rem;
+  border: 1px solid #e6ecef;
+  border-radius: 0.75rem;
+  background: #fff;
+}
+
+.materialRow {
+  display: flex;
+  gap: 0.65rem;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.materialName {
+  color: #344c60;
+  font-size: 0.8rem;
+  font-weight: 740;
+  line-height: 1.35;
+}
+
+.materialQuantity {
+  flex: none;
+  color: #6c7d8e;
+  font-size: 0.68rem;
+  font-weight: 720;
+}
+
+.materialMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.38rem;
+  align-items: center;
+  margin-top: 0.4rem;
+  color: #718193;
+  font-size: 0.67rem;
+  line-height: 1.45;
+}
+
+.requiredTag {
+  display: inline-flex;
+  flex: none;
+  padding: 0.22rem 0.4rem;
+  border-radius: 999px;
+  background: #edf5f4;
+  color: #326c67;
+  font-size: 0.6rem;
+  font-weight: 780;
+}
+
+.detailLead {
+  margin: 0.55rem 0 0;
+  color: #285d59;
+  font-size: 0.86rem;
+  font-weight: 760;
+  line-height: 1.4;
+}
+
+.detailList,
+.stopList {
+  display: grid;
+  gap: 0.48rem;
+}
+
+.detailList li,
+.stopList li {
+  position: relative;
+  padding-left: 1.1rem;
+  color: #42566a;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.detailList li::before,
+.stopList li::before {
+  position: absolute;
+  top: 0.52rem;
+  left: 0;
+  width: 0.36rem;
+  height: 0.36rem;
+  border-radius: 999px;
+  background: #5cb8ac;
+  content: "";
+}
+
+.stopList li::before {
+  background: #d17b69;
+}
+
+.skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: auto;
+  padding-top: 1rem;
+}
+
+.skillBadge {
+  padding: 0.4rem 0.55rem;
+  background: #edf2ff;
+  color: #4a56a0;
+  font-size: 0.66rem;
+  letter-spacing: 0.02em;
+}
+
+.catalogSection {
+  margin-top: 1rem;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  border-radius: 1.75rem;
+}
+
+.catalogDescription {
+  max-width: 39rem;
+  margin: 0.55rem 0 0;
+  color: var(--lab-muted);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
+.keyboardHint {
+  flex: none;
+  max-width: 17rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 0.85rem;
+  background: #f2f6f8;
+  color: #627489;
+  font-size: 0.7rem;
+  line-height: 1.45;
+}
+
+.activityList {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1.1rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.activityListItem {
+  min-width: 0;
+}
+
+.activityCard {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 23rem;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid #dde7ec;
+  border-radius: 1.15rem;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(50, 74, 94, 0.055);
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+  appearance: none;
+}
+
+.activityCard:hover {
+  transform: translateY(-2px);
+  border-color: #b8d5d3;
+  box-shadow: 0 12px 26px rgba(36, 84, 87, 0.1);
+}
+
+.activityCard[aria-current="true"] {
+  border-color: #1e8e84;
+  box-shadow:
+    0 0 0 2px rgba(30, 142, 132, 0.14),
+    0 13px 28px rgba(36, 84, 87, 0.13);
+}
+
+.activityCard:focus-visible {
+  outline: 3px solid rgba(79, 70, 229, 0.78);
+  outline-offset: 3px;
+}
+
+.thumbnail {
+  overflow: hidden;
+  position: relative;
+  height: 7.2rem;
+  flex: none;
+  border-bottom: 1px solid rgba(21, 64, 78, 0.07);
+  background: linear-gradient(145deg, #ecf8f5, #e4f1f4);
+}
+
+.toneMint {
+  background: linear-gradient(145deg, #e5f7f2, #d8eee9);
+}
+
+.toneBlue {
+  background: linear-gradient(145deg, #e7f1fb, #dbe9f5);
+}
+
+.toneLavender {
+  background: linear-gradient(145deg, #efedfb, #e2e2f5);
+}
+
+.tonePeach {
+  background: linear-gradient(145deg, #fff0e7, #f7dfd7);
+}
+
+.toneSage {
+  background: linear-gradient(145deg, #eef5e7, #dfebda);
+}
+
+.visualHalo {
+  position: absolute;
+  top: 0.8rem;
+  left: 50%;
+  width: 5rem;
+  height: 5rem;
+  transform: translateX(-50%);
+  border: 1px solid rgba(255, 255, 255, 0.82);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 0 0 0.7rem rgba(255, 255, 255, 0.12);
+}
+
+.visualFloor {
+  position: absolute;
+  right: 15%;
+  bottom: 0.72rem;
+  left: 15%;
+  height: 0.22rem;
+  border-radius: 999px;
+  background: rgba(50, 85, 95, 0.13);
+}
+
+.visualPerson {
+  position: absolute;
+  top: 1.12rem;
+  left: 50%;
+  width: 3.7rem;
+  height: 5rem;
+  transform: translateX(-50%);
+}
+
+.visualHead,
+.visualBody,
+.visualArmLeft,
+.visualArmRight,
+.visualLegLeft,
+.visualLegRight {
+  position: absolute;
+  display: block;
+  border-radius: 999px;
+  background: #527985;
+}
+
+.visualHead {
+  top: 0;
+  left: 50%;
+  width: 1.18rem;
+  height: 1.18rem;
+  transform: translateX(-50%);
+  background: #d5a07f;
+}
+
+.visualBody {
+  top: 1.25rem;
+  left: 50%;
+  width: 1.2rem;
+  height: 2.05rem;
+  transform: translateX(-50%);
+  border-radius: 0.65rem;
+  background: #247f78;
+}
+
+.visualArmLeft,
+.visualArmRight {
+  top: 1.52rem;
+  width: 1.7rem;
+  height: 0.33rem;
+  background: #d5a07f;
+}
+
+.visualArmLeft {
+  right: 50%;
+  transform: rotate(-18deg);
+  transform-origin: right center;
+}
+
+.visualArmRight {
+  left: 50%;
+  transform: rotate(18deg);
+  transform-origin: left center;
+}
+
+.visualLegLeft,
+.visualLegRight {
+  top: 3.05rem;
+  left: 50%;
+  width: 1.7rem;
+  height: 0.38rem;
+  transform-origin: left center;
+  background: #48687a;
+}
+
+.visualLegLeft {
+  transform: rotate(76deg);
+}
+
+.visualLegRight {
+  transform: rotate(104deg);
+}
+
+.visualCount {
+  position: absolute;
+  top: 0.65rem;
+  left: 0.65rem;
+  display: grid;
+  min-width: 2rem;
+  height: 2rem;
+  place-items: center;
+  padding: 0 0.42rem;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 0.7rem;
+  background: rgba(255, 255, 255, 0.68);
+  color: #38606a;
+  font-size: 0.68rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  backdrop-filter: blur(5px);
+}
+
+.cardBody {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  padding: 0.85rem;
+}
+
+.cardMeta {
+  display: flex;
+  gap: 0.35rem;
+  align-items: center;
+  justify-content: space-between;
+  color: #718094;
+  font-size: 0.64rem;
+  font-weight: 720;
+  letter-spacing: 0.045em;
+  text-transform: uppercase;
+}
+
+.cardTitle {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 0.55rem;
+  color: #1a3449;
+  font-size: 0.92rem;
+  font-weight: 740;
+  line-height: 1.28;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.cardCategory {
+  display: -webkit-box;
+  overflow: hidden;
+  margin-top: 0.5rem;
+  color: #6a7c8f;
+  font-size: 0.7rem;
+  line-height: 1.35;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.cardInstruction,
+.cardMaterial {
+  display: -webkit-box;
+  overflow: hidden;
+  color: #4c6074;
+  font-size: 0.67rem;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+}
+
+.cardInstruction {
+  margin-top: 0.55rem;
+  -webkit-line-clamp: 3;
+}
+
+.cardMaterial {
+  margin-top: 0.5rem;
+  -webkit-line-clamp: 2;
+}
+
+.cardMaterial strong {
+  color: #2d4a60;
+}
+
+.cardSupervision {
+  width: fit-content;
+  margin-top: 0.55rem;
+  padding: 0.28rem 0.43rem;
+  border-radius: 999px;
+  background: #edf7f5;
+  color: #216d66;
+  font-size: 0.6rem;
+  font-weight: 780;
+}
+
+.cardWarning {
+  margin-top: 0.55rem;
+  padding: 0.46rem 0.5rem;
+  border: 1px solid #f1d5cc;
+  border-radius: 0.7rem;
+  background: #fff7f4;
+  color: #9a4d3f;
+  font-size: 0.61rem;
+  font-weight: 680;
+  line-height: 1.4;
+}
+
+.cardSelection {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 0.65rem;
+  color: #758598;
+  font-size: 0.67rem;
+  font-weight: 700;
+}
+
+.cardSelection::before {
+  width: 0.45rem;
+  height: 0.45rem;
+  border: 1px solid #91a4b3;
+  border-radius: 999px;
+  content: "";
+}
+
+.activityCard[aria-current="true"] .cardSelection {
+  color: var(--lab-teal-deep);
+}
+
+.activityCard[aria-current="true"] .cardSelection::before {
+  border-color: #0f8b80;
+  background: #0f8b80;
+  box-shadow: inset 0 0 0 2px #fff;
+}
+
+.footerNote {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  border: 1px dashed #c8d8df;
+  border-radius: 1rem;
+  background: rgba(248, 251, 252, 0.8);
+  color: #68798b;
+  font-size: 0.76rem;
+  line-height: 1.55;
+}
+
+.footerNote::before {
+  width: 0.52rem;
+  height: 0.52rem;
+  flex: none;
+  margin-top: 0.3rem;
+  border-radius: 999px;
+  background: #7b8da0;
+  content: "";
+}
+
+.emptyState {
+  padding: 2rem;
+  border: 1px dashed #cbdbe2;
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.88);
+  text-align: center;
+}
+
+.emptyTitle {
+  margin: 0;
+  color: #1b344a;
+  font-size: 1.25rem;
+}
+
+.emptyText {
+  margin: 0.55rem auto 0;
+  max-width: 32rem;
+  color: var(--lab-muted);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (max-width: 1120px) {
+  .activityList {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 920px) {
+  .reviewGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .clinicalPanel {
+    min-height: auto;
+  }
+
+  .skills {
+    margin-top: 0;
+  }
+
+  .activityList {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 680px) {
+  .hero,
+  .playerPanel,
+  .clinicalPanel,
+  .catalogSection {
+    border-radius: 1.35rem;
+  }
+
+  .hero {
+    padding: 1.35rem;
+  }
+
+  .title {
+    font-size: clamp(2rem, 11vw, 3rem);
+    line-height: 1.02;
+  }
+
+  .summaryStrip {
+    grid-template-columns: 1fr;
+  }
+
+  .summaryItem {
+    display: flex;
+    gap: 0.6rem;
+    align-items: baseline;
+    justify-content: space-between;
+  }
+
+  .summaryLabel {
+    margin-top: 0;
+    text-align: right;
+  }
+
+  .panelHeader,
+  .catalogHeader {
+    flex-direction: column;
+  }
+
+  .controlGuide {
+    grid-template-columns: 1fr;
+  }
+
+  .keyboardHint {
+    max-width: none;
+  }
+
+  .activityList {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 430px) {
+  .eyebrowRow {
+    align-items: stretch;
+  }
+
+  .statusBadge,
+  .localBadge {
+    width: 100%;
+  }
+
+  .activityList {
+    grid-template-columns: 1fr;
+  }
+
+  .activityCard {
+    display: grid;
+    grid-template-columns: 7.5rem minmax(0, 1fr);
+    min-height: 8.6rem;
+  }
+
+  .thumbnail {
+    height: 100%;
+    min-height: 8.6rem;
+    border-right: 1px solid rgba(21, 64, 78, 0.07);
+    border-bottom: 0;
+  }
+
+  .instructionBand {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .activityCard {
+    scroll-behavior: auto;
+    transition: none;
+  }
+
+  .activityCard:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-contrast: more) {
+  .hero,
+  .playerPanel,
+  .clinicalPanel,
+  .catalogSection,
+  .activityCard,
+  .detailCard {
+    border-color: #768a9b;
+  }
+}

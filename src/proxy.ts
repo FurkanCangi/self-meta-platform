@@ -3,8 +3,20 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const APP_SESSION_COOKIE = "sm_active_session";
 const DEVICE_MANAGEMENT_COOKIE = "sm_device_management";
+const LOCAL_ACTIVITY_LAB_PATH = "/owner-audit/activity-lab";
 
 export async function proxy(request: NextRequest) {
+  if (request.nextUrl.pathname === LOCAL_ACTIVITY_LAB_PATH) {
+    if (process.env.NODE_ENV === "production") {
+      return new NextResponse("Not Found", {
+        status: 404,
+        headers: { "Cache-Control": "no-store" },
+      });
+    }
+
+    return NextResponse.next();
+  }
+
   const appSurfaceRequested =
     request.nextUrl.searchParams.get("surface") === "app" ||
     request.cookies.get("dna_app_surface")?.value === "app";

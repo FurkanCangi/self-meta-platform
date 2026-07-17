@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp/activity-lab",
+    "rootDir": ".",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2020",
+    "incremental": false,
+    "isolatedModules": false
+  },
+  "include": [
+    "scripts/run-regulation-activity-lab-tests.ts",
+    "src/features/regulation-activity-lab/types.ts",
+    "src/features/regulation-activity-lab/catalog.ts",
+    "src/features/regulation-activity-lab/timeline.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

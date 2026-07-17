@@ -1,16 +1,17 @@
 "use client"
 
 import {
+  ArrowUp,
   ChevronDown,
   CircleAlert,
   FileSearch,
   LoaderCircle,
   RefreshCw,
-  Send,
   ShieldCheck,
   Sparkles,
   X,
 } from "lucide-react"
+import Image from "next/image"
 import Link from "next/link"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useAppSurface } from "@/app/components/app-shell/useAppSurface"
@@ -402,53 +403,122 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
     void sendQuestion(cleanQuestion)
   }
 
-  return (
-    <div className="mx-auto w-full max-w-[1180px] pb-2">
-      <header className="relative mb-4 overflow-hidden rounded-[28px] border border-cyan-100/80 bg-[var(--sm-surface)] p-5 shadow-[0_20px_54px_rgba(37,99,235,0.10)] md:mb-5 md:p-7">
-        <div className="pointer-events-none absolute -left-12 -top-20 h-52 w-52 rounded-full bg-cyan-100/45 blur-3xl" />
-        <div className="pointer-events-none absolute -right-10 -top-16 h-52 w-52 rounded-full bg-violet-100/45 blur-3xl" />
-        <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div className="min-w-0">
-            <div className="inline-flex min-h-9 items-center gap-2 rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-3 text-[11px] font-black uppercase tracking-[0.14em] text-blue-700">
-              <Sparkles size={15} aria-hidden="true" /> Kaynak kontrollü klinik bilgi alanı
-            </div>
-            <h1 className="mt-3 text-3xl font-black tracking-tight text-[#071b3a] md:text-4xl">DNA Asistanı</h1>
-            <p className="mt-2 max-w-3xl text-sm font-medium leading-6 text-slate-600 md:text-[15px]">
-              Teori, DNA kavramları ve kendi raporlarınız hakkındaki soruları tek alanda yanıtlar; gerekli bağlamı kendisi belirler.
-            </p>
+  const hasConversation = messages.length > 0 || reportPickerOpen || sending
+
+  useEffect(() => {
+    const input = questionInputRef.current
+    if (!input) return
+    input.style.height = "auto"
+    const nextHeight = Math.min(Math.max(input.scrollHeight, 48), 160)
+    input.style.height = `${nextHeight}px`
+    input.style.overflowY = input.scrollHeight > 160 ? "auto" : "hidden"
+  }, [hasConversation, question])
+
+  function renderComposer(hero: boolean) {
+    return (
+      <form onSubmit={submitQuestion} className="w-full">
+        {sendError ? (
+          <div role="alert" className="mb-3 rounded-2xl border border-rose-200 bg-[var(--sm-surface)] px-4 py-3 text-xs font-bold leading-5 text-[var(--sm-text)] shadow-sm">
+            {sendError}
+            {sendErrorCode === "unauthorized" || sendErrorCode === "session_expired" ? (
+              <Link href="/app-login" className="ml-2 inline-flex min-h-11 items-center font-black text-blue-700 underline-offset-4 hover:underline">
+                Yeniden giriş yap
+              </Link>
+            ) : null}
           </div>
-          <div className="flex min-h-12 shrink-0 items-center gap-3 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-4 text-sm font-bold text-[var(--sm-text-soft)]">
-            <ShieldCheck size={20} aria-hidden="true" /> Mesajlar kaydedilmez
+        ) : null}
+
+        <div
+          className={[
+            "border border-[var(--sm-border)] bg-[var(--sm-surface)] shadow-[0_22px_70px_-38px_rgba(7,27,58,0.58)] transition-[border-color,box-shadow] focus-within:border-blue-400 focus-within:shadow-[0_26px_80px_-38px_rgba(37,99,235,0.48)] focus-within:ring-4 focus-within:ring-blue-100/70",
+            hero ? "rounded-[30px] p-2.5 sm:p-3" : "rounded-[26px] p-2.5 sm:p-3",
+          ].join(" ")}
+        >
+          <div className="flex items-end gap-2 sm:gap-3">
+            <label htmlFor="dna-chat-question" className="sr-only">DNA Asistanına sorunuzu yazın</label>
+            <textarea
+              ref={questionInputRef}
+              id="dna-chat-question"
+              value={question}
+              onChange={(event) => setQuestion(event.target.value.slice(0, 600))}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" && !event.shiftKey) {
+                  event.preventDefault()
+                  submitQuestion()
+                }
+              }}
+              rows={1}
+              maxLength={600}
+              disabled={sending}
+              placeholder={selectedReport ? "Bu rapor veya genel bilgi hakkında sorun…" : "DNA Asistanına sorun…"}
+              className={[
+                "max-h-40 min-w-0 flex-1 resize-none border-0 bg-transparent px-2 text-sm font-semibold leading-6 text-[var(--sm-text)] outline-none placeholder:font-medium placeholder:text-[var(--sm-text-muted)] disabled:opacity-60 sm:text-[15px]",
+                "min-h-[48px] py-3",
+              ].join(" ")}
+            />
+            <div className="flex shrink-0 items-center gap-2 pb-0.5">
+              {question.length > 500 ? (
+                <span className="hidden text-[10px] font-bold text-[var(--sm-text-muted)] sm:inline">{question.length}/600</span>
+              ) : null}
+              <button
+                type="submit"
+                disabled={sending || question.trim().length < 2}
+                aria-label="Soruyu gönder"
+                className="grid min-h-12 min-w-12 place-items-center rounded-full border border-blue-600 bg-blue-600 text-white shadow-[0_12px_26px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-[0_16px_30px_rgba(37,99,235,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300 disabled:shadow-none disabled:hover:translate-y-0"
+              >
+                {sending ? <LoaderCircle className="animate-spin" size={19} aria-hidden="true" /> : <ArrowUp size={20} strokeWidth={2.6} aria-hidden="true" />}
+              </button>
+            </div>
           </div>
         </div>
-      </header>
 
-      <section className="dna-card min-w-0 overflow-visible" aria-label="DNA Asistanı sohbeti">
-        <div className="border-b border-[var(--sm-border)] px-4 py-4 md:px-6">
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-cyan-500 via-blue-600 to-violet-600 text-white shadow-[0_12px_26px_rgba(37,99,235,0.22)]">
-                <Sparkles size={21} aria-hidden="true" />
-              </span>
-              <div className="min-w-0">
-                <h2 className="text-base font-black text-[var(--sm-text)]">Nasıl yardımcı olabilirim?</h2>
-                <p className="mt-0.5 text-xs font-semibold leading-5 text-[var(--sm-text-muted)]">
-                  Genel bilgi ile rapor bağlamını otomatik olarak ayırırım.
-                </p>
-              </div>
+        <div className="mt-3 flex flex-col items-center justify-center gap-1.5 px-2 text-center text-[10px] font-semibold leading-4 text-[var(--sm-text-muted)] sm:flex-row sm:gap-3 sm:text-[11px]">
+          <span className="hidden sm:inline">Enter gönderir · Shift + Enter yeni satır</span>
+          <span className="inline-flex items-center justify-center gap-1.5">
+            <CircleAlert className="shrink-0 text-blue-600" size={13} aria-hidden="true" />
+            Kişisel kimlik bilgisi yazmayın; tanı, ilaç ve tedavi planı kapsam dışıdır.
+          </span>
+        </div>
+      </form>
+    )
+  }
+
+  return (
+    <div className="mx-auto w-full max-w-[1040px] pb-2">
+      <section
+        className={[
+          "relative flex min-h-[calc(100dvh-190px)] min-w-0 flex-col md:min-h-[calc(100dvh-150px)]",
+          isAppSurface ? "min-h-[calc(100dvh-208px)] md:min-h-[calc(100dvh-190px)] lg:min-h-[calc(100dvh-154px)]" : "",
+        ].join(" ")}
+        aria-label="DNA Asistanı sohbeti"
+      >
+        <header className="flex min-h-14 flex-col gap-3 border-b border-[var(--sm-border)] px-1 pb-3 sm:flex-row sm:items-center sm:justify-between sm:px-2">
+          <div className="flex min-w-0 items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-blue-100 bg-[var(--sm-surface)] text-blue-700 shadow-sm">
+              <Sparkles size={19} aria-hidden="true" />
+            </span>
+            <div className="min-w-0">
+              <h1 className="text-base font-black tracking-tight text-[var(--sm-text)]">DNA Asistanı</h1>
+              <p className="mt-0.5 truncate text-[11px] font-semibold text-[var(--sm-text-muted)]">Kaynak kontrollü · Klinik sınırları tanımlı</p>
+            </div>
+          </div>
+
+          <div className="flex min-w-0 items-center gap-2 sm:justify-end">
+            <div className="hidden min-h-10 items-center gap-2 rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface)] px-3 text-[11px] font-bold text-[var(--sm-text-muted)] shadow-sm md:flex">
+              <ShieldCheck size={16} className="text-blue-600" aria-hidden="true" /> Mesajlar kaydedilmez
             </div>
 
             {selectedReport ? (
-              <div role="status" className="flex min-h-12 items-center gap-2 rounded-2xl border border-cyan-200 bg-cyan-50 px-3 text-xs font-bold text-cyan-900">
+              <div role="status" className="flex min-h-11 min-w-0 items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-2.5 text-xs font-bold text-[var(--sm-text)] shadow-sm">
                 <FileSearch size={17} aria-hidden="true" />
                 <span className="min-w-0">
-                  <span className="block truncate font-black">{selectedReport.clientCode || "Danışan kodu yok"}</span>
-                  <span className="block text-[10px] text-cyan-700">{formatDate(selectedReport.createdAt)}</span>
+                  <span className="block max-w-28 truncate font-black">{selectedReport.clientCode || "Danışan kodu yok"}</span>
+                  <span className="hidden text-[10px] text-cyan-700 sm:block">{formatDate(selectedReport.createdAt)}</span>
                 </span>
                 <button
                   type="button"
                   onClick={changeReportContext}
-                  className="min-h-11 rounded-xl px-2 font-black text-blue-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="min-h-11 rounded-full px-2 font-black text-blue-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
                   Değiştir
                 </button>
@@ -456,68 +526,93 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
                   type="button"
                   onClick={removeReportContext}
                   aria-label="Rapor bağlamını kaldır ve yeni sohbet başlat"
-                  className="grid min-h-11 min-w-11 place-items-center rounded-xl text-slate-500 hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="grid min-h-11 min-w-11 place-items-center rounded-full text-slate-500 hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                 >
                   <X size={17} aria-hidden="true" />
                 </button>
               </div>
             ) : reportsLoading && initialReportId && !reportPickerOpen ? (
-              <div role="status" className="flex min-h-12 items-center gap-2 rounded-2xl bg-[var(--sm-surface-soft)] px-3 text-xs font-bold text-[var(--sm-text-muted)]">
+              <div role="status" className="flex min-h-11 items-center gap-2 rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface)] px-3 text-xs font-bold text-[var(--sm-text-muted)] shadow-sm">
                 <LoaderCircle className="animate-spin" size={17} aria-hidden="true" /> Rapor bağlantısı doğrulanıyor
               </div>
             ) : null}
           </div>
-        </div>
+        </header>
 
-        <div
-          className={[
-            "min-h-[440px] space-y-4 bg-[var(--sm-surface-soft)]/60 px-3 py-4 md:min-h-[560px] md:px-6 md:py-6",
-            isAppSurface ? "pb-40" : "",
-          ].join(" ")}
-          role="log"
-          aria-live="polite"
-          aria-relevant="additions text"
-        >
-          {messages.length === 0 && !reportPickerOpen ? (
-            <div className="mx-auto max-w-3xl rounded-[24px] border border-blue-100 bg-[var(--sm-surface)] p-5 shadow-sm">
-              <div className="flex items-center gap-2 text-sm font-black text-blue-700">
-                <Sparkles size={18} aria-hidden="true" /> Örnek sorular
-              </div>
-              <p className="mt-3 text-sm font-medium leading-6 text-[var(--sm-text-soft)]">
-                Nörofizyoloji, self-regülasyon, DNA değerlendirme yaklaşımı veya bir raporunuz hakkında doğal biçimde sorabilirsiniz.
+        {!hasConversation ? (
+          <div
+            className="flex flex-1 items-center justify-center px-1 py-8 sm:px-5"
+            role="log"
+            aria-live="polite"
+            aria-relevant="additions text"
+          >
+            <div className="w-full max-w-[880px] text-center md:-translate-y-5">
+              <Image
+                src="/images/logo-icon.png"
+                alt=""
+                width={180}
+                height={180}
+                priority
+                unoptimized
+                className="mx-auto h-[68px] w-[68px] object-contain drop-shadow-[0_14px_24px_rgba(37,99,235,0.24)] sm:h-[76px] sm:w-[76px]"
+                sizes="76px"
+              />
+              <div className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-700">DNA Intelligence</div>
+              <h2 className="mx-auto mt-4 max-w-3xl text-[28px] font-semibold leading-tight tracking-[-0.035em] text-[var(--sm-text)] sm:text-4xl lg:text-[42px]">
+                Bugün neyi birlikte inceleyelim?
+              </h2>
+              <p className="mx-auto mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--sm-text-muted)] sm:text-[15px]">
+                Nörofizyoloji, self-regülasyon, DNA kavramları veya kendi raporunuz hakkında doğal biçimde sorun.
               </p>
-              <div className="mt-4 grid gap-2 md:grid-cols-2">
-                {STARTER_QUESTIONS.map((suggestion) => (
+
+              <div className="mx-auto mt-8 max-w-[840px] text-left">{renderComposer(true)}</div>
+
+              <div className="mx-auto mt-6 grid max-w-[760px] gap-2 sm:grid-cols-2">
+                {STARTER_QUESTIONS.slice(0, 4).map((suggestion, index) => (
                   <button
                     key={suggestion}
                     type="button"
                     onClick={() => moveQuestionFocus(suggestion)}
-                    className="min-h-11 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-3 py-2 text-left text-xs font-bold leading-5 text-[var(--sm-text-soft)] transition hover:border-blue-200 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    className={[
+                      "min-h-12 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface)] px-4 py-2.5 text-left text-xs font-bold leading-5 text-[var(--sm-text-soft)] shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+                      index > 1 ? "hidden sm:block" : "",
+                    ].join(" ")}
                   >
                     {suggestion}
                   </button>
                 ))}
               </div>
             </div>
-          ) : null}
-
-          {messages.map((message) =>
-            message.role === "user" ? (
-              <div key={message.id} className="ml-auto max-w-[88%] rounded-[22px] rounded-br-md bg-gradient-to-br from-blue-600 to-blue-700 px-4 py-3 text-sm font-semibold leading-6 text-white shadow-[0_12px_24px_rgba(37,99,235,0.18)] md:max-w-[72%]">
-                {message.text}
-              </div>
-            ) : (
-              <AssistantAnswer key={message.id} answer={message.answer} onSuggestion={moveQuestionFocus} />
-            ),
-          )}
-
-          {reportPickerOpen ? (
-            <section
-              ref={reportPickerRef}
-              tabIndex={-1}
-              className="max-w-3xl rounded-[24px] rounded-bl-md border border-cyan-200 bg-[var(--sm-surface)] p-4 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-blue-500 md:p-5"
-              aria-labelledby="dna-report-picker-title"
+          </div>
+        ) : (
+          <>
+            <div
+              className={[
+                "flex-1 px-1 py-6 sm:px-4 sm:py-8",
+                isAppSurface ? "pb-40" : "",
+              ].join(" ")}
+              role="log"
+              aria-live="polite"
+              aria-relevant="additions text"
             >
+              <div className="mx-auto max-w-[780px] space-y-7">
+                {messages.map((message) =>
+                  message.role === "user" ? (
+                    <div key={message.id} className="ml-auto max-w-[88%] rounded-[24px] rounded-br-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-semibold leading-6 text-[var(--sm-text)] shadow-sm md:max-w-[76%]">
+                      {message.text}
+                    </div>
+                  ) : (
+                    <AssistantAnswer key={message.id} answer={message.answer} onSuggestion={moveQuestionFocus} />
+                  ),
+                )}
+
+                {reportPickerOpen ? (
+                  <section
+                    ref={reportPickerRef}
+                    tabIndex={-1}
+                    className="rounded-[26px] border border-cyan-200 bg-[var(--sm-surface)] p-4 shadow-[0_18px_46px_rgba(7,27,58,0.08)] outline-none focus-visible:ring-2 focus-visible:ring-blue-500 md:p-5"
+                    aria-labelledby="dna-report-picker-title"
+                  >
               <div className="flex items-start gap-3">
                 <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-cyan-50 text-cyan-700">
                   <FileSearch size={19} aria-hidden="true" />
@@ -582,73 +677,33 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
                   Bu hesapta tartışılabilecek aktif DNA raporu bulunmuyor.
                 </div>
               )}
-            </section>
-          ) : null}
+                  </section>
+                ) : null}
 
-          {sending ? (
-            <div className="flex max-w-[84%] items-center gap-3 rounded-[22px] rounded-bl-md border border-[var(--sm-border)] bg-[var(--sm-surface)] px-4 py-3 text-sm font-semibold text-[var(--sm-text-muted)]">
-              <LoaderCircle className="animate-spin text-blue-600" size={18} aria-hidden="true" /> Kaynak kontrollü yanıt hazırlanıyor
+                {sending ? (
+                  <div className="flex items-center gap-3 text-sm font-semibold text-[var(--sm-text-muted)]">
+                    <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-blue-100 bg-[var(--sm-surface)] text-blue-700 shadow-sm">
+                      <LoaderCircle className="animate-spin" size={17} aria-hidden="true" />
+                    </span>
+                    Kaynak kontrollü yanıt hazırlanıyor
+                  </div>
+                ) : null}
+                <div ref={messageEndRef} />
+              </div>
             </div>
-          ) : null}
-          <div ref={messageEndRef} />
-        </div>
 
-        <form
-          onSubmit={submitQuestion}
-          className={[
-            "z-20 border-t border-[var(--sm-border)] bg-[var(--sm-surface)]/96 p-3 shadow-[0_-16px_36px_rgba(7,27,58,0.08)] backdrop-blur-xl md:p-4",
-            isAppSurface
-              ? "fixed inset-x-3 bottom-[calc(78px+env(safe-area-inset-bottom))] mx-auto max-w-[406px] rounded-t-[22px] md:inset-x-8 md:max-w-[704px] lg:sticky lg:inset-x-auto lg:bottom-[88px] lg:mx-0 lg:max-w-none lg:rounded-none"
-              : "sticky bottom-2",
-          ].join(" ")}
-        >
-          {sendError ? (
-            <div role="alert" className="mb-2 rounded-2xl border border-rose-200 bg-[var(--sm-surface-soft)] px-3 py-2 text-xs font-bold leading-5 text-[var(--sm-text)]">
-              {sendError}
-              {sendErrorCode === "unauthorized" || sendErrorCode === "session_expired" ? (
-                <Link href="/app-login" className="ml-2 inline-flex min-h-11 items-center font-black text-blue-700 underline-offset-4 hover:underline">
-                  Yeniden giriş yap
-                </Link>
-              ) : null}
-            </div>
-          ) : null}
-          <div className="flex items-end gap-2">
-            <label htmlFor="dna-chat-question" className="sr-only">DNA Asistanına sorunuzu yazın</label>
-            <textarea
-              ref={questionInputRef}
-              id="dna-chat-question"
-              value={question}
-              onChange={(event) => setQuestion(event.target.value.slice(0, 600))}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" && !event.shiftKey) {
-                  event.preventDefault()
-                  submitQuestion()
-                }
-              }}
-              rows={2}
-              maxLength={600}
-              disabled={sending}
-              placeholder={selectedReport ? "Raporla veya genel bilgiyle ilgili sorun…" : "Teori, DNA veya raporlarınız hakkında sorun…"}
-              className="min-h-[52px] max-h-40 min-w-0 flex-1 resize-y rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-4 py-3 text-sm font-semibold leading-6 text-[var(--sm-text)] outline-none placeholder:text-[var(--sm-text-muted)] focus:border-blue-400 focus:ring-2 focus:ring-blue-100 disabled:opacity-60"
-            />
-            <button
-              type="submit"
-              disabled={sending || question.trim().length < 2}
-              aria-label="Soruyu gönder"
-              className="dna-btn grid min-h-[52px] min-w-[52px] shrink-0 place-items-center disabled:cursor-not-allowed disabled:opacity-45"
+            <footer
+              className={[
+                "z-20 bg-[var(--sm-app-bg)]/95 px-1 pb-2 pt-3 backdrop-blur-xl sm:px-4",
+                isAppSurface
+                  ? "fixed inset-x-3 bottom-[calc(78px+env(safe-area-inset-bottom))] mx-auto max-w-[406px] rounded-t-[24px] md:inset-x-8 md:max-w-[760px] lg:sticky lg:inset-x-auto lg:bottom-[88px] lg:max-w-none lg:rounded-none"
+                  : "sticky bottom-0",
+              ].join(" ")}
             >
-              {sending ? <LoaderCircle className="animate-spin" size={19} aria-hidden="true" /> : <Send size={19} aria-hidden="true" />}
-            </button>
-          </div>
-          <div className="mt-2 flex flex-col gap-2 px-1 text-[10px] font-bold text-[var(--sm-text-muted)] sm:flex-row sm:items-center sm:justify-between">
-            <span>Enter gönderir · Shift + Enter yeni satır</span>
-            <span>{question.length}/600</span>
-          </div>
-          <div className="mt-2 flex items-start gap-2 rounded-xl bg-[var(--sm-surface-soft)] px-3 py-2 text-[10px] font-semibold leading-4 text-[var(--sm-text-muted)]">
-            <CircleAlert className="mt-0.5 shrink-0 text-blue-600" size={14} aria-hidden="true" />
-            <span>Ad, T.C. kimlik, telefon veya adres yazmayın. Tanı, ilaç ve tedavi planı kapsam dışıdır.</span>
-          </div>
-        </form>
+              <div className="mx-auto max-w-[860px]">{renderComposer(false)}</div>
+            </footer>
+          </>
+        )}
       </section>
     </div>
   )
@@ -662,22 +717,24 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
   const meta = reportScopedNotAvailable ? { ...baseMeta, label: "Raporda Yok" } : baseMeta
 
   return (
-    <article className="max-w-[94%] rounded-[24px] rounded-bl-md border border-[var(--sm-border)] bg-[var(--sm-surface)] p-4 shadow-sm md:max-w-[84%] md:p-5">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className={`inline-flex min-h-7 items-center rounded-full border px-2.5 text-[10px] font-black uppercase tracking-[0.08em] ${meta.className}`}>
-          {meta.label}
+    <article className="w-full">
+      <div className="flex items-start gap-3 sm:gap-4">
+        <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-blue-100 bg-[var(--sm-surface)] text-blue-700 shadow-sm">
+          <Sparkles size={17} aria-hidden="true" />
         </span>
-        <span className="text-[10px] font-bold text-[var(--sm-text-muted)]">{answer.engineVersion}</span>
-      </div>
-      <p className="mt-3 text-sm font-bold leading-6 text-[var(--sm-text)]">{answer.summary}</p>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`inline-flex min-h-7 items-center rounded-full border px-2.5 text-[10px] font-black uppercase tracking-[0.08em] ${meta.className}`}>
+              {meta.label}
+            </span>
+            <span className="text-[10px] font-bold text-[var(--sm-text-muted)]">{answer.engineVersion}</span>
+          </div>
+          <p className="mt-3 text-sm font-bold leading-6 text-[var(--sm-text)]">{answer.summary}</p>
 
       {answer.details.length ? (
-        <ul className="mt-3 space-y-2 text-sm font-medium leading-6 text-[var(--sm-text-soft)]">
+        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm font-medium leading-6 text-[var(--sm-text-soft)] marker:text-blue-500">
           {answer.details.map((detail) => (
-            <li key={detail} className="flex gap-2">
-              <span aria-hidden="true" className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
-              <span>{detail}</span>
-            </li>
+            <li key={detail}>{detail}</li>
           ))}
         </ul>
       ) : null}
@@ -699,8 +756,8 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
       {answer.caseEvidence.length ? (
         <div className="mt-4 rounded-2xl border border-cyan-200 bg-[var(--sm-surface-soft)] p-3">
           <div className="text-[11px] font-black uppercase tracking-[0.1em] text-cyan-700">Rapordaki dayanak</div>
-          <ul className="mt-2 space-y-1.5 text-xs font-semibold leading-5 text-[var(--sm-text-soft)]">
-            {answer.caseEvidence.map((evidence) => <li key={evidence}>• {evidence}</li>)}
+          <ul className="mt-2 list-disc space-y-1.5 pl-4 text-xs font-semibold leading-5 text-[var(--sm-text-soft)]">
+            {answer.caseEvidence.map((evidence) => <li key={evidence}>{evidence}</li>)}
           </ul>
         </div>
       ) : null}
@@ -765,6 +822,8 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
           ))}
         </div>
       ) : null}
+        </div>
+      </div>
     </article>
   )
 }

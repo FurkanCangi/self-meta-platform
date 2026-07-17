@@ -174,6 +174,11 @@ function unmatchedResponse(safety: DnaChatSafetyResult): DnaChatResponse {
   })
 }
 
+function isStandaloneFollowUp(question: string): boolean {
+  const normalized = normalizeDnaChatText(question)
+  return /^(?:peki bu|biraz daha acikla|bununla iliskisi ne|bunun iliskisi ne|bunun fizyolojik regulasyonla iliskisi ne|buna ornek verir misin|cocuklarda da ayni mi|bu cocuklarda da gecerli mi|kaniti guclu mu|hangi yas icin gecerli|hangi olcumle gosterilmis|bireysel olarak ne anlama gelir|bunun tersi de olabilir mi|bunun tersi ne|erken cocukluk icin ne degisiyor|peki erken cocuklukta nasil|erken cocuklukta nasil degisir|bunu erken cocukluk icin anlatir misin|okul caginda nasil yorumlariz|dna ile nasil baglariz ama abartmadan|bunu neden soyleyemiyoruz|bu neden tani koydurmuyor|bundan ne sonuc cikarabiliriz|bu kavramin cocuklardaki gelisimi ne zaman hizlanir|cevresel talepler bu surecleri degistirir mi|bu nedensellik gosterir mi)$/.test(normalized)
+}
+
 function notAvailableResponse(
   safety: DnaChatSafetyResult,
   intent: DnaChatIntentDefinition,
@@ -851,6 +856,13 @@ function resolveSingleDnaChat(
     }
   }
 
+  if (!request.previousTopic && isStandaloneFollowUp(question)) {
+    return clarificationResponse(
+      safety,
+      "Takip sorusunun hangi kavram veya önceki bulguya gönderme yaptığı açık değil.",
+    )
+  }
+
   const queryKind = classifyDnaChatQueryKind(question)
   const routed = routeDnaChatQuestion({
     question,
@@ -868,7 +880,7 @@ function resolveSingleDnaChat(
   const isCaseQuery = !legacyNonCaseMatch && (
     queryKind === "case_finding" ||
     queryKind === "case_theory" ||
-    (routed.route === "case" && Boolean(routed.intent))
+    (request.mode === "case" && routed.route === "case" && Boolean(routed.intent))
   )
   if (isCaseQuery) {
     const intent =

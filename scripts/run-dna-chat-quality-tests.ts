@@ -149,6 +149,17 @@ let securityCorrect = 0
 const durations: number[] = []
 const failures: string[] = []
 
+// Measure the steady-state deterministic engine, not one-time module/JIT
+// initialization. Cold-start and route overhead are covered by the separate
+// API contract benchmark.
+for (const entry of benchmark) {
+  resolveDnaChat({
+    mode: entry.mode,
+    question: entry.question,
+    ...(entry.mode === "case" ? { caseContext: benchmarkCase } : {}),
+  })
+}
+
 for (const entry of benchmark) {
   const startedAt = performance.now()
   const response = resolveDnaChat({

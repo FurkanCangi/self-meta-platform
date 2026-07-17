@@ -62,6 +62,84 @@ final result: passed
 
 ---
 
+# DNA Assistant Chat Workspace Design QA
+
+## Scope
+
+- Production route: `/dna-asistani`
+- Source visual truth: `/var/folders/7j/kgq_1qrj27n39d0yjmkfh1_40000gn/T/TemporaryItems/NSIRD_screencaptureui_qvJgDU/Ekran Resmi 2026-07-17 16.15.26.png`
+- Desktop implementation capture: `.tmp/dna-chat-ui-qa/desktop-final.png`
+- Mobile implementation capture: `.tmp/dna-chat-ui-qa/mobile-final.png`
+- Structured answer capture: `.tmp/dna-chat-ui-qa/desktop-answer-sources-open.png`
+- Full-view source comparison: `.tmp/dna-chat-ui-qa/desktop-comparison.png`
+- Desktop viewport: `1440 x 900`, light theme, empty conversation
+- Mobile viewport: `390 x 844`, dark theme, empty conversation
+- Interaction state: empty conversation, keyboard submit/error state, dark conversation, and expanded source details
+
+## Full-view Comparison Evidence
+
+- The source and implementation were normalized into one `2880 x 900` side-by-side artifact.
+- Both designs use one quiet first viewport, a centered question, a wide floating composer, and restrained surrounding chrome.
+- The DNA version intentionally retains the product shell, clinical privacy boundary, verified source affordances, and a small number of starter questions.
+- A separate focused crop was not needed because the title, composer, send control, privacy line, and starter controls remain legible at original resolution in the full comparison. The structured answer was inspected separately at full viewport size.
+
+## Required Fidelity Surfaces
+
+- **Fonts and typography:** Existing system UI typography was retained. The welcome heading uses a semibold display weight, compact tracking, and a `28px` to `42px` responsive scale. Helper text remains readable without competing with the prompt.
+- **Spacing and layout rhythm:** The two previous dashboard-like cards were replaced by a single `1040px` workspace. Empty state content is vertically centered; the hero composer is capped at `840px`, transcript at `780px`, and conversation composer at `860px`.
+- **Colors and tokens:** Neutral surfaces use the existing `--sm-*` theme variables. Cyan, blue, and violet are restricted to the real DNA mark, focus state, semantic badges, and the send action.
+- **Image quality:** The real `public/images/logo-icon.png` brand asset is used at its native square ratio. No placeholder, custom SVG, CSS art, or generated substitute was introduced.
+- **Copy and content:** The welcome text names the supported tasks directly. Privacy and clinical-scope copy remains present but was reduced to one quiet line beneath the composer.
+- **Icons:** Existing Lucide icons are used consistently. The send action uses an upward arrow matching the selected chat reference while preserving a descriptive accessible label.
+- **Responsiveness:** At `390 x 844`, document and viewport widths both remain `390px`; horizontal overflow is zero. Mobile shows two starter prompts to keep the first viewport focused. Desktop shows all four.
+
+## Interaction and Accessibility Checks
+
+- The textarea retains its explicit label, `600` character limit, Enter submit, Shift + Enter line break, disabled state, and visible focus ring.
+- Multi-line questions grow the composer automatically from `48px` up to `160px`; a three-line question measured `120px` without internal scrolling.
+- Send, report context, report selection, and suggestion controls preserve at least `44px` targets.
+- `role="log"`, `aria-live="polite"`, report-picker focus management, and semantic `details/summary` sources remain intact.
+- Keyboard submit changed the screen from the centered welcome state to the compact conversation state as expected.
+- Source details expanded successfully and exposed the source title, year, DOI, and claim boundary.
+- The authenticated clinical response was not requested through the unauthenticated visual harness; existing `chat:quality` and `chat:security` gates verify the same production response path without bypassing authentication.
+- Browser console: no new runtime errors. The log retained two earlier development-only LCP notices from the superseded first-iteration hero asset.
+- `npm run lint`: passed.
+- `npm run chat:quality`: passed, `120/120`.
+- `npm run chat:security`: passed, live safety refusals `341/341`.
+- `npm run build`: passed with `/dna-asistani` in the production route manifest.
+- `git diff --check`: passed for the DNA Assistant component.
+
+## Comparison History
+
+### Iteration 1
+
+- **P2 - Composer density and brand visibility:** The first implementation rendered the welcome composer at roughly `96px` high and the fine-line transparent DNA symbol became too faint at desktop scale.
+- **Fix:** Reduced the composer to a single-row floating capsule and switched to the production `logo-icon.png` asset with stronger small-scale contrast.
+- **Post-fix evidence:** `.tmp/dna-chat-ui-qa/desktop-final.png` and `.tmp/dna-chat-ui-qa/desktop-comparison.png`.
+
+### Iteration 2
+
+- **P2 - Mobile first-viewport density:** Four starter prompts pushed the final controls below the initial `390 x 844` viewport.
+- **Fix:** Kept two starter prompts on mobile and all four from the small desktop breakpoint upward.
+- **Post-fix evidence:** `.tmp/dna-chat-ui-qa/mobile-final.png`; viewport and document width both measure `390px`, and document height remains `844px` in the captured state.
+
+### Iteration 3
+
+- **P2 - Multi-line input and dark report context:** The compact single-row composer initially did not grow for Shift + Enter content, and the selected-report chip used a cyan text value without a dark-theme override.
+- **Fix:** Added controlled autosizing up to `160px` and moved the report-chip foreground to the shared theme text token.
+- **Post-fix evidence:** Three-line input measured `120px` with `overflow-y: hidden`; lint and the final component review passed.
+
+## Remaining Notes
+
+- **P3:** The small Next.js development indicator in local captures is development-only and is absent from the production build.
+- The selected reference is an interaction and composition target, not a request to copy ChatGPT branding or navigation. The implementation intentionally preserves DNA Intelligence identity and clinical boundaries.
+
+No unresolved P0, P1, or P2 findings remain.
+
+final result: passed
+
+---
+
 # Homepage Clinical Journey Design QA
 
 ## Scope
