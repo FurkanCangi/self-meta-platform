@@ -3,7 +3,6 @@ import { createServerClient } from "@supabase/ssr"
 import {
   decodeGoogleOAuthState,
   GOOGLE_OAUTH_STATE_COOKIE,
-  type GoogleOAuthState,
 } from "@/lib/auth/googleOAuthState"
 import { getAcceptedDocumentsSnapshot, hasAcceptedActiveDocuments } from "@/lib/legal/documents"
 import {
@@ -56,6 +55,26 @@ function authUrl(request: NextRequest, path: "/login" | "/signup", params?: Reco
     if (value && !(appSurface && key === "surface" && targetPath === "/app-login")) url.searchParams.set(key, value)
   }
   return url
+}
+
+function sanitizeNextPath(value?: string | null) {
+  const raw = String(value || "")
+  if (
+    !raw ||
+    !raw.startsWith("/") ||
+    raw.startsWith("//") ||
+    raw.includes("\\") ||
+    /[\u0000-\u001f\u007f]/.test(raw) ||
+    raw.startsWith("/legal/accept")
+  ) {
+    return "/starter"
+  }
+  return raw
+}
+
+function appendDeviceRecoveryContext(target: URL, nextPath: string, appSurface: boolean) {
+  target.searchParams.set("surface", appSurface ? "app" : "web")
+  if (nextPath !== "/starter") target.searchParams.set("next", nextPath)
 }
 
 function resolvePostLoginPath(plan: string, nextPath: string, appSurface: boolean) {
@@ -129,9 +148,11 @@ async function redirectWithSignOut({
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code")
   const state = decodeGoogleOAuthState(request.cookies.get(GOOGLE_OAUTH_STATE_COOKIE)?.value)
+  const nextPath = sanitizeNextPath(state?.nextPath)
+  const appSurface = state?.surface === "app" || nextPath.includes("surface=app")
   const fallbackParams = {
-    ...(state?.surface === "app" ? { surface: "app" } : {}),
-    ...(state?.nextPath && state.nextPath !== "/starter" ? { next: state.nextPath } : {}),
+    ...(appSurface ? { surface: "app" } : {}),
+    ...(nextPath !== "/starter" ? { next: nextPath } : {}),
   }
 
   if (!code || !state) {
@@ -284,6 +305,7 @@ export async function GET(request: NextRequest) {
       const target = new URL("/profile-setting", requestOrigin(request))
       target.searchParams.set("tab", "devices")
       target.searchParams.set("error", sessionResult.error)
+      appendDeviceRecoveryContext(target, nextPath, appSurface)
       const response = await redirectWithSignOut({
         request,
         supabase,
@@ -308,6 +330,7 @@ export async function GET(request: NextRequest) {
     const target = new URL("/profile-setting", requestOrigin(request))
     target.searchParams.set("tab", "devices")
     target.searchParams.set("approval", "required")
+    appendDeviceRecoveryContext(target, nextPath, appSurface)
     const response = await redirectWithSignOut({
       request,
       supabase,
@@ -342,7 +365,7 @@ export async function GET(request: NextRequest) {
   }
 
   const target = new URL(
-    resolvePostLoginPath(resolveEffectivePlan(profile?.plan, user.email), state.nextPath, state.surface === "app"),
+    resolvePostLoginPath(resolveEffectivePlan(profile?.plan, user.email), nextPath, appSurface),
     requestOrigin(request)
   )
   const response = NextResponse.redirect(target, 303)

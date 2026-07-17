@@ -10,7 +10,15 @@ import {
 } from "@/lib/security/deviceManagementAccess"
 import { requireTrustedMutation } from "@/lib/security/apiGuards"
 import { ensurePaymentExemptAccess, resolveEffectivePlan } from "@/lib/security/paymentExemptions"
-import { checkRateLimit, getClientRateLimitKey } from "@/lib/security/rateLimit"
+import {
+  checkRateLimit,
+  getPseudonymousRateLimitKey,
+  getTrustedClientNetworkIdentity,
+} from "@/lib/security/rateLimit"
+
+const LOGIN_USER_ATTEMPT_LIMIT = 10
+const LOGIN_NETWORK_ATTEMPT_LIMIT = 80
+const LOGIN_RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000
 
 type CookieToSet = {
   name: string
@@ -45,9 +53,27 @@ function normalizeLoginEmail(value: FormDataEntryValue | null) {
     .replace(/\u0130/g, "i")
 }
 
+function getLoginRateLimitKeys(request: NextRequest, normalizedEmail: string) {
+  const networkIdentity = getTrustedClientNetworkIdentity(request)
+  return {
+    userNetworkKey: getPseudonymousRateLimitKey("auth-login-user", [
+      normalizedEmail,
+      networkIdentity,
+    ]),
+    networkAbuseKey: getPseudonymousRateLimitKey("auth-login-network", [networkIdentity]),
+  }
+}
+
 function sanitizeNextPath(value: FormDataEntryValue | null) {
   const raw = String(value || "")
-  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/legal/accept")) {
+  if (
+    !raw ||
+    !raw.startsWith("/") ||
+    raw.startsWith("//") ||
+    raw.includes("\\") ||
+    /[\u0000-\u001f\u007f]/.test(raw) ||
+    raw.startsWith("/legal/accept")
+  ) {
     return "/starter"
   }
   return raw
@@ -73,6 +99,11 @@ function loginUrl(request: NextRequest, params?: Record<string, string>) {
     if (value && !(appSurface && key === "surface")) url.searchParams.set(key, value)
   }
   return url
+}
+
+function appendDeviceRecoveryContext(target: URL, nextPath: string, appSurface: boolean) {
+  target.searchParams.set("surface", appSurface ? "app" : "web")
+  if (nextPath !== "/starter") target.searchParams.set("next", nextPath)
 }
 
 function requestOrigin(request: NextRequest) {
@@ -102,12 +133,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: "origin" }), 303)
   }
 
-  const rateLimit = await checkRateLimit({
-    key: getClientRateLimitKey(request, "auth-login"),
-    limit: 8,
-    windowMs: 10 * 60 * 1000,
+  const loginRateLimitKeys = getLoginRateLimitKeys(request, email)
+  const networkAbuseRateLimit = await checkRateLimit({
+    key: loginRateLimitKeys.networkAbuseKey,
+    limit: LOGIN_NETWORK_ATTEMPT_LIMIT,
+    windowMs: LOGIN_RATE_LIMIT_WINDOW_MS,
   })
-  if (!rateLimit.ok) {
+  if (!networkAbuseRateLimit.ok) {
+    return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: "rate_limited" }), 303)
+  }
+  const userNetworkRateLimit = await checkRateLimit({
+    key: loginRateLimitKeys.userNetworkKey,
+    limit: LOGIN_USER_ATTEMPT_LIMIT,
+    windowMs: LOGIN_RATE_LIMIT_WINDOW_MS,
+  })
+  if (!userNetworkRateLimit.ok) {
     return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: "rate_limited" }), 303)
   }
 
@@ -184,7 +224,10 @@ export async function POST(request: NextRequest) {
   }
   const registerPayload = await registerResponse.json().catch(() => null)
   if (!registerResponse.ok || !registerPayload?.ok) {
-    const code = String(registerPayload?.error || "session_failed")
+    const code =
+      registerResponse.status === 429
+        ? "rate_limited"
+        : String(registerPayload?.error || "session_failed")
     if (
       code === "device_limit_exceeded" ||
       code === "replacement_limit_exceeded" ||
@@ -193,6 +236,7 @@ export async function POST(request: NextRequest) {
       const target = new URL("/profile-setting", origin)
       target.searchParams.set("tab", "devices")
       target.searchParams.set("error", code)
+      appendDeviceRecoveryContext(target, nextPath, appSurface)
       const response = NextResponse.redirect(target, 303)
       await clearLocalAuthSession(supabase, authCookies, response)
       setDeviceManagementCookie(response, userId)
@@ -211,6 +255,7 @@ export async function POST(request: NextRequest) {
     const target = new URL("/profile-setting", origin)
     target.searchParams.set("tab", "devices")
     target.searchParams.set("approval", "required")
+    appendDeviceRecoveryContext(target, nextPath, appSurface)
     const response = NextResponse.redirect(target, 303)
     await clearLocalAuthSession(supabase, authCookies, response)
     setDeviceManagementCookie(response, userId)

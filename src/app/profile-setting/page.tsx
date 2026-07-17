@@ -1,7 +1,10 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import DeviceManagementPanel from "./DeviceManagementPanel"
+import DeviceManagementPanel, {
+  type DeviceRecoveryReason,
+  type DeviceRecoverySurface,
+} from "./DeviceManagementPanel"
 
 type TherapistSettings = {
   emailNotifications: boolean
@@ -15,6 +18,26 @@ const defaultSettings: TherapistSettings = {
   emailNotifications: true,
   reportHistoryVisible: true,
   invoiceEmail: "",
+}
+
+type DeviceRecoveryContext = {
+  nextPath: string
+  surface: DeviceRecoverySurface
+}
+
+function sanitizeRecoveryNextPath(value: string | null) {
+  const raw = String(value || "")
+  if (
+    !raw ||
+    !raw.startsWith("/") ||
+    raw.startsWith("//") ||
+    raw.includes("\\") ||
+    /[\u0000-\u001f\u007f]/.test(raw) ||
+    raw.startsWith("/legal/accept")
+  ) {
+    return "/starter"
+  }
+  return raw
 }
 
 function ToggleRow({
@@ -48,12 +71,33 @@ export default function ProfileSettingPage() {
   const [settings, setSettings] = useState<TherapistSettings>(defaultSettings)
   const [loaded, setLoaded] = useState(false)
   const [savedAt, setSavedAt] = useState("")
-  const [deviceLimitMode, setDeviceLimitMode] = useState(false)
+  const [deviceRecoveryReason, setDeviceRecoveryReason] = useState<DeviceRecoveryReason>(null)
+  const [deviceApprovalRequired, setDeviceApprovalRequired] = useState(false)
+  const [deviceRecoveryContext, setDeviceRecoveryContext] = useState<DeviceRecoveryContext>({
+    nextPath: "/starter",
+    surface: "web",
+  })
 
   useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search)
-      setDeviceLimitMode(params.get("deviceLimit") === "1")
+      const error = params.get("error")
+      setDeviceRecoveryReason(
+        error === "device_limit_exceeded" ||
+          error === "replacement_limit_exceeded" ||
+          error === "trusted_device_required"
+          ? error
+          : params.get("deviceLimit") === "1"
+            ? "device_limit_exceeded"
+            : null
+      )
+      setDeviceApprovalRequired(params.get("approval") === "required")
+      const nextPath = sanitizeRecoveryNextPath(params.get("next"))
+      setDeviceRecoveryContext({
+        nextPath,
+        surface:
+          params.get("surface") === "app" || nextPath.includes("surface=app") ? "app" : "web",
+      })
       const raw = localStorage.getItem(STORAGE_KEY)
       if (raw) {
         const stored = JSON.parse(raw) as Partial<TherapistSettings>
@@ -109,8 +153,13 @@ export default function ProfileSettingPage() {
           </p>
         </div>
 
-        {deviceLimitMode ? (
-          <DeviceManagementPanel deviceLimitMode />
+        {deviceRecoveryReason || deviceApprovalRequired ? (
+          <DeviceManagementPanel
+            recoveryReason={deviceRecoveryReason}
+            approvalRequired={deviceApprovalRequired}
+            nextPath={deviceRecoveryContext.nextPath}
+            surface={deviceRecoveryContext.surface}
+          />
         ) : (
           <div className="space-y-6">
             <DeviceManagementPanel />

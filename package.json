@@ -35,6 +35,7 @@
     "security:owner-scenarios": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/owner-security-scenario-tests.js",
     "security:video-playback": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/education-playback-contract-tests.js",
     "security:device-trust": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/device-trust-contract-tests.js",
+    "security:login-device-identity": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/login-device-identity-contract-tests.js",
     "security:live-hardening-contract": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/live-security-hardening-contract-tests.js",
     "security:live-hardening": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/live-security-hardening.js",
     "security:network-policy": "tsc -p tsconfig.education-network-policy-tests.json && node .tmp/education-network-policy-tests/scripts/education-network-policy-tests.js",

@@ -37,7 +37,14 @@ type PendingApproval = {
   deviceType: string
   requestedAt: string
   expiresAt: string
-  status?: "pending" | "approved" | "rejected" | "expired"
+  status?:
+    | "pending"
+    | "approved"
+    | "rejected"
+    | "expired"
+    | "attempts_exhausted"
+    | "device_limit"
+    | "replacement_limit"
   isCurrent?: boolean
   verificationCode?: string
 }
@@ -58,6 +65,108 @@ type DeviceResponse = {
   devices?: DeviceRow[]
   pendingApprovals?: PendingApproval[]
   error?: string
+}
+
+class DeviceActionRequestError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly retryAfterSeconds: number | null = null
+  ) {
+    super(message)
+    this.name = "DeviceActionRequestError"
+  }
+}
+
+export type DeviceRecoveryReason =
+  | "device_limit_exceeded"
+  | "replacement_limit_exceeded"
+  | "trusted_device_required"
+  | null
+
+export type DeviceRecoverySurface = "app" | "web"
+
+type DeviceManagementPanelProps = {
+  recoveryReason?: DeviceRecoveryReason
+  approvalRequired?: boolean
+  nextPath?: string
+  surface?: DeviceRecoverySurface
+}
+
+const recoveryContent: Record<
+  NonNullable<DeviceRecoveryReason>,
+  { title: string; description: string; nextStep: string }
+> = {
+  device_limit_exceeded: {
+    title: "3 güvenilir cihaz hakkınız dolu",
+    description:
+      "Bu yeni cihazdan mevcut cihaz adlarını güvenlik nedeniyle göstermiyoruz. Hesabınız ve kayıtlarınız duruyor.",
+    nextStep:
+      "Mevcut güvenilir cihazlarınızdan birinde Ayarlar → Cihazlarım bölümünü açın, kullanmadığınız cihazı kaldırın ve sonra bu cihazda yeniden giriş yapın.",
+  },
+  replacement_limit_exceeded: {
+    title: "Cihaz değiştirme hakkınız bu dönem için dolu",
+    description:
+      "30 gün içindeki 2 cihaz değişikliği kullanılmış. Mevcut güvenilir cihazlarınız çalışmaya devam eder; hesabınız kilitlenmedi.",
+    nextStep:
+      "Yeni bir cihaz eklemek için cihaz desteği isteyin. Destek ekibi güvenli kontrolün ardından değiştirme hakkınızı sıfırlayabilir.",
+  },
+  trusted_device_required: {
+    title: "Bu cihazı onaylayacak güvenilir cihaz bulunamadı",
+    description:
+      "Hesabınız ve kayıtlarınız silinmedi. Güvenlik nedeniyle bu tarayıcıda eski cihaz listesi gösterilmiyor.",
+    nextStep:
+      "Cihaz desteği isteyin. Destek ekibi hesap sahipliğini kontrol ettikten sonra güvenilir cihaz erişimini güvenli biçimde yenileyebilir.",
+  },
+}
+
+function retryAfterMs(response: Response) {
+  const value = response.headers.get("retry-after")?.trim()
+  if (!value) return 30_000
+  const seconds = Number(value)
+  if (Number.isFinite(seconds) && seconds > 0) return Math.ceil(seconds * 1000)
+  const date = Date.parse(value)
+  return Number.isFinite(date) ? Math.max(1_000, date - Date.now()) : 30_000
+}
+
+function deviceActionRateLimitMessage(error: unknown) {
+  if (!(error instanceof DeviceActionRequestError) || error.status !== 429) return null
+  const waitSeconds = error.retryAfterSeconds || 30
+  return `Cihaz işlemi sınırına ulaşıldı. ${waitSeconds} saniye bekleyip yeniden deneyin.`
+}
+
+function sanitizeRecoveryNextPath(value?: string | null) {
+  const raw = String(value || "")
+  if (
+    !raw ||
+    !raw.startsWith("/") ||
+    raw.startsWith("//") ||
+    raw.includes("\\") ||
+    /[\u0000-\u001f\u007f]/.test(raw) ||
+    raw.startsWith("/legal/accept")
+  ) {
+    return "/starter"
+  }
+  return raw
+}
+
+function buildRecoveryLoginUrl({
+  nextPath,
+  surface,
+  notice,
+}: {
+  nextPath?: string
+  surface?: DeviceRecoverySurface
+  notice?: "device_approved" | "device_retry"
+}) {
+  const safeNextPath = sanitizeRecoveryNextPath(nextPath)
+  const resolvedSurface =
+    surface === "app" || safeNextPath.includes("surface=app") ? "app" : "web"
+  const params = new URLSearchParams()
+  params.set("surface", resolvedSurface)
+  if (safeNextPath !== "/starter") params.set("next", safeNextPath)
+  if (notice) params.set(notice, "1")
+  return `${resolvedSurface === "app" ? "/app-login" : "/login"}?${params.toString()}`
 }
 
 function formatDate(value: string | null | undefined) {
@@ -100,11 +209,18 @@ function deviceLocation(device: DeviceRow) {
   return [city, country].filter(Boolean).join(", ") || "Konum bilinmiyor"
 }
 
-export default function DeviceManagementPanel({ deviceLimitMode = false }: { deviceLimitMode?: boolean }) {
+export default function DeviceManagementPanel({
+  recoveryReason = null,
+  approvalRequired = false,
+  nextPath = "/starter",
+  surface = "web",
+}: DeviceManagementPanelProps) {
   const [devices, setDevices] = useState<DeviceRow[]>([])
   const [pendingApprovals, setPendingApprovals] = useState<PendingApproval[]>([])
   const [replacementPolicy, setReplacementPolicy] = useState<ReplacementPolicy | null>(null)
-  const [mode, setMode] = useState<DeviceResponse["mode"]>("active_session")
+  const [mode, setMode] = useState<DeviceResponse["mode"]>(
+    recoveryReason || approvalRequired ? "device_management" : "active_session"
+  )
   const [maxDevices, setMaxDevices] = useState(3)
   const [loading, setLoading] = useState(true)
   const [workingKey, setWorkingKey] = useState("")
@@ -113,8 +229,20 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
   const [renamingId, setRenamingId] = useState("")
   const [renameValue, setRenameValue] = useState("")
   const [approvalCodes, setApprovalCodes] = useState<Record<string, string>>({})
+  const [pollBackoffUntil, setPollBackoffUntil] = useState(0)
+  const [hasSuccessfulLoad, setHasSuccessfulLoad] = useState(false)
   const activationAttempted = useRef(false)
   const cryptoUpgradeAttempted = useRef(false)
+  const approvalInFlightChallenges = useRef(new Set<string>())
+  const approvedLoginUrl = buildRecoveryLoginUrl({ nextPath, surface, notice: "device_approved" })
+  const retryLoginUrl = buildRecoveryLoginUrl({ nextPath, surface, notice: "device_retry" })
+  const returnLoginUrl = buildRecoveryLoginUrl({ nextPath, surface })
+  const resolvedRecoverySurface =
+    surface === "app" || sanitizeRecoveryNextPath(nextPath).includes("surface=app") ? "app" : "web"
+  const deviceSupportUrl =
+    resolvedRecoverySurface === "app"
+      ? "/support?category=device&surface=app"
+      : "/support?category=device"
 
   const loadDevices = useCallback(async (quiet = false) => {
     if (!quiet) setLoading(true)
@@ -125,6 +253,14 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
       })
       const payload = (await response.json().catch(() => null)) as DeviceResponse | null
       if (!response.ok || !payload?.ok) {
+        if (response.status === 429) {
+          const waitMs = retryAfterMs(response)
+          setPollBackoffUntil(Date.now() + waitMs)
+          setError(
+            `Cihaz durumunu çok sık kontrol ettik. ${Math.max(1, Math.ceil(waitMs / 1000))} saniye sonra otomatik olarak yeniden deneyeceğiz.`
+          )
+          return
+        }
         if (!quiet) setError("Cihaz listesi şu anda alınamadı. Lütfen tekrar deneyin.")
         return
       }
@@ -133,6 +269,8 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
       setReplacementPolicy(payload.replacementPolicy || null)
       setMode(payload.mode || "active_session")
       setMaxDevices(payload.maxDevices || 3)
+      setPollBackoffUntil(0)
+      setHasSuccessfulLoad(true)
       setError("")
     } catch {
       if (!quiet) setError("Cihaz listesi şu anda alınamadı. Lütfen tekrar deneyin.")
@@ -145,13 +283,26 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
     void loadDevices()
   }, [loadDevices])
 
+  const approvalPollingRequired =
+    pendingApprovals.some((approval) => !approval.status || approval.status === "pending") ||
+    Boolean(approvalRequired && !hasSuccessfulLoad)
   useEffect(() => {
-    if (mode !== "device_management" && !pendingApprovals.some((approval) => approval.status === "pending")) {
-      return
+    if (!approvalPollingRequired && pollBackoffUntil <= 0) return
+    let cancelled = false
+    let timer: number | undefined
+    const schedule = () => {
+      const delay = Math.max(12_000, pollBackoffUntil - Date.now())
+      timer = window.setTimeout(async () => {
+        await loadDevices(true)
+        if (!cancelled) schedule()
+      }, delay)
     }
-    const timer = window.setInterval(() => void loadDevices(true), 12_000)
-    return () => window.clearInterval(timer)
-  }, [loadDevices, mode, pendingApprovals])
+    schedule()
+    return () => {
+      cancelled = true
+      if (timer !== undefined) window.clearTimeout(timer)
+    }
+  }, [approvalPollingRequired, loadDevices, pollBackoffUntil])
 
   useEffect(() => {
     if (mode !== "active_session" || cryptoUpgradeAttempted.current) return
@@ -197,9 +348,9 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
     if (mode === "device_management" && !activationAttempted.current) {
       activationAttempted.current = true
       setMessage("Cihazınız onaylandı. Güvenli oturumu açmak için yeniden giriş yapın.")
-      window.location.assign("/login?device_approved=1")
+      window.location.assign(approvedLoginUrl)
     }
-  }, [currentApproved, mode])
+  }, [approvedLoginUrl, currentApproved, mode])
 
   const postAction = async (body: Record<string, unknown>) => {
     const path = "/api/security/devices"
@@ -219,7 +370,15 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
       body: serializedBody,
     })
     const payload = await response.json().catch(() => null)
-    if (!response.ok || !payload?.ok) throw new Error(payload?.error || "device_action_failed")
+    if (!response.ok || !payload?.ok) {
+      const waitSeconds =
+        response.status === 429 ? Math.max(1, Math.ceil(retryAfterMs(response) / 1000)) : null
+      throw new DeviceActionRequestError(
+        payload?.error || "device_action_failed",
+        response.status,
+        waitSeconds
+      )
+    }
     return payload
   }
 
@@ -236,19 +395,27 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
       setRenamingId("")
       setMessage("Cihaz adı güncellendi.")
       await loadDevices(true)
-    } catch {
-      setError("Cihaz adı güncellenemedi. Lütfen tekrar deneyin.")
+    } catch (actionError) {
+      setError(
+        deviceActionRateLimitMessage(actionError) ||
+          "Cihaz adı güncellenemedi. Lütfen tekrar deneyin."
+      )
     } finally {
       setWorkingKey("")
     }
   }
 
   const removeDevice = async (device: DeviceRow, reason: "removed" | "not_mine") => {
-    const warning = device.isCurrent
+    const baseWarning = device.isCurrent
       ? "Kullandığınız cihaz kaldırılacak ve bu cihazdan çıkış yapılacak. Devam edilsin mi?"
       : reason === "not_mine"
         ? "Bu cihaz size ait değilse güvenlik için hesabınızdaki bütün oturumlar ve video erişimleri kapatılacak; hesap incelemeye alınacak. Devam edilsin mi?"
         : "Bu cihazı hesabınızdan kaldırmak istediğinize emin misiniz?"
+    const replacementWarning =
+      reason === "removed" && remainingReplacements === 0
+        ? "\n\nÖnemli: Bu dönemde cihaz değiştirme hakkınız kalmadı. Cihazı yine kaldırabilirsiniz; fakat yeni bir cihaz eklemek için cihaz desteği gerekir."
+        : ""
+    const warning = `${baseWarning}${replacementWarning}`
     if (!window.confirm(warning)) return
 
     setWorkingKey(`remove-${device.id}`)
@@ -257,7 +424,13 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
       const result = await postAction({ action: "revoke", deviceId: device.id, reason })
       if (result?.accountLocked) {
         setMessage("Hesabınız güvenlik için kilitlendi ve bütün cihazlardan çıkış yapıldı. Destek ekibi inceleme sonrası yeniden açabilir.")
-        await logoutAppSession("global")
+        try {
+          await logoutAppSession("global")
+        } catch {
+          // The server has already suspended the account and revoked its
+          // sessions. logoutAppSession still clears local auth in `finally`;
+          // an expected 401 must not replace the suspension result.
+        }
         window.location.assign("/login?error=account_suspended")
         return
       }
@@ -268,8 +441,11 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
       }
       setMessage(reason === "not_mine" ? "Tanımadığınız cihaz kaldırıldı ve erişimi kapatıldı." : "Cihaz kaldırıldı.")
       await loadDevices(true)
-    } catch {
-      setError("Cihaz kaldırılamadı. Lütfen tekrar deneyin.")
+    } catch (actionError) {
+      setError(
+        deviceActionRateLimitMessage(actionError) ||
+          "Cihaz kaldırılamadı. Lütfen tekrar deneyin."
+      )
     } finally {
       setWorkingKey("")
     }
@@ -282,7 +458,9 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
       setError("Yeni cihazda görünen 6 haneli onay kodunu girin.")
       return
     }
+    if (approvalInFlightChallenges.current.has(challengeId)) return
 
+    approvalInFlightChallenges.current.add(challengeId)
     setWorkingKey(`${action}-${challengeId}`)
     setError("")
     try {
@@ -292,12 +470,15 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
       await loadDevices(true)
     } catch (actionError) {
       const reason = actionError instanceof Error ? actionError.message : ""
+      const rateLimitMessage = deviceActionRateLimitMessage(actionError)
       setError(
-        reason === "verification_code_invalid" || reason === "invalid_code" || reason === "attempts_exhausted"
-          ? "Onay kodu hatalı veya süresi dolmuş. Yeni cihazdaki kodu kontrol edin."
-          : "Onay isteği tamamlanamadı. Lütfen tekrar deneyin."
+        rateLimitMessage ||
+          (reason === "verification_code_invalid" || reason === "invalid_code" || reason === "attempts_exhausted"
+            ? "Onay kodu hatalı veya süresi dolmuş. Yeni cihazdaki kodu kontrol edin."
+            : "Onay isteği tamamlanamadı. Lütfen tekrar deneyin.")
       )
     } finally {
+      approvalInFlightChallenges.current.delete(challengeId)
       setWorkingKey("")
     }
   }
@@ -324,6 +505,27 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
   const revokedDevices = devices.filter((device) => device.revokedAt)
   const remainingReplacements = replacementPolicy?.remaining ?? 2
   const replacementWindowDays = replacementPolicy?.windowDays ?? 30
+  const currentManagementApproval = pendingApprovals.find((approval) => approval.isCurrent)
+  const currentApprovalPending = Boolean(
+    currentManagementApproval &&
+      (!currentManagementApproval.status || currentManagementApproval.status === "pending")
+  )
+  const showPrivateDeviceInventory =
+    mode === "active_session" && !recoveryReason && !approvalRequired
+  const recovery = recoveryReason ? recoveryContent[recoveryReason] : null
+  const managementRequestMissing =
+    mode === "device_management" &&
+    !loading &&
+    !error &&
+    !recovery &&
+    pendingApprovals.length === 0
+  const canRetryLogin =
+    recoveryReason === "device_limit_exceeded" ||
+    Boolean(
+      mode === "device_management" &&
+        !currentApprovalPending &&
+        (currentManagementApproval || managementRequestMissing)
+    )
 
   return (
     <section className="rounded-3xl border border-slate-200 bg-white p-6" aria-labelledby="devices-title">
@@ -338,10 +540,10 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
           </p>
         </div>
 
-        {deviceLimitMode || mode === "device_management" ? (
+        {canRetryLogin ? (
           <button
             type="button"
-            onClick={() => window.location.assign("/login?device_retry=1")}
+            onClick={() => window.location.assign(retryLoginUrl)}
             className="inline-flex h-11 items-center justify-center rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
           >
             Yeniden giriş yap
@@ -349,20 +551,53 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
         ) : null}
       </div>
 
-      {deviceLimitMode ? (
-        <div className="mt-5 rounded-2xl border border-violet-200 bg-violet-50 px-4 py-3 text-sm leading-6 text-violet-900">
-          Cihaz hakkınız dolu. Mevcut güvenilir cihazlarınızdan birinde Profil → Cihazlarım bölümünü açıp kullanmadığınız cihazı kaldırın; ardından bu cihazda yeniden giriş yapın.
+      {recovery ? (
+        <div className="mt-5 rounded-2xl border border-violet-200 bg-violet-50 p-4 text-sm leading-6 text-violet-950">
+          <div className="font-semibold">{recovery.title}</div>
+          <p className="mt-1">{recovery.description}</p>
+          <p className="mt-2 font-medium">{recovery.nextStep}</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <a
+              href={deviceSupportUrl}
+              className="inline-flex h-10 items-center justify-center rounded-xl border border-violet-300 bg-white px-4 text-sm font-semibold text-violet-950 hover:bg-violet-100"
+            >
+              Cihaz desteği iste
+            </a>
+            {recoveryReason === "device_limit_exceeded" ? (
+              <button
+                type="button"
+                onClick={() => window.location.assign(retryLoginUrl)}
+                className="h-10 rounded-xl bg-violet-900 px-4 text-sm font-semibold text-white hover:bg-violet-800"
+              >
+                Cihazı kaldırdım, tekrar dene
+              </button>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2">
-        <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-          <span className="font-semibold">Aktif cihaz:</span> {activeDevices.length}/{maxDevices}
+      {managementRequestMissing ? (
+        <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-950">
+          <div className="font-semibold">Cihaz onay isteği artık görünmüyor</div>
+          <p className="mt-1">
+            Kodun süresi dolmuş veya istek tamamlanmış olabilir. Yeni bir kod oluşturmak için yeniden giriş yapın; sorun sürerse cihaz desteği isteyin.
+          </p>
+          <a className="mt-3 inline-flex font-semibold underline" href={deviceSupportUrl}>
+            Cihaz desteğine git
+          </a>
         </div>
-        <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
-          <span className="font-semibold">Değiştirme hakkı:</span> {remainingReplacements} / {replacementPolicy?.limit ?? 2} · {replacementWindowDays} gün
+      ) : null}
+
+      {showPrivateDeviceInventory ? (
+        <div className="mt-5 grid gap-3 sm:grid-cols-2">
+          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            <span className="font-semibold">Aktif cihaz:</span> {activeDevices.length}/{maxDevices}
+          </div>
+          <div className="rounded-2xl bg-slate-50 px-4 py-3 text-sm text-slate-700">
+            <span className="font-semibold">Değiştirme hakkı:</span> {remainingReplacements} / {replacementPolicy?.limit ?? 2} · {replacementWindowDays} gün
+          </div>
         </div>
-      </div>
+      ) : null}
 
       {message ? (
         <div className="mt-5 rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm text-cyan-900" role="status">
@@ -382,8 +617,16 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
             {pendingApprovals.map((approval) => {
               const challengeId = approval.challengeId || approval.id
               const pending = !approval.status || approval.status === "pending"
+              const approvalBusy =
+                approvalInFlightChallenges.current.has(challengeId) ||
+                workingKey === `approve-${challengeId}` ||
+                workingKey === `reject-${challengeId}`
               return (
-                <div key={challengeId} className="rounded-2xl border border-amber-200 bg-amber-50 p-4">
+                <div
+                  key={challengeId}
+                  className="rounded-2xl border border-amber-200 bg-amber-50 p-4"
+                  aria-busy={approvalBusy}
+                >
                   <div className="font-semibold text-amber-950">
                     {approval.displayName || deviceTypeLabel(approval.deviceType)}
                     {approval.isCurrent ? " · Bu cihaz" : ""}
@@ -398,7 +641,9 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
                       <div className="mt-1 font-mono text-2xl font-bold tracking-[0.3em] text-slate-950">
                         {approval.verificationCode}
                       </div>
-                      <div className="mt-2 text-xs text-slate-600">Bu kodu mevcut güvenilir cihazınızda girin.</div>
+                      <div className="mt-2 text-xs leading-5 text-slate-600">
+                        Mevcut güvenilir cihazınızda Ayarlar → Cihazlarım bölümünü açın ve bu kodu oradaki onay alanına girin.
+                      </div>
                     </div>
                   ) : pending && mode === "active_session" ? (
                     <div className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -415,13 +660,14 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
                           inputMode="numeric"
                           autoComplete="one-time-code"
                           placeholder="6 haneli kod"
+                          disabled={approvalBusy}
                           className="h-10 w-full rounded-xl border border-amber-300 bg-white px-3 font-mono tracking-widest outline-none focus:border-blue-500"
                         />
                       </label>
                       <button
                         type="button"
                         onClick={() => void resolveApproval(approval, "approve")}
-                        disabled={workingKey === `approve-${challengeId}`}
+                        disabled={approvalBusy}
                         className="h-10 rounded-xl bg-slate-950 px-4 text-sm font-semibold text-white disabled:opacity-60"
                       >
                         Onayla
@@ -429,7 +675,7 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
                       <button
                         type="button"
                         onClick={() => void resolveApproval(approval, "reject")}
-                        disabled={workingKey === `reject-${challengeId}`}
+                        disabled={approvalBusy}
                         className="h-10 rounded-xl border border-amber-300 bg-white px-4 text-sm font-semibold text-amber-950 disabled:opacity-60"
                       >
                         Reddet
@@ -451,13 +697,14 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
         </div>
       ) : null}
 
-      <div className="mt-6">
-        <h3 className="text-base font-semibold text-slate-900">Aktif cihazlar</h3>
-        {loading ? (
-          <div className="mt-3 rounded-2xl border border-slate-200 p-4 text-sm text-slate-500">Cihazlar yükleniyor...</div>
-        ) : activeDevices.length ? (
-          <div className="mt-3 space-y-3">
-            {activeDevices.map((device) => {
+      {showPrivateDeviceInventory ? (
+        <div className="mt-6">
+          <h3 className="text-base font-semibold text-slate-900">Aktif cihazlar</h3>
+          {loading ? (
+            <div className="mt-3 rounded-2xl border border-slate-200 p-4 text-sm text-slate-500">Cihazlar yükleniyor...</div>
+          ) : activeDevices.length ? (
+            <div className="mt-3 space-y-3">
+              {activeDevices.map((device) => {
               const isRenaming = renamingId === device.id
               return (
                 <article key={device.id} className="rounded-2xl border border-slate-200 p-4">
@@ -542,12 +789,13 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
                   ) : null}
                 </article>
               )
-            })}
-          </div>
-        ) : (
-          <div className="mt-3 rounded-2xl border border-slate-200 p-4 text-sm text-slate-500">Aktif cihaz bulunamadı.</div>
-        )}
-      </div>
+              })}
+            </div>
+          ) : (
+            <div className="mt-3 rounded-2xl border border-slate-200 p-4 text-sm text-slate-500">Aktif cihaz bulunamadı.</div>
+          )}
+        </div>
+      ) : null}
 
       <div className="mt-6 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row">
         {mode === "active_session" ? (
@@ -562,7 +810,7 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
         ) : (
           <button
             type="button"
-            onClick={() => window.location.assign("/login")}
+            onClick={() => window.location.assign(returnLoginUrl)}
             className="h-11 rounded-xl border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-700 hover:bg-slate-50"
           >
             Giriş ekranına dön
@@ -580,7 +828,7 @@ export default function DeviceManagementPanel({ deviceLimitMode = false }: { dev
         ) : null}
       </div>
 
-      {revokedDevices.length ? (
+      {showPrivateDeviceInventory && revokedDevices.length ? (
         <details className="mt-5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
           <summary className="cursor-pointer text-sm font-semibold text-slate-700">Kaldırılmış cihaz geçmişi</summary>
           <div className="mt-4 space-y-2">

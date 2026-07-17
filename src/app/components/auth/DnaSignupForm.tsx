@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useRef, useState, type FormEvent } from "react"
+import { flushSync } from "react-dom"
 import AuthLayout from "./AuthLayout"
 import {
   createBrowserDeviceProof,
@@ -73,6 +74,7 @@ export default function DnaSignupForm() {
   const [nextPath, setNextPath] = useState("")
   const [surface, setSurface] = useState("web")
   const googleReady = useRef(false)
+  const submissionPreparing = useRef(false)
   const legalAccepted =
     legalChecks.terms && legalChecks.kvkk && legalChecks.consent && legalChecks.authority
 
@@ -82,6 +84,10 @@ export default function DnaSignupForm() {
   }, [])
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    if (submissionPreparing.current) {
+      event.preventDefault()
+      return
+    }
     setError("")
 
     if (!fullName.trim()) {
@@ -114,12 +120,17 @@ export default function DnaSignupForm() {
       return
     }
 
+    submissionPreparing.current = true
     setLoading(true)
   }
 
   async function handleGoogleSubmit(event: FormEvent<HTMLFormElement>) {
     if (googleReady.current) {
       googleReady.current = false
+      return
+    }
+    if (submissionPreparing.current) {
+      event.preventDefault()
       return
     }
     setError("")
@@ -132,20 +143,30 @@ export default function DnaSignupForm() {
 
     event.preventDefault()
     const form = event.currentTarget
+    submissionPreparing.current = true
     setGoogleLoading(true)
     let proof: BrowserDeviceProofFields
     try {
       proof = await createBrowserDeviceProof()
-    } catch {
-      setError("Güvenli cihaz doğrulamasına ulaşılamadı. Bağlantınızı kontrol edip yeniden deneyin.")
+    } catch (proofError) {
+      const retrySeconds =
+        proofError instanceof Error && proofError.message.startsWith("device_challenge_rate_limited:")
+          ? Math.max(1, Number(proofError.message.split(":")[1]) || 60)
+          : null
+      setError(
+        retrySeconds
+          ? `Cihaz güvenliği çok sık istendi. ${retrySeconds} saniye sonra yeniden deneyin.`
+          : "Güvenli cihaz doğrulamasına ulaşılamadı. Bağlantınızı kontrol edip yeniden deneyin."
+      )
+      submissionPreparing.current = false
       setGoogleLoading(false)
       return
     }
-    setDeviceProof(proof)
-    requestAnimationFrame(() => {
-      googleReady.current = true
-      form.requestSubmit()
+    flushSync(() => {
+      setDeviceProof(proof)
     })
+    googleReady.current = true
+    form.requestSubmit()
   }
 
   return (
@@ -291,15 +312,15 @@ export default function DnaSignupForm() {
           </div>
 
           {error ? (
-            <div className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900">
+            <div role="alert" className="rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-900">
               {error}
             </div>
           ) : null}
 
           <button
             type="submit"
-            disabled={loading || !legalAccepted}
-            aria-disabled={loading || !legalAccepted}
+            disabled={loading || googleLoading || !legalAccepted}
+            aria-disabled={loading || googleLoading || !legalAccepted}
             title={!legalAccepted ? "Kayıt için tüm hukuki onayları tamamlayın." : undefined}
             className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-cyan-400 via-blue-600 to-violet-600 px-5 font-bold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 hover:shadow-blue-600/30 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45"
           >
@@ -324,8 +345,8 @@ export default function DnaSignupForm() {
           <input type="hidden" name="authority" value={legalChecks.authority ? "on" : ""} />
           <button
             type="submit"
-            disabled={googleLoading || !legalAccepted}
-            aria-disabled={googleLoading || !legalAccepted}
+            disabled={loading || googleLoading || !legalAccepted}
+            aria-disabled={loading || googleLoading || !legalAccepted}
             title={!legalAccepted ? "Google ile kayıt için tüm hukuki onayları tamamlayın." : undefined}
             className="inline-flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-5 font-bold text-slate-800 shadow-sm shadow-slate-200/60 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-blue-100/70 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45"
           >

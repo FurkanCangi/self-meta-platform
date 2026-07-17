@@ -7,7 +7,12 @@ import {
   createDeviceProofChallenge,
   normalizeDevicePossessionTarget,
 } from "@/lib/security/deviceProof"
-import { checkRateLimit, getClientRateLimitKey, rateLimitResponse } from "@/lib/security/rateLimit"
+import {
+  checkRateLimit,
+  getNetworkRateLimitKey,
+  getPseudonymousRateLimitKey,
+  rateLimitResponse,
+} from "@/lib/security/rateLimit"
 import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
@@ -35,12 +40,18 @@ export async function POST(request: Request) {
   if (!parsed.ok) return parsed.response
 
   if ("deviceId" in parsed.data) {
-    const rateLimit = await checkRateLimit({
-      key: getClientRateLimitKey(request, "device-proof-challenge"),
+    const broadRateLimit = await checkRateLimit({
+      key: getNetworkRateLimitKey(request, "device-proof-challenge-broad"),
+      limit: 600,
+      windowMs: 10 * 60 * 1000,
+    })
+    if (!broadRateLimit.ok) return rateLimitResponse(broadRateLimit.resetAt)
+    const deviceRateLimit = await checkRateLimit({
+      key: getPseudonymousRateLimitKey("device-proof-challenge-device", [parsed.data.deviceId]),
       limit: 30,
       windowMs: 10 * 60 * 1000,
     })
-    if (!rateLimit.ok) return rateLimitResponse(rateLimit.resetAt)
+    if (!deviceRateLimit.ok) return rateLimitResponse(deviceRateLimit.resetAt)
     return NextResponse.json({ ok: true, ...createDeviceProofChallenge(parsed.data.deviceId) })
   }
 

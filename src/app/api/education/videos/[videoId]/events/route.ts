@@ -13,6 +13,7 @@ import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { rejectServerControlledFields } from "@/lib/security/payloadGuards"
 import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import {
+  createEducationVideoPlaybackAccess,
   findEducationVideoAsset,
   getRequestAuditContext,
   recordEducationVideoAccessLog,
@@ -29,6 +30,7 @@ const ALLOWED_VIDEO_EVENTS = new Set([
   "complete",
   "error",
   "release",
+  "refresh_url",
   "watermark_rendered",
 ])
 
@@ -73,7 +75,10 @@ export async function POST(
   const { videoId } = await params
   const rateLimit = await checkRateLimit({
     key: `education-video-events:${auth.user.id}`,
-    limit: 240,
+    // A one-hour lesson naturally emits about 144 signed heartbeats plus
+    // roughly 40 signed Supabase URL refreshes. Keep enough room for normal
+    // pause/seek/play use without making the possession-bound route unbounded.
+    limit: 480,
     windowMs: 60 * 60 * 1000,
   })
 
@@ -227,6 +232,84 @@ export async function POST(
     return NextResponse.json({ ok: false, error }, { status })
   }
 
+  let refreshedPlaybackUrl: {
+    playbackUrl: string
+    signedUrl: string
+    expiresAt: string
+    signedUrlTtlSeconds: number
+  } | null = null
+
+  if (eventType === "refresh_url") {
+    const refreshedAccess = await createEducationVideoPlaybackAccess({
+      admin,
+      asset,
+      userId: auth.user.id,
+      ipAddress: auditContext.ipAddress,
+    })
+
+    if (!refreshedAccess.ok) {
+      await recordEducationVideoAccessLog({
+        admin,
+        userId: auth.user.id,
+        videoId: asset.id,
+        eventType: refreshedAccess.error,
+        tokenId: verifiedToken.tokenId,
+        ipAddress: auditContext.ipAddress,
+        userAgent: auditContext.userAgent,
+        watermarkCode: verifiedToken.watermarkCode,
+        metadata: { player_session_id: playerSessionId, lease_id: leaseId, phase: "signed_url_refresh" },
+      })
+      return NextResponse.json({ ok: false, error: refreshedAccess.error }, { status: 500 })
+    }
+
+    const refresh = refreshedAccess.access
+    if (
+      refresh.provider !== "supabase" ||
+      refresh.playerConfig.playbackPolicy !== "signed_url" ||
+      !refresh.playbackUrl ||
+      !refresh.signedUrl ||
+      !refresh.signedUrlTtlSeconds
+    ) {
+      return NextResponse.json(
+        { ok: false, error: "playback_url_refresh_unsupported" },
+        { status: 400 }
+      )
+    }
+
+    // URL signing is external to the lease transaction. Confirm the exact
+    // lease once more so a takeover racing with Storage cannot receive a fresh
+    // bearer URL on the device that just lost playback ownership.
+    const confirmedLease = await touchEducationPlaybackLease({
+      ...playbackContext,
+      leaseId,
+    })
+    if (!confirmedLease.ok) {
+      const error = confirmedLease.error || "playback_lease_lost"
+      await recordEducationVideoAccessLog({
+        admin,
+        userId: auth.user.id,
+        videoId: asset.id,
+        eventType: error,
+        tokenId: verifiedToken.tokenId,
+        ipAddress: auditContext.ipAddress,
+        userAgent: auditContext.userAgent,
+        watermarkCode: verifiedToken.watermarkCode,
+        metadata: { player_session_id: playerSessionId, lease_id: leaseId, phase: "signed_url_refresh_confirm" },
+      })
+      return NextResponse.json(
+        { ok: false, error },
+        { status: error === "playback_lease_lost" ? 409 : 500 }
+      )
+    }
+
+    refreshedPlaybackUrl = {
+      playbackUrl: refresh.playbackUrl,
+      signedUrl: refresh.signedUrl,
+      expiresAt: refresh.expiresAt,
+      signedUrlTtlSeconds: refresh.signedUrlTtlSeconds,
+    }
+  }
+
   await recordEducationVideoAccessLog({
     admin,
     userId: auth.user.id,
@@ -246,5 +329,12 @@ export async function POST(
     },
   })
 
-  return NextResponse.json({ ok: true, released: RELEASE_EVENTS.has(eventType) })
+  return NextResponse.json(
+    {
+      ok: true,
+      released: RELEASE_EVENTS.has(eventType),
+      ...(refreshedPlaybackUrl ? { refresh: refreshedPlaybackUrl } : {}),
+    },
+    { headers: { "cache-control": "private, no-store" } }
+  )
 }

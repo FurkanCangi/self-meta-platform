@@ -459,23 +459,6 @@ export async function registerAppSessionForUser(
 
   let device = existingDevice as AccountDeviceRow | null
   if (!device) {
-    if (occupiedDeviceSlots >= MAX_REGISTERED_DEVICES) {
-      await recordAccountSecurityEvent({
-        userId: user.id,
-        eventType: "device_limit_blocked",
-        ipAddress: metadata.ipAddress,
-        userAgent: metadata.userAgent,
-        metadata: { max_devices: MAX_REGISTERED_DEVICES },
-      })
-      return {
-        ok: false,
-        status: "device_limit",
-        error: "device_limit_exceeded",
-        message: "Bu hesap için en fazla 3 güvenilir cihaz kullanılabilir.",
-        httpStatus: 409,
-      }
-    }
-
     const countsAsReplacement = verifiedHistoryCount >= MAX_REGISTERED_DEVICES
     if (countsAsReplacement) {
       const usage = await getDeviceReplacementUsage(admin, user.id)
@@ -490,6 +473,23 @@ export async function registerAppSessionForUser(
           message: "30 gün içinde en fazla 2 yeni cihaz eklenebilir.",
           httpStatus: 409,
         }
+      }
+    }
+
+    if (occupiedDeviceSlots >= MAX_REGISTERED_DEVICES) {
+      await recordAccountSecurityEvent({
+        userId: user.id,
+        eventType: "device_limit_blocked",
+        ipAddress: metadata.ipAddress,
+        userAgent: metadata.userAgent,
+        metadata: { max_devices: MAX_REGISTERED_DEVICES },
+      })
+      return {
+        ok: false,
+        status: "device_limit",
+        error: "device_limit_exceeded",
+        message: "Bu hesap için en fazla 3 güvenilir cihaz kullanılabilir.",
+        httpStatus: 409,
       }
     }
 
@@ -574,6 +574,23 @@ export async function registerAppSessionForUser(
     const legacySessionNeedsApproval =
       device.verification_method === "legacy_session" && !freshLegacyApprovalId
     if (device.revoked_at || device.verification_required || !device.verified_at || legacySessionNeedsApproval) {
+      // Once three devices have ever been verified, every newly approved
+      // untrusted device consumes replacement quota. This includes retrying a
+      // previously rejected, never-verified fingerprint; otherwise repeatedly
+      // rejecting and recreating the same request could defer the quota check
+      // until the final approval RPC.
+      const countsAsReplacement = verifiedHistoryCount >= MAX_REGISTERED_DEVICES
+      if (countsAsReplacement) {
+        const usage = await getDeviceReplacementUsage(admin, user.id)
+        if (usage.error || usage.used >= DEVICE_REPLACEMENT_LIMIT) {
+          return {
+            ok: false,
+            status: usage.error ? "error" : "replacement_limit",
+            error: usage.error ? "replacement_count_failed" : "replacement_limit_exceeded",
+            httpStatus: usage.error ? 500 : 409,
+          }
+        }
+      }
       if (
         occupiedDeviceSlots >= MAX_REGISTERED_DEVICES &&
         Boolean(device.revoked_at) &&
@@ -594,19 +611,6 @@ export async function registerAppSessionForUser(
           error: "trusted_device_required",
           message: "Tüm güvenilir cihazlar kayıp. Destek üzerinden güvenli cihaz sıfırlaması gerekir.",
           httpStatus: 403,
-        }
-      }
-      const countsAsReplacement =
-        Boolean(device.ever_verified_at) && verifiedHistoryCount >= MAX_REGISTERED_DEVICES
-      if (countsAsReplacement) {
-        const usage = await getDeviceReplacementUsage(admin, user.id)
-        if (usage.error || usage.used >= DEVICE_REPLACEMENT_LIMIT) {
-          return {
-            ok: false,
-            status: usage.error ? "error" : "replacement_limit",
-            error: usage.error ? "replacement_count_failed" : "replacement_limit_exceeded",
-            httpStatus: usage.error ? 500 : 409,
-          }
         }
       }
       const { error: pendingUpdateError } = await admin

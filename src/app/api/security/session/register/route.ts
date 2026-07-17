@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { requireTrustedMutation } from "@/lib/security/apiGuards"
 import { rejectServerControlledFields } from "@/lib/security/payloadGuards"
-import { checkRateLimit, getClientRateLimitKey, rateLimitResponse } from "@/lib/security/rateLimit"
+import { checkRateLimit, getNetworkRateLimitKey, rateLimitResponse } from "@/lib/security/rateLimit"
 import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import { setAppSessionCookie, verifyCurrentAppSession } from "@/lib/security/appSession"
 import { extractSupabaseAuthSessionId } from "@/lib/security/authSessionBinding"
@@ -35,12 +35,12 @@ export async function POST(request: Request) {
   const originError = await requireTrustedMutation(request)
   if (originError) return originError
 
-  const requestRateLimit = await checkRateLimit({
-    key: getClientRateLimitKey(request, "session-register"),
-    limit: 20,
+  const broadRateLimit = await checkRateLimit({
+    key: getNetworkRateLimitKey(request, "session-register-broad"),
+    limit: 600,
     windowMs: 10 * 60 * 1000,
   })
-  if (!requestRateLimit.ok) return rateLimitResponse(requestRateLimit.resetAt)
+  if (!broadRateLimit.ok) return rateLimitResponse(broadRateLimit.resetAt)
 
   const admin = createSupabaseAdminClient()
   const supabase = await createSupabaseServerClient()
@@ -66,6 +66,12 @@ export async function POST(request: Request) {
   if (error || !user?.id) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 })
   }
+  const userRateLimit = await checkRateLimit({
+    key: `session-register:${user.id}`,
+    limit: 60,
+    windowMs: 10 * 60 * 1000,
+  })
+  if (!userRateLimit.ok) return rateLimitResponse(userRateLimit.resetAt)
   const authSessionId = extractSupabaseAuthSessionId(authAccessToken)
   if (!authSessionId) {
     return NextResponse.json({ ok: false, error: "auth_session_binding_required" }, { status: 401 })
