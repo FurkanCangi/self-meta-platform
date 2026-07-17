@@ -62,6 +62,42 @@ final result: passed
 
 ---
 
+# Homepage Clinical Journey Design QA
+
+## Scope
+
+- Route: `/`
+- Selected visual source: `/Users/furkancangi/.codex/generated_images/019ecfb7-080f-7730-8baf-3ef7e620363f/exec-0190a235-05e7-40eb-afc6-e948519a7864.png`
+- Desktop implementation capture: `/tmp/dna-clinical-journey-desktop-section.png`
+- Mobile implementation captures: `/tmp/dna-clinical-journey-mobile-section.png` and `/tmp/dna-clinical-journey-mobile-cta.png`
+- Side-by-side comparison: `/tmp/dna-clinical-journey-comparison.png`
+- Desktop verification viewport: `1440 x 900`
+- Mobile verification viewport: `390 x 844`
+
+## Design Result
+
+- The paused Therapist Finder preview was replaced with the selected clinical-journey direction.
+- The new section explains the product in four connected decisions: assessment, pattern recognition, clinical priority, and reporting/follow-up.
+- The white clinical surface, navy hierarchy, and restrained cyan-to-purple progression preserve the chosen reference while using production typography, navigation, and Lucide icons.
+- Miniature interface previews make every stage concrete without adding another text-heavy marketing layer.
+- The primary action leads to `/dna-nedir/degerlendirme-sistemi` and remains visually distinct without introducing a separate nested card.
+
+## Verification
+
+- Desktop reference and implementation were reviewed in one side-by-side comparison image.
+- Mobile flow changes to one vertical timeline with stable marker, copy, preview, and action dimensions.
+- Mobile document width and viewport width both remain `390px`; no horizontal overflow was detected.
+- Heading, stage labels, descriptions, and action text fit without clipping or overlap.
+- TypeScript lint: passed.
+- Production build: passed.
+- `git diff --check`: passed before this QA entry.
+
+No unresolved P0, P1, or P2 findings remain.
+
+final result: passed
+
+---
+
 # Research Detail Pages Design QA
 
 ## Scope
