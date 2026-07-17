@@ -15,6 +15,7 @@ import {
   AiOutlineMessage,
   AiOutlineUser,
 } from "react-icons/ai";
+import { logoutAppSession } from "@/lib/security/clientLogout";
 import { supabase } from "@/lib/supabase/client";
 import { useTheme } from "./theme-provider";
 
@@ -233,7 +234,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      await logoutAppSession("local");
     } catch {}
     try {
       localStorage.removeItem(STORAGE_KEY);

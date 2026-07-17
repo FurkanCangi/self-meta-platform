@@ -1,5 +1,6 @@
 import fs from "node:fs"
 import path from "node:path"
+import { createHash, webcrypto } from "node:crypto"
 import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 
 type Step = {
@@ -84,6 +85,64 @@ function failIfError(label: string, error: unknown) {
     const message = String((error as { message?: string; code?: string })?.message || error)
     const code = String((error as { code?: string })?.code || "")
     throw new Error(code ? `${label}: ${code} ${message}` : `${label}: ${message}`)
+  }
+}
+
+async function createP256DeviceProof(siteUrl: string, accessToken: string) {
+  const pair = (await webcrypto.subtle.generateKey(
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign", "verify"]
+  )) as CryptoKeyPair
+  const publicKey = await webcrypto.subtle.exportKey("jwk", pair.publicKey)
+  const canonical = JSON.stringify({
+    crv: publicKey.crv,
+    kty: publicKey.kty,
+    x: publicKey.x,
+    y: publicKey.y,
+  })
+  const publicKeyFingerprint = createHash("sha256").update(canonical).digest("base64url")
+  const rawDeviceId = `p256-${publicKeyFingerprint}`
+  const challengeResponse = await fetch(`${siteUrl}/api/security/device-proof/challenge`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/json",
+      authorization: `Bearer ${accessToken}`,
+      "x-dna-request": "same-origin",
+      "user-agent": `DNA-live-backend-health/${runId}/p256-challenge`,
+    },
+    body: JSON.stringify({ deviceId: rawDeviceId }),
+  })
+  const challengePayload = await challengeResponse.json().catch(() => null) as {
+    ok?: boolean
+    challenge?: string
+    challengeToken?: string
+    error?: string
+  } | null
+  if (
+    challengeResponse.status !== 200 ||
+    !challengePayload?.ok ||
+    !challengePayload.challenge ||
+    !challengePayload.challengeToken
+  ) {
+    throw new Error(
+      `device proof challenge failed: HTTP ${challengeResponse.status} ${challengePayload?.error || "invalid_response"}`
+    )
+  }
+  const signature = await webcrypto.subtle.sign(
+    { name: "ECDSA", hash: "SHA-256" },
+    pair.privateKey,
+    Buffer.from(challengePayload.challenge, "utf8")
+  )
+  return {
+    deviceId: rawDeviceId,
+    deviceType: "desktop" as const,
+    identityVersion: "p256-v1" as const,
+    publicKeyJwk: JSON.stringify(publicKey),
+    publicKeyFingerprint,
+    proofChallengeToken: challengePayload.challengeToken,
+    proofSignature: Buffer.from(signature).toString("base64url"),
+    legacyDeviceId: `live-health-legacy-${runId}`,
   }
 }
 
@@ -200,6 +259,27 @@ async function cleanup() {
     })
   }
   if (userId) {
+    await safeCleanup("education_video_access_logs", async () => {
+      await admin!.from("education_video_access_logs").delete().eq("user_id", userId)
+    })
+    await safeCleanup("education_video_playback_sessions", async () => {
+      await admin!.from("education_video_playback_sessions").delete().eq("user_id", userId)
+    })
+    await safeCleanup("education_video_playback_leases", async () => {
+      await admin!.from("education_video_playback_leases").delete().eq("user_id", userId)
+    })
+    await safeCleanup("education_video_access_tokens", async () => {
+      await admin!.from("education_video_access_tokens").delete().eq("user_id", userId)
+    })
+    await safeCleanup("account_device_verification_challenges", async () => {
+      await admin!.from("account_device_verification_challenges").delete().eq("user_id", userId)
+    })
+    await safeCleanup("account_device_changes", async () => {
+      await admin!.from("account_device_changes").delete().eq("user_id", userId)
+    })
+    await safeCleanup("account_device_proof_nonces", async () => {
+      await admin!.from("account_device_proof_nonces").delete().eq("user_id", userId)
+    })
     await safeCleanup("account_security_events", async () => {
       await admin!.from("account_security_events").delete().eq("user_id", userId)
     })
@@ -234,6 +314,9 @@ async function cleanup() {
       await admin!.from("api_rate_limits").delete().eq("key", rateLimitKey)
     })
   }
+  await safeCleanup("api_rate_limits_canary", async () => {
+    await admin!.from("api_rate_limits").delete().ilike("key", `%${runId}%`)
+  })
 }
 
 async function main() {
@@ -264,6 +347,9 @@ async function main() {
         "reports",
         "account_devices",
         "account_sessions",
+        "account_device_verification_challenges",
+        "account_device_changes",
+        "account_device_proof_nonces",
         "account_security_events",
         "account_security_state",
         "support_tickets",
@@ -271,6 +357,9 @@ async function main() {
         "support_ticket_attachments",
         "therapist_directory_profiles",
         "user_entitlements",
+        "education_video_access_tokens",
+        "education_video_playback_sessions",
+        "education_video_playback_leases",
         "report_credit_ledger",
         "api_rate_limits",
       ]
@@ -315,6 +404,7 @@ async function main() {
     await step("session/device registration API works", async () => {
       const session = (await browser.auth.getSession()).data.session
       if (!session?.access_token) throw new Error("missing browser token")
+      const deviceProof = await createP256DeviceProof(config.siteUrl, session.access_token)
       const response = await fetch(`${config.siteUrl}/api/security/session/register`, {
         method: "POST",
         headers: {
@@ -323,14 +413,10 @@ async function main() {
           "x-dna-request": "same-origin",
           "user-agent": `DNA-live-backend-health/${runId}`,
         },
-        body: JSON.stringify({
-          deviceId: `live-health-device-${runId}`,
-          deviceType: "desktop",
-          allowSlotReuse: true,
-        }),
+        body: JSON.stringify(deviceProof),
       })
-      const payload = await response.json().catch(() => null) as { ok?: boolean; sessionId?: string; deviceId?: string; error?: string } | null
-      if (!response.ok || !payload?.ok || !payload.sessionId || !payload.deviceId) {
+      const payload = await response.json().catch(() => null) as { ok?: boolean; status?: string; sessionId?: string; deviceId?: string; error?: string } | null
+      if (!response.ok || !payload?.ok || payload.status !== "active" || !payload.sessionId || !payload.deviceId) {
         throw new Error(`HTTP ${response.status} ${payload?.error || "session_register_failed"}`)
       }
       sessionId = payload.sessionId

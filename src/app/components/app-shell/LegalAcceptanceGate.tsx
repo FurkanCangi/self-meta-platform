@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { FileCheck2, RefreshCw } from "lucide-react";
 
@@ -49,6 +50,10 @@ function clearCachedLegalStatus() {
 }
 
 export default function LegalAcceptanceGate({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const isDeviceSecurityManagement =
+    pathname === "/profile-setting" && searchParams.get("tab") === "devices";
   const [status, setStatus] = useState<LegalStatus | null>(null);
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState(false);
@@ -76,8 +81,12 @@ export default function LegalAcceptanceGate({ children }: { children: React.Reac
   }
 
   useEffect(() => {
+    if (isDeviceSecurityManagement) {
+      setLoading(false);
+      return;
+    }
     void loadStatus();
-  }, []);
+  }, [isDeviceSecurityManagement]);
 
   async function acceptDocuments() {
     setAccepting(true);
@@ -115,7 +124,10 @@ export default function LegalAcceptanceGate({ children }: { children: React.Reac
     }
   }
 
-  if (loading) return <>{children}</>;
+  // A pending or capped device has no Supabase auth cookies by design. The
+  // signed, narrowly scoped device-management cookie is still allowed to open
+  // this screen, so the legal gate must not hide its approval code/actions.
+  if (isDeviceSecurityManagement || loading) return <>{children}</>;
 
   if (status?.accepted) return <>{children}</>;
 

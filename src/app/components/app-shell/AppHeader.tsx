@@ -5,7 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { AiOutlineLogout, AiOutlineMoon, AiOutlineSun } from "react-icons/ai";
 import { useTheme } from "../theme-provider";
-import { supabase } from "@/lib/supabase/client";
+import { logoutAppSession } from "@/lib/security/clientLogout";
 import AppNotifications from "./AppNotifications";
 
 export default function AppHeader() {
@@ -14,7 +14,7 @@ export default function AppHeader() {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      await logoutAppSession("local");
     } catch {}
     try {
       localStorage.removeItem("dna_therapist_profile");

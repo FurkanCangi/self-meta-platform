@@ -1,8 +1,14 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { GraduationCap, Lock, PlayCircle, RefreshCw, ShieldCheck } from "lucide-react"
+import { useAppSurface } from "@/app/components/app-shell/useAppSurface"
+import {
+  SecureEducationPlayer,
+  type SecureEducationPlayerWatermark,
+} from "@/app/education/SecureEducationPlayer"
+import { createDevicePossessionHeaders } from "@/lib/security/browserDeviceIdentity"
 
 type EducationVideoItem = {
   id: string
@@ -25,6 +31,9 @@ type EducationVideoAccessResponse = {
   access?: {
     token: string
     tokenExpiresAt: string
+    leaseId: string
+    leaseExpiresAt: string
+    playerSessionId: string
     provider: string
     playbackToken: string | null
     playbackUrl: string | null
@@ -41,13 +50,13 @@ type EducationVideoAccessResponse = {
     signedUrl: string | null
     signedUrlTtlSeconds: number | null
   }
-  watermark?: {
-    code: string
-    displayText: string
-    qrPayload: string
-    refreshSeconds: number
-    positionSeed: string
-  }
+  watermark?: SecureEducationPlayerWatermark & { qrPayload: string }
+  activePlayback?: {
+    videoId: string | null
+    videoTitle: string | null
+    deviceType: string
+    lastHeartbeatAt: string | null
+  } | null
 }
 
 type BillingStatus = {
@@ -62,15 +71,6 @@ type BillingStatus = {
     remaining: number | null
   }
 }
-
-const WATERMARK_POSITIONS = [
-  "top-3 left-3",
-  "top-3 right-3",
-  "bottom-3 left-3",
-  "bottom-3 right-3",
-  "top-1/2 left-4 -translate-y-1/2",
-  "top-1/2 right-4 -translate-y-1/2",
-]
 
 function formatPlan(value?: string | null) {
   if (!value) return "Tüm eğitim erişimi"
@@ -88,14 +88,11 @@ function formatStatus(value: string) {
   return "Taslak"
 }
 
-function pickWatermarkPosition(seed: string, step: number) {
-  let total = 0
-  for (const char of seed) total += char.charCodeAt(0)
-  return WATERMARK_POSITIONS[(total + step) % WATERMARK_POSITIONS.length] || WATERMARK_POSITIONS[0]
-}
-
 function makePlayerSessionId(videoId: string) {
-  return `player_${videoId}_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`
+  const randomId = typeof crypto !== "undefined" && "randomUUID" in crypto
+    ? crypto.randomUUID()
+    : `${Date.now()}_${Math.random().toString(36).slice(2, 12)}`
+  return `player_${videoId.slice(0, 32)}_${randomId}`.slice(0, 120)
 }
 
 export default function EducationPage() {
@@ -109,12 +106,22 @@ export default function EducationPage() {
   const [accessLoading, setAccessLoading] = useState(false)
   const [accessError, setAccessError] = useState("")
   const [accessData, setAccessData] = useState<EducationVideoAccessResponse | null>(null)
-  const [watermarkStep, setWatermarkStep] = useState(0)
+  const [playbackConflict, setPlaybackConflict] = useState<{
+    item: EducationVideoItem
+    playerSessionId: string
+    activePlayback: EducationVideoAccessResponse["activePlayback"]
+  } | null>(null)
   const [billingStatus, setBillingStatus] = useState<BillingStatus | null>(null)
+  const openVideoSequenceRef = useRef(0)
+  const openVideoRequestRef = useRef<{ id: number; controller: AbortController } | null>(null)
+  const isAppSurface = useAppSurface(false)
 
-  const nativeVideoRef = useRef<HTMLVideoElement | null>(null)
-  const heartbeatRef = useRef<number | null>(null)
-  const playerSessionIdRef = useRef("")
+  useEffect(() => {
+    return () => {
+      openVideoRequestRef.current?.controller.abort()
+      openVideoRequestRef.current = null
+    }
+  }, [])
 
   useEffect(() => {
     let mounted = true
@@ -181,125 +188,89 @@ export default function EducationPage() {
 
   const selected = useMemo(() => items.find((item) => item.id === selectedId) || null, [items, selectedId])
 
-  const postPlaybackEvent = useEffectEvent(
-    async (eventType: string, extra: Record<string, unknown> = {}) => {
-      if (!selected || !accessData?.access?.token || !playerSessionIdRef.current) return
-
-      try {
-        await fetch(`/api/education/videos/${encodeURIComponent(selected.id)}/events`, {
-          method: "POST",
-          headers: {
-            "content-type": "application/json",
-            "x-dna-request": "same-origin",
-          },
-          body: JSON.stringify({
-            eventType,
-            accessToken: accessData.access.token,
-            playerSessionId: playerSessionIdRef.current,
-            visibleWatermarkCode: accessData.watermark?.code || null,
-            ...extra,
-          }),
-        })
-      } catch {}
-    }
-  )
-
-  const stopHeartbeat = useEffectEvent(() => {
-    if (heartbeatRef.current) {
-      window.clearInterval(heartbeatRef.current)
-      heartbeatRef.current = null
-    }
-  })
-
-  const startHeartbeat = useEffectEvent(() => {
-    stopHeartbeat()
-    const intervalSeconds = accessData?.access?.playerConfig?.heartbeatIntervalSeconds || 25
-    heartbeatRef.current = window.setInterval(() => {
-      const video = nativeVideoRef.current
-      void postPlaybackEvent("heartbeat", {
-        playbackSeconds: video?.currentTime || 0,
-        durationSeconds: video?.duration || null,
-      })
-    }, intervalSeconds * 1000)
-  })
-
-  async function openVideo(item: EducationVideoItem) {
+  async function openVideo(
+    item: EducationVideoItem,
+    options: { takeover?: boolean; playerSessionId?: string } = {}
+  ) {
+    const playerSessionId = options.playerSessionId || makePlayerSessionId(item.id)
+    const requestId = ++openVideoSequenceRef.current
+    openVideoRequestRef.current?.controller.abort()
+    const controller = new AbortController()
+    openVideoRequestRef.current = { id: requestId, controller }
     setSelectedId(item.id)
     setAccessLoading(true)
     setAccessError("")
-    stopHeartbeat()
+    setPlaybackConflict(null)
 
     try {
-      const response = await fetch(`/api/education/videos/${encodeURIComponent(item.id)}/access`, {
+      const path = `/api/education/videos/${encodeURIComponent(item.id)}/access`
+      const serializedBody = JSON.stringify({
+        playerSessionId,
+        takeover: Boolean(options.takeover),
+      })
+      const possessionHeaders = await createDevicePossessionHeaders({
+        path,
+        body: serializedBody,
+        signal: controller.signal,
+      })
+      const response = await fetch(path, {
         method: "POST",
         headers: {
           "content-type": "application/json",
           "x-dna-request": "same-origin",
+          ...possessionHeaders,
         },
-        body: JSON.stringify({}),
+        body: serializedBody,
+        signal: controller.signal,
       })
 
       const json = (await response.json()) as EducationVideoAccessResponse
+      if (openVideoRequestRef.current?.id !== requestId) return
 
       if (!response.ok || !json.ok) {
         setAccessData(null)
-        setAccessError(json.error || "Video erişimi alınamadı.")
-        setAccessLoading(false)
+        if (response.status === 409 && json.error === "active_playback_exists") {
+          setPlaybackConflict({ item, playerSessionId, activePlayback: json.activePlayback })
+          setAccessError("Eğitim başka bir cihazda açık.")
+        } else if (json.error === "education_network_blocked") {
+          setAccessError("Bu ağ üzerinden eğitim videosu oynatılamıyor.")
+        } else if (json.error === "playback_lease_lost") {
+          setAccessError("Oynatma başka bir cihazda devralındı. Eğitimi yeniden açabilirsiniz.")
+        } else {
+          setAccessError(json.error || "Video erişimi alınamadı.")
+        }
         return
       }
 
-      playerSessionIdRef.current = makePlayerSessionId(item.id)
       setAccessData(json)
-      setWatermarkStep(0)
-      setAccessLoading(false)
-    } catch {
+    } catch (requestError) {
+      if (openVideoRequestRef.current?.id !== requestId) return
+      if (requestError instanceof DOMException && requestError.name === "AbortError") return
       setAccessData(null)
       setAccessError("Video erişimi alınamadı.")
-      setAccessLoading(false)
+    } finally {
+      if (openVideoRequestRef.current?.id === requestId) {
+        openVideoRequestRef.current = null
+        setAccessLoading(false)
+      }
     }
   }
 
-  useEffect(() => {
-    if (!accessData?.watermark?.positionSeed) return
-    const refreshSeconds = accessData.watermark.refreshSeconds || 45
-    const timer = window.setInterval(() => {
-      setWatermarkStep((current) => current + 1)
-    }, refreshSeconds * 1000)
-
-    return () => {
-      window.clearInterval(timer)
-    }
-  }, [accessData?.watermark?.positionSeed, accessData?.watermark?.refreshSeconds])
-
-  useEffect(() => {
-    if (!accessData?.access || !selected) return
-    void postPlaybackEvent("player_loaded")
-
-    if (accessData.access.playerConfig.mode === "iframe") {
-      void postPlaybackEvent("play")
-      void postPlaybackEvent("watermark_rendered")
-      startHeartbeat()
-    }
-
-    return () => {
-      void postPlaybackEvent("complete")
-      stopHeartbeat()
-    }
-  }, [accessData?.access, selected, postPlaybackEvent, startHeartbeat, stopHeartbeat])
-
-  useEffect(() => {
-    return () => {
-      stopHeartbeat()
-    }
-  }, [stopHeartbeat])
-
-  const watermarkPosition = accessData?.watermark
-    ? pickWatermarkPosition(accessData.watermark.positionSeed, watermarkStep)
-    : WATERMARK_POSITIONS[0]
   const activeAccess = accessData?.access || null
+
+  function handlePlaybackStopped(message: string) {
+    setAccessData(null)
+    setPlaybackConflict(null)
+    setAccessError(message)
+  }
+
+  const conflictMessage = playbackConflict?.activePlayback?.videoTitle
+    ? `“${playbackConflict.activePlayback.videoTitle}” başka bir cihazda açık. Oradaki oynatmayı durdurup burada devam etmek ister misiniz?`
+    : "Eğitim başka bir cihazda açık. Oradaki oynatmayı durdurup burada devam etmek ister misiniz?"
 
   return (
     <>
+    {isAppSurface && (
     <div className="dna-app-only dna-app-page space-y-4">
       <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
         <div className="flex items-start justify-between gap-3">
@@ -388,70 +359,38 @@ export default function EducationPage() {
               Güvenli oynatma bağlantısı hazırlanıyor...
             </div>
           ) : accessError ? (
-            <div className="rounded-2xl border border-slate-300 bg-slate-50 p-4 text-sm text-slate-900">{accessError}</div>
+            <div className="rounded-2xl border border-slate-300 bg-slate-50 p-4 text-sm text-slate-900">
+              <p>{playbackConflict ? conflictMessage : accessError}</p>
+              {playbackConflict && (
+                <button
+                  type="button"
+                  onClick={() => void openVideo(playbackConflict.item, {
+                    takeover: true,
+                    playerSessionId: playbackConflict.playerSessionId,
+                  })}
+                  className="mt-3 w-full rounded-xl bg-blue-600 px-4 py-3 font-black text-white"
+                >
+                  Burada devam et
+                </button>
+              )}
+            </div>
           ) : accessData && activeAccess ? (
             <>
               <div className="mb-3 text-base font-black text-[#071b3a]">{accessData.video?.title || selected?.title || "Eğitim videosu"}</div>
-              <div className="relative overflow-hidden rounded-[20px] border border-slate-200 bg-[#06133d]">
-                <div className="relative aspect-video w-full">
-                  {activeAccess.playerConfig.mode === "iframe" && activeAccess.embedUrl ? (
-                    <iframe
-                      src={activeAccess.embedUrl}
-                      className="absolute inset-0 h-full w-full border-0"
-                      allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen;"
-                      allowFullScreen
-                      onLoad={() => {
-                        void postPlaybackEvent("watermark_rendered")
-                      }}
-                    />
-                  ) : activeAccess.playbackUrl ? (
-                    <video
-                      ref={nativeVideoRef}
-                      src={activeAccess.playbackUrl}
-                      controls
-                      playsInline
-                      className="absolute inset-0 h-full w-full bg-black object-contain"
-                      onLoadedData={() => {
-                        void postPlaybackEvent("watermark_rendered")
-                      }}
-                      onPlay={() => {
-                        void postPlaybackEvent("play", {
-                          playbackSeconds: nativeVideoRef.current?.currentTime || 0,
-                          durationSeconds: nativeVideoRef.current?.duration || null,
-                        })
-                        startHeartbeat()
-                      }}
-                      onPause={() => {
-                        void postPlaybackEvent("pause", {
-                          playbackSeconds: nativeVideoRef.current?.currentTime || 0,
-                          durationSeconds: nativeVideoRef.current?.duration || null,
-                        })
-                        stopHeartbeat()
-                      }}
-                      onEnded={() => {
-                        void postPlaybackEvent("complete", {
-                          playbackSeconds: nativeVideoRef.current?.currentTime || 0,
-                          durationSeconds: nativeVideoRef.current?.duration || null,
-                        })
-                        stopHeartbeat()
-                      }}
-                    />
-                  ) : (
-                    <div className="absolute inset-0 grid place-items-center text-sm text-white/80">Oynatma bağlantısı bulunamadı.</div>
-                  )}
-                  {accessData.watermark && (
-                    <div className={["pointer-events-none absolute z-10 max-w-[72%] rounded-xl border border-white/20 bg-black/45 px-3 py-2 text-[10px] font-medium tracking-[0.08em] text-white backdrop-blur-sm", watermarkPosition].join(" ")}>
-                      {accessData.watermark.displayText}
-                    </div>
-                  )}
-                </div>
-              </div>
+              <SecureEducationPlayer
+                videoId={accessData.video?.id || selected?.id || ""}
+                access={activeAccess}
+                watermark={accessData.watermark}
+                onPlaybackStopped={handlePlaybackStopped}
+              />
             </>
           ) : null}
         </section>
       )}
     </div>
+    )}
 
+    {!isAppSurface && (
     <div className="dna-web-only mx-auto max-w-7xl px-0 py-0 md:px-4 md:py-6">
       <div className="dna-card p-4 md:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -588,7 +527,19 @@ export default function EducationPage() {
 
               {accessError && (
                 <div className="mb-4 rounded-2xl border border-slate-300 bg-slate-50 p-4 text-sm text-slate-900">
-                  {accessError}
+                  <p>{playbackConflict ? conflictMessage : accessError}</p>
+                  {playbackConflict && (
+                    <button
+                      type="button"
+                      onClick={() => void openVideo(playbackConflict.item, {
+                        takeover: true,
+                        playerSessionId: playbackConflict.playerSessionId,
+                      })}
+                      className="mt-3 inline-flex rounded-xl bg-blue-600 px-4 py-2.5 font-semibold text-white transition hover:bg-blue-700"
+                    >
+                      Burada devam et
+                    </button>
+                  )}
                 </div>
               )}
 
@@ -606,72 +557,12 @@ export default function EducationPage() {
 
               {accessData && activeAccess && (
                 <>
-                  <div className="relative overflow-hidden rounded-[24px] border border-slate-200 bg-[#06133d]">
-                    <div className="relative aspect-video w-full">
-                      {activeAccess.playerConfig.mode === "iframe" && activeAccess.embedUrl ? (
-                        <iframe
-                          src={activeAccess.embedUrl}
-                          className="absolute inset-0 h-full w-full border-0"
-                          allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen;"
-                          allowFullScreen
-                          onLoad={() => {
-                            void postPlaybackEvent("watermark_rendered")
-                          }}
-                        />
-                      ) : activeAccess.playbackUrl ? (
-                        <video
-                          ref={nativeVideoRef}
-                          src={activeAccess.playbackUrl}
-                          controls
-                          playsInline
-                          className="absolute inset-0 h-full w-full bg-black object-contain"
-                          onLoadedData={() => {
-                            void postPlaybackEvent("watermark_rendered")
-                          }}
-                          onPlay={() => {
-                            void postPlaybackEvent("play", {
-                              playbackSeconds: nativeVideoRef.current?.currentTime || 0,
-                              durationSeconds: nativeVideoRef.current?.duration || null,
-                            })
-                            startHeartbeat()
-                          }}
-                          onPause={() => {
-                            void postPlaybackEvent("pause", {
-                              playbackSeconds: nativeVideoRef.current?.currentTime || 0,
-                              durationSeconds: nativeVideoRef.current?.duration || null,
-                            })
-                            stopHeartbeat()
-                          }}
-                          onEnded={() => {
-                            void postPlaybackEvent("complete", {
-                              playbackSeconds: nativeVideoRef.current?.currentTime || 0,
-                              durationSeconds: nativeVideoRef.current?.duration || null,
-                            })
-                            stopHeartbeat()
-                          }}
-                          onError={() => {
-                            void postPlaybackEvent("error")
-                            stopHeartbeat()
-                          }}
-                        />
-                      ) : (
-                        <div className="absolute inset-0 grid place-items-center text-sm text-white/80">
-                          Oynatma bağlantısı bulunamadı.
-                        </div>
-                      )}
-
-                      {accessData.watermark && (
-                        <div
-                          className={[
-                            "pointer-events-none absolute z-10 max-w-[74%] rounded-xl border border-white/20 bg-black/45 px-3 py-2 text-[10px] font-medium tracking-[0.08em] text-white backdrop-blur-sm transition-all duration-700 sm:max-w-[40%] sm:text-[11px]",
-                            watermarkPosition,
-                          ].join(" ")}
-                        >
-                          <div>{accessData.watermark.displayText}</div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                  <SecureEducationPlayer
+                    videoId={accessData.video?.id || selected.id}
+                    access={activeAccess}
+                    watermark={accessData.watermark}
+                    onPlaybackStopped={handlePlaybackStopped}
+                  />
 
                   <div className="mt-4 grid gap-3 md:grid-cols-3">
                     <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
@@ -706,6 +597,7 @@ export default function EducationPage() {
         </section>
       </div>
     </div>
+    )}
     </>
   )
 }

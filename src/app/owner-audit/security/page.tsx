@@ -174,6 +174,12 @@ function UserSecurityCard({ user }: { user: OwnerSecurityUser }) {
               Detay
             </Link>
             <OwnerSecurityActionButton targetUserId={user.userId} action="revoke_sessions" label="Oturumları düşür" variant="dark" />
+            <OwnerSecurityActionButton
+              targetUserId={user.userId}
+              action="reset_device_replacements"
+              label="Cihaz değişimini sıfırla"
+              confirmMessage="Bu kullanıcının 30 günlük cihaz değiştirme sayacı sıfırlansın mı? İşlem denetim kaydına yazılır."
+            />
             <OwnerSecurityActionButton targetUserId={user.userId} action="hide_from_security" label="Listeden gizle" />
             {(user.riskScore > 0 || user.manualReviewRequired || locked) ? (
               <OwnerSecurityActionButton targetUserId={user.userId} action="clear_risk" label="Riskten çıkar" />
@@ -205,7 +211,13 @@ function UserSecurityCard({ user }: { user: OwnerSecurityUser }) {
                       <span className="font-semibold text-slate-900">{device.type}</span> / {device.lastIp || "IP yok"}
                     </span>
                     {device.revokedAt ? (
-                      <span className="font-semibold text-slate-600">İptal</span>
+                      <OwnerSecurityActionButton
+                        targetUserId={user.userId}
+                        action="recover_device_trust"
+                        label="Güvenilir cihaz olarak aç"
+                        deviceId={device.id}
+                        confirmMessage="Bu iptal edilmiş cihaz yeniden güvenilir yapılacak. Kullanıcının cihazları kayıp olduğunda destek kurtarması için kullanın. Devam edilsin mi?"
+                      />
                     ) : (
                       <OwnerSecurityActionButton
                         targetUserId={user.userId}
@@ -213,6 +225,7 @@ function UserSecurityCard({ user }: { user: OwnerSecurityUser }) {
                         label="Cihazı iptal et"
                         variant="danger"
                         deviceId={device.id}
+                        confirmMessage="Bu cihazın oturumları ve aktif eğitim videosu hemen kapatılacak. Devam edilsin mi?"
                       />
                     )}
                   </div>

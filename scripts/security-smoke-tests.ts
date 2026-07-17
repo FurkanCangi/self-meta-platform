@@ -88,24 +88,59 @@ check("webhook timestamp tolerance is enforced", entitlements.includes("BILLING_
 check("TRY currency is required for grant validation", /event\.currency\s*!==\s*"TRY"/.test(entitlements), "missing TRY validation")
 
 const videoProtection = read("src/lib/security/videoProtection.ts")
+const playbackLease = read("src/lib/security/educationPlaybackLease.ts")
+const playbackLeaseMigration = read("supabase/migrations/20260717110915_education_video_single_playback.sql")
 check("video playback concurrency window exists", videoProtection.includes("EDUCATION_PLAYBACK_CONCURRENCY_WINDOW_SECONDS"), "missing concurrency window")
-check("concurrent playback block is implemented", videoProtection.includes("concurrent_playback_blocked"), "missing concurrent block")
+check("account-wide playback lease is implemented", playbackLease.includes("claim_education_video_playback") && playbackLeaseMigration.includes("user_id uuid primary key"), "missing account lease")
+check("playback claim is serialized per account", playbackLeaseMigration.includes("pg_advisory_xact_lock") && playbackLeaseMigration.includes("active_playback_exists"), "missing atomic account claim")
 check("provider-agnostic playback access exists", videoProtection.includes("createEducationVideoPlaybackAccess"), "missing provider-ready playback access")
 check("mock provider mode exists", videoProtection.includes('provider === "mock"'), "missing mock provider")
 check("bunny provider mode exists", videoProtection.includes('provider === "bunny"'), "missing bunny provider")
 check("bunny provider enforces ready status", videoProtection.includes('error: "video_provider_not_ready"'), "missing provider readiness gate")
 
 const eventsRoute = read("src/app/api/education/videos/[videoId]/events/route.ts")
-check("education events require playerSessionId", eventsRoute.includes("player_session_id_required"), "missing player session requirement")
-check("education events return HTTP 409 for concurrent playback", eventsRoute.includes("status: playback.error === \"concurrent_playback_blocked\" ? 409 : 500"), "missing 409 block")
+check("education events require playerSessionId and leaseId", eventsRoute.includes("playerSessionId:") && eventsRoute.includes("leaseId: z.string().uuid()"), "missing player/lease requirement")
+check("education events return HTTP 409 when lease is lost", eventsRoute.includes('error === "playback_lease_lost" ? 409 : 500'), "missing lease-lost 409")
+check(
+  "education events require device possession except safe release",
+  eventsRoute.includes('if (eventType !== "release")') &&
+    eventsRoute.includes("verifyDevicePossessionForRequest") &&
+    eventsRoute.includes("const possessionRequest = request.clone()"),
+  "missing event possession proof"
+)
 
 const accessRoute = read("src/app/api/education/videos/[videoId]/access/route.ts")
+const deviceProof = read("src/lib/security/deviceProof.ts")
+const deviceProofChallengeRoute = read("src/app/api/security/device-proof/challenge/route.ts")
+const browserDeviceIdentity = read("src/lib/security/browserDeviceIdentity.ts")
 const educationVideosRoute = read("src/app/api/education/videos/route.ts")
 const educationUploadRoute = read("src/app/api/education/videos/upload/route.ts")
 const ownerEducationClient = read("src/app/owner-audit/education/OwnerEducationClient.tsx")
 const educationVideoSql = read("sql/education_video_security.sql")
 check("access route returns provider field", accessRoute.includes("provider: playbackAccess.access.provider"), "missing provider response")
 check("access route returns playerConfig", accessRoute.includes("playerConfig: playbackAccess.access.playerConfig"), "missing playerConfig response")
+check("video access requires current device possession", accessRoute.includes("verifyDevicePossessionForRequest"), "missing access possession proof")
+check(
+  "device possession challenge binds exact raw request body",
+  deviceProof.includes("challenge.bodyHash") &&
+    deviceProof.includes("await params.request.clone().text()") &&
+    browserDeviceIdentity.includes("new TextEncoder().encode(params.body)"),
+  "missing exact body binding"
+)
+check(
+  "device possession proof is one-time and expired nonces are cleaned per user",
+  deviceProof.includes('device_possession_proof_replayed') &&
+    deviceProof.includes('.eq("user_id", params.userId)') &&
+    deviceProof.includes('.lt("expires_at", new Date().toISOString())'),
+  "missing nonce replay or cleanup control"
+)
+check(
+  "device possession challenge is allowlisted and rate limited",
+  deviceProof.includes("normalizeDevicePossessionTarget") &&
+    deviceProofChallengeRoute.includes("device-possession-challenge:") &&
+    deviceProofChallengeRoute.includes("checkRateLimit"),
+  "missing challenge allowlist or rate limit"
+)
 check("education video management endpoint has owner-only manage scope", educationVideosRoute.includes("scope\") === \"manage\"") && educationVideosRoute.includes("video_manage_forbidden"), "missing education manage scope guard")
 check("education upload endpoint creates signed upload URLs", educationUploadRoute.includes("createSignedUploadUrl") && educationUploadRoute.includes("video_upload_forbidden"), "missing signed owner upload endpoint")
 check("education upload endpoint validates video mime types", educationUploadRoute.includes("video_upload_type_invalid") && educationUploadRoute.includes("video/quicktime"), "missing education video upload type guard")
@@ -239,6 +274,7 @@ const authCallbackRoute = read("src/app/auth/callback/route.ts")
 const sessionRegisterRoute = read("src/app/api/security/session/register/route.ts")
 const profileSettingsPage = read("src/app/profile-setting/page.tsx")
 const profileDevicesPanel = read("src/app/profile-setting/DeviceManagementPanel.tsx")
+const legalAcceptanceGate = read("src/app/components/app-shell/LegalAcceptanceGate.tsx")
 const proxy = read("src/proxy.ts")
 check("owner security read route requires owner allowlist", ownerSecurityRoute.includes("assertOwnerAuditAccess"), "owner security route missing allowlist")
 check("owner security action route requires trusted mutation", ownerSecurityActionRoute.includes("requireTrustedMutation"), "owner security action missing trusted mutation")
@@ -255,11 +291,11 @@ check("owner security scenario tests cover mock attacks", ownerSecurityScenarioT
 check("owner security scenario tests cover clear risk", ownerSecurityScenarioTests.includes("clear risk resets risk state and lock"), "owner clear risk scenario missing")
 check("owner security scenario tests cover clear event type", ownerSecurityScenarioTests.includes("clear event type marks matching events resolved"), "owner clear event type scenario missing")
 check("owner security scenario tests avoid live Supabase", !ownerSecurityScenarioTests.includes("createSupabaseAdminClient"), "scenario test should not use live Supabase")
-check("session registration enforces max three device slots", sessionRegistration.includes("MAX_REGISTERED_DEVICES = 3") && sessionRegistration.includes("registeredDevices.length >= MAX_REGISTERED_DEVICES"), "max three device check missing")
-check("session registration separates desktop mobile and tablet slots", sessionRegistration.includes('deviceType === "mobile"') && sessionRegistration.includes('deviceType === "tablet"') && !sessionRegistration.includes('"handheld"'), "device slots should not collapse mobile/tablet")
+check("session registration enforces max three trusted devices", sessionRegistration.includes("MAX_REGISTERED_DEVICES = 3") && sessionRegistration.includes("occupiedDeviceSlots >= MAX_REGISTERED_DEVICES"), "max three device check missing")
+check("session registration allows any mix of device types", !sessionRegistration.includes("sameSlotDevice") && !sessionRegistration.includes("deviceSlot("), "device types must not reserve separate slots")
 check("session registration no longer blocks same slot second device", !sessionRegistration.includes("device_slot_unavailable"), "same slot device block should be relaxed")
-check("session registration reuses same slot before max-device block", sessionRegistration.indexOf("sameSlotDevice") < sessionRegistration.indexOf("registeredDevices.length >= MAX_REGISTERED_DEVICES"), "same slot reuse must happen before max device block")
-check("automatic lock threshold is relaxed for test period", /const LOCK_THRESHOLD = 160/.test(anomalyDetection), "automatic lock threshold not relaxed")
+check("session registration replaces only the same device session", sessionRegistration.includes('.eq("device_id", device.id)') && !sessionRegistration.includes('eventType: "active_session_replaced"'), "session replacement must be device-scoped")
+check("anomaly scoring never auto-locks the account", anomalyDetection.includes('action: "none" | "manual_review"') && !anomalyDetection.includes('action: "temporary_lock"'), "automatic account lock must be disabled")
 check("anomaly scoring tracks frequent device changes", anomalyDetection.includes("frequent_device_changes") && anomalyDetection.includes("sık cihaz ekleme/kaldırma"), "frequent device change scoring missing")
 check("test security exempt emails exist", securityExemptions.includes("SECURITY_TEST_EXEMPT_EMAILS") && securityExemptions.includes("busranurtohan@gmail.com"), "test security exempt emails missing")
 check("test exempt users still get session fingerprint audit", !appSession.includes("if (lockExemptUser) return { ok: true, sessionId }"), "lock exempt users should still be audited")
@@ -268,14 +304,34 @@ check("device management cookie is signed", deviceManagementAccess.includes("cre
 check("login keeps authenticated user in device management mode on device limit", authLoginRoute.includes("setDeviceManagementCookie(response, userId)") && authLoginRoute.includes('code === "device_limit_exceeded"'), "login device-limit handoff missing")
 check("google auth keeps authenticated user in device management mode on device limit", authCallbackRoute.includes("setDeviceManagementCookie(response, user.id)") && authCallbackRoute.includes('sessionResult.error === "device_limit_exceeded"'), "google device-limit handoff missing")
 check("session register clears device management cookie after success", sessionRegisterRoute.includes("clearDeviceManagementCookie(response)"), "device management cookie not cleared after register")
-check("device management API accepts management cookie only after auth user match", deviceManagementRoute.includes("verifyDeviceManagementToken(deviceManagementToken, user.id)"), "device management token check missing")
+check(
+  "device management API validates signed management identity and exposes only its pending request",
+  deviceManagementRoute.includes("readDeviceManagementToken") &&
+    deviceManagementRoute.includes("managementToken.userId") &&
+    deviceManagementRoute.includes("access.pendingToken?.deviceId") &&
+    deviceManagementRoute.includes('access.mode !== "active_session"'),
+  "signed pending-only management access missing"
+)
 check("device management API revokes own devices only", deviceManagementRoute.includes('.eq("user_id", access.user.id)') && deviceManagementRoute.includes('action: z.literal("revoke")'), "self-device revoke guard missing")
 check("device management API records self revoke audit event", deviceManagementRoute.includes("user_device_revoked_self"), "self revoke audit missing")
-check("device management API reevaluates risk after self revoke", deviceManagementRoute.includes("evaluateAccountRisk(access.user.id)"), "self revoke risk evaluation missing")
+check("device management API does not auto-lock after self revoke", !deviceManagementRoute.includes("evaluateAccountRisk(access.user.id)"), "self revoke must remain an audited user action")
 check("proxy allows profile settings during device management mode", proxy.includes("DEVICE_MANAGEMENT_COOKIE") && proxy.includes('request.nextUrl.pathname === "/profile-setting"'), "proxy device-management settings exception missing")
+check(
+  "legal acceptance gate does not hide device approval and recovery",
+  legalAcceptanceGate.includes('pathname === "/profile-setting"') &&
+    legalAcceptanceGate.includes('searchParams.get("tab") === "devices"') &&
+    legalAcceptanceGate.includes("isDeviceSecurityManagement || loading"),
+  "device-management screen can be hidden behind the legal acceptance gate"
+)
 check("profile settings renders device management panel", profileSettingsPage.includes("DeviceManagementPanel") && profileSettingsPage.includes("deviceLimitMode"), "settings device panel missing")
-check("device panel can continue after revoking old device", profileDevicesPanel.includes("/api/security/session/register") && profileDevicesPanel.includes("Bu cihazla devam et"), "continue with this device flow missing")
-check("device panel explains 1 desktop 1 phone 1 tablet policy", profileDevicesPanel.includes("1 bilgisayar, 1 telefon ve 1 tablet") && profileDevicesPanel.includes("{activeDevices.length}/3"), "three-slot device policy missing in panel")
+check(
+  "capped pending device directs removal to an existing trusted device",
+  profileDevicesPanel.includes("Mevcut güvenilir cihazlarınızdan birinde") &&
+    profileDevicesPanel.includes('/login?device_retry=1') &&
+    !profileDevicesPanel.includes("Bu cihazla devam et"),
+  "safe device-limit recovery guidance missing"
+)
+check("device panel explains type-neutral three-device policy", profileDevicesPanel.includes("türü fark etmeksizin en fazla") && profileDevicesPanel.includes("{activeDevices.length}/{maxDevices}"), "three-device policy missing in panel")
 
 const ownerMemberActionRoute = read("src/app/api/owner-audit/member/action/route.ts")
 const ownerMemberActions = read("src/lib/owner/ownerMemberActions.ts")

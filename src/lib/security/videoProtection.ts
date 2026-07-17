@@ -33,6 +33,8 @@ export type EducationVideoAsset = {
 export type EducationVideoWatermark = {
   code: string
   displayText: string
+  maskedEmail: string
+  issuedAt: string
   qrPayload: string
   refreshSeconds: number
   positionSeed: string
@@ -117,6 +119,7 @@ export async function getRequestAuditContext() {
 export function buildEducationVideoWatermark(params: {
   user: User
   videoId: string
+  playerSessionId: string
   issuedAt?: Date
 }): EducationVideoWatermark {
   const issuedAt = params.issuedAt || new Date()
@@ -126,21 +129,29 @@ export function buildEducationVideoWatermark(params: {
   const timestamp = issuedAt.toISOString().replace(/[-:T.Z]/g, "").slice(0, 12)
   const userFragment = params.user.id.replace(/-/g, "").slice(0, 8).toUpperCase()
   const videoFragment = params.videoId.replace(/[^a-z0-9]/gi, "").slice(0, 8).toUpperCase() || "VIDEO"
+  const playerFragment = createHash("sha256")
+    .update(params.playerSessionId)
+    .digest("hex")
+    .slice(0, 6)
+    .toUpperCase()
   const randomFragment = randomBytes(3).toString("hex").toUpperCase()
-  const code = `SM-${userFragment}-${videoFragment}-${timestamp}-${randomFragment}`
+  const code = `SM-${userFragment}-${videoFragment}-${playerFragment}-${timestamp}-${randomFragment}`
 
   return {
     code,
     displayText: `${maskedEmail} | ${code}`,
+    maskedEmail,
+    issuedAt: issuedAt.toISOString(),
     qrPayload: JSON.stringify({
       c: code,
       u: userFragment,
       v: params.videoId,
+      p: playerFragment,
       t: issuedAt.toISOString(),
     }),
     refreshSeconds: EDUCATION_WATERMARK_REFRESH_SECONDS,
     positionSeed: createHash("sha256")
-      .update(`${params.user.id}:${params.videoId}:${timestamp}:${randomFragment}`)
+      .update(`${params.user.id}:${params.videoId}:${params.playerSessionId}:${timestamp}:${randomFragment}`)
       .digest("hex")
       .slice(0, 16),
   }
@@ -177,6 +188,9 @@ export async function createEducationVideoAccessToken(params: {
   userId: string
   videoId: string
   watermarkCode: string
+  appSessionId: string
+  deviceId: string
+  playerSessionId: string
 }) {
   const rawToken = randomBytes(32).toString("base64url")
   const tokenHash = hashVideoAccessToken(rawToken)
@@ -189,6 +203,9 @@ export async function createEducationVideoAccessToken(params: {
       video_id: params.videoId,
       token_hash: tokenHash,
       watermark_code: params.watermarkCode,
+      app_session_id: params.appSessionId,
+      device_id: params.deviceId,
+      player_session_id: params.playerSessionId,
       expires_at: expiresAt,
     })
     .select("id, expires_at")
@@ -204,6 +221,23 @@ export async function createEducationVideoAccessToken(params: {
     tokenId: String(data.id),
     expiresAt: String(data.expires_at),
   }
+}
+
+export async function revokeEducationVideoAccessToken(params: {
+  admin: SupabaseClient
+  userId: string
+  tokenId: string
+}) {
+  const { error } = await params.admin
+    .from("education_video_access_tokens")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("id", params.tokenId)
+    .eq("user_id", params.userId)
+    .is("revoked_at", null)
+
+  return error
+    ? { ok: false as const, error: "token_revoke_failed" }
+    : { ok: true as const }
 }
 
 export async function verifyEducationVideoAccessToken(params: {

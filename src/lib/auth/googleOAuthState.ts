@@ -13,17 +13,21 @@ export type GoogleOAuthState = {
   surface: "web" | "app"
   deviceId: string
   deviceType: "desktop" | "mobile" | "tablet" | "unknown"
+  identityVersion: "p256-v1" | "legacy-session"
+  publicKeyJwk: string
+  publicKeyFingerprint: string
+  proofChallengeToken: string
+  proofSignature: string
+  legacyDeviceId: string
   legalAccepted: boolean
   createdAt: number
   nonce: string
 }
 
 function stateSecret() {
-  return (
-    process.env.AUTH_STATE_SECRET ||
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    "dna-google-oauth-dev-secret"
-  )
+  if (process.env.AUTH_STATE_SECRET) return process.env.AUTH_STATE_SECRET
+  if (process.env.NODE_ENV !== "production") return "dna-google-oauth-dev-secret"
+  throw new Error("AUTH_STATE_SECRET is required in production")
 }
 
 function sign(payload: string) {
@@ -52,6 +56,10 @@ export function decodeGoogleOAuthState(value?: string | null): GoogleOAuthState 
     if (parsed.mode !== "signup" && parsed.mode !== "login") return null
     if (parsed.surface !== "web" && parsed.surface !== "app") return null
     if (!parsed.deviceId || parsed.deviceId.length < 16 || parsed.deviceId.length > 200) return null
+    if (parsed.identityVersion !== "p256-v1" && parsed.identityVersion !== "legacy-session") return null
+    if (String(parsed.publicKeyJwk || "").length > 2000) return null
+    if (String(parsed.proofChallengeToken || "").length > 3000) return null
+    if (String(parsed.proofSignature || "").length > 1000) return null
     if (!parsed.createdAt || Date.now() - parsed.createdAt > GOOGLE_OAUTH_STATE_MAX_AGE_SECONDS * 1000) return null
     return parsed
   } catch {

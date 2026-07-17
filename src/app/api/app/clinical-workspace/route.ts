@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
+import { requireConfirmedUser } from "@/lib/security/apiGuards";
 import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type ClientRow = {
   id: string;
@@ -62,15 +62,9 @@ function compactText(value?: string | null, maxLength = 140) {
 }
 
 export async function GET() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user?.id) {
-    return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
-  }
+  const auth = await requireConfirmedUser();
+  if (!auth.ok) return auth.response;
+  const user = auth.user;
 
   const rateLimit = await checkRateLimit({
     key: `clinical-workspace:${user.id}`,

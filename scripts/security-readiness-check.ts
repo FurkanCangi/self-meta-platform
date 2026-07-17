@@ -83,10 +83,15 @@ for (const key of [
   "NEXT_PUBLIC_SUPABASE_URL",
   "NEXT_PUBLIC_SUPABASE_ANON_KEY",
   "SUPABASE_SERVICE_ROLE_KEY",
+  "APP_SESSION_SECRET",
+  "AUTH_STATE_SECRET",
+  "DEVICE_PROOF_SECRET",
+  "DEVICE_APPROVAL_SECRET",
   "PAYMENT_WEBHOOK_SECRET",
   "EDUCATION_VIDEO_BUCKET",
   "VIDEO_OBS_API_BASE_URL",
   "VIDEO_PROVIDER",
+  "EDUCATION_NETWORK_POLICY_MODE",
   "BUNNY_STREAM_LIBRARY_ID",
   "BUNNY_STREAM_API_KEY",
   "BUNNY_STREAM_SIGNING_KEY",
@@ -119,6 +124,19 @@ for (const sqlFile of [
   "sql/dna_chat_v1.sql",
 ]) {
   if (!exists(sqlFile)) add("missing SQL migration file", sqlFile)
+}
+
+for (const migrationFile of [
+  "supabase/migrations/20260717110912_account_device_trust.sql",
+  "supabase/migrations/20260717110915_education_video_single_playback.sql",
+  "supabase/migrations/20260717111042_security_device_video_indexes.sql",
+  "supabase/migrations/20260717130825_seal_app_session_cookie_and_bind_auth_session.sql",
+  "supabase/migrations/20260717130827_atomic_security_cleanup.sql",
+  "supabase/migrations/20260717130830_harden_device_approval_and_playback_races.sql",
+  "supabase/migrations/20260717131530_close_direct_security_table_access.sql",
+  "supabase/migrations/20260717132102_finalize_security_advisor_cleanup.sql",
+]) {
+  if (!exists(migrationFile)) add("missing versioned Supabase migration", migrationFile)
 }
 
 const paymentSecuritySql = read("sql/payment_security.sql")
@@ -176,6 +194,7 @@ for (const file of serviceRoleFiles) {
   const allowed =
     file === "src/lib/supabase/admin.ts" ||
     file === "src/lib/owner/ownerAudit.ts" ||
+    file === "src/proxy.ts" ||
     file === ".env.example" ||
     file.startsWith("scripts/")
   if (!allowed) add("service role key outside server-only allowlist", file)

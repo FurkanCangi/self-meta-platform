@@ -420,10 +420,48 @@ export async function applyOwnerSecurityActionWithClient(
   } else if (params.action === "revoke_device") {
     if (!params.deviceId) return { ok: false as const, error: "device_id_required" }
     const { error } = await runEqChain(
-      admin.from("account_devices").update({ revoked_at: timestamp }),
+      admin.from("account_devices").update({
+        revoked_at: timestamp,
+        verification_required: true,
+        verified_at: null,
+      }),
       [["id", params.deviceId], ["user_id", params.targetUserId]]
     )
     if (error) return { ok: false as const, error: "device_revoke_failed" }
+  } else if (params.action === "reset_device_replacements") {
+    const { error } = await admin.from("account_device_changes").insert({
+      user_id: params.targetUserId,
+      action: "owner_replacement_reset",
+      actor_user_id: params.actorUserId,
+      reason: params.reason,
+      metadata,
+      created_at: timestamp,
+    })
+    if (error) return { ok: false as const, error: "device_replacement_reset_failed" }
+  } else if (params.action === "recover_device_trust") {
+    if (!params.deviceId) return { ok: false as const, error: "device_id_required" }
+    const { error } = await runEqChain(
+      admin.from("account_devices").update({
+        revoked_at: null,
+        verification_required: false,
+        verified_at: timestamp,
+        ever_verified_at: timestamp,
+        verification_method: "legacy_transition",
+        legacy_transition_until: new Date(new Date(timestamp).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      }),
+      [["id", params.deviceId], ["user_id", params.targetUserId]]
+    )
+    if (error) return { ok: false as const, error: "device_trust_recovery_failed" }
+    const { error: auditError } = await admin.from("account_device_changes").insert({
+      user_id: params.targetUserId,
+      device_id: params.deviceId,
+      action: "owner_all_lost_reset",
+      actor_user_id: params.actorUserId,
+      reason: params.reason,
+      metadata,
+      created_at: timestamp,
+    })
+    if (auditError) return { ok: false as const, error: "device_trust_recovery_audit_failed" }
   } else if (params.action === "mark_review" || params.action === "clear_review") {
     const { error } = await admin.from("account_security_state").upsert(
       {

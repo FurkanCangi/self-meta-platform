@@ -12,6 +12,7 @@ type ActionButtonProps = {
   deviceId?: string | null
   eventType?: string | null
   lockMinutes?: number
+  confirmMessage?: string
 }
 
 function buttonClass(variant: ActionButtonProps["variant"]) {
@@ -36,6 +37,7 @@ export function OwnerSecurityActionButton({
   deviceId,
   eventType,
   lockMinutes,
+  confirmMessage,
 }: ActionButtonProps) {
   const router = useRouter()
   const [pending, startTransition] = useTransition()
@@ -44,6 +46,7 @@ export function OwnerSecurityActionButton({
   function runAction(event?: MouseEvent<HTMLButtonElement>) {
     event?.preventDefault()
     event?.stopPropagation()
+    if (confirmMessage && !window.confirm(confirmMessage)) return
 
     setError("")
     startTransition(async () => {

@@ -1,8 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { useSearchParams } from "next/navigation";
 import AuthLayout from "../components/auth/AuthLayout";
+import {
+  createBrowserDeviceProof,
+  type BrowserDeviceProofFields,
+} from "@/lib/security/browserDeviceIdentity";
 
 function sanitizeNextPath(value: string | null) {
   if (!value || !value.startsWith("/") || value.startsWith("//")) {
@@ -40,17 +44,17 @@ function formatLoginErrorCode(code?: string | null) {
   }
   if (code === "rate_limited") return "Çok sık giriş denemesi yapıldı. Lütfen birkaç dakika sonra tekrar deneyin.";
   if (code === "device_limit_exceeded") {
-    return "Bu hesap 1 bilgisayar, 1 telefon ve 1 tablet hakkıyla kullanılabilir. Yeni cihaz eklemek için önce mevcut cihazlardan biri kaldırılmalıdır.";
+    return "Bu hesapta 3 güvenilir cihaz kayıtlı. Yeni cihaz için mevcut cihazlarınızdan birini kaldırın.";
   }
-  if (code === "device_slot_unavailable") {
-    return "Bu cihaz türü için hak dolu. Devam etmek için önce aynı türdeki eski cihazı kaldırın.";
-  }
+  if (code === "replacement_limit_exceeded") return "30 gün içindeki 2 cihaz değiştirme hakkı kullanılmış. Destek ekibi güvenli sıfırlama yapabilir.";
+  if (code === "trusted_device_required") return "Bu cihazı onaylayacak güvenilir cihaz bulunamadı. Destek üzerinden güvenli cihaz sıfırlaması gerekir.";
   if (code === "device_revoked") return "Bu cihaz için erişim kapatılmış görünüyor.";
   if (code === "account_temporarily_locked") return "Şüpheli kullanım nedeniyle hesap geçici olarak kilitlendi.";
   if (code === "account_suspended") return "Hesap güvenlik nedeniyle askıya alınmış görünüyor.";
   if (code === "device_id_invalid") {
     return "Bu tarayıcı cihaz bilgisini oluşturamadı. Sayfayı yenileyip tekrar deneyin.";
   }
+  if (code.startsWith("device_proof_")) return "Bu tarayıcının güvenli cihaz doğrulaması tamamlanamadı. Sayfayı yenileyip tekrar deneyin.";
   if (code === "device_count_failed") {
     return "Cihaz kayıtları kontrol edilemedi. Lütfen tekrar deneyin.";
   }
@@ -69,26 +73,16 @@ function formatLoginErrorCode(code?: string | null) {
   return "Giriş sırasında bir hata oluştu.";
 }
 
-function getOrCreateDeviceId() {
-  const key = "dna_device_id";
-  const existing = window.localStorage.getItem(key);
-  if (existing && existing.length >= 16) return existing;
-
-  const next =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
-
-  window.localStorage.setItem(key, next);
-  return next;
-}
-
-function detectDeviceType() {
-  const ua = navigator.userAgent || "";
-  if (/ipad|tablet|playbook|silk/i.test(ua)) return "tablet";
-  if (/mobi|iphone|android/i.test(ua)) return "mobile";
-  return "desktop";
-}
+const EMPTY_DEVICE_PROOF: BrowserDeviceProofFields = {
+  deviceId: "",
+  deviceType: "unknown",
+  identityVersion: "legacy-session",
+  publicKeyJwk: "",
+  publicKeyFingerprint: "",
+  proofChallengeToken: "",
+  proofSignature: "",
+  legacyDeviceId: "",
+};
 
 type LoginPageProps = {
   forcedSurface?: "app" | "web";
@@ -101,30 +95,70 @@ export default function LoginPage({ forcedSurface }: LoginPageProps = {}) {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [deviceId, setDeviceId] = useState("");
-  const [deviceType, setDeviceType] = useState("desktop");
+  const [deviceProof, setDeviceProof] = useState<BrowserDeviceProofFields>(EMPTY_DEVICE_PROOF);
   const [err, setErr] = useState<string | null>(() => formatLoginErrorCode(sp.get("error")));
   const [notice, setNotice] = useState<string | null>(() =>
-    sp.get("confirmed") === "1" ? "E-postanız doğrulandı. Şimdi giriş yapabilirsiniz." : null
+    sp.get("confirmed") === "1"
+      ? "E-postanız doğrulandı. Şimdi giriş yapabilirsiniz."
+      : sp.get("device_approved") === "1"
+        ? "Cihazınız onaylandı. Güvenli oturumu açmak için son kez giriş yapın."
+        : sp.get("device_retry") === "1"
+          ? "Cihaz durumunuz değiştiyse yeniden giriş yaparak devam edebilirsiniz."
+          : null
   );
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const passwordReady = useRef(false);
+  const googleReady = useRef(false);
 
-  useEffect(() => {
-    setDeviceId(getOrCreateDeviceId());
-    setDeviceType(detectDeviceType());
-  }, []);
-
-  function onSubmit() {
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    if (passwordReady.current) {
+      passwordReady.current = false;
+      return;
+    }
+    event.preventDefault();
+    const form = event.currentTarget;
     setErr(null);
     setNotice(null);
     setLoading(true);
+    let proof: BrowserDeviceProofFields;
+    try {
+      proof = await createBrowserDeviceProof();
+    } catch {
+      setErr("Güvenli cihaz doğrulamasına ulaşılamadı. İnternet bağlantınızı kontrol edip yeniden deneyin.");
+      setLoading(false);
+      return;
+    }
+    setDeviceProof(proof);
+    requestAnimationFrame(() => {
+      passwordReady.current = true;
+      form.requestSubmit();
+    });
   }
 
-  function onGoogleSubmit() {
+  async function onGoogleSubmit(event: FormEvent<HTMLFormElement>) {
+    if (googleReady.current) {
+      googleReady.current = false;
+      return;
+    }
+    event.preventDefault();
+    const form = event.currentTarget;
     setErr(null);
     setNotice(null);
     setGoogleLoading(true);
+    let proof: BrowserDeviceProofFields;
+    try {
+      proof = await createBrowserDeviceProof();
+    } catch {
+      setErr("Güvenli cihaz doğrulamasına ulaşılamadı. İnternet bağlantınızı kontrol edip yeniden deneyin.");
+      setGoogleLoading(false);
+      return;
+    }
+    setDeviceProof(proof);
+    requestAnimationFrame(() => {
+      googleReady.current = true;
+      form.requestSubmit();
+    });
   }
 
   return (
@@ -133,8 +167,7 @@ export default function LoginPage({ forcedSurface }: LoginPageProps = {}) {
         <form className="mt-3 space-y-3" action="/api/auth/login" method="post" onSubmit={onSubmit}>
           <input type="hidden" name="surface" value={appSurface ? "app" : "web"} />
           <input type="hidden" name="next" value={nextPath} />
-          <input type="hidden" name="deviceId" value={deviceId} />
-          <input type="hidden" name="deviceType" value={deviceType} />
+          <DeviceProofInputs proof={deviceProof} />
           {sp.get("next") ? (
             <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
               Devam etmek istediğiniz sayfaya geçmek için giriş yapın.
@@ -191,8 +224,7 @@ export default function LoginPage({ forcedSurface }: LoginPageProps = {}) {
           <input type="hidden" name="mode" value="login" />
           <input type="hidden" name="surface" value={appSurface ? "app" : "web"} />
           <input type="hidden" name="next" value={nextPath} />
-          <input type="hidden" name="deviceId" value={deviceId} />
-          <input type="hidden" name="deviceType" value={deviceType} />
+          <DeviceProofInputs proof={deviceProof} />
           <button
             type="submit"
             disabled={googleLoading}
@@ -211,5 +243,20 @@ export default function LoginPage({ forcedSurface }: LoginPageProps = {}) {
         </div>
       </div>
     </AuthLayout>
+  );
+}
+
+function DeviceProofInputs({ proof }: { proof: BrowserDeviceProofFields }) {
+  return (
+    <>
+      <input type="hidden" name="deviceId" value={proof.deviceId} />
+      <input type="hidden" name="deviceType" value={proof.deviceType} />
+      <input type="hidden" name="identityVersion" value={proof.identityVersion} />
+      <input type="hidden" name="publicKeyJwk" value={proof.publicKeyJwk} />
+      <input type="hidden" name="publicKeyFingerprint" value={proof.publicKeyFingerprint} />
+      <input type="hidden" name="proofChallengeToken" value={proof.proofChallengeToken} />
+      <input type="hidden" name="proofSignature" value={proof.proofSignature} />
+      <input type="hidden" name="legacyDeviceId" value={proof.legacyDeviceId} />
+    </>
   );
 }
