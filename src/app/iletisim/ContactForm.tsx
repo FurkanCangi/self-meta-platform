@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ListFilter, Mail, PenLine, Send, UserRound } from "lucide-react";
+import { AlertCircle, CheckCircle2, ListFilter, Mail, PenLine, Send, ShieldCheck, UserRound } from "lucide-react";
 import styles from "../marketing-pages.module.css";
 
 function supportErrorMessage(code?: string) {
@@ -48,21 +48,25 @@ export default function ContactForm() {
     ticketData.set("deviceType", detectDeviceType());
 
     startTransition(async () => {
-      const response = await fetch("/api/support/tickets", {
-        method: "POST",
-        headers: {
-          "x-dna-request": "same-origin",
-        },
-        body: ticketData,
-      });
-      const payload = await response.json().catch(() => null);
-      if (!response.ok || !payload?.ok) {
-        setError(supportErrorMessage(payload?.error));
-        return;
-      }
+      try {
+        const response = await fetch("/api/support/tickets", {
+          method: "POST",
+          headers: {
+            "x-dna-request": "same-origin",
+          },
+          body: ticketData,
+        });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok || !payload?.ok) {
+          setError(supportErrorMessage(payload?.error));
+          return;
+        }
 
-      setMessage("Mesajınız güvenli şekilde alındı. En kısa sürede size dönüş yapacağız.");
-      form.reset();
+        setMessage("Mesajınız alındı. Ekibimiz en kısa sürede sizinle iletişime geçecek.");
+        form.reset();
+      } catch {
+        setError("Bağlantı kurulamadı. Lütfen internet bağlantınızı kontrol edip tekrar deneyin.");
+      }
     });
   }
 
@@ -74,48 +78,68 @@ export default function ContactForm() {
         </span>
         <span>
           <strong>Mesajınızı bize iletin</strong>
-          <small>Formu doldurun, size dönüş yapalım.</small>
+          <small>Konunuzu paylaşın, doğru ekip size dönüş yapsın.</small>
         </span>
       </div>
 
       <div className={styles.contactFormGrid}>
-        <label className={styles.contactField}>
-          <UserRound size={22} />
-          <input name="requesterName" type="text" placeholder="Ad Soyad" autoComplete="name" maxLength={120} />
+        <label className={styles.contactFieldGroup}>
+          <span className={styles.contactFieldLabel}>Ad Soyad</span>
+          <span className={styles.contactField}>
+            <UserRound size={21} />
+            <input name="requesterName" type="text" placeholder="Adınız ve soyadınız" autoComplete="name" maxLength={120} />
+          </span>
         </label>
 
-        <label className={styles.contactField}>
-          <Mail size={22} />
-          <input name="email" type="email" placeholder="E-posta" autoComplete="email" required maxLength={180} />
+        <label className={styles.contactFieldGroup}>
+          <span className={styles.contactFieldLabel}>E-posta</span>
+          <span className={styles.contactField}>
+            <Mail size={21} />
+            <input name="email" type="email" placeholder="ornek@eposta.com" autoComplete="email" required maxLength={180} />
+          </span>
         </label>
 
-        <label className={`${styles.contactField} ${styles.contactFieldFull}`}>
-          <ListFilter size={22} />
-          <select name="categoryLabel" defaultValue="" required>
-            <option value="" disabled>
-              Konu seçin
-            </option>
-            <option>Kurumsal kullanım</option>
-            <option>Eğitim programı</option>
-            <option>Deterministik raporlama</option>
-            <option>Akademik iş birliği</option>
-            <option>Diğer</option>
-          </select>
+        <label className={`${styles.contactFieldGroup} ${styles.contactFieldFull}`}>
+          <span className={styles.contactFieldLabel}>Konu</span>
+          <span className={styles.contactField}>
+            <ListFilter size={21} />
+            <select name="categoryLabel" defaultValue="" required>
+              <option value="" disabled>
+                İletişim konusunu seçin
+              </option>
+              <option>Kurumsal kullanım</option>
+              <option>Eğitim programı</option>
+              <option>AI destekli raporlama</option>
+              <option>Akademik iş birliği</option>
+              <option>Diğer</option>
+            </select>
+          </span>
         </label>
 
-        <label className={`${styles.contactField} ${styles.contactTextarea} ${styles.contactFieldFull}`}>
-          <PenLine size={22} />
-          <textarea name="description" placeholder="Mesajınız" required minLength={10} maxLength={4000} />
+        <label className={`${styles.contactFieldGroup} ${styles.contactFieldFull}`}>
+          <span className={styles.contactFieldLabel}>Mesajınız</span>
+          <span className={`${styles.contactField} ${styles.contactTextarea}`}>
+            <PenLine size={21} />
+            <textarea
+              name="description"
+              placeholder="Size nasıl yardımcı olabiliriz?"
+              required
+              minLength={10}
+              maxLength={4000}
+            />
+          </span>
         </label>
       </div>
 
       {message ? (
-        <div className="mt-5 rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-bold text-cyan-800">
+        <div className={`${styles.contactStatus} ${styles.contactStatusSuccess}`} role="status" aria-live="polite">
+          <CheckCircle2 size={19} />
           {message}
         </div>
       ) : null}
       {error ? (
-        <div className="mt-5 rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm font-bold text-slate-900">
+        <div className={`${styles.contactStatus} ${styles.contactStatusError}`} role="alert" aria-live="assertive">
+          <AlertCircle size={19} />
           {error}
         </div>
       ) : null}
@@ -124,6 +148,11 @@ export default function ContactForm() {
         <Send size={21} strokeWidth={2.2} />
         <span>{pending ? "Gönderiliyor..." : "Gönder"}</span>
       </button>
+
+      <p className={styles.contactPrivacyNote}>
+        <ShieldCheck size={16} />
+        Bilgileriniz yalnızca talebinize dönüş yapmak için kullanılır.
+      </p>
     </form>
   );
 }

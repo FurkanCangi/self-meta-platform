@@ -3,10 +3,12 @@ import { notFound } from "next/navigation";
 import FooterContact from "../../components/FooterContact";
 import LandingHeader from "../../components/LandingHeader";
 import styles from "../../marketing-pages.module.css";
+import CollaborationPage from "../CollaborationPage";
 import DataNetworkPage from "../DataNetworkPage";
 import ProjectSupportPage from "../ProjectSupportPage";
 import ResearchNotesClient from "../ResearchNotesClient";
 import { getResearchPage, researchPages } from "../researchContent";
+import { getResearchNotes } from "../researchNotesData";
 
 type ResearchDetailPageProps = {
   params: Promise<{
@@ -41,7 +43,7 @@ export default async function ResearchDetailPage({ params }: ResearchDetailPageP
     return (
       <div className={styles.page}>
         <LandingHeader />
-        <ResearchNotesClient />
+        <ResearchNotesClient notes={getResearchNotes()} />
         <FooterContact />
       </div>
     );
@@ -53,6 +55,10 @@ export default async function ResearchDetailPage({ params }: ResearchDetailPageP
 
   if (slug === "tez-ve-proje-destegi") {
     return <ProjectSupportPage />;
+  }
+
+  if (slug === "is-birlikleri") {
+    return <CollaborationPage />;
   }
 
   const HeroIcon = page.icon;

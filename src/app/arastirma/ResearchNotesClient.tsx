@@ -1,282 +1,138 @@
 "use client";
 
-import Link from "next/link";
-import type { CSSProperties } from "react";
 import { useMemo, useState } from "react";
 import {
-  BarChart3,
-  Bookmark,
+  ArrowUpRight,
+  BookOpenCheck,
   Brain,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  CircleAlert,
+  Database,
+  FileCheck2,
   FileText,
-  FlaskConical,
   HeartPulse,
-  Mail,
-  Microscope,
+  Layers3,
+  Ruler,
   Search,
   ShieldCheck,
   SlidersHorizontal,
-  Sparkles,
-  Stethoscope,
-  UserRound,
-  Zap,
+  UsersRound,
+  X,
+  type LucideIcon,
 } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import type {
+  ResearchCategoryKey,
+  ResearchNote,
+  ResearchStudyType,
+} from "./researchNotesTypes";
+import {
+  RESEARCH_CATEGORY_LABELS,
+  RESEARCH_STUDY_TYPE_LABELS,
+} from "./researchNotesTypes";
 import styles from "./ResearchNotesClient.module.css";
 
-type CategoryKey =
-  | "all"
-  | "interosepsiyon"
-  | "oz-duzenleme"
-  | "duyusal-regulasyon"
-  | "yurutucu-islevler"
-  | "otizm"
-  | "dehb"
-  | "mudahale-yaklasimlari"
-  | "olcekler"
-  | "metodoloji";
+type CategoryFilter = "all" | ResearchCategoryKey;
+type StudyTypeFilter = "all" | ResearchStudyType;
+type SortKey = "newest" | "oldest" | "title";
 
-type EvidenceKey = "all" | "systematic" | "rct" | "cohort" | "observational";
-
-type ResearchNote = {
-  id: number;
-  title: string;
-  date: string;
-  readTime: number;
-  excerpt: string;
-  category: Exclude<CategoryKey, "all">;
-  categoryLabel: string;
-  evidence: Exclude<EvidenceKey, "all">;
-  evidenceLabel: string;
-  icon: LucideIcon;
-  accent: string;
+type ResearchNotesClientProps = {
+  notes: ResearchNote[];
 };
 
-const categories: {
-  key: CategoryKey;
-  label: string;
-  count: number;
-  icon: LucideIcon;
-}[] = [
-  { key: "all", label: "Tümü", count: 32, icon: FileText },
-  { key: "interosepsiyon", label: "Interosepsiyon", count: 6, icon: HeartPulse },
-  { key: "oz-duzenleme", label: "Öz Düzenleme", count: 5, icon: Brain },
-  { key: "duyusal-regulasyon", label: "Duyusal Regülasyon", count: 6, icon: SlidersHorizontal },
-  { key: "yurutucu-islevler", label: "Yürütücü İşlevler", count: 5, icon: Brain },
-  { key: "otizm", label: "Otizm", count: 7, icon: Sparkles },
-  { key: "dehb", label: "DEHB", count: 4, icon: Zap },
-  { key: "mudahale-yaklasimlari", label: "Müdahale Yaklaşımları", count: 4, icon: Stethoscope },
-  { key: "olcekler", label: "Ölçekler", count: 3, icon: BarChart3 },
-  { key: "metodoloji", label: "Metodoloji", count: 2, icon: FlaskConical },
-];
+const PAGE_SIZE = 6;
 
-const evidenceLevels: {
-  key: EvidenceKey;
-  label: string;
-  count: number;
-  color: string;
-}[] = [
-  { key: "systematic", label: "Sistematik Derleme / Meta Analiz", count: 6, color: "#10b981" },
-  { key: "rct", label: "Randomize Kontrollü Çalışma (RCT)", count: 9, color: "#22c55e" },
-  { key: "cohort", label: "Kohort Çalışma", count: 8, color: "#eab308" },
-  { key: "observational", label: "Vaka Serisi / Gözlemsel", count: 9, color: "#94a3b8" },
-];
-
-const evidenceColors: Record<Exclude<EvidenceKey, "all">, string> = {
-  systematic: "#10b981",
-  rct: "#22c55e",
-  cohort: "#eab308",
-  observational: "#94a3b8",
+const categoryIcons: Record<ResearchCategoryKey, LucideIcon> = {
+  interosepsiyon: HeartPulse,
+  "duyusal-regulasyon": SlidersHorizontal,
+  "duygusal-regulasyon": Brain,
+  "yurutucu-islevler": Layers3,
+  "gelisim-ve-baglam": UsersRound,
+  "olcum-ve-metodoloji": Ruler,
 };
 
-const notes: ResearchNote[] = [
-  {
-    id: 1,
-    title: "Okul Öncesi Çocuklarda Interoseptif Farkındalık",
-    date: "8 Haziran 2026",
-    readTime: 3,
-    excerpt:
-      "Interoseptif farkındalık ile sosyal katılım ve duygusal düzenleme becerileri arasında orta düzey ilişki bulundu.",
-    category: "interosepsiyon",
-    categoryLabel: "Interosepsiyon",
-    evidence: "systematic",
-    evidenceLabel: "Sistematik Derleme",
-    icon: HeartPulse,
-    accent: "#7c3aed",
-  },
-  {
-    id: 2,
-    title: "Yürütücü İşlevlere Yönelik Müdahalelerin Etkisi",
-    date: "2 Haziran 2026",
-    readTime: 5,
-    excerpt:
-      "Planlama ve çalışma belleği becerilerindeki gelişim, günlük yaşam performansına olumlu yansıdı.",
-    category: "yurutucu-islevler",
-    categoryLabel: "Yürütücü İşlevler",
-    evidence: "rct",
-    evidenceLabel: "Randomize Kontrollü Çalışma (RCT)",
-    icon: Brain,
-    accent: "#2563eb",
-  },
-  {
-    id: 3,
-    title: "Duyusal İşleme Örüntüleri ve Davranışsal Yanıtlar",
-    date: "28 Mayıs 2026",
-    readTime: 4,
-    excerpt:
-      "Duyusal hassasiyet düzeyi arttıkça, davranışsal esneklikte azalma gözlendi.",
-    category: "duyusal-regulasyon",
-    categoryLabel: "Duyusal Regülasyon",
-    evidence: "cohort",
-    evidenceLabel: "Kohort Çalışma",
-    icon: SlidersHorizontal,
-    accent: "#00c8d7",
-  },
-  {
-    id: 4,
-    title: "Duygu Düzenleme Stratejileri ve Klinik Uygulamalar",
-    date: "20 Mayıs 2026",
-    readTime: 4,
-    excerpt:
-      "Bilişsel yeniden çerçeveleme ve farkındalık temelli yaklaşımlar duygu düzenleme becerilerini destekliyor.",
-    category: "duyusal-regulasyon",
-    categoryLabel: "Duygusal Regülasyon",
-    evidence: "rct",
-    evidenceLabel: "Randomize Kontrollü Çalışma (RCT)",
-    icon: Sparkles,
-    accent: "#7c3aed",
-  },
-  {
-    id: 5,
-    title: "Otizm Spektrumunda Sosyal İletişim Becerileri",
-    date: "15 Mayıs 2026",
-    readTime: 6,
-    excerpt:
-      "Yapılandırılmış sosyal beceri eğitimlerinin iletişim becerilerini artırmada etkili olduğu bulundu.",
-    category: "otizm",
-    categoryLabel: "Otizm",
-    evidence: "cohort",
-    evidenceLabel: "Kohort Çalışma",
-    icon: FileText,
-    accent: "#2563eb",
-  },
-  {
-    id: 6,
-    title: "Öz Düzenleme Becerilerinde Klinik Gözlem Notları",
-    date: "9 Mayıs 2026",
-    readTime: 5,
-    excerpt:
-      "Gözlem notları, ölçek sonuçlarıyla birlikte yorumlandığında müdahale hedeflerini netleştirmeye yardımcı olur.",
-    category: "oz-duzenleme",
-    categoryLabel: "Öz Düzenleme",
-    evidence: "observational",
-    evidenceLabel: "Vaka Serisi / Gözlemsel",
-    icon: ShieldCheck,
-    accent: "#3b82f6",
-  },
-  {
-    id: 7,
-    title: "DEHB’de Dikkat Sürdürme ve Görev Tamamlama",
-    date: "2 Mayıs 2026",
-    readTime: 4,
-    excerpt:
-      "Görev yapılandırması ve çevresel düzenleme, dikkat sürdürme becerisini klinik pratikte destekleyebilir.",
-    category: "dehb",
-    categoryLabel: "DEHB",
-    evidence: "observational",
-    evidenceLabel: "Vaka Serisi / Gözlemsel",
-    icon: Zap,
-    accent: "#7c3aed",
-  },
-  {
-    id: 8,
-    title: "Ölçek Seçiminde Klinik Amaç ve Yorum Sınırı",
-    date: "25 Nisan 2026",
-    readTime: 3,
-    excerpt:
-      "Ölçek seçimi, tanı iddiasından çok klinik soru, takip ihtiyacı ve müdahale planlamasıyla ilişkilendirilmelidir.",
-    category: "olcekler",
-    categoryLabel: "Ölçekler",
-    evidence: "systematic",
-    evidenceLabel: "Sistematik Derleme",
-    icon: BarChart3,
-    accent: "#00c8d7",
-  },
-  {
-    id: 9,
-    title: "Müdahale Planlarında Önceliklendirme Mantığı",
-    date: "18 Nisan 2026",
-    readTime: 5,
-    excerpt:
-      "Çok boyutlu değerlendirme, destek alanlarını önceliklendirirken güçlü alanları müdahale planına dahil etmeyi kolaylaştırır.",
-    category: "mudahale-yaklasimlari",
-    categoryLabel: "Müdahale Yaklaşımları",
-    evidence: "rct",
-    evidenceLabel: "Randomize Kontrollü Çalışma (RCT)",
-    icon: Stethoscope,
-    accent: "#2563eb",
-  },
-  {
-    id: 10,
-    title: "Klinik Araştırma Notlarında Metodolojik Okuma",
-    date: "10 Nisan 2026",
-    readTime: 4,
-    excerpt:
-      "Örneklem, ölçüm aracı ve sonuç yorumunun ayrı değerlendirilmesi klinik aktarımı daha güvenilir hale getirir.",
-    category: "metodoloji",
-    categoryLabel: "Metodoloji",
-    evidence: "observational",
-    evidenceLabel: "Vaka Serisi / Gözlemsel",
-    icon: FlaskConical,
-    accent: "#7c3aed",
-  },
+const studyTypeOrder: ResearchStudyType[] = [
+  "meta_analysis",
+  "systematic_review",
+  "scoping_review",
+  "longitudinal",
+  "observational",
+  "review",
 ];
-
-const PAGE_SIZE = 5;
 
 function normalize(value: string) {
   return value.toLocaleLowerCase("tr-TR");
 }
 
-export default function ResearchNotesClient() {
-  const [category, setCategory] = useState<CategoryKey>("all");
-  const [evidence, setEvidence] = useState<EvidenceKey>("all");
+function formatVerifiedAt(value: string) {
+  const [year, month, day] = value.split("-");
+  return `${day}.${month}.${year}`;
+}
+
+export default function ResearchNotesClient({ notes }: ResearchNotesClientProps) {
+  const [category, setCategory] = useState<CategoryFilter>("all");
+  const [studyType, setStudyType] = useState<StudyTypeFilter>("all");
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState("newest");
+  const [sort, setSort] = useState<SortKey>("newest");
   const [page, setPage] = useState(1);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const categoryCounts = useMemo(() => {
+    const counts = new Map<ResearchCategoryKey, number>();
+    notes.forEach((note) => counts.set(note.category, (counts.get(note.category) ?? 0) + 1));
+    return counts;
+  }, [notes]);
+
+  const studyTypeCounts = useMemo(() => {
+    const counts = new Map<ResearchStudyType, number>();
+    notes.forEach((note) => counts.set(note.studyType, (counts.get(note.studyType) ?? 0) + 1));
+    return counts;
+  }, [notes]);
+
+  const categories = useMemo(
+    () =>
+      (Object.keys(RESEARCH_CATEGORY_LABELS) as ResearchCategoryKey[]).map((key) => ({
+        key,
+        label: RESEARCH_CATEGORY_LABELS[key],
+        count: categoryCounts.get(key) ?? 0,
+        icon: categoryIcons[key],
+      })),
+    [categoryCounts],
+  );
 
   const filteredNotes = useMemo(() => {
     const normalizedQuery = normalize(query.trim());
     const rows = notes.filter((note) => {
       const categoryMatches = category === "all" || note.category === category;
-      const evidenceMatches = evidence === "all" || note.evidence === evidence;
+      const studyTypeMatches = studyType === "all" || note.studyType === studyType;
       const queryMatches =
         !normalizedQuery ||
-        normalize(`${note.title} ${note.excerpt} ${note.categoryLabel} ${note.evidenceLabel}`).includes(normalizedQuery);
+        normalize(
+          `${note.title} ${note.clinicalFocus} ${note.interpretationBoundary} ${note.categoryLabel} ${note.studyTypeLabel} ${note.apaReference}`,
+        ).includes(normalizedQuery);
 
-      return categoryMatches && evidenceMatches && queryMatches;
+      return categoryMatches && studyTypeMatches && queryMatches;
     });
 
     return rows.sort((a, b) => {
-      if (sort === "reading") return a.readTime - b.readTime;
-      if (sort === "oldest") return b.id - a.id;
-      return a.id - b.id;
+      if (sort === "oldest") return a.year - b.year || a.title.localeCompare(b.title, "tr-TR");
+      if (sort === "title") return a.title.localeCompare(b.title, "tr-TR");
+      return b.year - a.year || a.title.localeCompare(b.title, "tr-TR");
     });
-  }, [category, evidence, query, sort]);
+  }, [category, notes, query, sort, studyType]);
 
   const totalPages = Math.max(1, Math.ceil(filteredNotes.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
   const visibleNotes = filteredNotes.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+  const pmidCount = notes.filter((note) => note.pmid).length;
+  const doiCount = notes.filter((note) => note.doi).length;
+  const hasActiveFilters = category !== "all" || studyType !== "all" || query.trim().length > 0;
 
-  const updateCategory = (nextCategory: CategoryKey) => {
-    setCategory(nextCategory);
-    setPage(1);
-  };
-
-  const updateEvidence = (nextEvidence: EvidenceKey) => {
-    setEvidence(nextEvidence);
+  const clearFilters = () => {
+    setCategory("all");
+    setStudyType("all");
+    setQuery("");
     setPage(1);
   };
 
@@ -285,86 +141,127 @@ export default function ResearchNotesClient() {
       <section className={styles.hero}>
         <div className={styles.heroCopy}>
           <div className={styles.eyebrow}>
-            <FlaskConical size={16} />
-            Araştırma
+            <BookOpenCheck size={16} />
+            Doğrulanmış kaynak arşivi
           </div>
           <h1>Araştırma Notları</h1>
-          <p>Klinik uygulamaya dönük kısa literatür özetleri, metodoloji notları ve bilimsel değerlendirmeler.</p>
+          <p>
+            Klinik sorulara hızlı yön veren, kaynağı açık ve yorum sınırı belirtilmiş güncel literatür kayıtları.
+          </p>
         </div>
 
-        <div className={styles.heroVisual} aria-hidden="true">
-          <div className={styles.orbit} />
-          <div className={styles.visualIconSearch}>
-            <Search size={58} />
+        <div className={styles.heroEvidence} aria-label="Kaynak arşivi özeti">
+          <div className={styles.heroStat}>
+            <Database size={21} />
+            <span><strong>{notes.length}</strong> doğrulanmış yayın</span>
           </div>
-          <div className={styles.visualIconChart}>
-            <BarChart3 size={38} />
+          <div className={styles.heroStat}>
+            <FileCheck2 size={21} />
+            <span><strong>{doiCount}</strong> DOI kaydı</span>
           </div>
-          <div className={styles.paperStack}>
-            <div className={styles.paperBack} />
-            <div className={styles.paperFront}>
-              <span />
-              <span />
-              <span />
-              <span />
-            </div>
+          <div className={styles.heroStat}>
+            <ShieldCheck size={21} />
+            <span><strong>{pmidCount}</strong> PubMed kaydı</span>
           </div>
+          <p>
+            Kaynaklar doğrudan yayıncı, DOI veya PubMed sayfasına açılır. Çalışma türü, kanıt gücü yerine araştırma
+            tasarımını gösterir.
+          </p>
         </div>
       </section>
 
       <section className={styles.workspace} aria-label="Araştırma notları arşivi">
         <aside className={styles.sidebar}>
-          <div className={styles.filterPanel}>
-            <h2>Kategoriler</h2>
-            <div className={styles.filterList}>
-              {categories.map(({ key, label, count, icon: Icon }) => {
-                const active = category === key;
-                return (
+          <button
+            className={styles.mobileFilterToggle}
+            type="button"
+            aria-expanded={filtersOpen}
+            aria-controls="research-note-filters"
+            onClick={() => setFiltersOpen((value) => !value)}
+          >
+            <SlidersHorizontal size={17} />
+            <span>{filtersOpen ? "Filtreleri kapat" : "Filtreleri aç"}</span>
+            {hasActiveFilters ? <strong>Etkin</strong> : null}
+            <ChevronDown className={filtersOpen ? styles.filterChevronOpen : ""} size={17} />
+          </button>
+
+          <div
+            className={`${styles.sidebarPanels} ${filtersOpen ? styles.sidebarPanelsOpen : ""}`}
+            id="research-note-filters"
+          >
+            <div className={styles.filterPanel}>
+              <div className={styles.filterHeading}>
+                <span>Konu</span>
+                <strong>{notes.length}</strong>
+              </div>
+              <div className={styles.filterList}>
+                <button
+                  className={`${styles.filterButton} ${category === "all" ? styles.filterActive : ""}`}
+                  type="button"
+                  onClick={() => {
+                    setCategory("all");
+                    setPage(1);
+                  }}
+                >
+                  <FileText size={17} />
+                  <span>Tümü</span>
+                  <strong>{notes.length}</strong>
+                </button>
+                {categories.map(({ key, label, count, icon: Icon }) => (
                   <button
-                    className={`${styles.filterButton} ${active ? styles.filterActive : ""}`}
+                    className={`${styles.filterButton} ${category === key ? styles.filterActive : ""}`}
                     key={key}
                     type="button"
-                    onClick={() => updateCategory(key)}
+                    onClick={() => {
+                      setCategory(key);
+                      setPage(1);
+                    }}
                   >
-                    <Icon size={18} />
+                    <Icon size={17} />
                     <span>{label}</span>
                     <strong>{count}</strong>
                   </button>
-                );
-              })}
+                ))}
+              </div>
             </div>
-          </div>
 
-          <div className={styles.filterPanel}>
-            <h2>
-              Kanıt Düzeyi
-              <ShieldCheck size={16} />
-            </h2>
-            <div className={styles.evidenceList}>
-              {evidenceLevels.map(({ key, label, count, color }) => {
-                const active = evidence === key;
-                return (
-                  <button
-                    className={`${styles.evidenceButton} ${active ? styles.evidenceActive : ""}`}
-                    key={key}
-                    type="button"
-                    onClick={() => updateEvidence(key)}
-                  >
-                    <span style={{ "--dot": color } as CSSProperties} />
-                    <em>{label}</em>
-                    <strong>{count}</strong>
-                  </button>
-                );
-              })}
+            <div className={styles.filterPanel}>
+              <div className={styles.filterHeading}>
+                <span>Çalışma türü</span>
+                <Layers3 size={16} />
+              </div>
+              <div className={styles.studyTypeList}>
+                <button
+                  className={`${styles.studyTypeButton} ${studyType === "all" ? styles.studyTypeActive : ""}`}
+                  type="button"
+                  onClick={() => {
+                    setStudyType("all");
+                    setPage(1);
+                  }}
+                >
+                  <span>Tüm çalışma türleri</span>
+                  <strong>{notes.length}</strong>
+                </button>
+                {studyTypeOrder.map((key) => {
+                  const count = studyTypeCounts.get(key) ?? 0;
+                  if (!count) return null;
+                  return (
+                    <button
+                      className={`${styles.studyTypeButton} ${studyType === key ? styles.studyTypeActive : ""}`}
+                      key={key}
+                      type="button"
+                      onClick={() => {
+                        setStudyType(key);
+                        setPage(1);
+                      }}
+                    >
+                      <span>{RESEARCH_STUDY_TYPE_LABELS[key]}</span>
+                      <strong>{count}</strong>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
-          </div>
-
-          <div className={styles.loginPanel}>
-            <div className={styles.loginIcon}>
-              <Bookmark size={22} />
-            </div>
-            <p>İlgilendiğiniz konuları kaydedin, sonra kolayca ulaşın.</p>
-            <Link href="/login">Giriş Yapın</Link>
           </div>
         </aside>
 
@@ -372,113 +269,134 @@ export default function ResearchNotesClient() {
           <div className={styles.toolbar}>
             <label className={styles.searchBox}>
               <span className="sr-only">Araştırma notlarında ara</span>
+              <Search size={19} />
               <input
                 value={query}
                 onChange={(event) => {
                   setQuery(event.target.value);
                   setPage(1);
                 }}
-                placeholder="Araştırma notlarında ara..."
+                placeholder="Konu, yazar veya anahtar kelime ara"
               />
-              <Search size={19} />
             </label>
 
             <label className={styles.sortBox}>
               <span className="sr-only">Sıralama</span>
-              <select value={sort} onChange={(event) => setSort(event.target.value)}>
+              <select
+                value={sort}
+                onChange={(event) => {
+                  setSort(event.target.value as SortKey);
+                  setPage(1);
+                }}
+              >
                 <option value="newest">En yeni</option>
                 <option value="oldest">En eski</option>
-                <option value="reading">Okuma süresi</option>
+                <option value="title">Başlığa göre</option>
               </select>
-              <ChevronDown size={18} />
+              <ChevronDown size={17} />
             </label>
           </div>
 
-          <div className={styles.resultsMeta}>
-            <strong>{filteredNotes.length}</strong> araştırma notu görüntüleniyor
-          </div>
-
-          <div className={styles.noteList} id="research-note-list">
-            {visibleNotes.map((note) => {
-              const Icon = note.icon;
-              return (
-                <article className={styles.noteCard} key={note.id} style={{ "--accent": note.accent } as CSSProperties}>
-                  <div className={styles.noteRail} />
-                  <div className={styles.noteIcon}>
-                    <Icon size={34} />
-                  </div>
-                  <div className={styles.noteBody}>
-                    <div className={styles.noteTopline}>
-                      <h2>{note.title}</h2>
-                      <button type="button" aria-label={`${note.title} notunu kaydet`}>
-                        <Bookmark size={19} />
-                      </button>
-                    </div>
-                    <div className={styles.noteMeta}>
-                      <span>{note.date}</span>
-                      <span>{note.readTime} dk okuma</span>
-                    </div>
-                    <p>{note.excerpt}</p>
-                    <span className={styles.tag}>{note.categoryLabel}</span>
-                  </div>
-                  <div className={styles.evidenceCard}>
-                    <small>Kanıt Düzeyi</small>
-                    <span style={{ "--evidence-dot": evidenceColors[note.evidence] } as CSSProperties}>
-                      <i />
-                      {note.evidenceLabel}
-                    </span>
-                    <a href="#research-note-list">Notu Oku <ChevronRight size={17} /></a>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-
-          <div className={styles.pagination} aria-label="Araştırma notları sayfalama">
-            <button type="button" disabled={currentPage === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>
-              <ChevronLeft size={18} />
-            </button>
-            {Array.from({ length: totalPages }, (_, index) => index + 1).map((item) => (
-              <button
-                className={currentPage === item ? styles.pageActive : ""}
-                key={item}
-                type="button"
-                onClick={() => setPage(item)}
-              >
-                {item}
+          <div className={styles.resultsBar}>
+            <p><strong>{filteredNotes.length}</strong> doğrulanmış kaynak gösteriliyor</p>
+            {hasActiveFilters ? (
+              <button type="button" onClick={clearFilters}>
+                <X size={15} /> Filtreleri temizle
               </button>
-            ))}
-            <button
-              type="button"
-              disabled={currentPage === totalPages}
-              onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
-            >
-              <ChevronRight size={18} />
-            </button>
+            ) : null}
           </div>
-        </div>
-      </section>
 
-      <section className={styles.cta}>
-        <div>
-          <h2>Araştırma ve iş birliği için birlikte üretelim.</h2>
-          <p>Bilimsel gelişime katkı sağlamak ve klinik uygulamaları güçlendirmek için ortak çalışmalara açığız.</p>
-        </div>
-        <div className={styles.ctaCards}>
-          <a href="mailto:self.metacognition.institute@gmail.com">
-            <Mail size={26} />
-            <span>
-              <strong>E-posta</strong>
-              self.metacognition.institute@gmail.com
-            </span>
-          </a>
-          <a href="tel:+905306766654">
-            <UserRound size={26} />
-            <span>
-              <strong>Telefon</strong>
-              +90 530 676 66 54
-            </span>
-          </a>
+          {visibleNotes.length ? (
+            <div className={styles.noteList}>
+              {visibleNotes.map((note) => {
+                const Icon = categoryIcons[note.category];
+                return (
+                  <article className={styles.noteCard} key={note.id}>
+                    <div className={styles.noteIcon}>
+                      <Icon size={24} />
+                    </div>
+
+                    <div className={styles.noteBody}>
+                      <div className={styles.noteBadges}>
+                        <span>{note.categoryLabel}</span>
+                        <span>{note.studyTypeLabel}</span>
+                        <span>{note.year}</span>
+                      </div>
+                      <h2>{note.title}</h2>
+                      <p className={styles.citation}>{note.inlineCitation}</p>
+
+                      <div className={styles.findings}>
+                        <div>
+                          <strong>Bu kaynak neyi destekliyor?</strong>
+                          <p>{note.clinicalFocus}</p>
+                        </div>
+                        <div className={styles.boundary}>
+                          <CircleAlert size={17} />
+                          <p><strong>Yorum sınırı:</strong> {note.interpretationBoundary}</p>
+                        </div>
+                      </div>
+
+                      <details className={styles.reference}>
+                        <summary>Tam kaynakçayı göster</summary>
+                        <p>{note.apaReference}</p>
+                      </details>
+                    </div>
+
+                    <div className={styles.sourcePanel}>
+                      <div>
+                        <small>Kaynak kaydı</small>
+                        <strong>{note.pmid ? `PubMed · PMID ${note.pmid}` : "DOI kaydı"}</strong>
+                      </div>
+                      <span>Kontrol: {formatVerifiedAt(note.verifiedAt)}</span>
+                      <a href={note.sourceUrl} target="_blank" rel="noreferrer">
+                        Kaynağı aç <ArrowUpRight size={16} />
+                      </a>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
+          ) : (
+            <div className={styles.emptyState}>
+              <Search size={28} />
+              <h2>Eşleşen kaynak bulunamadı</h2>
+              <p>Arama sözcüğünü veya filtreleri değiştirerek yeniden deneyin.</p>
+              <button type="button" onClick={clearFilters}>Tüm kaynakları göster</button>
+            </div>
+          )}
+
+          {totalPages > 1 ? (
+            <div className={styles.pagination} aria-label="Araştırma notları sayfalama">
+              <button
+                type="button"
+                aria-label="Önceki sayfa"
+                disabled={currentPage === 1}
+                onClick={() => setPage((value) => Math.max(1, value - 1))}
+              >
+                <ChevronLeft size={18} />
+              </button>
+              {Array.from({ length: totalPages }, (_, index) => index + 1).map((item) => (
+                <button
+                  className={currentPage === item ? styles.pageActive : ""}
+                  key={item}
+                  type="button"
+                  aria-label={`${item}. sayfa`}
+                  aria-current={currentPage === item ? "page" : undefined}
+                  onClick={() => setPage(item)}
+                >
+                  {item}
+                </button>
+              ))}
+              <button
+                type="button"
+                aria-label="Sonraki sayfa"
+                disabled={currentPage === totalPages}
+                onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          ) : null}
         </div>
       </section>
     </main>

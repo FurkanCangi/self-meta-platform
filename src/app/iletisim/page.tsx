@@ -1,4 +1,4 @@
-import { ChevronRight, Mail, Phone, Send } from "lucide-react";
+import { ArrowUpRight, Mail, Phone, Send } from "lucide-react";
 import FooterContact from "../components/FooterContact";
 import LandingHeader from "../components/LandingHeader";
 import styles from "../marketing-pages.module.css";
@@ -25,8 +25,8 @@ export default function IletisimPage() {
             <div className={styles.contactAccentLine} aria-hidden="true" />
 
             <p>
-              Sorularınızı, görüşlerinizi veya iş birliği taleplerinizi bize iletebilirsiniz. Ekibimiz en kısa sürede
-              sizinle iletişime geçecektir.
+              Eğitim, klinik kullanım, araştırma veya iş birliği konularındaki sorularınızı doğrudan ekibimize
+              iletebilirsiniz.
             </p>
 
             <div className={styles.contactCards}>
@@ -38,7 +38,7 @@ export default function IletisimPage() {
                   <strong>E-posta</strong>
                   <small>self.metacognition.institute@gmail.com</small>
                 </span>
-                <ChevronRight size={20} />
+                <ArrowUpRight size={20} />
               </a>
 
               <a className={styles.contactInfoCard} href="tel:+905306766654">
@@ -49,7 +49,7 @@ export default function IletisimPage() {
                   <strong>Telefon</strong>
                   <small>+90 530 676 66 54</small>
                 </span>
-                <ChevronRight size={20} />
+                <ArrowUpRight size={20} />
               </a>
             </div>
           </div>
