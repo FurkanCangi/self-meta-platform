@@ -20,7 +20,7 @@ type EnvConfig = {
 }
 
 type Fixture = {
-  label: "A" | "B"
+  label: "A" | "B" | "UI"
   email: string
   password: string
   userAgent: string
@@ -336,10 +336,10 @@ class CookieJar {
   }
 }
 
-function createFixture(label: "A" | "B"): Fixture {
+function createFixture(label: "A" | "B" | "UI"): Fixture {
   const suffix = `${runId}-${label.toLowerCase()}`
   const useBrowserFixture =
-    label === "A" && process.env.DNA_CHAT_CROSS_ACCOUNT_UI_HOLD === uiHoldConfirmation
+    label === "UI" && process.env.DNA_CHAT_CROSS_ACCOUNT_UI_HOLD === uiHoldConfirmation
   const email = useBrowserFixture
     ? String(process.env.DNA_CHAT_CROSS_ACCOUNT_UI_EMAIL || "").trim()
     : `${suffix}@example.invalid`
@@ -774,7 +774,7 @@ async function cleanup(fixtures: Fixture[]) {
 async function main() {
   let config: EnvConfig | null = null
   let fatal: string | null = null
-  const fixtures = [createFixture("A"), createFixture("B")]
+  const fixtures: Fixture[] = [createFixture("A"), createFixture("B")]
 
   try {
     config = loadConfig()
@@ -951,13 +951,22 @@ async function main() {
       invariant(ownCase.body.engineVersion === "dna-chat-engine@2", "Owned case used the wrong engine version.")
       invariant(
         ownCase.body.classification === "case_finding" || ownCase.body.classification === "hypothesis",
-        "Owned case did not return a case-scoped classification.",
+        `Owned case did not return a case-scoped classification ` +
+          `(classification=${String(ownCase.body.classification || "missing").slice(0, 40)}, ` +
+          `outcome=${String(ownCase.body.outcome || "missing").slice(0, 40)}, ` +
+          `route=${String(ownCase.body.route || "missing").slice(0, 40)}).`,
       )
       invariant(!responseContainsFixture(ownCase.body, fixtureB), "Owned case leaked foreign fixture data.")
       return "case=answered audit_gate=open"
     })
 
     if (process.env.DNA_CHAT_CROSS_ACCOUNT_UI_HOLD === uiHoldConfirmation) {
+      const browserFixture = createFixture("UI")
+      await runStep("create isolated browser-only QA fixture", async () => {
+        await createSyntheticFixture(browserFixture)
+        fixtures.push(browserFixture)
+        return "fixture=browser-only first-login-ready"
+      })
       console.log(JSON.stringify({
         ok: true,
         ready: "browser_qa_fixture",

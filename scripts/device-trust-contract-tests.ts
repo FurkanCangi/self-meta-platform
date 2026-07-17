@@ -20,6 +20,8 @@ function check(label: string, condition: boolean, detail = "") {
 const migration = read("supabase/migrations/20260717110912_account_device_trust.sql")
 const registration = read("src/lib/security/sessionRegistration.ts")
 const browserIdentity = read("src/lib/security/browserDeviceIdentity.ts")
+const loginPage = read("src/app/login/PageClient.tsx")
+const signupForm = read("src/app/components/auth/DnaSignupForm.tsx")
 const deviceProof = read("src/lib/security/deviceProof.ts")
 const deviceProofChallengeRoute = read("src/app/api/security/device-proof/challenge/route.ts")
 const devicesRoute = read("src/app/api/security/devices/route.ts")
@@ -80,6 +82,14 @@ check("first device is auto trusted", registration.includes("autoTrust = isFirst
 check("browser key is P-256", browserIdentity.includes('namedCurve: "P-256"'))
 check("stored private key is non-extractable", browserIdentity.includes("false,\n      [\"sign\", \"verify\"]"))
 check("browser credential is stored in IndexedDB", browserIdentity.includes("indexedDB.open"))
+check(
+  "auth forms flush device proof before native submit",
+  loginPage.includes("flushSync(() => setDeviceProof(proof))") &&
+    signupForm.includes("flushSync(() => setDeviceProof(proof))") &&
+    !loginPage.includes("requestAnimationFrame(() =>") &&
+    !signupForm.includes("requestAnimationFrame(() =>"),
+  "auth forms can submit before hidden P-256 fields reach the DOM",
+)
 check("legacy mode is explicit", browserIdentity.includes('identityVersion: "legacy-session"'))
 check(
   "request possession challenge is HMAC protected and short lived",

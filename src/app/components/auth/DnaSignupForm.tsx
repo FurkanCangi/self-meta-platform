@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { useEffect, useRef, useState, type FormEvent } from "react"
+import { flushSync } from "react-dom"
 import AuthLayout from "./AuthLayout"
 import {
   createBrowserDeviceProof,
@@ -141,11 +142,9 @@ export default function DnaSignupForm() {
       setGoogleLoading(false)
       return
     }
-    setDeviceProof(proof)
-    requestAnimationFrame(() => {
-      googleReady.current = true
-      form.requestSubmit()
-    })
+    flushSync(() => setDeviceProof(proof))
+    googleReady.current = true
+    form.requestSubmit()
   }
 
   return (

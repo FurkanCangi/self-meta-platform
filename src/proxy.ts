@@ -142,6 +142,7 @@ function sessionExpiredRedirect(request: NextRequest) {
   loginUrl.searchParams.set("next", nextPath);
   loginUrl.searchParams.set("session", "expired");
   const redirect = NextResponse.redirect(loginUrl);
+  redirect.headers.set("Cache-Control", "private, no-store, max-age=0, must-revalidate");
   redirect.cookies.delete(APP_SESSION_COOKIE);
   return redirect;
 }
@@ -210,7 +211,9 @@ export async function proxy(request: NextRequest) {
     const loginUrl = new URL("/login", request.url);
     const nextPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
     loginUrl.searchParams.set("next", nextPath);
-    return NextResponse.redirect(loginUrl);
+    const redirect = NextResponse.redirect(loginUrl);
+    redirect.headers.set("Cache-Control", "private, no-store, max-age=0, must-revalidate");
+    return redirect;
   }
 
   const rawAppSessionCookie = request.cookies.get(APP_SESSION_COOKIE)?.value;

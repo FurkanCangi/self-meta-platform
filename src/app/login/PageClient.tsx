@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, type FormEvent } from "react";
+import { flushSync } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import AuthLayout from "../components/auth/AuthLayout";
 import {
@@ -129,11 +130,9 @@ export default function LoginPage({ forcedSurface }: LoginPageProps = {}) {
       setLoading(false);
       return;
     }
-    setDeviceProof(proof);
-    requestAnimationFrame(() => {
-      passwordReady.current = true;
-      form.requestSubmit();
-    });
+    flushSync(() => setDeviceProof(proof));
+    passwordReady.current = true;
+    form.requestSubmit();
   }
 
   async function onGoogleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -154,11 +153,9 @@ export default function LoginPage({ forcedSurface }: LoginPageProps = {}) {
       setGoogleLoading(false);
       return;
     }
-    setDeviceProof(proof);
-    requestAnimationFrame(() => {
-      googleReady.current = true;
-      form.requestSubmit();
-    });
+    flushSync(() => setDeviceProof(proof));
+    googleReady.current = true;
+    form.requestSubmit();
   }
 
   return (

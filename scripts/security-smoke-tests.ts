@@ -317,6 +317,11 @@ check("device management API records self revoke audit event", deviceManagementR
 check("device management API does not auto-lock after self revoke", !deviceManagementRoute.includes("evaluateAccountRisk(access.user.id)"), "self revoke must remain an audited user action")
 check("proxy allows profile settings during device management mode", proxy.includes("DEVICE_MANAGEMENT_COOKIE") && proxy.includes('request.nextUrl.pathname === "/profile-setting"'), "proxy device-management settings exception missing")
 check(
+  "protected-route redirects are private and no-store",
+  proxy.includes('redirect.headers.set("Cache-Control", "private, no-store, max-age=0, must-revalidate")'),
+  "protected-route redirects must not be cached",
+)
+check(
   "legal acceptance gate does not hide device approval and recovery",
   legalAcceptanceGate.includes('pathname === "/profile-setting"') &&
     legalAcceptanceGate.includes('searchParams.get("tab") === "devices"') &&
