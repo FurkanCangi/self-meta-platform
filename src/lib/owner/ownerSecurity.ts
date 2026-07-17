@@ -18,6 +18,8 @@ export type OwnerSecurityFilters = {
 export type OwnerSecurityAction =
   | "revoke_sessions"
   | "revoke_device"
+  | "reset_device_replacements"
+  | "recover_device_trust"
   | "mark_review"
   | "clear_review"
   | "clear_risk"
@@ -287,5 +289,34 @@ export async function applyOwnerSecurityAction(params: {
   eventType?: string | null
   lockMinutes?: number | null
 }) {
-  return applyOwnerSecurityActionWithClient(createSupabaseAdminClient() as any, params)
+  const admin = createSupabaseAdminClient()
+  const result = await applyOwnerSecurityActionWithClient(admin as any, params)
+  if (result.ok && params.action === "revoke_device" && params.deviceId) {
+    const { data, error } = await admin.rpc("revoke_account_device_security", {
+      p_user_id: params.targetUserId,
+      p_device_id: params.deviceId,
+      p_reason: "owner_device_revoked",
+      p_suspend_account: false,
+    })
+    if (error || !(data as { ok?: boolean } | null)?.ok) {
+      return { ok: false as const, error: "device_security_cleanup_failed" }
+    }
+  }
+  if (
+    result.ok &&
+    (params.action === "revoke_sessions" ||
+      params.action === "temporary_lock" ||
+      params.action === "suspend")
+  ) {
+    const { data, error } = await admin.rpc("logout_account_security", {
+      p_user_id: params.targetUserId,
+      p_app_session_id: null,
+      p_global: true,
+      p_reason: `owner_${params.action}`,
+    })
+    if (error || !(data as { ok?: boolean } | null)?.ok) {
+      return { ok: false as const, error: "account_security_cleanup_failed" }
+    }
+  }
+  return result
 }

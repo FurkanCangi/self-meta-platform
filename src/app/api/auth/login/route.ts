@@ -1,9 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
-import { setAppSessionCookie } from "@/lib/security/appSession"
+import { clearAppSessionCookie, setAppSessionCookie } from "@/lib/security/appSession"
 import {
   clearDeviceManagementCookie,
+  clearPendingDeviceCookie,
+  setPendingDeviceCookie,
   setDeviceManagementCookie,
 } from "@/lib/security/deviceManagementAccess"
 import { requireTrustedMutation } from "@/lib/security/apiGuards"
@@ -14,6 +16,25 @@ type CookieToSet = {
   name: string
   value: string
   options: Parameters<NextResponse["cookies"]["set"]>[2]
+}
+
+function applyLatestAuthCookies(response: NextResponse, authCookies: CookieToSet[]) {
+  const latest = new Map<string, CookieToSet>()
+  for (const cookie of authCookies) latest.set(cookie.name, cookie)
+  for (const { name, value, options } of latest.values()) {
+    response.cookies.set(name, value, options)
+  }
+}
+
+async function clearLocalAuthSession(
+  supabase: ReturnType<typeof createServerClient>,
+  authCookies: CookieToSet[],
+  response: NextResponse
+) {
+  await supabase.auth.signOut({ scope: "local" }).catch(() => null)
+  applyLatestAuthCookies(response, authCookies)
+  clearAppSessionCookie(response)
+  return response
 }
 
 function normalizeLoginEmail(value: FormDataEntryValue | null) {
@@ -136,35 +157,78 @@ export async function POST(request: NextRequest) {
         "x-dna-request": "same-origin",
         "user-agent": request.headers.get("user-agent") || "",
         "x-forwarded-for": request.headers.get("x-forwarded-for") || "",
+        "x-vercel-forwarded-for": request.headers.get("x-vercel-forwarded-for") || "",
+        "x-vercel-ip-city": request.headers.get("x-vercel-ip-city") || "",
+        "x-vercel-ip-country": request.headers.get("x-vercel-ip-country") || "",
+        "x-vercel-id": request.headers.get("x-vercel-id") || "",
         "x-real-ip": request.headers.get("x-real-ip") || "",
+        cookie: request.headers.get("cookie") || "",
       },
       body: JSON.stringify({
         deviceId: String(formData.get("deviceId") || `server-${userId}-${request.headers.get("user-agent") || "unknown"}`).slice(0, 200),
         deviceType: String(formData.get("deviceType") || "desktop"),
-        allowSlotReuse: true,
+        identityVersion: String(formData.get("identityVersion") || "legacy-session"),
+        publicKeyJwk: String(formData.get("publicKeyJwk") || ""),
+        publicKeyFingerprint: String(formData.get("publicKeyFingerprint") || ""),
+        proofChallengeToken: String(formData.get("proofChallengeToken") || ""),
+        proofSignature: String(formData.get("proofSignature") || ""),
+        legacyDeviceId: String(formData.get("legacyDeviceId") || ""),
       }),
     })
   } catch {
-    await supabase.auth.signOut()
-    return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: "session_failed" }), 303)
+    return clearLocalAuthSession(
+      supabase,
+      authCookies,
+      NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: "session_failed" }), 303)
+    )
   }
   const registerPayload = await registerResponse.json().catch(() => null)
-  if (!registerResponse.ok || !registerPayload?.ok || !registerPayload?.sessionId) {
+  if (!registerResponse.ok || !registerPayload?.ok) {
     const code = String(registerPayload?.error || "session_failed")
-    if (code === "device_limit_exceeded") {
+    if (
+      code === "device_limit_exceeded" ||
+      code === "replacement_limit_exceeded" ||
+      code === "trusted_device_required"
+    ) {
       const target = new URL("/profile-setting", origin)
       target.searchParams.set("tab", "devices")
-      target.searchParams.set("deviceLimit", "1")
+      target.searchParams.set("error", code)
       const response = NextResponse.redirect(target, 303)
-      authCookies.forEach(({ name, value, options }) => {
-        response.cookies.set(name, value, options)
-      })
+      await clearLocalAuthSession(supabase, authCookies, response)
       setDeviceManagementCookie(response, userId)
+      clearPendingDeviceCookie(response)
       return response
     }
 
-    await supabase.auth.signOut()
-    return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: code }), 303)
+    return clearLocalAuthSession(
+      supabase,
+      authCookies,
+      NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: code }), 303)
+    )
+  }
+
+  if (registerPayload.status === "approval_required") {
+    const target = new URL("/profile-setting", origin)
+    target.searchParams.set("tab", "devices")
+    target.searchParams.set("approval", "required")
+    const response = NextResponse.redirect(target, 303)
+    await clearLocalAuthSession(supabase, authCookies, response)
+    setDeviceManagementCookie(response, userId)
+    setPendingDeviceCookie(response, {
+      userId,
+      challengeId: String(registerPayload.challengeId),
+      deviceId: String(registerPayload.deviceId),
+      verificationCode: String(registerPayload.verificationCode),
+    })
+    return response
+  }
+
+  if (!registerPayload.sessionId) {
+    return clearLocalAuthSession(
+      supabase,
+      authCookies,
+      NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: "session_failed" }), 303)
+    )
   }
 
   const admin = createSupabaseAdminClient()
@@ -176,17 +240,19 @@ export async function POST(request: NextRequest) {
 
   const exemption = await ensurePaymentExemptAccess({ admin, userId, email: data.user?.email })
   if (!exemption.ok) {
-    await supabase.auth.signOut()
-    return NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: exemption.error }), 303)
+    return clearLocalAuthSession(
+      supabase,
+      authCookies,
+      NextResponse.redirect(loginUrl(request, { ...fallbackParams, error: exemption.error }), 303)
+    )
   }
 
   const effectivePlan = resolveEffectivePlan(profile?.plan, data.user?.email)
   const target = new URL(resolvePostLoginPath(effectivePlan, nextPath, appSurface), origin)
   const response = NextResponse.redirect(target, 303)
-  authCookies.forEach(({ name, value, options }) => {
-    response.cookies.set(name, value, options)
-  })
+  applyLatestAuthCookies(response, authCookies)
   setAppSessionCookie(response, registerPayload.sessionId)
   clearDeviceManagementCookie(response)
+  clearPendingDeviceCookie(response)
   return response
 }

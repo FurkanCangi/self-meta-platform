@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server"
 import { z } from "zod"
-import { requireTrustedMutation } from "@/lib/security/apiGuards"
+import { requireConfirmedUser, requireTrustedMutation } from "@/lib/security/apiGuards"
 import { rejectServerControlledFields } from "@/lib/security/payloadGuards"
 import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
-import { createSupabaseServerClient } from "@/lib/supabase/server"
 import {
   getDirectoryPublicationMissingFields,
   hasTooManyDirectorySpecialties,
@@ -51,17 +50,8 @@ function isMissingDirectoryTable(error: unknown) {
 }
 
 async function getCurrentUser() {
-  const supabase = await createSupabaseServerClient()
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser()
-
-  if (error || !user?.id) {
-    return null
-  }
-
-  return user
+  const auth = await requireConfirmedUser()
+  return auth.ok ? auth.user : null
 }
 
 export async function GET() {

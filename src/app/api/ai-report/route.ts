@@ -144,7 +144,7 @@ import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import { createServerClient } from "@supabase/ssr"
 import { z } from "zod"
-import { requireTrustedMutation } from "@/lib/security/apiGuards"
+import { requireConfirmedUser, requireTrustedMutation } from "@/lib/security/apiGuards"
 import { rejectServerControlledFields } from "@/lib/security/payloadGuards"
 import { evaluateAccountRisk, recordAccountSecurityEvent } from "@/lib/security/anomalyDetection"
 import { getPrivacyAuditContext, recordDataAccessAuditEvent } from "@/lib/security/privacyOps"
@@ -262,29 +262,9 @@ export async function POST(req: Request) {
     if (originError) return originError
 
     const supabase = await createSupabaseServerClient()
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-
-    if (!user) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "Unauthorized",
-        },
-        { status: 401 }
-      )
-    }
-
-    if (!user.email_confirmed_at) {
-      return NextResponse.json(
-        {
-          ok: false,
-          error: "Email confirmation required",
-        },
-        { status: 403 }
-      )
-    }
+    const auth = await requireConfirmedUser()
+    if (!auth.ok) return auth.response
+    const user = auth.user
 
     const rateLimit = await checkRateLimit({
       key: `ai-report:${user.id}`,

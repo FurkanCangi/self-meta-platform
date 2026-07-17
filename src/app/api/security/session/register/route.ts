@@ -4,8 +4,13 @@ import { requireTrustedMutation } from "@/lib/security/apiGuards"
 import { rejectServerControlledFields } from "@/lib/security/payloadGuards"
 import { checkRateLimit, getClientRateLimitKey, rateLimitResponse } from "@/lib/security/rateLimit"
 import { readJsonWithSchema } from "@/lib/security/schemaGuards"
-import { setAppSessionCookie } from "@/lib/security/appSession"
+import { setAppSessionCookie, verifyCurrentAppSession } from "@/lib/security/appSession"
+import { extractSupabaseAuthSessionId } from "@/lib/security/authSessionBinding"
 import { clearDeviceManagementCookie } from "@/lib/security/deviceManagementAccess"
+import {
+  clearPendingDeviceCookie,
+  setPendingDeviceCookie,
+} from "@/lib/security/deviceManagementAccess"
 import {
   registerAppSessionForUser,
   MAX_REGISTERED_DEVICES,
@@ -17,7 +22,12 @@ const sessionRegisterPayloadSchema = z
   .object({
     deviceId: z.string().min(16).max(200),
     deviceType: z.enum(["desktop", "mobile", "tablet", "unknown"]).optional(),
-    allowSlotReuse: z.boolean().optional(),
+    identityVersion: z.enum(["p256-v1", "legacy-session"]).optional(),
+    publicKeyJwk: z.string().max(2000).optional(),
+    publicKeyFingerprint: z.string().max(200).optional(),
+    proofChallengeToken: z.string().max(3000).optional(),
+    proofSignature: z.string().max(1000).optional(),
+    legacyDeviceId: z.string().min(16).max(200).optional(),
   })
   .passthrough()
 
@@ -34,21 +44,31 @@ export async function POST(request: Request) {
 
   const admin = createSupabaseAdminClient()
   const supabase = await createSupabaseServerClient()
-  const serverAuth = await supabase.auth.getUser()
-  let user = serverAuth.data.user
-  let error = serverAuth.error
-
-  if (error || !user?.id) {
-    const bearer = String(request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim()
-    if (bearer) {
-      const tokenAuth = await admin.auth.getUser(bearer)
-      user = tokenAuth.data.user
-      error = tokenAuth.error
-    }
+  const bearer = String(request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "").trim()
+  let user
+  let error
+  let authAccessToken: string | null = null
+  if (bearer) {
+    const tokenAuth = await admin.auth.getUser(bearer)
+    user = tokenAuth.data.user
+    error = tokenAuth.error
+    if (!tokenAuth.error && tokenAuth.data.user) authAccessToken = bearer
+  } else {
+    const [serverAuth, serverSession] = await Promise.all([
+      supabase.auth.getUser(),
+      supabase.auth.getSession(),
+    ])
+    user = serverAuth.data.user
+    error = serverAuth.error || serverSession.error
+    authAccessToken = serverSession.data.session?.access_token || null
   }
 
   if (error || !user?.id) {
     return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 })
+  }
+  const authSessionId = extractSupabaseAuthSessionId(authAccessToken)
+  if (!authSessionId) {
+    return NextResponse.json({ ok: false, error: "auth_session_binding_required" }, { status: 401 })
   }
 
   const parsedBody = await readJsonWithSchema(request, sessionRegisterPayloadSchema)
@@ -63,12 +83,25 @@ export async function POST(request: Request) {
     )
   }
 
+  let authorizedLegacyDeviceRecordId: string | null = null
+  if (body.legacyDeviceId) {
+    const currentSession = await verifyCurrentAppSession(user.id)
+    if (currentSession.ok) authorizedLegacyDeviceRecordId = currentSession.deviceId
+  }
+
   const result = await registerAppSessionForUser({
     user,
     requestHeaders: request.headers,
+    authSessionId,
+    authorizedLegacyDeviceRecordId,
     deviceId: body.deviceId,
     deviceType: body.deviceType,
-    allowSlotReuse: body.allowSlotReuse === true,
+    identityVersion: body.identityVersion,
+    publicKeyJwk: body.publicKeyJwk,
+    publicKeyFingerprint: body.publicKeyFingerprint,
+    proofChallengeToken: body.proofChallengeToken,
+    proofSignature: body.proofSignature,
+    legacyDeviceId: body.legacyDeviceId,
   })
 
   if (!result.ok) {
@@ -78,17 +111,41 @@ export async function POST(request: Request) {
         error: result.error,
         ...(result.message ? { message: result.message } : {}),
       },
-      { status: result.status }
+      { status: result.httpStatus }
     )
+  }
+
+  if (result.status === "approval_required") {
+    const response = NextResponse.json(
+      {
+        ok: true,
+        status: result.status,
+        deviceId: result.deviceId,
+        challengeId: result.challengeId,
+        expiresAt: result.expiresAt,
+        verificationCode: result.approvalCode,
+        maxDevices: result.maxDevices,
+      },
+      { status: 202 }
+    )
+    setPendingDeviceCookie(response, {
+      userId: user.id,
+      challengeId: result.challengeId,
+      deviceId: result.deviceId,
+      verificationCode: result.approvalCode,
+    })
+    return response
   }
 
   const response = NextResponse.json({
     ok: true,
+    status: result.status,
     sessionId: result.sessionId,
     deviceId: result.deviceId,
     maxDevices: MAX_REGISTERED_DEVICES,
   })
   setAppSessionCookie(response, result.sessionId)
   clearDeviceManagementCookie(response)
+  clearPendingDeviceCookie(response)
   return response
 }

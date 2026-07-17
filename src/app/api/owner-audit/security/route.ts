@@ -1,18 +1,15 @@
 import { NextResponse } from "next/server"
 import { assertOwnerAuditAccess } from "@/lib/owner/ownerAccess"
 import { fetchOwnerSecurityDashboard } from "@/lib/owner/ownerSecurity"
+import { requireConfirmedUser } from "@/lib/security/apiGuards"
 import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
-import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 export async function GET(request: Request) {
   try {
-    const supabase = await createSupabaseServerClient()
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser()
-
-    if (error || !user?.id || !user.email) {
+    const auth = await requireConfirmedUser()
+    if (!auth.ok) return auth.response
+    const user = auth.user
+    if (!user.email) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 })
     }
 

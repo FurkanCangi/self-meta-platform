@@ -6,9 +6,16 @@ import {
   type GoogleOAuthState,
 } from "@/lib/auth/googleOAuthState"
 import { getAcceptedDocumentsSnapshot, hasAcceptedActiveDocuments } from "@/lib/legal/documents"
-import { setAppSessionCookie } from "@/lib/security/appSession"
+import {
+  clearAppSessionCookie,
+  setAppSessionCookie,
+  verifyCurrentAppSession,
+} from "@/lib/security/appSession"
+import { extractSupabaseAuthSessionId } from "@/lib/security/authSessionBinding"
 import {
   clearDeviceManagementCookie,
+  clearPendingDeviceCookie,
+  setPendingDeviceCookie,
   setDeviceManagementCookie,
 } from "@/lib/security/deviceManagementAccess"
 import { ensurePaymentExemptAccess, resolveEffectivePlan } from "@/lib/security/paymentExemptions"
@@ -19,6 +26,14 @@ type CookieToSet = {
   name: string
   value: string
   options: Parameters<NextResponse["cookies"]["set"]>[2]
+}
+
+function applyLatestAuthCookies(response: NextResponse, authCookies: CookieToSet[]) {
+  const latest = new Map<string, CookieToSet>()
+  for (const cookie of authCookies) latest.set(cookie.name, cookie)
+  for (const { name, value, options } of latest.values()) {
+    response.cookies.set(name, value, options)
+  }
 }
 
 type LegalAcceptanceRow = {
@@ -103,11 +118,10 @@ async function redirectWithSignOut({
   authCookies: CookieToSet[]
   target: URL
 }) {
-  await supabase.auth.signOut().catch(() => null)
+  await supabase.auth.signOut({ scope: "local" }).catch(() => null)
   const response = NextResponse.redirect(target, 303)
-  authCookies.forEach(({ name, value, options }) => {
-    response.cookies.set(name, value, options)
-  })
+  applyLatestAuthCookies(response, authCookies)
+  clearAppSessionCookie(response)
   clearGoogleState(response)
   return response
 }
@@ -242,24 +256,42 @@ export async function GET(request: NextRequest) {
     }
   }
 
+  const previousAppSession = state.legacyDeviceId
+    ? await verifyCurrentAppSession(user.id)
+    : null
   const sessionResult = await registerAppSessionForUser({
     user,
     requestHeaders: request.headers,
+    authSessionId: extractSupabaseAuthSessionId(data.session.access_token) || "",
+    authorizedLegacyDeviceRecordId:
+      previousAppSession?.ok ? previousAppSession.deviceId : null,
     deviceId: state.deviceId,
     deviceType: state.deviceType,
-    allowSlotReuse: true,
+    identityVersion: state.identityVersion,
+    publicKeyJwk: state.publicKeyJwk,
+    publicKeyFingerprint: state.publicKeyFingerprint,
+    proofChallengeToken: state.proofChallengeToken,
+    proofSignature: state.proofSignature,
+    legacyDeviceId: state.legacyDeviceId,
   })
 
   if (!sessionResult.ok) {
-    if (sessionResult.error === "device_limit_exceeded") {
+    if (
+      sessionResult.error === "device_limit_exceeded" ||
+      sessionResult.error === "replacement_limit_exceeded" ||
+      sessionResult.error === "trusted_device_required"
+    ) {
       const target = new URL("/profile-setting", requestOrigin(request))
       target.searchParams.set("tab", "devices")
-      target.searchParams.set("deviceLimit", "1")
-      const response = NextResponse.redirect(target, 303)
-      authCookies.forEach(({ name, value, options }) => {
-        response.cookies.set(name, value, options)
+      target.searchParams.set("error", sessionResult.error)
+      const response = await redirectWithSignOut({
+        request,
+        supabase,
+        authCookies,
+        target,
       })
       setDeviceManagementCookie(response, user.id)
+      clearPendingDeviceCookie(response)
       clearGoogleState(response)
       return response
     }
@@ -270,6 +302,27 @@ export async function GET(request: NextRequest) {
       authCookies,
       target: authUrl(request, "/login", { ...fallbackParams, error: sessionResult.error || "session_failed" }),
     })
+  }
+
+  if (sessionResult.status === "approval_required") {
+    const target = new URL("/profile-setting", requestOrigin(request))
+    target.searchParams.set("tab", "devices")
+    target.searchParams.set("approval", "required")
+    const response = await redirectWithSignOut({
+      request,
+      supabase,
+      authCookies,
+      target,
+    })
+    setDeviceManagementCookie(response, user.id)
+    setPendingDeviceCookie(response, {
+      userId: user.id,
+      challengeId: sessionResult.challengeId,
+      deviceId: sessionResult.deviceId,
+      verificationCode: sessionResult.approvalCode,
+    })
+    clearGoogleState(response)
+    return response
   }
 
   const { data: profile } = await admin
@@ -293,11 +346,10 @@ export async function GET(request: NextRequest) {
     requestOrigin(request)
   )
   const response = NextResponse.redirect(target, 303)
-  authCookies.forEach(({ name, value, options }) => {
-    response.cookies.set(name, value, options)
-  })
+  applyLatestAuthCookies(response, authCookies)
   setAppSessionCookie(response, sessionResult.sessionId)
   clearDeviceManagementCookie(response)
+  clearPendingDeviceCookie(response)
   clearGoogleState(response)
   return response
 }

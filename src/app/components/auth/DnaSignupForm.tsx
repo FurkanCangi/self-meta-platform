@@ -1,8 +1,12 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState, type FormEvent } from "react"
+import { useEffect, useRef, useState, type FormEvent } from "react"
 import AuthLayout from "./AuthLayout"
+import {
+  createBrowserDeviceProof,
+  type BrowserDeviceProofFields,
+} from "@/lib/security/browserDeviceIdentity"
 
 const LEGAL_ACCEPTANCE_ERROR =
   "Devam etmek için hizmet sözleşmesi, KVKK aydınlatması, açık rıza ve veri giriş yetkisi beyanlarını onaylayın."
@@ -40,25 +44,15 @@ function getSignupSearchParam(name: string) {
   return new URLSearchParams(window.location.search).get(name) ?? ""
 }
 
-function getOrCreateDeviceId() {
-  const key = "dna_device_id"
-  const existing = window.localStorage.getItem(key)
-  if (existing && existing.length >= 16) return existing
-
-  const next =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID()
-      : `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`
-
-  window.localStorage.setItem(key, next)
-  return next
-}
-
-function detectDeviceType() {
-  const ua = navigator.userAgent || ""
-  if (/ipad|tablet|playbook|silk/i.test(ua)) return "tablet"
-  if (/mobi|iphone|android/i.test(ua)) return "mobile"
-  return "desktop"
+const EMPTY_DEVICE_PROOF: BrowserDeviceProofFields = {
+  deviceId: "",
+  deviceType: "unknown",
+  identityVersion: "legacy-session",
+  publicKeyJwk: "",
+  publicKeyFingerprint: "",
+  proofChallengeToken: "",
+  proofSignature: "",
+  legacyDeviceId: "",
 }
 
 export default function DnaSignupForm() {
@@ -75,16 +69,14 @@ export default function DnaSignupForm() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState(initialSignupError)
-  const [deviceId, setDeviceId] = useState("")
-  const [deviceType, setDeviceType] = useState("desktop")
+  const [deviceProof, setDeviceProof] = useState<BrowserDeviceProofFields>(EMPTY_DEVICE_PROOF)
   const [nextPath, setNextPath] = useState("")
   const [surface, setSurface] = useState("web")
+  const googleReady = useRef(false)
   const legalAccepted =
     legalChecks.terms && legalChecks.kvkk && legalChecks.consent && legalChecks.authority
 
   useEffect(() => {
-    setDeviceId(getOrCreateDeviceId())
-    setDeviceType(detectDeviceType())
     setNextPath(getSignupSearchParam("next"))
     setSurface(getSignupSearchParam("surface") === "app" ? "app" : "web")
   }, [])
@@ -125,7 +117,11 @@ export default function DnaSignupForm() {
     setLoading(true)
   }
 
-  function handleGoogleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleGoogleSubmit(event: FormEvent<HTMLFormElement>) {
+    if (googleReady.current) {
+      googleReady.current = false
+      return
+    }
     setError("")
 
     if (!legalAccepted) {
@@ -134,7 +130,22 @@ export default function DnaSignupForm() {
       return
     }
 
+    event.preventDefault()
+    const form = event.currentTarget
     setGoogleLoading(true)
+    let proof: BrowserDeviceProofFields
+    try {
+      proof = await createBrowserDeviceProof()
+    } catch {
+      setError("Güvenli cihaz doğrulamasına ulaşılamadı. Bağlantınızı kontrol edip yeniden deneyin.")
+      setGoogleLoading(false)
+      return
+    }
+    setDeviceProof(proof)
+    requestAnimationFrame(() => {
+      googleReady.current = true
+      form.requestSubmit()
+    })
   }
 
   return (
@@ -306,8 +317,7 @@ export default function DnaSignupForm() {
           <input type="hidden" name="mode" value="signup" />
           <input type="hidden" name="surface" value={surface} />
           <input type="hidden" name="next" value={nextPath} />
-          <input type="hidden" name="deviceId" value={deviceId} />
-          <input type="hidden" name="deviceType" value={deviceType} />
+          <DeviceProofInputs proof={deviceProof} />
           <input type="hidden" name="terms" value={legalChecks.terms ? "on" : ""} />
           <input type="hidden" name="kvkk" value={legalChecks.kvkk ? "on" : ""} />
           <input type="hidden" name="consent" value={legalChecks.consent ? "on" : ""} />
@@ -332,5 +342,20 @@ export default function DnaSignupForm() {
         </div>
       </div>
     </AuthLayout>
+  )
+}
+
+function DeviceProofInputs({ proof }: { proof: BrowserDeviceProofFields }) {
+  return (
+    <>
+      <input type="hidden" name="deviceId" value={proof.deviceId} />
+      <input type="hidden" name="deviceType" value={proof.deviceType} />
+      <input type="hidden" name="identityVersion" value={proof.identityVersion} />
+      <input type="hidden" name="publicKeyJwk" value={proof.publicKeyJwk} />
+      <input type="hidden" name="publicKeyFingerprint" value={proof.publicKeyFingerprint} />
+      <input type="hidden" name="proofChallengeToken" value={proof.proofChallengeToken} />
+      <input type="hidden" name="proofSignature" value={proof.proofSignature} />
+      <input type="hidden" name="legacyDeviceId" value={proof.legacyDeviceId} />
+    </>
   )
 }

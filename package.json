@@ -33,6 +33,12 @@
     "security:smoke": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/security-smoke-tests.js",
     "security:readiness": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/security-readiness-check.js",
     "security:owner-scenarios": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/owner-security-scenario-tests.js",
+    "security:video-playback": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/education-playback-contract-tests.js",
+    "security:device-trust": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/device-trust-contract-tests.js",
+    "security:live-hardening-contract": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/live-security-hardening-contract-tests.js",
+    "security:live-hardening": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/live-security-hardening.js",
+    "security:network-policy": "tsc -p tsconfig.education-network-policy-tests.json && node .tmp/education-network-policy-tests/scripts/education-network-policy-tests.js",
+    "security:update-network-ranges": "tsc -p tsconfig.education-network-updater.json && node .tmp/education-network-updater/scripts/update-education-network-ranges.js --write",
     "directory:contract": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/therapist-directory-contract-tests.js",
     "live:health": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/live-backend-health.js"
   },

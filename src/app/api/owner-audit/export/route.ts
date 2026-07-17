@@ -3,9 +3,9 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { assertOwnerAuditAccess } from "@/lib/owner/ownerAccess"
 import { fetchOwnerAuditEvents, fetchOwnerDossierRows } from "@/lib/owner/ownerAudit"
 import { evaluateAccountRisk, recordAccountSecurityEvent } from "@/lib/security/anomalyDetection"
+import { requireConfirmedUser } from "@/lib/security/apiGuards"
 import { getPrivacyAuditContext, recordDataAccessAuditEvent } from "@/lib/security/privacyOps"
 import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
-import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 function flattenObject(
   input: Record<string, unknown>,
@@ -63,13 +63,10 @@ function toCsv(rows: Array<Record<string, unknown>>) {
 
 export async function GET(req: Request) {
   try {
-    const supabase = await createSupabaseServerClient()
-    const {
-      data: { user },
-      error: userError,
-    } = await supabase.auth.getUser()
-
-    if (userError || !user?.email) {
+    const auth = await requireConfirmedUser()
+    if (!auth.ok) return auth.response
+    const user = auth.user
+    if (!user.email) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 })
     }
 

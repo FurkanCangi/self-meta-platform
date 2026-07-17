@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp/education-network-updater",
+    "rootDir": ".",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2020",
+    "incremental": false,
+    "isolatedModules": false
+  },
+  "include": [
+    "scripts/update-education-network-ranges.ts",
+    "src/lib/security/educationNetworkPolicy.ts",
+    "src/lib/security/data/education-network-ranges.json"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

@@ -2,16 +2,17 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { assertOwnerAuditAccess } from "@/lib/owner/ownerAccess"
 import { applyOwnerSecurityAction } from "@/lib/owner/ownerSecurity"
-import { requireTrustedMutation } from "@/lib/security/apiGuards"
+import { requireConfirmedUser, requireTrustedMutation } from "@/lib/security/apiGuards"
 import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { readJsonWithSchema } from "@/lib/security/schemaGuards"
-import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 const ownerSecurityActionSchema = z.object({
   targetUserId: z.string().uuid(),
   action: z.enum([
     "revoke_sessions",
     "revoke_device",
+    "reset_device_replacements",
+    "recover_device_trust",
     "mark_review",
     "clear_review",
     "clear_risk",
@@ -34,13 +35,11 @@ export async function POST(request: Request) {
   if (originError) return originError
 
   try {
-    const supabase = await createSupabaseServerClient()
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser()
+    const auth = await requireConfirmedUser()
+    if (!auth.ok) return auth.response
+    const user = auth.user
 
-    if (error || !user?.id || !user.email) {
+    if (!user.email) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 })
     }
 

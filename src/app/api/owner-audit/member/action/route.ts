@@ -2,11 +2,10 @@ import { NextResponse } from "next/server"
 import { z } from "zod"
 import { assertOwnerAuditAccess } from "@/lib/owner/ownerAccess"
 import { applyOwnerMemberAction } from "@/lib/owner/ownerMemberActions"
-import { requireTrustedMutation } from "@/lib/security/apiGuards"
+import { requireConfirmedUser, requireTrustedMutation } from "@/lib/security/apiGuards"
 import { rejectServerControlledFields } from "@/lib/security/payloadGuards"
 import { checkRateLimit, rateLimitResponse } from "@/lib/security/rateLimit"
 import { readJsonWithSchema } from "@/lib/security/schemaGuards"
-import { createSupabaseServerClient } from "@/lib/supabase/server"
 
 const ownerMemberActionSchema = z
   .object({
@@ -21,13 +20,10 @@ export async function POST(request: Request) {
   if (originError) return originError
 
   try {
-    const supabase = await createSupabaseServerClient()
-    const {
-      data: { user },
-      error,
-    } = await supabase.auth.getUser()
-
-    if (error || !user?.id || !user.email) {
+    const auth = await requireConfirmedUser()
+    if (!auth.ok) return auth.response
+    const user = auth.user
+    if (!user.email) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 })
     }
 

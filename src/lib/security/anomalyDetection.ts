@@ -13,13 +13,11 @@ type SecurityEventRow = {
 
 type RiskDecision = {
   score: number
-  action: "none" | "manual_review" | "temporary_lock"
+  action: "none" | "manual_review"
   reasons: string[]
 }
 
 const REVIEW_THRESHOLD = 40
-const LOCK_THRESHOLD = 160
-const TEMPORARY_LOCK_MINUTES = 30
 const SECURITY_LOCK_EXEMPT_ROLES = new Set(["admin", "super_admin", "owner"])
 
 function countDistinct(values: Array<string | null | undefined>) {
@@ -121,10 +119,6 @@ export function scoreAccountSecurityEvents(events: SecurityEventRow[]): RiskDeci
     reasons.push("API rate limit aşımı")
   }
 
-  if (score >= LOCK_THRESHOLD) {
-    return { score, action: "temporary_lock", reasons }
-  }
-
   if (score >= REVIEW_THRESHOLD) {
     return { score, action: "manual_review", reasons }
   }
@@ -212,11 +206,6 @@ export async function evaluateAccountRisk(userId: string) {
   if (lockExempt) {
     decision = { score: 0, action: "none", reasons: [] }
   }
-  const lockedUntil =
-    decision.action === "temporary_lock"
-      ? new Date(Date.now() + TEMPORARY_LOCK_MINUTES * 60 * 1000).toISOString()
-      : null
-
   const { error: stateError } = await admin
     .from("account_security_state")
     .upsert(
@@ -225,7 +214,6 @@ export async function evaluateAccountRisk(userId: string) {
         risk_score: decision.score,
         risk_reasons: decision.reasons,
         manual_review_required: decision.action !== "none",
-        temporary_locked_until: lockedUntil,
         last_evaluated_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       },
@@ -234,17 +222,6 @@ export async function evaluateAccountRisk(userId: string) {
 
   if (stateError) {
     return { ok: false as const, error: stateError.message }
-  }
-
-  if (decision.action === "temporary_lock") {
-    await admin
-      .from("account_sessions")
-      .update({
-        status: "revoked",
-        revoked_at: new Date().toISOString(),
-      })
-      .eq("user_id", userId)
-      .eq("status", "active")
   }
 
   return { ok: true as const, decision }
