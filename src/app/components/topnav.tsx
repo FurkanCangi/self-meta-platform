@@ -273,6 +273,20 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
         </div>
 
         <div className="flex items-center gap-3">
+          {showOwnerAudit ? (
+            <Link
+              href="/owner-audit"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 px-3 text-sm font-black text-indigo-800 shadow-sm transition hover:border-indigo-300 hover:bg-indigo-100"
+              aria-label="Yönetici Panelini Aç"
+              title="Yönetici Paneli"
+            >
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-indigo-700 text-[10px] text-white">
+                YP
+              </span>
+              <span className="hidden lg:inline">Yönetici Paneli</span>
+            </Link>
+          ) : null}
+
           <button
             type="button"
             onClick={toggleTheme}

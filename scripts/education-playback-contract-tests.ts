@@ -1,6 +1,11 @@
 import assert from "node:assert/strict"
 import fs from "node:fs"
 import path from "node:path"
+import {
+  clampPlaybackResumeTime,
+  playbackUrlRefreshDelayMs,
+  retryAfterDelayMs,
+} from "../src/app/education/playbackUrlRefresh"
 
 const root = process.cwd()
 const read = (relativePath: string) => fs.readFileSync(path.join(root, relativePath), "utf8")
@@ -61,8 +66,37 @@ const touchIndex = eventsRoute.indexOf("await touchEducationPlaybackLease")
 assert.ok(networkIndex >= 0 && touchIndex > networkIndex, "network policy must run before lease touch")
 assert.match(eventsRoute, /error === "playback_lease_lost" \? 409 : 500/)
 assert.match(eventsRoute, /RELEASE_EVENTS/)
+assert.match(
+  eventsRoute,
+  /key: `education-video-events:\$\{auth\.user\.id\}`,[\s\S]*limit: 480,[\s\S]*windowMs: 60 \* 60 \* 1000/,
+  "the possession-bound event budget must accommodate long lessons, heartbeats, URL refreshes, and ordinary controls"
+)
 assert.match(eventsRoute, /const possessionRequest = request\.clone\(\)/)
 assert.match(eventsRoute, /if \(eventType !== "release"\)[\s\S]*verifyDevicePossessionForRequest/)
+assert.match(eventsRoute, /"refresh_url"/)
+const refreshBranchIndex = eventsRoute.indexOf('if (eventType === "refresh_url")')
+assert.ok(
+  eventsRoute.indexOf("const verifiedToken = await verifyEducationVideoAccessToken") < refreshBranchIndex &&
+    eventsRoute.indexOf("const currentSession = await verifyCurrentAppSession") < refreshBranchIndex &&
+    eventsRoute.indexOf("const possession = await verifyDevicePossessionForRequest") < refreshBranchIndex &&
+    touchIndex < refreshBranchIndex,
+  "refresh must retain token, app-session, device-possession, and exact-lease checks"
+)
+const refreshRouteSource = eventsRoute.slice(refreshBranchIndex)
+const refreshSignedUrlIndex = refreshRouteSource.indexOf("createEducationVideoPlaybackAccess")
+const refreshProviderGateIndex = refreshRouteSource.indexOf('refresh.provider !== "supabase"')
+const refreshLeaseConfirmIndex = refreshRouteSource.indexOf("const confirmedLease = await touchEducationPlaybackLease")
+const refreshResponseIndex = refreshRouteSource.indexOf("refreshedPlaybackUrl =")
+assert.ok(
+  refreshSignedUrlIndex >= 0 &&
+    refreshProviderGateIndex > refreshSignedUrlIndex &&
+    refreshLeaseConfirmIndex > refreshProviderGateIndex &&
+    refreshResponseIndex > refreshLeaseConfirmIndex,
+  "refresh must sign only a supported URL, then reconfirm the exact lease before disclosing it"
+)
+assert.match(refreshRouteSource, /refresh\.playerConfig\.playbackPolicy !== "signed_url"/)
+assert.match(refreshRouteSource, /phase: "signed_url_refresh_confirm"/)
+assert.match(eventsRoute, /refreshedPlaybackUrl \? \{ refresh: refreshedPlaybackUrl \} : \{\}/)
 
 assert.match(protection, /EDUCATION_VIDEO_HEARTBEAT_INTERVAL_SECONDS = 25/)
 assert.match(protection, /EDUCATION_PLAYBACK_CONCURRENCY_WINDOW_SECONDS = 90/)
@@ -80,6 +114,32 @@ assert.match(player, /expectedPlaybackKey/)
 assert.match(player, /activePlaybackKeyRef\.current !== expectedPlaybackKey/)
 assert.match(player, /eventType === "release"[\s\S]*createDevicePossessionHeaders/)
 assert.match(player, /const serializedBody = JSON\.stringify/)
+assert.match(player, /eventType: "refresh_url"/)
+assert.match(player, /access\.provider !== "supabase"/)
+assert.match(player, /access\.playerConfig\.playbackPolicy !== "signed_url"/)
+assert.match(player, /playbackUrlRefreshDelayMs/)
+assert.match(player, /createDevicePossessionHeaders\(\{[\s\S]*path,[\s\S]*body: serializedBody/)
+assert.match(player, /activePlaybackKeyRef\.current !== requestPlaybackKey/)
+assert.match(player, /currentTime: currentVideo\?\.currentTime \|\| 0/)
+assert.match(player, /!currentVideo\.paused && !currentVideo\.ended/)
+assert.match(player, /clampPlaybackResumeTime\(pending\.currentTime, video\.duration\)/)
+assert.match(player, /src=\{currentPlaybackSource\.playbackUrl\}/)
+assert.match(player, /onLoadedMetadata/)
+assert.match(player, /suppressNextLoadedDataEventRef/)
+assert.match(player, /suppressNextPlayEventRef/)
+const endedHandler = player.slice(player.indexOf("onEnded={() =>"), player.indexOf("onError={() =>"))
+assert.ok(
+  endedHandler.indexOf("releasedRef.current = true") >= 0 &&
+    endedHandler.indexOf("stopHeartbeat()") > endedHandler.indexOf("releasedRef.current = true") &&
+    endedHandler.indexOf('postEvent("complete"') > endedHandler.indexOf("stopHeartbeat()"),
+  "video completion must stop local lease continuity before the best-effort completion request"
+)
+const errorHandler = player.slice(player.indexOf("onError={() =>"), player.indexOf("/>\n        ) : (", player.indexOf("onError={() =>")))
+assert.equal(
+  errorHandler.match(/releasedRef\.current = true[\s\S]*?stopHeartbeat\(\)[\s\S]*?postEvent\("error"\)/g)?.length,
+  2,
+  "both signed-URL refresh errors and ordinary media errors must stop local lease continuity first"
+)
 const postEventSource = player.slice(player.indexOf("const postEvent"), player.indexOf("const startHeartbeat"))
 const parsedEventResponseIndex = postEventSource.indexOf("const json =")
 const staleEventGuardIndex = postEventSource.indexOf(
@@ -91,6 +151,35 @@ assert.ok(
   parsedEventResponseIndex >= 0 && staleEventGuardIndex > parsedEventResponseIndex && terminalEventIndex > staleEventGuardIndex,
   "stale event response must be ignored before it can stop the active lease"
 )
+
+const refreshNow = Date.parse("2026-07-17T12:00:00.000Z")
+assert.equal(
+  playbackUrlRefreshDelayMs({
+    expiresAt: "2026-07-17T12:02:00.000Z",
+    ttlSeconds: 120,
+    nowMs: refreshNow,
+  }),
+  90_000,
+  "a two-minute Supabase URL must refresh thirty seconds before expiry"
+)
+assert.equal(
+  playbackUrlRefreshDelayMs({
+    expiresAt: "2026-07-17T12:00:10.000Z",
+    ttlSeconds: 120,
+    nowMs: refreshNow,
+  }),
+  0,
+  "an already stale refresh deadline must run immediately"
+)
+assert.equal(
+  playbackUrlRefreshDelayMs({ expiresAt: "invalid", ttlSeconds: 120, nowMs: refreshNow }),
+  null
+)
+assert.equal(clampPlaybackResumeTime(55, 100), 55)
+assert.equal(clampPlaybackResumeTime(100, 100), 99.75)
+assert.equal(clampPlaybackResumeTime(Number.NaN, 100), 0)
+assert.equal(retryAfterDelayMs("7", refreshNow), 7_000)
+assert.equal(retryAfterDelayMs("2026-07-17T12:00:09.000Z", refreshNow), 9_000)
 assert.match(page, /Burada devam et/)
 assert.match(page, /playerSessionId,[\s\S]*takeover:/)
 assert.match(page, /createDevicePossessionHeaders\(\{[\s\S]*body: serializedBody/)
@@ -110,4 +199,4 @@ assert.ok(
   "stale access response must be ignored before it can replace the latest selection"
 )
 
-console.log("Education playback contract tests passed (lease races, request ordering, takeover, cleanup, watermark, network gate).")
+console.log("Education playback contract tests passed (lease races, takeover, signed URL refresh, resume, watermark, network gate).")

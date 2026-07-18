@@ -1,3 +1,4 @@
+import { createHash } from "crypto"
 import { cookies } from "next/headers"
 import { NextResponse } from "next/server"
 import { z } from "zod"
@@ -11,7 +12,7 @@ import {
 import { verifyCurrentAppSession } from "@/lib/security/appSession"
 import { verifyDevicePossessionForRequest } from "@/lib/security/deviceProof"
 import { rejectServerControlledFields } from "@/lib/security/payloadGuards"
-import { checkRateLimit, getClientRateLimitKey, rateLimitResponse } from "@/lib/security/rateLimit"
+import { checkRateLimit, getNetworkRateLimitKey, rateLimitResponse } from "@/lib/security/rateLimit"
 import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import { recordAccountSecurityEvent } from "@/lib/security/anomalyDetection"
 import {
@@ -67,6 +68,7 @@ async function requireDeviceAccess() {
       mode: "active_session" as const,
       sessionId: appSession.sessionId,
       currentDeviceId: appSession.deviceId,
+      managementNonce: null,
     }
   }
 
@@ -84,6 +86,7 @@ async function requireDeviceAccess() {
       sessionId: null,
       currentDeviceId: null,
       pendingToken,
+      managementNonce: managementToken.nonce,
     }
   }
 
@@ -91,6 +94,27 @@ async function requireDeviceAccess() {
     ok: false as const,
     response: NextResponse.json({ ok: false, error: "Session expired" }, { status: 401 }),
   }
+}
+
+function scopedDeviceReadRateLimitKey(access: {
+  user: { id: string }
+  mode: "active_session" | "device_management"
+  sessionId: string | null
+  currentDeviceId: string | null
+  managementNonce: string | null
+  pendingToken?: { challengeId: string; deviceId: string } | null
+}) {
+  const identity =
+    access.mode === "active_session"
+      ? [access.user.id, access.sessionId, access.currentDeviceId].join(":")
+      : [
+          access.user.id,
+          access.managementNonce,
+          access.pendingToken?.challengeId || "recovery",
+          access.pendingToken?.deviceId || "none",
+        ].join(":")
+  const digest = createHash("sha256").update(identity).digest("base64url")
+  return `security-devices-read:${access.mode}:${digest}`
 }
 
 function verificationStatus(device: {
@@ -104,15 +128,32 @@ function verificationStatus(device: {
 }
 
 export async function GET(request: Request) {
-  const rateLimit = await checkRateLimit({
-    key: getClientRateLimitKey(request, "security-devices-read"),
-    limit: 60,
+  const broadRateLimit = await checkRateLimit({
+    key: getNetworkRateLimitKey(request, "security-devices-read-broad"),
+    // This is only a coarse abuse ceiling. Each authenticated app session has
+    // its own tighter bucket below, so a clinic's shared network cannot make a
+    // few approval screens starve one another.
+    limit: 1_200,
     windowMs: 10 * 60 * 1000,
   })
-  if (!rateLimit.ok) return rateLimitResponse(rateLimit.resetAt)
+  if (!broadRateLimit.ok) return rateLimitResponse(broadRateLimit.resetAt)
 
   const access = await requireDeviceAccess()
-  if (!access.ok) return access.response
+  if (!access.ok) {
+    const anonymousRateLimit = await checkRateLimit({
+      key: getNetworkRateLimitKey(request, "security-devices-read-anonymous"),
+      limit: 60,
+      windowMs: 10 * 60 * 1000,
+    })
+    if (!anonymousRateLimit.ok) return rateLimitResponse(anonymousRateLimit.resetAt)
+    return access.response
+  }
+  const scopedRateLimit = await checkRateLimit({
+    key: scopedDeviceReadRateLimitKey(access),
+    limit: 120,
+    windowMs: 10 * 60 * 1000,
+  })
+  if (!scopedRateLimit.ok) return rateLimitResponse(scopedRateLimit.resetAt)
   const admin = createSupabaseAdminClient()
   const now = new Date().toISOString()
   const { data: expiredChallenges, error: expireError } = await admin
@@ -234,18 +275,24 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   const originError = await requireTrustedMutation(request)
   if (originError) return originError
-  const rateLimit = await checkRateLimit({
-    key: getClientRateLimitKey(request, "security-devices-action"),
-    limit: 30,
+  const broadRateLimit = await checkRateLimit({
+    key: getNetworkRateLimitKey(request, "security-devices-action-broad"),
+    limit: 600,
     windowMs: 10 * 60 * 1000,
   })
-  if (!rateLimit.ok) return rateLimitResponse(rateLimit.resetAt)
+  if (!broadRateLimit.ok) return rateLimitResponse(broadRateLimit.resetAt)
 
   const access = await requireDeviceAccess()
   if (!access.ok) return access.response
   if (access.mode !== "active_session") {
     return NextResponse.json({ ok: false, error: "trusted_device_required" }, { status: 403 })
   }
+  const scopedRateLimit = await checkRateLimit({
+    key: `security-devices-action:${access.user.id}:${access.sessionId}`,
+    limit: 90,
+    windowMs: 10 * 60 * 1000,
+  })
+  if (!scopedRateLimit.ok) return rateLimitResponse(scopedRateLimit.resetAt)
 
   const possession = await verifyDevicePossessionForRequest({
     request,
@@ -313,35 +360,29 @@ export async function POST(request: Request) {
   }
 
   if (body.action === "reject") {
-    const now = new Date().toISOString()
-    const { data: challenge, error: lookupError } = await admin
-      .from("account_device_verification_challenges")
-      .select("id, pending_device_id")
-      .eq("id", body.challengeId)
-      .eq("user_id", access.user.id)
-      .eq("status", "pending")
-      .maybeSingle()
-    if (lookupError) return NextResponse.json({ ok: false, error: "challenge_lookup_failed" }, { status: 500 })
-    if (!challenge) return NextResponse.json({ ok: false, error: "challenge_not_found" }, { status: 404 })
-    await Promise.all([
-      admin
-        .from("account_device_verification_challenges")
-        .update({ status: "rejected", rejected_at: now })
-        .eq("id", challenge.id)
-        .eq("user_id", access.user.id),
-      admin
-        .from("account_devices")
-        .update({ revoked_at: now, verification_required: true, verified_at: null })
-        .eq("id", challenge.pending_device_id)
-        .eq("user_id", access.user.id),
-    ])
+    const { data, error } = await admin.rpc("reject_account_device_challenge", {
+      p_user_id: access.user.id,
+      p_challenge_id: body.challengeId,
+      p_approver_device_id: access.currentDeviceId,
+    })
+    if (error) {
+      return NextResponse.json({ ok: false, error: "device_rejection_failed" }, { status: 500 })
+    }
+    const outcome = Array.isArray(data) ? data[0]?.result : (data as { result?: string } | null)?.result
+    const rejectedDeviceId = Array.isArray(data)
+      ? data[0]?.rejected_device_id
+      : (data as { rejected_device_id?: string } | null)?.rejected_device_id
+    if (outcome !== "rejected") {
+      const status = outcome === "challenge_not_found" ? 404 : outcome === "invalid_input" ? 400 : 409
+      return NextResponse.json({ ok: false, error: outcome || "device_rejection_failed" }, { status })
+    }
     await recordAccountSecurityEvent({
       userId: access.user.id,
       eventType: "device_approval_rejected",
-      deviceId: challenge.pending_device_id,
+      deviceId: rejectedDeviceId || null,
       ipAddress: getClientIp(request.headers),
       userAgent: request.headers.get("user-agent"),
-      metadata: { challenge_id: challenge.id },
+      metadata: { challenge_id: body.challengeId, approver_device_id: access.currentDeviceId },
     })
     return NextResponse.json({ ok: true, status: "rejected" })
   }

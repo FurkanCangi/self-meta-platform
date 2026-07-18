@@ -269,7 +269,9 @@ const appSession = read("src/lib/security/appSession.ts")
 const securityExemptions = read("src/lib/security/securityExemptions.ts")
 const deviceManagementAccess = read("src/lib/security/deviceManagementAccess.ts")
 const deviceManagementRoute = read("src/app/api/security/devices/route.ts")
+const authSignupRoute = read("src/app/api/auth/signup/route.ts")
 const authLoginRoute = read("src/app/api/auth/login/route.ts")
+const rateLimitSource = read("src/lib/security/rateLimit.ts")
 const authCallbackRoute = read("src/app/auth/callback/route.ts")
 const sessionRegisterRoute = read("src/app/api/security/session/register/route.ts")
 const profileSettingsPage = read("src/app/profile-setting/page.tsx")
@@ -301,6 +303,34 @@ check("test security exempt emails exist", securityExemptions.includes("SECURITY
 check("test exempt users still get session fingerprint audit", !appSession.includes("if (lockExemptUser) return { ok: true, sessionId }"), "lock exempt users should still be audited")
 check("test exempt users are not scored suspicious", anomalyDetection.includes("decision = { score: 0, action: \"none\", reasons: [] }"), "lock exempt users should not retain risk score")
 check("device management cookie is signed", deviceManagementAccess.includes("createHmac") && deviceManagementAccess.includes("timingSafeEqual"), "device management cookie must be signed")
+check(
+  "public signup separates each normalized email while retaining a broad network ceiling",
+  authSignupRoute.includes("signupRateLimitKeys(request, email)") &&
+    authSignupRoute.includes("SIGNUP_EMAIL_NETWORK_LIMIT = 5") &&
+  authSignupRoute.includes("SIGNUP_NETWORK_LIMIT = 40") &&
+    authSignupRoute.includes("key: rateLimitKeys.emailNetwork") &&
+    authSignupRoute.includes("key: rateLimitKeys.network") &&
+    authSignupRoute.indexOf("const networkRateLimit") <
+      authSignupRoute.indexOf("const emailNetworkRateLimit"),
+  "signup email-network and broad-network buckets are missing"
+)
+check(
+  "signup rate-limit persistence contains only HMAC digests",
+  authSignupRoute.includes("getPseudonymousRateLimitKey") &&
+    authSignupRoute.includes("getTrustedClientNetworkIdentity") &&
+    rateLimitSource.includes('createHmac("sha256", rateLimitHashSecret())') &&
+    rateLimitSource.includes(".update(JSON.stringify(parts))") &&
+    rateLimitSource.includes("return `${scope}:${digest}`") &&
+    !authSignupRoute.includes("getClientRateLimitKey"),
+  "signup rate-limit keys may expose raw email or network identifiers"
+)
+check(
+  "rate-limit storage cleanup is bounded and cannot delete a refreshed counter",
+  rateLimitSource.includes("RATE_LIMIT_CLEANUP_BATCH_SIZE = 100") &&
+    rateLimitSource.includes("RATE_LIMIT_CLEANUP_INTERVAL_MS") &&
+    (rateLimitSource.match(/\.lte\("reset_at", expiredBefore\)/g) || []).length >= 2,
+  "expired rate-limit cleanup is missing or race-prone"
+)
 check("login keeps authenticated user in device management mode on device limit", authLoginRoute.includes("setDeviceManagementCookie(response, userId)") && authLoginRoute.includes('code === "device_limit_exceeded"'), "login device-limit handoff missing")
 check("google auth keeps authenticated user in device management mode on device limit", authCallbackRoute.includes("setDeviceManagementCookie(response, user.id)") && authCallbackRoute.includes('sessionResult.error === "device_limit_exceeded"'), "google device-limit handoff missing")
 check("session register clears device management cookie after success", sessionRegisterRoute.includes("clearDeviceManagementCookie(response)"), "device management cookie not cleared after register")
@@ -323,15 +353,51 @@ check(
     legalAcceptanceGate.includes("isDeviceSecurityManagement || loading"),
   "device-management screen can be hidden behind the legal acceptance gate"
 )
-check("profile settings renders device management panel", profileSettingsPage.includes("DeviceManagementPanel") && profileSettingsPage.includes("deviceLimitMode"), "settings device panel missing")
+check(
+  "profile settings renders every device recovery and approval flow",
+  profileSettingsPage.includes("DeviceManagementPanel") &&
+    profileSettingsPage.includes("deviceRecoveryReason") &&
+    profileSettingsPage.includes("deviceApprovalRequired") &&
+    profileSettingsPage.includes('error === "device_limit_exceeded"') &&
+    profileSettingsPage.includes('error === "replacement_limit_exceeded"') &&
+    profileSettingsPage.includes('error === "trusted_device_required"'),
+  "settings device recovery flow missing"
+)
 check(
   "capped pending device directs removal to an existing trusted device",
-  profileDevicesPanel.includes("Mevcut güvenilir cihazlarınızdan birinde") &&
-    profileDevicesPanel.includes('/login?device_retry=1') &&
+  profileDevicesPanel.includes("Mevcut güvenilir cihazlarınızdan birinde Ayarlar → Cihazlarım") &&
+    profileDevicesPanel.includes('notice: "device_retry"') &&
+    profileDevicesPanel.includes("window.location.assign(retryLoginUrl)") &&
+    profileDevicesPanel.includes('/support?category=device') &&
     !profileDevicesPanel.includes("Bu cihazla devam et"),
   "safe device-limit recovery guidance missing"
 )
-check("device panel explains type-neutral three-device policy", profileDevicesPanel.includes("türü fark etmeksizin en fazla") && profileDevicesPanel.includes("{activeDevices.length}/{maxDevices}"), "three-device policy missing in panel")
+check(
+  "device panel explains type-neutral policy without leaking inventory to an untrusted browser",
+  profileDevicesPanel.includes("türü fark etmeksizin en fazla") &&
+    profileDevicesPanel.includes("{activeDevices.length}/{maxDevices}") &&
+    profileDevicesPanel.includes("showPrivateDeviceInventory") &&
+    profileDevicesPanel.includes('mode === "active_session" && !recoveryReason && !approvalRequired'),
+  "three-device privacy policy missing in panel"
+)
+check(
+  "device panel honors Retry-After and keeps pending approval retry-safe",
+  profileDevicesPanel.includes('response.headers.get("retry-after")') &&
+    profileDevicesPanel.includes("setPollBackoffUntil") &&
+    profileDevicesPanel.includes("approvalRequired && !hasSuccessfulLoad") &&
+    profileDevicesPanel.includes("setHasSuccessfulLoad(true)") &&
+    profileDevicesPanel.includes("currentApprovalPending") &&
+    profileDevicesPanel.includes("{canRetryLogin ? (") &&
+    !profileDevicesPanel.includes('deviceLimitMode || mode === "device_management"'),
+  "device polling or pending-approval recovery guard missing"
+)
+check(
+  "account lock redirects after local cleanup even if global logout fails",
+  /if \(result\?\.accountLocked\) \{[\s\S]*?try \{[\s\S]*?await logoutAppSession\("global"\)[\s\S]*?\} catch \{[\s\S]*?\}[\s\S]*?window\.location\.assign\("\/login\?error=account_suspended"\)/.test(
+    profileDevicesPanel
+  ),
+  "account suspension redirect can be replaced by a logout error"
+)
 
 const ownerMemberActionRoute = read("src/app/api/owner-audit/member/action/route.ts")
 const ownerMemberActions = read("src/lib/owner/ownerMemberActions.ts")

@@ -51,6 +51,16 @@ check(
     !source.includes("LIVE_SECURITY_DEVICE_APPROVAL_SECRET")
 )
 check(
+  "atomic device rejection RPC is required and its approve/reject race has one winner",
+  source.includes('admin!.rpc("reject_account_device_challenge"') &&
+    source.includes('step("device removal releases its session and permits two replacements"') &&
+    source.includes("const [approvalRace, rejectionRace] = await Promise.all") &&
+    source.includes("raceWinners.length === 1 && raceLosers.length === 1") &&
+    source.includes("approvalWon !== rejectionWon") &&
+    source.includes('racedChallenge?.status === (approvalWon ? "approved" : "rejected")') &&
+    source.includes("approval/rejection race left an inconsistent device state")
+)
+check(
   "three-device and fourth-device assertions are present",
   source.includes("expected 3 trusted devices") &&
     source.includes('result.payload.error === "device_limit_exceeded"')
@@ -134,8 +144,25 @@ check(
     source.includes("mediaBytes.byteLength > 0")
 )
 check(
+  "Supabase-provider canary refreshes signed bytes and rejects refresh after takeover",
+  source.includes('requireSignedUrl: process.env.LIVE_SECURITY_REQUIRE_SIGNED_URL === "1"') &&
+    source.includes("Supabase canary did not return the required signed video URL") &&
+    source.includes("!config!.requireSignedUrl || refreshedSignedUrl") &&
+    source.includes('"refresh_url"') &&
+    source.includes("refreshed signed video URL returned HTTP") &&
+    source.includes("taken-over playback refreshed its signed URL") &&
+    source.includes('staleRefresh.statusCode === 409') &&
+    source.includes('staleRefresh.payload.error === "playback_lease_lost"') &&
+    source.includes('range: "bytes=0-1023"') &&
+    source.includes('range: "bytes=512-1535"') &&
+    fixtureBytes.length > 1_535 &&
+    !source.includes('range: "bytes=2048-4095"')
+)
+check(
   "replacement quota is exercised",
   source.includes('thirdReplacement.payload.error === "replacement_limit_exceeded"') &&
+    source.includes('fullQuotaBlocked.payload.error === "replacement_limit_exceeded"') &&
+    source.indexOf("const fullQuotaBlocked") < source.indexOf("const removeReplacement") &&
     source.includes("replacementPolicy.used === 2 && replacementPolicy.remaining === 0")
 )
 check(
@@ -146,20 +173,70 @@ check(
     source.includes('error === "rate_limited"')
 )
 check(
-  "cleanup covers video, device, auth, storage, and rate-limit artifacts",
+  "cleanup covers video, device, auth, storage, and canary-owned exact rate-limit artifacts",
   source.includes('"education_video_playback_leases"') &&
     source.includes('"account_device_proof_nonces"') &&
     source.includes("admin!.auth.admin.deleteUser") &&
     source.includes("admin!.storage.from(educationBucket).remove") &&
-    source.includes('from("api_rate_limits").delete()')
+    source.includes('from("api_rate_limits")') &&
+    source.includes("canaryOwnedRateLimitKeys") &&
+    source.includes('`session-register:${context.userId}`') &&
+    source.includes('`device-possession-challenge:${context.userId}:${appSessionId}`') &&
+    source.includes('`security-devices-action:${context.userId}:${appSessionId}`') &&
+    source.includes('safeCleanup("canary-owned raw rate-limit key discovery"') &&
+    source.includes('safeCleanup("canary-owned session rate-limit key discovery"') &&
+    source.includes("discoverCanaryOwnedSessionRateLimitKeys") &&
+    source.includes('safeCleanup("canary-owned exact api rate limits"') &&
+    !source.includes('.delete().ilike("key"')
 )
 check(
   "cleanup is guaranteed by finally",
   source.includes("} finally {\n    await cleanup()")
 )
 check(
-  "cleanup verifies all canary rows are actually zero",
-  source.includes("zero verification") && source.includes("cleanup left")
+  "cleanup verifies tracked exact rows and discloses shared or opaque counters retained",
+  source.includes('"user_entitlements",') &&
+    source.includes("education video asset zero verification") &&
+    source.includes("education video object zero verification") &&
+    source.includes("api rate limits zero verification") &&
+    source.includes("canaryOwnedRateLimitKeys") &&
+    source.includes('retainedSharedRateLimitScopes.add("security-devices-action-broad")') &&
+    source.includes('retainedSharedRateLimitScopes.add("session-register-broad")') &&
+    source.includes('retainedSharedRateLimitScopes.add("device-proof-challenge-broad")') &&
+    source.includes('retainedOpaqueRateLimitScopes.add("device-proof-challenge-device")') &&
+    !source.includes('canaryOwnedRateLimitKeys.add("security-devices-action-broad")') &&
+    !source.includes('canaryOwnedRateLimitKeys.add("session-register-broad")') &&
+    source.includes('retainedSharedRateLimitScopes: [...retainedSharedRateLimitScopes].sort()') &&
+    source.includes('retainedOpaqueRateLimitScopes: [...retainedOpaqueRateLimitScopes].sort()') &&
+    source.includes("temporary auth user ${userId} zero verification failed") &&
+    source.includes("temporary auth user ${userId} still exists after cleanup") &&
+    source.includes("cleanup left")
+)
+check(
+  "auth cleanup uses exact user_not_found code and paginates beyond 4000 users",
+  source.includes('authErrorCode(error) === "user_not_found"') &&
+    !source.includes('/not found/i.test') &&
+    source.includes("while (true)") &&
+    source.includes("temporary signup user pagination repeated a page") &&
+    source.includes("page = Number.isInteger(nextPage) && nextPage > page ? nextPage : page + 1") &&
+    !source.includes("page <= 20")
+)
+check(
+  "signup cleanup verifies exact email and TEST AUTOMATION marker and requires successful-user lookup",
+  source.includes('const signupCanaryFullName = "TEST AUTOMATION Security Canary"') &&
+    source.includes("authUserMatchesSignupCanary") &&
+    source.includes("verifySignupCanaryUserId") &&
+    source.includes("temporary signup legal candidate lookup failed") &&
+    source.includes("successful signup response had no verifiable TEST AUTOMATION auth user") &&
+    source.includes("successful signup user could not be found for cleanup")
+)
+const uploadSuccessIndex = source.indexOf('failIfError("private canary video upload failed", upload.error)')
+const storageOwnershipIndex = source.indexOf("storagePath = candidateStoragePath")
+check(
+  "storage cleanup ownership begins only after a successful upload",
+  source.includes("const candidateStoragePath =") &&
+    uploadSuccessIndex >= 0 &&
+    storageOwnershipIndex > uploadSuccessIndex
 )
 check(
   "final output is a redacted summary rather than credentials",

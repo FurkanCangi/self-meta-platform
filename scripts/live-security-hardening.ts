@@ -19,14 +19,18 @@ type Config = {
   anonKey: string
   serviceKey: string
   httpTimeoutMs: number
+  requireSignedUrl: boolean
 }
 
 type AuthContext = {
   client: SupabaseClient
   cookies: Map<string, string>
   accessToken: string
+  userId: string
   label: string
   credential?: DeviceCredential
+  appSessionId?: string
+  currentDeviceId?: string
 }
 
 type DeviceCredential = {
@@ -80,12 +84,23 @@ const twoSecondCanaryMp4Base64 =
 const steps: StepResult[] = []
 const cleanupErrors: string[] = []
 const createdUserIds = new Set<string>()
+const canaryOwnedRateLimitKeys = new Set<string>()
+const retainedSharedRateLimitScopes = new Set<string>()
+const retainedOpaqueRateLimitScopes = new Set<string>()
+const signupCanaryFullName = "TEST AUTOMATION Security Canary"
+const canaryRawRateLimitPrefixes = [
+  "device-proof-challenge:",
+  "session-register:",
+  "session-logout:",
+]
 
 let config: Config | null = null
 let admin: SupabaseClient | null = null
 let signupEmail: string | null = null
+let signupUserExpected = false
 let assetId: string | null = null
 let storagePath: string | null = null
+let cleanedCanaryOwnedRateLimitKeyCount = 0
 
 function loadDotEnvFile(filePath: string) {
   if (!fs.existsSync(filePath)) return
@@ -150,6 +165,7 @@ function loadConfig(): Config {
     anonKey,
     serviceKey,
     httpTimeoutMs: 45_000,
+    requireSignedUrl: process.env.LIVE_SECURITY_REQUIRE_SIGNED_URL === "1",
   }
 }
 
@@ -203,6 +219,21 @@ async function step<T>(name: string, fn: () => Promise<{ value: T; detail?: stri
 
 async function fetchTarget(relativePath: string, init: RequestInit = {}) {
   assert(config, "configuration missing")
+  const method = String(init.method || "GET").toUpperCase()
+  if (relativePath === "/api/security/devices" && method === "POST") {
+    // This bucket is deliberately shared by every request from the same
+    // network. Record the test impact, but never delete or reset real traffic.
+    retainedSharedRateLimitScopes.add("security-devices-action-broad")
+  } else if (relativePath === "/api/security/devices" && method === "GET") {
+    retainedSharedRateLimitScopes.add("security-devices-read-broad")
+  } else if (relativePath === "/api/security/session/register" && method === "POST") {
+    retainedSharedRateLimitScopes.add("session-register-broad")
+  } else if (relativePath === "/api/auth/signup" && method === "POST") {
+    retainedSharedRateLimitScopes.add("auth-signup-network")
+    // The email+network key is canary-specific but HMAC-opaque to this runner.
+    // Guessing it or deleting a newly observed key could race a real signup.
+    retainedOpaqueRateLimitScopes.add("auth-signup-email-network")
+  }
   return fetch(`${config.targetUrl}${relativePath}`, {
     ...init,
     signal: init.signal || AbortSignal.timeout(config.httpTimeoutMs),
@@ -299,7 +330,14 @@ async function createAuthContext(email: string, password: string, label: string)
   const { data, error } = await client.auth.signInWithPassword({ email, password })
   failIfError("temporary user sign-in failed", error)
   assert(data.session?.access_token, "temporary user access token missing")
-  return { client, cookies: jar, accessToken: data.session.access_token, label }
+  assert(data.user?.id, "temporary user id missing after sign-in")
+  return {
+    client,
+    cookies: jar,
+    accessToken: data.session.access_token,
+    userId: data.user.id,
+    label,
+  }
 }
 
 async function createDeviceCredential(label: string): Promise<DeviceCredential> {
@@ -327,6 +365,8 @@ async function createDeviceCredential(label: string): Promise<DeviceCredential> 
 }
 
 async function createDeviceProof(credential: DeviceCredential, context: AuthContext) {
+  retainedSharedRateLimitScopes.add("device-proof-challenge-broad")
+  retainedOpaqueRateLimitScopes.add("device-proof-challenge-device")
   const challengeResponse = await fetchTarget("/api/security/device-proof/challenge", {
     method: "POST",
     headers: requestHeaders(context, `${credential.label}-challenge`),
@@ -395,6 +435,7 @@ async function createRequestPossessionHeaders(
 }
 
 async function registerDevice(context: AuthContext, credential: DeviceCredential): Promise<DeviceRegistration> {
+  canaryOwnedRateLimitKeys.add(`session-register:${context.userId}`)
   const proof = await createDeviceProof(credential, context)
   const response = await fetchTarget("/api/security/session/register", {
     method: "POST",
@@ -405,6 +446,20 @@ async function registerDevice(context: AuthContext, credential: DeviceCredential
   const payload = await readJson(response)
   if (payload.ok === true && (payload.status === "active" || payload.status === "approval_required")) {
     context.credential = credential
+  }
+  if (payload.ok === true && payload.status === "active") {
+    const appSessionId = asString(payload.sessionId)
+    const currentDeviceId = asString(payload.deviceId)
+    if (appSessionId && currentDeviceId) {
+      context.appSessionId = appSessionId
+      context.currentDeviceId = currentDeviceId
+      canaryOwnedRateLimitKeys.add(
+        `device-possession-challenge:${context.userId}:${appSessionId}`
+      )
+      canaryOwnedRateLimitKeys.add(
+        `security-devices-action:${context.userId}:${appSessionId}`
+      )
+    }
   }
   return { statusCode: response.status, payload }
 }
@@ -522,6 +577,19 @@ async function postSessionLogout(context: AuthContext, scope: "local" | "global"
 }
 
 async function getDevices(context: AuthContext) {
+  if (context.appSessionId && context.currentDeviceId) {
+    const {
+      data: { user },
+      error,
+    } = await context.client.auth.getUser()
+    failIfError("device-list rate-limit identity lookup failed", error)
+    if (user?.id) {
+      const digest = createHash("sha256")
+        .update([user.id, context.appSessionId, context.currentDeviceId].join(":"))
+        .digest("base64url")
+      canaryOwnedRateLimitKeys.add(`security-devices-read:active_session:${digest}`)
+    }
+  }
   const response = await fetchTarget("/api/security/devices", {
     method: "GET",
     headers: requestHeaders(context, "device-list", false),
@@ -651,7 +719,7 @@ async function postVideoEvent(
   context: AuthContext,
   videoId: string,
   playback: HttpPlaybackAccess,
-  eventType: "heartbeat" | "release",
+  eventType: "heartbeat" | "refresh_url" | "release",
   options: { skipPossessionProof?: boolean } = {}
 ) {
   const path = `/api/education/videos/${encodeURIComponent(videoId)}/events`
@@ -677,15 +745,51 @@ async function postVideoEvent(
   return { statusCode: response.status, payload: await readJson(response) }
 }
 
+function authUserMatchesSignupCanary(user: unknown, email: string) {
+  const row = asObject(user)
+  const metadata = asObject(row.user_metadata)
+  return (
+    asString(row.email).toLowerCase() === email.toLowerCase() &&
+    asString(metadata.full_name) === signupCanaryFullName
+  )
+}
+
+function authErrorCode(error: unknown) {
+  return asString(asObject(error).code)
+}
+
+async function verifySignupCanaryUserId(userId: string, email: string) {
+  assert(admin, "admin client missing")
+  const { data, error } = await admin.auth.admin.getUserById(userId)
+  if (error) {
+    if (authErrorCode(error) === "user_not_found") return null
+    failIfError("temporary signup candidate verification failed", error)
+  }
+  return data.user && authUserMatchesSignupCanary(data.user, email) ? data.user.id : null
+}
+
 async function findAuthUserIdByEmail(email: string) {
   assert(admin, "admin client missing")
   const perPage = 200
-  for (let page = 1; page <= 20; page += 1) {
+  const seenPageSignatures = new Set<string>()
+  let page = 1
+  while (true) {
     const { data, error } = await admin.auth.admin.listUsers({ page, perPage })
     failIfError("temporary signup user lookup failed", error)
-    const found = data.users.find((user) => String(user.email || "").toLowerCase() === email.toLowerCase())
-    if (found?.id) return found.id
+    const pageSignature = (data.users || []).map((user) => user.id).join(":")
+    assert(
+      !pageSignature || !seenPageSignatures.has(pageSignature),
+      "temporary signup user pagination repeated a page"
+    )
+    if (pageSignature) seenPageSignatures.add(pageSignature)
+
+    const found = data.users.find(
+      (user) => String(user.email || "").toLowerCase() === email.toLowerCase()
+    )
+    if (found) return authUserMatchesSignupCanary(found, email) ? found.id : null
     if (data.users.length < perPage) break
+    const nextPage = Number(asObject(data).nextPage || 0)
+    page = Number.isInteger(nextPage) && nextPage > page ? nextPage : page + 1
   }
   return null
 }
@@ -699,10 +803,61 @@ async function findSignupUserId(email: string) {
     .order("accepted_at", { ascending: false })
     .limit(1)
     .maybeSingle()
-  if (!legalAcceptance.error && legalAcceptance.data?.user_id) {
-    return String(legalAcceptance.data.user_id)
+  failIfError("temporary signup legal candidate lookup failed", legalAcceptance.error)
+  if (legalAcceptance.data?.user_id) {
+    const verifiedCandidate = await verifySignupCanaryUserId(
+      String(legalAcceptance.data.user_id),
+      email
+    )
+    if (verifiedCandidate) return verifiedCandidate
   }
   return findAuthUserIdByEmail(email)
+}
+
+async function discoverCanaryOwnedRawRateLimitKeys() {
+  assert(admin, "admin client missing")
+  const { data, error } = await admin
+    .from("api_rate_limits")
+    .select("key")
+    .ilike("key", `%${runId}%`)
+  failIfError("canary-owned raw rate-limit key discovery failed", error)
+  for (const row of data || []) {
+    const key = String(row.key || "")
+    if (
+      key.includes(runId) &&
+      canaryRawRateLimitPrefixes.some((prefix) => key.startsWith(prefix))
+    ) {
+      canaryOwnedRateLimitKeys.add(key)
+    }
+  }
+}
+
+async function discoverCanaryOwnedSessionRateLimitKeys(userIds: string[]) {
+  assert(admin, "admin client missing")
+  for (const userId of userIds) {
+    canaryOwnedRateLimitKeys.add(`session-register:${userId}`)
+  }
+  if (userIds.length === 0) return
+
+  const { data, error } = await admin
+    .from("account_sessions")
+    .select("id, user_id, device_id")
+    .in("user_id", userIds)
+  failIfError("canary-owned session rate-limit key discovery failed", error)
+  for (const row of data || []) {
+    const userId = String(row.user_id || "")
+    const sessionId = String(row.id || "")
+    const deviceId = String(row.device_id || "")
+    if (!userId || !sessionId) continue
+    canaryOwnedRateLimitKeys.add(`device-possession-challenge:${userId}:${sessionId}`)
+    canaryOwnedRateLimitKeys.add(`security-devices-action:${userId}:${sessionId}`)
+    if (deviceId) {
+      const digest = createHash("sha256")
+        .update([userId, sessionId, deviceId].join(":"))
+        .digest("base64url")
+      canaryOwnedRateLimitKeys.add(`security-devices-read:active_session:${digest}`)
+    }
+  }
 }
 
 async function safeCleanup(label: string, fn: () => Promise<void>) {
@@ -719,11 +874,21 @@ async function cleanup() {
   if (signupEmail) {
     await safeCleanup("signup user lookup", async () => {
       const signupUserId = await findSignupUserId(signupEmail!)
+      if (signupUserExpected) {
+        assert(signupUserId, "successful signup user could not be found for cleanup")
+      }
       if (signupUserId) createdUserIds.add(signupUserId)
     })
   }
 
+  await safeCleanup("canary-owned raw rate-limit key discovery", async () => {
+    await discoverCanaryOwnedRawRateLimitKeys()
+  })
+
   const userIds = [...createdUserIds]
+  await safeCleanup("canary-owned session rate-limit key discovery", async () => {
+    await discoverCanaryOwnedSessionRateLimitKeys(userIds)
+  })
   const deleteUsersFromTable = async (table: string, column = "user_id") => {
     if (userIds.length === 0) return
     const { error } = await admin!.from(table).delete().in(column, userIds)
@@ -764,18 +929,23 @@ async function cleanup() {
     })
   }
 
-  if (userIds.length > 0) {
-    await safeCleanup("api rate limits", async () => {
-      const exactKeys = userIds.flatMap((userId) => [
+  await safeCleanup("canary-owned exact api rate limits", async () => {
+    const exactKeys = [
+      ...canaryOwnedRateLimitKeys,
+      ...userIds.flatMap((userId) => [
         `education-video-access:${userId}`,
         `education-video-events:${userId}`,
-      ])
-      const { error } = await admin!.from("api_rate_limits").delete().in("key", exactKeys)
-      failIfError("user api rate-limit cleanup failed", error)
-      const runResult = await admin!.from("api_rate_limits").delete().ilike("key", `%${runId}%`)
-      failIfError("canary api rate-limit cleanup failed", runResult.error)
-    })
-  }
+      ]),
+    ]
+    if (exactKeys.length === 0) return
+    const { data, error } = await admin!
+      .from("api_rate_limits")
+      .delete()
+      .in("key", exactKeys)
+      .select("key")
+    failIfError("canary-owned exact api rate-limit cleanup failed", error)
+    cleanedCanaryOwnedRateLimitKeyCount = (data || []).length
+  })
 
   for (const userId of userIds) {
     await safeCleanup("temporary auth user", async () => {
@@ -789,6 +959,7 @@ async function cleanup() {
     "education_video_playback_sessions",
     "education_video_playback_leases",
     "education_video_access_tokens",
+    "user_entitlements",
     "account_device_verification_challenges",
     "account_device_changes",
     "account_device_proof_nonces",
@@ -816,6 +987,59 @@ async function cleanup() {
     failIfError("clients zero verification failed", error)
     assert(count === 0, `clients cleanup left ${count} canary rows`)
   })
+  if (assetId) {
+    await safeCleanup("education video asset zero verification", async () => {
+      const { count, error } = await admin!
+        .from("education_video_assets")
+        .select("id", { count: "exact", head: true })
+        .eq("id", assetId!)
+      failIfError("education video asset zero verification failed", error)
+      assert(count === 0, `education_video_assets cleanup left ${count} canary rows`)
+    })
+  }
+  if (storagePath) {
+    await safeCleanup("education video object zero verification", async () => {
+      const directory = path.posix.dirname(storagePath!)
+      const fileName = path.posix.basename(storagePath!)
+      const { data, error } = await admin!.storage
+        .from(educationBucket)
+        .list(directory === "." ? "" : directory, { search: fileName })
+      failIfError("education video object zero verification failed", error)
+      assert(
+        !(data || []).some((item) => item.name === fileName),
+        "education video object cleanup left the canary file in storage"
+      )
+    })
+  }
+  await safeCleanup("api rate limits zero verification", async () => {
+    const exactKeys = [
+      ...canaryOwnedRateLimitKeys,
+      ...userIds.flatMap((userId) => [
+        `education-video-access:${userId}`,
+        `education-video-events:${userId}`,
+      ]),
+    ]
+    if (exactKeys.length > 0) {
+      const exactResult = await admin!
+        .from("api_rate_limits")
+        .select("key", { count: "exact", head: true })
+        .in("key", exactKeys)
+      failIfError("user api rate-limit zero verification failed", exactResult.error)
+      assert(exactResult.count === 0, `api_rate_limits cleanup left ${exactResult.count} user rows`)
+    }
+  })
+  for (const userId of userIds) {
+    await safeCleanup(`auth user ${userId} zero verification`, async () => {
+      const { data, error } = await admin!.auth.admin.getUserById(userId)
+      if (error) {
+        assert(
+          authErrorCode(error) === "user_not_found",
+          `temporary auth user ${userId} zero verification failed: ${errorMessage(error)}`
+        )
+      }
+      assert(!data.user, `temporary auth user ${userId} still exists after cleanup`)
+    })
+  }
 }
 
 async function run() {
@@ -874,14 +1098,24 @@ async function run() {
     })
     failIfError("device approval RPC preflight failed", approval.error)
     assert(rpcRow(approval.data).result === "approver_not_trusted", "device approval RPC preflight response invalid")
-    return { value: undefined, detail: `${requiredTables.length} tables, 2 RPCs, private bucket` }
+    const rejection = await admin!.rpc("reject_account_device_challenge", {
+      p_user_id: zero,
+      p_challenge_id: zero,
+      p_approver_device_id: zero,
+    })
+    failIfError("device rejection RPC preflight failed", rejection.error)
+    assert(
+      rpcRow(rejection.data).result === "approver_not_trusted",
+      "device rejection RPC preflight response invalid"
+    )
+    return { value: undefined, detail: `${requiredTables.length} tables, 3 RPCs, private bucket` }
   })
 
   await step("public signup form reaches the live backend", async () => {
     signupEmail = `${runId}-public-signup@example.invalid`
     const signupPassword = `S-${randomBytes(24).toString("base64url")}aA1!`
     const form = new FormData()
-    form.set("fullName", "TEST AUTOMATION Security Canary")
+    form.set("fullName", signupCanaryFullName)
     form.set("email", signupEmail)
     form.set("password", signupPassword)
     form.set("confirmPassword", signupPassword)
@@ -912,7 +1146,11 @@ async function run() {
         (redirect.pathname === "/signup" && acceptedWithoutDelivery),
       `signup backend returned ${redirect.pathname}${error ? ` error=${error}` : ""}`
     )
+    signupUserExpected = redirect.pathname === "/auth-signup-success"
     const userId = await findSignupUserId(signupEmail)
+    if (signupUserExpected) {
+      assert(userId, "successful signup response had no verifiable TEST AUTOMATION auth user")
+    }
     if (userId) createdUserIds.add(userId)
     return {
       value: undefined,
@@ -1009,6 +1247,7 @@ async function run() {
       client: primaryContexts[0].client,
       cookies: new Map(primaryContexts[0].cookies),
       accessToken: primaryContexts[0].accessToken,
+      userId: primaryContexts[0].userId,
       label: "copied-cookie-without-device-key",
     }
 
@@ -1231,14 +1470,15 @@ async function run() {
   })
 
   await step("private temporary video asset and entitlement are created", async () => {
-    storagePath = `live-security/${runId}/canary.mp4`
+    const candidateStoragePath = `live-security/${runId}/canary.mp4`
     const canaryObject = Buffer.from(twoSecondCanaryMp4Base64, "base64")
     assert(canaryObject.length > 1_000, "embedded 2-second MP4 fixture is unexpectedly empty")
-    const upload = await admin!.storage.from(educationBucket).upload(storagePath, canaryObject, {
+    const upload = await admin!.storage.from(educationBucket).upload(candidateStoragePath, canaryObject, {
       contentType: "video/mp4",
       upsert: false,
     })
     failIfError("private canary video upload failed", upload.error)
+    storagePath = candidateStoragePath
 
     const insertedAsset = await admin!
       .from("education_video_assets")
@@ -1331,10 +1571,16 @@ async function run() {
     const firstAccess = expectHttpPlayback(
       await requestVideoAccess(primaryContexts[0], assetId, `http-a-${runId}`, false)
     )
+    if (config!.requireSignedUrl) {
+      assert(
+        firstAccess.signedUrl,
+        "Supabase canary did not return the required signed video URL"
+      )
+    }
     if (firstAccess.signedUrl) {
       const mediaResponse = await fetch(firstAccess.signedUrl, {
         method: "GET",
-        headers: { range: "bytes=0-2047" },
+        headers: { range: "bytes=0-1023" },
         signal: AbortSignal.timeout(config!.httpTimeoutMs),
       })
       assert(
@@ -1345,6 +1591,33 @@ async function run() {
       assert(contentType.startsWith("video/mp4"), `signed video URL returned ${contentType || "no content type"}`)
       const mediaBytes = await mediaResponse.arrayBuffer()
       assert(mediaBytes.byteLength > 0, "signed video URL returned an empty object")
+
+      const refresh = await postVideoEvent(
+        primaryContexts[0],
+        assetId,
+        firstAccess,
+        "refresh_url"
+      )
+      const refreshed = asObject(refresh.payload.refresh)
+      const refreshedSignedUrl = asString(refreshed.signedUrl)
+      const refreshedUrl = refreshedSignedUrl || asString(refreshed.playbackUrl)
+      assert(
+        refresh.statusCode === 200 &&
+          refresh.payload.ok === true &&
+          refreshedUrl &&
+          (!config!.requireSignedUrl || refreshedSignedUrl),
+        `signed video URL refresh failed with HTTP ${refresh.statusCode}`
+      )
+      const refreshedMedia = await fetch(refreshedUrl, {
+        method: "GET",
+        headers: { range: "bytes=512-1535" },
+        signal: AbortSignal.timeout(config!.httpTimeoutMs),
+      })
+      assert(
+        refreshedMedia.status === 200 || refreshedMedia.status === 206,
+        `refreshed signed video URL returned HTTP ${refreshedMedia.status}`
+      )
+      assert((await refreshedMedia.arrayBuffer()).byteLength > 0, "refreshed signed URL returned no bytes")
     }
     const conflict = await requestVideoAccess(primaryContexts[1], assetId, `http-b-${runId}`, false)
     assert(
@@ -1355,6 +1628,18 @@ async function run() {
     const secondAccess = expectHttpPlayback(
       await requestVideoAccess(primaryContexts[1], assetId, `http-b-${runId}`, true)
     )
+    if (firstAccess.signedUrl) {
+      const staleRefresh = await postVideoEvent(
+        primaryContexts[0],
+        assetId,
+        firstAccess,
+        "refresh_url"
+      )
+      assert(
+        staleRefresh.statusCode === 409 && staleRefresh.payload.error === "playback_lease_lost",
+        `taken-over playback refreshed its signed URL: HTTP ${staleRefresh.statusCode}`
+      )
+    }
     const oldHeartbeat = await postVideoEvent(
       primaryContexts[0],
       assetId,
@@ -1377,7 +1662,12 @@ async function run() {
       .maybeSingle()
     failIfError("HTTP lease cleanup verification failed", lease.error)
     assert(!lease.data, "HTTP playback lease remained after release")
-    return { value: undefined, detail: "HTTP 409 + takeover + playback_lease_lost + release" }
+    return {
+      value: undefined,
+      detail: firstAccess.signedUrl
+        ? "HTTP 409 + takeover + signed URL refresh/stale denial + release"
+        : "HTTP 409 + takeover + playback_lease_lost + release; signed URL not required",
+    }
   })
 
   await step("all three trusted devices can play the private video sequentially", async () => {
@@ -1476,11 +1766,67 @@ async function run() {
       `removed device playback was not rejected: HTTP ${removedHeartbeat.statusCode}`
     )
 
-    const replacementOne = await registerApprovedDevice({
-      context: fourthContext,
-      credential: credentials[3],
-      approverContext: primaryContexts[0],
-    })
+    const replacementRaceRequest = expectApprovalRegistration(
+      await registerDevice(fourthContext, credentials[3])
+    )
+    const [approvalRace, rejectionRace] = await Promise.all([
+      postDeviceAction(primaryContexts[0], {
+        action: "approve",
+        challengeId: replacementRaceRequest.challengeId,
+        code: replacementRaceRequest.verificationCode,
+      }),
+      postDeviceAction(primaryContexts[0], {
+        action: "reject",
+        challengeId: replacementRaceRequest.challengeId,
+      }),
+    ])
+    const raceWinners = [approvalRace, rejectionRace].filter(
+      (result) => result.statusCode === 200 && result.payload.ok === true
+    )
+    const raceLosers = [approvalRace, rejectionRace].filter(
+      (result) => result.statusCode === 409 && result.payload.ok !== true
+    )
+    assert(
+      raceWinners.length === 1 && raceLosers.length === 1,
+      `approval/rejection race produced ${raceWinners.length} winners and ${raceLosers.length} losers`
+    )
+    const approvalWon = approvalRace.statusCode === 200 && approvalRace.payload.status === "approved"
+    const rejectionWon = rejectionRace.statusCode === 200 && rejectionRace.payload.status === "rejected"
+    assert(approvalWon !== rejectionWon, "approval/rejection race did not choose exactly one terminal state")
+
+    const [{ data: racedChallenge, error: racedChallengeError }, { data: racedDevice, error: racedDeviceError }] =
+      await Promise.all([
+        admin!
+          .from("account_device_verification_challenges")
+          .select("status")
+          .eq("id", replacementRaceRequest.challengeId)
+          .single(),
+        admin!
+          .from("account_devices")
+          .select("revoked_at, verification_required, verified_at")
+          .eq("id", replacementRaceRequest.deviceId)
+          .single(),
+      ])
+    failIfError("raced challenge verification failed", racedChallengeError)
+    failIfError("raced device verification failed", racedDeviceError)
+    assert(
+      racedChallenge?.status === (approvalWon ? "approved" : "rejected"),
+      "approval/rejection race database state disagreed with the winning API response"
+    )
+    assert(
+      approvalWon
+        ? !racedDevice?.revoked_at && racedDevice?.verification_required === false && Boolean(racedDevice?.verified_at)
+        : Boolean(racedDevice?.revoked_at) && racedDevice?.verification_required === true,
+      "approval/rejection race left an inconsistent device state"
+    )
+
+    const replacementOne = approvalWon
+      ? expectActiveRegistration(await registerDevice(fourthContext, credentials[3]))
+      : await registerApprovedDevice({
+          context: fourthContext,
+          credential: credentials[3],
+          approverContext: primaryContexts[0],
+        })
 
     const removeThird = await postDeviceAction(primaryContexts[0], {
       action: "revoke",
@@ -1497,6 +1843,15 @@ async function run() {
       approverContext: primaryContexts[0],
     })
 
+    const sixthContext = await createAuthContext(primary.first.email, primary.first.password, "primary-device-6")
+    const sixthCredential = await createDeviceCredential("device-6")
+    const fullQuotaBlocked = await registerDevice(sixthContext, sixthCredential)
+    assert(
+      fullQuotaBlocked.statusCode === 409 &&
+        fullQuotaBlocked.payload.error === "replacement_limit_exceeded",
+      `full three-device account hid its exhausted replacement quota: HTTP ${fullQuotaBlocked.statusCode} ${asString(fullQuotaBlocked.payload.error)}`
+    )
+
     const removeReplacement = await postDeviceAction(primaryContexts[0], {
       action: "revoke",
       deviceId: replacementOne.deviceId,
@@ -1507,8 +1862,6 @@ async function run() {
       "first replacement removal failed"
     )
 
-    const sixthContext = await createAuthContext(primary.first.email, primary.first.password, "primary-device-6")
-    const sixthCredential = await createDeviceCredential("device-6")
     const thirdReplacement = await registerDevice(sixthContext, sixthCredential)
     assert(
       thirdReplacement.statusCode === 409 && thirdReplacement.payload.error === "replacement_limit_exceeded",
@@ -1535,7 +1888,10 @@ async function run() {
     failIfError("removed device session verification failed", revokedSession.error)
     assert(revokedSession.data?.status === "revoked", "removed device session remained active")
     assert(replacementTwo.sessionId, "second replacement session missing")
-    return { value: undefined, detail: "remove + 2 replacements; third blocked" }
+    return {
+      value: undefined,
+      detail: "approve/reject race chose one state; 2 replacements; third blocked before and after removal",
+    }
   })
 
   assert(secondaryDevice.sessionId, "secondary canary session unexpectedly missing")
@@ -1561,6 +1917,10 @@ async function main() {
       ok: cleanupErrors.length === 0,
       errorCount: cleanupErrors.length,
       errors: cleanupErrors,
+      canaryOwnedExactRateLimitKeysTracked: canaryOwnedRateLimitKeys.size,
+      canaryOwnedExactRateLimitRowsRemoved: cleanedCanaryOwnedRateLimitKeyCount,
+      retainedSharedRateLimitScopes: [...retainedSharedRateLimitScopes].sort(),
+      retainedOpaqueRateLimitScopes: [...retainedOpaqueRateLimitScopes].sort(),
     },
     ...(fatal ? { fatal: errorMessage(fatal) } : {}),
   }

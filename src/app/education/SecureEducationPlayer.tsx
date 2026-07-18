@@ -3,16 +3,25 @@
 import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { Maximize2, Minimize2 } from "lucide-react"
 import { createDevicePossessionHeaders } from "@/lib/security/browserDeviceIdentity"
+import {
+  clampPlaybackResumeTime,
+  playbackUrlRefreshDelayMs,
+  retryAfterDelayMs,
+} from "./playbackUrlRefresh"
 
 export type SecureEducationPlayerAccess = {
   token: string
   leaseId: string
   playerSessionId: string
+  provider: string
   playbackUrl: string | null
   embedUrl: string | null
+  expiresAt: string
+  signedUrlTtlSeconds: number | null
   playerConfig: {
     mode: "native" | "iframe"
     heartbeatIntervalSeconds: number
+    playbackPolicy: string
   }
 }
 
@@ -31,6 +40,25 @@ type SecureEducationPlayerProps = {
   watermark?: SecureEducationPlayerWatermark
   onPlaybackStopped: (message: string) => void
 }
+
+type PlaybackSourceState = {
+  playbackKey: string
+  playbackUrl: string | null
+  expiresAt: string | null
+}
+
+type PlaybackUrlRefreshResponse = {
+  error?: string
+  refresh?: {
+    playbackUrl?: string
+    expiresAt?: string
+    signedUrlTtlSeconds?: number
+  }
+}
+
+type PlaybackUrlRefreshResult =
+  | { ok: true }
+  | { ok: false; terminal?: boolean; retryAfterMs?: number }
 
 const WATERMARK_POSITIONS = [
   "top-3 left-3",
@@ -63,10 +91,31 @@ export function SecureEducationPlayer({
   const releasedRef = useRef(false)
   const terminalRef = useRef(false)
   const activePlaybackKeyRef = useRef<string | null>(null)
+  const urlRefreshInFlightRef = useRef(false)
+  const sourceRefreshRef = useRef(false)
+  const pendingPlaybackRestoreRef = useRef<{
+    playbackKey: string
+    currentTime: number
+    shouldResume: boolean
+  } | null>(null)
+  const suppressNextLoadedDataEventRef = useRef(false)
+  const suppressNextPlayEventRef = useRef(false)
   const [watermarkStep, setWatermarkStep] = useState(0)
   const [displayTime, setDisplayTime] = useState(() => new Date())
   const [isFullscreen, setIsFullscreen] = useState(false)
   const playbackKey = `${videoId}:${access.leaseId}:${access.playerSessionId}:${access.token}`
+  const [playbackSource, setPlaybackSource] = useState<PlaybackSourceState>(() => ({
+    playbackKey,
+    playbackUrl: access.playbackUrl,
+    expiresAt: access.expiresAt,
+  }))
+  const currentPlaybackSource = playbackSource.playbackKey === playbackKey
+    ? playbackSource
+    : {
+        playbackKey,
+        playbackUrl: access.playbackUrl,
+        expiresAt: access.expiresAt,
+      }
 
   useLayoutEffect(() => {
     activePlaybackKeyRef.current = playbackKey
@@ -95,6 +144,19 @@ export function SecureEducationPlayer({
   const currentVisibleCode = watermark
     ? visibleWatermarkCode(watermark.code, watermarkStep)
     : null
+
+  useEffect(() => {
+    setPlaybackSource({
+      playbackKey,
+      playbackUrl: access.playbackUrl,
+      expiresAt: access.expiresAt,
+    })
+    urlRefreshInFlightRef.current = false
+    sourceRefreshRef.current = false
+    pendingPlaybackRestoreRef.current = null
+    suppressNextLoadedDataEventRef.current = false
+    suppressNextPlayEventRef.current = false
+  }, [access.expiresAt, access.playbackUrl, playbackKey])
 
   const postEvent = useEffectEvent(
     async (
@@ -193,6 +255,208 @@ export function SecureEducationPlayer({
     }, intervalSeconds * 1000)
     heartbeatRef.current = intervalId
   })
+
+  const refreshPlaybackUrl = useEffectEvent(
+    async (requestPlaybackKey: string): Promise<PlaybackUrlRefreshResult> => {
+      if (
+        activePlaybackKeyRef.current !== requestPlaybackKey ||
+        releasedRef.current ||
+        terminalRef.current
+      ) {
+        return { ok: false, terminal: true }
+      }
+      if (urlRefreshInFlightRef.current) {
+        return { ok: false, retryAfterMs: 1_000 }
+      }
+
+      urlRefreshInFlightRef.current = true
+      try {
+        const video = videoRef.current
+        const path = `/api/education/videos/${encodeURIComponent(videoId)}/events`
+        const serializedBody = JSON.stringify({
+          eventType: "refresh_url",
+          accessToken: access.token,
+          leaseId: access.leaseId,
+          playerSessionId: access.playerSessionId,
+          visibleWatermarkCode: currentVisibleCode,
+          playbackSeconds: video?.currentTime || 0,
+          durationSeconds: Number.isFinite(video?.duration) ? video?.duration : null,
+        })
+        const possessionHeaders = await createDevicePossessionHeaders({
+          path,
+          body: serializedBody,
+        })
+        const response = await fetch(path, {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-dna-request": "same-origin",
+            ...possessionHeaders,
+          },
+          body: serializedBody,
+          cache: "no-store",
+        })
+        const json = (await response.json().catch(() => null)) as PlaybackUrlRefreshResponse | null
+
+        if (activePlaybackKeyRef.current !== requestPlaybackKey) {
+          return { ok: false, terminal: true }
+        }
+
+        if (!response.ok) {
+          if (response.status === 409 && json?.error === "playback_lease_lost") {
+            notifyPlaybackStopped(
+              "Bu eğitim başka bir cihazda devam ettirildi. Buradaki oynatma durduruldu.",
+              requestPlaybackKey
+            )
+            return { ok: false, terminal: true }
+          }
+          if (response.status === 403 && json?.error === "education_network_blocked") {
+            notifyPlaybackStopped("Bu ağ üzerinden eğitim videosu oynatılamıyor.", requestPlaybackKey)
+            return { ok: false, terminal: true }
+          }
+          if (response.status === 401) {
+            notifyPlaybackStopped(
+              "Güvenli video erişiminizin süresi doldu. Eğitimi yeniden açın.",
+              requestPlaybackKey
+            )
+            return { ok: false, terminal: true }
+          }
+          if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+            notifyPlaybackStopped(
+              "Video bağlantısı güvenli biçimde yenilenemedi. Eğitimi yeniden açın.",
+              requestPlaybackKey
+            )
+            return { ok: false, terminal: true }
+          }
+          return {
+            ok: false,
+            retryAfterMs: response.status === 429
+              ? retryAfterDelayMs(response.headers.get("retry-after"))
+              : 5_000,
+          }
+        }
+
+        const refreshedPlaybackUrl = String(json?.refresh?.playbackUrl || "").trim()
+        const refreshedExpiresAt = String(json?.refresh?.expiresAt || "").trim()
+        const refreshedTtlSeconds = Number(json?.refresh?.signedUrlTtlSeconds)
+        if (
+          !refreshedPlaybackUrl ||
+          !Number.isFinite(new Date(refreshedExpiresAt).getTime()) ||
+          !Number.isFinite(refreshedTtlSeconds) ||
+          refreshedTtlSeconds <= 0
+        ) {
+          return { ok: false, retryAfterMs: 5_000 }
+        }
+
+        const currentVideo = videoRef.current
+        const shouldResume = Boolean(currentVideo && !currentVideo.paused && !currentVideo.ended)
+        pendingPlaybackRestoreRef.current = {
+          playbackKey: requestPlaybackKey,
+          currentTime: currentVideo?.currentTime || 0,
+          shouldResume,
+        }
+        sourceRefreshRef.current = true
+        suppressNextLoadedDataEventRef.current = true
+        suppressNextPlayEventRef.current = shouldResume
+        setPlaybackSource({
+          playbackKey: requestPlaybackKey,
+          playbackUrl: refreshedPlaybackUrl,
+          expiresAt: refreshedExpiresAt,
+        })
+        return { ok: true }
+      } catch {
+        return { ok: false, retryAfterMs: 5_000 }
+      } finally {
+        urlRefreshInFlightRef.current = false
+      }
+    }
+  )
+
+  const restorePlaybackAfterUrlRefresh = useEffectEvent(() => {
+    const pending = pendingPlaybackRestoreRef.current
+    const video = videoRef.current
+    if (!pending || pending.playbackKey !== playbackKey || !video) return
+
+    video.currentTime = clampPlaybackResumeTime(pending.currentTime, video.duration)
+    pendingPlaybackRestoreRef.current = null
+    sourceRefreshRef.current = false
+
+    if (pending.shouldResume) {
+      void video.play().catch(() => {
+        suppressNextPlayEventRef.current = false
+      })
+    } else {
+      suppressNextPlayEventRef.current = false
+    }
+  })
+
+  useEffect(() => {
+    if (
+      access.provider !== "supabase" ||
+      access.playerConfig.playbackPolicy !== "signed_url" ||
+      !currentPlaybackSource.playbackUrl ||
+      !access.signedUrlTtlSeconds
+    ) {
+      return
+    }
+
+    const effectPlaybackKey = playbackKey
+    let timerId: number | null = null
+    let disposed = false
+
+    const clearTimer = () => {
+      if (timerId !== null) {
+        window.clearTimeout(timerId)
+        timerId = null
+      }
+    }
+    const schedule = (delayMs: number) => {
+      clearTimer()
+      timerId = window.setTimeout(() => {
+        timerId = null
+        void runRefresh()
+      }, Math.max(0, delayMs))
+    }
+    const runRefresh = async () => {
+      if (disposed) return
+      const result = await refreshPlaybackUrl(effectPlaybackKey)
+      if (disposed || result.ok || result.terminal) return
+      schedule(result.retryAfterMs || 5_000)
+    }
+
+    const initialDelay = playbackUrlRefreshDelayMs({
+      expiresAt: currentPlaybackSource.expiresAt,
+      ttlSeconds: access.signedUrlTtlSeconds,
+    })
+    if (initialDelay !== null) schedule(initialDelay)
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState !== "visible") return
+      const delay = playbackUrlRefreshDelayMs({
+        expiresAt: currentPlaybackSource.expiresAt,
+        ttlSeconds: access.signedUrlTtlSeconds,
+      })
+      if (delay !== null && delay <= 0) {
+        clearTimer()
+        void runRefresh()
+      }
+    }
+
+    document.addEventListener("visibilitychange", refreshWhenVisible)
+    return () => {
+      disposed = true
+      clearTimer()
+      document.removeEventListener("visibilitychange", refreshWhenVisible)
+    }
+  }, [
+    access.playerConfig.playbackPolicy,
+    access.provider,
+    access.signedUrlTtlSeconds,
+    currentPlaybackSource.expiresAt,
+    currentPlaybackSource.playbackUrl,
+    playbackKey,
+    refreshPlaybackUrl,
+  ])
 
   useEffect(() => {
     releasedRef.current = false
@@ -306,10 +570,10 @@ export function SecureEducationPlayer({
               void postEvent("watermark_rendered")
             }}
           />
-        ) : access.playbackUrl ? (
+        ) : currentPlaybackSource.playbackUrl ? (
           <video
             ref={videoRef}
-            src={access.playbackUrl}
+            src={currentPlaybackSource.playbackUrl}
             controls
             controlsList="nodownload nofullscreen noremoteplayback"
             disablePictureInPicture
@@ -317,10 +581,22 @@ export function SecureEducationPlayer({
             playsInline
             preload="metadata"
             className="absolute inset-0 h-full w-full bg-black object-contain"
+            onLoadedMetadata={() => {
+              restorePlaybackAfterUrlRefresh()
+            }}
             onLoadedData={() => {
+              if (suppressNextLoadedDataEventRef.current) {
+                suppressNextLoadedDataEventRef.current = false
+                return
+              }
               void postEvent("watermark_rendered")
             }}
             onPlay={() => {
+              if (suppressNextPlayEventRef.current) {
+                suppressNextPlayEventRef.current = false
+                startHeartbeat(playbackKey)
+                return
+              }
               void postEvent("play", {
                 playbackSeconds: videoRef.current?.currentTime || 0,
                 durationSeconds: Number.isFinite(videoRef.current?.duration) ? videoRef.current?.duration : null,
@@ -328,22 +604,41 @@ export function SecureEducationPlayer({
               startHeartbeat(playbackKey)
             }}
             onPause={() => {
-              if (releasedRef.current) return
+              if (releasedRef.current || sourceRefreshRef.current) return
               void postEvent("pause", {
                 playbackSeconds: videoRef.current?.currentTime || 0,
                 durationSeconds: Number.isFinite(videoRef.current?.duration) ? videoRef.current?.duration : null,
               })
             }}
             onEnded={() => {
+              // Stop all local continuity work immediately. The complete
+              // event remains best-effort; a transient network failure must
+              // not let URL refreshes keep an already-finished lease alive.
+              releasedRef.current = true
+              stopHeartbeat()
               void postEvent("complete", {
                 playbackSeconds: videoRef.current?.currentTime || 0,
                 durationSeconds: Number.isFinite(videoRef.current?.duration) ? videoRef.current?.duration : null,
               })
-              stopHeartbeat()
             }}
             onError={() => {
-              void postEvent("error")
+              if (sourceRefreshRef.current) {
+                sourceRefreshRef.current = false
+                pendingPlaybackRestoreRef.current = null
+                suppressNextLoadedDataEventRef.current = false
+                suppressNextPlayEventRef.current = false
+                releasedRef.current = true
+                stopHeartbeat()
+                void postEvent("error")
+                notifyPlaybackStopped(
+                  "Yenilenen video bağlantısı açılamadı. Eğitimi yeniden açın.",
+                  playbackKey
+                )
+                return
+              }
+              releasedRef.current = true
               stopHeartbeat()
+              void postEvent("error")
             }}
           />
         ) : (

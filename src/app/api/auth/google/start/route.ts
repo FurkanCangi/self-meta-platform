@@ -7,7 +7,11 @@ import {
   type GoogleOAuthMode,
 } from "@/lib/auth/googleOAuthState"
 import { requireTrustedMutation } from "@/lib/security/apiGuards"
-import { checkRateLimit, getClientRateLimitKey } from "@/lib/security/rateLimit"
+import {
+  checkRateLimit,
+  getNetworkRateLimitKey,
+  getPseudonymousRateLimitKey,
+} from "@/lib/security/rateLimit"
 import { normalizeDeviceType } from "@/lib/security/sessionRegistration"
 
 type CookieToSet = {
@@ -86,12 +90,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(redirectUrl(request, sourcePath, { ...fallbackParams, error: "origin" }), 303)
   }
 
-  const rateLimit = await checkRateLimit({
-    key: getClientRateLimitKey(request, `auth-google-${mode}`),
-    limit: mode === "signup" ? 5 : 10,
+  const deviceId = String(formData.get("deviceId") || fallbackDeviceId(request)).slice(0, 200)
+  const broadRateLimit = await checkRateLimit({
+    key: getNetworkRateLimitKey(request, `auth-google-${mode}-broad`),
+    limit: mode === "signup" ? 200 : 600,
     windowMs: 10 * 60 * 1000,
   })
-  if (!rateLimit.ok) {
+  if (!broadRateLimit.ok) {
+    return NextResponse.redirect(redirectUrl(request, sourcePath, { ...fallbackParams, error: "rate_limited" }), 303)
+  }
+  const deviceRateLimit = await checkRateLimit({
+    key: getPseudonymousRateLimitKey(`auth-google-${mode}-device`, [deviceId]),
+    limit: mode === "signup" ? 10 : 30,
+    windowMs: 10 * 60 * 1000,
+  })
+  if (!deviceRateLimit.ok) {
     return NextResponse.redirect(redirectUrl(request, sourcePath, { ...fallbackParams, error: "rate_limited" }), 303)
   }
 
@@ -131,7 +144,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(redirectUrl(request, sourcePath, { ...fallbackParams, error: "google_failed" }), 303)
   }
 
-  const deviceId = String(formData.get("deviceId") || fallbackDeviceId(request)).slice(0, 200)
   const response = NextResponse.redirect(data.url, 303)
   authCookies.forEach(({ name, value, options }) => {
     response.cookies.set(name, value, options)

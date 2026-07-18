@@ -9,6 +9,7 @@ import {
   type VerifiedDeviceProof,
   verifySubmittedDeviceProof,
 } from "@/lib/security/deviceProof"
+import { isDeviceApprovalExemptEmail } from "@/lib/owner/ownerAccess"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
 export const MAX_REGISTERED_DEVICES = 3
@@ -57,6 +58,8 @@ type AccountDeviceRow = {
   id: string
   device_fingerprint_hash: string
   device_type: string | null
+  first_seen_at: string | null
+  last_seen_at: string | null
   revoked_at: string | null
   verification_required: boolean | null
   verified_at: string | null
@@ -132,6 +135,35 @@ function isTrustedDevice(device: AccountDeviceRow | null | undefined) {
       device.verification_required === false &&
       device.verified_at
   )
+}
+
+function deviceLastUsedAt(device: AccountDeviceRow) {
+  const value = device.last_seen_at || device.first_seen_at
+  return value ? new Date(value).getTime() : 0
+}
+
+async function rotateOldestApprovalExemptDevice(
+  admin: ReturnType<typeof createSupabaseAdminClient>,
+  userId: string,
+  devices: AccountDeviceRow[],
+  keepDeviceId?: string
+) {
+  const activeOtherDevices = devices
+    .filter((device) => !device.revoked_at && device.id !== keepDeviceId)
+    .sort((left, right) => deviceLastUsedAt(left) - deviceLastUsedAt(right))
+
+  if (activeOtherDevices.length < MAX_REGISTERED_DEVICES) return null
+
+  const oldestDevice = activeOtherDevices[0]
+  const { data, error } = await admin.rpc("revoke_account_device_security", {
+    p_user_id: userId,
+    p_device_id: oldestDevice.id,
+    p_reason: "approval_exempt_device_rotation",
+    p_suspend_account: false,
+  })
+  const result = data as { ok?: boolean } | null
+  if (error || !result?.ok) return "approval_exempt_device_rotation_failed"
+  return null
 }
 
 async function consumeProofNonce(
@@ -248,8 +280,9 @@ export async function registerAppSessionForUser(
   }
 
   const p256Submitted = input.identityVersion === "p256-v1"
+  const approvalExemptUser = isDeviceApprovalExemptEmail(user.email)
   const proofResult = await verifySubmittedDeviceProof(rawDeviceId, input)
-  if (p256Submitted && !proofResult.ok) {
+  if (p256Submitted && !proofResult.ok && !approvalExemptUser) {
     return { ok: false, status: "error", error: proofResult.error, httpStatus: 403 }
   }
   const proof = proofResult.ok ? proofResult.proof : null
@@ -262,6 +295,8 @@ export async function registerAppSessionForUser(
   const metadata = clientMetadata(requestHeaders)
   const deviceType = normalizeDeviceType(input.deviceType)
   const deviceHash = hashDeviceId(user.id, rawDeviceId)
+  // Existing staff accounts keep normal password/session security, but device
+  // approval, replacement quota and device-proof friction stay invisible.
   const lockExemptUser = await isSecurityLockExemptUser(user.id, user.email)
 
   const { data: securityState, error: securityStateError } = await admin
@@ -283,7 +318,7 @@ export async function registerAppSessionForUser(
   }
 
   const deviceSelect =
-    "id, device_fingerprint_hash, device_type, revoked_at, verification_required, verified_at, ever_verified_at, verification_method, legacy_transition_until, public_key_fingerprint, last_user_agent, last_ip"
+    "id, device_fingerprint_hash, device_type, first_seen_at, last_seen_at, revoked_at, verification_required, verified_at, ever_verified_at, verification_method, legacy_transition_until, public_key_fingerprint, last_user_agent, last_ip"
   let { data: existingDevice, error: lookupError } = await admin
     .from("account_devices")
     .select(deviceSelect)
@@ -292,6 +327,18 @@ export async function registerAppSessionForUser(
     .maybeSingle()
   if (lookupError) {
     return { ok: false, status: "error", error: "device_lookup_failed", httpStatus: 500 }
+  }
+
+  if (approvalExemptUser) {
+    const approvalCleanupAt = new Date().toISOString()
+    const { error: approvalCleanupError } = await admin
+      .from("account_device_verification_challenges")
+      .update({ status: "approved", approved_at: approvalCleanupAt, consumed_at: approvalCleanupAt })
+      .eq("user_id", user.id)
+      .eq("status", "pending")
+    if (approvalCleanupError) {
+      return { ok: false, status: "error", error: "device_approval_cleanup_failed", httpStatus: 500 }
+    }
   }
 
   const staleNow = new Date().toISOString()
@@ -395,7 +442,7 @@ export async function registerAppSessionForUser(
   const historyCount = devices.length
   const verifiedHistoryCount = devices.filter((device) => Boolean(device.ever_verified_at)).length
   const isFirstDevice = historyCount === 0
-  if (isFirstDevice && !proof) {
+  if (isFirstDevice && !proof && !approvalExemptUser) {
     return {
       ok: false,
       status: "error",
@@ -409,7 +456,12 @@ export async function registerAppSessionForUser(
       existingDevice.legacy_transition_until &&
       new Date(existingDevice.legacy_transition_until).getTime() > Date.now()
   )
-  if (!proof && existingDevice?.verification_method === "legacy_transition" && !legacyTransitionValid) {
+  if (
+    !approvalExemptUser &&
+    !proof &&
+    existingDevice?.verification_method === "legacy_transition" &&
+    !legacyTransitionValid
+  ) {
     const otherTrustedDevices = trustedDevices.filter((trusted) => trusted.id !== existingDevice?.id)
     if (otherTrustedDevices.length === 0) {
       return {
@@ -459,7 +511,29 @@ export async function registerAppSessionForUser(
 
   let device = existingDevice as AccountDeviceRow | null
   if (!device) {
-    if (occupiedDeviceSlots >= MAX_REGISTERED_DEVICES) {
+    const countsAsReplacement = verifiedHistoryCount >= MAX_REGISTERED_DEVICES
+    if (countsAsReplacement && !approvalExemptUser) {
+      const usage = await getDeviceReplacementUsage(admin, user.id)
+      if (usage.error) {
+        return { ok: false, status: "error", error: "replacement_count_failed", httpStatus: 500 }
+      }
+      if (usage.used >= DEVICE_REPLACEMENT_LIMIT) {
+        return {
+          ok: false,
+          status: "replacement_limit",
+          error: "replacement_limit_exceeded",
+          message: "30 gün içinde en fazla 2 yeni cihaz eklenebilir.",
+          httpStatus: 409,
+        }
+      }
+    }
+
+    if (approvalExemptUser && occupiedDeviceSlots >= MAX_REGISTERED_DEVICES) {
+      const rotationError = await rotateOldestApprovalExemptDevice(admin, user.id, devices)
+      if (rotationError) {
+        return { ok: false, status: "error", error: rotationError, httpStatus: 500 }
+      }
+    } else if (occupiedDeviceSlots >= MAX_REGISTERED_DEVICES) {
       await recordAccountSecurityEvent({
         userId: user.id,
         eventType: "device_limit_blocked",
@@ -476,24 +550,7 @@ export async function registerAppSessionForUser(
       }
     }
 
-    const countsAsReplacement = verifiedHistoryCount >= MAX_REGISTERED_DEVICES
-    if (countsAsReplacement) {
-      const usage = await getDeviceReplacementUsage(admin, user.id)
-      if (usage.error) {
-        return { ok: false, status: "error", error: "replacement_count_failed", httpStatus: 500 }
-      }
-      if (usage.used >= DEVICE_REPLACEMENT_LIMIT) {
-        return {
-          ok: false,
-          status: "replacement_limit",
-          error: "replacement_limit_exceeded",
-          message: "30 gün içinde en fazla 2 yeni cihaz eklenebilir.",
-          httpStatus: 409,
-        }
-      }
-    }
-
-    if (!isFirstDevice && trustedDevices.length === 0) {
+    if (!approvalExemptUser && !isFirstDevice && trustedDevices.length === 0) {
       return {
         ok: false,
         status: "error",
@@ -503,7 +560,7 @@ export async function registerAppSessionForUser(
       }
     }
 
-    let autoTrust = isFirstDevice && Boolean(proof)
+    let autoTrust = approvalExemptUser || (isFirstDevice && Boolean(proof))
     const verifiedNow = new Date().toISOString()
     const deviceInsert = {
       user_id: user.id,
@@ -554,9 +611,31 @@ export async function registerAppSessionForUser(
       return { ok: false, status: "error", error: "device_create_failed", httpStatus: 500 }
     }
     device = created as AccountDeviceRow
+    if (approvalExemptUser && !autoTrust) {
+      const { data: trustedDevice, error: trustError } = await admin
+        .from("account_devices")
+        .update({
+          verification_required: false,
+          verified_at: verifiedNow,
+          ever_verified_at: verifiedNow,
+        })
+        .eq("id", device.id)
+        .eq("user_id", user.id)
+        .select(deviceSelect)
+        .single()
+      if (trustError || !trustedDevice) {
+        return { ok: false, status: "error", error: "device_auto_trust_failed", httpStatus: 500 }
+      }
+      device = trustedDevice as AccountDeviceRow
+      autoTrust = true
+    }
     await recordAccountSecurityEvent({
       userId: user.id,
-      eventType: autoTrust ? "first_device_trusted" : "new_device_approval_requested",
+      eventType: approvalExemptUser
+        ? "approval_exempt_device_trusted"
+        : autoTrust
+          ? "first_device_trusted"
+          : "new_device_approval_requested",
       deviceId: device.id,
       ipAddress: metadata.ipAddress,
       userAgent: metadata.userAgent,
@@ -574,7 +653,25 @@ export async function registerAppSessionForUser(
     const legacySessionNeedsApproval =
       device.verification_method === "legacy_session" && !freshLegacyApprovalId
     if (device.revoked_at || device.verification_required || !device.verified_at || legacySessionNeedsApproval) {
+      // Once three devices have ever been verified, every newly approved
+      // untrusted device consumes replacement quota. This includes retrying a
+      // previously rejected, never-verified fingerprint; otherwise repeatedly
+      // rejecting and recreating the same request could defer the quota check
+      // until the final approval RPC.
+      const countsAsReplacement = verifiedHistoryCount >= MAX_REGISTERED_DEVICES
+      if (countsAsReplacement && !approvalExemptUser) {
+        const usage = await getDeviceReplacementUsage(admin, user.id)
+        if (usage.error || usage.used >= DEVICE_REPLACEMENT_LIMIT) {
+          return {
+            ok: false,
+            status: usage.error ? "error" : "replacement_limit",
+            error: usage.error ? "replacement_count_failed" : "replacement_limit_exceeded",
+            httpStatus: usage.error ? 500 : 409,
+          }
+        }
+      }
       if (
+        !approvalExemptUser &&
         occupiedDeviceSlots >= MAX_REGISTERED_DEVICES &&
         Boolean(device.revoked_at) &&
         !isTrustedDevice(device)
@@ -586,8 +683,23 @@ export async function registerAppSessionForUser(
           httpStatus: 409,
         }
       }
+      if (
+        approvalExemptUser &&
+        Boolean(device.revoked_at) &&
+        occupiedDeviceSlots >= MAX_REGISTERED_DEVICES
+      ) {
+        const rotationError = await rotateOldestApprovalExemptDevice(
+          admin,
+          user.id,
+          devices,
+          device.id
+        )
+        if (rotationError) {
+          return { ok: false, status: "error", error: rotationError, httpStatus: 500 }
+        }
+      }
       const availableApprovers = trustedDevices.filter((trusted) => trusted.id !== device?.id)
-      if (availableApprovers.length === 0) {
+      if (!approvalExemptUser && availableApprovers.length === 0) {
         return {
           ok: false,
           status: "error",
@@ -596,25 +708,16 @@ export async function registerAppSessionForUser(
           httpStatus: 403,
         }
       }
-      const countsAsReplacement =
-        Boolean(device.ever_verified_at) && verifiedHistoryCount >= MAX_REGISTERED_DEVICES
-      if (countsAsReplacement) {
-        const usage = await getDeviceReplacementUsage(admin, user.id)
-        if (usage.error || usage.used >= DEVICE_REPLACEMENT_LIMIT) {
-          return {
-            ok: false,
-            status: usage.error ? "error" : "replacement_limit",
-            error: usage.error ? "replacement_count_failed" : "replacement_limit_exceeded",
-            httpStatus: usage.error ? 500 : 409,
-          }
-        }
-      }
+      const verifiedNow = new Date().toISOString()
       const { error: pendingUpdateError } = await admin
         .from("account_devices")
         .update({
           revoked_at: null,
-          verification_required: true,
-          verified_at: null,
+          verification_required: approvalExemptUser ? false : true,
+          verified_at: approvalExemptUser ? verifiedNow : null,
+          ever_verified_at: approvalExemptUser
+            ? device.ever_verified_at || verifiedNow
+            : device.ever_verified_at,
           public_key_jwk: proof?.publicKeyJwk || null,
           public_key_fingerprint: proof?.publicKeyFingerprint || null,
           verification_method: proof ? "p256_v1" : "legacy_session",
@@ -628,15 +731,47 @@ export async function registerAppSessionForUser(
       if (pendingUpdateError) {
         return { ok: false, status: "error", error: "device_update_failed", httpStatus: 500 }
       }
-      return createApprovalChallenge({
-        admin,
-        userId: user.id,
-        deviceId: device.id,
-        countsAsReplacement,
-      })
+      if (approvalExemptUser) {
+        const { error: challengeCleanupError } = await admin
+          .from("account_device_verification_challenges")
+          .update({ status: "approved", approved_at: verifiedNow, consumed_at: verifiedNow })
+          .eq("user_id", user.id)
+          .eq("pending_device_id", device.id)
+          .eq("status", "pending")
+        if (challengeCleanupError) {
+          return { ok: false, status: "error", error: "device_approval_cleanup_failed", httpStatus: 500 }
+        }
+        device = {
+          ...device,
+          revoked_at: null,
+          verification_required: false,
+          verified_at: verifiedNow,
+          ever_verified_at: device.ever_verified_at || verifiedNow,
+          public_key_fingerprint: proof?.publicKeyFingerprint || null,
+          verification_method: proof ? "p256_v1" : "legacy_session",
+          last_user_agent: metadata.userAgent,
+          last_ip: metadata.ipAddress,
+        }
+        await recordAccountSecurityEvent({
+          userId: user.id,
+          eventType: "approval_exempt_device_trusted",
+          deviceId: device.id,
+          ipAddress: metadata.ipAddress,
+          userAgent: metadata.userAgent,
+          metadata: { device_type: deviceType, counts_as_replacement: countsAsReplacement },
+        })
+      } else {
+        return createApprovalChallenge({
+          admin,
+          userId: user.id,
+          deviceId: device.id,
+          countsAsReplacement,
+        })
+      }
     }
 
     if (
+      !approvalExemptUser &&
       device.verification_method === "p256_v1" &&
       (!proof || device.public_key_fingerprint !== proof.publicKeyFingerprint)
     ) {

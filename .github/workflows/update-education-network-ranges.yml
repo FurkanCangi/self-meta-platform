@@ -1,0 +1,37 @@
+name: Update education network ranges
+
+on:
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: education-network-ranges
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run security:update-network-ranges
+      - run: npm run security:network-policy
+      - name: Commit a validated change
+        run: |
+          if git diff --quiet -- src/lib/security/data/education-network-ranges.json; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/lib/security/data/education-network-ranges.json
+          git commit -m "chore(security): refresh education network ranges"
+          git push origin "HEAD:${GITHUB_REF_NAME}"

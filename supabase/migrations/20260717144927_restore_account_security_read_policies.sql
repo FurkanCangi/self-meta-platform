@@ -1,28 +1,8 @@
-alter table public.account_devices enable row level security;
-alter table public.account_sessions enable row level security;
-alter table public.account_security_events enable row level security;
-alter table public.account_security_state enable row level security;
+-- Supabase history version: 20260717144927.
+-- This version was applied directly to the live project and briefly restored
+-- authenticated browser SELECT policies on account-security tables. Replaying
+-- that regression on a fresh database is intentionally a no-op. The following
+-- 20260717153616 and 20260717153624 migrations record and enforce the final
+-- server-API-only access boundary.
 
-revoke all on public.account_devices from anon;
-revoke all on public.account_sessions from anon;
-revoke all on public.account_security_events from anon;
-revoke all on public.account_security_state from anon;
-
-revoke insert, update, delete on public.account_devices from authenticated;
-revoke insert, update, delete on public.account_sessions from authenticated;
-revoke insert, update, delete on public.account_security_events from authenticated;
-revoke insert, update, delete on public.account_security_state from authenticated;
-
-grant select on public.account_devices to authenticated;
-grant select on public.account_sessions to authenticated;
-grant select on public.account_security_events to authenticated;
-grant select on public.account_security_state to authenticated;
-
-drop policy if exists "Users can read own account devices" on public.account_devices;
-create policy "Users can read own account devices" on public.account_devices for select to authenticated using (auth.uid() = user_id);
-drop policy if exists "Users can read own account sessions" on public.account_sessions;
-create policy "Users can read own account sessions" on public.account_sessions for select to authenticated using (auth.uid() = user_id);
-drop policy if exists "Users can read own account security events" on public.account_security_events;
-create policy "Users can read own account security events" on public.account_security_events for select to authenticated using (auth.uid() = user_id);
-drop policy if exists "Users can read own account security state" on public.account_security_state;
-create policy "Users can read own account security state" on public.account_security_state for select to authenticated using (auth.uid() = user_id);
+select 1;

@@ -135,6 +135,10 @@ for (const migrationFile of [
   "supabase/migrations/20260717130830_harden_device_approval_and_playback_races.sql",
   "supabase/migrations/20260717131530_close_direct_security_table_access.sql",
   "supabase/migrations/20260717132102_finalize_security_advisor_cleanup.sql",
+  "supabase/migrations/20260717144927_restore_account_security_read_policies.sql",
+  "supabase/migrations/20260717153616_reclose_account_security_tables.sql",
+  "supabase/migrations/20260717153624_reclose_account_security_table_access.sql",
+  "supabase/migrations/20260717154105_atomic_device_challenge_rejection.sql",
 ]) {
   if (!exists(migrationFile)) add("missing versioned Supabase migration", migrationFile)
 }

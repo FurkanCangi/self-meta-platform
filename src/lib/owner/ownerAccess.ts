@@ -1,8 +1,27 @@
-export function getOwnerAuditEmails(): string[] {
-  return String(process.env.OWNER_AUDIT_EMAILS || "")
+function parseEmailList(value?: string): string[] {
+  return String(value || "")
     .split(",")
     .map((value) => value.trim().toLowerCase())
     .filter(Boolean)
+}
+
+export function getOwnerAuditEmails(): string[] {
+  return parseEmailList(process.env.OWNER_AUDIT_EMAILS)
+}
+
+export function getDeviceApprovalExemptEmails(): string[] {
+  return [
+    ...new Set([
+      ...getOwnerAuditEmails(),
+      ...parseEmailList(process.env.SECURITY_DEVICE_APPROVAL_EXEMPT_EMAILS),
+    ]),
+  ]
+}
+
+export function isDeviceApprovalExemptEmail(email?: string | null): boolean {
+  if (!email) return false
+  const normalized = String(email).trim().toLowerCase()
+  return getDeviceApprovalExemptEmails().includes(normalized)
 }
 
 export function isOwnerAuditEmail(email?: string | null): boolean {

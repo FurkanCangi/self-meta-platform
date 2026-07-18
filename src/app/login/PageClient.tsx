@@ -1,10 +1,14 @@
 "use client";
 
-import { useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
+import { flushSync } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import AuthLayout from "../components/auth/AuthLayout";
 import {
   createBrowserDeviceProof,
+  isBrowserDeviceProofComplete,
+  prepareBrowserDeviceIdentity,
+  type BrowserDeviceIdentityReadiness,
   type BrowserDeviceProofFields,
 } from "@/lib/security/browserDeviceIdentity";
 
@@ -54,6 +58,12 @@ function formatLoginErrorCode(code?: string | null) {
   if (code === "device_id_invalid") {
     return "Bu tarayıcı cihaz bilgisini oluşturamadı. Sayfayı yenileyip tekrar deneyin.";
   }
+  if (code === "invalid_payload") {
+    return "Güvenli cihaz kimliği tamamlanmadan giriş gönderildi. Sayfayı yenileyip tekrar deneyin.";
+  }
+  if (code === "device_proof_required") {
+    return "İlk güvenilir cihazı eklemek için güncel Chrome, Safari veya Edge kullanın. Bu eski tarayıcı ilk cihaz olarak güvenli biçimde kaydedilemiyor.";
+  }
   if (code.startsWith("device_proof_")) return "Bu tarayıcının güvenli cihaz doğrulaması tamamlanamadı. Sayfayı yenileyip tekrar deneyin.";
   if (code === "device_count_failed") {
     return "Cihaz kayıtları kontrol edilemedi. Lütfen tekrar deneyin.";
@@ -88,6 +98,37 @@ type LoginPageProps = {
   forcedSurface?: "app" | "web";
 };
 
+function deviceIdentityNotice(readiness: BrowserDeviceIdentityReadiness | null) {
+  if (!readiness) {
+    return {
+      tone: "preparing" as const,
+      message: "Güvenli cihaz kimliği hazırlanıyor…",
+    };
+  }
+  if (!readiness.canSubmit || readiness.fallbackReason === "legacy_storage_unavailable") {
+    return {
+      tone: "blocked" as const,
+      message:
+        "Bu tarayıcı cihaz kimliğini güvenli biçimde saklayamıyor. Gizli modu kapatın veya güncel Chrome, Safari ya da Edge ile yeniden açın. Geçici kimlikle giriş gönderilmedi.",
+    };
+  }
+  if (readiness.fallbackReason === "webcrypto_unavailable") {
+    return {
+      tone: "fallback" as const,
+      message:
+        "Bu tarayıcı güvenli cihaz anahtarını desteklemiyor. Tek oturumluk uyumluluk modu kullanılacak; sonraki girişte cihaz onayı tekrar istenebilir.",
+    };
+  }
+  if (readiness.fallbackReason === "secure_key_storage_unavailable") {
+    return {
+      tone: "fallback" as const,
+      message:
+        "Tarayıcı güvenli cihaz anahtarını saklayamadı. Tek oturumluk uyumluluk modu kullanılacak; sonraki girişte cihaz onayı tekrar istenebilir.",
+    };
+  }
+  return null;
+}
+
 export default function LoginPage({ forcedSurface }: LoginPageProps = {}) {
   const sp = useSearchParams();
   const nextPath = sanitizeNextPath(sp.get("next"));
@@ -108,8 +149,86 @@ export default function LoginPage({ forcedSurface }: LoginPageProps = {}) {
   );
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [identityReadiness, setIdentityReadiness] = useState<BrowserDeviceIdentityReadiness | null>(null);
   const passwordReady = useRef(false);
   const googleReady = useRef(false);
+  const submissionPreparing = useRef(false);
+  const deviceProofPromise = useRef<Promise<BrowserDeviceProofFields> | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    void prepareBrowserDeviceIdentity()
+      .then((readiness) => {
+        if (active) setIdentityReadiness(readiness);
+      })
+      .catch(() => {
+        if (active) {
+          setIdentityReadiness({
+            identityVersion: "legacy-session",
+            canSubmit: false,
+            fallbackReason: "legacy_storage_unavailable",
+            legacyPersistence: "memory",
+          });
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function proofForLogin() {
+    if (!deviceProofPromise.current) {
+      deviceProofPromise.current = createBrowserDeviceProof().finally(() => {
+        deviceProofPromise.current = null;
+      });
+    }
+    return deviceProofPromise.current;
+  }
+
+  async function prepareAndSubmit(
+    form: HTMLFormElement,
+    ready: typeof passwordReady,
+    setPending: (value: boolean) => void
+  ) {
+    if (submissionPreparing.current) return;
+    submissionPreparing.current = true;
+    setErr(null);
+    setNotice(null);
+    setPending(true);
+    try {
+      const readiness = await prepareBrowserDeviceIdentity();
+      setIdentityReadiness(readiness);
+      if (!readiness.canSubmit) {
+        setErr(deviceIdentityNotice(readiness)?.message || "Güvenli cihaz kimliği hazırlanamadı.");
+        submissionPreparing.current = false;
+        setPending(false);
+        return;
+      }
+      const proof = await proofForLogin();
+      if (!isBrowserDeviceProofComplete(proof)) {
+        throw new Error("device_identity_incomplete");
+      }
+      flushSync(() => {
+        setDeviceProof(proof);
+      });
+      ready.current = true;
+      form.requestSubmit();
+    } catch (error) {
+      const challengeRetrySeconds =
+        error instanceof Error && error.message.startsWith("device_challenge_rate_limited:")
+          ? Math.max(1, Number(error.message.split(":")[1]) || 60)
+          : null;
+      setErr(
+        challengeRetrySeconds
+          ? `Cihaz güvenliği çok sık istendi. ${challengeRetrySeconds} saniye sonra yeniden deneyin.`
+          : error instanceof Error && error.message === "device_identity_storage_unavailable"
+          ? "Bu tarayıcı güvenli cihaz kimliğini saklayamıyor. Gizli modu kapatın veya güncel bir tarayıcı kullanın."
+          : "Güvenli cihaz kimliği hazırlanamadı. Sayfayı yenileyip tekrar deneyin; sorun sürerse güncel Chrome, Safari ya da Edge kullanın."
+      );
+      submissionPreparing.current = false;
+      setPending(false);
+    }
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     if (passwordReady.current) {
@@ -117,23 +236,7 @@ export default function LoginPage({ forcedSurface }: LoginPageProps = {}) {
       return;
     }
     event.preventDefault();
-    const form = event.currentTarget;
-    setErr(null);
-    setNotice(null);
-    setLoading(true);
-    let proof: BrowserDeviceProofFields;
-    try {
-      proof = await createBrowserDeviceProof();
-    } catch {
-      setErr("Güvenli cihaz doğrulamasına ulaşılamadı. İnternet bağlantınızı kontrol edip yeniden deneyin.");
-      setLoading(false);
-      return;
-    }
-    setDeviceProof(proof);
-    requestAnimationFrame(() => {
-      passwordReady.current = true;
-      form.requestSubmit();
-    });
+    await prepareAndSubmit(event.currentTarget, passwordReady, setLoading);
   }
 
   async function onGoogleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -142,24 +245,11 @@ export default function LoginPage({ forcedSurface }: LoginPageProps = {}) {
       return;
     }
     event.preventDefault();
-    const form = event.currentTarget;
-    setErr(null);
-    setNotice(null);
-    setGoogleLoading(true);
-    let proof: BrowserDeviceProofFields;
-    try {
-      proof = await createBrowserDeviceProof();
-    } catch {
-      setErr("Güvenli cihaz doğrulamasına ulaşılamadı. İnternet bağlantınızı kontrol edip yeniden deneyin.");
-      setGoogleLoading(false);
-      return;
-    }
-    setDeviceProof(proof);
-    requestAnimationFrame(() => {
-      googleReady.current = true;
-      form.requestSubmit();
-    });
+    await prepareAndSubmit(event.currentTarget, googleReady, setGoogleLoading);
   }
+
+  const identityNotice = deviceIdentityNotice(identityReadiness);
+  const identityBlocked = identityReadiness?.canSubmit === false;
 
   return (
     <AuthLayout mode="login" surface={appSurface ? "app" : "web"}>
@@ -168,6 +258,20 @@ export default function LoginPage({ forcedSurface }: LoginPageProps = {}) {
           <input type="hidden" name="surface" value={appSurface ? "app" : "web"} />
           <input type="hidden" name="next" value={nextPath} />
           <DeviceProofInputs proof={deviceProof} />
+          {identityNotice ? (
+            <div
+              role={identityNotice.tone === "blocked" ? "alert" : "status"}
+              className={
+                identityNotice.tone === "blocked"
+                  ? "rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-medium text-rose-800"
+                  : identityNotice.tone === "fallback"
+                    ? "rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900"
+                    : "rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700"
+              }
+            >
+              {identityNotice.message}
+            </div>
+          ) : null}
           {sp.get("next") ? (
             <div className="rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm font-medium text-blue-700">
               Devam etmek istediğiniz sayfaya geçmek için giriş yapın.
@@ -200,17 +304,17 @@ export default function LoginPage({ forcedSurface }: LoginPageProps = {}) {
           />
 
           {err ? (
-            <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900">
+            <div role="alert" className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm font-medium text-slate-900">
               <div>{err}</div>
             </div>
           ) : null}
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || googleLoading || !identityReadiness || identityBlocked}
             className="w-full rounded-xl bg-gradient-to-r from-cyan-400 via-blue-600 to-violet-600 px-4 py-4 text-sm font-bold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 hover:shadow-blue-600/30 disabled:translate-y-0 disabled:opacity-60"
           >
-            Giriş Yap
+            {!identityReadiness ? "Cihaz güvenliği hazırlanıyor…" : loading ? "Giriş hazırlanıyor…" : "Giriş Yap"}
           </button>
         </form>
 
@@ -227,7 +331,7 @@ export default function LoginPage({ forcedSurface }: LoginPageProps = {}) {
           <DeviceProofInputs proof={deviceProof} />
           <button
             type="submit"
-            disabled={googleLoading}
+            disabled={loading || googleLoading || !identityReadiness || identityBlocked}
             className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-4 text-sm font-bold text-slate-800 shadow-sm shadow-slate-200/60 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-blue-100/70 disabled:translate-y-0 disabled:opacity-60"
           >
             <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-base shadow-sm">G</span>

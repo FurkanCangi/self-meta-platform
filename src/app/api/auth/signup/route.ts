@@ -3,7 +3,11 @@ import { NextResponse, type NextRequest } from "next/server"
 import { isCustomSignupEmailConfigured, sendSignupConfirmationEmail } from "@/lib/auth/confirmationEmail"
 import { getAcceptedDocumentsSnapshot, LEGAL_DOCUMENT_VERSION } from "@/lib/legal/documents"
 import { requireTrustedMutation } from "@/lib/security/apiGuards"
-import { checkRateLimit, getClientRateLimitKey } from "@/lib/security/rateLimit"
+import {
+  checkRateLimit,
+  getPseudonymousRateLimitKey,
+  getTrustedClientNetworkIdentity,
+} from "@/lib/security/rateLimit"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
 type CookieToSet = {
@@ -14,6 +18,9 @@ type CookieToSet = {
 
 const PLAN_CODE = "none"
 const LEGAL_ERROR = "legal_required"
+const SIGNUP_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
+const SIGNUP_EMAIL_NETWORK_LIMIT = 5
+const SIGNUP_NETWORK_LIMIT = 40
 
 export const runtime = "nodejs"
 
@@ -62,11 +69,19 @@ function isValidEmail(value: string) {
 }
 
 function getClientIp(request: NextRequest) {
-  return (
-    request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
-    request.headers.get("x-real-ip") ||
-    null
-  )
+  const identity = getTrustedClientNetworkIdentity(request)
+  return identity === "unknown-network" ? null : identity
+}
+
+function signupRateLimitKeys(request: NextRequest, normalizedEmail: string) {
+  const networkIdentity = getTrustedClientNetworkIdentity(request).trim().toLowerCase()
+  return {
+    emailNetwork: getPseudonymousRateLimitKey("auth-signup-email-network", [
+      normalizedEmail,
+      networkIdentity,
+    ]),
+    network: getPseudonymousRateLimitKey("auth-signup-network", [networkIdentity]),
+  }
 }
 
 function isAlreadyRegisteredResult(user: { identities?: unknown[] } | null | undefined) {
@@ -125,12 +140,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.redirect(signupUrl(request, { error: "origin" }), 303)
   }
 
-  const rateLimit = await checkRateLimit({
-    key: getClientRateLimitKey(request, "auth-signup"),
-    limit: 5,
-    windowMs: 15 * 60 * 1000,
+  const rateLimitKeys = signupRateLimitKeys(request, email)
+  const networkRateLimit = await checkRateLimit({
+    key: rateLimitKeys.network,
+    limit: SIGNUP_NETWORK_LIMIT,
+    windowMs: SIGNUP_RATE_LIMIT_WINDOW_MS,
   })
-  if (!rateLimit.ok) {
+  if (!networkRateLimit.ok) {
+    return NextResponse.redirect(signupUrl(request, { error: "rate_limited" }), 303)
+  }
+  const emailNetworkRateLimit = await checkRateLimit({
+    key: rateLimitKeys.emailNetwork,
+    limit: SIGNUP_EMAIL_NETWORK_LIMIT,
+    windowMs: SIGNUP_RATE_LIMIT_WINDOW_MS,
+  })
+  if (!emailNetworkRateLimit.ok) {
     return NextResponse.redirect(signupUrl(request, { error: "rate_limited" }), 303)
   }
 
