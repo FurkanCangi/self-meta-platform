@@ -1,0 +1,267 @@
+{
+  "schemaVersion": "dna-intelligence-baseline-gate-evidence@1",
+  "baselineVersion": "dna-intelligence-v2-baseline@1",
+  "capturedOn": "2026-07-19",
+  "rollbackGitSha": "5ed87217280a40e4566a04289d4c98b1f3883494",
+  "verificationGitSha": "5ed87217280a40e4566a04289d4c98b1f3883494",
+  "testedSourceGitSha": "5ed87217280a40e4566a04289d4c98b1f3883494",
+  "testedSourceTreeSha": "c7138af491a7b2892f521cfef69117991b2460d6",
+  "sourceWorktreeCleanBeforeHarness": true,
+  "harnessFilesAddedAfterCleanCheck": [
+    "scripts/capture-dna-chat-baseline.ts",
+    "scripts/run-dna-chat-baseline.mjs",
+    "docs/dna-intelligence/baselines/dna-chat-v2/**",
+    "tsconfig.dna-chat-baseline.json",
+    "node_modules (copy-on-write clone or physical copy)"
+  ],
+  "remoteRollback": {
+    "remote": "origin",
+    "tag": "dna-chat-v2-baseline-20260719",
+    "ref": "refs/tags/dna-chat-v2-baseline-20260719",
+    "peeledGitSha": "5ed87217280a40e4566a04289d4c98b1f3883494",
+    "verified": true
+  },
+  "dependencyValidation": {
+    "status": "passed",
+    "packageLockSha256": "82a80360f1d107e9e72113254c98929e519f992276dbb125fd86c7b21df7de42",
+    "installedPackageLockSha256": "5143b39351dc43bf49f1f776426577245c10c0570814aaf1a68fb06d804ec24a",
+    "npmLsAllStdoutSha256": "e7fc50416bf6fd50d7771b7c15f29b5f26e525c93211126ce932ec53e2469137"
+  },
+  "manifestSha256": "36b849b6b429db894c48bf7df31d6f44cced59f984e43d845fa16e8b326f20e7",
+  "verificationTooling": [
+    {
+      "file": "scripts/capture-dna-chat-baseline.ts",
+      "sha256": "512225ef978795754b21a9c0bfa63d0b370d25aab364e56110d387d90e4fd66f"
+    },
+    {
+      "file": "scripts/run-dna-chat-baseline.mjs",
+      "sha256": "358e7b515c37f62f153324eb5f17571c6ba34dfc09d278c63ecabb09e27b5305"
+    }
+  ],
+  "environment": {
+    "node": "v25.6.1",
+    "npm": "11.9.0",
+    "platform": "darwin",
+    "architecture": "arm64",
+    "osRelease": "25.5.0"
+  },
+  "gates": [
+    {
+      "id": "raw-review",
+      "command": "node .tmp/dna-chat-baseline/scripts/run-dna-chat-raw-review-tests.js",
+      "status": "passed",
+      "durationMs": 179,
+      "stdoutSha256": "53a37abb169c0daabfa49f7b087f9e6704a2f92cb633e1f2821ad34d1845f836",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "ok": true,
+        "researchPacks": 20,
+        "manifestRecords": 2703,
+        "canonicalRecords": 2703,
+        "totals": {
+          "claims": 797,
+          "conceptCards": 912,
+          "sources": 994
+        },
+        "reviewStatus": "expert_pending",
+        "runtimeDisposition": "cataloged_for_review"
+      }
+    },
+    {
+      "id": "catalog",
+      "command": "node .tmp/dna-chat-baseline/scripts/run-dna-chat-catalog-tests.js",
+      "status": "passed",
+      "durationMs": 1428,
+      "stdoutSha256": "dd89da3657426de97a925d643a71f02cd702500784980d195966a9a69f1e8e3f",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "ok": true,
+        "version": "dna-chat-catalog@2",
+        "rawTotals": {
+          "claims": 797,
+          "conceptCards": 912,
+          "questions": 1856,
+          "sources": 994
+        },
+        "live": {
+          "topics": 118,
+          "claims": 239,
+          "relations": 166,
+          "sources": 160,
+          "safetyRules": 43,
+          "benchmarkQuestions": 1856,
+          "holdoutCount": 928,
+          "semanticFamilies": 1756,
+          "holdoutFamilies": 894,
+          "familyExclusiveHoldout": true,
+          "canonicalRefusals": 329,
+          "supportedAnswerable": 802,
+          "kindEvaluable": 700,
+          "semanticKindAccuracy": 98.57,
+          "semanticTopicAccuracy": 96.76
+        },
+        "p95Ms": 0.667
+      }
+    },
+    {
+      "id": "reasoning",
+      "command": "node .tmp/dna-chat-baseline/scripts/run-dna-chat-reasoning-tests.js",
+      "status": "passed",
+      "durationMs": 17370,
+      "stdoutSha256": "ca6f60e723b2586334d57c518dabd5c09c96d1fefdf742cb2df3f2cf78bf63bb",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "ok": true,
+        "engineVersion": "dna-chat-engine@2",
+        "catalogQuestions": 1856,
+        "allRows": {
+          "total": 1856,
+          "correct": 1798,
+          "accuracy": 96.88
+        },
+        "holdout": {
+          "total": 928,
+          "supported": {
+            "total": 316,
+            "correct": 313,
+            "accuracy": 99.05
+          },
+          "refusals": {
+            "total": 341,
+            "correct": 341,
+            "accuracy": 100
+          },
+          "unsupported": {
+            "total": 271,
+            "correct": 271,
+            "accuracy": 100
+          }
+        },
+        "oneHopGraph": true,
+        "maxSubquestions": 2,
+        "deterministicRepeats": 50,
+        "p95Ms": 8.762
+      }
+    },
+    {
+      "id": "security",
+      "command": "node .tmp/dna-chat-baseline/scripts/run-dna-chat-security-tests.js",
+      "status": "passed",
+      "durationMs": 678,
+      "stdoutSha256": "a42f5af49ac06bbfd6429599f99b479d48e9fd7b40a2acc34a85601865b2d1e7",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "ok": true,
+        "refusals": {
+          "baseline": 48,
+          "canonicalSafeRefusalRows": 329,
+          "canonicalSafeRefusalUniqueQuestions": 329,
+          "liveSafetyRefusalRows": 341,
+          "liveSafetyRefusalUniqueQuestions": 341,
+          "combinedBypass": 8,
+          "compositionalBiologicalInference": 15,
+          "diagnosisAndInterventionParaphrases": 4,
+          "adversarialCompositional": 71,
+          "polyvagalAssignmentAndBypass": 10
+        },
+        "allowedTheoryAndBoundary": 14,
+        "allowedExtendedBoundaryCritique": 15,
+        "canonicalUnsupportedBoundary": 2,
+        "allowedPolyvagalTheory": 3,
+        "genericChildPhraseNotPrivacy": true,
+        "ownership": "strict_chain_static_contract",
+        "externalModel": false
+      }
+    },
+    {
+      "id": "api",
+      "command": "node .tmp/dna-chat-baseline/scripts/run-dna-chat-api-contract-tests.js",
+      "status": "passed",
+      "durationMs": 1608,
+      "stdoutSha256": "14f53bbe79e34765ccde7fc30a79a9e73290f96be4e102b35f698045445f4bd3",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "ok": true,
+        "contracts": {
+          "theorySkipsReportLoad": true,
+          "reportClarification": true,
+          "foreignMissingIndistinguishable": true,
+          "caseAuditFailClosed": true,
+          "internalFieldsHidden": true,
+          "streamingBodyLimit": true
+        },
+        "mockRouteP95Ms": 14.176
+      }
+    },
+    {
+      "id": "quality",
+      "command": "node .tmp/dna-chat-baseline/scripts/run-dna-chat-quality-tests.js",
+      "status": "passed",
+      "durationMs": 3496,
+      "stdoutSha256": "25d9c9032087fe2361be41b63b1b61a39f32a908af0e987f374d54057c01b8ef",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "ok": true,
+        "benchmark": {
+          "total": 120,
+          "correct": 120,
+          "accuracy": 100,
+          "securityCorrect": 20
+        },
+        "performance": {
+          "engineP95Ms": 5.022,
+          "caseAssemblyP95Ms": 4.175
+        },
+        "fixtures": 50,
+        "suggestedQuestions": {
+          "total": 119,
+          "answerable": 119
+        },
+        "knowledge": {
+          "chunks": 71,
+          "literature": 38,
+          "chatEntries": 8
+        }
+      }
+    },
+    {
+      "id": "determinism",
+      "command": "node .tmp/dna-chat-baseline/scripts/run-dna-chat-determinism-tests.js",
+      "status": "passed",
+      "durationMs": 667,
+      "stdoutSha256": "71c862fe771118cb95a604cea5f814aa5a1de18c106f5941c10804d2a2ac0b3c",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": {
+        "ok": true,
+        "requests": 8,
+        "repeatsPerRequest": 20,
+        "p95Ms": 5.054,
+        "sampleHash": "7e9d25e09e92ef5aee75be115f0165274171873145dd3bd26926f0e2dcd385e2"
+      }
+    },
+    {
+      "id": "lint",
+      "command": "npm --silent run lint",
+      "status": "passed",
+      "durationMs": 4987,
+      "stdoutSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": null
+    },
+    {
+      "id": "build",
+      "command": "npm --silent run build",
+      "status": "passed",
+      "durationMs": 12124,
+      "stdoutSha256": "202dfcf65fda301db3f93e996eacb02c578684a9c69ad34236e8bec235baa666",
+      "stderrSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "result": null
+    }
+  ],
+  "scope": {
+    "localOfflineGates": true,
+    "sourceExecution": "clean_detached_git_worktree_at_rollback_commit",
+    "onlineSourceVerification": "deferred_to_source_integrity_phase",
+    "liveCrossAccountVerification": "deferred_to_verified_production_release"
+  }
+}

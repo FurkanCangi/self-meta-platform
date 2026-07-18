@@ -30,6 +30,8 @@
     "chat:reasoning": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-chat-reasoning && node .tmp/dna-chat-reasoning/scripts/run-dna-chat-reasoning-tests.js",
     "chat:source-verify-online": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-chat-source-online && node .tmp/dna-chat-source-online/scripts/run-dna-chat-source-verify-online.js",
     "chat:cross-account-live": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-chat-cross-account && node .tmp/dna-chat-cross-account/scripts/run-dna-chat-cross-account-live.js",
+    "chat:baseline": "node scripts/run-dna-chat-baseline.mjs",
+    "chat:baseline:update": "node scripts/run-dna-chat-baseline.mjs --write",
     "security:smoke": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/security-smoke-tests.js",
     "security:readiness": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/security-readiness-check.js",
     "security:owner-scenarios": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/owner-security-scenario-tests.js",

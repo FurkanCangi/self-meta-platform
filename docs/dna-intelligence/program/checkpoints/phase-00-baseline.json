@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 0,
+  "title": "Mevcut sistemi dondurma",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "source": {
+    "gitSha": "5ed87217280a40e4566a04289d4c98b1f3883494",
+    "gitTreeSha": "c7138af491a7b2892f521cfef69117991b2460d6",
+    "engineVersion": "dna-chat-engine@2",
+    "catalogVersion": "dna-chat-catalog@2",
+    "rollbackTag": "dna-chat-v2-baseline-20260719",
+    "remoteRollbackRef": "origin/refs/tags/dna-chat-v2-baseline-20260719"
+  },
+  "inventory": {
+    "topics": 118,
+    "liveClaims": 239,
+    "oneHopRelations": 166,
+    "sources": 160,
+    "safetyRules": 43,
+    "benchmarkQuestions": 1856,
+    "holdoutQuestions": 928,
+    "rawResearchRecords": 2703
+  },
+  "evidence": {
+    "baselineManifest": "docs/dna-intelligence/baselines/dna-chat-v2/baseline-manifest.json",
+    "gateEvidence": "docs/dna-intelligence/baselines/dna-chat-v2/gate-evidence.json",
+    "regressionFixtures": "docs/dna-intelligence/baselines/dna-chat-v2/regression-fixtures.json",
+    "checksums": "docs/dna-intelligence/baselines/dna-chat-v2/SHA256SUMS",
+    "verificationCommand": "npm run chat:baseline",
+    "sourceExecution": "clean_detached_git_worktree_at_rollback_commit"
+  },
+  "exitGates": {
+    "catalog": "passed",
+    "rawReview": "passed",
+    "reasoning": "passed",
+    "security": "passed",
+    "api": "passed",
+    "quality": "passed",
+    "determinism": "passed",
+    "lint": "passed",
+    "build": "passed",
+    "singleCommandReproduction": "passed",
+    "remoteRollbackDurability": "passed",
+    "independentReview": "passed_with_no_blockers"
+  },
+  "worktreeBoundary": {
+    "preservedUnrelatedPaths": [
+      "scripts/activity-pilot/"
+    ],
+    "runtimeBehaviorChanged": false
+  },
+  "knownLimitations": [
+    "Bu baseline iç mühendislik regresyon kanıtıdır; bağımsız klinik validasyon değildir.",
+    "V2 source_verified_expert_pending kayıtları insan uzman onayı anlamına gelmez.",
+    "Kod rollback'i veritabanı migration rollback'i değildir."
+  ],
+  "nextPhase": 1
+}

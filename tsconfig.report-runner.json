@@ -31,6 +31,7 @@
     "scripts/run-dna-chat-api-contract-tests.ts",
     "scripts/run-dna-chat-source-verify-online.ts",
     "scripts/run-dna-chat-cross-account-live.ts",
+    "scripts/capture-dna-chat-baseline.ts",
     "scripts/report-quality-cases.ts",
     "src/lib/dna/**/*.ts",
     "src/lib/assessment/**/*.ts"

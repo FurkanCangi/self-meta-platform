@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "dna-intelligence-program-state@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "objective": "DNA Intelligence V3 planını Faz 0'dan Faz 60'a sıralı ve kanıt kapılı biçimde tamamlamak",
+  "completedPhases": [
+    0
+  ],
+  "currentPhase": 1,
+  "status": "in_progress",
+  "lastCompletedCheckpoint": "docs/dna-intelligence/program/checkpoints/phase-00-baseline.json",
+  "rollbackTag": "dna-chat-v2-baseline-20260719",
+  "phaseOrderPolicy": "Bir fazın çıkış kapıları geçmeden sonraki faz tamamlanmış sayılmaz.",
+  "updatedOn": "2026-07-19"
+}

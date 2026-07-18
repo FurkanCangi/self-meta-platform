@@ -1,0 +1,917 @@
+{
+  "architectureBoundary": {
+    "embeddings": false,
+    "externalLlmAtRuntime": false,
+    "runtimeInternet": false,
+    "vectorDatabase": false
+  },
+  "baselineVersion": "dna-intelligence-v2-baseline@1",
+  "capturedOn": "2026-07-19",
+  "catalogVersion": "dna-chat-catalog@2",
+  "engineVersion": "dna-chat-engine@2",
+  "implementationBranch": "codex/dna-intelligence-v3",
+  "inventory": {
+    "benchmarkQuestions": 1856,
+    "holdoutQuestions": 928,
+    "liveClaims": 239,
+    "oneHopRelations": 166,
+    "rawCounts": {
+      "benchmarkQuestions": 1856,
+      "claims": 797,
+      "conceptCards": 912,
+      "sourceRows": 994
+    },
+    "rawResearchRecords": 2703,
+    "rawReviewManifestRecords": 2703,
+    "researchPacks": 20,
+    "safetyRules": 43,
+    "sources": 160,
+    "topics": 118
+  },
+  "knownLimitations": [
+    "Mevcut V2 topic kayıtları source_verified_expert_pending durumundadır; bu insan uzman onayı değildir.",
+    "V2 runtime filtresi topic review durumunu canlı yayın kapısı olarak uygulamaz; V3 çok-geçişli yayın kapısı bunu değiştirecektir.",
+    "V2 kaynak kartındaki excerptTr her zaman gerçek belge pasajı değildir; V3 claim-passage grafı bu açığı kapatacaktır.",
+    "Bu baseline iç mühendislik regresyon kanıtıdır; bağımsız klinik validasyon değildir."
+  ],
+  "provenance": [
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v1/self-regulation.md",
+      "expertReview": "pending",
+      "id": "provenance.self-regulation.v1",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "5424b29899da8c63d2884701c59a4f62da826c34c370d2985d967f2bef2fb4a9"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v1/central-nervous-system.md",
+      "expertReview": "pending",
+      "id": "provenance.central-nervous-system.v1",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "1d6d484285fe36be15b0cae8837b87391bab21138cfd795171cd2209d6faa277"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v1/autonomic-nervous-system.md",
+      "expertReview": "pending",
+      "id": "provenance.autonomic-nervous-system.v1",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "a8f870c214d3a5db99ebeaff1b6b40bb0bba930aae6ad26573ca002e8c8220f4"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v1/sympathetic-parasympathetic-processes.md",
+      "expertReview": "pending",
+      "id": "provenance.sympathetic-parasympathetic.v1",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "17afcc401554ac0d5d2765db0244ea64b3dbdb76c8ce8ddaa00e40b9e4a63b79"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v2/prefrontal-processes.md",
+      "expertReview": "pending",
+      "id": "provenance.prefrontal-processes.v2",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "fd3a2959344ae648a277bbb6d3cc10192af141a11ea4ce4e58af4da8ebae7c91"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v2/anterior-cingulate-cortex.md",
+      "expertReview": "pending",
+      "id": "provenance.anterior-cingulate-cortex.v2",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "f20dca60867450fa55a7d1e78a5523208eed9632a3481dbb6cfbaea19bf281ef"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v2/insular-cortex.md",
+      "expertReview": "pending",
+      "id": "provenance.insular-cortex.v2",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "0e05e9a9a611c725db6f4cf45eaaba11fa3a700642ab719518f9d16680681c54"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v2/interoception.md",
+      "expertReview": "pending",
+      "id": "provenance.interoception.v2",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "e6f5b2789d0ec62848aa6d6347c56a7a48045f42bef3e647d0851746fb7da21d"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v3/arousal-reactivity.md",
+      "expertReview": "pending",
+      "id": "provenance.arousal-reactivity.v3",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "07078c3e8f58d3745941f75a1659aaedd3ca632f23a79899edc2e0a5c767e426"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v3/recovery-self-organization.md",
+      "expertReview": "pending",
+      "id": "provenance.recovery-self-organization.v3",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "be6e9b52c710c6bdf0caced8a49f1476271851e70f058a6745adc788ca12d386"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v3/sensory-modulation.md",
+      "expertReview": "pending",
+      "id": "provenance.sensory-modulation.v3",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "78283a8d35559425019f5e07a478b1582bb9a9a3b612533f1d7d2057feb29dfc"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v3/emotion-regulation.md",
+      "expertReview": "pending",
+      "id": "provenance.emotion-regulation.v3",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "8834a5728b161f96bf8e42a0d9886e6cde45fdfb4d15da9979baa95885604d00"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v4/stress-systems.md",
+      "expertReview": "pending",
+      "id": "provenance.stress-systems.v4",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "523dfc3ae756c911c0d99cf05920066916d2e2d06896254c643a2288eeb97fcb"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v4/sleep-daily-rhythm.md",
+      "expertReview": "pending",
+      "id": "provenance.sleep-daily-rhythm.v4",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "12face8da1c7440307a366806b8364962ec296d028baebfb1df13bffec471801"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v4/executive-functions.md",
+      "expertReview": "pending",
+      "id": "provenance.executive-functions.v4",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "42d1e37f380cf5e7a7714a3c1c7ab3e93ecbc3cbe4061560733920b6b15a6caf"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v4/attention-working-memory.md",
+      "expertReview": "pending",
+      "id": "provenance.attention-working-memory.v4",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "a27304ba16dec580e9927d4ca53698cb1b6c353d2137fda7e0ad1b5e4bdda4cf"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v5/case-report-interpretation-boundaries.md",
+      "expertReview": "pending",
+      "id": "provenance.case-report-boundaries.v5",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "1c9bddb5601139dac7196ef47eea03dd2cfed706e99f3cca66cf42e039761347"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v5/dna-six-domains.md",
+      "expertReview": "pending",
+      "id": "provenance.dna-six-domains.v5",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "2ece669d1d0dc87421c11b94705d10e942e5d094b946f90e8077ad9a2f19d374"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v5/developmental-differences.md",
+      "expertReview": "pending",
+      "id": "provenance.developmental-differences.v5",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "f68d707ab32434cc2b72e0c52c328ae1a8dd7015759ae45c55acc1d144928492"
+    },
+    {
+      "canonicalFile": "docs/dna-knowledge/research-packs/v5/coregulation.md",
+      "expertReview": "pending",
+      "id": "provenance.coregulation.v5",
+      "runtimePolicy": "verified_safe_subset_only",
+      "sha256": "d0fe25b3a2c9eb6817cc9d6baaf12244c11d9a8c11cafaeb4ba3af08747c55e5"
+    }
+  ],
+  "regression": {
+    "artifact": "regression-fixtures.json",
+    "artifactSha256": "97b303c3846693d0e991ed56bd1521e6356a1b3a889c645786fe233c8f7eb374",
+    "sampleCount": 16
+  },
+  "rollback": {
+    "catalogVersion": "dna-chat-catalog@2",
+    "databaseBoundary": "Kod rollback'i Supabase migration rollback'i değildir; şema uyumluluğu release aşamasında ayrıca doğrulanır.",
+    "engineVersion": "dna-chat-engine@2",
+    "gitSha": "5ed87217280a40e4566a04289d4c98b1f3883494",
+    "reconstructionCommand": "git worktree add <temporary-path> dna-chat-v2-baseline-20260719",
+    "remote": "origin",
+    "remoteRef": "refs/tags/dna-chat-v2-baseline-20260719",
+    "requiredTag": "dna-chat-v2-baseline-20260719",
+    "runtimeBoundary": "V2 kaynak anı immutable Git commit ve regression fixture ile korunur; V3 feature flag'i sonraki fazlarda eklenir."
+  },
+  "schemaVersion": "dna-intelligence-baseline-manifest@1",
+  "sourceBranchAtCapture": "main",
+  "sourceCommitTimestamp": "2026-07-17T18:51:09+03:00",
+  "sourceSnapshot": {
+    "gitSha": "5ed87217280a40e4566a04289d4c98b1f3883494",
+    "hashGroups": {
+      "caseApiBoundary": {
+        "algorithm": "sha256(sorted path + NUL + bytes + NUL)",
+        "description": "Vaka API, sahiplik, audit, hız sınırı ve snapshot güvenlik sınırı",
+        "fileCount": 7,
+        "files": [
+          {
+            "bytes": 17531,
+            "path": "src/app/api/app/dna-chat/route.ts",
+            "sha256": "399934784b9b82b6801552abc4625ef6f840a27f0a11de694fcb52744d8e6b51"
+          },
+          {
+            "bytes": 177016,
+            "path": "src/lib/dna/reportEngine.ts",
+            "sha256": "c3dbbc05b4e3f71134d292cb3c09df6d5944e5379eec2c21ad83df2d9b15e079"
+          },
+          {
+            "bytes": 2368,
+            "path": "src/lib/security/apiGuards.ts",
+            "sha256": "ee7239d5139744d2f19359631b24389cb1096c724f1511f2865f27bba0d3c235"
+          },
+          {
+            "bytes": 3250,
+            "path": "src/lib/security/privacyOps.ts",
+            "sha256": "108344bc1db61b668578ef8b780e031df703a1602c1cdbad103df1beb6e2eadf"
+          },
+          {
+            "bytes": 2370,
+            "path": "src/lib/security/rateLimit.ts",
+            "sha256": "2be3f09cd682626844da30ceaf57936d43dab15fc2b35474d2705266bba42411"
+          },
+          {
+            "bytes": 623,
+            "path": "src/lib/supabase/admin.ts",
+            "sha256": "0efe11fc139429dae68c1482d7c950e7ec06c64fa84e8e482ba97557d31feae5"
+          },
+          {
+            "bytes": 626,
+            "path": "src/lib/supabase/server.ts",
+            "sha256": "484a281f79e317f50433498ff07406760777b6bcbfaf34e87c3fb85e02bb4263"
+          }
+        ],
+        "sha256": "012f708354fb40963e7032f544fd470ff430f7f1b744075d5d1f0545f7e89165"
+      },
+      "catalogEvidence": {
+        "algorithm": "sha256(sorted path + NUL + bytes + NUL)",
+        "description": "Katalog, kanonik araştırma paketleri ve provenance girdileri",
+        "fileCount": 47,
+        "files": [
+          {
+            "bytes": 62358,
+            "path": "docs/dna-knowledge/research-packs/v1/autonomic-nervous-system.md",
+            "sha256": "a8f870c214d3a5db99ebeaff1b6b40bb0bba930aae6ad26573ca002e8c8220f4"
+          },
+          {
+            "bytes": 80724,
+            "path": "docs/dna-knowledge/research-packs/v1/central-nervous-system.md",
+            "sha256": "1d6d484285fe36be15b0cae8837b87391bab21138cfd795171cd2209d6faa277"
+          },
+          {
+            "bytes": 3633,
+            "path": "docs/dna-knowledge/research-packs/v1/README.md",
+            "sha256": "d0aab85b5e3eda2fe69fda6e531ac791e5a84b267b928eafa2e50a06335d6ae0"
+          },
+          {
+            "bytes": 144400,
+            "path": "docs/dna-knowledge/research-packs/v1/self-regulation.md",
+            "sha256": "5424b29899da8c63d2884701c59a4f62da826c34c370d2985d967f2bef2fb4a9"
+          },
+          {
+            "bytes": 378,
+            "path": "docs/dna-knowledge/research-packs/v1/SHA256SUMS",
+            "sha256": "f650349650e52d9559df5e5b0b6cd84c10357b29b85753ef6c933f235ff99e15"
+          },
+          {
+            "bytes": 196483,
+            "path": "docs/dna-knowledge/research-packs/v1/sympathetic-parasympathetic-processes.md",
+            "sha256": "17afcc401554ac0d5d2765db0244ea64b3dbdb76c8ce8ddaa00e40b9e4a63b79"
+          },
+          {
+            "bytes": 157775,
+            "path": "docs/dna-knowledge/research-packs/v2/anterior-cingulate-cortex.md",
+            "sha256": "f20dca60867450fa55a7d1e78a5523208eed9632a3481dbb6cfbaea19bf281ef"
+          },
+          {
+            "bytes": 152450,
+            "path": "docs/dna-knowledge/research-packs/v2/insular-cortex.md",
+            "sha256": "0e05e9a9a611c725db6f4cf45eaaba11fa3a700642ab719518f9d16680681c54"
+          },
+          {
+            "bytes": 190335,
+            "path": "docs/dna-knowledge/research-packs/v2/interoception.md",
+            "sha256": "e6f5b2789d0ec62848aa6d6347c56a7a48045f42bef3e647d0851746fb7da21d"
+          },
+          {
+            "bytes": 90171,
+            "path": "docs/dna-knowledge/research-packs/v2/prefrontal-processes.md",
+            "sha256": "fd3a2959344ae648a277bbb6d3cc10192af141a11ea4ce4e58af4da8ebae7c91"
+          },
+          {
+            "bytes": 2369,
+            "path": "docs/dna-knowledge/research-packs/v2/README.md",
+            "sha256": "7a9c870a18c2f90ebca3ad986d0cba09b0b766702b841b0ba60983652261a770"
+          },
+          {
+            "bytes": 352,
+            "path": "docs/dna-knowledge/research-packs/v2/SHA256SUMS",
+            "sha256": "269214ea719df0b75a9b1edadc71e9b9b84bed8ab68550ceabef9710d54d6021"
+          },
+          {
+            "bytes": 125661,
+            "path": "docs/dna-knowledge/research-packs/v3/arousal-reactivity.md",
+            "sha256": "07078c3e8f58d3745941f75a1659aaedd3ca632f23a79899edc2e0a5c767e426"
+          },
+          {
+            "bytes": 227453,
+            "path": "docs/dna-knowledge/research-packs/v3/emotion-regulation.md",
+            "sha256": "8834a5728b161f96bf8e42a0d9886e6cde45fdfb4d15da9979baa95885604d00"
+          },
+          {
+            "bytes": 728,
+            "path": "docs/dna-knowledge/research-packs/v3/README.md",
+            "sha256": "2ae3c23ec8f1497b1ae1dd0f929d64fdfd629f757dbe0b2d3053134540c50215"
+          },
+          {
+            "bytes": 165772,
+            "path": "docs/dna-knowledge/research-packs/v3/recovery-self-organization.md",
+            "sha256": "be6e9b52c710c6bdf0caced8a49f1476271851e70f058a6745adc788ca12d386"
+          },
+          {
+            "bytes": 190975,
+            "path": "docs/dna-knowledge/research-packs/v3/sensory-modulation.md",
+            "sha256": "78283a8d35559425019f5e07a478b1582bb9a9a3b612533f1d7d2057feb29dfc"
+          },
+          {
+            "bytes": 360,
+            "path": "docs/dna-knowledge/research-packs/v3/SHA256SUMS",
+            "sha256": "1b2ed2ecfba92a180159a6f3e316960435cda7469dc484f8380359b385f71f2f"
+          },
+          {
+            "bytes": 228528,
+            "path": "docs/dna-knowledge/research-packs/v4/attention-working-memory.md",
+            "sha256": "a27304ba16dec580e9927d4ca53698cb1b6c353d2137fda7e0ad1b5e4bdda4cf"
+          },
+          {
+            "bytes": 208857,
+            "path": "docs/dna-knowledge/research-packs/v4/executive-functions.md",
+            "sha256": "42d1e37f380cf5e7a7714a3c1c7ab3e93ecbc3cbe4061560733920b6b15a6caf"
+          },
+          {
+            "bytes": 1611,
+            "path": "docs/dna-knowledge/research-packs/v4/README.md",
+            "sha256": "44b498f764b0eb3fcda8c6458f7ecb927cf2fad5d6520bf01e91709cfbe919b7"
+          },
+          {
+            "bytes": 355,
+            "path": "docs/dna-knowledge/research-packs/v4/SHA256SUMS",
+            "sha256": "d040ec967afd69141aff6c8ba2f175e7d73b3406c6dc1cb2d59884551e82ae4d"
+          },
+          {
+            "bytes": 220483,
+            "path": "docs/dna-knowledge/research-packs/v4/sleep-daily-rhythm.md",
+            "sha256": "12face8da1c7440307a366806b8364962ec296d028baebfb1df13bffec471801"
+          },
+          {
+            "bytes": 170405,
+            "path": "docs/dna-knowledge/research-packs/v4/stress-systems.md",
+            "sha256": "523dfc3ae756c911c0d99cf05920066916d2e2d06896254c643a2288eeb97fcb"
+          },
+          {
+            "bytes": 162118,
+            "path": "docs/dna-knowledge/research-packs/v5/case-report-interpretation-boundaries.md",
+            "sha256": "1c9bddb5601139dac7196ef47eea03dd2cfed706e99f3cca66cf42e039761347"
+          },
+          {
+            "bytes": 240654,
+            "path": "docs/dna-knowledge/research-packs/v5/coregulation.md",
+            "sha256": "d0fe25b3a2c9eb6817cc9d6baaf12244c11d9a8c11cafaeb4ba3af08747c55e5"
+          },
+          {
+            "bytes": 199815,
+            "path": "docs/dna-knowledge/research-packs/v5/developmental-differences.md",
+            "sha256": "f68d707ab32434cc2b72e0c52c328ae1a8dd7015759ae45c55acc1d144928492"
+          },
+          {
+            "bytes": 236507,
+            "path": "docs/dna-knowledge/research-packs/v5/dna-six-domains.md",
+            "sha256": "2ece669d1d0dc87421c11b94705d10e942e5d094b946f90e8077ad9a2f19d374"
+          },
+          {
+            "bytes": 2595,
+            "path": "docs/dna-knowledge/research-packs/v5/README.md",
+            "sha256": "e33cf24cc171eab5f0ff937d8a7668f2657a7aef0944dfdd623405f674597ca2"
+          },
+          {
+            "bytes": 369,
+            "path": "docs/dna-knowledge/research-packs/v5/SHA256SUMS",
+            "sha256": "c01d8069cd2d878d04bd1cae7a4bc5ced98ad71c5741cfab24489bdb71553e2a"
+          },
+          {
+            "bytes": 55803,
+            "path": "src/lib/dna/chat/catalog/benchmarkQuestions.ts",
+            "sha256": "686adc51bd0435d75a6e216b9b5a2b19c33c0fba39b55905352bf9e3fa0922e2"
+          },
+          {
+            "bytes": 149817,
+            "path": "src/lib/dna/chat/catalog/canonicalBenchmarkData.ts",
+            "sha256": "24927eba5d41ee08a2c56fb239bd57e4042fd12140a7f63c94fe5aba49b45ecd"
+          },
+          {
+            "bytes": 81818,
+            "path": "src/lib/dna/chat/catalog/claims.ts",
+            "sha256": "6a25367add049b1fa768f81f47273f3edf338888d3a3353c9448b821620bc1eb"
+          },
+          {
+            "bytes": 1988,
+            "path": "src/lib/dna/chat/catalog/index.ts",
+            "sha256": "453bc9498d9b2f81048503f285261dde214044c7ea436bd45a5596d0341f070e"
+          },
+          {
+            "bytes": 12635,
+            "path": "src/lib/dna/chat/catalog/provenance.ts",
+            "sha256": "2aeeba6843f4077c2a1e441536ec08cae496af52a080a1f1e229491131db43ca"
+          },
+          {
+            "bytes": 11115,
+            "path": "src/lib/dna/chat/catalog/rawReviewManifest.ts",
+            "sha256": "3ebca58255ef786c6a09a56ee5a62c73272b6c25bd79b734e12dccfa484688df"
+          },
+          {
+            "bytes": 45414,
+            "path": "src/lib/dna/chat/catalog/relations.ts",
+            "sha256": "a825a67f7ce9c34598b6baf3203593e4a781d238bc1d4116cd8b4eca40754078"
+          },
+          {
+            "bytes": 33693,
+            "path": "src/lib/dna/chat/catalog/safetyRules.ts",
+            "sha256": "4eff7204b4b9e5bf212ad36c79a6a1271d34cd97467b23d73f5debeef36d430a"
+          },
+          {
+            "bytes": 35003,
+            "path": "src/lib/dna/chat/catalog/search.ts",
+            "sha256": "d63f1723d1adff873a152c08b9d6e2f15f3875257cd8a38f4ed7f0c613b750bf"
+          },
+          {
+            "bytes": 77945,
+            "path": "src/lib/dna/chat/catalog/sources.ts",
+            "sha256": "7aaa1a996a9ecd67dd146d1843b167db7c7ba45d1e742489fa4085e95afa55b9"
+          },
+          {
+            "bytes": 84128,
+            "path": "src/lib/dna/chat/catalog/topics.ts",
+            "sha256": "42a8d5f2965969032c09560b6ab9496197876c3029a286a0256a396ecb2c9911"
+          },
+          {
+            "bytes": 8859,
+            "path": "src/lib/dna/chat/catalog/types.ts",
+            "sha256": "03436d8a45625912571c1eb6aabdf78d062137d3dc6b106e044bb603b73be8a0"
+          },
+          {
+            "bytes": 64412,
+            "path": "src/lib/dna/chat/catalog/v5CanonicalBenchmarkData.ts",
+            "sha256": "2522c32f755c4725f9c95902fbcd11a2b1848f3bac0e3c3dbd81b2d21aae4954"
+          },
+          {
+            "bytes": 56244,
+            "path": "src/lib/dna/chat/catalog/v5CaseBoundariesCatalog.ts",
+            "sha256": "ab3c5cdce70949df8ee14f2ba6ffebc217a9474147014f4cec458721f1550966"
+          },
+          {
+            "bytes": 40958,
+            "path": "src/lib/dna/chat/catalog/v5CoregulationCatalog.ts",
+            "sha256": "50c945403d76fbc2be1af10ae241432e05eaf8fc49c4c8491874b652d6040867"
+          },
+          {
+            "bytes": 57515,
+            "path": "src/lib/dna/chat/catalog/v5DevelopmentCatalog.ts",
+            "sha256": "3e3f63e863ae6d3969a5436e5c26383647f3d45332849491509781b4ecb692a0"
+          },
+          {
+            "bytes": 68649,
+            "path": "src/lib/dna/chat/catalog/v5SixDomainsCatalog.ts",
+            "sha256": "d3cd4c0c7ce92b943b0643e157850b193923ca02b78ee977f402ddcfb47d392d"
+          }
+        ],
+        "sha256": "50f4d999c87b4f8365b91a972a760ce8aa30ccc27c66803c20243a7aa2d4809f"
+      },
+      "engineRuntime": {
+        "algorithm": "sha256(sorted path + NUL + bytes + NUL)",
+        "description": "V2 deterministik sohbet motoru ile tüm DNA ve assessment kaynak kapanışı",
+        "fileCount": 58,
+        "files": [
+          {
+            "bytes": 1136,
+            "path": "src/lib/assessment/assessmentEngine.ts",
+            "sha256": "395b89b23286d38b256e1128a131dfe24ebc6cbce53bd6f9306645a7db1e5166"
+          },
+          {
+            "bytes": 2083,
+            "path": "src/lib/assessment/itemScoring.ts",
+            "sha256": "93be38ee90daf7fc9fafd2d8743e189b008c7917701d264a267ce201011f25d1"
+          },
+          {
+            "bytes": 3264,
+            "path": "src/lib/dna/ageUtils.ts",
+            "sha256": "4768d03bdc4e1a3a59d082e0821262462bbf39f9b4a4925fc95251e207136e4d"
+          },
+          {
+            "bytes": 29893,
+            "path": "src/lib/dna/anamnezUtils.ts",
+            "sha256": "04decaf12952e7c58e928e27d9dbf6830fc906bd62c5f05bb807cec49e5667b6"
+          },
+          {
+            "bytes": 4842,
+            "path": "src/lib/dna/chat/apiResolver.ts",
+            "sha256": "829c1d27e9ac6a91630719f72820807fa1ddfdf3441231a600395aa3831c206d"
+          },
+          {
+            "bytes": 7743,
+            "path": "src/lib/dna/chat/caseContext.ts",
+            "sha256": "3c5b86d0c81ed99628034001bf7f08dfc4719c98fedd69aa4633c146339c5ae4"
+          },
+          {
+            "bytes": 55803,
+            "path": "src/lib/dna/chat/catalog/benchmarkQuestions.ts",
+            "sha256": "686adc51bd0435d75a6e216b9b5a2b19c33c0fba39b55905352bf9e3fa0922e2"
+          },
+          {
+            "bytes": 149817,
+            "path": "src/lib/dna/chat/catalog/canonicalBenchmarkData.ts",
+            "sha256": "24927eba5d41ee08a2c56fb239bd57e4042fd12140a7f63c94fe5aba49b45ecd"
+          },
+          {
+            "bytes": 81818,
+            "path": "src/lib/dna/chat/catalog/claims.ts",
+            "sha256": "6a25367add049b1fa768f81f47273f3edf338888d3a3353c9448b821620bc1eb"
+          },
+          {
+            "bytes": 1988,
+            "path": "src/lib/dna/chat/catalog/index.ts",
+            "sha256": "453bc9498d9b2f81048503f285261dde214044c7ea436bd45a5596d0341f070e"
+          },
+          {
+            "bytes": 12635,
+            "path": "src/lib/dna/chat/catalog/provenance.ts",
+            "sha256": "2aeeba6843f4077c2a1e441536ec08cae496af52a080a1f1e229491131db43ca"
+          },
+          {
+            "bytes": 11115,
+            "path": "src/lib/dna/chat/catalog/rawReviewManifest.ts",
+            "sha256": "3ebca58255ef786c6a09a56ee5a62c73272b6c25bd79b734e12dccfa484688df"
+          },
+          {
+            "bytes": 45414,
+            "path": "src/lib/dna/chat/catalog/relations.ts",
+            "sha256": "a825a67f7ce9c34598b6baf3203593e4a781d238bc1d4116cd8b4eca40754078"
+          },
+          {
+            "bytes": 33693,
+            "path": "src/lib/dna/chat/catalog/safetyRules.ts",
+            "sha256": "4eff7204b4b9e5bf212ad36c79a6a1271d34cd97467b23d73f5debeef36d430a"
+          },
+          {
+            "bytes": 35003,
+            "path": "src/lib/dna/chat/catalog/search.ts",
+            "sha256": "d63f1723d1adff873a152c08b9d6e2f15f3875257cd8a38f4ed7f0c613b750bf"
+          },
+          {
+            "bytes": 77945,
+            "path": "src/lib/dna/chat/catalog/sources.ts",
+            "sha256": "7aaa1a996a9ecd67dd146d1843b167db7c7ba45d1e742489fa4085e95afa55b9"
+          },
+          {
+            "bytes": 84128,
+            "path": "src/lib/dna/chat/catalog/topics.ts",
+            "sha256": "42a8d5f2965969032c09560b6ab9496197876c3029a286a0256a396ecb2c9911"
+          },
+          {
+            "bytes": 8859,
+            "path": "src/lib/dna/chat/catalog/types.ts",
+            "sha256": "03436d8a45625912571c1eb6aabdf78d062137d3dc6b106e044bb603b73be8a0"
+          },
+          {
+            "bytes": 64412,
+            "path": "src/lib/dna/chat/catalog/v5CanonicalBenchmarkData.ts",
+            "sha256": "2522c32f755c4725f9c95902fbcd11a2b1848f3bac0e3c3dbd81b2d21aae4954"
+          },
+          {
+            "bytes": 56244,
+            "path": "src/lib/dna/chat/catalog/v5CaseBoundariesCatalog.ts",
+            "sha256": "ab3c5cdce70949df8ee14f2ba6ffebc217a9474147014f4cec458721f1550966"
+          },
+          {
+            "bytes": 40958,
+            "path": "src/lib/dna/chat/catalog/v5CoregulationCatalog.ts",
+            "sha256": "50c945403d76fbc2be1af10ae241432e05eaf8fc49c4c8491874b652d6040867"
+          },
+          {
+            "bytes": 57515,
+            "path": "src/lib/dna/chat/catalog/v5DevelopmentCatalog.ts",
+            "sha256": "3e3f63e863ae6d3969a5436e5c26383647f3d45332849491509781b4ecb692a0"
+          },
+          {
+            "bytes": 68649,
+            "path": "src/lib/dna/chat/catalog/v5SixDomainsCatalog.ts",
+            "sha256": "d3cd4c0c7ce92b943b0643e157850b193923ca02b78ee977f402ddcfb47d392d"
+          },
+          {
+            "bytes": 31447,
+            "path": "src/lib/dna/chat/catalogReasoning.ts",
+            "sha256": "341632471b6409dcfecc68c30cb54b77e36d981c150701be7efcac7fb279c1ed"
+          },
+          {
+            "bytes": 44656,
+            "path": "src/lib/dna/chat/engine.ts",
+            "sha256": "26b2af2d98c323fafb75519e7990574ec8b8419278b973475d82d68e0b505e4f"
+          },
+          {
+            "bytes": 1201,
+            "path": "src/lib/dna/chat/index.ts",
+            "sha256": "fe4e9e8ee597824c60b743e8cdd64137b623be2131a9ac1d15790360763f2ecb"
+          },
+          {
+            "bytes": 17891,
+            "path": "src/lib/dna/chat/intents.ts",
+            "sha256": "f17c9d9774bb773a9469be645a81ec16d5679e7a011a6f89ab1a12d6ee02791a"
+          },
+          {
+            "bytes": 16816,
+            "path": "src/lib/dna/chat/knowledge.ts",
+            "sha256": "8688d14ab7ba749ccc385ba9fc52af3baa0030d2239001029cdd7bf9aacf4d14"
+          },
+          {
+            "bytes": 4377,
+            "path": "src/lib/dna/chat/reportSnapshot.ts",
+            "sha256": "a86991425eaa1157ea51ca7307a7357a36bc4dd97d887c3b01966ff20d76c03b"
+          },
+          {
+            "bytes": 8563,
+            "path": "src/lib/dna/chat/router.ts",
+            "sha256": "f5f3f59b058b3b5b733cd2964fb8eb29301b40b60c967acdbb0d2865ecaf4255"
+          },
+          {
+            "bytes": 34961,
+            "path": "src/lib/dna/chat/safety.ts",
+            "sha256": "00bbb461545887de1bb38d0694541937342ef0124681467278c5549fd50996cb"
+          },
+          {
+            "bytes": 775,
+            "path": "src/lib/dna/chat/suggestions.ts",
+            "sha256": "9b92bcf2000b8224319f5ba3440f2052aad165a3bd24ce1ad79042b5c36c077b"
+          },
+          {
+            "bytes": 6357,
+            "path": "src/lib/dna/chat/text.ts",
+            "sha256": "65a51f7283913f6f1bc1dc987c2661412c57b763a2e7bad7080c429c470bcdec"
+          },
+          {
+            "bytes": 5744,
+            "path": "src/lib/dna/chat/types.ts",
+            "sha256": "73705ba917a8a5c7cbd98fd840066cb8418a07a0d4b7d68f1b9a11a9f4a3d50f"
+          },
+          {
+            "bytes": 12731,
+            "path": "src/lib/dna/clinicalAnalysis.ts",
+            "sha256": "5f1a4161ff988f40b380fdc357cb998b4c02ef39cdf5a223f4fe42d0098b468f"
+          },
+          {
+            "bytes": 2826,
+            "path": "src/lib/dna/clinicalClaimRegistry.ts",
+            "sha256": "7f987e51cf937ac7019e9d5fffd4a39c370a115f7285bc0e7cfc1b830027b110"
+          },
+          {
+            "bytes": 3208,
+            "path": "src/lib/dna/clinicalDifferentialFormulation.ts",
+            "sha256": "81ce214022f7569370b1b2c7c5d378b7402690e0907dffe6a8e5824b012e43d2"
+          },
+          {
+            "bytes": 27075,
+            "path": "src/lib/dna/clinicalKnowledgeBase.ts",
+            "sha256": "f06d0d4bf1616d07673662476dd73289a45a195ae0088abce7b3b6ea793a4313"
+          },
+          {
+            "bytes": 15767,
+            "path": "src/lib/dna/clinicalKnowledgeSelector.ts",
+            "sha256": "12bfda08f6cef81891b3f8ca2fcd6015807d03d3e3e05dee4c766c7d7620f4be"
+          },
+          {
+            "bytes": 24315,
+            "path": "src/lib/dna/clinicalNarrativeCompiler.ts",
+            "sha256": "956ca0ec44af90d60f0efec9f37b0134c1b52a4781d1937c245108ae207e44f7"
+          },
+          {
+            "bytes": 22826,
+            "path": "src/lib/dna/clinicalReasoning.ts",
+            "sha256": "c249057ae7cccd7c13f115a5e101631a702553a6c9f3b61b19a3b7a81cd97ae9"
+          },
+          {
+            "bytes": 5292,
+            "path": "src/lib/dna/clinicalSafetyValidator.ts",
+            "sha256": "c67ca21882991f7bdd88dc2169204a0658fc4e4150527dd7919759692ae51b12"
+          },
+          {
+            "bytes": 152,
+            "path": "src/lib/dna/defaultAnswers.ts",
+            "sha256": "7ba7be23788eec2dd32384b8f278022fe1fb15ec09329dbfe128c57c761bb9a8"
+          },
+          {
+            "bytes": 1395,
+            "path": "src/lib/dna/demoCases.ts",
+            "sha256": "4e63b8f80f7e42aa6851dfcfb23bb30355d141b1b69e4aba9a78bb92e9cb1914"
+          },
+          {
+            "bytes": 62705,
+            "path": "src/lib/dna/externalTestRegistry.ts",
+            "sha256": "9b910ac7c9042deceac9cb71435711547ffdbd06ebbcdd67be21cd59e5dd6d02"
+          },
+          {
+            "bytes": 33152,
+            "path": "src/lib/dna/itemSignals.ts",
+            "sha256": "33a932cd3f5a188a728bb6cf9b9d2077e247b18a44adbe20ee6b00adad7c358d"
+          },
+          {
+            "bytes": 64497,
+            "path": "src/lib/dna/literatureNote.ts",
+            "sha256": "56445d864d1a3b0bdf8b7a02d60c4776d459a04c9f55ee970e2a7478a3b70aea"
+          },
+          {
+            "bytes": 4435,
+            "path": "src/lib/dna/normativeBands.ts",
+            "sha256": "1a6ee4b5169e0e21dc4f45ebd8e6c2b92388e08cf73d35b4c1a1b7b1c99c50de"
+          },
+          {
+            "bytes": 7065,
+            "path": "src/lib/dna/questions.ts",
+            "sha256": "3591c21744872e0e7811257c0904c2757c6587a53ae23a1604f65fd98349f797"
+          },
+          {
+            "bytes": 177016,
+            "path": "src/lib/dna/reportEngine.ts",
+            "sha256": "c3dbbc05b4e3f71134d292cb3c09df6d5944e5379eec2c21ad83df2d9b15e079"
+          },
+          {
+            "bytes": 25997,
+            "path": "src/lib/dna/reportEngine.ts.fix1.20260323_151310",
+            "sha256": "60967769bac878664600d42fea381015ad5688a8f2741eabf9c97cd81bdb6f0f"
+          },
+          {
+            "bytes": 75583,
+            "path": "src/lib/dna/reportLanguageQuality.ts",
+            "sha256": "3ed487ea4ddaa6e26baa437d82f76c478d52dd688d7ce367e3106f35a7d282fc"
+          },
+          {
+            "bytes": 2250,
+            "path": "src/lib/dna/reportLogger.ts",
+            "sha256": "9c4d12194919cdd1ce03d80a62fe7f5ec7d1858d69ac533058fd3f9c940e38f4"
+          },
+          {
+            "bytes": 1740,
+            "path": "src/lib/dna/reportPrivacy.ts",
+            "sha256": "48186d6bd4730bfdf670d550dc9268ece3886abe56a749baa1b3d4b154d818c2"
+          },
+          {
+            "bytes": 15675,
+            "path": "src/lib/dna/reportQuality.ts",
+            "sha256": "859321e88937e33639fdb580014d1d09ced5cb0c679d38705104352a6397814f"
+          },
+          {
+            "bytes": 10050,
+            "path": "src/lib/dna/reportText.ts",
+            "sha256": "307085d82dac16c081d62d1d8cce13ad8a1bd81ccd09dd81d7a0090962a9bc73"
+          },
+          {
+            "bytes": 35334,
+            "path": "src/lib/dna/reportTrace.ts",
+            "sha256": "208c27a5938bacbf4dee63c2e5f62b36994635d5965bfbc31a0f3155ddc53cf3"
+          },
+          {
+            "bytes": 134,
+            "path": "src/lib/dna/scoring.ts",
+            "sha256": "ca81f247017d4b3a2db4b33d4814a1bfeaa106d2eabe6e73b62570fabba8bf2c"
+          }
+        ],
+        "sha256": "1f3525e7eeb5a780949c6c6b33f8d111257336e14061ea94391156cfefb333d6"
+      },
+      "verificationToolchain": {
+        "algorithm": "sha256(sorted path + NUL + bytes + NUL)",
+        "description": "V2 test betikleri, TypeScript ve Next.js doğrulama yapılandırması",
+        "fileCount": 14,
+        "files": [
+          {
+            "bytes": 1252,
+            "path": "next.config.ts",
+            "sha256": "7cdb754b000597295bc62ac40ea4968f725172cb14b24c2b833cd0115afd1609"
+          },
+          {
+            "bytes": 143424,
+            "path": "package-lock.json",
+            "sha256": "82a80360f1d107e9e72113254c98929e519f992276dbb125fd86c7b21df7de42"
+          },
+          {
+            "bytes": 7184,
+            "path": "package.json",
+            "sha256": "ba4f6459d02aa62d0880db3c030ff6741e1b8162e135543a9d241fbf7aef522b"
+          },
+          {
+            "bytes": 7310,
+            "path": "scripts/run-dna-chat-api-contract-tests.ts",
+            "sha256": "eecd20c48a5d2331819d9c6ff4e238f9bd2ea8dd7db5afb289e3f5603c833983"
+          },
+          {
+            "bytes": 23384,
+            "path": "scripts/run-dna-chat-catalog-tests.ts",
+            "sha256": "095d2b25a59d84caaba630455b152a8d750023c956bc9a1218117d89117523a3"
+          },
+          {
+            "bytes": 39651,
+            "path": "scripts/run-dna-chat-cross-account-live.ts",
+            "sha256": "baaf949fb2fa577712642dcd6f28a39f5e8928e460f719edccaa1c76938dbb54"
+          },
+          {
+            "bytes": 3235,
+            "path": "scripts/run-dna-chat-determinism-tests.ts",
+            "sha256": "a43a7a1b0cb31fd540beef11f3faac78430da15e23dc55809d6d4cdc8c87dac6"
+          },
+          {
+            "bytes": 17722,
+            "path": "scripts/run-dna-chat-quality-tests.ts",
+            "sha256": "4f3a84c39a2e377ba1067d790154e71f4952261c3bf28b7d2e8118928acdda03"
+          },
+          {
+            "bytes": 16136,
+            "path": "scripts/run-dna-chat-raw-review-tests.ts",
+            "sha256": "d1dab6886c5eb46dcf5f4f7f7e1a347428c78ffc32d9cda89fd0414218d7b3f1"
+          },
+          {
+            "bytes": 20661,
+            "path": "scripts/run-dna-chat-reasoning-tests.ts",
+            "sha256": "b19e159bc17545333badb2a312e536057a705578cf6d64c0dac5522056b0b195"
+          },
+          {
+            "bytes": 34662,
+            "path": "scripts/run-dna-chat-security-tests.ts",
+            "sha256": "2d29733834580532531597b04e26d0a839af3fd5c2d5000c729f3ba89f3505cd"
+          },
+          {
+            "bytes": 6349,
+            "path": "scripts/run-dna-chat-source-verify-online.ts",
+            "sha256": "8813d56597825b569a0a61ff08211f22996a7eb85ab3d8ecbaf4478bd3e7dd91"
+          },
+          {
+            "bytes": 902,
+            "path": "tsconfig.json",
+            "sha256": "1eeb35e575e937358b9f4048e2ac2f05c4ddd6d2e47477cc38e65a6de9b5ff54"
+          },
+          {
+            "bytes": 1358,
+            "path": "tsconfig.report-runner.json",
+            "sha256": "fbc27140f9b2a148afa1831cc6d6df6818d1197f417788cf866ad718a1a9cb3f"
+          }
+        ],
+        "sha256": "9abd5b9c82294e22a5c6da214e3f0c49ea6721af30bc942147baab92b87a90c6"
+      }
+    }
+  },
+  "verification": {
+    "checksumArtifact": "SHA256SUMS",
+    "gateEvidenceArtifact": "gate-evidence.json",
+    "gates": [
+      {
+        "command": "node .tmp/dna-chat-baseline/scripts/run-dna-chat-raw-review-tests.js",
+        "id": "raw-review"
+      },
+      {
+        "command": "node .tmp/dna-chat-baseline/scripts/run-dna-chat-catalog-tests.js",
+        "id": "catalog"
+      },
+      {
+        "command": "node .tmp/dna-chat-baseline/scripts/run-dna-chat-reasoning-tests.js",
+        "id": "reasoning"
+      },
+      {
+        "command": "node .tmp/dna-chat-baseline/scripts/run-dna-chat-security-tests.js",
+        "id": "security"
+      },
+      {
+        "command": "node .tmp/dna-chat-baseline/scripts/run-dna-chat-api-contract-tests.js",
+        "id": "api"
+      },
+      {
+        "command": "node .tmp/dna-chat-baseline/scripts/run-dna-chat-quality-tests.js",
+        "id": "quality"
+      },
+      {
+        "command": "node .tmp/dna-chat-baseline/scripts/run-dna-chat-determinism-tests.js",
+        "id": "determinism"
+      },
+      {
+        "command": "npm --silent run lint",
+        "id": "lint"
+      },
+      {
+        "command": "npm --silent run build",
+        "id": "build"
+      }
+    ],
+    "liveCrossAccountVerificationDeferredToPhase": 52,
+    "onlineSourceVerificationDeferredToPhase": 10,
+    "singleCommand": "npm run chat:baseline",
+    "updateCommand": "npm run chat:baseline:update"
+  },
+  "worktreeBoundary": {
+    "excludedPaths": [
+      "scripts/activity-pilot/"
+    ],
+    "policy": "Kapsam dışı kullanıcı dosyaları baseline, commit ve release diff'ine alınmaz."
+  }
+}

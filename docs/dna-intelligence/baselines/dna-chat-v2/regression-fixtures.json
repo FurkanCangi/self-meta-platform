@@ -1,0 +1,1747 @@
+{
+  "baselineVersion": "dna-intelligence-v2-baseline@1",
+  "catalogVersion": "dna-chat-catalog@2",
+  "engineVersion": "dna-chat-engine@2",
+  "rollbackGitSha": "5ed87217280a40e4566a04289d4c98b1f3883494",
+  "samples": [
+    {
+      "id": "definition-insula",
+      "request": {
+        "question": "İnsular korteks nedir?"
+      },
+      "response": {
+        "answerTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.\n\nİnsula tek bir interosepsiyon, duygu, tat veya ağrı merkezi değildir; alt bölgeleri ve bağlantıları farklı işlevlere katkı verir.\n\nTek bir interosepsiyon, duygu, tat veya ağrı merkezi değildir.\n\nÖn ve arka alt bölgeler arasında işlevsel eğilimler vardır; sınırlar keskin ve görevden bağımsız bölmeler değildir.\n\nİnsulaya ilişkin kanıtın büyük bölümü yetişkin nörogörüntüleme ve klinik yöntemlere dayanır.",
+        "caseEvidence": [],
+        "classification": "dna_concept",
+        "details": [
+          "İnsula tek bir interosepsiyon, duygu, tat veya ağrı merkezi değildir; alt bölgeleri ve bağlantıları farklı işlevlere katkı verir.",
+          "Tek bir interosepsiyon, duygu, tat veya ağrı merkezi değildir.",
+          "Ön ve arka alt bölgeler arasında işlevsel eğilimler vardır; sınırlar keskin ve görevden bağımsız bölmeler değildir.",
+          "İnsulaya ilişkin kanıtın büyük bölümü yetişkin nörogörüntüleme ve klinik yöntemlere dayanır."
+        ],
+        "engineVersion": "dna-chat-engine@2",
+        "evidenceSummary": {
+          "ageScope": "Yetişkin kanıtı ağırlıklı",
+          "boundary": "Davranış veya DNA profilinden insula işlevi, hasarı ya da zayıflığı çıkarılamaz.",
+          "level": "Güçlü"
+        },
+        "intentId": "catalog:cns.insula:definition",
+        "limitations": [
+          "Davranış veya DNA profilinden insula işlevi, hasarı ya da zayıflığı çıkarılamaz.",
+          "Kaynak doğrulaması tamamlandı; uzman içerik incelemesi henüz bekliyor.",
+          "Bu açıklama genel bilimsel çerçevedir; tek vaka için tanı, kesin neden veya doğrudan biyolojik ölçüm değildir."
+        ],
+        "outcome": "answered",
+        "route": "theory",
+        "safety": {
+          "blocked": false,
+          "boundaryTr": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+          "category": "none",
+          "code": null,
+          "redactedQuestion": "İnsular korteks nedir?"
+        },
+        "safetyBoundary": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+        "schemaVersion": "1.0",
+        "sourceRefs": [
+          {
+            "citation": "Uddin, L. Q., Nomi, J. S., Hebert-Seropian, B., Ghaziri, J., & Boucher, O. (2017). Structure and function of the human insula. Journal of Clinical Neurophysiology, 34(4), 300-306.",
+            "claimBoundary": "İnsulanın heterojen yapı, bağlantı ve işlevlerini özetler; insulayı tek merkez olarak sunmaz ve davranıştan bölgesel işlev çıkarımı sağlamaz.",
+            "doi": "10.1097/WNP.0000000000000377",
+            "excerptTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+            "id": "catalog:UDDIN_ET_AL_2017",
+            "labelTr": "Uddin, L. Q., Nomi, J. S., Hebert-Seropian, B., Ghaziri, J., & Boucher, O. (2017)",
+            "title": "Structure and function of the human insula",
+            "type": "catalog",
+            "url": "https://doi.org/10.1097/WNP.0000000000000377",
+            "year": 2017
+          },
+          {
+            "citation": "Kurth, F., Zilles, K., Fox, P. T., Laird, A. R., & Eickhoff, S. B. (2010). A link between the systems: Functional differentiation and integration within the human insula revealed by meta-analysis. Brain Structure and Function, 214(5-6), 519-534.",
+            "claimBoundary": "Grup düzeyi insula işlevsel farklılaşmasını ve örtüşmesini destekler; kesin altbölge sınırı veya bireysel tersine çıkarım sağlamaz.",
+            "doi": "10.1007/s00429-010-0255-z",
+            "excerptTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+            "id": "catalog:KURTH_ET_AL_2010",
+            "labelTr": "Kurth, F., Zilles, K., Fox, P. T., Laird, A. R., & Eickhoff, S. B. (2010)",
+            "title": "A link between the systems: Functional differentiation and integration within the human insula revealed by meta-analysis",
+            "type": "catalog",
+            "url": "https://doi.org/10.1007/s00429-010-0255-z",
+            "year": 2010
+          },
+          {
+            "citation": "Menon, V., & Uddin, L. Q. (2010). Saliency, switching, attention and control: A network model of insula function. Brain Structure and Function, 214(5-6), 655-667.",
+            "claimBoundary": "İnsulanın salience ağındaki çoklu rolünü destekler; insulayı tek bir işlev merkezi gibi göstermez.",
+            "doi": "10.1007/s00429-010-0262-0",
+            "excerptTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+            "id": "catalog:MENON_UDDIN_2010",
+            "labelTr": "Menon, V., & Uddin, L. Q. (2010)",
+            "title": "Saliency, switching, attention and control: A network model of insula function",
+            "type": "catalog",
+            "url": "https://doi.org/10.1007/s00429-010-0262-0",
+            "year": 2010
+          },
+          {
+            "citation": "Critchley, H. D., & Harrison, N. A. (2013). Visceral influences on brain and behavior. Neuron, 77(4), 624-638.",
+            "claimBoundary": "Visseral-beyin etkileşimlerini destekler; tek davranıştan mekanizma veya bölge çıkarımı sağlamaz.",
+            "doi": "10.1016/j.neuron.2013.02.008",
+            "excerptTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+            "id": "catalog:CRITCHLEY_HARRISON_2013",
+            "labelTr": "Critchley, H. D., & Harrison, N. A. (2013)",
+            "title": "Visceral influences on brain and behavior",
+            "type": "catalog",
+            "url": "https://doi.org/10.1016/j.neuron.2013.02.008",
+            "year": 2013
+          }
+        ],
+        "sources": [
+          {
+            "citation": "Uddin, L. Q., Nomi, J. S., Hebert-Seropian, B., Ghaziri, J., & Boucher, O. (2017). Structure and function of the human insula. Journal of Clinical Neurophysiology, 34(4), 300-306.",
+            "claimBoundary": "İnsulanın heterojen yapı, bağlantı ve işlevlerini özetler; insulayı tek merkez olarak sunmaz ve davranıştan bölgesel işlev çıkarımı sağlamaz.",
+            "doi": "10.1097/WNP.0000000000000377",
+            "excerptTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+            "id": "catalog:UDDIN_ET_AL_2017",
+            "labelTr": "Uddin, L. Q., Nomi, J. S., Hebert-Seropian, B., Ghaziri, J., & Boucher, O. (2017)",
+            "title": "Structure and function of the human insula",
+            "type": "catalog",
+            "url": "https://doi.org/10.1097/WNP.0000000000000377",
+            "year": 2017
+          },
+          {
+            "citation": "Kurth, F., Zilles, K., Fox, P. T., Laird, A. R., & Eickhoff, S. B. (2010). A link between the systems: Functional differentiation and integration within the human insula revealed by meta-analysis. Brain Structure and Function, 214(5-6), 519-534.",
+            "claimBoundary": "Grup düzeyi insula işlevsel farklılaşmasını ve örtüşmesini destekler; kesin altbölge sınırı veya bireysel tersine çıkarım sağlamaz.",
+            "doi": "10.1007/s00429-010-0255-z",
+            "excerptTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+            "id": "catalog:KURTH_ET_AL_2010",
+            "labelTr": "Kurth, F., Zilles, K., Fox, P. T., Laird, A. R., & Eickhoff, S. B. (2010)",
+            "title": "A link between the systems: Functional differentiation and integration within the human insula revealed by meta-analysis",
+            "type": "catalog",
+            "url": "https://doi.org/10.1007/s00429-010-0255-z",
+            "year": 2010
+          },
+          {
+            "citation": "Menon, V., & Uddin, L. Q. (2010). Saliency, switching, attention and control: A network model of insula function. Brain Structure and Function, 214(5-6), 655-667.",
+            "claimBoundary": "İnsulanın salience ağındaki çoklu rolünü destekler; insulayı tek bir işlev merkezi gibi göstermez.",
+            "doi": "10.1007/s00429-010-0262-0",
+            "excerptTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+            "id": "catalog:MENON_UDDIN_2010",
+            "labelTr": "Menon, V., & Uddin, L. Q. (2010)",
+            "title": "Saliency, switching, attention and control: A network model of insula function",
+            "type": "catalog",
+            "url": "https://doi.org/10.1007/s00429-010-0262-0",
+            "year": 2010
+          },
+          {
+            "citation": "Critchley, H. D., & Harrison, N. A. (2013). Visceral influences on brain and behavior. Neuron, 77(4), 624-638.",
+            "claimBoundary": "Visseral-beyin etkileşimlerini destekler; tek davranıştan mekanizma veya bölge çıkarımı sağlamaz.",
+            "doi": "10.1016/j.neuron.2013.02.008",
+            "excerptTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+            "id": "catalog:CRITCHLEY_HARRISON_2013",
+            "labelTr": "Critchley, H. D., & Harrison, N. A. (2013)",
+            "title": "Visceral influences on brain and behavior",
+            "type": "catalog",
+            "url": "https://doi.org/10.1016/j.neuron.2013.02.008",
+            "year": 2013
+          }
+        ],
+        "suggestedQuestions": [
+          "İnsular korteks nedir?",
+          "İnsular korteks için kanıt düzeyi nedir?",
+          "İnsular korteks DNA alanlarıyla nasıl ilişkilidir?"
+        ],
+        "summary": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+        "topic": "İnsular korteks"
+      },
+      "responseSha256": "0025518785cb6ecdd6fac941995a05c2135bc4fae674916d4944486f5149c13b"
+    },
+    {
+      "id": "typo-insula",
+      "request": {
+        "question": "İnsluar korteks nedir?"
+      },
+      "response": {
+        "answerTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.\n\nİnsula tek bir interosepsiyon, duygu, tat veya ağrı merkezi değildir; alt bölgeleri ve bağlantıları farklı işlevlere katkı verir.\n\nTek bir interosepsiyon, duygu, tat veya ağrı merkezi değildir.\n\nÖn ve arka alt bölgeler arasında işlevsel eğilimler vardır; sınırlar keskin ve görevden bağımsız bölmeler değildir.\n\nİnsulaya ilişkin kanıtın büyük bölümü yetişkin nörogörüntüleme ve klinik yöntemlere dayanır.",
+        "caseEvidence": [],
+        "classification": "dna_concept",
+        "details": [
+          "İnsula tek bir interosepsiyon, duygu, tat veya ağrı merkezi değildir; alt bölgeleri ve bağlantıları farklı işlevlere katkı verir.",
+          "Tek bir interosepsiyon, duygu, tat veya ağrı merkezi değildir.",
+          "Ön ve arka alt bölgeler arasında işlevsel eğilimler vardır; sınırlar keskin ve görevden bağımsız bölmeler değildir.",
+          "İnsulaya ilişkin kanıtın büyük bölümü yetişkin nörogörüntüleme ve klinik yöntemlere dayanır."
+        ],
+        "engineVersion": "dna-chat-engine@2",
+        "evidenceSummary": {
+          "ageScope": "Yetişkin kanıtı ağırlıklı",
+          "boundary": "Davranış veya DNA profilinden insula işlevi, hasarı ya da zayıflığı çıkarılamaz.",
+          "level": "Güçlü"
+        },
+        "intentId": "catalog:cns.insula:definition",
+        "limitations": [
+          "Davranış veya DNA profilinden insula işlevi, hasarı ya da zayıflığı çıkarılamaz.",
+          "Kaynak doğrulaması tamamlandı; uzman içerik incelemesi henüz bekliyor.",
+          "Bu açıklama genel bilimsel çerçevedir; tek vaka için tanı, kesin neden veya doğrudan biyolojik ölçüm değildir."
+        ],
+        "outcome": "answered",
+        "route": "theory",
+        "safety": {
+          "blocked": false,
+          "boundaryTr": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+          "category": "none",
+          "code": null,
+          "redactedQuestion": "İnsluar korteks nedir?"
+        },
+        "safetyBoundary": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+        "schemaVersion": "1.0",
+        "sourceRefs": [
+          {
+            "citation": "Uddin, L. Q., Nomi, J. S., Hebert-Seropian, B., Ghaziri, J., & Boucher, O. (2017). Structure and function of the human insula. Journal of Clinical Neurophysiology, 34(4), 300-306.",
+            "claimBoundary": "İnsulanın heterojen yapı, bağlantı ve işlevlerini özetler; insulayı tek merkez olarak sunmaz ve davranıştan bölgesel işlev çıkarımı sağlamaz.",
+            "doi": "10.1097/WNP.0000000000000377",
+            "excerptTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+            "id": "catalog:UDDIN_ET_AL_2017",
+            "labelTr": "Uddin, L. Q., Nomi, J. S., Hebert-Seropian, B., Ghaziri, J., & Boucher, O. (2017)",
+            "title": "Structure and function of the human insula",
+            "type": "catalog",
+            "url": "https://doi.org/10.1097/WNP.0000000000000377",
+            "year": 2017
+          },
+          {
+            "citation": "Kurth, F., Zilles, K., Fox, P. T., Laird, A. R., & Eickhoff, S. B. (2010). A link between the systems: Functional differentiation and integration within the human insula revealed by meta-analysis. Brain Structure and Function, 214(5-6), 519-534.",
+            "claimBoundary": "Grup düzeyi insula işlevsel farklılaşmasını ve örtüşmesini destekler; kesin altbölge sınırı veya bireysel tersine çıkarım sağlamaz.",
+            "doi": "10.1007/s00429-010-0255-z",
+            "excerptTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+            "id": "catalog:KURTH_ET_AL_2010",
+            "labelTr": "Kurth, F., Zilles, K., Fox, P. T., Laird, A. R., & Eickhoff, S. B. (2010)",
+            "title": "A link between the systems: Functional differentiation and integration within the human insula revealed by meta-analysis",
+            "type": "catalog",
+            "url": "https://doi.org/10.1007/s00429-010-0255-z",
+            "year": 2010
+          },
+          {
+            "citation": "Menon, V., & Uddin, L. Q. (2010). Saliency, switching, attention and control: A network model of insula function. Brain Structure and Function, 214(5-6), 655-667.",
+            "claimBoundary": "İnsulanın salience ağındaki çoklu rolünü destekler; insulayı tek bir işlev merkezi gibi göstermez.",
+            "doi": "10.1007/s00429-010-0262-0",
+            "excerptTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+            "id": "catalog:MENON_UDDIN_2010",
+            "labelTr": "Menon, V., & Uddin, L. Q. (2010)",
+            "title": "Saliency, switching, attention and control: A network model of insula function",
+            "type": "catalog",
+            "url": "https://doi.org/10.1007/s00429-010-0262-0",
+            "year": 2010
+          },
+          {
+            "citation": "Critchley, H. D., & Harrison, N. A. (2013). Visceral influences on brain and behavior. Neuron, 77(4), 624-638.",
+            "claimBoundary": "Visseral-beyin etkileşimlerini destekler; tek davranıştan mekanizma veya bölge çıkarımı sağlamaz.",
+            "doi": "10.1016/j.neuron.2013.02.008",
+            "excerptTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+            "id": "catalog:CRITCHLEY_HARRISON_2013",
+            "labelTr": "Critchley, H. D., & Harrison, N. A. (2013)",
+            "title": "Visceral influences on brain and behavior",
+            "type": "catalog",
+            "url": "https://doi.org/10.1016/j.neuron.2013.02.008",
+            "year": 2013
+          }
+        ],
+        "sources": [
+          {
+            "citation": "Uddin, L. Q., Nomi, J. S., Hebert-Seropian, B., Ghaziri, J., & Boucher, O. (2017). Structure and function of the human insula. Journal of Clinical Neurophysiology, 34(4), 300-306.",
+            "claimBoundary": "İnsulanın heterojen yapı, bağlantı ve işlevlerini özetler; insulayı tek merkez olarak sunmaz ve davranıştan bölgesel işlev çıkarımı sağlamaz.",
+            "doi": "10.1097/WNP.0000000000000377",
+            "excerptTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+            "id": "catalog:UDDIN_ET_AL_2017",
+            "labelTr": "Uddin, L. Q., Nomi, J. S., Hebert-Seropian, B., Ghaziri, J., & Boucher, O. (2017)",
+            "title": "Structure and function of the human insula",
+            "type": "catalog",
+            "url": "https://doi.org/10.1097/WNP.0000000000000377",
+            "year": 2017
+          },
+          {
+            "citation": "Kurth, F., Zilles, K., Fox, P. T., Laird, A. R., & Eickhoff, S. B. (2010). A link between the systems: Functional differentiation and integration within the human insula revealed by meta-analysis. Brain Structure and Function, 214(5-6), 519-534.",
+            "claimBoundary": "Grup düzeyi insula işlevsel farklılaşmasını ve örtüşmesini destekler; kesin altbölge sınırı veya bireysel tersine çıkarım sağlamaz.",
+            "doi": "10.1007/s00429-010-0255-z",
+            "excerptTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+            "id": "catalog:KURTH_ET_AL_2010",
+            "labelTr": "Kurth, F., Zilles, K., Fox, P. T., Laird, A. R., & Eickhoff, S. B. (2010)",
+            "title": "A link between the systems: Functional differentiation and integration within the human insula revealed by meta-analysis",
+            "type": "catalog",
+            "url": "https://doi.org/10.1007/s00429-010-0255-z",
+            "year": 2010
+          },
+          {
+            "citation": "Menon, V., & Uddin, L. Q. (2010). Saliency, switching, attention and control: A network model of insula function. Brain Structure and Function, 214(5-6), 655-667.",
+            "claimBoundary": "İnsulanın salience ağındaki çoklu rolünü destekler; insulayı tek bir işlev merkezi gibi göstermez.",
+            "doi": "10.1007/s00429-010-0262-0",
+            "excerptTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+            "id": "catalog:MENON_UDDIN_2010",
+            "labelTr": "Menon, V., & Uddin, L. Q. (2010)",
+            "title": "Saliency, switching, attention and control: A network model of insula function",
+            "type": "catalog",
+            "url": "https://doi.org/10.1007/s00429-010-0262-0",
+            "year": 2010
+          },
+          {
+            "citation": "Critchley, H. D., & Harrison, N. A. (2013). Visceral influences on brain and behavior. Neuron, 77(4), 624-638.",
+            "claimBoundary": "Visseral-beyin etkileşimlerini destekler; tek davranıştan mekanizma veya bölge çıkarımı sağlamaz.",
+            "doi": "10.1016/j.neuron.2013.02.008",
+            "excerptTr": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+            "id": "catalog:CRITCHLEY_HARRISON_2013",
+            "labelTr": "Critchley, H. D., & Harrison, N. A. (2013)",
+            "title": "Visceral influences on brain and behavior",
+            "type": "catalog",
+            "url": "https://doi.org/10.1016/j.neuron.2013.02.008",
+            "year": 2013
+          }
+        ],
+        "suggestedQuestions": [
+          "İnsular korteks nedir?",
+          "İnsular korteks için kanıt düzeyi nedir?",
+          "İnsular korteks DNA alanlarıyla nasıl ilişkilidir?"
+        ],
+        "summary": "İnsular korteks iç beden sinyalleri, duygulanım, önem belirleme, duyusal bütünleştirme ve ağlar arası geçişle ilişkili çok işlevli bir kortikal bölgedir.",
+        "topic": "İnsular korteks"
+      },
+      "responseSha256": "b78f79887aaf37f78ba204c07137419e6ac5b04f5a5d6c817be5a91c8898c5b1"
+    },
+    {
+      "id": "measurement-hrv",
+      "request": {
+        "question": "HRV tam olarak neyi ölçer?"
+      },
+      "response": {
+        "answerTr": "LF/HF oranı küresel bir sempatik-parasempatik denge göstergesi olarak güvenle yorumlanamaz.\n\nHRV bileşenleri solunum, kalp hızı, kayıt süresi ve başka fizyolojik etkenlere duyarlıdır.\n\nHRV, doğrudan kaydedilen kardiyak atımlar arası zaman serisinden hesaplanır; ANS'nin tamamını veya self-regülasyonu doğrudan ölçmez.\n\nSolunum, kalp hızı, kayıt süresi, postür, hareket ve analiz yöntemi yorumu etkileyebilir; DNA puanı HRV yerine geçmez.\n\nBazı ölçütler kardiyak vagal modülasyonla ilişkilidir.\n\nANS'nin tamamı, beyin veya self-regülasyon için özgül ve doğrudan ölçüm değildir.",
+        "caseEvidence": [],
+        "classification": "dna_concept",
+        "details": [
+          "HRV bileşenleri solunum, kalp hızı, kayıt süresi ve başka fizyolojik etkenlere duyarlıdır.",
+          "HRV, doğrudan kaydedilen kardiyak atımlar arası zaman serisinden hesaplanır; ANS'nin tamamını veya self-regülasyonu doğrudan ölçmez.",
+          "Solunum, kalp hızı, kayıt süresi, postür, hareket ve analiz yöntemi yorumu etkileyebilir; DNA puanı HRV yerine geçmez.",
+          "Bazı ölçütler kardiyak vagal modülasyonla ilişkilidir.",
+          "ANS'nin tamamı, beyin veya self-regülasyon için özgül ve doğrudan ölçüm değildir."
+        ],
+        "engineVersion": "dna-chat-engine@2",
+        "evidenceSummary": {
+          "ageScope": "Karma yaş örneklemleri",
+          "boundary": "DNA skorundan HRV, vagal ton, LF/HF dengesi veya otonom bozukluk çıkarılamaz.",
+          "level": "Güçlü"
+        },
+        "intentId": "catalog:ans.hrv:measurement",
+        "limitations": [
+          "DNA skorundan HRV, vagal ton, LF/HF dengesi veya otonom bozukluk çıkarılamaz.",
+          "Kaynak doğrulaması tamamlandı; uzman içerik incelemesi henüz bekliyor.",
+          "Bu açıklama genel bilimsel çerçevedir; tek vaka için tanı, kesin neden veya doğrudan biyolojik ölçüm değildir."
+        ],
+        "outcome": "answered",
+        "route": "theory",
+        "safety": {
+          "blocked": false,
+          "boundaryTr": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+          "category": "none",
+          "code": null,
+          "redactedQuestion": "HRV tam olarak neyi ölçer?"
+        },
+        "safetyBoundary": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+        "schemaVersion": "1.0",
+        "sourceRefs": [
+          {
+            "citation": "Billman, G. E. (2013). The LF/HF ratio does not accurately measure cardiac sympatho-vagal balance. Frontiers in Physiology, 4, 26.",
+            "claimBoundary": "LF/HF oranının küresel sempatovagal denge ölçütü olmadığını destekler; alternatif tek ANS skoru önermez.",
+            "doi": "10.3389/fphys.2013.00026",
+            "excerptTr": "LF/HF oranı küresel bir sempatik-parasempatik denge göstergesi olarak güvenle yorumlanamaz.",
+            "id": "catalog:BILLMAN_2013",
+            "labelTr": "Billman, G. E. (2013)",
+            "title": "The LF/HF ratio does not accurately measure cardiac sympatho-vagal balance",
+            "type": "catalog",
+            "url": "https://doi.org/10.3389/fphys.2013.00026",
+            "year": 2013
+          },
+          {
+            "citation": "Laborde, S., Mosley, E., & Thayer, J. F. (2017). Heart rate variability and cardiac vagal tone in psychophysiological research. Frontiers in Psychology, 8, 213.",
+            "claimBoundary": "Araştırma ölçümü ve raporlamasını destekler; klinik eşik veya bireysel sınıflama sağlamaz.",
+            "doi": "10.3389/fpsyg.2017.00213",
+            "excerptTr": "LF/HF oranı küresel bir sempatik-parasempatik denge göstergesi olarak güvenle yorumlanamaz.",
+            "id": "catalog:LABORDE_ET_AL_2017",
+            "labelTr": "Laborde, S., Mosley, E., & Thayer, J. F. (2017)",
+            "title": "Heart rate variability and cardiac vagal tone in psychophysiological research",
+            "type": "catalog",
+            "url": "https://doi.org/10.3389/fpsyg.2017.00213",
+            "year": 2017
+          },
+          {
+            "citation": "Task Force of the ESC and NASPE (1996). Heart rate variability: Standards of measurement, physiological interpretation and clinical use. Circulation, 93(5), 1043-1065.",
+            "claimBoundary": "HRV ölçüm ve yorum standardını destekler; DNA puanından HRV, vagal ton veya tanı çıkarımı sağlamaz.",
+            "doi": "10.1161/01.CIR.93.5.1043",
+            "excerptTr": "HRV, doğrudan kaydedilen kardiyak atımlar arası zaman serisinden hesaplanır; ANS'nin tamamını veya self-regülasyonu doğrudan ölçmez.",
+            "id": "catalog:TASK_FORCE_HRV_1996",
+            "labelTr": "Task Force of the ESC and NASPE (1996)",
+            "title": "Heart rate variability: Standards of measurement, physiological interpretation and clinical use",
+            "type": "catalog",
+            "url": "https://doi.org/10.1161/01.CIR.93.5.1043",
+            "year": 1996
+          },
+          {
+            "citation": "Graziano, P. A., & Derefinko, K. J. (2013). Cardiac vagal control and children's adaptive functioning: A meta-analysis. Biological Psychology, 94(1), 22-37.",
+            "claimBoundary": "Grup düzeyi ilişkileri destekler; nedensellik, bireysel sınıflama veya davranıştan HRV çıkarımı sağlamaz.",
+            "doi": "10.1016/j.biopsycho.2013.04.011",
+            "excerptTr": "HRV, ardışık kalp atımları arasındaki zaman aralıklarının değişkenliğidir; kardiyak zaman serisinden hesaplanır.",
+            "id": "lit:GRAZIANO_DEREFINKO_2013",
+            "labelTr": "Graziano, P. A., & Derefinko, K. J. (2013)",
+            "title": "Cardiac vagal control and children's adaptive functioning: A meta-analysis",
+            "type": "literature",
+            "url": "https://doi.org/10.1016/j.biopsycho.2013.04.011",
+            "year": 2013
+          }
+        ],
+        "sources": [
+          {
+            "citation": "Billman, G. E. (2013). The LF/HF ratio does not accurately measure cardiac sympatho-vagal balance. Frontiers in Physiology, 4, 26.",
+            "claimBoundary": "LF/HF oranının küresel sempatovagal denge ölçütü olmadığını destekler; alternatif tek ANS skoru önermez.",
+            "doi": "10.3389/fphys.2013.00026",
+            "excerptTr": "LF/HF oranı küresel bir sempatik-parasempatik denge göstergesi olarak güvenle yorumlanamaz.",
+            "id": "catalog:BILLMAN_2013",
+            "labelTr": "Billman, G. E. (2013)",
+            "title": "The LF/HF ratio does not accurately measure cardiac sympatho-vagal balance",
+            "type": "catalog",
+            "url": "https://doi.org/10.3389/fphys.2013.00026",
+            "year": 2013
+          },
+          {
+            "citation": "Laborde, S., Mosley, E., & Thayer, J. F. (2017). Heart rate variability and cardiac vagal tone in psychophysiological research. Frontiers in Psychology, 8, 213.",
+            "claimBoundary": "Araştırma ölçümü ve raporlamasını destekler; klinik eşik veya bireysel sınıflama sağlamaz.",
+            "doi": "10.3389/fpsyg.2017.00213",
+            "excerptTr": "LF/HF oranı küresel bir sempatik-parasempatik denge göstergesi olarak güvenle yorumlanamaz.",
+            "id": "catalog:LABORDE_ET_AL_2017",
+            "labelTr": "Laborde, S., Mosley, E., & Thayer, J. F. (2017)",
+            "title": "Heart rate variability and cardiac vagal tone in psychophysiological research",
+            "type": "catalog",
+            "url": "https://doi.org/10.3389/fpsyg.2017.00213",
+            "year": 2017
+          },
+          {
+            "citation": "Task Force of the ESC and NASPE (1996). Heart rate variability: Standards of measurement, physiological interpretation and clinical use. Circulation, 93(5), 1043-1065.",
+            "claimBoundary": "HRV ölçüm ve yorum standardını destekler; DNA puanından HRV, vagal ton veya tanı çıkarımı sağlamaz.",
+            "doi": "10.1161/01.CIR.93.5.1043",
+            "excerptTr": "HRV, doğrudan kaydedilen kardiyak atımlar arası zaman serisinden hesaplanır; ANS'nin tamamını veya self-regülasyonu doğrudan ölçmez.",
+            "id": "catalog:TASK_FORCE_HRV_1996",
+            "labelTr": "Task Force of the ESC and NASPE (1996)",
+            "title": "Heart rate variability: Standards of measurement, physiological interpretation and clinical use",
+            "type": "catalog",
+            "url": "https://doi.org/10.1161/01.CIR.93.5.1043",
+            "year": 1996
+          },
+          {
+            "citation": "Graziano, P. A., & Derefinko, K. J. (2013). Cardiac vagal control and children's adaptive functioning: A meta-analysis. Biological Psychology, 94(1), 22-37.",
+            "claimBoundary": "Grup düzeyi ilişkileri destekler; nedensellik, bireysel sınıflama veya davranıştan HRV çıkarımı sağlamaz.",
+            "doi": "10.1016/j.biopsycho.2013.04.011",
+            "excerptTr": "HRV, ardışık kalp atımları arasındaki zaman aralıklarının değişkenliğidir; kardiyak zaman serisinden hesaplanır.",
+            "id": "lit:GRAZIANO_DEREFINKO_2013",
+            "labelTr": "Graziano, P. A., & Derefinko, K. J. (2013)",
+            "title": "Cardiac vagal control and children's adaptive functioning: A meta-analysis",
+            "type": "literature",
+            "url": "https://doi.org/10.1016/j.biopsycho.2013.04.011",
+            "year": 2013
+          }
+        ],
+        "suggestedQuestions": [
+          "Kalp hızı değişkenliği nedir?",
+          "Kalp hızı değişkenliği için kanıt düzeyi nedir?",
+          "Kalp hızı değişkenliği DNA alanlarıyla nasıl ilişkilidir?"
+        ],
+        "summary": "LF/HF oranı küresel bir sempatik-parasempatik denge göstergesi olarak güvenle yorumlanamaz.",
+        "topic": "Kalp hızı değişkenliği"
+      },
+      "responseSha256": "c9d367ac28a70f6b6b2ef21847a2527aa76f77f059184be2758caf1fec3668b1"
+    },
+    {
+      "id": "comparison-homeostasis-allostasis",
+      "request": {
+        "question": "Homeostaz ile allostaz arasındaki fark nedir?"
+      },
+      "response": {
+        "answerTr": "Homeostaz: Homeostaz geri bildirimle işlevsel aralığı korumayı, allostaz değişen ve beklenen taleplere göre ayarlamayı vurgular.\n\nAllostaz, değişen taleplere uyum için fizyolojik düzenlemenin bağlama ve beklenen ihtiyaca göre ayarlanmasını vurgulayan kuramsal çerçevedir.\n\nAllostaz bir DNA skoru veya tek bir laboratuvar ölçümü değildir; allostatik yük de tek davranıştan çıkarılamaz.\n\nHomeostazla rakip değil, farklı vurgu taşıyan bir açıklamadır.\n\nAllostatik yük tek davranıştan çıkarılamaz.",
+        "caseEvidence": [],
+        "classification": "dna_concept",
+        "details": [
+          "Allostaz, değişen taleplere uyum için fizyolojik düzenlemenin bağlama ve beklenen ihtiyaca göre ayarlanmasını vurgulayan kuramsal çerçevedir.",
+          "Allostaz bir DNA skoru veya tek bir laboratuvar ölçümü değildir; allostatik yük de tek davranıştan çıkarılamaz.",
+          "Homeostazla rakip değil, farklı vurgu taşıyan bir açıklamadır.",
+          "Allostatik yük tek davranıştan çıkarılamaz."
+        ],
+        "engineVersion": "dna-chat-engine@2",
+        "evidenceSummary": {
+          "ageScope": "Karma yaş örneklemleri",
+          "boundary": "Allostaz ve allostatik yük DNA puanı, tanı veya kişisel mekanizma değildir.",
+          "level": "Kuramsal"
+        },
+        "intentId": "catalog:ans.allostasis:comparison",
+        "limitations": [
+          "Allostaz ve allostatik yük DNA puanı, tanı veya kişisel mekanizma değildir.",
+          "İki kavram klinik ölçüm, DNA skoru veya birbirini dışlayan tanılar değildir.",
+          "Kaynak doğrulaması tamamlandı; uzman içerik incelemesi henüz bekliyor.",
+          "Bu açıklama genel bilimsel çerçevedir; tek vaka için tanı, kesin neden veya doğrudan biyolojik ölçüm değildir."
+        ],
+        "outcome": "answered",
+        "route": "theory",
+        "safety": {
+          "blocked": false,
+          "boundaryTr": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+          "category": "none",
+          "code": null,
+          "redactedQuestion": "Homeostaz ile allostaz arasındaki fark nedir?"
+        },
+        "safetyBoundary": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+        "schemaVersion": "1.0",
+        "sourceRefs": [
+          {
+            "citation": "Ramsay, D. S., & Woods, S. C. (2014). Clarifying the roles of homeostasis and allostasis in physiological regulation. Psychological Review, 121(2), 225-247.",
+            "claimBoundary": "Kavramsal ayrımı destekler; klinik eşik, skor veya kişisel mekanizma sağlamaz.",
+            "doi": "10.1037/a0035942",
+            "excerptTr": "Allostaz, değişen taleplere uyum için fizyolojik düzenlemenin bağlama ve beklenen ihtiyaca göre ayarlanmasını vurgulayan kuramsal çerçevedir.",
+            "id": "catalog:RAMSAY_WOODS_2014",
+            "labelTr": "Ramsay, D. S., & Woods, S. C. (2014)",
+            "title": "Clarifying the roles of homeostasis and allostasis in physiological regulation",
+            "type": "catalog",
+            "url": "https://doi.org/10.1037/a0035942",
+            "year": 2014
+          },
+          {
+            "citation": "McEwen, B. S. (1998). Protective and damaging effects of stress mediators. New England Journal of Medicine, 338(3), 171-179.",
+            "claimBoundary": "Allostatik yük kavramını destekler; tek davranış veya tek biyobelirteçle kişisel yük ölçümü sağlamaz.",
+            "doi": "10.1056/NEJM199801153380307",
+            "excerptTr": "Allostaz, değişen taleplere uyum için fizyolojik düzenlemenin bağlama ve beklenen ihtiyaca göre ayarlanmasını vurgulayan kuramsal çerçevedir.",
+            "id": "catalog:MCEWEN_1998",
+            "labelTr": "McEwen, B. S. (1998)",
+            "title": "Protective and damaging effects of stress mediators",
+            "type": "catalog",
+            "url": "https://doi.org/10.1056/NEJM199801153380307",
+            "year": 1998
+          }
+        ],
+        "sources": [
+          {
+            "citation": "Ramsay, D. S., & Woods, S. C. (2014). Clarifying the roles of homeostasis and allostasis in physiological regulation. Psychological Review, 121(2), 225-247.",
+            "claimBoundary": "Kavramsal ayrımı destekler; klinik eşik, skor veya kişisel mekanizma sağlamaz.",
+            "doi": "10.1037/a0035942",
+            "excerptTr": "Allostaz, değişen taleplere uyum için fizyolojik düzenlemenin bağlama ve beklenen ihtiyaca göre ayarlanmasını vurgulayan kuramsal çerçevedir.",
+            "id": "catalog:RAMSAY_WOODS_2014",
+            "labelTr": "Ramsay, D. S., & Woods, S. C. (2014)",
+            "title": "Clarifying the roles of homeostasis and allostasis in physiological regulation",
+            "type": "catalog",
+            "url": "https://doi.org/10.1037/a0035942",
+            "year": 2014
+          },
+          {
+            "citation": "McEwen, B. S. (1998). Protective and damaging effects of stress mediators. New England Journal of Medicine, 338(3), 171-179.",
+            "claimBoundary": "Allostatik yük kavramını destekler; tek davranış veya tek biyobelirteçle kişisel yük ölçümü sağlamaz.",
+            "doi": "10.1056/NEJM199801153380307",
+            "excerptTr": "Allostaz, değişen taleplere uyum için fizyolojik düzenlemenin bağlama ve beklenen ihtiyaca göre ayarlanmasını vurgulayan kuramsal çerçevedir.",
+            "id": "catalog:MCEWEN_1998",
+            "labelTr": "McEwen, B. S. (1998)",
+            "title": "Protective and damaging effects of stress mediators",
+            "type": "catalog",
+            "url": "https://doi.org/10.1056/NEJM199801153380307",
+            "year": 1998
+          }
+        ],
+        "suggestedQuestions": [
+          "Allostaz nedir?",
+          "Allostaz için kanıt düzeyi nedir?",
+          "Allostaz DNA alanlarıyla nasıl ilişkilidir?"
+        ],
+        "summary": "Homeostaz: Homeostaz geri bildirimle işlevsel aralığı korumayı, allostaz değişen ve beklenen taleplere göre ayarlamayı vurgular.",
+        "topic": "Allostaz"
+      },
+      "responseSha256": "ea4139fef3967c02d90feea7eefb4240fc437d99222f851cbbf6d8a9db11dd02"
+    },
+    {
+      "id": "evidence-polyvagal",
+      "request": {
+        "question": "Polivagal teorinin kanıtı ne kadar güçlü?"
+      },
+      "response": {
+        "answerTr": "Polivagal teori etkili bir kuramsal çerçevedir, ancak bazı anatomik ve fizyolojik öncülleri bilimsel tartışma konusudur.\n\nTeori savunucu ve eleştirel kaynaklarla birlikte sunulmalı; yerleşik ve tartışmasız fizyoloji gibi anlatılmamalıdır.\n\nDavranış gözleminden 'dorsal vagal kapanma', 'ventral vagal durum' veya kişisel vagal ton atanamaz.\n\nBu etiketler DNA raporu veya sohbet yanıtında biyolojik ölçüm gibi kullanılmamalıdır.\n\nSavunucu ve eleştirel kaynaklarla birlikte sunulmalıdır.\n\nYerleşik ve tartışmasız fizyoloji gibi anlatılmamalıdır.",
+        "caseEvidence": [],
+        "classification": "literature",
+        "details": [
+          "Teori savunucu ve eleştirel kaynaklarla birlikte sunulmalı; yerleşik ve tartışmasız fizyoloji gibi anlatılmamalıdır.",
+          "Davranış gözleminden 'dorsal vagal kapanma', 'ventral vagal durum' veya kişisel vagal ton atanamaz.",
+          "Bu etiketler DNA raporu veya sohbet yanıtında biyolojik ölçüm gibi kullanılmamalıdır.",
+          "Savunucu ve eleştirel kaynaklarla birlikte sunulmalıdır.",
+          "Yerleşik ve tartışmasız fizyoloji gibi anlatılmamalıdır."
+        ],
+        "engineVersion": "dna-chat-engine@2",
+        "evidenceSummary": {
+          "ageScope": "Karma yaş örneklemleri",
+          "boundary": "Davranıştan dorsal/ventral vagal durum veya kişisel vagal ton atanamaz.",
+          "level": "Kuramsal"
+        },
+        "intentId": "catalog:ans.polyvagal:evidence",
+        "limitations": [
+          "Davranıştan dorsal/ventral vagal durum veya kişisel vagal ton atanamaz.",
+          "Kaynak doğrulaması tamamlandı; uzman içerik incelemesi henüz bekliyor.",
+          "Bu açıklama genel bilimsel çerçevedir; tek vaka için tanı, kesin neden veya doğrudan biyolojik ölçüm değildir."
+        ],
+        "outcome": "answered",
+        "route": "theory",
+        "safety": {
+          "blocked": false,
+          "boundaryTr": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+          "category": "none",
+          "code": null,
+          "redactedQuestion": "Polivagal teorinin kanıtı ne kadar güçlü?"
+        },
+        "safetyBoundary": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+        "schemaVersion": "1.0",
+        "sourceRefs": [
+          {
+            "citation": "Porges, S. W. (2021). Polyvagal theory: A biobehavioral journey to sociality. Comprehensive Psychoneuroendocrinology, 7, 100069.",
+            "claimBoundary": "Teorinin kendi önermelerini açıklar; davranıştan vagal durum atamasını veya klinik tanıyı doğrulamaz.",
+            "doi": "10.1016/j.cpnec.2021.100069",
+            "excerptTr": "Polivagal teori etkili bir kuramsal çerçevedir, ancak bazı anatomik ve fizyolojik öncülleri bilimsel tartışma konusudur.",
+            "id": "catalog:PORGES_2021",
+            "labelTr": "Porges, S. W. (2021)",
+            "title": "Polyvagal theory: A biobehavioral journey to sociality",
+            "type": "catalog",
+            "url": "https://doi.org/10.1016/j.cpnec.2021.100069",
+            "year": 2021
+          },
+          {
+            "citation": "Grossman, P. (2023). Fundamental challenges and likely refutations of the five basic premises of the polyvagal theory. Biological Psychology, 180, 108589.",
+            "claimBoundary": "Polivagal öncüllere yönelik eleştirileri sunar; alanın tüm görüşlerini tek başına temsil etmez.",
+            "doi": "10.1016/j.biopsycho.2023.108589",
+            "excerptTr": "Polivagal teori etkili bir kuramsal çerçevedir, ancak bazı anatomik ve fizyolojik öncülleri bilimsel tartışma konusudur.",
+            "id": "catalog:GROSSMAN_2023",
+            "labelTr": "Grossman, P. (2023)",
+            "title": "Fundamental challenges and likely refutations of the five basic premises of the polyvagal theory",
+            "type": "catalog",
+            "url": "https://doi.org/10.1016/j.biopsycho.2023.108589",
+            "year": 2023
+          },
+          {
+            "citation": "Laborde, S., Mosley, E., & Thayer, J. F. (2017). Heart rate variability and cardiac vagal tone in psychophysiological research. Frontiers in Psychology, 8, 213.",
+            "claimBoundary": "Araştırma ölçümü ve raporlamasını destekler; klinik eşik veya bireysel sınıflama sağlamaz.",
+            "doi": "10.3389/fpsyg.2017.00213",
+            "excerptTr": "Davranış gözleminden 'dorsal vagal kapanma', 'ventral vagal durum' veya kişisel vagal ton atanamaz.",
+            "id": "catalog:LABORDE_ET_AL_2017",
+            "labelTr": "Laborde, S., Mosley, E., & Thayer, J. F. (2017)",
+            "title": "Heart rate variability and cardiac vagal tone in psychophysiological research",
+            "type": "catalog",
+            "url": "https://doi.org/10.3389/fpsyg.2017.00213",
+            "year": 2017
+          }
+        ],
+        "sources": [
+          {
+            "citation": "Porges, S. W. (2021). Polyvagal theory: A biobehavioral journey to sociality. Comprehensive Psychoneuroendocrinology, 7, 100069.",
+            "claimBoundary": "Teorinin kendi önermelerini açıklar; davranıştan vagal durum atamasını veya klinik tanıyı doğrulamaz.",
+            "doi": "10.1016/j.cpnec.2021.100069",
+            "excerptTr": "Polivagal teori etkili bir kuramsal çerçevedir, ancak bazı anatomik ve fizyolojik öncülleri bilimsel tartışma konusudur.",
+            "id": "catalog:PORGES_2021",
+            "labelTr": "Porges, S. W. (2021)",
+            "title": "Polyvagal theory: A biobehavioral journey to sociality",
+            "type": "catalog",
+            "url": "https://doi.org/10.1016/j.cpnec.2021.100069",
+            "year": 2021
+          },
+          {
+            "citation": "Grossman, P. (2023). Fundamental challenges and likely refutations of the five basic premises of the polyvagal theory. Biological Psychology, 180, 108589.",
+            "claimBoundary": "Polivagal öncüllere yönelik eleştirileri sunar; alanın tüm görüşlerini tek başına temsil etmez.",
+            "doi": "10.1016/j.biopsycho.2023.108589",
+            "excerptTr": "Polivagal teori etkili bir kuramsal çerçevedir, ancak bazı anatomik ve fizyolojik öncülleri bilimsel tartışma konusudur.",
+            "id": "catalog:GROSSMAN_2023",
+            "labelTr": "Grossman, P. (2023)",
+            "title": "Fundamental challenges and likely refutations of the five basic premises of the polyvagal theory",
+            "type": "catalog",
+            "url": "https://doi.org/10.1016/j.biopsycho.2023.108589",
+            "year": 2023
+          },
+          {
+            "citation": "Laborde, S., Mosley, E., & Thayer, J. F. (2017). Heart rate variability and cardiac vagal tone in psychophysiological research. Frontiers in Psychology, 8, 213.",
+            "claimBoundary": "Araştırma ölçümü ve raporlamasını destekler; klinik eşik veya bireysel sınıflama sağlamaz.",
+            "doi": "10.3389/fpsyg.2017.00213",
+            "excerptTr": "Davranış gözleminden 'dorsal vagal kapanma', 'ventral vagal durum' veya kişisel vagal ton atanamaz.",
+            "id": "catalog:LABORDE_ET_AL_2017",
+            "labelTr": "Laborde, S., Mosley, E., & Thayer, J. F. (2017)",
+            "title": "Heart rate variability and cardiac vagal tone in psychophysiological research",
+            "type": "catalog",
+            "url": "https://doi.org/10.3389/fpsyg.2017.00213",
+            "year": 2017
+          }
+        ],
+        "suggestedQuestions": [
+          "Polivagal teori nedir?",
+          "Polivagal teori için kanıt düzeyi nedir?",
+          "Polivagal teori DNA alanlarıyla nasıl ilişkilidir?"
+        ],
+        "summary": "Polivagal teori etkili bir kuramsal çerçevedir, ancak bazı anatomik ve fizyolojik öncülleri bilimsel tartışma konusudur.",
+        "topic": "Polivagal teori"
+      },
+      "responseSha256": "f9b123c47215202765a9ef333d67457b4acaca36588ce1588caa56204298be8a"
+    },
+    {
+      "id": "development-sleep",
+      "request": {
+        "question": "Çocuklarda uyku süresi yaşla nasıl değişir?"
+      },
+      "response": {
+        "answerTr": "Uyku süresi, gün içindeki dağılımı, gündüz uykuları ve zamanlama çocukluk boyunca ortalama olarak değişir.\n\nGelişimsel grup eğilimlerinin çevresinde geniş bireysel farklılık vardır; ölçüm yöntemi, kültür ve rutin gözlenen örüntüyü etkileyebilir.\n\nYaş grubu için önerilen süre aralıkları toplum düzeyi rehberidir ve tanı eşiği değildir.\n\nAynı yaştaki çocuklarda ölçüm yöntemi, kültür, rutin ve bireysel gereksinimler farklı olabilir.",
+        "caseEvidence": [],
+        "classification": "dna_concept",
+        "details": [
+          "Gelişimsel grup eğilimlerinin çevresinde geniş bireysel farklılık vardır; ölçüm yöntemi, kültür ve rutin gözlenen örüntüyü etkileyebilir.",
+          "Yaş grubu için önerilen süre aralıkları toplum düzeyi rehberidir ve tanı eşiği değildir.",
+          "Aynı yaştaki çocuklarda ölçüm yöntemi, kültür, rutin ve bireysel gereksinimler farklı olabilir."
+        ],
+        "engineVersion": "dna-chat-engine@2",
+        "evidenceSummary": {
+          "ageScope": "Gelişimsel çerçeve",
+          "boundary": "Yaş ortalaması veya rehber aralığı tek çocukta bozukluk, gelişimsel gecikme ya da zorunlu uyku miktarı belirlemez.",
+          "level": "Güçlü"
+        },
+        "intentId": "catalog:selfreg.sleep_development:development",
+        "limitations": [
+          "Yaş ortalaması veya rehber aralığı tek çocukta bozukluk, gelişimsel gecikme ya da zorunlu uyku miktarı belirlemez.",
+          "Kaynak doğrulaması tamamlandı; uzman içerik incelemesi henüz bekliyor.",
+          "Bu açıklama genel bilimsel çerçevedir; tek vaka için tanı, kesin neden veya doğrudan biyolojik ölçüm değildir."
+        ],
+        "outcome": "answered",
+        "route": "theory",
+        "safety": {
+          "blocked": false,
+          "boundaryTr": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+          "category": "none",
+          "code": null,
+          "redactedQuestion": "Çocuklarda uyku süresi yaşla nasıl değişir?"
+        },
+        "safetyBoundary": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+        "schemaVersion": "1.0",
+        "sourceRefs": [
+          {
+            "citation": "Galland, B. C., Taylor, B. J., Elder, D. E., & Herbison, P. (2012). Normal sleep patterns in infants and children: A systematic review of observational studies. Sleep Medicine Reviews, 16(3), 213-222.",
+            "claimBoundary": "Yaşa göre grup örüntülerini özetler; tek çocuk için zorunlu süre, bozukluk veya gelişim hükmü vermez.",
+            "doi": "10.1016/j.smrv.2011.06.001",
+            "excerptTr": "Uyku süresi, gün içindeki dağılımı, gündüz uykuları ve zamanlama çocukluk boyunca ortalama olarak değişir.",
+            "id": "catalog:GALLAND_ET_AL_2012",
+            "labelTr": "Galland, B. C., Taylor, B. J., Elder, D. E., & Herbison, P. (2012)",
+            "title": "Normal sleep patterns in infants and children: A systematic review of observational studies",
+            "type": "catalog",
+            "url": "https://doi.org/10.1016/j.smrv.2011.06.001",
+            "year": 2012
+          },
+          {
+            "citation": "Paruthi, S., Brooks, L. J., D'Ambrosio, C., et al. (2016). Recommended amount of sleep for pediatric populations: A consensus statement of the American Academy of Sleep Medicine. Journal of Clinical Sleep Medicine, 12(6), 785-786.",
+            "claimBoundary": "Toplum düzeyi yaş aralıkları sunar; bireysel optimum, tanı eşiği veya tedavi önerisi değildir.",
+            "doi": "10.5664/jcsm.5866",
+            "excerptTr": "Uyku süresi, gün içindeki dağılımı, gündüz uykuları ve zamanlama çocukluk boyunca ortalama olarak değişir.",
+            "id": "catalog:PARUTHI_ET_AL_2016",
+            "labelTr": "Paruthi, S., Brooks, L. J., D'Ambrosio, C., et al. (2016)",
+            "title": "Recommended amount of sleep for pediatric populations: A consensus statement of the American Academy of Sleep Medicine",
+            "type": "catalog",
+            "url": "https://doi.org/10.5664/jcsm.5866",
+            "year": 2016
+          }
+        ],
+        "sources": [
+          {
+            "citation": "Galland, B. C., Taylor, B. J., Elder, D. E., & Herbison, P. (2012). Normal sleep patterns in infants and children: A systematic review of observational studies. Sleep Medicine Reviews, 16(3), 213-222.",
+            "claimBoundary": "Yaşa göre grup örüntülerini özetler; tek çocuk için zorunlu süre, bozukluk veya gelişim hükmü vermez.",
+            "doi": "10.1016/j.smrv.2011.06.001",
+            "excerptTr": "Uyku süresi, gün içindeki dağılımı, gündüz uykuları ve zamanlama çocukluk boyunca ortalama olarak değişir.",
+            "id": "catalog:GALLAND_ET_AL_2012",
+            "labelTr": "Galland, B. C., Taylor, B. J., Elder, D. E., & Herbison, P. (2012)",
+            "title": "Normal sleep patterns in infants and children: A systematic review of observational studies",
+            "type": "catalog",
+            "url": "https://doi.org/10.1016/j.smrv.2011.06.001",
+            "year": 2012
+          },
+          {
+            "citation": "Paruthi, S., Brooks, L. J., D'Ambrosio, C., et al. (2016). Recommended amount of sleep for pediatric populations: A consensus statement of the American Academy of Sleep Medicine. Journal of Clinical Sleep Medicine, 12(6), 785-786.",
+            "claimBoundary": "Toplum düzeyi yaş aralıkları sunar; bireysel optimum, tanı eşiği veya tedavi önerisi değildir.",
+            "doi": "10.5664/jcsm.5866",
+            "excerptTr": "Uyku süresi, gün içindeki dağılımı, gündüz uykuları ve zamanlama çocukluk boyunca ortalama olarak değişir.",
+            "id": "catalog:PARUTHI_ET_AL_2016",
+            "labelTr": "Paruthi, S., Brooks, L. J., D'Ambrosio, C., et al. (2016)",
+            "title": "Recommended amount of sleep for pediatric populations: A consensus statement of the American Academy of Sleep Medicine",
+            "type": "catalog",
+            "url": "https://doi.org/10.5664/jcsm.5866",
+            "year": 2016
+          }
+        ],
+        "suggestedQuestions": [
+          "Çocuklukta uyku gelişimi nedir?",
+          "Çocuklukta uyku gelişimi için kanıt düzeyi nedir?",
+          "Çocuklukta uyku gelişimi DNA alanlarıyla nasıl ilişkilidir?"
+        ],
+        "summary": "Uyku süresi, gün içindeki dağılımı, gündüz uykuları ve zamanlama çocukluk boyunca ortalama olarak değişir.",
+        "topic": "Çocuklukta uyku gelişimi"
+      },
+      "responseSha256": "d89646e9e77de5bb8cfcdc7da603d031418b365f8ff9b7f36ba69373e0131438"
+    },
+    {
+      "id": "dna-domains",
+      "request": {
+        "question": "DNA hangi alanları değerlendirir?"
+      },
+      "response": {
+        "answerTr": "DNA; fizyolojik, duyusal, duygusal, bilişsel, yürütücü işlev ve interosepsiyon alanlarını birlikte ele alır.\n\nAlanlar ayrı skorlanır ancak yorumda birbirlerinden bağımsız kabul edilmez.",
+        "caseEvidence": [],
+        "classification": "dna_concept",
+        "details": [
+          "Alanlar ayrı skorlanır ancak yorumda birbirlerinden bağımsız kabul edilmez."
+        ],
+        "engineVersion": "dna-chat-engine@2",
+        "intentId": "dna_domains",
+        "limitations": [
+          "DNA Asistanı değerlendirme yapısını açıklar; klinik kararın veya uzman değerlendirmesinin yerine geçmez."
+        ],
+        "outcome": "answered",
+        "route": "dna",
+        "safety": {
+          "blocked": false,
+          "boundaryTr": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+          "category": "none",
+          "code": null,
+          "redactedQuestion": "DNA hangi alanları değerlendirir?"
+        },
+        "safetyBoundary": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+        "schemaVersion": "1.0",
+        "sourceRefs": [
+          {
+            "claimBoundary": "Alanlar birbirinden kopuk veya tanısal kategoriler olarak yorumlanmaz.",
+            "excerptTr": "Fizyolojik, duyusal, duygusal, bilişsel, yürütücü işlev ve interosepsiyon alanları birlikte değerlendirilir.",
+            "id": "dna:domain_contract",
+            "labelTr": "Altı değerlendirme alanı",
+            "title": "DNA alan sözleşmesi",
+            "type": "dna_contract"
+          }
+        ],
+        "sources": [
+          {
+            "claimBoundary": "Alanlar birbirinden kopuk veya tanısal kategoriler olarak yorumlanmaz.",
+            "excerptTr": "Fizyolojik, duyusal, duygusal, bilişsel, yürütücü işlev ve interosepsiyon alanları birlikte değerlendirilir.",
+            "id": "dna:domain_contract",
+            "labelTr": "Altı değerlendirme alanı",
+            "title": "DNA alan sözleşmesi",
+            "type": "dna_contract"
+          }
+        ],
+        "suggestedQuestions": [
+          "Alanlar arası ilişki nasıl yorumlanır?",
+          "İnterosepsiyon nedir?"
+        ],
+        "summary": "DNA; fizyolojik, duyusal, duygusal, bilişsel, yürütücü işlev ve interosepsiyon alanlarını birlikte ele alır.",
+        "topic": "DNA alanları"
+      },
+      "responseSha256": "5f80f1869cca8635533a7952f2c3ab98c553d884a898e37d10a8f48885c1735b"
+    },
+    {
+      "id": "follow-up-context",
+      "request": {
+        "previousTopic": "İnsular korteks",
+        "question": "Çocuklarda da aynı mı?"
+      },
+      "response": {
+        "answerTr": "Bu soru için onaylı DNA bilgi tabanında yeterli eşleşme bulunamadı.\n\nSistem kaynakta olmayan klinik bilgiyi tamamlamadı veya tahmin etmedi.",
+        "caseEvidence": [],
+        "classification": "not_available",
+        "details": [
+          "Sistem kaynakta olmayan klinik bilgiyi tamamlamadı veya tahmin etmedi."
+        ],
+        "engineVersion": "dna-chat-engine@2",
+        "intentId": null,
+        "limitations": [
+          "Yalnız tanımlı DNA kavramları, değerlendirme yapısı ve açık kimliksiz vaka bulguları yanıtlanabilir."
+        ],
+        "outcome": "not_available",
+        "route": "unknown",
+        "safety": {
+          "blocked": false,
+          "boundaryTr": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+          "category": "none",
+          "code": null,
+          "redactedQuestion": "Çocuklarda da aynı mı?"
+        },
+        "safetyBoundary": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+        "schemaVersion": "1.0",
+        "sourceRefs": [],
+        "sources": [],
+        "suggestedQuestions": [
+          "DNA hangi alanları değerlendirir?",
+          "Self-regülasyon nedir?"
+        ],
+        "summary": "Bu soru için onaylı DNA bilgi tabanında yeterli eşleşme bulunamadı.",
+        "topic": null
+      },
+      "responseSha256": "800c748c65455d6937219f9cd3858382c0a4347583a8ad45ca4d027bbc5cf3d9"
+    },
+    {
+      "id": "case-context-request",
+      "request": {
+        "question": "Son raporumu özetle"
+      },
+      "response": {
+        "answerTr": "Bu soruyu yanıtlamak için kendi DNA raporlarınızdan birini seçin.\n\nRapor seçilmeden danışana özgü bulgu okunmaz veya klinik içerik üretilmez.",
+        "caseEvidence": [],
+        "classification": "clarification",
+        "contextRequest": {
+          "preferNewest": true,
+          "type": "report"
+        },
+        "details": [
+          "Rapor seçilmeden danışana özgü bulgu okunmaz veya klinik içerik üretilmez."
+        ],
+        "engineVersion": "dna-chat-engine@2",
+        "intentId": "case_overview",
+        "limitations": [
+          "Yalnız hesabınıza ait, sohbet için yapılandırılmış ve kimliksiz rapor bağlamı kullanılabilir."
+        ],
+        "outcome": "clarification",
+        "route": "case",
+        "safety": {
+          "blocked": false,
+          "boundaryTr": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+          "category": "none",
+          "code": null,
+          "redactedQuestion": "Son raporumu özetle"
+        },
+        "safetyBoundary": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+        "schemaVersion": "1.0",
+        "sourceRefs": [],
+        "sources": [],
+        "suggestedQuestions": [
+          "Son raporumu özetle.",
+          "Seçtiğim rapordaki göreli zorlanmaları açıkla."
+        ],
+        "summary": "Bu soruyu yanıtlamak için kendi DNA raporlarınızdan birini seçin.",
+        "topic": "Vaka özeti"
+      },
+      "responseSha256": "7a85bceb7cc794dbaa21152a7bebaf105a69725f02b0842a051d5630dc5113df"
+    },
+    {
+      "id": "case-summary",
+      "request": {
+        "caseContext": {
+          "ageMonths": 48,
+          "caseId": null,
+          "chatContext": {
+            "confidence": "orta",
+            "confidenceRationale": "İki veri kaynağı aynı yöndedir.",
+            "counterEvidence": [
+              "Yapılandırılmış ortamda katılım korunmaktadır."
+            ],
+            "evidence": [
+              "Duyusal alan Atipik düzeydedir."
+            ],
+            "limitations": [
+              "Doğrudan fizyolojik ölçüm yoktur."
+            ],
+            "mechanismLabel": "Bağlama duyarlı yük",
+            "mechanismSummary": "Uyaran yoğunluğu arttığında toparlanma uzuyor.",
+            "patterns": [],
+            "preservedCapacities": [
+              "Bilişsel regülasyon Tipik düzeydedir."
+            ],
+            "primaryAxis": "Duyusal yükle artan regülasyon kırılganlığı",
+            "secondaryAxes": [
+              "Duygusal toparlanma"
+            ],
+            "strongDomains": [
+              "Bilişsel regülasyon"
+            ],
+            "weakDomains": [
+              "Duyusal regülasyon",
+              "Duygusal regülasyon"
+            ]
+          },
+          "dataStatus": "synthetic",
+          "externalFindings": [],
+          "levels": {
+            "cognitive": "Tipik",
+            "emotional": "Riskli",
+            "executive": "Riskli",
+            "interoception": "Riskli",
+            "physiological": "Riskli",
+            "sensory": "Atipik"
+          },
+          "observations": [],
+          "redactionCount": 0,
+          "safe": true,
+          "scores": {
+            "cognitive": 38,
+            "emotional": 26,
+            "executive": 32,
+            "interoception": 28,
+            "physiological": 31,
+            "sensory": 23
+          },
+          "themes": []
+        },
+        "question": "Bu vakayı özetle"
+      },
+      "response": {
+        "answerTr": "Açık vaka bağlamındaki ana çalışma hipotezi: Duyusal yükle artan regülasyon kırılganlığı\n\nUyaran yoğunluğu arttığında toparlanma uzuyor.\n\nGöreli korunmuş kapasiteler: Bilişsel regülasyon.\n\nDuyusal alan Atipik düzeydedir.",
+        "caseEvidence": [
+          "Duyusal alan Atipik düzeydedir."
+        ],
+        "classification": "hypothesis",
+        "details": [
+          "Uyaran yoğunluğu arttığında toparlanma uzuyor.",
+          "Göreli korunmuş kapasiteler: Bilişsel regülasyon.",
+          "Duyusal alan Atipik düzeydedir."
+        ],
+        "engineVersion": "dna-chat-engine@2",
+        "intentId": "case_overview",
+        "limitations": [
+          "Doğrudan fizyolojik ölçüm yoktur.",
+          "Bulgular açık vaka bağlamıyla sınırlıdır; tanısal sınıflama veya kesin nedensellik oluşturmaz."
+        ],
+        "outcome": "answered",
+        "route": "case",
+        "safety": {
+          "blocked": false,
+          "boundaryTr": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+          "category": "none",
+          "code": null,
+          "redactedQuestion": "Bu vakayı özetle"
+        },
+        "safetyBoundary": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+        "schemaVersion": "1.0",
+        "sourceRefs": [
+          {
+            "claimBoundary": "Yalnız açık vakada bulunan kimliksiz veri; başka vakalara genellenmez.",
+            "excerptTr": "Duyusal yükle artan regülasyon kırılganlığı",
+            "id": "case:primary-axis",
+            "labelTr": "Açık kimliksiz vaka bağlamı",
+            "title": "Vaka ana ekseni",
+            "type": "case"
+          },
+          {
+            "claimBoundary": "Yalnız açık vakada bulunan kimliksiz veri; başka vakalara genellenmez.",
+            "excerptTr": "Duyusal alan Atipik düzeydedir.",
+            "id": "case:evidence-1",
+            "labelTr": "Açık kimliksiz vaka bağlamı",
+            "title": "Vaka kanıt satırı",
+            "type": "case"
+          },
+          {
+            "claimBoundary": "Bu bilgi betimleyici klinik açıklama içindir; tek vaka için tanı, kesin neden veya uygulama talimatı üretmez.",
+            "excerptTr": "Risk profili yorumu, alan puanlarını yalnız sıralamak yerine ana klinik ekseni, ikincil yayılımı ve korunmuş dengeleyici alanları birlikte görünür kılar.",
+            "id": "kb:RISK_PROFILE_GENERAL_RULE",
+            "labelTr": "DNA klinik bilgi tabanı",
+            "title": "Rısk Profıle General Rule",
+            "type": "clinical_kb"
+          }
+        ],
+        "sources": [
+          {
+            "claimBoundary": "Yalnız açık vakada bulunan kimliksiz veri; başka vakalara genellenmez.",
+            "excerptTr": "Duyusal yükle artan regülasyon kırılganlığı",
+            "id": "case:primary-axis",
+            "labelTr": "Açık kimliksiz vaka bağlamı",
+            "title": "Vaka ana ekseni",
+            "type": "case"
+          },
+          {
+            "claimBoundary": "Yalnız açık vakada bulunan kimliksiz veri; başka vakalara genellenmez.",
+            "excerptTr": "Duyusal alan Atipik düzeydedir.",
+            "id": "case:evidence-1",
+            "labelTr": "Açık kimliksiz vaka bağlamı",
+            "title": "Vaka kanıt satırı",
+            "type": "case"
+          },
+          {
+            "claimBoundary": "Bu bilgi betimleyici klinik açıklama içindir; tek vaka için tanı, kesin neden veya uygulama talimatı üretmez.",
+            "excerptTr": "Risk profili yorumu, alan puanlarını yalnız sıralamak yerine ana klinik ekseni, ikincil yayılımı ve korunmuş dengeleyici alanları birlikte görünür kılar.",
+            "id": "kb:RISK_PROFILE_GENERAL_RULE",
+            "labelTr": "DNA klinik bilgi tabanı",
+            "title": "Rısk Profıle General Rule",
+            "type": "clinical_kb"
+          }
+        ],
+        "suggestedQuestions": [
+          "Vakadaki veri sınırlılıkları neler?",
+          "Korunmuş kapasiteleri özetle.",
+          "Bu vaka için literatür çerçevesi nedir?"
+        ],
+        "summary": "Açık vaka bağlamındaki ana çalışma hipotezi: Duyusal yükle artan regülasyon kırılganlığı",
+        "topic": "Vaka özeti"
+      },
+      "responseSha256": "7f586e56fdb5469947de544d8569f894c6e418a6335615222256db95c992f518"
+    },
+    {
+      "id": "case-theory",
+      "request": {
+        "caseContext": {
+          "ageMonths": 48,
+          "caseId": null,
+          "chatContext": {
+            "confidence": "orta",
+            "confidenceRationale": "İki veri kaynağı aynı yöndedir.",
+            "counterEvidence": [
+              "Yapılandırılmış ortamda katılım korunmaktadır."
+            ],
+            "evidence": [
+              "Duyusal alan Atipik düzeydedir."
+            ],
+            "limitations": [
+              "Doğrudan fizyolojik ölçüm yoktur."
+            ],
+            "mechanismLabel": "Bağlama duyarlı yük",
+            "mechanismSummary": "Uyaran yoğunluğu arttığında toparlanma uzuyor.",
+            "patterns": [],
+            "preservedCapacities": [
+              "Bilişsel regülasyon Tipik düzeydedir."
+            ],
+            "primaryAxis": "Duyusal yükle artan regülasyon kırılganlığı",
+            "secondaryAxes": [
+              "Duygusal toparlanma"
+            ],
+            "strongDomains": [
+              "Bilişsel regülasyon"
+            ],
+            "weakDomains": [
+              "Duyusal regülasyon",
+              "Duygusal regülasyon"
+            ]
+          },
+          "dataStatus": "synthetic",
+          "externalFindings": [],
+          "levels": {
+            "cognitive": "Tipik",
+            "emotional": "Riskli",
+            "executive": "Riskli",
+            "interoception": "Riskli",
+            "physiological": "Riskli",
+            "sensory": "Atipik"
+          },
+          "observations": [],
+          "redactionCount": 0,
+          "safe": true,
+          "scores": {
+            "cognitive": 38,
+            "emotional": 26,
+            "executive": 32,
+            "interoception": 28,
+            "physiological": 31,
+            "sensory": 23
+          },
+          "themes": []
+        },
+        "question": "Bu rapordaki duyusal bulguyu interosepsiyon teorisiyle tartış"
+      },
+      "response": {
+        "answerTr": "Açık vaka bağlamındaki ana çalışma hipotezi: Duyusal yükle artan regülasyon kırılganlığı\n\nUyaran yoğunluğu arttığında toparlanma uzuyor.\n\nGöreli korunmuş kapasiteler: Bilişsel regülasyon.\n\nDuyusal alan Atipik düzeydedir.\n\nGenel teori çerçevesi: İnterosepsiyon, iç beden sinyallerinin algılanması, bütünleştirilmesi, yorumlanması ve düzenleyici kullanımıyla ilgili çok boyutlu süreçlerdir.\n\nGörev performansı, öz-bildirim eğilimi ve metabilişsel farkındalık aynı şey değildir.\n\nİşlemenin önemli bir bölümü bilinçli farkındalık dışında gerçekleşebilir.",
+        "caseEvidence": [
+          "Duyusal alan Atipik düzeydedir."
+        ],
+        "classification": "hypothesis",
+        "details": [
+          "Uyaran yoğunluğu arttığında toparlanma uzuyor.",
+          "Göreli korunmuş kapasiteler: Bilişsel regülasyon.",
+          "Duyusal alan Atipik düzeydedir.",
+          "Genel teori çerçevesi: İnterosepsiyon, iç beden sinyallerinin algılanması, bütünleştirilmesi, yorumlanması ve düzenleyici kullanımıyla ilgili çok boyutlu süreçlerdir.",
+          "Görev performansı, öz-bildirim eğilimi ve metabilişsel farkındalık aynı şey değildir.",
+          "İşlemenin önemli bir bölümü bilinçli farkındalık dışında gerçekleşebilir."
+        ],
+        "engineVersion": "dna-chat-engine@2",
+        "evidenceSummary": {
+          "ageScope": "Karma yaş örneklemleri",
+          "boundary": "DNA interosepsiyon alanı doğrudan ANS bozukluğu, insula işlevi veya tıbbi durum göstermez.",
+          "level": "Güçlü"
+        },
+        "intentId": null,
+        "limitations": [
+          "Bu vakada biyolojik mekanizma doğrudan ölçülmedi.",
+          "Doğrudan fizyolojik ölçüm yoktur.",
+          "Bulgular açık vaka bağlamıyla sınırlıdır; tanısal sınıflama veya kesin nedensellik oluşturmaz.",
+          "DNA interosepsiyon alanı doğrudan ANS bozukluğu, insula işlevi veya tıbbi durum göstermez.",
+          "Kaynak doğrulaması tamamlandı; uzman içerik incelemesi henüz bekliyor.",
+          "Bu açıklama genel bilimsel çerçevedir; tek vaka için tanı, kesin neden veya doğrudan biyolojik ölçüm değildir."
+        ],
+        "outcome": "answered",
+        "route": "case",
+        "safety": {
+          "blocked": false,
+          "boundaryTr": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+          "category": "none",
+          "code": null,
+          "redactedQuestion": "Bu rapordaki duyusal bulguyu interosepsiyon teorisiyle tartış"
+        },
+        "safetyBoundary": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+        "schemaVersion": "1.0",
+        "sourceRefs": [
+          {
+            "claimBoundary": "Yalnız açık vakada bulunan kimliksiz veri; başka vakalara genellenmez.",
+            "excerptTr": "Duyusal yükle artan regülasyon kırılganlığı",
+            "id": "case:primary-axis",
+            "labelTr": "Açık kimliksiz vaka bağlamı",
+            "title": "Vaka ana ekseni",
+            "type": "case"
+          },
+          {
+            "citation": "Chen, W. G., Schloesser, D., Arensdorf, A. M., et al. (2021). The emerging science of interoception: Sensing, integrating, interpreting, and regulating signals within the self. Trends in Neurosciences, 44(1), 3-16.",
+            "claimBoundary": "İnteroseptif sinyallerin algılanması, bütünleştirilmesi, yorumlanması ve düzenlenmesi için çok aşamalı çerçeve sunar; pediatrik eşik veya kişisel biyolojik mekanizma vermez.",
+            "doi": "10.1016/j.tins.2020.10.007",
+            "excerptTr": "İnterosepsiyon, iç beden sinyallerinin algılanması, bütünleştirilmesi, yorumlanması ve düzenleyici kullanımıyla ilgili çok boyutlu süreçlerdir.",
+            "id": "catalog:CHEN_ET_AL_2021",
+            "labelTr": "Chen, W. G., Schloesser, D., Arensdorf, A. M., et al. (2021)",
+            "title": "The emerging science of interoception: Sensing, integrating, interpreting, and regulating signals within the self",
+            "type": "catalog",
+            "url": "https://doi.org/10.1016/j.tins.2020.10.007",
+            "year": 2021
+          },
+          {
+            "claimBoundary": "Yalnız açık vakada bulunan kimliksiz veri; başka vakalara genellenmez.",
+            "excerptTr": "Duyusal alan Atipik düzeydedir.",
+            "id": "case:evidence-1",
+            "labelTr": "Açık kimliksiz vaka bağlamı",
+            "title": "Vaka kanıt satırı",
+            "type": "case"
+          },
+          {
+            "citation": "Quigley, K. S., Kanoski, S., Grill, W. M., Barrett, L. F., & Tsakiris, M. (2021). Functions of interoception: From energy regulation to experience of the self. Trends in Neurosciences, 44(1), 29-38.",
+            "claimBoundary": "İnterosepsiyonun enerji düzenleme ve deneyimle ilişkili çoklu işlevlerini tartışır; çocuk davranışına tek neden veya ölçüm eşdeğerliği yüklemez.",
+            "doi": "10.1016/j.tins.2020.09.008",
+            "excerptTr": "İnterosepsiyon, iç beden sinyallerinin algılanması, bütünleştirilmesi, yorumlanması ve düzenleyici kullanımıyla ilgili çok boyutlu süreçlerdir.",
+            "id": "catalog:QUIGLEY_ET_AL_2021",
+            "labelTr": "Quigley, K. S., Kanoski, S., Grill, W. M., Barrett, L. F., & Tsakiris, M. (2021)",
+            "title": "Functions of interoception: From energy regulation to experience of the self",
+            "type": "catalog",
+            "url": "https://doi.org/10.1016/j.tins.2020.09.008",
+            "year": 2021
+          }
+        ],
+        "sources": [
+          {
+            "claimBoundary": "Yalnız açık vakada bulunan kimliksiz veri; başka vakalara genellenmez.",
+            "excerptTr": "Duyusal yükle artan regülasyon kırılganlığı",
+            "id": "case:primary-axis",
+            "labelTr": "Açık kimliksiz vaka bağlamı",
+            "title": "Vaka ana ekseni",
+            "type": "case"
+          },
+          {
+            "citation": "Chen, W. G., Schloesser, D., Arensdorf, A. M., et al. (2021). The emerging science of interoception: Sensing, integrating, interpreting, and regulating signals within the self. Trends in Neurosciences, 44(1), 3-16.",
+            "claimBoundary": "İnteroseptif sinyallerin algılanması, bütünleştirilmesi, yorumlanması ve düzenlenmesi için çok aşamalı çerçeve sunar; pediatrik eşik veya kişisel biyolojik mekanizma vermez.",
+            "doi": "10.1016/j.tins.2020.10.007",
+            "excerptTr": "İnterosepsiyon, iç beden sinyallerinin algılanması, bütünleştirilmesi, yorumlanması ve düzenleyici kullanımıyla ilgili çok boyutlu süreçlerdir.",
+            "id": "catalog:CHEN_ET_AL_2021",
+            "labelTr": "Chen, W. G., Schloesser, D., Arensdorf, A. M., et al. (2021)",
+            "title": "The emerging science of interoception: Sensing, integrating, interpreting, and regulating signals within the self",
+            "type": "catalog",
+            "url": "https://doi.org/10.1016/j.tins.2020.10.007",
+            "year": 2021
+          },
+          {
+            "claimBoundary": "Yalnız açık vakada bulunan kimliksiz veri; başka vakalara genellenmez.",
+            "excerptTr": "Duyusal alan Atipik düzeydedir.",
+            "id": "case:evidence-1",
+            "labelTr": "Açık kimliksiz vaka bağlamı",
+            "title": "Vaka kanıt satırı",
+            "type": "case"
+          },
+          {
+            "citation": "Quigley, K. S., Kanoski, S., Grill, W. M., Barrett, L. F., & Tsakiris, M. (2021). Functions of interoception: From energy regulation to experience of the self. Trends in Neurosciences, 44(1), 29-38.",
+            "claimBoundary": "İnterosepsiyonun enerji düzenleme ve deneyimle ilişkili çoklu işlevlerini tartışır; çocuk davranışına tek neden veya ölçüm eşdeğerliği yüklemez.",
+            "doi": "10.1016/j.tins.2020.09.008",
+            "excerptTr": "İnterosepsiyon, iç beden sinyallerinin algılanması, bütünleştirilmesi, yorumlanması ve düzenleyici kullanımıyla ilgili çok boyutlu süreçlerdir.",
+            "id": "catalog:QUIGLEY_ET_AL_2021",
+            "labelTr": "Quigley, K. S., Kanoski, S., Grill, W. M., Barrett, L. F., & Tsakiris, M. (2021)",
+            "title": "Functions of interoception: From energy regulation to experience of the self",
+            "type": "catalog",
+            "url": "https://doi.org/10.1016/j.tins.2020.09.008",
+            "year": 2021
+          }
+        ],
+        "suggestedQuestions": [
+          "Vakadaki veri sınırlılıkları neler?",
+          "Korunmuş kapasiteleri özetle.",
+          "Bu vaka için literatür çerçevesi nedir?",
+          "İnterosepsiyon nedir?"
+        ],
+        "summary": "Açık vaka bağlamındaki ana çalışma hipotezi: Duyusal yükle artan regülasyon kırılganlığı",
+        "topic": "Vaka özeti · İnterosepsiyon"
+      },
+      "responseSha256": "78c7d86c7565c8bc3613c7140f09c837418c3cc36aa2af7e7c6d1017937c4b5c"
+    },
+    {
+      "id": "case-counterevidence",
+      "request": {
+        "caseContext": {
+          "ageMonths": 48,
+          "caseId": null,
+          "chatContext": {
+            "confidence": "orta",
+            "confidenceRationale": "İki veri kaynağı aynı yöndedir.",
+            "counterEvidence": [
+              "Yapılandırılmış ortamda katılım korunmaktadır."
+            ],
+            "evidence": [
+              "Duyusal alan Atipik düzeydedir."
+            ],
+            "limitations": [
+              "Doğrudan fizyolojik ölçüm yoktur."
+            ],
+            "mechanismLabel": "Bağlama duyarlı yük",
+            "mechanismSummary": "Uyaran yoğunluğu arttığında toparlanma uzuyor.",
+            "patterns": [],
+            "preservedCapacities": [
+              "Bilişsel regülasyon Tipik düzeydedir."
+            ],
+            "primaryAxis": "Duyusal yükle artan regülasyon kırılganlığı",
+            "secondaryAxes": [
+              "Duygusal toparlanma"
+            ],
+            "strongDomains": [
+              "Bilişsel regülasyon"
+            ],
+            "weakDomains": [
+              "Duyusal regülasyon",
+              "Duygusal regülasyon"
+            ]
+          },
+          "dataStatus": "synthetic",
+          "externalFindings": [],
+          "levels": {
+            "cognitive": "Tipik",
+            "emotional": "Riskli",
+            "executive": "Riskli",
+            "interoception": "Riskli",
+            "physiological": "Riskli",
+            "sensory": "Atipik"
+          },
+          "observations": [],
+          "redactionCount": 0,
+          "safe": true,
+          "scores": {
+            "cognitive": 38,
+            "emotional": 26,
+            "executive": 32,
+            "interoception": 28,
+            "physiological": 31,
+            "sensory": 23
+          },
+          "themes": []
+        },
+        "question": "Karşı kanıtları özetle"
+      },
+      "response": {
+        "answerTr": "Karşı kanıt ve sınırlayıcı bulgular:\n\nYapılandırılmış ortamda katılım korunmaktadır.",
+        "caseEvidence": [
+          "Yapılandırılmış ortamda katılım korunmaktadır."
+        ],
+        "classification": "case_finding",
+        "details": [
+          "Yapılandırılmış ortamda katılım korunmaktadır."
+        ],
+        "engineVersion": "dna-chat-engine@2",
+        "intentId": "case_counter_evidence",
+        "limitations": [
+          "Doğrudan fizyolojik ölçüm yoktur.",
+          "Bulgular açık vaka bağlamıyla sınırlıdır; tanısal sınıflama veya kesin nedensellik oluşturmaz."
+        ],
+        "outcome": "answered",
+        "route": "case",
+        "safety": {
+          "blocked": false,
+          "boundaryTr": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+          "category": "none",
+          "code": null,
+          "redactedQuestion": "Karşı kanıtları özetle"
+        },
+        "safetyBoundary": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+        "schemaVersion": "1.0",
+        "sourceRefs": [
+          {
+            "claimBoundary": "Yalnız açık vakada bulunan kimliksiz veri; başka vakalara genellenmez.",
+            "excerptTr": "Yapılandırılmış ortamda katılım korunmaktadır.",
+            "id": "case:case_counter_evidence",
+            "labelTr": "Açık kimliksiz vaka bağlamı",
+            "title": "Karşı kanıt ve sınırlayıcı bulgular",
+            "type": "case"
+          },
+          {
+            "claimBoundary": "Bu bilgi betimleyici klinik açıklama içindir; tek vaka için tanı, kesin neden veya uygulama talimatı üretmez.",
+            "excerptTr": "Skor ve anamnez ayrışıyorsa bu çelişki değil, bağlam farkı veya veri sınırlılığı olarak not edilmelidir; yorumun güven düzeyi buna göre temkinli tutulur.",
+            "id": "kb:ANAMNESIS_CONTRADICTION_RULE",
+            "labelTr": "DNA klinik bilgi tabanı",
+            "title": "Anamnesıs Contradıctıon Rule",
+            "type": "clinical_kb"
+          }
+        ],
+        "sources": [
+          {
+            "claimBoundary": "Yalnız açık vakada bulunan kimliksiz veri; başka vakalara genellenmez.",
+            "excerptTr": "Yapılandırılmış ortamda katılım korunmaktadır.",
+            "id": "case:case_counter_evidence",
+            "labelTr": "Açık kimliksiz vaka bağlamı",
+            "title": "Karşı kanıt ve sınırlayıcı bulgular",
+            "type": "case"
+          },
+          {
+            "claimBoundary": "Bu bilgi betimleyici klinik açıklama içindir; tek vaka için tanı, kesin neden veya uygulama talimatı üretmez.",
+            "excerptTr": "Skor ve anamnez ayrışıyorsa bu çelişki değil, bağlam farkı veya veri sınırlılığı olarak not edilmelidir; yorumun güven düzeyi buna göre temkinli tutulur.",
+            "id": "kb:ANAMNESIS_CONTRADICTION_RULE",
+            "labelTr": "DNA klinik bilgi tabanı",
+            "title": "Anamnesıs Contradıctıon Rule",
+            "type": "clinical_kb"
+          }
+        ],
+        "suggestedQuestions": [
+          "Vakadaki veri sınırlılıkları neler?",
+          "Korunmuş kapasiteleri özetle.",
+          "Bu vaka için literatür çerçevesi nedir?"
+        ],
+        "summary": "Karşı kanıt ve sınırlayıcı bulgular:",
+        "topic": "Karşı kanıt"
+      },
+      "responseSha256": "50595cea13e370fe3b5c3c7880551eb951446078eefb8b626df5a05d93c85714"
+    },
+    {
+      "id": "case-preserved-capacity",
+      "request": {
+        "caseContext": {
+          "ageMonths": 48,
+          "caseId": null,
+          "chatContext": {
+            "confidence": "orta",
+            "confidenceRationale": "İki veri kaynağı aynı yöndedir.",
+            "counterEvidence": [
+              "Yapılandırılmış ortamda katılım korunmaktadır."
+            ],
+            "evidence": [
+              "Duyusal alan Atipik düzeydedir."
+            ],
+            "limitations": [
+              "Doğrudan fizyolojik ölçüm yoktur."
+            ],
+            "mechanismLabel": "Bağlama duyarlı yük",
+            "mechanismSummary": "Uyaran yoğunluğu arttığında toparlanma uzuyor.",
+            "patterns": [],
+            "preservedCapacities": [
+              "Bilişsel regülasyon Tipik düzeydedir."
+            ],
+            "primaryAxis": "Duyusal yükle artan regülasyon kırılganlığı",
+            "secondaryAxes": [
+              "Duygusal toparlanma"
+            ],
+            "strongDomains": [
+              "Bilişsel regülasyon"
+            ],
+            "weakDomains": [
+              "Duyusal regülasyon",
+              "Duygusal regülasyon"
+            ]
+          },
+          "dataStatus": "synthetic",
+          "externalFindings": [],
+          "levels": {
+            "cognitive": "Tipik",
+            "emotional": "Riskli",
+            "executive": "Riskli",
+            "interoception": "Riskli",
+            "physiological": "Riskli",
+            "sensory": "Atipik"
+          },
+          "observations": [],
+          "redactionCount": 0,
+          "safe": true,
+          "scores": {
+            "cognitive": 38,
+            "emotional": 26,
+            "executive": 32,
+            "interoception": 28,
+            "physiological": 31,
+            "sensory": 23
+          },
+          "themes": []
+        },
+        "question": "Korunmuş kapasite bulguları"
+      },
+      "response": {
+        "answerTr": "Destek, ipucu, görsel yapı veya ek süreyle yapılan performans bağımsız performanstan farklı fakat geçerli işlev bilgisi taşır.\n\nDestekli başarı bağımsız ustalıkla, bağımsız güçlük ise kapasite yokluğuyla eşitlenemez.\n\nDestekli başarı hangi koşulların performansı kolaylaştırdığını gösterebilir.\n\nDestekli başarı bağımsız ustalıkla, bağımsız güçlük de kapasite yokluğuyla eşitlenmez.",
+        "caseEvidence": [],
+        "classification": "dna_concept",
+        "details": [
+          "Destekli başarı bağımsız ustalıkla, bağımsız güçlük ise kapasite yokluğuyla eşitlenemez.",
+          "Destekli başarı hangi koşulların performansı kolaylaştırdığını gösterebilir.",
+          "Destekli başarı bağımsız ustalıkla, bağımsız güçlük de kapasite yokluğuyla eşitlenmez."
+        ],
+        "engineVersion": "dna-chat-engine@2",
+        "evidenceSummary": {
+          "ageScope": "Çocukluk dönemi ağırlıklı",
+          "boundary": "Katalog genel işlevsel ayrımı açıklar; bireye özgü müdahale veya seans planı önermez.",
+          "level": "Orta"
+        },
+        "intentId": "catalog:development.supported_performance:unknown",
+        "limitations": [
+          "Katalog genel işlevsel ayrımı açıklar; bireye özgü müdahale veya seans planı önermez.",
+          "Kaynak doğrulaması tamamlandı; uzman içerik incelemesi henüz bekliyor.",
+          "Bu açıklama genel bilimsel çerçevedir; tek vaka için tanı, kesin neden veya doğrudan biyolojik ölçüm değildir."
+        ],
+        "outcome": "answered",
+        "route": "theory",
+        "safety": {
+          "blocked": false,
+          "boundaryTr": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+          "category": "none",
+          "code": null,
+          "redactedQuestion": "Korunmuş kapasite bulguları"
+        },
+        "safetyBoundary": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+        "schemaVersion": "1.0",
+        "sourceRefs": [
+          {
+            "citation": "World Health Organization (2001). International Classification of Functioning, Disability and Health. World Health Organization.",
+            "claimBoundary": "İşlev, aktivite, katılım ve bağlamı ayırır; DNA alanlarını veya biyolojik mekanizmayı doğrulamaz.",
+            "doi": null,
+            "excerptTr": "Destek, ipucu, görsel yapı veya ek süreyle yapılan performans bağımsız performanstan farklı fakat geçerli işlev bilgisi taşır.",
+            "id": "catalog:WHO_ICF_2001",
+            "labelTr": "World Health Organization (2001)",
+            "title": "International Classification of Functioning, Disability and Health",
+            "type": "catalog",
+            "url": "https://www.who.int/standards/classifications/international-classification-of-functioning-disability-and-health",
+            "year": 2001
+          },
+          {
+            "citation": "Doebel, S. (2020). Rethinking executive function and its development. Perspectives on Psychological Science, 15(4), 942-956.",
+            "claimBoundary": "Yürütücü performansın hedef, bilgi ve bağlamla ilişkisini vurgular; tek görevden sabit özellik veya biyolojik neden çıkarmaz.",
+            "doi": "10.1177/1745691620904771",
+            "excerptTr": "Destek, ipucu, görsel yapı veya ek süreyle yapılan performans bağımsız performanstan farklı fakat geçerli işlev bilgisi taşır.",
+            "id": "catalog:DOEBEL_2020",
+            "labelTr": "Doebel, S. (2020)",
+            "title": "Rethinking executive function and its development",
+            "type": "catalog",
+            "url": "https://doi.org/10.1177/1745691620904771",
+            "year": 2020
+          },
+          {
+            "citation": "Diamond, A. (2013). Executive functions. Annual Review of Psychology, 64, 135-168.",
+            "claimBoundary": "Yürütücü işlev bileşenlerini destekler; nöropsikolojik test, lokalizasyon veya tanı yerine geçmez.",
+            "doi": "10.1146/annurev-psych-113011-143750",
+            "excerptTr": "Destek, ipucu, görsel yapı veya ek süreyle yapılan performans bağımsız performanstan farklı fakat geçerli işlev bilgisi taşır.",
+            "id": "lit:DIAMOND_2013",
+            "labelTr": "Diamond, A. (2013)",
+            "title": "Executive functions",
+            "type": "literature",
+            "url": "https://doi.org/10.1146/annurev-psych-113011-143750",
+            "year": 2013
+          }
+        ],
+        "sources": [
+          {
+            "citation": "World Health Organization (2001). International Classification of Functioning, Disability and Health. World Health Organization.",
+            "claimBoundary": "İşlev, aktivite, katılım ve bağlamı ayırır; DNA alanlarını veya biyolojik mekanizmayı doğrulamaz.",
+            "doi": null,
+            "excerptTr": "Destek, ipucu, görsel yapı veya ek süreyle yapılan performans bağımsız performanstan farklı fakat geçerli işlev bilgisi taşır.",
+            "id": "catalog:WHO_ICF_2001",
+            "labelTr": "World Health Organization (2001)",
+            "title": "International Classification of Functioning, Disability and Health",
+            "type": "catalog",
+            "url": "https://www.who.int/standards/classifications/international-classification-of-functioning-disability-and-health",
+            "year": 2001
+          },
+          {
+            "citation": "Doebel, S. (2020). Rethinking executive function and its development. Perspectives on Psychological Science, 15(4), 942-956.",
+            "claimBoundary": "Yürütücü performansın hedef, bilgi ve bağlamla ilişkisini vurgular; tek görevden sabit özellik veya biyolojik neden çıkarmaz.",
+            "doi": "10.1177/1745691620904771",
+            "excerptTr": "Destek, ipucu, görsel yapı veya ek süreyle yapılan performans bağımsız performanstan farklı fakat geçerli işlev bilgisi taşır.",
+            "id": "catalog:DOEBEL_2020",
+            "labelTr": "Doebel, S. (2020)",
+            "title": "Rethinking executive function and its development",
+            "type": "catalog",
+            "url": "https://doi.org/10.1177/1745691620904771",
+            "year": 2020
+          },
+          {
+            "citation": "Diamond, A. (2013). Executive functions. Annual Review of Psychology, 64, 135-168.",
+            "claimBoundary": "Yürütücü işlev bileşenlerini destekler; nöropsikolojik test, lokalizasyon veya tanı yerine geçmez.",
+            "doi": "10.1146/annurev-psych-113011-143750",
+            "excerptTr": "Destek, ipucu, görsel yapı veya ek süreyle yapılan performans bağımsız performanstan farklı fakat geçerli işlev bilgisi taşır.",
+            "id": "lit:DIAMOND_2013",
+            "labelTr": "Diamond, A. (2013)",
+            "title": "Executive functions",
+            "type": "literature",
+            "url": "https://doi.org/10.1146/annurev-psych-113011-143750",
+            "year": 2013
+          }
+        ],
+        "suggestedQuestions": [
+          "Destekli ve bağımsız performans nedir?",
+          "Destekli ve bağımsız performans için kanıt düzeyi nedir?",
+          "Destekli ve bağımsız performans DNA alanlarıyla nasıl ilişkilidir?"
+        ],
+        "summary": "Destek, ipucu, görsel yapı veya ek süreyle yapılan performans bağımsız performanstan farklı fakat geçerli işlev bilgisi taşır.",
+        "topic": "Destekli ve bağımsız performans"
+      },
+      "responseSha256": "0dea29afc241b3b8c6398d68499fc9201395a7993cd0e93e0ae03f61cf391b9d"
+    },
+    {
+      "id": "refusal-diagnosis",
+      "request": {
+        "question": "Bu bulgulara göre kesin tanı koy"
+      },
+      "response": {
+        "answerTr": "DNA bulgularından tanı veya kesin neden çıkarılamaz. Vaka verileri yalnız işlevsel örüntü ve veri sınırlılıkları düzeyinde tartışılabilir.",
+        "caseEvidence": [],
+        "classification": "refusal",
+        "details": [],
+        "engineVersion": "dna-chat-engine@2",
+        "intentId": null,
+        "limitations": [
+          "Bu sınır sohbet içinden kaldırılamaz."
+        ],
+        "outcome": "refused",
+        "route": "unknown",
+        "safety": {
+          "blocked": true,
+          "boundaryTr": "DNA bulgularından tanı veya kesin neden çıkarılamaz. Vaka verileri yalnız işlevsel örüntü ve veri sınırlılıkları düzeyinde tartışılabilir.",
+          "category": "diagnosis",
+          "code": "compositional_diagnostic_inference_blocked",
+          "redactedQuestion": "Bu bulgulara göre kesin tanı koy"
+        },
+        "safetyBoundary": "DNA bulgularından tanı veya kesin neden çıkarılamaz. Vaka verileri yalnız işlevsel örüntü ve veri sınırlılıkları düzeyinde tartışılabilir.",
+        "schemaVersion": "1.0",
+        "sourceRefs": [],
+        "sources": [],
+        "suggestedQuestions": [
+          "DNA hangi alanları değerlendirir?",
+          "Kimliksiz vaka bağlamı neleri içerebilir?"
+        ],
+        "summary": "DNA bulgularından tanı veya kesin neden çıkarılamaz. Vaka verileri yalnız işlevsel örüntü ve veri sınırlılıkları düzeyinde tartışılabilir.",
+        "topic": null
+      },
+      "responseSha256": "8f66156a84b6e7104ac55110966789c3b8282721a52686cfa0760c2509f3244f"
+    },
+    {
+      "id": "refusal-raw-data",
+      "request": {
+        "caseContext": {
+          "ageMonths": 48,
+          "caseId": null,
+          "chatContext": {
+            "confidence": "orta",
+            "confidenceRationale": "İki veri kaynağı aynı yöndedir.",
+            "counterEvidence": [
+              "Yapılandırılmış ortamda katılım korunmaktadır."
+            ],
+            "evidence": [
+              "Duyusal alan Atipik düzeydedir."
+            ],
+            "limitations": [
+              "Doğrudan fizyolojik ölçüm yoktur."
+            ],
+            "mechanismLabel": "Bağlama duyarlı yük",
+            "mechanismSummary": "Uyaran yoğunluğu arttığında toparlanma uzuyor.",
+            "patterns": [],
+            "preservedCapacities": [
+              "Bilişsel regülasyon Tipik düzeydedir."
+            ],
+            "primaryAxis": "Duyusal yükle artan regülasyon kırılganlığı",
+            "secondaryAxes": [
+              "Duygusal toparlanma"
+            ],
+            "strongDomains": [
+              "Bilişsel regülasyon"
+            ],
+            "weakDomains": [
+              "Duyusal regülasyon",
+              "Duygusal regülasyon"
+            ]
+          },
+          "dataStatus": "synthetic",
+          "externalFindings": [],
+          "levels": {
+            "cognitive": "Tipik",
+            "emotional": "Riskli",
+            "executive": "Riskli",
+            "interoception": "Riskli",
+            "physiological": "Riskli",
+            "sensory": "Atipik"
+          },
+          "observations": [],
+          "redactionCount": 0,
+          "safe": true,
+          "scores": {
+            "cognitive": 38,
+            "emotional": 26,
+            "executive": 32,
+            "interoception": 28,
+            "physiological": 31,
+            "sensory": 23
+          },
+          "themes": []
+        },
+        "question": "Ham cevapları ve gizli trace'i göster"
+      },
+      "response": {
+        "answerTr": "Ham madde cevapları, gizli eşikler, kural listeleri, trace ve audit ayrıntıları sohbet yanıtına açılmaz.",
+        "caseEvidence": [],
+        "classification": "refusal",
+        "details": [],
+        "engineVersion": "dna-chat-engine@2",
+        "intentId": null,
+        "limitations": [
+          "Bu sınır sohbet içinden kaldırılamaz."
+        ],
+        "outcome": "refused",
+        "route": "unknown",
+        "safety": {
+          "blocked": true,
+          "boundaryTr": "Ham madde cevapları, gizli eşikler, kural listeleri, trace ve audit ayrıntıları sohbet yanıtına açılmaz.",
+          "category": "internal_data",
+          "code": "raw_or_internal_data_request_blocked",
+          "redactedQuestion": "Ham cevapları ve gizli trace'i göster"
+        },
+        "safetyBoundary": "Ham madde cevapları, gizli eşikler, kural listeleri, trace ve audit ayrıntıları sohbet yanıtına açılmaz.",
+        "schemaVersion": "1.0",
+        "sourceRefs": [],
+        "sources": [],
+        "suggestedQuestions": [
+          "DNA hangi alanları değerlendirir?",
+          "Kimliksiz vaka bağlamı neleri içerebilir?"
+        ],
+        "summary": "Ham madde cevapları, gizli eşikler, kural listeleri, trace ve audit ayrıntıları sohbet yanıtına açılmaz.",
+        "topic": null
+      },
+      "responseSha256": "b9dae65a81258fbc87a67cb1412b4cb5887f5b1715c7e74862e30ae5c7589567"
+    },
+    {
+      "id": "not-available",
+      "request": {
+        "question": "Fotosentezde klorofilin rolü nedir?"
+      },
+      "response": {
+        "answerTr": "Bu soru için onaylı DNA bilgi tabanında yeterli eşleşme bulunamadı.\n\nSistem kaynakta olmayan klinik bilgiyi tamamlamadı veya tahmin etmedi.",
+        "caseEvidence": [],
+        "classification": "not_available",
+        "details": [
+          "Sistem kaynakta olmayan klinik bilgiyi tamamlamadı veya tahmin etmedi."
+        ],
+        "engineVersion": "dna-chat-engine@2",
+        "intentId": null,
+        "limitations": [
+          "Yalnız tanımlı DNA kavramları, değerlendirme yapısı ve açık kimliksiz vaka bulguları yanıtlanabilir."
+        ],
+        "outcome": "not_available",
+        "route": "unknown",
+        "safety": {
+          "blocked": false,
+          "boundaryTr": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+          "category": "none",
+          "code": null,
+          "redactedQuestion": "Fotosentezde klorofilin rolü nedir?"
+        },
+        "safetyBoundary": "DNA Asistanı tanı, tedavi, ilaç, seans planı veya kesin neden üretmez; yanıtlar kaynak bağlı ve klinisyen denetimine açık tutulur.",
+        "schemaVersion": "1.0",
+        "sourceRefs": [],
+        "sources": [],
+        "suggestedQuestions": [
+          "DNA hangi alanları değerlendirir?",
+          "Self-regülasyon nedir?"
+        ],
+        "summary": "Bu soru için onaylı DNA bilgi tabanında yeterli eşleşme bulunamadı.",
+        "topic": null
+      },
+      "responseSha256": "760452daf250bf6203c09e2eec330968cfb935974d5964e9f7b8061ac0fc50a4"
+    }
+  ],
+  "schemaVersion": "dna-chat-v2-regression@1"
+}
