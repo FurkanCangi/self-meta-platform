@@ -33,6 +33,8 @@ const appSession = read("src/lib/security/appSession.ts")
 const ownerSecurity = read("src/lib/owner/ownerSecurity.ts")
 const ownerSecurityCore = read("src/lib/owner/ownerSecurityCore.ts")
 const ownerSecurityPage = read("src/app/owner-audit/security/page.tsx")
+const ownerAccess = read("src/lib/owner/ownerAccess.ts")
+const topnav = read("src/app/components/topnav.tsx")
 const sessionBindingMigration = read("supabase/migrations/20260717130825_seal_app_session_cookie_and_bind_auth_session.sql")
 const atomicCleanupMigration = read("supabase/migrations/20260717130827_atomic_security_cleanup.sql")
 const recloseSecurityTablesMigration = read("supabase/migrations/20260717153616_reclose_account_security_tables.sql")
@@ -123,6 +125,25 @@ check(
   registration.includes("hashDeviceApprovalCode") && registration.includes('createHmac("sha256"')
 )
 check("first device is auto trusted", registration.includes("autoTrust = isFirstDevice && Boolean(proof)"))
+check(
+  "owner and explicitly configured accounts skip only device approval",
+  ownerAccess.includes("SECURITY_DEVICE_APPROVAL_EXEMPT_EMAILS") &&
+    ownerAccess.includes("...getOwnerAuditEmails()") &&
+    registration.includes("isDeviceApprovalExemptEmail(user.email) && proof") &&
+    registration.includes('eventType: "approval_exempt_device_trusted"') &&
+    registration.includes("verification_required: approvalExemptDevice ? false : true")
+)
+check(
+  "approval exemption still requires cryptographic device proof",
+  registration.includes("const approvalExemptDevice = Boolean(isDeviceApprovalExemptEmail(user.email) && proof)") &&
+    !registration.includes("isDeviceApprovalExemptEmail(user.email) && !proof")
+)
+check(
+  "owner panel has a persistent top navigation entry",
+  topnav.includes('href="/owner-audit"') &&
+    topnav.includes('aria-label="Yönetici Panelini Aç"') &&
+    topnav.includes("{showOwnerAudit ? (")
+)
 
 check("browser key is P-256", browserIdentity.includes('namedCurve: "P-256"'))
 check("stored private key is non-extractable", browserIdentity.includes("false,\n      [\"sign\", \"verify\"]"))

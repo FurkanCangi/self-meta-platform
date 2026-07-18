@@ -9,6 +9,7 @@ import {
   type VerifiedDeviceProof,
   verifySubmittedDeviceProof,
 } from "@/lib/security/deviceProof"
+import { isDeviceApprovalExemptEmail } from "@/lib/owner/ownerAccess"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
 export const MAX_REGISTERED_DEVICES = 3
@@ -262,6 +263,9 @@ export async function registerAppSessionForUser(
   const metadata = clientMetadata(requestHeaders)
   const deviceType = normalizeDeviceType(input.deviceType)
   const deviceHash = hashDeviceId(user.id, rawDeviceId)
+  // Owners and explicitly listed accounts skip only the six-digit approval
+  // step. A valid, non-extractable P-256 browser key is still mandatory.
+  const approvalExemptDevice = Boolean(isDeviceApprovalExemptEmail(user.email) && proof)
   const lockExemptUser = await isSecurityLockExemptUser(user.id, user.email)
 
   const { data: securityState, error: securityStateError } = await admin
@@ -554,9 +558,31 @@ export async function registerAppSessionForUser(
       return { ok: false, status: "error", error: "device_create_failed", httpStatus: 500 }
     }
     device = created as AccountDeviceRow
+    if (approvalExemptDevice && !autoTrust) {
+      const { data: trustedDevice, error: trustError } = await admin
+        .from("account_devices")
+        .update({
+          verification_required: false,
+          verified_at: verifiedNow,
+          ever_verified_at: verifiedNow,
+        })
+        .eq("id", device.id)
+        .eq("user_id", user.id)
+        .select(deviceSelect)
+        .single()
+      if (trustError || !trustedDevice) {
+        return { ok: false, status: "error", error: "device_auto_trust_failed", httpStatus: 500 }
+      }
+      device = trustedDevice as AccountDeviceRow
+      autoTrust = true
+    }
     await recordAccountSecurityEvent({
       userId: user.id,
-      eventType: autoTrust ? "first_device_trusted" : "new_device_approval_requested",
+      eventType: approvalExemptDevice
+        ? "approval_exempt_device_trusted"
+        : autoTrust
+          ? "first_device_trusted"
+          : "new_device_approval_requested",
       deviceId: device.id,
       ipAddress: metadata.ipAddress,
       userAgent: metadata.userAgent,
@@ -604,7 +630,7 @@ export async function registerAppSessionForUser(
         }
       }
       const availableApprovers = trustedDevices.filter((trusted) => trusted.id !== device?.id)
-      if (availableApprovers.length === 0) {
+      if (!approvalExemptDevice && availableApprovers.length === 0) {
         return {
           ok: false,
           status: "error",
@@ -613,12 +639,16 @@ export async function registerAppSessionForUser(
           httpStatus: 403,
         }
       }
+      const verifiedNow = new Date().toISOString()
       const { error: pendingUpdateError } = await admin
         .from("account_devices")
         .update({
           revoked_at: null,
-          verification_required: true,
-          verified_at: null,
+          verification_required: approvalExemptDevice ? false : true,
+          verified_at: approvalExemptDevice ? verifiedNow : null,
+          ever_verified_at: approvalExemptDevice
+            ? device.ever_verified_at || verifiedNow
+            : device.ever_verified_at,
           public_key_jwk: proof?.publicKeyJwk || null,
           public_key_fingerprint: proof?.publicKeyFingerprint || null,
           verification_method: proof ? "p256_v1" : "legacy_session",
@@ -632,12 +662,43 @@ export async function registerAppSessionForUser(
       if (pendingUpdateError) {
         return { ok: false, status: "error", error: "device_update_failed", httpStatus: 500 }
       }
-      return createApprovalChallenge({
-        admin,
-        userId: user.id,
-        deviceId: device.id,
-        countsAsReplacement,
-      })
+      if (approvalExemptDevice) {
+        const { error: challengeCleanupError } = await admin
+          .from("account_device_verification_challenges")
+          .update({ status: "approved", approved_at: verifiedNow, consumed_at: verifiedNow })
+          .eq("user_id", user.id)
+          .eq("pending_device_id", device.id)
+          .eq("status", "pending")
+        if (challengeCleanupError) {
+          return { ok: false, status: "error", error: "device_approval_cleanup_failed", httpStatus: 500 }
+        }
+        device = {
+          ...device,
+          revoked_at: null,
+          verification_required: false,
+          verified_at: verifiedNow,
+          ever_verified_at: device.ever_verified_at || verifiedNow,
+          public_key_fingerprint: proof?.publicKeyFingerprint || null,
+          verification_method: "p256_v1",
+          last_user_agent: metadata.userAgent,
+          last_ip: metadata.ipAddress,
+        }
+        await recordAccountSecurityEvent({
+          userId: user.id,
+          eventType: "approval_exempt_device_trusted",
+          deviceId: device.id,
+          ipAddress: metadata.ipAddress,
+          userAgent: metadata.userAgent,
+          metadata: { device_type: deviceType, counts_as_replacement: countsAsReplacement },
+        })
+      } else {
+        return createApprovalChallenge({
+          admin,
+          userId: user.id,
+          deviceId: device.id,
+          countsAsReplacement,
+        })
+      }
     }
 
     if (
