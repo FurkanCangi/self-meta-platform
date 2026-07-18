@@ -636,19 +636,27 @@ export default function DeviceManagementPanel({
                   </div>
 
                   {approval.verificationCode ? (
-                    <div className="mt-3 rounded-xl bg-white px-4 py-3 text-center">
-                      <div className="text-xs font-semibold uppercase tracking-wide text-slate-500">Onay kodunuz</div>
+                    <div className="mt-3 rounded-xl border border-amber-300 bg-white px-4 py-4">
+                      <div className="text-center text-sm font-bold text-amber-950">
+                        Bu kodu bu ekrana yazmayın
+                      </div>
+                      <ol className="mt-3 list-decimal space-y-1 pl-5 text-sm leading-6 text-slate-700">
+                        <li>Daha önce kullandığınız güvenilir cihazı açın.</li>
+                        <li>Aynı hesapta Ayarlar → Cihazlarım → Bekleyen cihaz onayları bölümüne gidin.</li>
+                        <li>Aşağıdaki kodu oradaki “Yeni cihazda görünen 6 haneli kod” alanına yazın.</li>
+                      </ol>
+                      <div className="mt-4 text-center text-xs font-semibold uppercase tracking-wide text-slate-500">Yeni cihaz kodu</div>
                       <div className="mt-1 font-mono text-2xl font-bold tracking-[0.3em] text-slate-950">
                         {approval.verificationCode}
                       </div>
-                      <div className="mt-2 text-xs leading-5 text-slate-600">
-                        Mevcut güvenilir cihazınızda Ayarlar → Cihazlarım bölümünü açın ve bu kodu oradaki onay alanına girin.
+                      <div className="mt-3 text-center text-xs leading-5 text-slate-600">
+                        Eski güvenilir cihaza erişemiyorsanız cihaz desteğini kullanın.
                       </div>
                     </div>
                   ) : pending && mode === "active_session" ? (
                     <div className="mt-3 flex flex-col gap-2 sm:flex-row">
-                      <label className="min-w-0 flex-1">
-                        <span className="sr-only">6 haneli onay kodu</span>
+                      <label className="min-w-0 flex-1 text-sm font-semibold text-amber-950">
+                        Yeni cihazda görünen 6 haneli kodu buraya yazın
                         <input
                           value={approvalCodes[challengeId] || ""}
                           onChange={(event) =>
@@ -661,7 +669,7 @@ export default function DeviceManagementPanel({
                           autoComplete="one-time-code"
                           placeholder="6 haneli kod"
                           disabled={approvalBusy}
-                          className="h-10 w-full rounded-xl border border-amber-300 bg-white px-3 font-mono tracking-widest outline-none focus:border-blue-500"
+                          className="mt-2 h-10 w-full rounded-xl border border-amber-300 bg-white px-3 font-mono tracking-widest outline-none focus:border-blue-500"
                         />
                       </label>
                       <button

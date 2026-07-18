@@ -124,19 +124,28 @@ check(
   "approval codes are HMAC hashed",
   registration.includes("hashDeviceApprovalCode") && registration.includes('createHmac("sha256"')
 )
-check("first device is auto trusted", registration.includes("autoTrust = isFirstDevice && Boolean(proof)"))
+check("first device is auto trusted", registration.includes("isFirstDevice && Boolean(proof)"))
 check(
-  "owner and explicitly configured accounts skip only device approval",
+  "owner and explicitly configured accounts skip device friction",
   ownerAccess.includes("SECURITY_DEVICE_APPROVAL_EXEMPT_EMAILS") &&
     ownerAccess.includes("...getOwnerAuditEmails()") &&
-    registration.includes("isDeviceApprovalExemptEmail(user.email) && proof") &&
+    registration.includes("const approvalExemptUser = isDeviceApprovalExemptEmail(user.email)") &&
     registration.includes('eventType: "approval_exempt_device_trusted"') &&
-    registration.includes("verification_required: approvalExemptDevice ? false : true")
+    registration.includes("verification_required: approvalExemptUser ? false : true") &&
+    registration.includes("rotateOldestApprovalExemptDevice") &&
+    registration.includes('p_reason: "approval_exempt_device_rotation"')
 )
 check(
-  "approval exemption still requires cryptographic device proof",
-  registration.includes("const approvalExemptDevice = Boolean(isDeviceApprovalExemptEmail(user.email) && proof)") &&
-    !registration.includes("isDeviceApprovalExemptEmail(user.email) && !proof")
+  "approval exemption also supports legacy browsers without codes",
+  registration.includes("if (isFirstDevice && !proof && !approvalExemptUser)") &&
+    registration.includes("p256Submitted && !proofResult.ok && !approvalExemptUser") &&
+    registration.includes("!approvalExemptUser &&\n      device.verification_method === \"p256_v1\"")
+)
+check(
+  "device approval instructions clearly separate the new and trusted devices",
+  profileDevicesPanel.includes("Bu kodu bu ekrana yazmayın") &&
+    profileDevicesPanel.includes("Daha önce kullandığınız güvenilir cihazı açın") &&
+    profileDevicesPanel.includes("Yeni cihazda görünen 6 haneli kodu buraya yazın")
 )
 check(
   "owner panel has a persistent top navigation entry",
@@ -199,7 +208,8 @@ check(
 )
 check(
   "expired legacy transition falls back to trusted-device approval",
-  registration.includes('existingDevice?.verification_method === "legacy_transition" && !legacyTransitionValid') &&
+  registration.includes("!approvalExemptUser &&\n    !proof &&\n    existingDevice?.verification_method === \"legacy_transition\"") &&
+    registration.includes("!legacyTransitionValid") &&
     registration.includes('verification_method: "legacy_session"') &&
     registration.includes("countsAsReplacement: false")
 )
