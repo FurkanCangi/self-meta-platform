@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 23,
+  "title": "Klinik güvenlik denetimi",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_contract_and_inventory_disposition",
+  "source": {
+    "governanceGitSha": "e915746bedba4e5a243cc4f205f944904c0d5c1a",
+    "implementationVersion": "dna-claim-review-gates@1",
+    "protocolId": "dna-clinical-safety-review@1"
+  },
+  "executionDisposition": {
+    "reviewDimensions": 8,
+    "automaticBlockerClasses": 13,
+    "productionRegisteredReviews": 0,
+    "runtimeEligible": 0
+  },
+  "exitGates": {
+    "diagnosisTreatmentMedicationAndPrognosisBlocked": "passed",
+    "individualBiologicalInferenceBlocked": "passed",
+    "behaviorToBrainOrAutonomicInferenceBlocked": "passed",
+    "ageAndCausalityRiskChecked": "passed",
+    "derivedBlockersCannotBeOmittedByCaller": "passed"
+  },
+  "interpretation": "Klinik güvenlik kapısı fail-closed tamamlandı; review kaydı olmayan içerik güvenli varsayılmaz.",
+  "releaseBoundary": "Tek bir otomatik blocker veya eksik review yayını engeller.",
+  "knownLimitations": ["bu kapı bağımsız klinik validasyon yerine ürün güvenlik sözleşmesidir"],
+  "nextPhase": 24
+}

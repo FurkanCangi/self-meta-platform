@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 27,
+  "title": "Nihai yayın uygunluğu",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_contract_and_inventory_disposition",
+  "source": {
+    "governanceGitSha": "e915746bedba4e5a243cc4f205f944904c0d5c1a",
+    "implementationVersion": "dna-publication-eligibility@1",
+    "schemaId": "dna-publication-eligibility@1"
+  },
+  "executionDisposition": {
+    "mandatoryPublicationGates": 14,
+    "authorizedProductionPublications": 0,
+    "releaseEligibleRealClaims": 0,
+    "runtimeEligible": 0
+  },
+  "exitGates": {
+    "allFourteenGatesRequired": "passed",
+    "gateEvidenceBoundToCandidateHash": "passed",
+    "immutablePublicationDigestRequired": "passed",
+    "callerCannotAuthorizePublication": "passed",
+    "exactClaimPassageSourceReviewTupleRequired": "passed"
+  },
+  "interpretation": "Nihai yayın kapısı tamamlandı; eksiksiz kanıt taşıyan gerçek kayıt olmadığı için production publication registry sıfırdır.",
+  "releaseBoundary": "On dört kapıdan biri eksikse kayıt fail-closed biçimde yayımlanmaz.",
+  "knownLimitations": ["V3 gerçek bilimsel release kaydı yoktur"],
+  "nextPhase": 28
+}

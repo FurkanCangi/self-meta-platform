@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 21,
+  "title": "Yöntem desteği denetimi",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_contract_and_inventory_disposition",
+  "source": {
+    "governanceGitSha": "e915746bedba4e5a243cc4f205f944904c0d5c1a",
+    "implementationVersion": "dna-claim-review-gates@1",
+    "protocolId": "dna-method-support-review@1"
+  },
+  "executionDisposition": {
+    "requiredMethodDimensions": 6,
+    "trustedSourceMethodAppraisals": 0,
+    "productionRegisteredReviews": 0,
+    "runtimeEligible": 0
+  },
+  "exitGates": {
+    "designAndClaimStrengthAligned": "passed",
+    "correlationCausationSeparated": "passed",
+    "measurementSampleAgeAndContextChecked": "passed",
+    "effectAndUncertaintyRequired": "passed",
+    "trustedMethodAppraisalRequired": "passed"
+  },
+  "interpretation": "Yöntem denetimi sözleşmesi tamamlandı; 47 kaynak için gerçek yöntem değerlendirmesi hâlen pending olduğundan üretim review kaydı sıfırdır.",
+  "releaseBoundary": "Yöntem desteği adequate_with_stated_limits olmadan iddia yayımlanamaz.",
+  "knownLimitations": ["47 kaynak için gerçek yöntem değerlendirmesi tamamlanmamıştır"],
+  "nextPhase": 22
+}

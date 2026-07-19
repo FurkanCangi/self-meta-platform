@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 31,
+  "title": "Deterministik retrieval motoru",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_engine_with_empty_real_package",
+  "source": {
+    "governanceGitSha": "e915746bedba4e5a243cc4f205f944904c0d5c1a",
+    "engineVersion": "dna-chat-engine@3",
+    "retrievalVersion": "dna-v3-retrieval@1"
+  },
+  "executionDisposition": {
+    "orderedPipelineStages": 13,
+    "maximumSubquestions": 2,
+    "syntheticBenchmarkP95Ms": 3.989,
+    "v3ReleasedClaims": 0,
+    "v3ApiBound": false,
+    "v2RuntimeChanged": false
+  },
+  "exitGates": {
+    "safetyBeforeRetrieval": "passed",
+    "exactTurkishBm25AndNgramRouting": "passed",
+    "ageEvidenceLicenseAndEntailmentFilters": "passed",
+    "oneHopRelationshipOnly": "passed",
+    "stableThresholdAndTieBreak": "passed",
+    "templatedAnswerAndFinalClaimGuard": "passed",
+    "caseContextIdentityBoundAndFailClosed": "passed",
+    "externalModelEmbeddingVectorDbAndRuntimeInternetAbsent": "passed"
+  },
+  "interpretation": "Deterministik V3 retrieval motoru tamamlandı; gerçek paket boş olduğundan production V3 sonucu not_available ve API bağı kapalıdır.",
+  "releaseBoundary": "Nonempty kanonik paket ve V3 vaka derleyicisi olmadan V3 kullanıcı trafiğine bağlanmaz.",
+  "knownLimitations": ["V3 vaka assembler yoktur", "V3 API entegrasyonu bilinçli olarak yapılmamıştır"],
+  "nextPhase": 32
+}

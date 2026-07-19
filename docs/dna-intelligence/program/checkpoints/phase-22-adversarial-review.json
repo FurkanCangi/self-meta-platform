@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 22,
+  "title": "Karşı kanıt ve adversarial denetim",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_contract_and_inventory_disposition",
+  "source": {
+    "governanceGitSha": "e915746bedba4e5a243cc4f205f944904c0d5c1a",
+    "implementationVersion": "dna-claim-review-gates@1",
+    "protocolId": "dna-adversarial-review@1"
+  },
+  "executionDisposition": {
+    "requiredAdversarialDimensions": 8,
+    "productionRegisteredReviews": 0,
+    "contestedRealClaims": 0,
+    "runtimeEligible": 0
+  },
+  "exitGates": {
+    "counterevidenceAndAlternativeExplanationChecked": "passed",
+    "methodQualityOverridesRecencyAndStudyCount": "passed",
+    "evidenceSetAndSearchCutoffBound": "passed",
+    "materialConflictCannotEnterRuntime": "passed",
+    "unresolvedConflictRequiresPhase25": "passed"
+  },
+  "interpretation": "Adversarial inceleme kapısı tamamlandı; gerçek evidence-set review kaydı bulunmadığı için hiçbir claim clean veya contested olarak üretimde yetkilendirilmedi.",
+  "releaseBoundary": "Çözülemeyen karşı kanıt runtime'a değil conflict set akışına gider.",
+  "knownLimitations": ["gerçek adversarial literature review yürütülmemiştir"],
+  "nextPhase": 23
+}

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 25,
+  "title": "Çelişki kümeleri",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_contract_and_inventory_disposition",
+  "source": {
+    "governanceGitSha": "e915746bedba4e5a243cc4f205f944904c0d5c1a",
+    "implementationVersion": "dna-publication-eligibility@1",
+    "schemaId": "dna-conflict-set@1"
+  },
+  "executionDisposition": {
+    "minimumMembers": 2,
+    "requiredDistinctDirections": 2,
+    "authorizedProductionConflictSets": 0,
+    "runtimeEligible": 0
+  },
+  "exitGates": {
+    "opposingDirectionsRequired": "passed",
+    "evidenceStrengthAndConditionsRecorded": "passed",
+    "unknownAndUnresolvedConflictVisible": "passed",
+    "stableBoundedResponseRequired": "passed",
+    "callerCannotAuthorizeConflictSet": "passed"
+  },
+  "interpretation": "Çelişki kümesi veri modeli ve yayın sınırı tamamlandı; gerçek yetkili conflict set kaydı yoktur.",
+  "releaseBoundary": "Çözülemeyen çatışma kesin bireysel sonuca dönüştürülemez.",
+  "knownLimitations": ["gerçek literatür çatışmaları henüz kümelenmemiştir"],
+  "nextPhase": 26
+}

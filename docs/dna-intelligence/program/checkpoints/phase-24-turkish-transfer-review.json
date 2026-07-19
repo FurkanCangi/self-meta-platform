@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 24,
+  "title": "Türkçe bilimsel aktarım denetimi",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_contract_and_inventory_disposition",
+  "source": {
+    "governanceGitSha": "e915746bedba4e5a243cc4f205f944904c0d5c1a",
+    "implementationVersion": "dna-claim-review-gates@1",
+    "protocolId": "dna-turkish-transfer-review@1"
+  },
+  "executionDisposition": {
+    "controlledTermFamilies": 8,
+    "productionRegisteredReviews": 0,
+    "independentBackTranslations": 0,
+    "runtimeEligible": 0
+  },
+  "exitGates": {
+    "originalEnglishPassageRetained": "passed",
+    "conceptualEquivalenceAndScopeChecked": "passed",
+    "causalStrengthAndModalityPreserved": "passed",
+    "independentBackTranslationRequired": "passed",
+    "sourceTermsCrossChecked": "passed"
+  },
+  "interpretation": "Türkçe aktarım kapısı tamamlandı; gerçek çift yönlü çeviri review kaydı bulunmadığı için hiçbir iddia bu kapıdan geçmiş sayılmaz.",
+  "releaseBoundary": "Onaylı Türkçe anlatım, özgün İngilizce pasaj ve bağımsız ters çeviri olmadan yayımlanamaz.",
+  "knownLimitations": ["gerçek bağımsız ters çeviri review sicili boştur"],
+  "nextPhase": 25
+}

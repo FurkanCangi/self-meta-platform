@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 26,
+  "title": "DNA ilişki sınıflandırması",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_contract_and_inventory_disposition",
+  "source": {
+    "governanceGitSha": "e915746bedba4e5a243cc4f205f944904c0d5c1a",
+    "implementationVersion": "dna-publication-eligibility@1",
+    "schemaId": "dna-relationship-classification@1"
+  },
+  "executionDisposition": {
+    "controlledValues": 7,
+    "defaultValue": null,
+    "authorizedProductionRelationships": 0,
+    "runtimeEligible": 0
+  },
+  "exitGates": {
+    "controlledEnumOnly": "passed",
+    "directRelationIsNotDefault": "passed",
+    "generalScienceCannotValidateProduct": "passed",
+    "productDefinitionAuthoritySeparated": "passed",
+    "externalScienceCannotRewriteProductDefinition": "passed"
+  },
+  "interpretation": "Yedi değerli DNA ilişki sınıflandırması tamamlandı; varsayılan doğrudan bağlantı yoktur ve gerçek yetkili ilişki kaydı sıfırdır.",
+  "releaseBoundary": "DNA ilişkisi açıkça sınıflandırılmadan yayın adayı oluşamaz.",
+  "knownLimitations": ["owner kitabı gelmediği için product_definition bağları yoktur"],
+  "nextPhase": 27
+}

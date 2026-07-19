@@ -21,7 +21,19 @@
     16,
     17,
     18,
-    19
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31
   ],
   "deferredPhases": [
     {
@@ -32,26 +44,25 @@
       "releaseBlocking": true
     }
   ],
-  "currentPhase": 20,
+  "currentPhase": 32,
   "status": "in_progress",
-  "lastCompletedCheckpoint": "docs/dna-intelligence/program/checkpoints/phase-19-claim-reconciliation.json",
+  "lastCompletedCheckpoint": "docs/dna-intelligence/program/checkpoints/phase-31-deterministic-retrieval.json",
   "rollbackTag": "dna-chat-v2-baseline-20260719",
-  "phaseOrderPolicy": "Bir fazın çıkış kapıları geçmeden sonraki faz tamamlanmış sayılmaz. Kullanıcının 2026-07-19 tarihli açık talebiyle Faz 3 owner kitabı gelene kadar deferred tutuldu. Faz 4-19 için completed, fail-closed mühendislik/workflow kapılarının ve gerçek envanter disposition'ının tamamlandığını ifade eder; pending bilimsel korpus kaydını audited veya released yapmaz ve Faz 3 release kapısını açmaz.",
+  "phaseOrderPolicy": "Bir fazın çıkış kapıları geçmeden sonraki faz tamamlanmış sayılmaz. Kullanıcının 2026-07-19 tarihli açık talebiyle Faz 3 owner kitabı gelene kadar deferred tutuldu. Faz 4-31 için completed, fail-closed mühendislik/workflow kapılarının ve ilgili gerçek envanter disposition'ının tamamlandığını ifade eder; pending bilimsel korpus kaydını audited veya released yapmaz ve Faz 3 release kapısını açmaz.",
   "releaseBlockers": [
     "owner_book_not_supplied",
     "owner_approved_product_claim_bindings_missing",
-    "source_integrity_pending_records",
-    "source_integrity_runtime_binding_required_before_first_v3_release",
-    "source_method_appraisals_pending",
-    "claim_level_age_and_population_scope_not_coded",
-    "accepted_source_passage_registry_empty",
-    "blind_extraction_corpus_runs_empty",
-    "reconciled_claim_registry_empty",
-    "v3_audited_candidate_registry_empty",
-    "coverage_release_ready_cells_zero",
-    "gap_full_text_appraisal_pending",
-    "phase20_source_fidelity_not_completed"
+    "source_integrity_pending_40",
+    "source_method_appraisals_pending_47",
+    "accepted_real_passages_zero",
+    "phase20_24_real_review_bundles_zero",
+    "authorized_conflict_relationship_and_publication_records_zero",
+    "legacy_v2_claims_quarantined_239",
+    "v3_static_package_empty",
+    "v3_case_assembler_not_bound",
+    "v3_api_not_bound_until_nonempty_released_package",
+    "coverage_release_ready_cells_zero"
   ],
-  "evidence": "docs/dna-intelligence/program/evidence/phase-10-19-governance-gates.json",
+  "evidence": "docs/dna-intelligence/program/evidence/phase-20-31-governance-gates.json",
   "updatedOn": "2026-07-19"
 }

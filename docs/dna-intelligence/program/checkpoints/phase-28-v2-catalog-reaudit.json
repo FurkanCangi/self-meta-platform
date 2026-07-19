@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 28,
+  "title": "V2 kataloğunun V3 yayın kurallarıyla yeniden denetlenmesi",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "complete_inventory_audit_with_fail_closed_disposition",
+  "source": {
+    "governanceGitSha": "e915746bedba4e5a243cc4f205f944904c0d5c1a",
+    "snapshotVersion": "dna-v2-catalog-reaudit@1",
+    "snapshotSha256": "f22abe41616cc361337127af77714f64afe4f77337e930918172f3bc6b0eafc1"
+  },
+  "executionDisposition": {
+    "auditedClaims": 239,
+    "releaseEligibleClaims": 0,
+    "quarantinedClaims": 239,
+    "totalSources": 160,
+    "sourcesReferencedByClaims": 151,
+    "sourcesUnusedByClaims": 9,
+    "fullyOrphanSources": 7
+  },
+  "exitGates": {
+    "allLegacyLiveClaimsAudited": "passed",
+    "sourceIdsNotTreatedAsPassages": "passed",
+    "expertPendingNotAccepted": "passed",
+    "unusedAndOrphanSourcesEnumerated": "passed",
+    "v2RuntimeUnchanged": "passed"
+  },
+  "interpretation": "239 V2 claimin tamamı denetlendi; gerçek passage ve tamamlanmış review olmadığı için tamamı V3'te karantinaya alındı.",
+  "releaseBoundary": "Karantina bilimsel yanlışlık hükmü değildir; V3 yayın kanıtının eksik olduğunu gösterir.",
+  "knownLimitations": ["V2 kullanıcı deneyimi rollback nesli olarak çalışmaya devam eder"],
+  "nextPhase": 29
+}

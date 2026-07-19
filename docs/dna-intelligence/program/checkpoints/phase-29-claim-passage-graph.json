@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 29,
+  "title": "Claim-passage kanıt grafı",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_contract_and_empty_real_graph",
+  "source": {
+    "governanceGitSha": "e915746bedba4e5a243cc4f205f944904c0d5c1a",
+    "graphVersion": "dna-v3-claim-passage-graph@1"
+  },
+  "executionDisposition": {
+    "graphStages": 7,
+    "maximumRelationHops": 1,
+    "realGraphClaims": 0,
+    "realGraphRelations": 0
+  },
+  "exitGates": {
+    "sourceArtifactPassageClaimRelationTopicAnswerChain": "passed",
+    "everyEdgeHasOwnEvidenceAndHash": "passed",
+    "endpointEvidenceCannotProveRelation": "passed",
+    "multiHopInferenceRejected": "passed",
+    "orphanAndTamperedNodesRejected": "passed"
+  },
+  "interpretation": "Yedi aşamalı, hash bağlı ve tek adımlı graf tamamlandı; yayımlanmış claim olmadığı için gerçek graf bilinçli olarak boştur.",
+  "releaseBoundary": "A ve B'nin ayrı ayrı desteklenmesi A-B ilişkisine kanıt oluşturmaz.",
+  "knownLimitations": ["gerçek graph düğümleri Phase 27 yayınına bağlıdır"],
+  "nextPhase": 30
+}
