@@ -12,9 +12,9 @@ export default function FinalCTA() {
       <div className={styles.panel}>
         <div className={styles.badge}>
           <ShieldCheck size={18} />
-          Deterministik klinik çalışma altyapısı
+          Klinik değerlendirme ve raporlama
         </div>
-        <h2>Değerlendirme sürecinizi daha net, hızlı ve izlenebilir hale getirin.</h2>
+        <h2>Değerlendirme bilgilerinizi tek yerde toplayın, raporunuzu daha kolay hazırlayın.</h2>
         <p>
           {DNA_INTELLIGENCE_PLATFORM_DESCRIPTION_TR} {DNA_INTELLIGENCE_PLATFORM_BOUNDARY_TR}
         </p>
@@ -24,7 +24,7 @@ export default function FinalCTA() {
             <ArrowRight size={20} />
           </Link>
           <Link href="/cozumler" className={styles.secondary}>
-            Kullanım Senaryoları
+            Neler Yapabilirsiniz?
           </Link>
         </div>
       </div>

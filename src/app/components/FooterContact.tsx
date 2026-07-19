@@ -14,10 +14,10 @@ const footerLinks = [
 
 const solutionLinks = [
   "Eğitim Platformu",
-  "Deterministik Örüntü Özeti",
-  "Açıklanabilir Rapor Taslağı",
-  "Terapist Kontrollü Değerlendirme",
-  "Danışan Takip",
+  "Değerlendirme",
+  "Rapor Hazırlama",
+  "Terapist İncelemesi",
+  "Danışan Takibi",
 ];
 
 const socialLinks = [
@@ -34,8 +34,8 @@ export default function FooterContact() {
           <div className={styles.brand}>
             <BrandLogo variant="footer" />
             <p className={styles.brandText}>
-              Dynamic Neuro-Regulation Approach; klinik eğitim, değerlendirme ve uygulama çerçevesi sunar.
-              DNA Intelligence ise değerlendirme verilerini yapılandıran ve terapist incelemesine açık deterministik rapor taslakları sunan ayrı bir dijital platformdur.
+              Dynamic Neuro-Regulation Approach, terapistlere yönelik bir eğitim programıdır.
+              DNA Intelligence ise değerlendirme bilgilerini toplamak, rapor taslağı hazırlamak ve danışan takibini sürdürmek için kullanılan dijital platformdur.
             </p>
           </div>
 

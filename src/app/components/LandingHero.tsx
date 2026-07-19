@@ -9,16 +9,16 @@ export default function LandingHero() {
         <div className={styles.heroInner}>
           <div className={styles.left}>
             <h1 className={styles.h1}>
-              Klinik değerlendirme, skor
+              Değerlendirme, rapor
               <br />
-              ve rapor süreçlerini
+              ve takip işlemlerini
               <br />
               tek panelde yönetin
             </h1>
 
             <p className={styles.p}>
-              DNA Intelligence; yapılandırılmış anamnez, alt boyut skor girişi ve versiyonlu klinik
-              raporlamayı terapist odaklı sade bir akışta birleştirir.
+              Test sonuçlarını, anamnez bilgilerini ve gözlem notlarını aynı yerde toplayın;
+              rapor taslağını hazırlayın ve danışan kayıtlarını takip edin.
             </p>
 
             <div className={styles.ctaRow}>
@@ -31,9 +31,9 @@ export default function LandingHero() {
             </div>
 
             <ul className={styles.bullets}>
-              <li>Tek panelde kayıt, skor ve rapor akışı</li>
-              <li>Terapist kontrolünde klinik işleyiş</li>
-              <li>Versiyonlu ve izlenebilir rapor mantığı</li>
+              <li>Danışan kayıtları, test sonuçları ve raporlar tek yerde</li>
+              <li>Rapor taslağını terapist inceler ve düzenler</li>
+              <li>Önceki raporları ve değişiklikleri görüntüleyin</li>
             </ul>
           </div>
 

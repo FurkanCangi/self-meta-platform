@@ -21,49 +21,49 @@ const educationModules = [
     icon: BookOpen,
     number: "01",
     title: "Temel Model",
-    body: "Dinamik Nöro-Regülasyon Yaklaşımı'nın kuramsal temelleri ve klinik çerçevesi.",
+    body: "Yaklaşımın temel kavramlarını ve klinikte nasıl kullanıldığını öğrenin.",
   },
   {
     icon: SlidersHorizontal,
     number: "02",
     title: "Regülasyon Alanları",
-    body: "İnterosepsiyon, duygusal, duyusal, bilişsel ve yürütücü işlev alanlarını birlikte ele alır.",
+    body: "İnterosepsiyon, duyusal, duygusal, bilişsel ve yürütücü işlev alanlarını birlikte değerlendirin.",
   },
   {
     icon: ClipboardCheck,
     number: "03",
     title: "Değerlendirme Pratiği",
-    body: "Ölçek, anamnez, gözlem ve vaka verisi ile bütüncül değerlendirme.",
+    body: "Test, anamnez ve gözlem bilgilerini bir vaka üzerinde değerlendirin.",
   },
   {
     icon: Target,
     number: "04",
     title: "Müdahale Planlama",
-    body: "Bulgulara dayalı hedefler belirleyin ve müdahale stratejilerinizi planlayın.",
+    body: "Değerlendirme sonuçlarına göre hedef ve müdahale planı hazırlamayı öğrenin.",
   },
   {
     icon: Award,
     number: "05",
     title: "Sertifikasyon ve Uygulama",
-    body: "Öğrendiklerinizi klinik pratiğe entegre edin ve sertifikanızı alın.",
+    body: "Eğitimi ve uygulama çalışmalarını tamamlayarak sertifikanızı alın.",
   },
 ];
 
 const educationHighlights = [
   {
     icon: BookOpen,
-    title: "Kuramsal temel",
-    body: "Yaklaşımın bilimsel temellerini ve klinik çerçevesini öğrenin.",
+    title: "Temel bilgiler",
+    body: "Yaklaşımın temel kavramlarını ve dayandığı bilgileri öğrenin.",
   },
   {
     icon: UsersRound,
-    title: "Vaka temelli öğrenme",
-    body: "Gerçek vaka örnekleriyle klinik düşünme becerilerinizi geliştirin.",
+    title: "Vaka örnekleriyle öğrenme",
+    body: "Vaka örnekleri üzerinden değerlendirme yapmayı öğrenin.",
   },
   {
     icon: SquarePlay,
     title: "Uygulama ve sertifikasyon",
-    body: "Müdahale planlama becerilerinizi uygulayın ve sertifikanızı alın.",
+    body: "Uygulama çalışmalarını tamamlayın ve sertifikanızı alın.",
   },
 ];
 
@@ -103,11 +103,10 @@ export default function TherapistsSection() {
               <GraduationCap size={21} strokeWidth={2.2} />
               EĞİTİM PROGRAMI
             </div>
-            <h2 className={styles.h2}>Önce yaklaşımı öğrenin.</h2>
-            <strong className={styles.subhead}>40 saatlik yapılandırılmış eğitim programı</strong>
+            <h2 className={styles.h2}>Yaklaşımı eğitimle öğrenin.</h2>
+            <strong className={styles.subhead}>40 saatlik eğitim programı</strong>
             <p className={styles.lead}>
-              Dinamik Nöro-Regülasyon Yaklaşımı'nı; teori, vaka örnekleri, klinik düşünme, değerlendirme ve müdahale
-              planlama süreçleri üzerinden bütüncül bir şekilde öğrenin.
+              Yaklaşımın temelini, vaka değerlendirmeyi ve müdahale planlamayı adım adım öğrenin.
             </p>
 
             <div className={styles.noteGrid}>

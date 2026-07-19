@@ -121,7 +121,7 @@ export default function CookieConsent() {
               <div>
                 <div className={styles.modalKicker}>
                   <ShieldCheck size={16} />
-                  KVKK uyumlu tercih yönetimi
+                  Çerezlerinizi seçin
                 </div>
                 <h2 id="cookie-preferences-title">Çerez Tercihleri</h2>
               </div>
@@ -147,7 +147,7 @@ export default function CookieConsent() {
               <label className={styles.preferenceItem}>
                 <div>
                   <strong>Analitik Çerezler</strong>
-                  <p>Site performansını ve kullanım örüntülerini toplulaştırılmış şekilde anlamaya yardımcı olur.</p>
+                  <p>Hangi sayfaların kullanıldığını ve sitenin nasıl çalıştığını anlamamıza yardımcı olur.</p>
                 </div>
                 <input
                   type="checkbox"
@@ -159,7 +159,7 @@ export default function CookieConsent() {
               <label className={styles.preferenceItem}>
                 <div>
                   <strong>Pazarlama Çerezleri</strong>
-                  <p>Tanıtım ve kampanya ölçümleme süreçleri için kullanılabilir. Şu an varsayılan olarak kapalıdır.</p>
+                  <p>Tanıtım ve kampanyaların sonuçlarını ölçmek için kullanılır. Başlangıçta kapalıdır.</p>
                 </div>
                 <input
                   type="checkbox"

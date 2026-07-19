@@ -15,19 +15,19 @@ const orbitItems = [
   {
     className: styles.orbitEmotion,
     title: "Duygusal Regülasyon",
-    text: "Toparlanma, yoğunluk ve geçiş yanıtları",
+    text: "Duygusal yoğunluk, geçişler ve toparlanma",
     tone: "blue",
   },
   {
     className: styles.orbitIntero,
     title: "İnterosepsiyon",
-    text: "İç beden sinyali ve farkındalık",
+    text: "Bedensel sinyaller ve içsel farkındalık",
     tone: "teal",
   },
   {
     className: styles.orbitSomato,
     title: "Somatosensoriyel Sistem",
-    text: "Dokunsal işlemleme ve beden farkındalığı",
+    text: "Dokunmaya verilen tepkiler ve beden farkındalığı",
     tone: "pink",
   },
 ];
@@ -41,17 +41,18 @@ export default function LandingHeroV2() {
         <div className={styles.copy}>
           <div className={styles.badge}>
             <span className={styles.badgeBrand}>DNA Intelligence</span>
-            <span className={styles.badgeSub}>Deterministik klinik çalışma platformu</span>
+            <span className={styles.badgeSub}>Değerlendirme ve rapor hazırlama platformu</span>
           </div>
 
           <h1 className={styles.h1}>
-            Klinik değerlendirmede
-            <span>daha kapsamlı analiz.</span>
+            Değerlendirme bilgilerini tek yerde toplayın.
+            <span>Raporunuzu daha kolay hazırlayın.</span>
           </h1>
 
           <p className={styles.lead}>
             {DNA_INTELLIGENCE_PLATFORM_DESCRIPTION_TR} {DNA_INTELLIGENCE_PLATFORM_BOUNDARY_TR}
-            {" "}Çalışma zamanında haricî LLM veya internetten bilgi arama kullanılmaz.
+            {" "}Anamnez bilgileri, test sonuçları ve gözlem notları tek yerde tutulur; çalışma zamanında
+            haricî LLM veya internetten bilgi arama kullanılmaz.
           </p>
 
           <div className={styles.actions}>

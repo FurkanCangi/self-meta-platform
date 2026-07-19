@@ -10,31 +10,31 @@ const items = [
     icon: ClipboardCheck,
     tone: "purple",
     title: "Değerlendirme",
-    body: "Standartlaştırılmış ölçekler ve deterministik analiz kurallarıyla tutarlı değerlendirme.",
+    body: "Test sonuçlarını, anamnez bilgilerini ve gözlem notlarını aynı yerde görün.",
   },
   {
     icon: Workflow,
     tone: "blue",
-    title: "Klinik Planlama Eğitimi",
-    body: "Eğitim çerçevesiyle vaka düşünme ve müdahale gerekçesi çalışın; yazılım terapi veya seans planı üretmez.",
+    title: "Değerlendirme ve Planlama Eğitimi",
+    body: "Eğitimde vaka değerlendirmeyi ve müdahale planlamayı öğrenin; yazılım terapi veya seans planı üretmez.",
   },
   {
     icon: TrendingUp,
     tone: "mint",
     title: "Gelişim Takibi",
-    body: "Süreç boyunca ilerlemeyi izleyin, gelişimi somut verilerle görün.",
+    body: "Danışanın önceki ve yeni değerlendirmelerini karşılaştırın.",
   },
   {
     icon: FileText,
     tone: "orange",
     title: "Raporlama",
-    body: "Deterministik rapor taslağını oluşturun; terapist incelemesi ve düzenlemesinden sonra paylaşın veya arşivleyin.",
+    body: "Sistem değerlendirme bilgilerinden bir rapor taslağı hazırlar. Taslağı terapist incelemesi ve düzenlemesinden sonra kaydedin veya paylaşın.",
   },
   {
     icon: ScanSearch,
     tone: "pink",
-    title: "Görüntü İşleme",
-    body: "Video ve görsel verileri analiz ederek klinik gözlemleri ölçülebilir sinyallere dönüştürün.",
+    title: "Video ve Görüntü İnceleme",
+    body: "Video kayıtlarını inceleyin ve gözlem notlarınızı değerlendirmeye ekleyin.",
   },
 ];
 
@@ -77,15 +77,15 @@ export default function SolutionsGrid() {
             <span className={styles.pillIcon} />
             Sunduğumuz Çözümler
           </div>
-          <h2 className={styles.h2}>Klinik süreçleri iyileştiren entegre çözümler.</h2>
+          <h2 className={styles.h2}>Değerlendirme, rapor ve takip işlemlerini tek yerden yapın.</h2>
           <p className={styles.lead}>
-            DNA Intelligence değerlendirme, rapor taslağı ve takip verisini tek çalışma alanında düzenler; klinik karar terapiste aittir.
+            Test sonuçları, raporlar ve takip notları aynı yerde tutulur. Son değerlendirmeyi her zaman terapist yapar.
           </p>
         </div>
 
         <div className={styles.stage}>
           <div className={styles.chartPanel} aria-hidden="true">
-            <span>Analiz Skoru</span>
+            <span>Değerlendirme Özeti</span>
             <strong>86/100</strong>
             <div className={styles.miniChart}>
               <i />
@@ -98,7 +98,7 @@ export default function SolutionsGrid() {
           <div className={styles.profilePanel} aria-hidden="true">
             <div className={styles.profileAvatar} />
             <div>
-              <span>Vaka Profili</span>
+              <span>Danışan Özeti</span>
               <i />
               <i />
             </div>

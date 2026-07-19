@@ -9,63 +9,63 @@ import styles from "../../marketing-pages.module.css";
 const clinicalAreas = {
   interosepsiyon: {
     title: "İnterosepsiyon",
-    eyebrow: "DNA Intelligence modeli",
+    eyebrow: "Değerlendirme alanı",
     accent: "#00C8D7",
     icon: HeartPulse,
-    intro: "İç beden sinyallerini fark etme, anlamlandırma ve davranışı buna göre organize etme kapasitesi.",
-    why: "İnterosepsiyon; açlık, susuzluk, tuvalet ihtiyacı, yorgunluk ve bedensel rahatsızlık gibi sinyallerin fark edilmesiyle ilişkilidir. Bu alandaki güçlükler öz bakım, duygu farkındalığı ve günlük rutinlerle birlikte görülebilir; tek başına neden göstermez.",
-    evaluate: "DNA Intelligence modeli, iç beden sinyali farkındalığına dair ölçek yanıtlarını anamnez ve gözlem notlarıyla birlikte değerlendiren klinik eğitim çerçevesi sunar. DNA Intelligence bu bulguları yalnız puan düzeyinde değil, günlük işlevsellik örüntüsü içinde yorumlamaya destek olur.",
-    use: "Terapist, bedensel farkındalık ile davranışsal organizasyon arasındaki ilişkiyi daha net görür. Bu sayede klinik görüşmede hedef alanlar daha somut tartışılabilir.",
+    intro: "Açlık, susuzluk, yorgunluk, ağrı ve tuvalet ihtiyacı gibi beden sinyallerini fark etme ve bu sinyallere uygun davranma becerisi.",
+    why: "Beden sinyallerini fark etmek; öz bakım, duygu farkındalığı ve günlük rutinler için önemlidir. Bu alandaki güçlükler tek başına belirli bir neden veya tanı göstermez.",
+    evaluate: "Test yanıtları, anamnez bilgileri ve gözlem notları birlikte incelenir. Böylece beden sinyallerini fark etme güçlüğünün günlük yaşamda nerelerde ortaya çıktığı anlaşılır.",
+    use: "Terapist, çocuğun beden sinyallerini ne zaman fark ettiğini ve bu sinyallere nasıl karşılık verdiğini aileyle somut örnekler üzerinden konuşabilir.",
   },
   "fizyolojik-regulasyon": {
     title: "Fizyolojik Regülasyon",
-    eyebrow: "DNA Intelligence modeli",
+    eyebrow: "Değerlendirme alanı",
     accent: "#2563EB",
     icon: Activity,
-    intro: "Uyku, uyarılmışlık, enerji düzeyi ve temel bedensel denge süreçlerinin organizasyonu.",
-    why: "Uyku, enerji ve uyarılmışlıkla ilgili gözlemler; öğrenme, oyun ve sosyal etkileşime katılım bağlamında önemlidir. Bu birliktelikler doğrudan fizyolojik ölçüm veya nedensellik göstermez.",
-    evaluate: "Dynamic Neuro-Regulation Approach; uyku, toparlanma, yorgunluk, uyarılmışlık ve rutin toleransına ilişkin gözlemleri birlikte ele alan klinik eğitim çerçevesidir. DNA Intelligence bu kayıtların alan dağılımını görünür kılar; fizyolojik durumu doğrudan ölçmez.",
-    use: "Terapist, uyku, yorgunluk ve rutin gözlemlerini davranışsal bulguların yanında sistematik biçimde inceleyebilir. Platform biyolojik yük veya otonom durum çıkarımı yapmaz; klinik yorum terapiste aittir.",
+    intro: "Uyku, enerji düzeyi, uyanıklık ve günlük rutinlerle ilgili bedensel düzen.",
+    why: "Uyku, yorgunluk ve enerji düzeyi; öğrenmeyi, oyunu ve sosyal katılımı etkileyebilir. Bu gözlemler tek başına fizyolojik bir sorun veya neden göstermez.",
+    evaluate: "Uyku, toparlanma, yorgunluk ve günlük rutinlerle ilgili bilgiler diğer değerlendirme sonuçlarıyla birlikte incelenir. Platform fizyolojik durumu doğrudan ölçmez.",
+    use: "Terapist, uyku ve enerjiyle ilgili gözlemleri davranış ve günlük yaşam bilgileriyle birlikte değerlendirir. Platform biyolojik yük veya otonom durum çıkarımı yapmaz; son yorumu terapist yapar.",
   },
   "duyusal-regulasyon": {
     title: "Duyusal Regülasyon",
-    eyebrow: "DNA Intelligence modeli",
+    eyebrow: "Değerlendirme alanı",
     accent: "#7C3AED",
     icon: Gauge,
-    intro: "Ses, dokunma, hareket, görsel uyaran ve diğer duyusal girdilere verilen yanıtların modülasyonu.",
-    why: "Duyusal regülasyonla ilgili güçlükler günlük yaşamda kaçınma, arayış, dağılma veya yoğun tepkilerle birlikte görülebilir. Aynı davranış farklı işlevsel bağlamlarda oluşabildiği için çok boyutlu değerlendirme gerekir.",
-    evaluate: "Dynamic Neuro-Regulation Approach, duyusal yanıt örüntülerini diğer regülasyon alanlarıyla birlikte ele alan klinik eğitim çerçevesidir. DNA Intelligence alan dağılımını görünür kılar; duyusal zorlanmayı birincil neden veya ikincil sonuç olarak sınıflandırmaz.",
-    use: "Terapist, seans ve ev rutini içinde hangi duyusal koşulların çocuğu zorladığını daha net açıklayabilir. Aile bilgilendirmesi daha somut hale gelir.",
+    intro: "Ses, dokunma, hareket, ışık ve diğer duyusal uyaranlara verilen tepkileri ayarlama becerisi.",
+    why: "Bu alandaki güçlükler kaçınma, sürekli uyaran arama, çabuk dağılma veya yoğun tepki verme şeklinde görülebilir. Aynı davranış farklı koşullarda ortaya çıkabileceği için diğer alanlarla birlikte değerlendirilir.",
+    evaluate: "Duyusal tepkiler; test sonuçları, anamnez bilgileri ve gözlem notlarıyla birlikte incelenir. Bu bilgiler tek başına zorlanmanın nedenini göstermez.",
+    use: "Terapist, çocuğu zorlayan ses, dokunma, hareket veya ortam koşullarını daha somut biçimde açıklayabilir ve aileyle günlük yaşam örnekleri üzerinden konuşabilir.",
   },
   "duygusal-regulasyon": {
     title: "Duygusal Regülasyon",
-    eyebrow: "DNA Intelligence modeli",
+    eyebrow: "Değerlendirme alanı",
     accent: "#7C3AED",
     icon: Zap,
-    intro: "Duygusal yoğunluk, toparlanma süresi, geçişlere yanıt ve stres toleransının düzenlenmesi.",
-    why: "Duygusal regülasyon yalnız davranış kontrolü değildir; beden, çevre ve bilişsel yükle birlikte şekillenir. Klinik değerlendirmede duygusal tepkilerin ne zaman, neyle ve ne kadar sürdüğü önemlidir.",
-    evaluate: "Dynamic Neuro-Regulation Approach, duygusal yanıtları duyusal, fizyolojik ve yürütücü işlev gözlemleriyle birlikte ele alan klinik eğitim çerçevesidir. DNA Intelligence kayıtlı eşlik eden alanları gösterir; neden veya mekanizma belirlemez.",
-    use: "Terapist, aile ve ekip görüşmelerinde duygusal tepkileri daha az etiketleyici, daha işlevsel bir dille tartışabilir. Klinik hipotez platform çıktısı değil, terapistin değerlendirmesidir.",
+    intro: "Yoğun duygularla baş etme, zor bir durumdan sonra sakinleşme ve değişikliklere uyum sağlama becerisi.",
+    why: "Duygusal tepkiler beden durumu, çevre, duyusal yük ve görevin zorluğuyla birlikte değişebilir. Değerlendirmede tepkinin ne zaman başladığı, ne kadar sürdüğü ve çocuğun nasıl sakinleştiği incelenir.",
+    evaluate: "Duygusal tepkiler; duyusal, fizyolojik, bilişsel ve yürütücü alanlardaki sonuçlarla birlikte incelenir. Bu bilgiler tek başına kesin bir neden göstermez.",
+    use: "Terapist, duygusal tepkileri etiketlemek yerine hangi koşullarda ortaya çıktığını ve günlük yaşamı nasıl etkilediğini aile ve ekiple konuşabilir.",
   },
   "bilissel-regulasyon": {
     title: "Bilişsel Regülasyon",
-    eyebrow: "DNA Intelligence modeli",
+    eyebrow: "Değerlendirme alanı",
     accent: "#2563EB",
     icon: Brain,
-    intro: "Dikkati sürdürme, bilişsel yük altında organize kalma ve göreve bağlı kalma kapasitesi.",
-    why: "Bilişsel regülasyon öğrenme ve problem çözmeyle ilişkilidir. Dikkat güçlükleri farklı işlevsel bağlamlarda görülebilir; ölçek örüntüsü duyusal, fizyolojik veya nörobiyolojik neden göstermez.",
-    evaluate: "Dynamic Neuro-Regulation Approach, bilişsel regülasyon bulgularını diğer alanlarla birlikte ele alan klinik eğitim çerçevesidir. DNA Intelligence yüzeydeki dikkatsizliğe eşlik eden kayıtlı alan dağılımını gösterir; kaynağını ayırt etmez.",
-    use: "Terapist, görev sürdürme ve öğrenme ortamındaki zorlanmaları yapılandırılmış bir profil üzerinden tartışabilir. Müdahale önceliğini platform değil terapist belirler.",
+    intro: "Dikkati sürdürme, göreve odaklanma ve zihinsel yük arttığında işi sürdürebilme becerisi.",
+    why: "Bu beceriler öğrenme ve problem çözme için önemlidir. Dikkat güçlükleri farklı koşullarda görülebilir; test sonuçları tek başına güçlüğün nedenini göstermez.",
+    evaluate: "Dikkat ve görevi sürdürmeyle ilgili sonuçlar diğer değerlendirme alanlarıyla birlikte incelenir. Bu sonuçlar dikkatsizliğin nedenini tek başına göstermez.",
+    use: "Terapist, çocuğun hangi görevlerde ve ortamlarda zorlandığını inceler. Önce hangi konunun ele alınacağına terapist karar verir.",
   },
   "yurutucu-islevler": {
     title: "Yürütücü İşlevler",
-    eyebrow: "DNA Intelligence modeli",
+    eyebrow: "Değerlendirme alanı",
     accent: "#00C8D7",
     icon: Route,
-    intro: "Planlama, ketleme, esneklik, geçiş yapabilme ve hedefe yönelik davranışı organize etme becerileri.",
-    why: "Yürütücü işlevler çocuğun günlük aktivitelerde bağımsızlığını ve görev yönetimini etkiler. Bu alan zayıf olduğunda başlama, sürdürme, değiştirme ve tamamlamada zorlanma görülebilir.",
-    evaluate: "DNA Intelligence modeli, yürütücü işlev bulgularını klinik profil içinde konumlandıran klinik eğitim çerçevesidir. DNA Intelligence, planlama ve esneklik gibi becerilerin duyusal, duygusal ve bilişsel alanlarla ilişkisini görünür hale getirir.",
-    use: "Terapist, görev performansındaki zorlanmaları yapılandırılmış bulgular üzerinden tartışabilir. Klinik hedefler ve aileye verilecek öneriler platform tarafından üretilmez; terapist tarafından belirlenir.",
+    intro: "Planlama, işe başlama, durma, esnek davranma, geçiş yapma ve işi tamamlama becerileri.",
+    why: "Bu beceriler günlük işlerde bağımsızlığı ve görev yönetimini etkiler. Güçlük olduğunda çocuk bir işe başlama, sürdürme, değiştirme veya tamamlama sırasında zorlanabilir.",
+    evaluate: "Planlama, esneklik ve görevi tamamlama bilgileri duyusal, duygusal ve bilişsel sonuçlarla birlikte incelenir. Bu bilgiler tek başına zorlanmanın nedenini göstermez.",
+    use: "Terapist, görev sırasında nerede zorlanıldığını aile ve ekiple somut örnekler üzerinden konuşabilir. Hedefleri ve önerileri terapist belirler.",
   },
 } as const;
 
@@ -109,18 +109,18 @@ export default async function ClinicalAreaPage({ params }: PageProps) {
             <div className={styles.icon}>
               <Layers3 size={30} strokeWidth={2} />
             </div>
-            <h3>DNA Intelligence modeli bu alanı nasıl değerlendirir?</h3>
+            <h3>Değerlendirmede hangi bilgiler kullanılır?</h3>
             <p>{area.evaluate}</p>
           </article>
         </section>
 
         <section className={styles.section}>
           <article className={styles.callout}>
-            <h2>Klinik kullanımda ne sağlar?</h2>
+            <h2>Terapiste nasıl yardımcı olur?</h2>
             <p>{area.use}</p>
             <div className={styles.actions}>
-              <Link className={styles.primary} href="/cozumler">Çözümleri İncele</Link>
-              <Link className={styles.secondary} href="/iletisim">İletişime Geç</Link>
+              <Link className={styles.primary} href="/cozumler">Çözümleri incele</Link>
+              <Link className={styles.secondary} href="/iletisim">İletişime geç</Link>
             </div>
           </article>
         </section>

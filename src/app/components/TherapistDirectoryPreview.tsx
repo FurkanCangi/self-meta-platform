@@ -47,10 +47,10 @@ export default function TherapistDirectoryPreview() {
             <UsersRound size={18} />
             Terapist Bul
           </div>
-          <h2>Eğitimi tamamlayan uzmanları şehir bazlı keşfedin.</h2>
+          <h2>Eğitimi tamamlayan terapistleri bulun.</h2>
           <p>
-            DNA eğitimini tamamlayan, public görünürlük izni olan ve onay süreci tamamlanan uzmanlar Terapist Bul
-            dizininde listelenir.
+            Şehir, meslek ve uzmanlık alanına göre arama yapın. Listede yalnızca eğitimini tamamlayan ve bilgilerinin
+            yayımlanmasına izin veren terapistler yer alır.
           </p>
 
           <div className={styles.stats}>
@@ -81,7 +81,7 @@ export default function TherapistDirectoryPreview() {
                 </Link>
               ))
             ) : (
-              <span className={styles.emptyCity}>Onaylı terapistler eklendikçe şehirler burada görünecek.</span>
+              <span className={styles.emptyCity}>Terapistler eklendikçe şehirler burada görünecek.</span>
             )}
           </div>
 
@@ -103,7 +103,7 @@ export default function TherapistDirectoryPreview() {
               ))
             ) : (
               <div className={styles.empty}>
-                İlk onaylı terapistler eklendiğinde burada kısa bir ön izleme gösterilecek.
+                İlk terapistler eklendiğinde burada kısa bir liste göreceksiniz.
               </div>
             )}
           </div>

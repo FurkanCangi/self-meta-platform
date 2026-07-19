@@ -78,7 +78,7 @@ export default function ContactForm() {
         </span>
         <span>
           <strong>Mesajınızı bize iletin</strong>
-          <small>Konunuzu paylaşın, doğru ekip size dönüş yapsın.</small>
+          <small>Konunuzu yazın; size en kısa sürede dönüş yapalım.</small>
         </span>
       </div>
 

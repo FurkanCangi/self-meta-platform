@@ -21,7 +21,7 @@ const included = [
   "40 saatlik DNA Intelligence eğitim programı",
   "Sertifika programı",
   "Platform erişimi",
-  "5 deterministik klinik rapor hakkı",
+  "5 rapor hakkı",
   "Eğitim güncellemelerine erişim",
 ];
 
@@ -48,7 +48,7 @@ export default function FiyatlandirmaPage() {
             <div className={styles.label} lang="en">DNA INTELLIGENCE SATIN ALMA</div>
             <h1>DNA Intelligence eğitim programına kayıt olun.</h1>
             <p>
-              İlk satın alım yalnızca 40 saatlik eğitim, platform erişimi, sertifika ve 5 deterministik klinik rapor hakkını içeren sabit programdır.
+              İlk satın alım; 40 saatlik eğitimi, platform erişimini, sertifikayı ve 5 rapor hakkını içeren tek seferlik program kaydıdır.
             </p>
             <div className={styles.highlightGrid}>
               {highlights.map(({ title, icon: Icon }) => (
@@ -81,7 +81,7 @@ export default function FiyatlandirmaPage() {
             </ul>
             <div className={styles.secureNote}>
               <LockKeyhole size={15} />
-              Güvenli ödeme altyapısı
+              Güvenli ödeme
             </div>
           </aside>
         </section>

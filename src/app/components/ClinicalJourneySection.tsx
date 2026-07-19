@@ -15,28 +15,28 @@ const journeySteps = [
   {
     number: "01",
     title: "Değerlendirme",
-    description: "Ölçek, anamnez ve klinik notlardan gelen veriyi tek yapıda düzenleyin.",
+    description: "Test sonuçlarını, anamnez bilgilerini ve klinik notları aynı yerde toplayın.",
     icon: ClipboardCheck,
     preview: "assessment",
   },
   {
     number: "02",
-    title: "Örüntü",
-    description: "Dağınık bulgular arasındaki tekrarları ve alan ilişkilerini görünür kılın.",
+    title: "Sonuçları karşılaştırma",
+    description: "Zorlanılan alanları ve daha güçlü performans gösterilen alanları karşılaştırın.",
     icon: ScanSearch,
     preview: "pattern",
   },
   {
     number: "03",
-    title: "Bulguları gözden geçirme",
-    description: "Göreli zorlanma ve korunmuş kapasite alanlarını inceleyin; klinik önceliği terapist belirler.",
+    title: "Terapist kontrolü",
+    description: "Sonuçları bütün olarak inceleyin; klinik önceliği terapist belirler.",
     icon: Target,
     preview: "priority",
   },
   {
     number: "04",
     title: "Rapor ve takip",
-    description: "İncelenmiş bulguları okunabilir rapora taşıyın ve terapistin belirlediği takip göstergelerini kaydedin.",
+    description: "Rapor taslağını inceleyip düzenleyin. Takipte kullanacağınız notları kaydedin.",
     icon: FileCheck2,
     preview: "report",
   },
@@ -118,12 +118,12 @@ export default function ClinicalJourneySection() {
       <div className={styles.inner}>
         <div className={styles.eyebrow}>
           <Route size={18} strokeWidth={2.2} />
-          Klinik yolculuk
+          Değerlendirmeden rapora
         </div>
 
         <header className={styles.header}>
-          <h2 id="clinical-journey-title">Dağınık veriden incelenebilir bulgu taslağına.</h2>
-          <p>Değerlendirme verisini düzenleyin, alan dağılımını görün ve klinik kararı kendi incelemenizle verin.</p>
+          <h2 id="clinical-journey-title">Test, anamnez ve gözlem bilgilerini birlikte değerlendirin.</h2>
+          <p>Sistem bilgileri tek yerde toplar ve rapor taslağı hazırlar. Terapist sonuçları inceler ve son kararını verir.</p>
         </header>
 
         <div className={styles.journey}>
@@ -154,7 +154,7 @@ export default function ClinicalJourneySection() {
         <div className={styles.actionRow}>
           <Link href="/dna-nedir/degerlendirme-sistemi" className={styles.action}>
             <ChartNoAxesColumnIncreasing size={19} strokeWidth={2.2} />
-            Örnek akışı incele
+            Nasıl çalıştığını görün
             <ArrowRight size={20} strokeWidth={2.3} />
           </Link>
         </div>
