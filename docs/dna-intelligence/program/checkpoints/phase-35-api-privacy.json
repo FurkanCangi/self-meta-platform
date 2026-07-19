@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 35,
+  "title": "API ve mahremiyet",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "production_api_privacy_and_ownership_contract",
+  "source": {
+    "implementationGitSha": "30c5d2a0375e5355731797ad7f4f69cb0930145e",
+    "engineCodeHash": "a8d165bb72484cc401a52b60bda640ba3e338023904a48b1a41a09de8a60524d",
+    "engineSourceClosureCount": 105
+  },
+  "executionDisposition": {
+    "maximumBodyBytes": 8192,
+    "cacheControl": "private_no_store",
+    "ownershipChain": "owner_client_assessment_report",
+    "foreignAndMissingReportStatus": 404,
+    "caseAuditFailureStatus": 503,
+    "externalModelOrRuntimeInternet": false
+  },
+  "exitGates": {
+    "strictPayloadSchema": "passed",
+    "sameOriginAndSession": "passed",
+    "theorySkipsReportRead": "passed",
+    "ownershipIsolation": "passed_static_and_api_contract",
+    "auditMetadataMinimization": "passed",
+    "publicInternalFieldLeak": "zero_in_contract_tests",
+    "mockApiP95Ms": 17.866
+  },
+  "releaseBoundary": "Gerçek çapraz hesap canlı doğrulaması sonraki canlı yayın kapısında yeniden çalıştırılmalıdır.",
+  "nextPhase": 36
+}

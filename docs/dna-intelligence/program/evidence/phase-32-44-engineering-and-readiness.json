@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "dna-intelligence-phase-evidence@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phases": [32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44],
+  "generatedAt": "2026-07-19T21:24:28+03:00",
+  "sourceGitSha": "30c5d2a0375e5355731797ad7f4f69cb0930145e",
+  "sourceTreeSha": "66b9c92fe38b9de65b2a306168335bbd5e6695cd",
+  "branch": "codex/dna-intelligence-v3",
+  "phaseDisposition": {
+    "completedEngineeringPhases": [32, 33, 34, 35, 36, 37],
+    "currentPhase": 38,
+    "phase38": "blocked_0_of_2400",
+    "phase39": "not_entered_0_of_10000",
+    "phases40To44": "engineering_gates_ready_not_executed_due_phase_order",
+    "currentRuntimeGeneration": "v2_legacy",
+    "v3Activation": "release_attestation_gated"
+  },
+  "productionCapabilities": {
+    "responseProfiles": ["short", "standard", "deep"],
+    "sourceLimits": {"short": 2, "standard": 4, "deep": 8},
+    "claimPassageCitationBinding": true,
+    "safeCaseOnlyAnswer": true,
+    "mixedCaseTheoryAnswer": true,
+    "modernBasicLegacyCaseContexts": true,
+    "strictApiPrivacy": true,
+    "singleResponsiveChatUi": true,
+    "sourceAndAnswerFeedback": true
+  },
+  "evaluationEngineering": {
+    "developmentQuestions": 1856,
+    "developmentFamilies": 1756,
+    "lockedBenchmarkTarget": 2400,
+    "lockedBenchmarkActual": 0,
+    "variationBankMinimum": 10000,
+    "variationBankActual": 0,
+    "variationKinds": 12,
+    "criticalSafetyFamilies": 19,
+    "caseScenarios": 12,
+    "engineSourceClosure": "105_of_105",
+    "sourceListSha256": "ea7f7cedd01e245077ba412d66056da50207894fca255638ccfb9dfb83c0b5b3",
+    "engineCodeHash": "a8d165bb72484cc401a52b60bda640ba3e338023904a48b1a41a09de8a60524d"
+  },
+  "releaseThresholds": {
+    "overallRoutingMinimum": 0.95,
+    "minimumCategoryRecall": 0.90,
+    "recallAt10Minimum": 0.97,
+    "ndcgAt5Minimum": 0.90,
+    "clarificationAccuracyMinimum": 1.0,
+    "unsupportedMaterialAnswerMaximum": 0,
+    "falseSafeRefusalMaximum": 0.05,
+    "transformedPerformanceLossMaximum": 0.02,
+    "materialClaimCoverage": 1.0,
+    "claimPassageEntailment": 1.0,
+    "criticalSafetyFamilyAccuracy": 1.0
+  },
+  "verificationGates": {
+    "adversarialCodeQualityAudit": "passed_no_p0_or_p1",
+    "governanceV3WithResearchSsd": "passed",
+    "v3Package": "passed_empty_fail_closed",
+    "v3Retrieval": "passed_p95_4_164_ms",
+    "evaluationEngineering": "passed_current_phases_41_44_not_ready",
+    "runtimeReleaseGate": "passed_v2_fallback_and_forged_inputs_blocked",
+    "api": "passed_mock_p95_17_866_ms",
+    "security": "passed_341_unique_live_refusals",
+    "legacyQuality": "passed_120_of_120",
+    "legacyReasoning": "passed_96_61_percent_overall_98_42_percent_supported_holdout_100_percent_safety",
+    "legacyDeterminism": "passed",
+    "legacyCatalog": "passed_118_topics_239_claims_166_relations_160_sources",
+    "legacyRawReview": "passed_20_packs_2703_records_expert_pending",
+    "chatForbiddenImports": "passed_99_graph_files_no_external_model_or_runtime_network",
+    "reportPrivacy": "passed",
+    "reportDeterminism": "passed_10_of_10",
+    "reportForbiddenImports": "passed_38_files",
+    "securitySmoke": "passed",
+    "securityReadiness": "passed",
+    "typecheck": "passed",
+    "lint": "passed",
+    "cleanCommitIntendedUse": "passed_9_supported_10_prohibited",
+    "cleanCommitBuild": "passed_next_16_2_9_webpack"
+  },
+  "releaseCandidateCheck": {
+    "status": "no_go_expected",
+    "exitCode": 1,
+    "reason": "evaluation_artifact_missing",
+    "missingPath": "/Volumes/ResearchSSD/Datasets/DNA-Intelligence/evaluation/v3/locked-benchmark/questions.json"
+  },
+  "visualQa": {
+    "component": "production_DnaAssistantClient",
+    "viewports": [390, 768, 1440],
+    "themes": ["light", "dark"],
+    "horizontalOverflow": 0,
+    "visibleTouchTargetsBelow44Px": 0,
+    "keyboardAndAriaSemantics": "passed",
+    "authenticatedLiveReportInteraction": "not_repeated_in_this_phase"
+  },
+  "releaseBlockers": [
+    "owner_book_not_supplied",
+    "owner_approved_product_claim_bindings_missing",
+    "accepted_real_passages_zero",
+    "phase20_24_real_review_bundles_zero",
+    "v3_static_package_empty",
+    "v3_release_attestation_absent",
+    "locked_benchmark_0_of_2400",
+    "variation_bank_0_of_10000",
+    "phase41_44_observations_absent",
+    "independent_human_evaluation_not_commissioned"
+  ],
+  "limitations": [
+    "Faz 32-37 tamamlanması ürün ve değerlendirme mühendisliğinin tamamlanmasıdır; Faz 38-44 gerçek sonuçlarının geçtiği anlamına gelmez.",
+    "V3 gerçek bilimsel paketi boş olduğundan üretim güvenli biçimde V2 legacy neslini kullanır.",
+    "2.400 kilitli soru ve 10.000 varyasyon henüz yazılmadı, gözden geçirilmedi veya mühürlenmedi.",
+    "Bağımsız insan değerlendirmesi yapılmadı; bu çalışma klinik validasyon olarak pazarlanamaz.",
+    "Faz 3 DNA owner kitabı beklenmektedir."
+  ],
+  "worktreeBoundary": {
+    "implementationVerification": "clean_detached_worktree_at_30c5d2a0375e5355731797ad7f4f69cb0930145e",
+    "unrelatedUserChangesPreservedAndExcluded": true,
+    "researchSsdRequiredNoLocalFallback": true,
+    "rawEvaluationPayloadAddedToRepo": false
+  }
+}

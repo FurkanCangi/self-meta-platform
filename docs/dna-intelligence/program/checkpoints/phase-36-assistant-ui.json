@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 36,
+  "title": "Tek sohbet arayüzü",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "responsive_accessible_ui_and_production_conversation_policy",
+  "source": {
+    "implementationGitSha": "30c5d2a0375e5355731797ad7f4f69cb0930145e",
+    "conversationPolicy": "dna-chat-conversation-policy@1"
+  },
+  "executionDisposition": {
+    "singleChatSurface": true,
+    "responseProfileControl": true,
+    "sourceAndAnswerFeedback": true,
+    "reportSelectionExactlyOnce": true,
+    "conversationResetOnReportChange": true
+  },
+  "exitGates": {
+    "keyboardAndScreenReaderSemantics": "passed",
+    "minimumTouchTargetPx": 44,
+    "ariaLive": "passed",
+    "lightAndDarkTheme": "passed_visual_qa",
+    "viewport390": "passed_no_horizontal_overflow",
+    "viewport768": "passed_no_horizontal_overflow",
+    "viewport1440": "passed_no_horizontal_overflow",
+    "reportDoubleSelectionRace": "passed_production_policy_test"
+  },
+  "verificationBoundary": "Görsel QA gerçek üretim bileşeniyle yerel geçici rota üzerinden yapıldı; kimlik doğrulamalı canlı rapor etkileşimi bu fazda yeniden çalıştırılmadı.",
+  "nextPhase": 37
+}

@@ -33,7 +33,13 @@
     28,
     29,
     30,
-    31
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37
   ],
   "deferredPhases": [
     {
@@ -44,11 +50,11 @@
       "releaseBlocking": true
     }
   ],
-  "currentPhase": 32,
+  "currentPhase": 38,
   "status": "in_progress",
-  "lastCompletedCheckpoint": "docs/dna-intelligence/program/checkpoints/phase-31-deterministic-retrieval.json",
+  "lastCompletedCheckpoint": "docs/dna-intelligence/program/checkpoints/phase-37-evaluation-governance.json",
   "rollbackTag": "dna-chat-v2-baseline-20260719",
-  "phaseOrderPolicy": "Bir fazın çıkış kapıları geçmeden sonraki faz tamamlanmış sayılmaz. Kullanıcının 2026-07-19 tarihli açık talebiyle Faz 3 owner kitabı gelene kadar deferred tutuldu. Faz 4-31 için completed, fail-closed mühendislik/workflow kapılarının ve ilgili gerçek envanter disposition'ının tamamlandığını ifade eder; pending bilimsel korpus kaydını audited veya released yapmaz ve Faz 3 release kapısını açmaz.",
+  "phaseOrderPolicy": "Bir fazın çıkış kapıları geçmeden sonraki faz tamamlanmış sayılmaz. Kullanıcının 2026-07-19 tarihli açık talebiyle Faz 3 owner kitabı gelene kadar deferred tutuldu. Faz 4-37 için completed, fail-closed mühendislik/workflow kapılarının ve ilgili gerçek envanter disposition'ının tamamlandığını ifade eder; pending bilimsel korpus kaydını audited veya released yapmaz ve Faz 3 release kapısını açmaz. Faz 38 gerçek 2.400 soruluk kilitli payload olmadığı için current kalır; Faz 39-44 mühendislik kapıları hazır olsa da sıraya göre tamamlanmış sayılmaz.",
   "releaseBlockers": [
     "owner_book_not_supplied",
     "owner_approved_product_claim_bindings_missing",
@@ -59,10 +65,25 @@
     "authorized_conflict_relationship_and_publication_records_zero",
     "legacy_v2_claims_quarantined_239",
     "v3_static_package_empty",
-    "v3_case_assembler_not_bound",
-    "v3_api_not_bound_until_nonempty_released_package",
-    "coverage_release_ready_cells_zero"
+    "v3_release_attestation_absent",
+    "coverage_release_ready_cells_zero",
+    "locked_benchmark_0_of_2400",
+    "variation_bank_0_of_10000",
+    "phase41_44_observations_absent",
+    "independent_human_evaluation_not_commissioned"
   ],
-  "evidence": "docs/dna-intelligence/program/evidence/phase-20-31-governance-gates.json",
+  "runtimeStatus": {
+    "currentGeneration": "v2_legacy",
+    "v3Activation": "release_attestation_gated",
+    "engineSourceClosure": "105_of_105",
+    "engineCodeHash": "a8d165bb72484cc401a52b60bda640ba3e338023904a48b1a41a09de8a60524d"
+  },
+  "evaluationStatus": {
+    "lockedBenchmark": "0_of_2400",
+    "variationBank": "0_of_10000",
+    "phases41To44": "not_ready",
+    "independentEvaluation": "not_commissioned"
+  },
+  "evidence": "docs/dna-intelligence/program/evidence/phase-32-44-engineering-and-readiness.json",
   "updatedOn": "2026-07-19"
 }

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 37,
+  "title": "Test veri yönetişimi",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "three_pool_governance_and_fail_closed_release_infrastructure",
+  "source": {
+    "implementationGitSha": "30c5d2a0375e5355731797ad7f4f69cb0930145e",
+    "evaluationGovernance": "dna-evaluation-governance@1",
+    "engineCodeHash": "a8d165bb72484cc401a52b60bda640ba3e338023904a48b1a41a09de8a60524d"
+  },
+  "executionDisposition": {
+    "developmentRegressionQuestions": 1856,
+    "developmentSemanticFamilies": 1756,
+    "lockedInternalQuestions": 0,
+    "independentEvaluation": "not_commissioned",
+    "claimableAsIndependentClinicalValidation": false
+  },
+  "exitGates": {
+    "developmentPoolVersioned": "passed",
+    "lockedPoolSealAndNoTuningContract": "passed",
+    "developmentLockedSemanticLeakageGuard": "passed",
+    "evaluationRunEngineAndPackageHashBinding": "passed",
+    "missingEvaluationDataFailsClosed": "passed",
+    "independentValidationMarketingGuard": "passed"
+  },
+  "releaseBoundary": "AI tarafından hazırlanmış kilitli set güçlü bir mühendislik testidir; bağımsız klinik validasyon değildir.",
+  "nextPhase": 38
+}

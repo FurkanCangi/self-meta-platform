@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 34,
+  "title": "Vaka ve teori birleştirme",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "production_bound_safe_case_only_and_mixed_assembler",
+  "source": {
+    "implementationGitSha": "30c5d2a0375e5355731797ad7f4f69cb0930145e",
+    "mixedAnswerContract": "dna-v3-mixed-case-theory-contract@1",
+    "caseContextVersion": "dna-chat-context@1"
+  },
+  "executionDisposition": {
+    "requiredSections": 6,
+    "supportedSnapshotGenerations": ["dna_chat_context_v1", "structured_basic_v0", "legacy_camelcase_v0"],
+    "rawClinicalTextConsumed": false,
+    "maximumRelationHops": 1
+  },
+  "exitGates": {
+    "caseAndScienceAuthorityPartition": "passed",
+    "mandatoryBiologicalMeasurementBoundary": "passed",
+    "missingAndCounterEvidenceSections": "passed",
+    "ageCompatibilityFilter": "passed",
+    "legacyBasicModernLineageBinding": "passed",
+    "rawSnapshotAndAnamnesisLeak": "zero_in_contract_tests"
+  },
+  "releaseBoundary": "Bu rapor biyolojik mekanizmayı doğrudan ölçmez; rapor bulguları genel literatürle birlikte fakat ondan ayrı değerlendirilmelidir.",
+  "nextPhase": 35
+}

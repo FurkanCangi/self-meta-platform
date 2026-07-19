@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 32,
+  "title": "Esnek cevap profilleri",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "production_bound_fail_closed_response_profiles",
+  "source": {
+    "implementationGitSha": "30c5d2a0375e5355731797ad7f4f69cb0930145e",
+    "engineVersion": "dna-chat-engine@3",
+    "profileContract": "dna-v3-response-profile-contract@1"
+  },
+  "executionDisposition": {
+    "profiles": ["short", "standard", "deep"],
+    "maximumSources": {"short": 2, "standard": 4, "deep": 8},
+    "naturalLanguageProfileSelection": true,
+    "chainOfThoughtExposed": false
+  },
+  "exitGates": {
+    "profileSourceCaps": "passed",
+    "naturalLanguageCues": "passed",
+    "conflictingCueSafeFallback": "passed",
+    "approvedClaimOnlyExpansion": "passed",
+    "determinism": "passed"
+  },
+  "releaseBoundary": "Derin profil yalnız daha fazla yayımlanabilir iddia ve kaynak gösterir; gizli düşünme izi üretmez.",
+  "nextPhase": 33
+}

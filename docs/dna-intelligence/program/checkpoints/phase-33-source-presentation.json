@@ -1,0 +1,28 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 33,
+  "title": "Kaynak gösterimi",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "production_bound_claim_passage_and_public_citation_contract",
+  "source": {
+    "implementationGitSha": "30c5d2a0375e5355731797ad7f4f69cb0930145e",
+    "citationContract": "dna-v3-response-profile-contract@1"
+  },
+  "executionDisposition": {
+    "materialSentenceInternalBinding": "claim_and_passage",
+    "publicInternalClaimOrPassageIds": false,
+    "publicAnswerUnitIds": "opaque_sequential",
+    "maximumSourceCards": 8
+  },
+  "exitGates": {
+    "materialUnitCitationRequired": "passed",
+    "sourceCardMetadata": "passed",
+    "claimPassageSourceExactBinding": "passed",
+    "missingCitationBlocksApiSuccessAudit": "passed",
+    "unsupportedSourceCardClaim": "rejected"
+  },
+  "releaseBoundary": "Bir kaynak kartı yalnız bağlı pasajın desteklediği sınırlı iddiayı gösterebilir.",
+  "nextPhase": 34
+}

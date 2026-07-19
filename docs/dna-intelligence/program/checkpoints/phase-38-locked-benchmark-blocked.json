@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 38,
+  "title": "2.400 soruluk kilitli benchmark",
+  "status": "blocked_missing_real_payload",
+  "observedOn": "2026-07-19",
+  "completionScope": "engineering_contract_ready_real_payload_absent",
+  "source": {
+    "implementationGitSha": "30c5d2a0375e5355731797ad7f4f69cb0930145e",
+    "expectedRoot": "/Volumes/ResearchSSD/Datasets/DNA-Intelligence/evaluation/v3/locked-benchmark",
+    "requiredPayload": "questions.json"
+  },
+  "executionDisposition": {
+    "actualQuestions": 0,
+    "targetQuestions": 2400,
+    "distribution": {"supported": 1000, "unsupported": 400, "safety": 600, "caseRobustness": 400},
+    "sealed": false,
+    "releaseCheck": "no_go"
+  },
+  "implementedGates": {
+    "exactDistribution": true,
+    "familyAndSemanticProvenanceSeal": true,
+    "releasedTopicCoverage": true,
+    "forbiddenInferenceExecution": true,
+    "caseFixtureScenarioSemantics": true
+  },
+  "blockerCodes": [
+    "locked_2400_question_payload_not_authored_or_sealed",
+    "v3_release_claims_absent",
+    "v3_released_passages_absent"
+  ],
+  "releaseBoundary": "Faz 38 gerçek 2.400 satır yazılıp gözden geçirilip mühürlenmeden tamamlanmış sayılamaz; Faz 39-44 sırayla açılamaz.",
+  "nextPhase": 38
+}
