@@ -13,10 +13,10 @@ export default function ArastirmaPage() {
       <main className={styles.main}>
         <section className={styles.hero}>
           <div className={styles.eyebrow}>Araştırma</div>
-          <h1>Bilimsel notlar, metodolojik destek ve ortak araştırma alanı.</h1>
+          <h1>Araştırma sorunuzu belirleyin, doğru yöntemi seçin ve sonuçları güvenilir kaynaklarla değerlendirin.</h1>
           <p>
-            Araştırma alanı; klinik uygulamaya dönük literatür notları, akademik iş birlikleri, tez ve proje desteği
-            ile çok merkezli veri üretimini ürün geliştirme gündeminden ayrı bir bilimsel çerçevede toplar.
+            Araştırma özetlerini inceleyebilir; tez, proje, iş birliği ve farklı merkezlerden veri toplama konularında
+            nasıl destek alabileceğinizi görebilirsiniz.
           </p>
         </section>
 
@@ -35,7 +35,7 @@ export default function ArastirmaPage() {
                 <h3>{eyebrow}</h3>
                 <p>{description}</p>
                 <span className={styles.cardAction}>
-                  Detayları İncele
+                  Sayfayı aç
                   <ArrowRight size={17} strokeWidth={2.1} />
                 </span>
               </Link>
@@ -44,14 +44,14 @@ export default function ArastirmaPage() {
         </section>
 
         <section className={styles.callout}>
-          <h2>Araştırma sürecinizi bilimsel ve etik bir çerçevede yapılandıralım.</h2>
+          <h2>Araştırmanızın hangi aşamasında desteğe ihtiyaç duyduğunuzu birlikte belirleyelim.</h2>
           <p>
-            Literatür değerlendirmesi, yöntem planı, iş birliği modeli ve veri ağı çalışmaları için kontrollü bir
-            araştırma zemini oluşturabiliriz.
+            Kaynak taraması, araştırma yöntemi, iş birliği ve farklı merkezlerden veri toplama konularında
+            ihtiyacınızı konuşabiliriz.
           </p>
           <div className={styles.actions}>
-            <a className={styles.primary} href="/arastirma/arastirma-notlari">Araştırma Notlarını Gör</a>
-            <a className={styles.secondary} href="/arastirma/is-birlikleri">İş Birliği Alanı</a>
+            <a className={styles.primary} href="/arastirma/arastirma-notlari">Araştırma notlarını gör</a>
+            <a className={styles.secondary} href="/arastirma/is-birlikleri">İş birliği seçenekleri</a>
           </div>
         </section>
       </main>

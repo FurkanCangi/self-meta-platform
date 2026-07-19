@@ -25,28 +25,28 @@ const networkLayers = [
   {
     number: "01",
     title: "Klinik merkezler",
-    text: "Ortak araştırma protokolüne bağlanır.",
+    text: "Aynı araştırma planına göre çalışır.",
     Icon: Building2,
     tone: "cyan",
   },
   {
     number: "02",
-    title: "Ölçüm standardı",
-    text: "Formlar ve veri sözlüğü eşlenir.",
+    title: "Ortak ölçüm planı",
+    text: "Bütün merkezler aynı formları ve değişken adlarını kullanır.",
     Icon: ClipboardCheck,
     tone: "blue",
   },
   {
     number: "03",
-    title: "Güvenli veri katmanı",
-    text: "Erişim, saklama ve etik sınırlar tanımlanır.",
+    title: "Güvenli veri yönetimi",
+    text: "Çalışma başlamadan veriye kimlerin erişeceğini ve verinin ne kadar süre saklanacağını yazarız.",
     Icon: ShieldCheck,
     tone: "violet",
   },
   {
     number: "04",
-    title: "Toplulaştırılmış analiz",
-    text: "Ortak bilimsel örüntüler değerlendirilir.",
+    title: "Birlikte değerlendirme",
+    text: "Araştırma ekibi kişisel bilgileri veriden ayırır ve merkezlerden gelen kayıtları toplu olarak inceler.",
     Icon: BarChart3,
     tone: "indigo",
   },
@@ -55,30 +55,30 @@ const networkLayers = [
 const safeguards = [
   {
     number: "01",
-    eyebrow: "Karşılaştırılabilirlik",
-    title: "Her merkez aynı ölçüm dilinde çalışır.",
-    text: "Ölçüm dili, form yapısı ve veri giriş standartları araştırma sorusuna göre ortaklaştırılır.",
+    eyebrow: "Ortak yöntem",
+    title: "Bütün merkezler aynı form ve veri giriş kurallarını kullanır.",
+    text: "Bütün merkezler aynı soruları, seçenekleri ve değişken adlarını kullanır.",
     Icon: Layers3,
   },
   {
     number: "02",
     eyebrow: "Veri kalitesi",
-    title: "Eksik, uyumsuz ve sıra dışı kayıtlar görünür olur.",
-    text: "Kalite kontrolleri veri toplama başlamadan tanımlanır; kayıtların izlenebilirliği süreç boyunca korunur.",
+    title: "Eksik veya birbiriyle uyuşmayan kayıtları işaretleriz.",
+    text: "Çalışma başlamadan uygulanacak kontrolleri ve kayıtların nasıl izleneceğini araştırma protokolünde kararlaştırırız.",
     Icon: ScanSearch,
   },
   {
     number: "03",
-    eyebrow: "Gizlilik ve yönetişim",
-    title: "Erişim sınırları baştan belirlenir.",
-    text: "Onam, etik izin, güvenli saklama ve yetkili erişim kuralları çalışma başlamadan netleştirilir.",
+    eyebrow: "Gizlilik ve erişim",
+    title: "Veriye erişecek kişileri baştan yazarız.",
+    text: "Çalışma başlamadan katılımcı onayını, etik kurul iznini, saklama süresini ve erişim yetkilerini açıkça kaydederiz.",
     Icon: LockKeyhole,
   },
   {
     number: "04",
-    eyebrow: "Bilimsel çıktı",
-    title: "Tekil kayıtlar değil, toplulaştırılmış bulgular değerlendirilir.",
-    text: "Veri ağı bireysel tanı veya otomatik karar için değil, kontrollü bilimsel analiz için yapılandırılır.",
+    eyebrow: "Toplu değerlendirme",
+    title: "Sonuçlar kişi kişi değil, bütün grup üzerinden değerlendirilir.",
+    text: "Veri ağı tanı koymaz veya tek bir kişi için karar vermez. Araştırma sonuçlarını görmek için kullanılır.",
     Icon: BarChart3,
   },
 ];
@@ -87,47 +87,47 @@ const processSteps = [
   {
     number: "01",
     title: "Araştırma sorusu",
-    text: "Merkezlerin yanıtlayacağı ortak soru ve hedef grup netleştirilir.",
+    text: "Merkezler ortak araştırma sorusunu ve çalışmaya kimlerin katılacağını birlikte kararlaştırır.",
     Icon: GitBranch,
   },
   {
     number: "02",
-    title: "Ortak protokol",
-    text: "Ölçüm, form, değişken ve uygulama adımları aynı yapıya alınır.",
+    title: "Ortak yöntem",
+    text: "Bütün merkezler aynı ölçüm araçlarını, değişkenleri ve uygulama adımlarını kullanır.",
     Icon: ClipboardCheck,
   },
   {
     number: "03",
-    title: "Kontrollü toplama",
-    text: "Merkezler yetkili erişimle veri üretir; kayıt izi korunur.",
+    title: "Veri toplama",
+    text: "Araştırma protokolünde verileri kimlerin gireceği ve işlemlerin nasıl kayıt altına alınacağı belirlenir.",
     Icon: Database,
   },
   {
     number: "04",
     title: "Kalite kontrolü",
-    text: "Eksik ve uyumsuz kayıtlar analize girmeden önce değerlendirilir.",
+    text: "Eksik veya birbiriyle uyuşmayan kayıtlar analize alınmadan önce kontrol edilir.",
     Icon: ScanSearch,
   },
   {
     number: "05",
-    title: "Ortak çıktı",
-    text: "Doğrulanmış veri toplulaştırılır ve araştırma planına göre analiz edilir.",
+    title: "Sonuçların hazırlanması",
+    text: "Kontrollerden geçen verileri birlikte inceler ve araştırma raporunu hazırlarız.",
     Icon: FileCheck2,
   },
 ];
 
 const produces = [
-  "Karşılaştırılabilir çok merkezli veri",
-  "Ortak veri sözlüğü ve ölçüm standardı",
-  "İzlenebilir kalite kontrolü",
-  "Analize hazır toplulaştırılmış veri seti",
+  "Merkezler arasında karşılaştırılabilen veriler",
+  "Bütün merkezlerde kullanılan ortak formlar",
+  "Veri erişimi ve işlem kayıtları için önceden belirlenmiş bir izleme planı",
+  "Birlikte değerlendirilmeye hazır araştırma verisi",
 ];
 
 const doesNotProduce = [
-  "Bireysel tanı veya otomatik klinik karar",
-  "Kontrolsüz merkezler arası veri paylaşımı",
-  "Etik izin ve açık amaç olmadan veri kullanımı",
-  "Kaynağı belirsiz veya denetlenemeyen analiz",
+  "Tek bir kişi için tanı koymak veya karar vermek",
+  "İzinsiz merkezler arası veri paylaşımı",
+  "Etik kurul izni ve açık amaç olmadan veri kullanımı",
+  "Kaynağı belli olmayan veya denetlenemeyen sonuçlar",
 ];
 
 export default function DataNetworkPage() {
@@ -141,15 +141,15 @@ export default function DataNetworkPage() {
             <div className={styles.heroCopy}>
               <span className={styles.kicker}>ÇOK MERKEZLİ ARAŞTIRMA ALTYAPISI</span>
               <h1>
-                Merkezleri bağlayın. <span>Veriyi standartlaştırın.</span> Bilgiyi birlikte üretin.
+                Merkezleri bir araya getirin. <span>Aynı yöntemle veri toplayın.</span> Sonuçları birlikte değerlendirin.
               </h1>
               <p>
-                Çok merkezli veri toplama ve ortak veri üretimi; karşılaştırılabilir ölçüm, güvenli erişim ve
-                etik kullanım ilkeleriyle tek bir araştırma hattında ilerler.
+                Birden fazla merkez aynı araştırmaya katıldığında herkes aynı formu, değişken adlarını ve veri
+                giriş kurallarını kullanır. Erişim ve gizlilik kurallarını da çalışma başlamadan kararlaştırır.
               </p>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#data-network-flow">
-                  Çalışma akışını incele
+                  Nasıl çalıştığını görün
                   <ArrowDown size={18} strokeWidth={2.3} />
                 </a>
                 <Link className={styles.textButton} href="/iletisim">
@@ -159,7 +159,7 @@ export default function DataNetworkPage() {
               </div>
             </div>
 
-            <div className={styles.networkPanel} aria-label="DNA veri ağı katmanları">
+            <div className={styles.networkPanel} aria-label="DNA veri ağı bileşenleri">
               <div className={styles.panelHeader}>
                 <div className={styles.panelBrand}>
                   <Image
@@ -171,10 +171,10 @@ export default function DataNetworkPage() {
                   />
                   <div>
                     <span>DNA Intelligence</span>
-                    <strong>Veri ağı protokolü</strong>
+                    <strong>Ortak araştırma planı</strong>
                   </div>
                 </div>
-                <span className={styles.panelStatus}>Kontrollü ağ modeli</span>
+                <span className={styles.panelStatus}>Kurallar belirlendi</span>
               </div>
 
               <div className={styles.networkLayers}>
@@ -195,7 +195,7 @@ export default function DataNetworkPage() {
 
               <div className={styles.panelFooter}>
                 <Network size={18} strokeWidth={2} aria-hidden="true" />
-                <span>Merkez verisinden doğrulanmış ortak çıktıya</span>
+                <span>Merkezlerden gelen kayıtlar önce kontrol edilir, ardından toplu olarak incelenir.</span>
                 <LockKeyhole size={17} strokeWidth={2} aria-hidden="true" />
               </div>
             </div>
@@ -203,10 +203,10 @@ export default function DataNetworkPage() {
 
           <div className={styles.heroFlow} aria-label="Veri ağı kısa akışı">
             {[
-              ["01", "Merkezleri bağla"],
-              ["02", "Standardı kur"],
-              ["03", "Veriyi doğrula"],
-              ["04", "Birlikte analiz et"],
+              ["01", "Merkezleri belirle"],
+              ["02", "Ortak yöntemi hazırla"],
+              ["03", "Kayıtları kontrol et"],
+              ["04", "Sonuçları değerlendir"],
             ].map(([number, label]) => (
               <div key={number}>
                 <span>{number}</span>
@@ -218,11 +218,10 @@ export default function DataNetworkPage() {
 
         <section className={styles.safeguards} aria-labelledby="safeguards-title">
           <div className={styles.sectionIntro}>
-            <span className={styles.kicker}>BİR AĞ, DÖRT GÜVENCE</span>
-            <h2 id="safeguards-title">Bilimsel iş birliği ortak kurallarla güçlenir.</h2>
+            <span className={styles.kicker}>ORTAK ÇALIŞMANIN DÖRT KURALI</span>
+            <h2 id="safeguards-title">Merkezler aynı yöntemle çalıştığında sonuçlar karşılaştırılabilir.</h2>
             <p>
-              Veri ağı yalnızca merkezleri bir araya getirmez. Ölçümden erişime kadar aynı kalite standardının
-              korunmasını sağlar.
+              Aynı formlar, veri giriş kuralları ve güvenlik önlemleri bütün merkezlerde uygulanır.
             </p>
           </div>
 
@@ -247,8 +246,8 @@ export default function DataNetworkPage() {
           <div className={styles.processInner}>
             <div className={styles.processHeading}>
               <span className={styles.kicker}>ÇALIŞMA AKIŞI</span>
-              <h2 id="process-title">Araştırma sorusundan ortak bilimsel çıktıya.</h2>
-              <p>Her aşama bir sonraki adımın veri kalitesini ve güvenilirliğini güçlendirir.</p>
+              <h2 id="process-title">Araştırma beş adımda yürütülür.</h2>
+              <p>Her adım tamamlandıktan sonra bir sonrakine geçilir.</p>
             </div>
 
             <div className={styles.processGrid}>
@@ -268,8 +267,8 @@ export default function DataNetworkPage() {
 
         <section className={styles.boundaries} aria-labelledby="boundaries-title">
           <div className={styles.boundaryHeading}>
-            <span className={styles.kicker}>AÇIK SINIRLAR</span>
-            <h2 id="boundaries-title">Veri ağının ne ürettiği kadar ne üretmediği de nettir.</h2>
+            <span className={styles.kicker}>VERİ AĞININ KULLANIM ALANI</span>
+            <h2 id="boundaries-title">Veri ağının kullanım amacı çalışma başlamadan açıklanır.</h2>
           </div>
 
           <div className={styles.boundaryColumns}>
@@ -278,7 +277,7 @@ export default function DataNetworkPage() {
                 <span className={styles.positiveIcon} aria-hidden="true">
                   <Check size={19} strokeWidth={2.5} />
                 </span>
-                <h3>Ağ ne üretir?</h3>
+                <h3>Veri ağıyla yapılabilecekler</h3>
               </div>
               <ul>
                 {produces.map((item) => (
@@ -295,7 +294,7 @@ export default function DataNetworkPage() {
                 <span className={styles.negativeIcon} aria-hidden="true">
                   <X size={19} strokeWidth={2.5} />
                 </span>
-                <h3>Ağ ne üretmez?</h3>
+                <h3>Kullanılmadığı alanlar</h3>
               </div>
               <ul>
                 {doesNotProduce.map((item) => (
@@ -314,8 +313,8 @@ export default function DataNetworkPage() {
             <span className={styles.kicker}>ARAŞTIRMA İŞ BİRLİĞİ</span>
             <h2>Çok merkezli bir çalışma mı planlıyorsunuz?</h2>
             <p>
-              Araştırma sorusunu, hedef grubu ve veri ihtiyacını birlikte değerlendirip uygulanabilir ağ modelini
-              netleştirebiliriz.
+              Araştırma sorusunu, hedef grubu, kullanılacak formları ve veri güvenliği kurallarını birlikte
+              belirleyebiliriz.
             </p>
           </div>
           <div className={styles.ctaActions}>

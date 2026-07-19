@@ -23,29 +23,29 @@ import styles from "./DataNetworkPage.module.css";
 const collaborationLayers = [
   {
     number: "01",
-    title: "Ortak amaç",
-    text: "Bilimsel soru ve hedef grup birlikte netleştirilir.",
+    title: "Ortak hedef",
+    text: "Tüm ekipler aynı araştırma sorusuna yanıt arar.",
     Icon: Target,
     tone: "cyan",
   },
   {
     number: "02",
-    title: "Rol ve kaynaklar",
-    text: "Ekiplerin katkısı, yetkisi ve sorumluluğu ayrılır.",
+    title: "Görev paylaşımı",
+    text: "Her ekip görevini ve hangi kararlardan sorumlu olduğunu bilir.",
     Icon: Users,
     tone: "blue",
   },
   {
     number: "03",
-    title: "Etik ve veri",
-    text: "Onam, erişim ve kullanım sınırları tanımlanır.",
+    title: "Veri güvenliği",
+    text: "Ekipler veri toplama, saklama ve paylaşma kurallarını yazılı hale getirir.",
     Icon: ShieldCheck,
     tone: "violet",
   },
   {
     number: "04",
-    title: "Ortak çıktı",
-    text: "Analiz, yayın ve paylaşım planı aynı hatta kurulur.",
+    title: "Tamamlanan çalışma",
+    text: "Ekipler raporu, yayını veya eğitim materyalini birlikte hazırlar.",
     Icon: FileCheck2,
     tone: "indigo",
   },
@@ -54,30 +54,30 @@ const collaborationLayers = [
 const foundations = [
   {
     number: "01",
-    eyebrow: "Ortak yön",
-    title: "Her ekip aynı araştırma sorusuna çalışır.",
-    text: "İş birliğinin amacı, hedef grubu ve başarı ölçütü ilk görüşmede açık biçimde tanımlanır.",
+    eyebrow: "Ortak soru",
+    title: "Bütün ekipler aynı araştırma sorusu üzerinde çalışır.",
+    text: "İlk görüşmede çalışmanın amacını, kapsamını ve takvimini konuşuruz.",
     Icon: Target,
   },
   {
     number: "02",
-    eyebrow: "Net roller",
-    title: "Katkı, yetki ve sorumluluk birbirine karışmaz.",
-    text: "Veri toplama, yöntem, analiz, koordinasyon ve yayın görevleri çalışma başlamadan taraflara dağıtılır.",
+    eyebrow: "Görev paylaşımı",
+    title: "Her ekip görevini çalışma başlamadan bilir.",
+    text: "Veri toplama, değerlendirme, koordinasyon ve yazım görevlerini baştan paylaşırız.",
     Icon: Network,
   },
   {
     number: "03",
-    eyebrow: "Etik çerçeve",
-    title: "Veri kullanımı ve erişim sınırları baştan belirlenir.",
-    text: "Onam, etik izin, gizlilik, güvenli saklama ve yetkili erişim koşulları ortak protokolün parçası olur.",
+    eyebrow: "Gizlilik ve erişim",
+    title: "Veriye erişecek kişileri ve kullanım amacını baştan yazarız.",
+    text: "Onam, etik izin, gizlilik, güvenli saklama ve erişim koşullarını açıkça kaydederiz.",
     Icon: ShieldCheck,
   },
   {
     number: "04",
-    eyebrow: "Çıktı planı",
-    title: "Bilimsel çıktı ve yayın sorumluluğu görünürdür.",
-    text: "Analiz yaklaşımı, yazarlık ilkeleri, paylaşım biçimi ve çıktı takvimi çalışmanın başında kararlaştırılır.",
+    eyebrow: "Yayın planı",
+    title: "Yazım ve yayın görevleri baştan paylaşılır.",
+    text: "Sonuçları nasıl değerlendireceğimizi, metni kimlerin yazacağını ve yayın takvimini baştan kararlaştırırız.",
     Icon: BookOpenCheck,
   },
 ];
@@ -85,39 +85,39 @@ const foundations = [
 const collaborationSteps = [
   {
     number: "01",
-    title: "Başvuru",
+    title: "İlk görüşme",
     text: "Kurum, ekip, araştırma fikri ve beklenen katkı paylaşılır.",
     Icon: Handshake,
   },
   {
     number: "02",
-    title: "Uyum değerlendirmesi",
-    text: "Bilimsel amaç, kapasite, takvim ve karşılıklı beklenti değerlendirilir.",
+    title: "İlk değerlendirme",
+    text: "Araştırmanın amacı, ekiplerin yapabilecekleri, takvim ve beklentiler konuşulur.",
     Icon: Scale,
   },
   {
     number: "03",
-    title: "Ortak protokol",
-    text: "Yöntem, roller, veri yönetimi ve etik sınırlar yazılı hale getirilir.",
+    title: "Görevlerin belirlenmesi",
+    text: "Yöntem, görevler, veri güvenliği ve etik kurallar yazılı hale getirilir.",
     Icon: ClipboardCheck,
   },
   {
     number: "04",
-    title: "Kontrollü uygulama",
-    text: "Ekipler belirlenen iş planında ilerler; karar ve değişiklik izi korunur.",
+    title: "Çalışmanın yürütülmesi",
+    text: "Ekipler belirlenen plana göre ilerler; alınan kararlar ve yapılan değişiklikler kaydedilir.",
     Icon: Route,
   },
   {
     number: "05",
-    title: "Ortak çıktı",
-    text: "Bulgular doğrulanır; yayın, rapor veya eğitim çıktısı birlikte tamamlanır.",
+    title: "Sonucun paylaşılması",
+    text: "Sonuçlar yeniden kontrol edilir; yayın, rapor veya eğitim materyali birlikte tamamlanır.",
     Icon: Flag,
   },
 ];
 
 const collaborationScope = [
   "Üniversite ve lisansüstü araştırma iş birlikleri",
-  "Araştırma gruplarıyla ortak yöntem ve veri üretimi",
+  "Araştırma gruplarıyla ortak yöntem belirleme ve veri toplama",
   "Klinik ekiplerle uygulama temelli araştırma geliştirme",
   "Ölçek, eğitim ve çok merkezli çalışma planları",
 ];
@@ -140,11 +140,11 @@ export default function CollaborationPage() {
             <div className={styles.heroCopy}>
               <span className={styles.kicker}>AKADEMİK VE KLİNİK İŞ BİRLİKLERİ</span>
               <h1>
-                Ortak hedefi belirleyin. <span>Rolleri netleştirin.</span> Birlikte üretin.
+                Ortak hedefi belirleyin. <span>Görevleri paylaşın.</span> Çalışmayı birlikte tamamlayın.
               </h1>
               <p>
-                Üniversiteler, araştırma grupları ve klinik ekipler; bilimsel amaç, etik çerçeve ve veri
-                sorumluluğu açık bir çalışma modeliyle aynı hatta buluşur.
+                Üniversiteler, araştırma grupları ve klinik ekipler araştırmanın amacını, görevleri, veri güvenliği
+                kurallarını ve yayın planını birlikte hazırlar.
               </p>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#collaboration-flow">
@@ -170,10 +170,10 @@ export default function CollaborationPage() {
                   />
                   <div>
                     <span>DNA Collaboration</span>
-                    <strong>Ortak çalışma dosyası</strong>
+                    <strong>Ortak çalışma planı</strong>
                   </div>
                 </div>
-                <span className={styles.panelStatus}>Amaç • rol • etik</span>
+                <span className={styles.panelStatus}>Hedef ve görevler belirlendi</span>
               </div>
 
               <div className={styles.networkLayers}>
@@ -194,7 +194,7 @@ export default function CollaborationPage() {
 
               <div className={styles.panelFooter}>
                 <Handshake size={18} strokeWidth={2} aria-hidden="true" />
-                <span>İlk görüşmeden izlenebilir ortak çıktıya</span>
+                <span>İlk görüşmeden ortak rapor veya yayına</span>
                 <ShieldCheck size={17} strokeWidth={2} aria-hidden="true" />
               </div>
             </div>
@@ -202,10 +202,10 @@ export default function CollaborationPage() {
 
           <div className={styles.heroFlow} aria-label="İş birliği kısa akışı">
             {[
-              ["01", "Hedefi tanımla"],
-              ["02", "Rolleri dağıt"],
-              ["03", "Protokolü kur"],
-              ["04", "Ortak çıktı üret"],
+              ["01", "Hedefi belirle"],
+              ["02", "Görevleri paylaş"],
+              ["03", "Kuralları yaz"],
+              ["04", "Çalışmayı tamamla"],
             ].map(([number, label]) => (
               <div key={number}>
                 <span>{number}</span>
@@ -217,11 +217,10 @@ export default function CollaborationPage() {
 
         <section className={styles.safeguards} aria-labelledby="foundations-title">
           <div className={styles.sectionIntro}>
-            <span className={styles.kicker}>DÖRT TEMEL KARAR</span>
-            <h2 id="foundations-title">Güçlü iş birliği, beklentiler netleştiğinde başlar.</h2>
+            <span className={styles.kicker}>ÇALIŞMA BAŞLAMADAN BELİRLENECEKLER</span>
+            <h2 id="foundations-title">Çalışmaya başlamadan önce hedefleri ve sorumlulukları birlikte kararlaştırırız.</h2>
             <p>
-              Ortaklık yalnızca ekipleri bir araya getirmez. Bilimsel hedefi, sorumlulukları ve veri kullanımını
-              herkes için görünür hale getirir.
+              Her ekip ne yapacağını, hangi bilgilere erişeceğini ve sonuçların nasıl paylaşılacağını baştan bilir.
             </p>
           </div>
 
@@ -245,9 +244,9 @@ export default function CollaborationPage() {
         <section className={styles.processSection} id="collaboration-flow" aria-labelledby="collaboration-flow-title">
           <div className={styles.processInner}>
             <div className={styles.processHeading}>
-              <span className={styles.kicker}>ÇALIŞMA MODELİ</span>
-              <h2 id="collaboration-flow-title">Başvurudan ortak bilimsel çıktıya.</h2>
-              <p>Her adım bir sonraki aşamanın kararlarını, veri güvenliğini ve ekip uyumunu güçlendirir.</p>
+              <span className={styles.kicker}>NASIL ÇALIŞIYORUZ?</span>
+              <h2 id="collaboration-flow-title">İlk görüşmeden tamamlanmış ortak çalışmaya beş adım.</h2>
+              <p>Araştırma sorusunu, görevleri, veri güvenliği kurallarını ve yayın planını adım adım kararlaştırırız.</p>
             </div>
 
             <div className={styles.processGrid}>
@@ -267,8 +266,8 @@ export default function CollaborationPage() {
 
         <section className={styles.boundaries} aria-labelledby="roles-title">
           <div className={styles.boundaryHeading}>
-            <span className={styles.kicker}>NET KAPSAM VE ROLLER</span>
-            <h2 id="roles-title">İş birliği alanı ile tarafların sorumluluğu ayrıdır.</h2>
+            <span className={styles.kicker}>KAPSAM VE SORUMLULUKLAR</span>
+            <h2 id="roles-title">Neleri birlikte yapacağımızı ve her ekibin sorumluluğunu açıkça yazarız.</h2>
           </div>
 
           <div className={styles.boundaryColumns}>
@@ -311,10 +310,10 @@ export default function CollaborationPage() {
         <section className={styles.cta}>
           <div>
             <span className={styles.kicker}>İŞ BİRLİĞİ GÖRÜŞMESİ</span>
-            <h2>Birlikte çalışabileceğimiz bir araştırma fikriniz mi var?</h2>
+            <h2>Birlikte yürütmek istediğiniz bir araştırma var mı?</h2>
             <p>
-              Kurumunuzu, ekibinizi, araştırma amacınızı ve beklediğiniz katkıyı paylaşın; uygun ortaklık modelini
-              somut adımlarla netleştirelim.
+              Kurumunuzu, ekibinizi, araştırma amacınızı ve ihtiyaç duyduğunuz desteği paylaşın. Nasıl
+              çalışabileceğimizi birlikte belirleyelim.
             </p>
           </div>
           <div className={styles.ctaActions}>

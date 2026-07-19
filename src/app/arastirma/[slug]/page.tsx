@@ -78,11 +78,8 @@ export default async function ResearchDetailPage({ params }: ResearchDetailPageP
             <div className={styles.icon} style={{ "--accent": page.accent } as CSSProperties}>
               <HeroIcon size={30} strokeWidth={2} />
             </div>
-            <h2>{page.eyebrow} alanı ne sağlar?</h2>
-            <p>
-              Bu alan; bilimsel değerlendirme, metodoloji, iş birliği ve veri üretimi süreçlerini klinik uygulamadan
-              koparmadan, etik sınırları belirgin ve okunaklı bir araştırma çerçevesinde sunmak için yapılandırılmıştır.
-            </p>
+            <h2>Bu sayfada neler bulacaksınız?</h2>
+            <p>Bu bölümde konuya ilişkin temel bilgileri, dikkat edilmesi gereken noktaları ve sonraki adımları bulabilirsiniz.</p>
           </article>
         </section>
 
@@ -105,7 +102,7 @@ export default async function ResearchDetailPage({ params }: ResearchDetailPageP
           <p>{page.callout.text}</p>
           <div className={styles.actions}>
             <a className={styles.primary} href={page.callout.href}>{page.callout.label}</a>
-            <a className={styles.secondary} href="/arastirma">Araştırma Merkezine Dön</a>
+            <a className={styles.secondary} href="/arastirma">Araştırma sayfasına dön</a>
           </div>
         </section>
       </main>

@@ -146,11 +146,11 @@ export default function ResearchNotesClient({ notes }: ResearchNotesClientProps)
           </div>
           <h1>Araştırma Notları</h1>
           <p>
-            Klinik sorulara hızlı yön veren, kaynağı açık ve yorum sınırı belirtilmiş güncel literatür kayıtları.
+            Güncel araştırmaları, kaynakları ve sonuçların hangi sınırlar içinde yorumlanabileceğini tek yerde inceleyin.
           </p>
         </div>
 
-        <div className={styles.heroEvidence} aria-label="Kaynak arşivi özeti">
+        <div className={styles.heroEvidence} aria-label="Kaynak arşivi">
           <div className={styles.heroStat}>
             <Database size={21} />
             <span><strong>{notes.length}</strong> doğrulanmış yayın</span>
@@ -164,8 +164,8 @@ export default function ResearchNotesClient({ notes }: ResearchNotesClientProps)
             <span><strong>{pmidCount}</strong> PubMed kaydı</span>
           </div>
           <p>
-            Kaynaklar doğrudan yayıncı, DOI veya PubMed sayfasına açılır. Çalışma türü, kanıt gücü yerine araştırma
-            tasarımını gösterir.
+            Kaynak bağlantıları sizi doğrudan yayıncıya, DOI kaydına veya PubMed sayfasına götürür. Listede yazan
+            çalışma türü, araştırmanın nasıl yapıldığını gösterir; tek başına kanıtın gücünü göstermez.
           </p>
         </div>
       </section>
@@ -298,7 +298,7 @@ export default function ResearchNotesClient({ notes }: ResearchNotesClientProps)
           </div>
 
           <div className={styles.resultsBar}>
-            <p><strong>{filteredNotes.length}</strong> doğrulanmış kaynak gösteriliyor</p>
+            <p><strong>{filteredNotes.length}</strong> doğrulanmış kaynak listeleniyor</p>
             {hasActiveFilters ? (
               <button type="button" onClick={clearFilters}>
                 <X size={15} /> Filtreleri temizle
@@ -327,7 +327,7 @@ export default function ResearchNotesClient({ notes }: ResearchNotesClientProps)
 
                       <div className={styles.findings}>
                         <div>
-                          <strong>Bu kaynak neyi destekliyor?</strong>
+                          <strong>Bu çalışma neyi destekliyor?</strong>
                           <p>{note.clinicalFocus}</p>
                         </div>
                         <div className={styles.boundary}>
@@ -344,7 +344,7 @@ export default function ResearchNotesClient({ notes }: ResearchNotesClientProps)
 
                     <div className={styles.sourcePanel}>
                       <div>
-                        <small>Kaynak kaydı</small>
+                        <small>Kaynak bilgileri</small>
                         <strong>{note.pmid ? `PubMed · PMID ${note.pmid}` : "DOI kaydı"}</strong>
                       </div>
                       <span>Kontrol: {formatVerifiedAt(note.verifiedAt)}</span>

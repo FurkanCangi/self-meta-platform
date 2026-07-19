@@ -25,28 +25,28 @@ const projectLayers = [
   {
     number: "01",
     title: "Araştırma sorusu",
-    text: "Çalışılabilir ve sınırları belirgin hale gelir.",
+    text: "İncelenecek konuyu, katılımcı grubunu ve koşulları açıkça yazarız.",
     Icon: Lightbulb,
     tone: "cyan",
   },
   {
     number: "02",
     title: "Yöntem planı",
-    text: "Örneklem, ölçüm ve analiz aynı hedefe bağlanır.",
+    text: "Katılımcıları, ölçüm araçlarını ve değerlendirme yöntemini araştırma sorusuna göre seçeriz.",
     Icon: ClipboardCheck,
     tone: "blue",
   },
   {
     number: "03",
-    title: "Veri yorumlama",
-    text: "Bulgular ve sınırlılıklar birlikte değerlendirilir.",
+    title: "Sonuçların yorumu",
+    text: "Sonuçları güçlü ve sınırlı yönleriyle birlikte inceleriz.",
     Icon: BarChart3,
     tone: "violet",
   },
   {
     number: "04",
-    title: "Bilimsel çıktı",
-    text: "Tez, proje, makale veya sunum yapılandırılır.",
+    title: "Çalışmanın yazılması",
+    text: "Sonuçlar tez, proje raporu, makale veya sunum biçiminde yazılır.",
     Icon: BookOpenCheck,
     tone: "indigo",
   },
@@ -56,29 +56,29 @@ const decisions = [
   {
     number: "01",
     eyebrow: "Araştırma sorusu",
-    title: "Klinik fikir, yanıtlanabilir bir soruya dönüşür.",
-    text: "Amaç, hedef grup, değişkenler ve araştırmanın sınırları en başta açık biçimde tanımlanır.",
+    title: "Klinikte merak edilen konuyu açık bir araştırma sorusuna dönüştürürüz.",
+    text: "Araştırmanın amacını, kapsamını ve değerlendirilecek bilgileri baştan kararlaştırırız.",
     Icon: Target,
   },
   {
     number: "02",
     eyebrow: "Yöntem planı",
-    title: "Tasarım, proje hedefiyle aynı yönde çalışır.",
-    text: "Örneklem, ölçüm araçları, uygulama akışı ve karşılaştırma planı birbiriyle uyumlu kurulur.",
+    title: "Araştırmanın yöntemi, soruya uygun olmalıdır.",
+    text: "Çalışmaya kimlerin katılacağını, hangi ölçümlerin yapılacağını ve sonuçları nasıl karşılaştıracağımızı birlikte seçeriz.",
     Icon: Route,
   },
   {
     number: "03",
-    eyebrow: "Ölçüm ve analiz",
-    title: "Toplanan her veri araştırma sorusuna hizmet eder.",
-    text: "Gereksiz değişken yükü azaltılır; veri kalitesi ve analiz yaklaşımı araştırma başlamadan netleştirilir.",
+    eyebrow: "Toplanacak bilgiler",
+    title: "Yalnızca araştırma için gerekli bilgiler toplanır.",
+    text: "Araştırma başlamadan hangi bilgileri toplayacağımızı ve sonuçları nasıl değerlendireceğimizi yazarız.",
     Icon: ScanSearch,
   },
   {
     number: "04",
-    eyebrow: "Bilimsel anlatım",
-    title: "Bulgular iddiadan önce kanıtı gösterir.",
-    text: "Sonuçlar klinik anlam, metodolojik sınırlılık ve etik kullanım dengesi korunarak yapılandırılır.",
+    eyebrow: "Sonuçların yazılması",
+    title: "Yorumlar araştırma sonuçlarına dayanır.",
+    text: "Sonuçlar abartılmadan yazılır; çalışmanın güçlü ve sınırlı yönleri açıkça belirtilir.",
     Icon: FileText,
   },
 ];
@@ -86,48 +86,48 @@ const decisions = [
 const projectSteps = [
   {
     number: "01",
-    title: "Ön görüşme",
-    text: "Proje fikri, hedef program ve mevcut hazırlık düzeyi değerlendirilir.",
+    title: "İlk görüşme",
+    text: "Araştırma fikri, başvuru yapılacak program ve mevcut hazırlıklar konuşulur.",
     Icon: GraduationCap,
   },
   {
     number: "02",
-    title: "Kapsam kararı",
-    text: "Araştırma sorusu ve projenin gerçekçi sınırları netleştirilir.",
+    title: "Konunun sınırları",
+    text: "Araştırma sorusunu ve yapılabilecek çalışmanın kapsamını birlikte netleştiririz.",
     Icon: Target,
   },
   {
     number: "03",
-    title: "Yöntem tasarımı",
-    text: "Örneklem, ölçüm, veri toplama ve analiz planı birlikte kurulur.",
+    title: "Yöntemin hazırlanması",
+    text: "Katılımcıları, ölçüm araçlarını, veri toplama adımlarını ve değerlendirme yöntemini birlikte seçeriz.",
     Icon: ListChecks,
   },
   {
     number: "04",
-    title: "Bulguların yorumu",
-    text: "Sonuçlar kanıt düzeyi ve metodolojik sınırlar içinde değerlendirilir.",
+    title: "Sonuçların değerlendirilmesi",
+    text: "Bulgular, çalışmanın yöntemi ve sınırlılıkları dikkate alınarak yorumlanır.",
     Icon: BarChart3,
   },
   {
     number: "05",
-    title: "Çıktı yapısı",
-    text: "Tez, rapor, makale taslağı veya sunum tutarlı bir anlatı kazanır.",
+    title: "Çalışmanın yazılması",
+    text: "Tezi, raporu, makale taslağını veya sunumu açık ve tutarlı bir sırayla düzenleriz.",
     Icon: FileCheck2,
   },
 ];
 
 const supportScope = [
-  "Araştırma sorusunu ve hipotezleri netleştirme",
-  "Yöntem, örneklem ve ölçüm planını yapılandırma",
-  "Analiz yaklaşımı ile veri ihtiyacını eşleştirme",
-  "Bulguları bilimsel sınırlar içinde yorumlama",
+  "Araştırma sorusunu ve hipotezleri belirleme",
+  "Katılımcı, ölçüm aracı ve veri toplama planını hazırlama",
+  "Toplanacak bilgiler ile değerlendirme yöntemini eşleştirme",
+  "Bulguları araştırmanın sınırları içinde yorumlama",
 ];
 
 const researcherResponsibilities = [
-  "Etik kurul ve kurum izinlerini tamamlama",
-  "Saha uygulamasını onaylanan protokole göre yürütme",
-  "Veri doğruluğunu ve kaynak kayıtlarını koruma",
-  "Nihai akademik karar ve teslim sorumluluğunu üstlenme",
+  "Etik kurul ve kurum izinlerini alma",
+  "Verileri belirlenen yönteme göre toplama",
+  "Kayıtların doğruluğunu ve kaynaklarını koruma",
+  "Son metni kontrol etme ve teslim etme",
 ];
 
 export default function ProjectSupportPage() {
@@ -141,15 +141,15 @@ export default function ProjectSupportPage() {
             <div className={styles.heroCopy}>
               <span className={styles.kicker}>TEZ VE ARAŞTIRMA PROJESİ DESTEĞİ</span>
               <h1>
-                Fikri netleştirin. <span>Yöntemi güçlendirin.</span> Çıktıyı yapılandırın.
+                Araştırma sorunuzu belirleyin. <span>Yönteminizi planlayın.</span> Çalışmanızı tamamlayın.
               </h1>
               <p>
-                Yüksek lisans, doktora, TÜBİTAK ve araştırma projeleri; araştırma sorusundan bilimsel çıktıya
-                kadar tutarlı bir metodolojik hat üzerinde geliştirilir.
+                Yüksek lisans, doktora, TÜBİTAK ve diğer araştırma projelerinde; araştırma sorusunu belirleme,
+                yöntem seçme, veri toplama ve sonuçları yazma aşamalarında destek verilir.
               </p>
               <div className={styles.heroActions}>
                 <a className={styles.primaryButton} href="#project-flow">
-                  Destek akışını incele
+                  Nasıl çalıştığımızı görün
                   <ArrowDown size={18} strokeWidth={2.3} />
                 </a>
                 <Link className={styles.textButton} href="/iletisim">
@@ -159,7 +159,7 @@ export default function ProjectSupportPage() {
               </div>
             </div>
 
-            <div className={styles.networkPanel} aria-label="Tez ve proje desteği katmanları">
+            <div className={styles.networkPanel} aria-label="Tez ve proje desteği bileşenleri">
               <div className={styles.panelHeader}>
                 <div className={styles.panelBrand}>
                   <Image
@@ -170,11 +170,11 @@ export default function ProjectSupportPage() {
                     priority
                   />
                   <div>
-                    <span>DNA Research</span>
-                    <strong>Proje çalışma dosyası</strong>
+                    <span>DNA Araştırma</span>
+                    <strong>Proje planı</strong>
                   </div>
                 </div>
-                <span className={styles.panelStatus}>Metodolojik yol haritası</span>
+                <span className={styles.panelStatus}>Adımlar belirlendi</span>
               </div>
 
               <div className={styles.networkLayers}>
@@ -195,7 +195,7 @@ export default function ProjectSupportPage() {
 
               <div className={styles.panelFooter}>
                 <GraduationCap size={18} strokeWidth={2} aria-hidden="true" />
-                <span>Araştırma fikrinden savunulabilir bilimsel çıktıya</span>
+                <span>Araştırma fikrinden tamamlanmış tez, rapor veya makaleye</span>
                 <FileCheck2 size={17} strokeWidth={2} aria-hidden="true" />
               </div>
             </div>
@@ -203,10 +203,10 @@ export default function ProjectSupportPage() {
 
           <div className={styles.heroFlow} aria-label="Proje desteği kısa akışı">
             {[
-              ["01", "Soruyu daralt"],
-              ["02", "Yöntemi kur"],
-              ["03", "Veriyi planla"],
-              ["04", "Çıktıyı yapılandır"],
+              ["01", "Soruyu belirle"],
+              ["02", "Yöntemi planla"],
+              ["03", "Veriyi topla"],
+              ["04", "Çalışmayı yaz"],
             ].map(([number, label]) => (
               <div key={number}>
                 <span>{number}</span>
@@ -218,11 +218,10 @@ export default function ProjectSupportPage() {
 
         <section className={styles.safeguards} aria-labelledby="decisions-title">
           <div className={styles.sectionIntro}>
-            <span className={styles.kicker}>DÖRT KRİTİK KARAR</span>
-            <h2 id="decisions-title">Güçlü proje, yöntem başlamadan önce kurulur.</h2>
+            <span className={styles.kicker}>PROJE BAŞLAMADAN BELİRLENECEK DÖRT KONU</span>
+            <h2 id="decisions-title">İyi bir araştırma, veri toplamadan önce doğru soruyla ve uygun yöntemle başlar.</h2>
             <p>
-              Desteğin amacı metni sonradan düzeltmek değil; soruyu, yöntemi, veriyi ve bilimsel anlatıyı baştan
-              aynı hedefe bağlamaktır.
+              Çalışma başlamadan önce sorunun kapsamını, katılımcıları, ölçüm araçlarını ve değerlendirme yöntemini kararlaştırırız.
             </p>
           </div>
 
@@ -246,9 +245,9 @@ export default function ProjectSupportPage() {
         <section className={styles.processSection} id="project-flow" aria-labelledby="project-flow-title">
           <div className={styles.processInner}>
             <div className={styles.processHeading}>
-              <span className={styles.kicker}>ÇALIŞMA MODELİ</span>
-              <h2 id="project-flow-title">Fikirden teslim edilebilir araştırma çıktısına.</h2>
-              <p>Her aşama önceki kararları korur; proje ilerledikçe yöntem ve anlatı birbirinden kopmaz.</p>
+              <span className={styles.kicker}>NASIL ÇALIŞIYORUZ?</span>
+              <h2 id="project-flow-title">Proje fikrinden tamamlanmış çalışmaya beş adım.</h2>
+              <p>Her aşamada alınan kararlar yeniden kontrol edilir. Böylece yöntem, sonuçlar ve yazılan metin birbiriyle çelişmez.</p>
             </div>
 
             <div className={styles.processGrid}>
@@ -268,8 +267,8 @@ export default function ProjectSupportPage() {
 
         <section className={styles.boundaries} aria-labelledby="scope-title">
           <div className={styles.boundaryHeading}>
-            <span className={styles.kicker}>NET ROLLER</span>
-            <h2 id="scope-title">Destek kapsamı ve akademik sorumluluk birbirinden ayrıdır.</h2>
+            <span className={styles.kicker}>DESTEK VE SORUMLULUKLAR</span>
+            <h2 id="scope-title">Hangi konularda destek vereceğimizi ve araştırmacının hangi işleri yürüteceğini baştan konuşuruz.</h2>
           </div>
 
           <div className={styles.boundaryColumns}>
@@ -278,7 +277,7 @@ export default function ProjectSupportPage() {
                 <span className={styles.positiveIcon} aria-hidden="true">
                   <Check size={19} strokeWidth={2.5} />
                 </span>
-                <h3>Destek ne sağlar?</h3>
+                <h3>Hangi konularda destek verilir?</h3>
               </div>
               <ul>
                 {supportScope.map((item) => (
@@ -295,7 +294,7 @@ export default function ProjectSupportPage() {
                 <span className={styles.negativeIcon} aria-hidden="true">
                   <X size={19} strokeWidth={2.5} />
                 </span>
-                <h3>Araştırmacının sorumluluğu</h3>
+                <h3>Araştırmacının yapması gerekenler</h3>
               </div>
               <ul>
                 {researcherResponsibilities.map((item) => (
@@ -312,10 +311,10 @@ export default function ProjectSupportPage() {
         <section className={styles.cta}>
           <div>
             <span className={styles.kicker}>PROJE GÖRÜŞMESİ</span>
-            <h2>Araştırma fikrinizi birlikte netleştirelim.</h2>
+            <h2>Projeniz hangi aşamada olursa olsun birlikte değerlendirebiliriz.</h2>
             <p>
-              Araştırma sorunuzu, proje kapsamınızı ve mevcut hazırlık düzeyinizi paylaşın; uygun destek hattını
-              somut adımlarla belirleyelim.
+              Araştırma sorunuzu, mevcut hazırlıklarınızı ve ihtiyaç duyduğunuz desteği paylaşın. Sonraki adımları
+              birlikte belirleyelim.
             </p>
           </div>
           <div className={styles.ctaActions}>
