@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 5,
+  "title": "10 alan x 14 boyut bilgi haritası",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "source": {
+    "governanceGitSha": "3ec9b3e193e0460f05be6f33cca246ba120d6ae8",
+    "coverageVersion": "dna-coverage-map@1"
+  },
+  "matrix": {
+    "domains": 10,
+    "dimensions": 14,
+    "cells": 140,
+    "uniqueCells": 140,
+    "releaseReady": 0,
+    "boundedPartial": 120,
+    "notAvailable": 10,
+    "prohibited": 10
+  },
+  "exitGates": {
+    "everyDomainHasEveryDimension": "passed",
+    "safeQuestionFamiliesRecorded": "passed",
+    "ageScopeAndBoundaryRecorded": "passed",
+    "candidateSourcesDoNotImplyRelease": "passed",
+    "claimAndSourceReleasePairRequired": "passed",
+    "allCellsHaveAutomatedOutcomeTests": "passed"
+  },
+  "interpretation": "0 release_ready dürüst bir başlangıç durumudur; kapsam hücresi kaynak varlığını bilimsel onay gibi sunmaz.",
+  "nextPhase": 6
+}

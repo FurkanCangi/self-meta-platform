@@ -5,12 +5,36 @@
   "completedPhases": [
     0,
     1,
-    2
+    2,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9
   ],
-  "currentPhase": 3,
+  "deferredPhases": [
+    {
+      "phase": 3,
+      "status": "deferred_owner_book",
+      "reason": "owner_book_not_supplied",
+      "authorizedOn": "2026-07-19",
+      "releaseBlocking": true
+    }
+  ],
+  "currentPhase": 10,
   "status": "in_progress",
-  "lastCompletedCheckpoint": "docs/dna-intelligence/program/checkpoints/phase-02-knowledge-authorities.json",
+  "lastCompletedCheckpoint": "docs/dna-intelligence/program/checkpoints/phase-09-component-licensing.json",
   "rollbackTag": "dna-chat-v2-baseline-20260719",
-  "phaseOrderPolicy": "Bir fazın çıkış kapıları geçmeden sonraki faz tamamlanmış sayılmaz.",
+  "phaseOrderPolicy": "Bir fazın çıkış kapıları geçmeden sonraki faz tamamlanmış sayılmaz. Kullanıcının 2026-07-19 tarihli açık talebiyle Faz 3 owner kitabı gelene kadar deferred tutuldu; Faz 4-9 altyapısı tamamlandı ancak bu istisna Faz 3 release kapısını açmaz.",
+  "releaseBlockers": [
+    "owner_book_not_supplied",
+    "owner_approved_product_claim_bindings_missing",
+    "v3_audited_candidate_registry_empty",
+    "coverage_release_ready_cells_zero",
+    "gap_full_text_appraisal_pending",
+    "claim_level_age_and_sample_scope_not_coded"
+  ],
+  "evidence": "docs/dna-intelligence/program/evidence/phase-03-09-governance-gates.json",
   "updatedOn": "2026-07-19"
 }

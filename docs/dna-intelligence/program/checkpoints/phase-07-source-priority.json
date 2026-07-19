@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 7,
+  "title": "Soru türüne göre A-E kaynak önceliği",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "source": {
+    "governanceGitSha": "3ec9b3e193e0460f05be6f33cca246ba120d6ae8",
+    "governanceVersion": "dna-source-governance@1"
+  },
+  "coverage": {
+    "questionTypes": 8,
+    "sourceRoles": 18,
+    "normalizedCurrentLibraryRecords": 47,
+    "populationSensitiveQuestionTypes": 6,
+    "ageScopeNotReportedRecords": 47,
+    "sampleScopeNotReportedRecords": 47
+  },
+  "exitGates": {
+    "questionSpecificGrades": "passed",
+    "dClassTheoryOrContestedOnly": "passed",
+    "eClassNeverSupportsScientificClaim": "passed",
+    "measurementRequiresPsychometricRole": "passed",
+    "populationMismatchFailsClosed": "passed",
+    "developmentMeasurementCaseRequireAgeAndSample": "passed",
+    "unknownAgeOrSampleNeverGuessed": "passed"
+  },
+  "currentRuntimeScienceEligibleRecords": 0,
+  "nextPhase": 8
+}

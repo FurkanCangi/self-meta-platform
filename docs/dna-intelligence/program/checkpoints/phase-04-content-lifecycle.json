@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 4,
+  "title": "V3 içerik yaşam döngüsü ve released-only kapısı",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "source": {
+    "governanceGitSha": "3ec9b3e193e0460f05be6f33cca246ba120d6ae8",
+    "lifecycleVersion": "dna-content-lifecycle@1",
+    "releaseCompilerVersion": "dna-v3-release-compiler@1",
+    "runtimeGateVersion": "dna-chat-runtime-release-gate@1"
+  },
+  "coverage": {
+    "lifecycleStates": 21,
+    "requiredReleaseMilestones": 12,
+    "explicitBlockedStatuses": 8,
+    "currentV3ReleasedCandidates": 0,
+    "auditedCandidateRegistryEntries": 0,
+    "activeRuntimeGeneration": "v2_legacy",
+    "globalRuntimeReleasedOnly": false
+  },
+  "exitGates": {
+    "appendOnlyEventHashChain": "passed",
+    "actualPayloadRehashedAtCompileTime": "passed",
+    "onlyExactReleasedStateEligible": "passed",
+    "v2NeverAutoPromotedToV3": "passed",
+    "canonicalCoverageOnly": "passed",
+    "immutableAuditedCandidateRegistry": "passed",
+    "apiRuntimeGateBeforeAuditAndResponse": "passed",
+    "engineResponseAuthenticityBeforeAuditAndResponse": "passed",
+    "v3PackageHashAndCandidateAuthorizationBound": "passed",
+    "unknownEngineOrCandidateFailsClosed": "passed"
+  },
+  "rollbackBoundary": "dna-chat-engine@2 yalnız değişmez v2_legacy rollback allowlist'iyle çalışır; bu V3 release statüsü değildir. Released-only kapısı V3 içeriği içindir ve mevcut V2 katalog için geriye dönük bir denetim iddiası oluşturmaz.",
+  "nextPhase": 5
+}

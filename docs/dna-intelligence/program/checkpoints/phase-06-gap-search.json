@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 6,
+  "title": "Boşluk odaklı kaynak arama",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "source": {
+    "governanceGitSha": "3ec9b3e193e0460f05be6f33cca246ba120d6ae8",
+    "protocolVersion": "dna-gap-protocols@1",
+    "executionVersion": "dna-gap-search-execution@1",
+    "runId": "dna-gap-search-20260719-7cdbe80cbc0b-20260719115132792",
+    "cutoffDate": "2026-07-19"
+  },
+  "protocols": {
+    "count": 10,
+    "linkedGapCells": 130,
+    "unlinkedGapCells": 0,
+    "apis": 3,
+    "apiExecutions": 30,
+    "downloadCapPerProtocolPerApi": 100
+  },
+  "results": {
+    "apiReportedNonDeduplicatedPool": 64239324,
+    "downloadedMetadata": 2824,
+    "deduplicatedMetadata": 2730,
+    "duplicatesRemoved": 94,
+    "titleAbstractScreened": 2730,
+    "titleAbstractExcluded": 1085,
+    "advancedToManualFullTextReview": 1645,
+    "fullTextAssessed": null,
+    "includedInEvidenceBase": null,
+    "releaseReadyClaims": 0
+  },
+  "evidence": {
+    "rawFilesOnResearchSsd": 100,
+    "rawManifestSha256": "2b3144aed93d7854f181fa33c416bdbdf66f91d12d92509d6f08191aa09a40de",
+    "repoSnapshotFileSha256": "8407dbd9b51640379e23da7dc763e2b5909d7a6ee7bb5a79acd15250017ddadb",
+    "absoluteSsdPathInRepoSnapshot": false
+  },
+  "exitGates": {
+    "questionAndEligibilityProtocolPerGap": "passed",
+    "databaseSpecificQueriesRecorded": "passed",
+    "realResultAndExclusionCountsRecorded": "passed",
+    "rawArtifactsByteAndShaVerified": "passed",
+    "nullUsedForUnperformedFullTextStages": "passed",
+    "prismaNotMisrepresentedAsProductValidation": "passed"
+  },
+  "boundary": "1.645 kayıt yalnız manuel tam metin incelemesine adaydır; dahil edilmiş, güvenilir veya release edilmiş kaynak değildir. Tam metin değerlendirmesi sonraki kaynak değerlendirme fazlarına aittir.",
+  "nextPhase": 7
+}

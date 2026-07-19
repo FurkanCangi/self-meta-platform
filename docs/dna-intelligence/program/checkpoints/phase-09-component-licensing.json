@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 9,
+  "title": "Kaynak ve bileşen düzeyinde lisans kapısı",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "source": {
+    "governanceGitSha": "3ec9b3e193e0460f05be6f33cca246ba120d6ae8",
+    "snapshotSha256": "b899bc3a3b071cfd2a9c8bc49f51374e94ee6052b55f8434c500c7ae783b8b15"
+  },
+  "audit": {
+    "sourceMatrices": 47,
+    "componentsPerSource": 8,
+    "componentDecisions": 376,
+    "artifactVerifiedFullTextAndPassage": 10,
+    "unknownFullTextAndPassage": 20,
+    "restrictedFullTextAndPassage": 14,
+    "metadataOnlyFullTextAndPassage": 3,
+    "tableFigureScaleTestItemsRestricted": "47/47",
+    "runtimeReleasedFullTextOrPassage": 0
+  },
+  "exitGates": {
+    "canonicalLicenseAllowlist": "passed",
+    "ncNdArrAndUnknownFailClosed": "passed",
+    "componentSpecificRights": "passed",
+    "arbitraryHttpsNotAcceptedAsLicenseEvidence": "passed",
+    "artifactOrOfficialAuthorityEvidenceRequired": "passed",
+    "thirdPartyComponentsRestrictedByDefault": "passed",
+    "metadataOnlyCannotSupportLiveClaim": "passed",
+    "structuredAttributionAndShareAlikeFulfillmentRequiredAtRelease": "passed",
+    "noticePayloadHashAndIdentityLicenseBinding": "passed"
+  },
+  "interpretation": "10 kayıt yalnız lisans kapısını geçmiştir; kimlik, yaşam döngüsü, bilimsel denetim, kapsam ve provenance kapıları olmadan runtime'a giremez.",
+  "nextPhase": 10
+}

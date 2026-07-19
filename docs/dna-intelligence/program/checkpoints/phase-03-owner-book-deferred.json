@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 3,
+  "title": "DNA kitabının kilitlenmesi",
+  "status": "deferred_owner_book",
+  "deferredOn": "2026-07-19",
+  "reason": "owner_book_not_supplied",
+  "authorization": "Kullanıcı DNA kitabı gelene kadar Faz 3'ün beklemesini ve sonraki yönetişim altyapısının kurulmasını açıkça istedi.",
+  "source": {
+    "governanceGitSha": "3ec9b3e193e0460f05be6f33cca246ba120d6ae8",
+    "contractVersion": "dna-owner-book-lock@1",
+    "currentOwnerApprovals": 0,
+    "currentProductClaimBindings": 0,
+    "currentV3ProductReleases": 0
+  },
+  "preparedInfrastructure": {
+    "byteExactArtifactManifest": "passed",
+    "chapterAndPassageRanges": "passed",
+    "artifactChapterAndPassageSha256": "passed",
+    "canonicalPassageSha256SeparateFromArtifactBytes": "passed",
+    "ownerDeclarationMatch": "passed",
+    "sharedRegisteredOwnerApprovalTrustRoot": "passed_empty_registry",
+    "allLiveClaimsMustBeBound": "passed",
+    "moduleMintedAuthorityOnly": "passed",
+    "forgedOrSerializedLockRejected": "passed",
+    "bookDoesNotEstablishScientificValidation": "passed"
+  },
+  "unmetExitGates": [
+    "Gerçek owner kitabı, sürümü ve baytları henüz sağlanmadı.",
+    "Owner tarafından onaylanmış bölüm ve pasaj aralıkları yok.",
+    "Canlı DNA ürün iddiaları owner-approved pasajlara henüz bağlanmadı."
+  ],
+  "releasePolicy": "Faz 3 tamamlanana kadar DNA ürün iddiaları V3 release paketine giremez.",
+  "continuedUnderAuthorizedDeferral": true,
+  "nextPhase": 4
+}

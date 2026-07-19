@@ -1,0 +1,185 @@
+{
+  "schemaVersion": "dna-intelligence-phase-evidence@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phases": [3, 4, 5, 6, 7, 8, 9],
+  "generatedAt": "2026-07-19T16:06:07+03:00",
+  "sourceGitSha": "3ec9b3e193e0460f05be6f33cca246ba120d6ae8",
+  "sourceTreeSha": "005d3dad07925dfd25e8d6a0d39a8a8ab09e59e1",
+  "branch": "codex/dna-intelligence-v3",
+  "phaseDisposition": {
+    "phase3": "deferred_owner_book",
+    "completed": [4, 5, 6, 7, 8, 9],
+    "currentV3ReleaseCount": 0,
+    "currentV3AuditedRegistryCount": 0
+  },
+  "newGovernanceGates": {
+    "bookLifecycle": {
+      "status": "passed",
+      "ownerBookStatus": "deferred_owner_book",
+      "ownerApprovals": 0,
+      "lifecycleStates": 21,
+      "requiredReleaseMilestones": 12,
+      "forgedOwnerLockBlocked": true,
+      "artifactAndCanonicalPassageHashesSeparated": true,
+      "unregisteredOwnerApprovalBlocked": true
+    },
+    "coverageAndGaps": {
+      "status": "passed",
+      "matrix": "10x14=140",
+      "releaseReady": 0,
+      "gapProtocols": 10,
+      "linkedGapCells": 130,
+      "rawSsdArtifactsVerified": "100/100",
+      "rawManifestSha256": "2b3144aed93d7854f181fa33c416bdbdf66f91d12d92509d6f08191aa09a40de"
+    },
+    "sourceGovernance": {
+      "status": "passed",
+      "ssdVerified": true,
+      "records": 47,
+      "identityEligible": 39,
+      "identityPending": 8,
+      "componentMatrices": 47,
+      "componentDecisions": 376,
+      "artifactVerifiedFullTextPassage": 10
+    },
+    "releaseCompiler": {
+      "status": "passed",
+      "syntheticCandidateBlocked": true,
+      "actualPayloadTamperBlocked": true,
+      "sourceAndProfileConflictsBlocked": true,
+      "foreignLicenseBlocked": true,
+      "pendingAttributionBlocked": true,
+      "forgedAttributionMetadataBlocked": true,
+      "structuredShareAlikeFulfillmentChecked": true,
+      "scienceParentMismatchBlocked": true,
+      "ownerArtifactAndCanonicalPassageMismatchBlocked": true,
+      "authorizationDigestIncludesOwnerLock": true,
+      "deterministicSha256": "88e00e14f121ea14db836a2021273d479b55dc2ef26434ebda2fb2100d9125ad"
+    },
+    "runtimeReleaseGate": {
+      "status": "passed",
+      "v2ExactRollbackAllowed": true,
+      "v3EmptyBlocked": true,
+      "releasePackageHashBound": true,
+      "candidateAuthorizationDigestRequired": true,
+      "forgedCandidateBlocked": true,
+      "forgedEngineAndAllowlistedResponseBlockedBeforeAuditAndPublicResponse": true,
+      "unknownGenerationBlocked": true
+    }
+  },
+  "regressionGatesOnCleanGovernanceCommit": {
+    "catalog": {
+      "status": "passed",
+      "topics": 118,
+      "claims": 239,
+      "relations": 166,
+      "sources": 160,
+      "benchmarkQuestions": 1856,
+      "holdoutQuestions": 928
+    },
+    "rawReview": {
+      "status": "passed",
+      "researchPacks": 20,
+      "records": 2703,
+      "reviewStatus": "expert_pending"
+    },
+    "reasoning": {
+      "status": "passed",
+      "allRowsAccuracyPercent": 96.61,
+      "supportedHoldoutAccuracyPercent": 98.42,
+      "safetyRefusalAccuracyPercent": 100,
+      "unsupportedSafeAccuracyPercent": 100,
+      "oneHopOnly": true,
+      "maxSubquestions": 2,
+      "p95Ms": 10.568
+    },
+    "security": {
+      "status": "passed",
+      "canonicalSafeRefusals": 329,
+      "liveSafetyRefusals": 341,
+      "externalAdversarialRegression": 40,
+      "ownership": "strict_chain_static_contract"
+    },
+    "api": {
+      "status": "passed",
+      "theorySkipsReportLoad": true,
+      "foreignAndMissingIndistinguishable": true,
+      "caseAuditFailClosed": true,
+      "internalFieldsHidden": true,
+      "auditMetadataMinimized": true,
+      "mockRouteP95Ms": 14.841
+    },
+    "intendedUse": {
+      "status": "passed",
+      "supported": "9/9",
+      "prohibited": "10/10",
+      "adversarialRegression": 40,
+      "surfaceParity": true
+    },
+    "quality": {
+      "status": "passed",
+      "benchmark": "120/120",
+      "security": "20/20",
+      "caseFixtures": 50,
+      "suggestedQuestions": "119/119",
+      "engineP95Ms": 5.175
+    },
+    "determinism": {
+      "status": "passed",
+      "requests": 8,
+      "repeatsPerRequest": 20,
+      "sampleHash": "70d1b0b18e3686f33331b4ad2117999f263025dfebf63341a6093c1920198a0d"
+    },
+    "forbiddenImports": {
+      "status": "passed",
+      "runtimeGraphFiles": 72,
+      "chatRuntimeFiles": 41,
+      "unresolvedImports": 0,
+      "externalModelModules": 0,
+      "runtimeKnowledgeNetworkPrimitives": 0
+    },
+    "authority": {
+      "status": "passed",
+      "authorities": 4,
+      "nonSubstitutionRules": "5/5",
+      "runtimeProductAuthority": "pending",
+      "runtimeScienceAuthority": "pending"
+    },
+    "reportPrivacy": "passed",
+    "reportDeterminism": "passed_10_of_10",
+    "reportForbiddenImports": "passed",
+    "securitySmoke": "passed",
+    "securityReadiness": "passed",
+    "lint": "passed",
+    "build": "passed_next_16_2_9_webpack",
+    "v2RollbackBaseline": "passed_from_project_root_with_clean_detached_rollback_worktree"
+  },
+  "hashesSha256": {
+    "bookLock": "425f6599508f8ffd97400b743e72c8032a1b66f801c982030761bb62303d1d2a",
+    "lifecycle": "97bf52ff27f248e75b1e8205f72dfe3faadd7febb8cdf2dbed3dca08f67d0a66",
+    "coverageMap": "5955fe25d6fa5738f35dab1551589841c3b50267a6ff024dd3e93af1c124cf43",
+    "gapProtocols": "e6b3ba8883a7ed5892c18586a43925b43a7692e4254496aaf562476b4aa44daa",
+    "sourceGovernance": "86c0d989dee6a39bc76e6fc2dec5b4826e1ec45408b37200df2e984084dda50a",
+    "releaseCompiler": "405c10d47d11450357fdf1f6366c2f7500b0a4b0d1017be70172e26e66ec1677",
+    "runtimeReleaseGate": "3fcfb2b6aaeffa9161c22bb46907b5450932cc0b5f2d422ddb8f219ccd88fcdf",
+    "knowledgeAuthority": "943a0e6c2398459a3caa4a54bb5e8d6600fd17b7fe729a0e5e8cce2d11bb3ecd",
+    "chatEngine": "c8e7d8720c3f5300db081487955c04d9fa397e5c94eeae9ee3592d05b1d53061",
+    "apiResolver": "53e2e656ccd17e0a7d09dce98d5e850265e47a8ee9424524a82dd08f072d7d81",
+    "gapExecutionSnapshot": "8407dbd9b51640379e23da7dc763e2b5909d7a6ee7bb5a79acd15250017ddadb",
+    "sourceGovernanceSnapshot": "b899bc3a3b071cfd2a9c8bc49f51374e94ee6052b55f8434c500c7ae783b8b15"
+  },
+  "worktreeBoundary": {
+    "implementationVerification": "clean_detached_worktree_at_3ec9b3e193e0460f05be6f33cca246ba120d6ae8",
+    "unrelatedUserChangesPreservedAndExcludedFromCommit": true,
+    "rawBooksOrPdfsAddedToRepo": false,
+    "absoluteResearchSsdPathAddedToRuntimeSnapshot": false
+  },
+  "limitations": [
+    "Faz 3 tamamlanmadı; owner kitabı ve owner-approved pasaj bağları bekleniyor.",
+    "V3 release paketi bilerek boştur; mevcut kullanıcı deneyimi exact V2 rollback yolunda çalışır.",
+    "1.645 arama kaydı yalnız tam metin inceleme adayıdır; kanıt tabanına dahil edilmiş değildir.",
+    "8 kaynak kimlik açısından pending, 20 kaynağın full-text/passage lisansı unknown durumundadır.",
+    "47 kaynağın yaş ve örneklem kapsamı not_reported olduğu için claim düzeyinde ayrıca kodlanmadan yaş duyarlı iddiaları destekleyemez.",
+    "Bu sonuçlar mühendislik ve kaynak yönetişimi kanıtıdır; bağımsız klinik veya psikometrik validasyon değildir."
+  ]
+}

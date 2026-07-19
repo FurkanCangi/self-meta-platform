@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 8,
+  "title": "Kaynak kimliği, sürüm, düzeltme ve çalışma ailesi",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "source": {
+    "governanceGitSha": "3ec9b3e193e0460f05be6f33cca246ba120d6ae8",
+    "snapshotSha256": "b899bc3a3b071cfd2a9c8bc49f51374e94ee6052b55f8434c500c7ae783b8b15",
+    "ssdAuditSummarySha256": "9fb044d7b5304e76f3ffbfc4052ace64337d5d575597f14ed8df2ca5eafc1d16"
+  },
+  "audit": {
+    "metadataRecords": 47,
+    "doiRecords": 40,
+    "uniqueDois": 40,
+    "verifiedDoiMatches": 40,
+    "duplicateDois": 0,
+    "identityVerified": 39,
+    "identityPending": 8,
+    "identityMismatch": 0,
+    "workVersionCorrectionCohortAudited": 47,
+    "pendingCorrectionResolution": 0
+  },
+  "exitGates": {
+    "doiPmidPmcidIsbnCanonicalization": "passed",
+    "duplicateIdentifiersFailClosed": "passed",
+    "titleAuthorYearVenueCrossCheck": "passed",
+    "preprintAndVersionOfRecordDeduplicated": "passed",
+    "cohortFamilyDeduplication": "passed",
+    "incomingAndOutgoingCorrectionRelationsPreserved": "passed",
+    "unresolvedCorrectionFailsClosed": "passed",
+    "pendingIdentityCannotRelease": "passed"
+  },
+  "interpretation": "Fazın tamamlanması bütün kaynakların uygun olduğu anlamına gelmez; 8 pending kayıt karantinada kalır.",
+  "nextPhase": 9
+}
