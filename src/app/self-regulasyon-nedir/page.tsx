@@ -19,7 +19,7 @@ export default function Page() {
           görev talepleri arasındaki dinamik uyumu da kapsar. Erken çocukluk
           döneminde self-regülasyon becerilerinin gelişimi; öğrenme, sosyal
           etkileşim, oyun, günlük yaşam becerileri ve akademik hazırlık üzerinde
-          doğrudan belirleyici rol oynar.
+          önemli bir işleve sahiptir; tek başına bu sonuçları belirlediği varsayılmaz.
         </p>
 
         <section className="mt-12 space-y-6 text-slate-700 leading-8">
@@ -106,20 +106,19 @@ export default function Page() {
           <p>
             Self-regülasyon güçlükleri klinikte sıklıkla “hareketlilik”,
             “öfke”, “dikkatsizlik” ya da “uyaranlara aşırı tepki” gibi yüzeyde
-            görülen belirtiler üzerinden tarif edilir. Oysa aynı davranış,
-            farklı altta yatan mekanizmalardan kaynaklanabilir. Bir çocukta
-            dikkat sorunu fizyolojik düzensizlikle ilişkiliyken, başka bir
-            çocukta duyusal yüklenme veya yürütücü işlev zorluğu temel belirleyici
-            olabilir.
+            görülen belirtiler üzerinden tarif edilir. Aynı davranış farklı
+            işlevsel bağlamlarda görülebilir. Ölçek ve gözlem örüntüsü bu bağlamları
+            tartışmaya yardımcı olur; altta yatan biyolojik mekanizmayı, fizyolojik
+            durumu veya kesin nedeni ölçmez.
           </p>
 
           <p>
             Bu nedenle yalnızca tek boyutlu tarama yaklaşımı çoğu zaman yetersiz
             kalır. Klinik olarak anlamlı olan, alanlar arası dağılımı ve bu
-            alanların birbirini nasıl etkilediğini görebilmektir. Çok boyutlu
-            değerlendirme, hangi alanların görece korunmuş olduğunu, hangi
-            sistemlerin kırılgan olduğunu ve çocuğun işlevselliğini hangi
-            örüntünün sınırladığını ortaya koyar.
+            alanların aynı işlevsel tabloda nasıl dağıldığını görebilmektir. Çok
+            boyutlu değerlendirme, raporlanan alanlarda görece korunmuş kapasite
+            ve zorlanma örüntülerini görünür kılar; bunların nedeni hakkında kesin
+            sonuç üretmez.
           </p>
         </section>
 
@@ -138,12 +137,11 @@ export default function Page() {
           </p>
 
           <p>
-            Klinik karar verme sürecinde hangi alanın tetikleyici, hangisinin
-            ikincil etkilenim alanı, hangisinin göreli koruyucu alan olduğunun
-            anlaşılması müdahale planlamasını doğrudan etkiler. Örneğin duyusal
-            regülasyonu korunmuş fakat fizyolojik düzenleme kırılgan olan bir
-            çocuk ile; duyusal yüklenmesi belirgin fakat fizyolojik yapısı daha
-            dengeli olan bir çocuk için aynı klinik yaklaşım uygun olmayabilir.
+            Klinik karar verme sürecinde raporlanan zorlanma ve korunmuş kapasite
+            alanları, terapistin daha geniş değerlendirmesi içinde ele alınır.
+            Bir alanın diğerinin tetikleyicisi, ikincil sonucu veya biyolojik
+            nedeni olduğu yalnız bu değerlendirmeden çıkarılamaz; müdahale kararı
+            terapiste aittir.
           </p>
         </section>
 
@@ -154,16 +152,16 @@ export default function Page() {
 
           <p>
             DNA Intelligence Platform, self-regülasyonun farklı bileşenlerini birlikte ele
-            alan açıklanabilir, deterministik bir klinik karar destek platformudur.
+            alan açıklanabilir, deterministik bir klinik çalışma platformudur.
             Sistem, farklı alanlardan gelen puanları yalnızca toplamaz; aynı
-            zamanda bunlar arasındaki örüntüyü analiz ederek klinik açıdan anlamlı
-            bir profil oluşturur.
+            zamanda kayıtlı kurallarla bunların dağılımını özetleyerek terapist
+            incelemesine açık bir rapor taslağı oluşturur.
           </p>
 
           <p>
             Bu yapı sayesinde terapist, yalnızca “riskli” veya “tipik” gibi
             yüzeysel sınıflamalara değil; alanlar arası ilişkinin niteliğine,
-            öncelikli zorlanma alanlarına, korunmuş sistemlere ve anamnez ile
+            göreli zorlanma alanlarına, korunmuş kapasitelere ve anamnez ile
             ölçüm bulguları arasındaki uyuma da erişir. Böylece değerlendirme
             raporu daha tutarlı, daha sistematik ve daha veri temelli hale gelir.
           </p>
@@ -171,8 +169,8 @@ export default function Page() {
           <p>
             Amaç, terapistin klinik karar verme sürecini ikame etmek değildir.
             Amaç, çok boyutlu verinin düzenlenmesini, örüntü analizini ve rapor
-            üretimini güçlendirerek daha güvenli ve daha standardize bir
-            değerlendirme altyapısı sunmaktır.
+            taslağını güçlendirerek daha standardize bir değerlendirme altyapısı
+            sunmaktır. Sistem klinik öncelik veya müdahale planı üretmez.
           </p>
         </section>
 
@@ -188,9 +186,9 @@ export default function Page() {
             birbirinden bağımsız değil; sürekli etkileşim içinde işlediği kabul
             edildiğinde, değerlendirme yaklaşımının da bu karmaşıklığı
             yansıtması gerekir. DNA Intelligence Platform bu ihtiyaca yanıt vermek için,
-            self-regülasyon alanlarını bütüncül biçimde analiz eden ve klinik
-            karar destek mantığıyla çalışan yeni nesil bir değerlendirme zemini
-            sunar.
+            self-regülasyon alanlarındaki değerlendirme verisini deterministik
+            kurallarla yapılandıran bir klinik çalışma zemini sunar. Platform
+            davranıştan biyolojik mekanizma çıkarmaz; nihai klinik yorum terapiste aittir.
           </p>
         </section>
       </main>

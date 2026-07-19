@@ -96,14 +96,14 @@ const approachFlow = [
   },
   {
     step: "03",
-    title: "Örüntüyü ayırma",
-    text: "Örüntüler ayrılır, öncelikler görünür olur.",
+    title: "Alan dağılımı",
+    text: "Göreli zorlanma ve korunmuş kapasite alanları görünür olur.",
     Icon: BrainCircuit,
   },
   {
     step: "04",
-    title: "Klinik rapor",
-    text: "Gerekçeli çıktı klinik karara hazırlanır.",
+    title: "Rapor taslağı",
+    text: "Gerekçesi ve sınırı görünür taslak terapist incelemesine sunulur.",
     Icon: FileText,
   },
 ];
@@ -119,7 +119,7 @@ const conceptColumns = [
     label: "Deterministik sistem",
     title: "DNA Intelligence",
     text: "Bu klinik dili dijital değerlendirme, veri sentezi ve rapor üretimi için kullanır; tanı koymaz, kararın yerini almaz.",
-    points: ["Değerlendirme verisini yapılandırır", "Örüntüleri ve öncelikleri görünür kılar", "Açıklanabilir klinik rapor taslağı üretir"],
+    points: ["Değerlendirme verisini yapılandırır", "Göreli zorlanma, kapasite ve sınırları görünür kılar", "Açıklanabilir rapor taslağı üretir"],
   },
 ];
 
@@ -248,20 +248,20 @@ const assessmentStages = [
   },
   {
     number: "02",
-    label: "Örüntüyü ayırın",
-    title: "Altı regülasyon alanının birbirini nasıl etkilediğini görün.",
-    text: "Alanlar tek bir toplam puana indirgenmeden karşılaştırılır; öncelik, eşlik eden güçlükler ve güçlü yönler birlikte okunur.",
+    label: "Dağılımı inceleyin",
+    title: "Altı regülasyon alanının aynı profildeki dağılımını görün.",
+    text: "Alanlar tek bir toplam puana indirgenmeden karşılaştırılır; göreli zorlanma, eşlik eden bulgular ve korunmuş kapasite birlikte gösterilir. Bu dağılım neden veya mekanizma kanıtlamaz.",
     items: ["Fizyolojik", "Duyusal", "Duygusal", "Bilişsel", "Yürütücü", "Sosyal katılım"],
-    outcome: "Birincil güçlük, eşlik eden alanlar ve koruyucu güçlü yönler ayrışır.",
+    outcome: "Göreli zorlanma, eşlik eden bulgu ve korunmuş kapasite ayrışır.",
     Icon: BrainCircuit,
   },
   {
     number: "03",
-    label: "Önceliği netleştirin",
-    title: "Profil bilgisini gerekçeli klinik karara taşıyın.",
-    text: "Görünür örüntü; müdahale hedefi, takip göstergesi ve rapor dili için düzenli bir karar izine dönüşür.",
-    items: ["Klinik öncelik", "Müdahale hedefi", "Takip göstergesi", "Rapor özeti"],
-    outcome: "Terapist neyi önce ele alacağını ve nedenini daha açık görür.",
+    label: "Terapist incelemesi",
+    title: "Profil taslağını mesleki değerlendirme içinde inceleyin.",
+    text: "Sistem rapor özetini, dayanakları ve veri sınırlılıklarını düzenler. Klinik öncelik, hedef ve takip kararını terapist verir.",
+    items: ["Rapor özeti", "Bulgu dayanakları", "Veri sınırlılıkları", "Terapist notu"],
+    outcome: "Taslak, klinik kararın yerine geçmeden terapist incelemesini destekler.",
     Icon: Target,
   },
 ];
@@ -278,17 +278,17 @@ const assessmentProfileNotes = [
     Icon: Users,
   },
   {
-    title: "Açıklanabilir karar",
-    text: "Öncelik ve müdahale gerekçesi izlenebilir bir klinik dile dönüşür.",
+    title: "Terapist kontrolü",
+    text: "Sistem bulgu ve sınırlılıkları görünür kılar; öncelik ve müdahale kararını terapist verir.",
     Icon: Target,
   },
 ];
 
 const assessmentReadout = [
-  { label: "Birincil öncelik", value: "Yürütücü işlevler" },
+  { label: "Göreli zorlanma", value: "Yürütücü işlevler" },
   { label: "Eşlik eden alan", value: "Duyusal regülasyon" },
-  { label: "Koruyucu alan", value: "Fizyolojik düzenleme" },
-  { label: "Takip odağı", value: "Göreve geçiş ve sürdürme" },
+  { label: "Korunmuş kapasite", value: "Fizyolojik düzenleme" },
+  { label: "Veri sınırlılığı", value: "Biyolojik ölçüm bulunmuyor" },
 ];
 
 const interventionHeroSignals = [
@@ -380,8 +380,8 @@ const interventionValuePoints = [
 
 const aiReportSignals = [
   { title: "Çoklu veri okuması", text: "Anamnez, ölçüm ve gözlem aynı bağlamda", Icon: Layers3 },
-  { title: "AI klinik sentezi", text: "Örüntüler ve öncelikler görünür", Icon: Sparkles },
-  { title: "Terapist onaylı çıktı", text: "Düzenlenebilir profesyonel rapor", Icon: ShieldCheck },
+  { title: "Deterministik örüntü özeti", text: "Bulgular ve sınırlar görünür", Icon: Sparkles },
+  { title: "Terapist kontrollü çıktı", text: "İncelenebilir ve düzenlenebilir taslak", Icon: ShieldCheck },
 ];
 
 const aiReportSources = [
@@ -393,9 +393,9 @@ const aiReportSources = [
 
 const aiReportSections = [
   { title: "Klinik özet", Icon: FileText },
-  { title: "Öncelikli alanlar", Icon: Target },
-  { title: "Hedefler", Icon: ListChecks },
-  { title: "Takip göstergeleri", Icon: BarChart3 },
+  { title: "Göreli zorlanma", Icon: Target },
+  { title: "Korunmuş kapasite", Icon: ListChecks },
+  { title: "Veri sınırlılıkları", Icon: BarChart3 },
 ];
 
 const aiCapabilities = [
@@ -409,17 +409,17 @@ const aiCapabilities = [
   },
   {
     step: "02",
-    eyebrow: "Analiz eder",
-    title: "Klinik örüntüleri, güçlü alanları ve öncelikleri görünür kılar.",
-    text: "AI, veriler arasındaki ilişkileri düzenleyerek terapistin dikkat etmesi gereken alanları daha hızlı görmesine yardımcı olur.",
-    outcome: "Açık öncelikler ve daha güçlü klinik muhakeme",
+    eyebrow: "Özetler",
+    title: "Göreli zorlanma, korunmuş kapasite ve veri sınırlarını görünür kılar.",
+    text: "Kayıtlı deterministik kurallar alan dağılımını özetler; neden, mekanizma veya klinik öncelik belirlemez.",
+    outcome: "Dayanağı ve sınırı açık bulgu özeti",
     Icon: BrainCircuit,
   },
   {
     step: "03",
     eyebrow: "Raporlaştırır",
-    title: "Klinik dili koruyan profesyonel bir rapor taslağı hazırlar.",
-    text: "Özet, klinik öncelikler, hedefler ve takip göstergeleri okunabilir bir rapor akışında yapılandırılır.",
+    title: "Terapist incelemesine açık bir rapor taslağı hazırlar.",
+    text: "Özet, dayanak, korunmuş kapasite ve veri sınırlılıkları okunabilir bir rapor akışında yapılandırılır; hedef veya takip kararı üretilmez.",
     outcome: "Terapist incelemesine hazır rapor taslağı",
     Icon: FileCheck2,
   },
@@ -432,13 +432,13 @@ const aiReportJourney = [
     Icon: Database,
   },
   {
-    title: "AI analizini çalıştırın",
-    text: "Sistem verileri birlikte okuyarak örüntüleri ve öncelikleri düzenlesin.",
+    title: "Deterministik özeti oluşturun",
+    text: "Sistem kayıtlı kurallarla alan dağılımını, dayanakları ve sınırlılıkları düzenlesin.",
     Icon: Sparkles,
   },
   {
     title: "Taslağı klinik gözle inceleyin",
-    text: "Rapor dilini, hedefleri ve yorumları vaka bağlamına göre değerlendirin.",
+    text: "Rapor dilini, bulguları ve sınırlılıkları vaka bağlamına göre değerlendirin; klinik kararları siz ekleyin.",
     Icon: UserRound,
   },
   {
@@ -451,7 +451,7 @@ const aiReportJourney = [
 const aiValuePoints = [
   { title: "Daha hızlı dokümantasyon", text: "Tekrarlayan rapor yazım yükünü azaltın.", Icon: TimerReset },
   { title: "Daha net klinik anlatım", text: "Karmaşık veriyi anlaşılır bir rapor akışına taşıyın.", Icon: BrainCircuit },
-  { title: "Kontrol sizde", text: "AI taslağını inceleyin, düzenleyin ve yalnızca siz onaylayın.", Icon: ShieldCheck },
+  { title: "Kontrol sizde", text: "Deterministik taslağı inceleyin, düzenleyin ve yalnızca siz onaylayın.", Icon: ShieldCheck },
 ];
 
 const labModules = [
@@ -538,7 +538,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
     : isInterventionPage
       ? "Müdahale planınızı daha net ve izlenebilir kurun."
     : isAiReportPage
-      ? "AI destekli klinik raporlama akışınızı birlikte kuralım."
+      ? "Deterministik rapor taslağı akışınızı birlikte kuralım."
     : isFutureModulesPage
       ? "Yeni modülleri klinik ihtiyaçlarla birlikte şekillendirelim."
     : "Değerlendirme ve raporlama akışınızı birlikte yapılandıralım.";
@@ -549,7 +549,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
     : isInterventionPage
       ? "Değerlendirme bulgusundan klinik hedefe, uygulamadan takip göstergesine uzanan akışı birlikte yapılandıralım."
     : isAiReportPage
-      ? "Klinik veriyi birleştiren, öncelikleri görünür kılan ve terapist onayına hazır rapor taslağı oluşturan AI deneyimini yakından inceleyin."
+      ? "Klinik veriyi kaynaklarını koruyarak düzenleyen, bulgu ve sınırlılıkları görünür kılan terapist kontrollü rapor taslağını inceleyin."
     : isFutureModulesPage
       ? "DNA Labs yol haritasını inceleyin; kullanım senaryoları, pilot çalışmalar ve erken erişim hakkında bilgi alın."
     : "Eğitim modelinden ölçüm formuna, deterministik analizden rapor diline kadar klinik sürecin nasıl kurulacağını birlikte netleştirebiliriz.";
@@ -604,18 +604,18 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
           <>
             <section className={styles.signalHero}>
               <div className={styles.signalHeroCopy}>
-                <span className={styles.signalEyebrow}>Klinik karar desteği</span>
+                <span className={styles.signalEyebrow}>Deterministik klinik çalışma platformu</span>
                 <h1>DNA Intelligence</h1>
                 <h2>
                   Örüntüyü görün.
                   <br />
-                  Önceliği belirleyin.
+                  Kararı siz verin.
                   <br />
                   Raporu netleştirin.
                 </h2>
                 <p>
                   Dynamic Neuro-Regulation Approach klinik çerçeveyi kurar; DNA Intelligence veriyi düzenler,
-                  öncelikleri görünür kılar ve rapora taşır.
+                  göreli zorlanma, korunmuş kapasite ve veri sınırlarını rapor taslağına taşır. Klinik önceliği terapist belirler.
                 </p>
                 <div className={styles.signalActions}>
                   <Link className={styles.signalPrimaryAction} href="#klinik-akis">
@@ -631,8 +631,8 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
               <figure className={styles.signalMap} aria-labelledby="signal-map-title">
                 <figcaption className={styles.signalPriority} id="signal-map-title">
                   <Target size={19} strokeWidth={2.2} aria-hidden="true" />
-                  <span>Birincil öncelik</span>
-                  <strong>Fizyolojik toparlanma</strong>
+                  <span>Temsili göreli zorlanma</span>
+                  <strong>Fizyolojik regülasyon</strong>
                 </figcaption>
                 <div className={styles.signalMapCanvas}>
                   <div className={styles.signalCore} aria-label="Regülasyon çekirdeği">
@@ -671,11 +671,11 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
               </figure>
             </section>
 
-            <section className={styles.clinicalPathway} id="klinik-akis" aria-label="Klinik karar desteği akışı">
+            <section className={styles.clinicalPathway} id="klinik-akis" aria-label="Eğitim ve deterministik rapor taslağı akışı">
               <div className={styles.clinicalPathwayHeader}>
                 <div>
                   <span>Klinik akış</span>
-                  <h2>Veriden karara, tek çizgide.</h2>
+                  <h2>Eğitimden terapist incelemesine, sınırları açık bir akış.</h2>
                 </div>
                 <p>Dört adım, tek bir klinik mantık: çerçeveyi kur, veriyi birleştir, örüntüyü ayır ve raporu netleştir.</p>
               </div>
@@ -695,10 +695,10 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
               </div>
             </section>
 
-            <section className={styles.modelBridgeSection} id="model-ayrimi" aria-label="Eğitim modeli ve karar destek sistemi ayrımı">
+            <section className={styles.modelBridgeSection} id="model-ayrimi" aria-label="Eğitim modeli ve deterministik platform ayrımı">
               <div className={styles.modelBridgeHeader}>
                 <span>İki tamamlayıcı katman</span>
-                <h2>Tek klinik karar, iki tamamlayıcı güç.</h2>
+                <h2>Eğitim çerçevesi ve ayrı bir deterministik platform.</h2>
                 <p>Eğitim düşünme çerçevesini kurar; DNA Intelligence bu çerçeveyi düzenli, izlenebilir bir çıktıya taşır.</p>
               </div>
               <div className={styles.modelBridgeCanvas}>
@@ -738,7 +738,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
                   </span>
                   <div>
                     <small>Ortak çıktı</small>
-                    <strong>Öncelikleri görünür, gerekçesi izlenebilir klinik rapor.</strong>
+                    <strong>Dayanakları ve sınırlılıkları görünür, terapist kontrollü rapor taslağı.</strong>
                   </div>
                 </div>
                 <div className={styles.modelBridgeActions}>
@@ -932,11 +932,11 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
                 <div className={styles.eyebrow}>{page.eyebrow}</div>
                 <h1>DNA Intelligence Değerlendirme Sistemi</h1>
                 <h2>
-                  Veriyi toplayın. Örüntüyü görün. <span>Klinik önceliği netleştirin.</span>
+                  Veriyi toplayın. Örüntüyü görün. <span>Klinik kararı siz verin.</span>
                 </h2>
                 <p>
                   Anamnez, gözlem, ölçek ve terapist yorumunu altı regülasyon alanında birleştirin; dağınık bulguları
-                  gerekçesi açık bir klinik profile dönüştürün.
+                  gerekçesi ve sınırı açık bir rapor taslağına dönüştürün. Sistem neden, mekanizma veya müdahale kararı üretmez.
                 </p>
                 <div className={styles.evaluationActions}>
                   <Link className={styles.primary} href="#degerlendirme-akisi">
@@ -992,12 +992,12 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
                   <div className={styles.evaluationMapResultTitle}>
                     <BrainCircuit size={22} strokeWidth={1.9} aria-hidden="true" />
                     <div>
-                      <span>Klinik profil</span>
-                      <strong>Önceliği ve gerekçeyi görünür kılar</strong>
+                      <span>Yapılandırılmış profil taslağı</span>
+                      <strong>Göreli zorlanma, kapasite ve sınırları görünür kılar</strong>
                     </div>
                   </div>
                   <ul>
-                    <li>Birincil öncelik</li>
+                    <li>Göreli zorlanma</li>
                     <li>Eşlik eden örüntü</li>
                     <li>Koruyucu güçlü alan</li>
                   </ul>
@@ -1013,10 +1013,9 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
             <section className={styles.evaluationJourney} id="degerlendirme-akisi">
               <div className={styles.evaluationJourneyIntro}>
                 <span>Değerlendirme akışı</span>
-                <h2>Üç aşamada bulgudan klinik önceliğe.</h2>
+                <h2>Üç aşamada veriden terapist incelemesine.</h2>
                 <p>
-                  Sistem yalnızca puanları yan yana koymaz; her aşama bir sonraki klinik kararı hazırlayacak şekilde
-                  ilerler.
+                  Sistem puan, kaynak ve sınırlılıkları yapılandırır; klinik öncelik ve sonraki adım kararını terapiste bırakır.
                 </p>
               </div>
               <div className={styles.evaluationJourneyList}>
@@ -1308,11 +1307,11 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
           <>
             <section className={styles.aiModernHero}>
               <div className={styles.aiModernHeroCopy}>
-                <div className={styles.eyebrow}>AI Destekli Klinik Raporlama</div>
-                <h1>Klinik veriyi AI ile anlamlandırın. <span>Raporu netleştirin.</span></h1>
+                <div className={styles.eyebrow}>Deterministik Klinik Raporlama</div>
+                <h1>Klinik veriyi açıklanabilir kurallarla düzenleyin. <span>Rapor taslağını inceleyin.</span></h1>
                 <p>
-                  DNA Intelligence AI; anamnez, ölçüm, gözlem ve terapist notlarını aynı klinik bağlamda birleştirir,
-                  örüntüleri görünür kılar ve uzman incelemesine hazır bir rapor taslağı oluşturur.
+                  DNA Intelligence; anamnez, ölçüm, gözlem ve terapist notlarını kaynaklarını koruyarak düzenler,
+                  kayıtlı kurallarla örüntüleri görünür kılar ve terapist incelemesine açık bir rapor taslağı oluşturur.
                 </p>
                 <div className={styles.aiModernActions}>
                   <Link className={styles.primary} href="#ai-rapor-akisi">
@@ -1320,7 +1319,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
                   </Link>
                   <Link className={styles.secondary} href="/iletisim">Bilgi Al</Link>
                 </div>
-                <div className={styles.aiModernSignals} aria-label="AI raporlama özellikleri">
+                <div className={styles.aiModernSignals} aria-label="Deterministik rapor taslağı özellikleri">
                   {aiReportSignals.map((item) => (
                     <article key={item.title}>
                       <item.Icon size={19} strokeWidth={2} aria-hidden="true" />
@@ -1330,7 +1329,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
                 </div>
               </div>
 
-              <aside className={styles.aiClinicalWorkspace} aria-label="AI destekli klinik raporlama örneği">
+              <aside className={styles.aiClinicalWorkspace} aria-label="Deterministik klinik rapor taslağı örneği">
                 <header>
                   <div>
                     <Image
@@ -1340,9 +1339,9 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
                       height={657}
                       aria-hidden="true"
                     />
-                    <div><span>DNA Intelligence AI</span><strong>Klinik rapor çalışma alanı</strong></div>
+                    <div><span>DNA Intelligence</span><strong>Deterministik rapor çalışma alanı</strong></div>
                   </div>
-                  <span>AI aktif</span>
+                  <span>Kural motoru aktif</span>
                 </header>
                 <div className={styles.aiWorkspaceSources}>
                   <span>Klinik veri</span>
@@ -1353,9 +1352,9 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
                   </div>
                 </div>
                 <div className={styles.aiWorkspaceCore}>
-                  <span><Sparkles size={17} strokeWidth={2} aria-hidden="true" /> AI klinik sentezi</span>
-                  <h2>Veriyi ilişkilendirir, örüntüyü görünür kılar, rapor diline taşır.</h2>
-                  <div><span>Güçlü alanlar</span><span>Destek ihtiyaçları</span><span>Klinik öncelikler</span></div>
+                  <span><Sparkles size={17} strokeWidth={2} aria-hidden="true" /> Deterministik örüntü özeti</span>
+                  <h2>Kaynakları düzenler, alan dağılımını görünür kılar ve rapor taslağına taşır.</h2>
+                  <div><span>Korunmuş kapasite</span><span>Göreli zorlanma</span><span>Veri sınırlılıkları</span></div>
                 </div>
                 <div className={styles.aiWorkspaceOutput}>
                   <div><span>Rapor taslağı</span><strong>Terapist incelemesine hazır</strong></div>
@@ -1374,9 +1373,9 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
 
             <section className={styles.aiCapabilitySection} aria-labelledby="ai-yetenekler-baslik">
               <div className={styles.aiCapabilityIntro}>
-                <span>AI ne yapar?</span>
-                <h2 id="ai-yetenekler-baslik">Klinik muhakemeyi hızlandıran üç temel görev.</h2>
-                <p>AI, klinisyenin yerine karar vermez; veriyi daha hızlı okumasına ve raporlamasına yardımcı olur.</p>
+                <span>Deterministik motor ne yapar?</span>
+                <h2 id="ai-yetenekler-baslik">Veriyi yapılandıran üç sınırlandırılmış görev.</h2>
+                <p>Motor klinisyenin yerine karar vermez; kayıtlı kurallarla bulgu taslağı ve veri sınırlarını görünür kılar.</p>
               </div>
               <div className={styles.aiCapabilityList}>
                 {aiCapabilities.map((item) => (
@@ -1396,8 +1395,8 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
 
             <section className={styles.aiReportPreviewSection} aria-labelledby="ai-rapor-onizleme-baslik">
               <header>
-                <div><span>AI rapor taslağı</span><h2 id="ai-rapor-onizleme-baslik">Karmaşık veriden okunabilir klinik özet.</h2></div>
-                <strong><Sparkles size={16} strokeWidth={2} aria-hidden="true" /> AI tarafından yapılandırıldı</strong>
+                <div><span>Deterministik rapor taslağı</span><h2 id="ai-rapor-onizleme-baslik">Karmaşık veriden incelenebilir bulgu özeti.</h2></div>
+                <strong><Sparkles size={16} strokeWidth={2} aria-hidden="true" /> Deterministik kurallarla yapılandırıldı</strong>
               </header>
               <div className={styles.aiReportPreviewBody}>
                 <aside aria-label="Rapor bölümleri">
@@ -1408,19 +1407,19 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
                   ))}
                 </aside>
                 <div className={styles.aiReportPreviewContent}>
-                  <div><span>Klinik özet</span><strong>Uzman onayı bekliyor</strong></div>
+                  <div><span>Klinik özet</span><strong>Terapist incelemesi bekliyor</strong></div>
                   <p>
                     Değerlendirme verileri, duyusal yük ve yürütücü talepler arttığında düzenleme kapasitesinin
                     zorlandığını; yapılandırılmış çevre ve öngörülebilir görev akışında katılımın güçlendiğini göstermektedir.
                   </p>
                   <div className={styles.aiReportPreviewFindings}>
-                    <article><span>Öncelikli örüntü</span><strong>Duyusal yük altında görev sürdürme</strong></article>
-                    <article><span>İlk klinik hedef</span><strong>Geçişleri daha öngörülebilir hale getirme</strong></article>
-                    <article><span>Takip göstergesi</span><strong>Göreve başlama süresi ve gereken yardım</strong></article>
+                    <article><span>Göreli zorlanma</span><strong>Duyusal yük altında görev sürdürme</strong></article>
+                    <article><span>Korunmuş kapasite</span><strong>Yapılandırılmış ortamda katılım</strong></article>
+                    <article><span>Veri sınırlılığı</span><strong>Biyolojik mekanizma doğrudan ölçülmedi</strong></article>
                   </div>
                 </div>
               </div>
-              <footer><ShieldCheck size={18} strokeWidth={2} aria-hidden="true" />AI taslağı düzenlenebilir; nihai içerik yalnızca terapistin inceleme ve onayıyla tamamlanır.</footer>
+              <footer><ShieldCheck size={18} strokeWidth={2} aria-hidden="true" />Deterministik taslak düzenlenebilir; nihai içerik yalnızca terapistin inceleme ve onayıyla tamamlanır.</footer>
             </section>
 
             <section className={styles.aiJourneySection} id="ai-rapor-akisi">
@@ -1440,7 +1439,7 @@ export default function DnaInfoPage({ page }: { page: DnaPage }) {
               </div>
             </section>
 
-            <section className={styles.aiValueSection} aria-label="AI raporlamanın klinik katkıları">
+            <section className={styles.aiValueSection} aria-label="Deterministik rapor taslağının dokümantasyon katkıları">
               <div><span>Klinik katkı</span><h2>Daha az yazım yükü, daha net klinik iletişim.</h2></div>
               <div className={styles.aiValueList}>
                 {aiValuePoints.map((item, index) => (

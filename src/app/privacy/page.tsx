@@ -1,4 +1,8 @@
 import LegalDocumentPage from "../components/legal/LegalDocumentPage"
+import {
+  DNA_INTELLIGENCE_AUDIT_NOTICE_TR,
+  DNA_INTELLIGENCE_PUBLIC_INTENDED_USE,
+} from "@/lib/dna/chat/intendedUse"
 
 export default function PrivacyPage() {
   return (
@@ -10,7 +14,7 @@ export default function PrivacyPage() {
           title: "1. Kapsam",
           body: [
             "Bu politika, DNA Intelligence web uygulamasını, değerlendirme formlarını, rapor üretim araçlarını, owner/admin denetim panelini, destek süreçlerini ve varsa video gözlem MVP modülünü kapsar.",
-            "Platform uzmanlara karar destek aracı sunar. Platform çıktıları tek başına tanı, tedavi, terapi planı veya tıbbi karar yerine geçmez; nihai mesleki değerlendirme uzman kullanıcıya aittir.",
+            "Platform değerlendirme verisini yapılandırma ve deterministik rapor taslağı oluşturma araçları sunar. Çıktılar tek başına tanı, tedavi, terapi planı veya tıbbi karar yerine geçmez; nihai mesleki değerlendirme uzman kullanıcıya aittir.",
           ],
         },
         {
@@ -39,14 +43,23 @@ export default function PrivacyPage() {
           ],
         },
         {
-          title: "5. Saklama, Silme ve Owner Audit",
+          title: "5. DNA Asistanı Sohbet ve Rapor Bağlamı",
+          body: [
+            DNA_INTELLIGENCE_PUBLIC_INTENDED_USE.descriptionTr,
+            DNA_INTELLIGENCE_PUBLIC_INTENDED_USE.privacyTr,
+            DNA_INTELLIGENCE_AUDIT_NOTICE_TR,
+            "DNA Asistanı çalışma zamanında harici LLM, model API'si veya internet araması kullanmaz. Rapor gerektirmeyen genel bilgi sorularında seçili rapor bağlamı okunmaz.",
+          ],
+        },
+        {
+          title: "6. Saklama, Silme ve Owner Audit",
           body: [
             "Kullanıcı arayüzünde silinen kayıtlar günlük kullanım görünürlüğünden kaldırılabilir. Ancak denetim, veri bütünlüğü, uyuşmazlık, yasal saklama ve güvenlik amaçlarıyla sınırlı snapshot kayıtları owner audit katmanında saklanabilir.",
             "Saklama süreleri veri kategorisine, hukuki sebebe, sözleşme ilişkisine, yasal yükümlülüklere ve teknik güvenlik ihtiyacına göre belirlenir. Süresi dolan veriler silinir, yok edilir veya anonim hale getirilir.",
           ],
         },
         {
-          title: "6. Kullanıcı Hakları ve İletişim",
+          title: "7. Kullanıcı Hakları ve İletişim",
           body: [
             "İlgili kişiler KVKK kapsamındaki başvuru haklarını kullanmak için [ILETISIM_EPOSTA] adresine başvurabilir. Başvuruda kimlik doğrulama ve talebin hangi veriyle ilgili olduğunun açıklanması istenebilir.",
             "Uzman kullanıcı, platforma girdiği danışan/çocuk verileri için gerekli bilgilendirme ve izinleri aldığını; yetkisiz veri girmeyeceğini kabul eder.",

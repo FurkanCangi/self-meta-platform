@@ -31,6 +31,13 @@ const EVIDENCE_LABELS: Record<DnaChatCatalogEvidenceLevel, string> = {
   boundary: "Ürün sınırı",
 }
 
+const EVIDENCE_CONSERVATISM_ORDER: readonly DnaChatCatalogEvidenceLevel[] = [
+  "strong",
+  "moderate",
+  "limited",
+  "theoretical",
+]
+
 const AGE_SCOPE_LABELS: Record<DnaChatCatalogTopic["ageScope"], string> = {
   all_ages: "Tüm yaşlar için genel çerçeve",
   developmental: "Gelişimsel çerçeve",
@@ -394,6 +401,9 @@ function sourceRef(source: DnaChatCatalogSource, excerpt: string): DnaChatSource
     doi: source.doi,
     url: source.url,
     claimBoundary: source.claimBoundary,
+    ageScope: AGE_SCOPE_LABELS[source.ageScope],
+    studyType: source.studyType,
+    sampleScope: `${AGE_SCOPE_LABELS[source.ageScope]}; çalışma türü: ${source.studyType}. Ayrıntılı örneklem büyüklüğü ve özellikleri katalog kaydında yapılandırılmamıştır.`,
   }
 }
 
@@ -431,11 +441,44 @@ function collectSources(
   return refs.slice(0, 4)
 }
 
-function evidenceSummary(topic: DnaChatCatalogTopic): DnaChatEvidenceSummary {
+function evidenceSummary(
+  topic: DnaChatCatalogTopic,
+  claims: readonly DnaChatCatalogClaim[] = [],
+  relations: readonly DnaChatCatalogRelation[] = [],
+  sources: readonly DnaChatSourceRef[] = [],
+): DnaChatEvidenceSummary {
+  // `boundary` is a product/safety constraint, not a scientific evidence tier.
+  // Mixing it into a topic's evidence or age aggregation would make a strong
+  // literature topic appear to have "Ürün sınırı" evidence and could also pull
+  // a generic all-ages safety relation into an adult-weighted evidence summary.
+  const scientificClaims = claims.filter((claim) => claim.evidenceLevel !== "boundary")
+  const scientificRelations = relations.filter((relation) => relation.evidenceLevel !== "boundary")
+  const evidenceLevels = [
+    topic.evidenceLevel,
+    ...scientificClaims.map((claim) => claim.evidenceLevel),
+    ...scientificRelations.map((relation) => relation.evidenceLevel),
+  ]
+  const conservativeLevel = [...evidenceLevels].sort(
+    (left, right) =>
+      EVIDENCE_CONSERVATISM_ORDER.indexOf(right) -
+      EVIDENCE_CONSERVATISM_ORDER.indexOf(left),
+  )[0] ?? topic.evidenceLevel
+  const ageScopes = stableUnique([
+    AGE_SCOPE_LABELS[topic.ageScope],
+    ...scientificClaims.map((claim) => AGE_SCOPE_LABELS[claim.ageScope]),
+    ...scientificRelations.map((relation) => AGE_SCOPE_LABELS[relation.ageScope]),
+  ], 3)
+  const boundaries = stableUnique([
+    topic.claimBoundary,
+    ...relations.map((relation) => relation.claimBoundary),
+  ], 3)
   return {
-    level: EVIDENCE_LABELS[topic.evidenceLevel],
-    ageScope: AGE_SCOPE_LABELS[topic.ageScope],
-    boundary: topic.claimBoundary,
+    level: EVIDENCE_LABELS[conservativeLevel],
+    ageScope: ageScopes.join(" · "),
+    sampleScope: sources.length
+      ? `Yanıtta ${sources.length} kaynak kaydı kullanıldı. Çalışma türü ve yaş kapsamı kaynak kartlarında gösterilir; ayrıntılı örneklem büyüklüğü yapılandırılmamışsa bu eksiklik açıkça belirtilir.`
+      : "Konu düzeyinde ayrıntılı örneklem büyüklüğü yapılandırılmamıştır; bu eksiklik bir örneklem sonucu gibi tamamlanmaz.",
+    boundary: boundaries.join(" "),
   }
 }
 
@@ -763,6 +806,6 @@ export function resolveDnaCatalogReasoning(input: {
       `${topic.title} için kanıt düzeyi nedir?`,
       `${topic.title} DNA alanlarıyla nasıl ilişkilidir?`,
     ], 3),
-    evidenceSummary: evidenceSummary(topic),
+    evidenceSummary: evidenceSummary(topic, claims, relations, sources),
   }
 }

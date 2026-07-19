@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 1,
+  "title": "Amaçlanan kullanım sözleşmesi",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "source": {
+    "baseGitSha": "33e5bfae316a7bba653f9ff63914e66c184bc5d4",
+    "branch": "codex/dna-intelligence-v3",
+    "intendedUseVersion": "dna-intelligence-intended-use@1",
+    "engineVersion": "dna-chat-engine@2",
+    "catalogVersion": "dna-chat-catalog@2"
+  },
+  "evidence": {
+    "gateEvidence": "docs/dna-intelligence/program/evidence/phase-01-intended-use-gates.json",
+    "runtimeContract": "src/lib/dna/chat/intendedUse.ts",
+    "contractArtifact": "docs/dna-intelligence/governance/intended-use-contract.json",
+    "contractDocumentation": "docs/dna-intelligence/governance/intended-use.md",
+    "behaviorMatrix": "scripts/dna-chat-fixtures/intended-use-matrix.json"
+  },
+  "coverage": {
+    "supported": "9/9",
+    "prohibited": "10/10",
+    "prohibitedHoldout": "32/32",
+    "independentAdversarialRegression": "40/40",
+    "negativeContrastPairs": "14/14",
+    "reasoningSupported": "313/316",
+    "reasoningSafetyRefusal": "341/341",
+    "reasoningUnsupportedSafe": "271/271"
+  },
+  "exitGates": {
+    "everySupportedBehaviorAutomated": "passed",
+    "everyProhibitedBehaviorAutomated": "passed",
+    "engineApiUiMarketingLegalParity": "passed",
+    "externalRuntimeModelBan": "passed",
+    "apiOwnershipAndAuditContract": "passed",
+    "auditMetadataMinimization": "passed",
+    "productionHttp": "passed",
+    "catalog": "passed",
+    "reasoning": "passed",
+    "security": "passed",
+    "quality": "passed",
+    "determinism": "passed",
+    "reportPrivacy": "passed",
+    "reportForbiddenImports": "passed",
+    "securitySmoke": "passed",
+    "securityReadiness": "passed",
+    "lint": "passed",
+    "build": "passed",
+    "v2RollbackBaseline": "passed",
+    "independentReview": "passed_with_no_blockers"
+  },
+  "worktreeBoundary": {
+    "preservedUnrelatedPaths": [
+      "scripts/activity-pilot/"
+    ]
+  },
+  "knownLimitations": [
+    "Mühendislik kapıları bağımsız klinik validasyon değildir.",
+    "İnsan uzman onayı bekleyen bilimsel kayıtlar bu fazda onaylanmış sayılmaz.",
+    "Otomatik 24 aylık audit imhası üretimde henüz doğrulanmamıştır.",
+    "Güncel canlı Supabase çapraz-hesap kanıtı sonraki güvenlik ve yayın fazlarında yenilenecektir."
+  ],
+  "nextPhase": 2
+}

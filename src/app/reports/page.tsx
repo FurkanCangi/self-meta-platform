@@ -304,12 +304,17 @@ export default function ReportsPage() {
                   DNA Asistanı uygunluğu doğrulanıyor…
                 </div>
               ) : chatEligibilityStatus === "ready" && chatEligibleReportIds.has(selected.id) ? (
-                <Link
-                  href={`/dna-asistani?report_id=${encodeURIComponent(selected.id)}&surface=app`}
-                  className="dna-btn mt-4 flex min-h-12 w-full items-center justify-center px-4 text-sm font-black"
-                >
-                  Rapora sor
-                </Link>
+                <>
+                  <Link
+                    href={`/dna-asistani?report_id=${encodeURIComponent(selected.id)}&surface=app`}
+                    className="dna-btn mt-4 flex min-h-12 w-full items-center justify-center px-4 text-sm font-black"
+                  >
+                    Güvenli bulguları tartış
+                  </Link>
+                  <p className="mt-2 text-center text-[11px] font-semibold leading-5 text-slate-500">
+                    Asistan yalnız yapılandırılmış rapor bulgularını genel literatürden ayrı ele alır; tanı veya tedavi önerisi üretmez.
+                  </p>
+                </>
               ) : chatEligibilityStatus === "ready" ? (
                 <div className="mt-4 rounded-2xl border border-amber-200 bg-amber-50 p-3 text-xs font-semibold leading-5 text-amber-900">
                   DNA Asistanı yalnız bu hesaba ait son 10 aktif raporla çalışır.
@@ -431,8 +436,9 @@ export default function ReportsPage() {
                   <Link
                     href={`/dna-asistani?report_id=${encodeURIComponent(selected.id)}`}
                     className="dna-btn inline-flex min-h-11 w-full items-center justify-center px-4 py-2 text-sm font-semibold sm:w-auto"
+                    title="Yalnız yapılandırılmış rapor bulguları genel literatürden ayrı tartışılır; tanı veya tedavi önerisi üretilmez."
                   >
-                    Rapora sor
+                    Güvenli bulguları tartış
                   </Link>
                 ) : chatEligibilityStatus === "ready" ? (
                   <div className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-900">

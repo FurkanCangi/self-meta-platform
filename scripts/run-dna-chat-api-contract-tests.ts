@@ -2,7 +2,9 @@ import assert from "node:assert/strict"
 import { performance } from "node:perf_hooks"
 
 import {
+  buildDnaChatAuditMetadata,
   createDnaChatSafeCaseContext,
+  DNA_CHAT_AUDIT_METADATA_KEYS,
   readDnaChatRequestBody,
   resolveDnaChatApiRequest,
   type DnaChatApiAuditInput,
@@ -66,6 +68,31 @@ function dependencies(options: {
 }
 
 async function main() {
+const auditMetadata = buildDnaChatAuditMetadata({
+  requestId: "audit-contract-1",
+  mode: "case",
+  intentId: "selfreg.interoception",
+  classification: "hypothesis",
+  outcome: "answered",
+  engineVersion: "dna-chat-engine@2",
+  intendedUseVersion: "dna-intelligence-intended-use@1",
+  sourceIds: ["source.one", "source.one", "source.two"],
+})
+assert.deepEqual(Object.keys(auditMetadata), [...DNA_CHAT_AUDIT_METADATA_KEYS])
+assert.deepEqual(auditMetadata.source_ids, ["source.one", "source.two"])
+for (const forbiddenAuditField of [
+  "question",
+  "answer",
+  "client_code",
+  "client_id",
+  "report_id",
+  "scores",
+  "case_evidence",
+  "anamnesis",
+]) {
+  assert.ok(!(forbiddenAuditField in auditMetadata), `Audit metadata yasak alan taşıyor: ${forbiddenAuditField}`)
+}
+
 const inLimitRequest = new Request("https://example.test/api/app/dna-chat", {
   method: "POST",
   body: JSON.stringify({ question: "HRV nedir?" }),
@@ -104,6 +131,16 @@ assert.equal(theoryWithReport.status, 200)
 assert.equal(theoryWithReport.accessedCaseReport, false)
 assert.equal(theoryWithReportDeps.state.loadCalls, 0, "Teori sorusu seçili/yabancı reportId için DB okumamalı")
 assert.equal(theoryWithReport.body.engineVersion, "dna-chat-engine@2")
+assert.deepEqual(theoryWithReport.body.intendedUse, {
+  version: "dna-intelligence-intended-use@1",
+  productName: "DNA Intelligence",
+  componentName: "DNA Asistanı",
+  descriptionTr: "Terapistlerin kaynak bağlı nörofizyoloji ve düzenleme bilgisini incelemesine; yalnız kendi seçtikleri DNA raporundaki güvenli bulguları genel literatürden ayrı tartışmasına yardımcı olan deterministik bilgi asistanıdır.",
+  boundaryTr: "Tanı ve ayırıcı tanı, tedavi veya seans planı, ilaç veya doz, prognoz ya da kesin nedensellik üretmez; davranıştan veya rapordan beyin bölgesi, HRV, kortizol ya da otonom durum çıkarmaz.",
+  privacyTr: "Yalnız oturum sahibinin seçtiği raporun güvenli yapılandırılmış bağlamını kullanır. Sohbet metni kalıcı geçmişe kaydedilmez; güvenlik ve erişim için sınırlı işlem ve kaynak metadatası tutulabilir. Bu metadata soru veya cevap metni, danışan kodu, rapor kimliği, skor ya da vaka bulgusu içermez. Ham cevap, anamnez, trace ve gizli kuralları göstermez, raporlar arası klinik profil karşılaştırmaz ve mesajlardan kendiliğinden öğrenmez.",
+  evidenceTr: "Kaynak, kanıt, yaş ve örneklem sınırı katalogda yapılandırıldığı ölçüde gösterilir; bulunmayan bilgi tahmin edilmez.",
+  runtimeTr: "Çalışma zamanında haricî LLM, model API'si, embedding, vektör veritabanı veya internetten bilgi arama kullanılmaz; yanıt yalnız sürümlü yerel katalog ve izinli rapor bağlamından oluşturulur.",
+})
 assert.ok(Array.isArray(theoryWithReport.body.sources) && theoryWithReport.body.sources.length > 0)
 
 const theoryOnlyDeps = dependencies({ requestId: "theory-request" })
@@ -128,6 +165,7 @@ assert.equal(caseDeps.state.loadCalls, 1)
 assert.ok(["case_finding", "hypothesis"].includes(String(caseResult.body.classification)))
 assert.equal(caseDeps.state.audits.length, 1)
 assert.equal(caseDeps.state.audits[0]?.mode, "case")
+assert.equal(caseDeps.state.audits[0]?.intendedUseVersion, "dna-intelligence-intended-use@1")
 
 const missingDependencies = dependencies({
   loadResult: { ok: false, status: 404, error: "report_not_found" },
@@ -186,6 +224,7 @@ console.log(JSON.stringify({
     caseAuditFailClosed: true,
     internalFieldsHidden: true,
     streamingBodyLimit: true,
+    auditMetadataMinimized: true,
   },
   mockRouteP95Ms: Number(mockRouteP95.toFixed(3)),
 }, null, 2))

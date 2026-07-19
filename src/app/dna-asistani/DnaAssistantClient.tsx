@@ -15,6 +15,14 @@ import Image from "next/image"
 import Link from "next/link"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useAppSurface } from "@/app/components/app-shell/useAppSurface"
+import {
+  DNA_INTELLIGENCE_AUDIT_NOTICE_TR,
+  DNA_INTELLIGENCE_COMPOSER_NOTICE_TR,
+  DNA_INTELLIGENCE_PUBLIC_INTENDED_USE,
+  DNA_INTELLIGENCE_REPORT_OWNERSHIP_NOTICE_TR,
+  DNA_INTELLIGENCE_TAGLINE_TR,
+  type DnaIntelligencePublicIntendedUse,
+} from "@/lib/dna/chat/intendedUse"
 import { DNA_CHAT_STARTER_QUESTIONS } from "@/lib/dna/chat/suggestions"
 
 type DnaChatClassification =
@@ -47,6 +55,9 @@ type SourceRef = {
   doi?: string | null
   url?: string
   claimBoundary?: string
+  ageScope?: string
+  studyType?: string
+  sampleScope?: string
 }
 
 type ContextRequest = {
@@ -57,6 +68,7 @@ type ContextRequest = {
 type EvidenceSummary = {
   level: string
   ageScope: string
+  sampleScope: string
   boundary: string
 }
 
@@ -68,6 +80,7 @@ type DnaAnswer = {
   caseEvidence: string[]
   limitations: string[]
   safetyBoundary: string
+  intendedUse: DnaIntelligencePublicIntendedUse
   suggestedQuestions: string[]
   engineVersion: string
   topic: string | null
@@ -149,6 +162,7 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
       ? {
           level: String((rawEvidenceSummary as Record<string, unknown>).level || "").trim(),
           ageScope: String((rawEvidenceSummary as Record<string, unknown>).ageScope || "").trim(),
+          sampleScope: String((rawEvidenceSummary as Record<string, unknown>).sampleScope || "").trim(),
           boundary: String((rawEvidenceSummary as Record<string, unknown>).boundary || "").trim(),
         }
       : undefined
@@ -161,6 +175,10 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
     caseEvidence: normalizeStringList(row.caseEvidence),
     limitations: normalizeStringList(row.limitations),
     safetyBoundary: String(row.safetyBoundary || "").trim(),
+    intendedUse:
+      row.intendedUse && typeof row.intendedUse === "object"
+        ? (row.intendedUse as DnaIntelligencePublicIntendedUse)
+        : DNA_INTELLIGENCE_PUBLIC_INTENDED_USE,
     suggestedQuestions: normalizeStringList(row.suggestedQuestions),
     engineVersion: String(row.engineVersion || "dna-chat-engine@2").trim(),
     topic: typeof row.topic === "string" && row.topic.trim() ? row.topic.trim() : null,
@@ -450,7 +468,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
               rows={1}
               maxLength={600}
               disabled={sending}
-              placeholder={selectedReport ? "Bu rapor veya genel bilgi hakkında sorun…" : "DNA Asistanına sorun…"}
+              placeholder={selectedReport ? "Bu raporun güvenli bulgularını veya genel bilgiyi sorun…" : "DNA Asistanına sorun…"}
               className={[
                 "max-h-40 min-w-0 flex-1 resize-none border-0 bg-transparent px-2 text-sm font-semibold leading-6 text-[var(--sm-text)] outline-none placeholder:font-medium placeholder:text-[var(--sm-text-muted)] disabled:opacity-60 sm:text-[15px]",
                 "min-h-[48px] py-3",
@@ -476,9 +494,21 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
           <span className="hidden sm:inline">Enter gönderir · Shift + Enter yeni satır</span>
           <span className="inline-flex items-center justify-center gap-1.5">
             <CircleAlert className="shrink-0 text-blue-600" size={13} aria-hidden="true" />
-            Kişisel kimlik bilgisi yazmayın; tanı, ilaç ve tedavi planı kapsam dışıdır.
+            {DNA_INTELLIGENCE_COMPOSER_NOTICE_TR}
           </span>
         </div>
+        <details className="group mx-auto mt-2 max-w-3xl text-left text-[10px] font-semibold leading-4 text-[var(--sm-text-muted)] sm:text-[11px]">
+          <summary className="mx-auto flex min-h-11 w-fit cursor-pointer list-none items-center gap-1.5 rounded-xl px-3 text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+            Kullanım ve veri sınırları
+            <ChevronDown className="transition group-open:rotate-180" size={14} aria-hidden="true" />
+          </summary>
+          <div className="mt-1 space-y-2 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-3">
+            <p>{DNA_INTELLIGENCE_PUBLIC_INTENDED_USE.boundaryTr}</p>
+            <p>{DNA_INTELLIGENCE_PUBLIC_INTENDED_USE.privacyTr}</p>
+            <p>{DNA_INTELLIGENCE_PUBLIC_INTENDED_USE.evidenceTr}</p>
+            <p>{DNA_INTELLIGENCE_PUBLIC_INTENDED_USE.runtimeTr}</p>
+          </div>
+        </details>
       </form>
     )
   }
@@ -499,13 +529,14 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
             </span>
             <div className="min-w-0">
               <h1 className="text-base font-black tracking-tight text-[var(--sm-text)]">DNA Asistanı</h1>
-              <p className="mt-0.5 truncate text-[11px] font-semibold text-[var(--sm-text-muted)]">Kaynak kontrollü · Klinik sınırları tanımlı</p>
+              <p className="mt-0.5 truncate text-[11px] font-semibold text-[var(--sm-text-muted)]">{DNA_INTELLIGENCE_TAGLINE_TR}</p>
             </div>
           </div>
 
           <div className="flex min-w-0 items-center gap-2 sm:justify-end">
             <div className="hidden min-h-10 items-center gap-2 rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface)] px-3 text-[11px] font-bold text-[var(--sm-text-muted)] shadow-sm md:flex">
-              <ShieldCheck size={16} className="text-blue-600" aria-hidden="true" /> Mesajlar kaydedilmez
+              <ShieldCheck size={16} className="text-blue-600" aria-hidden="true" />
+              <span title={DNA_INTELLIGENCE_AUDIT_NOTICE_TR}>Sohbet geçmişi tutulmaz · Sınırlı audit</span>
             </div>
 
             {selectedReport ? (
@@ -562,7 +593,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
                 Bugün neyi birlikte inceleyelim?
               </h2>
               <p className="mx-auto mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--sm-text-muted)] sm:text-[15px]">
-                Nörofizyoloji, self-regülasyon, DNA kavramları veya kendi raporunuz hakkında doğal biçimde sorun.
+                {DNA_INTELLIGENCE_PUBLIC_INTENDED_USE.descriptionTr}
               </p>
 
               <div className="mx-auto mt-8 max-w-[840px] text-left">{renderComposer(true)}</div>
@@ -620,7 +651,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
                 <div>
                   <h3 id="dna-report-picker-title" className="text-sm font-black text-[var(--sm-text)]">Hangi raporla devam edelim?</h3>
                   <p className="mt-1 text-xs font-semibold leading-5 text-[var(--sm-text-muted)]">
-                    Yalnız hesabınıza ait son 10 aktif DNA raporu gösterilir. Rapor içeriği seçimden önce açılmaz.
+                    {DNA_INTELLIGENCE_REPORT_OWNERSHIP_NOTICE_TR}
                   </p>
                 </div>
               </div>
@@ -747,6 +778,9 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
           {answer.evidenceSummary.ageScope ? (
             <div><span className="font-black text-[var(--sm-text)]">Yaş kapsamı:</span> <span className="font-semibold text-[var(--sm-text-soft)]">{answer.evidenceSummary.ageScope}</span></div>
           ) : null}
+          {answer.evidenceSummary.sampleScope ? (
+            <div className="sm:col-span-2"><span className="font-black text-[var(--sm-text)]">Örneklem sınırı:</span> <span className="font-semibold text-[var(--sm-text-soft)]">{answer.evidenceSummary.sampleScope}</span></div>
+          ) : null}
           {answer.evidenceSummary.boundary ? (
             <div className="sm:col-span-2"><span className="font-black text-[var(--sm-text)]">İddia sınırı:</span> <span className="font-semibold text-[var(--sm-text-soft)]">{answer.evidenceSummary.boundary}</span></div>
           ) : null}
@@ -782,6 +816,14 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
                 ) : null}
                 {source.claimBoundary ? (
                   <p className="mt-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)]"><strong>İddia sınırı:</strong> {source.claimBoundary}</p>
+                ) : null}
+                {source.ageScope || source.studyType ? (
+                  <p className="mt-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)]">
+                    <strong>Çalışma kapsamı:</strong> {[source.ageScope, source.studyType].filter(Boolean).join(" · ")}
+                  </p>
+                ) : null}
+                {source.sampleScope ? (
+                  <p className="mt-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)]"><strong>Örneklem sınırı:</strong> {source.sampleScope}</p>
                 ) : null}
                 {source.url ? (
                   <a href={source.url} target="_blank" rel="noreferrer" className="mt-2 inline-flex min-h-11 items-center text-xs font-black text-blue-700 underline-offset-4 hover:underline">

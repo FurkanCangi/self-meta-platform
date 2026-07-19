@@ -1,0 +1,160 @@
+{
+  "schemaVersion": "dna-intelligence-phase-evidence@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 1,
+  "title": "Amaçlanan kullanım sözleşmesi",
+  "generatedAt": "2026-07-19T03:09:13+03:00",
+  "sourceBaseGitSha": "33e5bfae316a7bba653f9ff63914e66c184bc5d4",
+  "branch": "codex/dna-intelligence-v3",
+  "contract": {
+    "version": "dna-intelligence-intended-use@1",
+    "supportedCapabilities": 9,
+    "prohibitedCapabilities": 10,
+    "prohibitedHoldout": 32,
+    "independentAdversarialRegression": 40,
+    "negativeContrastPairs": 14,
+    "additionalSafetyBoundaries": 3
+  },
+  "gates": {
+    "rawReview": {
+      "status": "passed",
+      "researchPacks": 20,
+      "records": 2703,
+      "reviewStatus": "expert_pending"
+    },
+    "catalog": {
+      "status": "passed",
+      "topics": 118,
+      "liveClaims": 239,
+      "oneHopRelations": 166,
+      "sources": 160,
+      "safetyRules": 43,
+      "benchmarkQuestions": 1856,
+      "holdoutQuestions": 928
+    },
+    "reasoning": {
+      "status": "passed",
+      "allRowsAccuracyPercent": 96.88,
+      "supportedHoldout": {
+        "correct": 313,
+        "total": 316,
+        "accuracyPercent": 99.05
+      },
+      "safetyRefusalHoldout": {
+        "correct": 341,
+        "total": 341,
+        "accuracyPercent": 100
+      },
+      "unsupportedSafeHoldout": {
+        "correct": 271,
+        "total": 271,
+        "accuracyPercent": 100
+      },
+      "maxSubquestions": 2,
+      "oneHopGraphOnly": true,
+      "p95Ms": 9.955
+    },
+    "security": {
+      "status": "passed",
+      "baselineRefusals": 48,
+      "canonicalSafeRefusals": 329,
+      "liveSafetyRefusals": 341,
+      "independentAdversarialRegression": "40/40",
+      "adversarialCompositional": 84,
+      "allowedTheoryAndBoundary": 25,
+      "auditMetadataMinimized": true
+    },
+    "intendedUse": {
+      "status": "passed",
+      "supportedCoverage": "9/9",
+      "prohibitedCoverage": "10/10",
+      "independentAdversarialRegression": "40/40",
+      "negativeContrastPairs": "14/14",
+      "engineApiUiMarketingLegalParity": true
+    },
+    "api": {
+      "status": "passed",
+      "theorySkipsReportLoad": true,
+      "foreignAndMissingIndistinguishable": true,
+      "caseAuditFailClosed": true,
+      "internalFieldsHidden": true,
+      "streamingBodyLimit": true,
+      "auditMetadataMinimized": true,
+      "mockRouteP95Ms": 53.874
+    },
+    "externalRuntime": {
+      "status": "passed",
+      "entrypointGraphFiles": 62,
+      "chatRuntimeFiles": 31,
+      "unresolvedImports": 0,
+      "externalModelModules": 0,
+      "chatRuntimeNetworkPrimitives": 0
+    },
+    "quality": {
+      "status": "passed",
+      "benchmark": "120/120",
+      "security": "20/20",
+      "caseFixtures": 50,
+      "suggestedQuestions": "119/119",
+      "engineP95Ms": 16.912,
+      "caseAssemblyP95Ms": 5.7
+    },
+    "determinism": {
+      "status": "passed",
+      "requests": 8,
+      "repeatsPerRequest": 20,
+      "sampleHash": "49aec0a8f2d5dd0bae13106d5ce20ecb9ede2b585b89571631e2678ee3513d42"
+    },
+    "productionHttp": {
+      "status": "passed",
+      "publicRoutes": 11,
+      "forbiddenClaims": 19,
+      "assistantAuthWall": true,
+      "runtime": "next start production build"
+    },
+    "regressions": {
+      "reportForbiddenImports": "passed",
+      "reportPrivacy": "passed",
+      "securitySmoke": "passed",
+      "securityReadiness": "passed",
+      "lint": "passed",
+      "build": "passed",
+      "v2RollbackBaseline": "passed"
+    },
+    "independentReview": {
+      "status": "passed_with_no_blockers",
+      "reviewer": "phase1_fresh_audit",
+      "reviewedSnapshot": "uncommitted phase-1 worktree after all fixes",
+      "unsafeFuzz": "40/40",
+      "safeContrastPairs": "14/14"
+    }
+  },
+  "hashesSha256": {
+    "masterPlan": "99e5a0470e66220a52dbfb29b39de70198b4702f319cf8fbe42f2dddbc26ac37",
+    "runtimeContract": "eeb028ba10d08e7c552922a34e281c3215bad0754d7bc3e34fa971e0c95d009e",
+    "contractArtifact": "605be2a6860d6b7f37223472ac529888ca8623b4962737e04097b2ed6e1e1190",
+    "contractDocumentation": "1423310585a2a395ab0faa4f7a09f833def9e89dde38c871628c92b179bc4dc3",
+    "behaviorMatrix": "7c605bb9ec21f3e2f0e92de6c950557786605095facb9df4296bc4be271f055b",
+    "intendedUseTest": "e548e2046b3ccfbeb819cd8357eea226c095164985300e3dd74ba04c611b7a15",
+    "securityTest": "dcfdcdb695646e455e4a35df56f229421b54bb5324e75e8aa64fdf2860b83678",
+    "forbiddenImportTest": "00679b7af426710fef947bcd9cb33ae857ea067334c9062c867d92a0520a7f3e",
+    "productionHttpTest": "7896c4119210b13d5ea646e61a6110406688708a213fffd9a5b24c367bc31107",
+    "apiContractTest": "574daec0b29f499414f1f91b84ea258fc61d6826c6376b79a539bf1c13135214",
+    "apiResolver": "8435eda835e8063591fa566c6e14f829db7c51e1e60b0a1f25871e6129a9f0e6",
+    "safetyGateway": "fe2eb785d412872933549bd33f978922caa3af0c6911415d35f9d7e30bf33bb2"
+  },
+  "limitations": [
+    "Bu faz mühendislik amaçlanan-kullanım ve güvenlik kanıtıdır; bağımsız klinik validasyon veya düzenleyici onay değildir.",
+    "source_verified_expert_pending ve expert_pending kayıtları insan uzman onayı anlamına gelmez.",
+    "Desteklenen holdout'ta bir güvenli soru not_available, iki soru doğru yanıtla birlikte yanlış topic sapması taşır; toplam doğruluk çıkış eşiğinin üzerindedir ve sonraki kalite fazlarında izlenecektir.",
+    "DNA eğitiminin tamamlanması mesleki kullanım beklentisidir; mevcut rota bunu teknik erişim koşulu olarak doğrulamaz.",
+    "24 aylık audit saklama politikası SQL'de tanımlıdır; otomatik süre-sonu imhası üretimde henüz doğrulanmış değildir ve public politika bunu garanti olarak sunmaz.",
+    "Bu fazda güncel canlı Supabase çapraz-hesap testi yeniden çalıştırılmadı; üretim yetki kanıtı sonraki güvenlik ve yayın fazlarında yenilenecektir.",
+    "Haricî LLM, model API'si, embedding, vektör veritabanı ve runtime internet bilgi araması yoktur; oturum, sahiplik ve audit için mevcut Supabase erişimi devam eder."
+  ],
+  "worktreeBoundary": {
+    "preservedUnrelatedPaths": [
+      "scripts/activity-pilot/"
+    ]
+  }
+}

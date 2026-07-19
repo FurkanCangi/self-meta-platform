@@ -6,6 +6,7 @@ import { checkRateLimit } from "@/lib/security/rateLimit"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import {
+  buildDnaChatAuditMetadata,
   createDnaChatSafeCaseContext,
   readDnaChatRequestBody,
   resolveDnaChatApiRequest,
@@ -389,15 +390,7 @@ async function writeDnaChatAudit(params: {
       resourceType: "dna_chat_request",
       resourceId: params.requestId,
       legalBasis: "health_related_service_and_access_accountability",
-      metadata: {
-        request_id: params.requestId,
-        mode: params.mode,
-        intent: params.intentId,
-        classification: params.classification,
-        engine_version: params.engineVersion,
-        refused: params.classification === "refusal" || params.outcome === "refused",
-        source_ids: params.sourceIds,
-      },
+      metadata: buildDnaChatAuditMetadata(params),
     })
   } catch (error) {
     console.error("[dna-chat] audit unavailable", error instanceof Error ? error.message : "unknown")

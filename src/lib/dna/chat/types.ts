@@ -1,3 +1,5 @@
+import type { DnaIntelligencePublicIntendedUse } from "./intendedUse"
+
 export const DNA_CHAT_SCHEMA_VERSION = "1.0" as const
 export const DNA_CHAT_ENGINE_VERSION = "dna-chat-engine@2" as const
 export const DNA_CHAT_KNOWLEDGE_CONTRACT_VERSION = "dna-chat-knowledge@1.0.0" as const
@@ -74,6 +76,9 @@ export type DnaChatSourceRef = {
   doi?: string | null
   url?: string
   claimBoundary?: string
+  ageScope?: string
+  studyType?: string
+  sampleScope?: string
 }
 
 export type DnaChatCaseContextInput = {
@@ -158,6 +163,7 @@ export type DnaChatSafetyCategory =
   | "biological_inference"
   | "measurement_overreach"
   | "internal_reasoning"
+  | "self_learning"
 
 export type DnaChatSafetyResult = {
   blocked: boolean
@@ -186,6 +192,7 @@ export type DnaChatContextRequest = {
 export type DnaChatEvidenceSummary = {
   level: string
   ageScope: string
+  sampleScope: string
   boundary: string
 }
 
@@ -205,6 +212,7 @@ export type DnaChatResponse = {
   caseEvidence: string[]
   limitations: string[]
   safetyBoundary: string
+  intendedUse: DnaIntelligencePublicIntendedUse
   suggestedQuestions: string[]
   safety: DnaChatSafetyResult
   contextRequest?: DnaChatContextRequest

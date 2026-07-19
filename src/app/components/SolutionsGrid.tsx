@@ -15,8 +15,8 @@ const items = [
   {
     icon: Workflow,
     tone: "blue",
-    title: "Terapi Planlama",
-    body: "Kişiye özel terapi planlarını hızlıca oluşturun ve optimize edin.",
+    title: "Klinik Planlama Eğitimi",
+    body: "Eğitim çerçevesiyle vaka düşünme ve müdahale gerekçesi çalışın; yazılım terapi veya seans planı üretmez.",
   },
   {
     icon: TrendingUp,
@@ -28,7 +28,7 @@ const items = [
     icon: FileText,
     tone: "orange",
     title: "Raporlama",
-    body: "Klinik raporlarınızı otomatik oluşturun, paylaşın ve arşivleyin.",
+    body: "Deterministik rapor taslağını oluşturun; terapist incelemesi ve düzenlemesinden sonra paylaşın veya arşivleyin.",
   },
   {
     icon: ScanSearch,
@@ -79,7 +79,7 @@ export default function SolutionsGrid() {
           </div>
           <h2 className={styles.h2}>Klinik süreçleri iyileştiren entegre çözümler.</h2>
           <p className={styles.lead}>
-            DNA Intelligence, değerlendirme, planlama ve takip süreçlerini tek klinik merkezde birleştirir.
+            DNA Intelligence değerlendirme, rapor taslağı ve takip verisini tek çalışma alanında düzenler; klinik karar terapiste aittir.
           </p>
         </div>
 

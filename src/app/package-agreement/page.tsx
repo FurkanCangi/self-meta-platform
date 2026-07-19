@@ -1,4 +1,8 @@
 import LegalDocumentPage from "../components/legal/LegalDocumentPage"
+import {
+  DNA_INTELLIGENCE_PLATFORM_BOUNDARY_TR,
+  DNA_INTELLIGENCE_PUBLIC_INTENDED_USE,
+} from "@/lib/dna/chat/intendedUse"
 
 export default function PackageAgreementPage() {
   return (
@@ -40,7 +44,9 @@ export default function PackageAgreementPage() {
           title: "5. Uzman Sorumluluğu",
           body: [
             "Uzman kullanıcı, platforma veri girmeden önce gerekli izinleri aldığını, danışan/çocuk verisini mesleki ve hukuki sorumluluğuyla yönettiğini ve raporları uzman kontrolünden geçirmeden paylaşmayacağını kabul eder.",
-            "Platform karar destek sağlar; tanı, tedavi, terapi programı veya resmi kurul kararı yerine geçmez.",
+            "Platform değerlendirme verisini yapılandırır ve terapist incelemesine açık deterministik rapor taslakları sunar.",
+            DNA_INTELLIGENCE_PLATFORM_BOUNDARY_TR,
+            DNA_INTELLIGENCE_PUBLIC_INTENDED_USE.boundaryTr,
           ],
         },
         {

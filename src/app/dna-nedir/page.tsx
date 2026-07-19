@@ -6,13 +6,13 @@ const page = dnaPages["dna-yaklasimi"];
 const canonicalUrl = "https://self-meta-platform.vercel.app/dna-nedir";
 
 export const metadata: Metadata = {
-  title: "DNA Intelligence Nedir? | Klinik Karar Desteği",
+  title: "DNA Intelligence Nedir? | Deterministik Klinik Çalışma Platformu",
   description: page.intro,
   alternates: {
     canonical: canonicalUrl,
   },
   openGraph: {
-    title: "DNA Intelligence Nedir? | Klinik Karar Desteği",
+    title: "DNA Intelligence Nedir? | Deterministik Klinik Çalışma Platformu",
     description: page.intro,
     url: canonicalUrl,
     siteName: "DNA Intelligence",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary",
-    title: "DNA Intelligence Nedir? | Klinik Karar Desteği",
+    title: "DNA Intelligence Nedir? | Deterministik Klinik Çalışma Platformu",
     description: page.intro,
   },
 };

@@ -28,15 +28,15 @@ const journeySteps = [
   },
   {
     number: "03",
-    title: "Klinik öncelik",
-    description: "Müdahale kararını en anlamlı klinik alanlardan başlayarak sıralayın.",
+    title: "Bulguları gözden geçirme",
+    description: "Göreli zorlanma ve korunmuş kapasite alanlarını inceleyin; klinik önceliği terapist belirler.",
     icon: Target,
     preview: "priority",
   },
   {
     number: "04",
     title: "Rapor ve takip",
-    description: "Kararı okunabilir bir rapora taşıyın ve takip planını netleştirin.",
+    description: "İncelenmiş bulguları okunabilir rapora taşıyın ve terapistin belirlediği takip göstergelerini kaydedin.",
     icon: FileCheck2,
     preview: "report",
   },
@@ -122,8 +122,8 @@ export default function ClinicalJourneySection() {
         </div>
 
         <header className={styles.header}>
-          <h2 id="clinical-journey-title">Bir vakadan net bir klinik karara.</h2>
-          <p>Değerlendirme verisini düzenleyin, örüntüyü görün ve takip planını netleştirin.</p>
+          <h2 id="clinical-journey-title">Dağınık veriden incelenebilir bulgu taslağına.</h2>
+          <p>Değerlendirme verisini düzenleyin, alan dağılımını görün ve klinik kararı kendi incelemenizle verin.</p>
         </header>
 
         <div className={styles.journey}>

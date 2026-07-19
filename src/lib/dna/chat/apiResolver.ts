@@ -20,7 +20,32 @@ export type DnaChatApiAuditInput = {
   classification: DnaChatResponse["classification"]
   outcome: DnaChatResponse["outcome"]
   engineVersion: string
+  intendedUseVersion: string
   sourceIds: string[]
+}
+
+export const DNA_CHAT_AUDIT_METADATA_KEYS = Object.freeze([
+  "request_id",
+  "mode",
+  "intent",
+  "classification",
+  "engine_version",
+  "intended_use_version",
+  "refused",
+  "source_ids",
+] as const)
+
+export function buildDnaChatAuditMetadata(input: DnaChatApiAuditInput) {
+  return {
+    request_id: input.requestId,
+    mode: input.mode,
+    intent: input.intentId,
+    classification: input.classification,
+    engine_version: input.engineVersion,
+    intended_use_version: input.intendedUseVersion,
+    refused: input.classification === "refusal" || input.outcome === "refused",
+    source_ids: Array.from(new Set(input.sourceIds.filter(Boolean))).slice(0, 16),
+  }
 }
 
 export type DnaChatCaseLoadResult =
@@ -95,6 +120,7 @@ function publicAnswer(answer: DnaChatResponse, requestId: string) {
     caseEvidence: answer.caseEvidence,
     limitations: answer.limitations,
     safetyBoundary: answer.safetyBoundary,
+    intendedUse: answer.intendedUse,
     suggestedQuestions: answer.suggestedQuestions,
     engineVersion: answer.engineVersion,
     topic: answer.topic,
@@ -145,6 +171,7 @@ export async function resolveDnaChatApiRequest(
     classification: answer.classification,
     outcome: answer.outcome,
     engineVersion: answer.engineVersion,
+    intendedUseVersion: answer.intendedUse.version,
     sourceIds: sourceIdsFromAnswer(answer),
   })
 

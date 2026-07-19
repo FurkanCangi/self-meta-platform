@@ -9,6 +9,7 @@ import {
 } from "./catalogReasoning"
 import { getCatalogTopicById } from "./catalog"
 import { DNA_CHAT_INTENT_BY_ID } from "./intents"
+import { DNA_INTELLIGENCE_PUBLIC_INTENDED_USE } from "./intendedUse"
 import {
   findDnaChatLiteratureSources,
   resolveDnaChatSources,
@@ -105,6 +106,7 @@ function makeResponse(input: {
     caseEvidence: stableUnique((input.caseEvidence ?? []).map(cleanOutput), 6),
     limitations,
     safetyBoundary: input.safety.boundaryTr,
+    intendedUse: DNA_INTELLIGENCE_PUBLIC_INTENDED_USE,
     suggestedQuestions: stableUnique(input.suggestedQuestions ?? [], 4),
     safety: input.safety,
     ...(input.contextRequest ? { contextRequest: input.contextRequest } : {}),
@@ -1046,6 +1048,7 @@ function combinedEvidenceSummary(responses: readonly DnaChatResponse[]): DnaChat
   return {
     level: stableUnique(summaries.map((summary) => summary.level), 3).join(" · "),
     ageScope: stableUnique(summaries.map((summary) => summary.ageScope), 3).join(" · "),
+    sampleScope: stableUnique(summaries.map((summary) => summary.sampleScope), 3).join(" · "),
     boundary: stableUnique(summaries.map((summary) => summary.boundary), 3).join(" "),
   }
 }

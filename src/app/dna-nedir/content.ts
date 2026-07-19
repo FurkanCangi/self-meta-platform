@@ -76,11 +76,11 @@ export const dnaPages = {
       },
       {
         title: "Veri sentezi",
-        text: "Skor, anamnez ve terapist gözlemi bir araya getirilerek klinik hipotez için anlamlı bir örüntü oluşturulur.",
+        text: "Skor, anamnez ve terapist gözlemi kaynakları ayrıştırılarak rapor taslağında görünür bir örüntü özeti oluşturulur; bu özet biyolojik mekanizma veya kesin neden göstermez.",
       },
       {
-        title: "Karar desteği",
-        text: "Sistem, terapistin hangi alanları önceliklendireceğini daha net görmesine destek olur.",
+        title: "Terapist değerlendirmesi",
+        text: "Sistem alan dağılımını görünür kılar; klinik önceliği ve sonraki adımı terapist kendi değerlendirmesiyle belirler.",
       },
     ],
   },
@@ -111,24 +111,24 @@ export const dnaPages = {
   "ai-raporlama": {
     slug: "ai-raporlama",
     route: "/dna-nedir/ai-raporlama",
-    eyebrow: "AI Destekli Klinik Raporlama",
-    title: "Klinik veriyi AI ile anlamlandırın, raporu netleştirin.",
+    eyebrow: "Deterministik Klinik Raporlama",
+    title: "Klinik veriyi açıklanabilir kurallarla düzenleyin, rapor taslağını inceleyin.",
     intro:
-      "DNA Intelligence AI; anamnez, ölçüm, gözlem ve terapist notlarını aynı klinik bağlamda birleştirir, örüntüleri görünür kılar ve profesyonel rapor taslağı hazırlar.",
+      "DNA Intelligence; anamnez, ölçüm, gözlem ve terapist notlarını kaynaklarını koruyarak düzenler, kayıtlı kurallarla örüntüleri görünür kılar ve terapist incelemesine açık rapor taslağı hazırlar.",
     icon: FileText,
     accent: "#2563EB",
     sections: [
       {
-        title: "AI klinik sentezi",
-        text: "Farklı kaynaklardan gelen klinik verileri birlikte okuyarak güçlü alanları, destek ihtiyaçlarını ve öncelikleri görünür kılar.",
+        title: "Açıklanabilir örüntü özeti",
+        text: "Farklı kaynaklardan gelen klinik verilerdeki göreli zorlanma ve korunmuş kapasite alanlarını görünür kılar; klinik önceliğe karar vermez.",
       },
       {
         title: "Profesyonel rapor taslağı",
-        text: "Klinik özeti, öncelikli alanları, hedefleri ve takip göstergelerini okunabilir bir rapor yapısında düzenler.",
+        text: "Klinik özeti ve kayıtlı bulguları okunabilir bir rapor yapısında düzenler; hedef ve takip kararları terapist tarafından eklenir.",
       },
       {
         title: "Terapist kontrolü",
-        text: "AI tarafından hazırlanan taslak terapist tarafından incelenir, düzenlenir ve yalnızca uzman onayıyla tamamlanır.",
+        text: "Deterministik taslak terapist tarafından incelenir ve düzenlenir; ancak terapistin klinik incelemesinden sonra tamamlanır.",
       },
     ],
   },

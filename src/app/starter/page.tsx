@@ -15,6 +15,7 @@ import {
   UserPlus,
   UsersRound,
 } from "lucide-react"
+import { DNA_INTELLIGENCE_ENTRY_DESCRIPTION_TR } from "@/lib/dna/chat/intendedUse"
 
 const cards = [
   {
@@ -54,7 +55,7 @@ const cards = [
   },
   {
     title: "DNA Asistanı",
-    text: "Teoriyi, DNA kavramlarını ve kendi son vaka raporlarınızı kaynak kontrollü biçimde tartışın.",
+    text: DNA_INTELLIGENCE_ENTRY_DESCRIPTION_TR,
     href: "/dna-asistani",
     icon: MessagesSquare,
     accent: "from-cyan-500 via-blue-600 to-violet-600",
@@ -141,7 +142,7 @@ export default function StarterPage() {
             <div className="min-w-0 flex-1">
               <div className="text-lg font-black text-[#071b3a]">DNA Asistanı</div>
               <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
-                Teori sor, DNA kavramlarını incele veya kendi son raporun üzerinden tartış.
+                {DNA_INTELLIGENCE_ENTRY_DESCRIPTION_TR}
               </p>
               <div className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-xl bg-white/80 px-3 text-xs font-black text-blue-700 shadow-sm">
                 Asistanı aç <ChevronRight size={16} />
@@ -216,7 +217,7 @@ export default function StarterPage() {
                   </div>
                   <div>
                     <div className="text-sm font-black text-[#071b3a]">Deterministik raporlama</div>
-                    <div className="mt-1 text-xs font-semibold text-slate-500">Klinisyen onaylı rapor taslağı</div>
+                    <div className="mt-1 text-xs font-semibold text-slate-500">Terapist incelemesine açık rapor taslağı</div>
                   </div>
                 </div>
               </div>

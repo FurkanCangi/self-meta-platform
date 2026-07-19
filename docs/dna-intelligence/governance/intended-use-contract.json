@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "dna-intelligence-intended-use-contract@1",
+  "version": "dna-intelligence-intended-use@1",
+  "productName": "DNA Intelligence",
+  "componentName": "DNA Asistanı",
+  "brandArchitecture": {
+    "approach": {
+      "name": "Dynamic Neuro-Regulation Approach",
+      "kind": "therapist_education_and_clinical_reasoning_framework",
+      "descriptionTr": "Dynamic Neuro-Regulation Approach, terapistlere yönelik bir eğitim ve klinik düşünme çerçevesidir; yazılımın kendisi değildir."
+    },
+    "platform": {
+      "name": "DNA Intelligence",
+      "kind": "deterministic_assessment_and_report_drafting_platform",
+      "descriptionTr": "DNA Intelligence, değerlendirme verilerini yapılandıran ve terapist incelemesine sunulan açıklanabilir, deterministik rapor taslakları oluşturan klinik çalışma platformudur.",
+      "boundaryTr": "Platform klinik öncelik, müdahale, tedavi veya seans planına kendiliğinden karar vermez; nihai yorum, düzenleme ve klinik karar terapiste aittir."
+    },
+    "assistant": {
+      "name": "DNA Asistanı",
+      "kind": "deterministic_source_controlled_information_assistant",
+      "descriptionTr": "Terapistlerin kaynak bağlı nörofizyoloji ve düzenleme bilgisini incelemesine; yalnız kendi seçtikleri DNA raporundaki güvenli bulguları genel literatürden ayrı tartışmasına yardımcı olan deterministik bilgi asistanıdır.",
+      "boundaryTr": "Tanı ve ayırıcı tanı, tedavi veya seans planı, ilaç veya doz, prognoz ya da kesin nedensellik üretmez; davranıştan veya rapordan beyin bölgesi, HRV, kortizol ya da otonom durum çıkarmaz."
+    }
+  },
+  "productKind": "deterministic_source_controlled_information_assistant",
+  "intendedUsers": [
+    "Terapist paneline erişimi olan, oturumu doğrulanmış kullanıcılar"
+  ],
+  "userQualificationBoundaryTr": "DNA eğitiminin tamamlanması mesleki kullanım beklentisidir; mevcut sohbet rotası eğitim tamamlama durumunu teknik bir erişim koşulu olarak doğrulamaz.",
+  "supported": [
+    {
+      "id": "explain_neurophysiology_and_regulation",
+      "statementTr": "Katalogda bulunan nörofizyolojik ve düzenleme kavramlarını kaynak sınırlarıyla açıklar."
+    },
+    {
+      "id": "compare_curated_concepts",
+      "statementTr": "Yalnız katalogda açıkça kayıtlı kavramları ve tek adımlı ilişkileri karşılaştırır."
+    },
+    {
+      "id": "describe_evidence_status",
+      "statementTr": "Yanıtın kanıt düzeyini ve iddia sınırını gösterir."
+    },
+    {
+      "id": "show_age_and_sample_boundaries",
+      "statementTr": "Kayıtlı yaş ve örneklem kapsamını gösterir; eksik örneklem bilgisini tamamlamaz."
+    },
+    {
+      "id": "explain_bounded_dna_relationship",
+      "statementTr": "Genel kavramların DNA konseptiyle ilişkisini yalnız kayıtlı ilişkinin niteliği kadar açıklar."
+    },
+    {
+      "id": "discuss_owned_report_findings",
+      "statementTr": "Terapistin seçtiği ve sahipliği doğrulanan rapordaki güvenli, yapılandırılmış bulguları tartışır."
+    },
+    {
+      "id": "juxtapose_report_and_literature",
+      "statementTr": "Rapor bulgusunu genel literatürden ayırarak yan yana gösterir ve biyolojik mekanizmanın vakada ölçülmediğini belirtir."
+    },
+    {
+      "id": "show_claim_linked_sources",
+      "statementTr": "Yanıtta kullanılan iddialara bağlı kaynak kayıtlarını gösterir."
+    },
+    {
+      "id": "abstain_when_knowledge_is_missing",
+      "statementTr": "Doğrulanmış katalogda yeterli bilgi olmadığında tahmin yürütmeden bunu açıkça söyler."
+    }
+  ],
+  "prohibited": [
+    {
+      "id": "diagnosis_and_differential_diagnosis",
+      "statementTr": "Tanı koymaz ve ayırıcı tanı seçeneklerini daraltmaz."
+    },
+    {
+      "id": "treatment_or_session_planning",
+      "statementTr": "Tedavi, terapi, müdahale, ev programı veya seans planı üretmez."
+    },
+    {
+      "id": "medication_or_dose_advice",
+      "statementTr": "İlaç, preparat veya doz önermez."
+    },
+    {
+      "id": "individual_prognosis",
+      "statementTr": "Bireysel prognoz, iyileşme süresi veya gelecekteki işlev düzeyi tahmini yapmaz."
+    },
+    {
+      "id": "definitive_causality",
+      "statementTr": "Kesin neden, etiyoloji veya nedensellik sonucu üretmez."
+    },
+    {
+      "id": "biological_state_inference_from_behavior",
+      "statementTr": "Davranıştan veya DNA raporundan beyin bölgesi, HRV, kortizol ya da otonom durum çıkarmaz."
+    },
+    {
+      "id": "raw_or_internal_data_disclosure",
+      "statementTr": "Ham cevap, anamnez, snapshot, trace, audit içeriği, dahili eşik veya gizli kural göstermez."
+    },
+    {
+      "id": "cross_owner_case_access",
+      "statementTr": "Başka terapistin vakasını veya raporunu görüntülemez."
+    },
+    {
+      "id": "cross_report_clinical_comparison",
+      "statementTr": "Birden çok raporu karşılaştırarak klinik profil çıkarmaz."
+    },
+    {
+      "id": "autonomous_learning_from_conversations",
+      "statementTr": "Kullanıcı mesajlarından kendiliğinden öğrenmez ve canlı kataloğu değiştirmez."
+    }
+  ],
+  "publicDescriptor": {
+    "version": "dna-intelligence-intended-use@1",
+    "productName": "DNA Intelligence",
+    "componentName": "DNA Asistanı",
+    "descriptionTr": "Terapistlerin kaynak bağlı nörofizyoloji ve düzenleme bilgisini incelemesine; yalnız kendi seçtikleri DNA raporundaki güvenli bulguları genel literatürden ayrı tartışmasına yardımcı olan deterministik bilgi asistanıdır.",
+    "boundaryTr": "Tanı ve ayırıcı tanı, tedavi veya seans planı, ilaç veya doz, prognoz ya da kesin nedensellik üretmez; davranıştan veya rapordan beyin bölgesi, HRV, kortizol ya da otonom durum çıkarmaz.",
+    "privacyTr": "Yalnız oturum sahibinin seçtiği raporun güvenli yapılandırılmış bağlamını kullanır. Sohbet metni kalıcı geçmişe kaydedilmez; güvenlik ve erişim için sınırlı işlem ve kaynak metadatası tutulabilir. Bu metadata soru veya cevap metni, danışan kodu, rapor kimliği, skor ya da vaka bulgusu içermez. Ham cevap, anamnez, trace ve gizli kuralları göstermez, raporlar arası klinik profil karşılaştırmaz ve mesajlardan kendiliğinden öğrenmez.",
+    "evidenceTr": "Kaynak, kanıt, yaş ve örneklem sınırı katalogda yapılandırıldığı ölçüde gösterilir; bulunmayan bilgi tahmin edilmez.",
+    "runtimeTr": "Çalışma zamanında haricî LLM, model API'si, embedding, vektör veritabanı veya internetten bilgi arama kullanılmaz; yanıt yalnız sürümlü yerel katalog ve izinli rapor bağlamından oluşturulur."
+  },
+  "oversightTr": "Yanıtlar klinik kararın yerine geçmez. Kullanıcı kaynakları, sınırları ve rapor bağlamını kendi mesleki sorumluluğu içinde değerlendirmelidir.",
+  "learningPolicy": "no_runtime_or_conversation_learning",
+  "runtimePolicy": "no_external_llm_no_runtime_internet"
+}

@@ -109,7 +109,7 @@ export default function ContactForm() {
               </option>
               <option>Kurumsal kullanım</option>
               <option>Eğitim programı</option>
-              <option>AI destekli raporlama</option>
+              <option>Deterministik raporlama</option>
               <option>Akademik iş birliği</option>
               <option>Diğer</option>
             </select>

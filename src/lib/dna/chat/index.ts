@@ -1,11 +1,28 @@
 export { createDnaChatSafeCaseContext, hasUsableDnaCaseContext } from "./caseContext"
 export { resolveDnaChat } from "./engine"
-export { readDnaChatRequestBody, resolveDnaChatApiRequest } from "./apiResolver"
+export {
+  buildDnaChatAuditMetadata,
+  DNA_CHAT_AUDIT_METADATA_KEYS,
+  readDnaChatRequestBody,
+  resolveDnaChatApiRequest,
+} from "./apiResolver"
 export {
   buildDnaChatSnapshotContext,
   DNA_CHAT_REPORT_CONTEXT_VERSION,
 } from "./reportSnapshot"
 export { DNA_CHAT_STARTER_QUESTIONS } from "./suggestions"
+export {
+  DNA_INTELLIGENCE_AUDIT_NOTICE_TR,
+  DNA_INTELLIGENCE_COMPOSER_NOTICE_TR,
+  DNA_INTELLIGENCE_ENTRY_DESCRIPTION_TR,
+  DNA_INTELLIGENCE_INTENDED_USE_CONTRACT,
+  DNA_INTELLIGENCE_INTENDED_USE_VERSION,
+  DNA_INTELLIGENCE_PROHIBITED_CAPABILITIES,
+  DNA_INTELLIGENCE_PUBLIC_INTENDED_USE,
+  DNA_INTELLIGENCE_REPORT_OWNERSHIP_NOTICE_TR,
+  DNA_INTELLIGENCE_SUPPORTED_CAPABILITIES,
+  DNA_INTELLIGENCE_TAGLINE_TR,
+} from "./intendedUse"
 export {
   DNA_CHAT_KNOWLEDGE_ENTRIES,
   DNA_CHAT_KNOWLEDGE_ENTRY_BY_TOPIC,

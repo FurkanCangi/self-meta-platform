@@ -1,4 +1,8 @@
 import Image from "next/image";
+import {
+  DNA_INTELLIGENCE_PLATFORM_BOUNDARY_TR,
+  DNA_INTELLIGENCE_PLATFORM_DESCRIPTION_TR,
+} from "@/lib/dna/chat/intendedUse";
 import styles from "./LandingHeroV2.module.css";
 
 const orbitItems = [
@@ -37,7 +41,7 @@ export default function LandingHeroV2() {
         <div className={styles.copy}>
           <div className={styles.badge}>
             <span className={styles.badgeBrand}>DNA Intelligence</span>
-            <span className={styles.badgeSub}>Klinik yapay zekâ platformu</span>
+            <span className={styles.badgeSub}>Deterministik klinik çalışma platformu</span>
           </div>
 
           <h1 className={styles.h1}>
@@ -46,8 +50,8 @@ export default function LandingHeroV2() {
           </h1>
 
           <p className={styles.lead}>
-            DNA Intelligence, çocuklarda self-regülasyon verilerini yapılandırır;
-            klinisyenin değerlendirme, raporlama ve takip süreçlerine yapay zekâ destekli içgörüler sunar.
+            {DNA_INTELLIGENCE_PLATFORM_DESCRIPTION_TR} {DNA_INTELLIGENCE_PLATFORM_BOUNDARY_TR}
+            {" "}Çalışma zamanında haricî LLM veya internetten bilgi arama kullanılmaz.
           </p>
 
           <div className={styles.actions}>
@@ -62,7 +66,7 @@ export default function LandingHeroV2() {
           </div>
         </div>
 
-        <div className={styles.visual} aria-label="Self-regülasyon alanları beyin bölgelerine bağlanan yapay zekâ görseli">
+        <div className={styles.visual} aria-label="Self-regülasyon alanlarını temsil eden kavramsal ağ görseli">
           <div className={styles.neuralField} aria-hidden="true">
             <span className={styles.sparkOne} />
             <span className={styles.sparkTwo} />
@@ -88,7 +92,7 @@ export default function LandingHeroV2() {
             <div className={styles.brainAura}>
               <Image
                 src="/images/landing/neuro-child.png"
-                alt="Çocuk profili üzerinde renkli yapay zekâ beyin ağı"
+                alt="Çocuk profili çevresinde temsili self-regülasyon alanları"
                 fill
                 priority
                 unoptimized

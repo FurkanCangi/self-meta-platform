@@ -27,14 +27,14 @@ import styles from "./page.module.css";
 export const metadata: Metadata = {
   title: "Klinik Çözümler | DNA Intelligence",
   description:
-    "Klinik eğitimden çok boyutlu değerlendirmeye, AI destekli analizden profesyonel raporlama ve danışan takibine uzanan DNA Intelligence çözüm ekosistemi.",
+    "Klinik eğitim, çok boyutlu değerlendirme, deterministik rapor taslağı ve danışan takibini sınırları açık katmanlarda sunan DNA Intelligence ekosistemi.",
   alternates: {
     canonical: "/cozumler",
   },
   openGraph: {
     title: "Klinik Çözümler | DNA Intelligence",
     description:
-      "Eğitim, değerlendirme, AI destekli analiz, klinik raporlama ve takip tek bir yapılandırılmış akışta.",
+      "Eğitim çerçevesi, değerlendirme, terapist kontrollü deterministik raporlama ve takip tek bir yapılandırılmış akışta.",
     url: "/cozumler",
     type: "website",
   },
@@ -57,8 +57,8 @@ const heroLayers = [
   },
   {
     number: "03",
-    title: "AI destekli analiz",
-    text: "Örüntü ve öncelik sentezi",
+    title: "Deterministik özet",
+    text: "Açıklanabilir alan dağılımı",
     Icon: BrainCircuit,
     tone: "violet",
   },
@@ -84,10 +84,10 @@ const coreSystems = [
   },
   {
     number: "02",
-    eyebrow: "Klinik karar desteği",
+    eyebrow: "Deterministik çalışma platformu",
     title: "DNA Intelligence",
-    text: "Bu klinik dili değerlendirme, AI destekli analiz, profesyonel raporlama ve takip süreçlerine taşır.",
-    items: ["Yapılandırılmış veri", "Açıklanabilir öncelik", "Terapist onaylı çıktı"],
+    text: "Bu klinik dili yapılandırılmış değerlendirme, açıklanabilir rapor taslağı ve takip süreçlerine taşır; klinik kararı terapiste bırakır.",
+    items: ["Yapılandırılmış veri", "Açıklanabilir bulgu özeti", "Terapist kontrollü çıktı"],
     href: "/dna-nedir/ai-raporlama",
     link: "Raporlama sistemini incele",
     Icon: BrainCircuit,
@@ -113,7 +113,7 @@ const solutionLayers = [
     title: "Dağınık klinik veriyi tek bir vaka görünümünde birleştirin.",
     text: "Anamnez, ölçek sonuçları, gözlem ve terapist notları kaynaklarını kaybetmeden aynı değerlendirme yapısında buluşur. Böylece tek bir puan yerine klinik örüntü görünür olur.",
     items: ["Çok kaynaklı veri", "Altı regülasyon alanı", "Güçlük ve güçlü yön ayrımı"],
-    outcome: "Sonuç: Birincil öncelik, eşlik eden alanlar ve koruyucu kapasite ayrışır.",
+    outcome: "Sonuç: Göreli zorlanma, eşlik eden bulgu ve korunmuş kapasite ayrışır.",
     href: "/dna-nedir/degerlendirme-sistemi",
     link: "Değerlendirme katmanını aç",
     Icon: Layers3,
@@ -122,24 +122,24 @@ const solutionLayers = [
   {
     number: "03",
     eyebrow: "Analiz et",
-    title: "AI desteğiyle örüntüyü ve klinik önceliği netleştirin.",
-    text: "Sistem klinik verileri yapılandırır, alanlar arasındaki ilişkileri görünür kılar ve karar gerekçesini rapor diline hazırlar. Nihai yorum ve klinik karar terapistin kontrolünde kalır.",
-    items: ["Örüntü sentezi", "Gerekçeli önceliklendirme", "Kanıt sınırlarını koruyan dil"],
-    outcome: "Sonuç: Ne yapılacağı kadar neden önce yapılacağı da görünür olur.",
+    title: "Kayıtlı kurallarla bulgu örüntüsünü görünür kılın.",
+    text: "Sistem klinik verileri yapılandırır ve alan dağılımını terapist incelemesine sunar. Biyolojik mekanizma, kesin neden, klinik öncelik veya müdahale kararı üretmez.",
+    items: ["Açıklanabilir örüntü özeti", "Göreli zorlanma ve kapasite", "Kanıt sınırlarını koruyan dil"],
+    outcome: "Sonuç: Bulguların dayanağı ve sınırı terapistin değerlendirmesi için görünür olur.",
     href: "/dna-nedir/ai-raporlama",
-    link: "AI analiz katmanını aç",
+    link: "Deterministik özet katmanını aç",
     Icon: Sparkles,
     tone: "dark",
   },
   {
     number: "04",
     eyebrow: "Raporla ve izle",
-    title: "Klinik kararı okunabilir rapora ve takip planına taşıyın.",
-    text: "Değerlendirme bulguları, klinik karar özeti, öncelikli hedefler ve takip göstergeleri tutarlı bir rapor yapısında birleşir. Süreç danışan kaydı üzerinden devam eder.",
-    items: ["Profesyonel klinik rapor", "Müdahale ve takip odağı", "Güvenli danışan arşivi"],
-    outcome: "Sonuç: Rapor yalnızca arşivlenmez; sonraki klinik adımı yönlendirir.",
-    href: "/dna-nedir/mudahale-yaklasimi",
-    link: "Müdahale katmanını aç",
+    title: "İncelenmiş bulguları okunabilir rapora taşıyın.",
+    text: "Değerlendirme bulguları deterministik bir taslakta düzenlenir. Klinik karar, hedef ve takip göstergeleri yalnız terapistin inceleme ve düzenlemesiyle tamamlanır.",
+    items: ["Terapist kontrollü rapor", "Kaynakları ayrıştırılmış bulgular", "Güvenli danışan arşivi"],
+    outcome: "Sonuç: Rapor taslağı klinik kararın yerine geçmeden dokümantasyonu destekler.",
+    href: "/dna-nedir/ai-raporlama",
+    link: "Rapor taslağı katmanını aç",
     Icon: Route,
     tone: "light",
   },
@@ -147,8 +147,8 @@ const solutionLayers = [
 
 const outcomes = [
   {
-    title: "Daha net klinik karar",
-    text: "Öncelik, gerekçe ve takip odağı aynı görünümde.",
+    title: "Terapist kontrollü karar",
+    text: "Bulgu, gerekçe ve sınırlılık aynı görünümde; karar terapistte.",
     Icon: Target,
   },
   {
@@ -158,7 +158,7 @@ const outcomes = [
   },
   {
     title: "Daha tutarlı takip",
-    text: "Değerlendirmeden müdahaleye kesintisiz vaka izi.",
+    text: "Değerlendirmeden terapistin takip notlarına kesintisiz vaka izi.",
     Icon: LineChart,
   },
   {
@@ -179,11 +179,11 @@ export default function CozumlerPage() {
             <div className={styles.heroCopy}>
               <span className={styles.kicker}>DNA ÇÖZÜM EKOSİSTEMİ</span>
               <h1>
-                Klinik süreci görün. <span>Önceliği netleştirin.</span> Kararı yapılandırın.
+                Klinik süreci görün. <span>Bulguları yapılandırın.</span> Kararı siz verin.
               </h1>
               <p>
-                Eğitimden değerlendirmeye, AI destekli analizden klinik raporlama ve takibe kadar her adım
-                aynı klinik dilde ilerler.
+                Eğitim çerçevesi, değerlendirme, deterministik rapor taslağı ve takip aynı klinik dili korur;
+                klinik öncelik ve müdahale kararı terapiste aittir.
               </p>
               <div className={styles.heroActions}>
                 <a href="#solution-layers" className={styles.primaryButton}>

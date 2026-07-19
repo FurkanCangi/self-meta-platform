@@ -26,7 +26,7 @@ values (
   24,
   'delete',
   'security_and_health_data_access_accountability',
-  'DNA Asistani auditlari yalniz istek kimligi, mod, intent, siniflandirma, motor surumu, ret durumu ve kaynak kimliklerini tutar; soru, cevap ve klinik icerik tutulmaz.'
+  'DNA Asistani auditlari yalniz istek kimligi, mod, intent, siniflandirma, motor ve sozlesme surumu, ret durumu ve kaynak kimliklerini tutar; soru, cevap, danisan kodu, rapor kimligi, skor veya vaka bulgusu tutulmaz. Otomatik sure sonu imha mekanizmasi ayrica dogrulanmalidir.'
 )
 on conflict (data_category) do update
 set

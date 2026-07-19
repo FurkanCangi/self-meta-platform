@@ -1,4 +1,5 @@
 import LegalDocumentPage from "../components/legal/LegalDocumentPage"
+import { DNA_INTELLIGENCE_PUBLIC_INTENDED_USE } from "@/lib/dna/chat/intendedUse"
 
 export default function KvkkPage() {
   return (
@@ -10,7 +11,7 @@ export default function KvkkPage() {
           title: "1. Veri Sorumlusu",
           body: [
             "Veri sorumlusu [VERI_SORUMLUSU_UNVANI] olup iletişim adresi [ILETISIM_EPOSTA] şeklindedir. Resmi unvan, vergi/MERSIS ve adres bilgileri yayına çıkmadan önce tamamlanacaktır.",
-            "Bu metin, DNA Intelligence platformunun web uygulaması, üyelik, ödeme, eğitim erişimi, klinik değerlendirme, rapor üretimi, güvenlik/audit ve destek süreçleri için hazırlanmıştır.",
+            "Bu metin, DNA Intelligence platformunun web uygulaması, üyelik, ödeme, eğitim erişimi, klinik değerlendirme, rapor üretimi, DNA Asistanı, güvenlik/audit ve destek süreçleri için hazırlanmıştır.",
           ],
         },
         {
@@ -43,7 +44,8 @@ export default function KvkkPage() {
         {
           title: "5. Aktarım Yapılabilecek Taraflar",
           body: [
-            "Veriler, hizmetin gerektirdiği ölçüde barındırma, veritabanı, kimlik doğrulama, güvenlik, loglama, ödeme/fatura, destek ve hukuki danışmanlık sağlayıcılarına aktarılabilir. Rapor üretimi amacıyla klinik içerik harici bir üretken yapay zeka veya LLM sağlayıcısına aktarılmaz.",
+            "Veriler, hizmetin gerektirdiği ölçüde barındırma, veritabanı, kimlik doğrulama, güvenlik, loglama, ödeme/fatura, destek ve hukuki danışmanlık sağlayıcılarına aktarılabilir. Rapor üretimi ve DNA Asistanı yanıtı amacıyla klinik içerik harici bir üretken yapay zeka veya LLM sağlayıcısına aktarılmaz.",
+            DNA_INTELLIGENCE_PUBLIC_INTENDED_USE.privacyTr,
             "Yurt dışı altyapı sağlayıcısı kullanılması halinde aktarım açık rıza ve ilgili mevzuat çerçevesinde yürütülür.",
           ],
         },
