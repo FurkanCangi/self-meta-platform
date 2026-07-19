@@ -1,5 +1,7 @@
 import { createHash } from "node:crypto"
 
+import { DNA_REGISTERED_OWNER_APPROVALS } from "../knowledgeAuthority"
+
 export const DNA_OWNER_BOOK_LOCK_CONTRACT_VERSION = "dna-owner-book-lock@1" as const
 export const DNA_OWNER_BOOK_DEFERRED_REASON = "owner_book_not_supplied" as const
 
@@ -14,7 +16,8 @@ export type DnaByteRange = Readonly<{
 export type DnaOwnerBookPassage = Readonly<{
   passageId: string
   range: DnaByteRange
-  passageSha256: string
+  artifactPassageSha256: string
+  canonicalPassageSha256: string
 }>
 
 export type DnaOwnerBookChapter = Readonly<{
@@ -50,7 +53,8 @@ export type DnaOwnerBookApprovalRecord = Readonly<{
     chapterId: string
     passageId: string
     range: DnaByteRange
-    passageSha256: string
+    artifactPassageSha256: string
+    canonicalPassageSha256: string
   }>[]
 }>
 
@@ -58,6 +62,7 @@ export type DnaProductClaimBookBinding = Readonly<{
   claimId: string
   chapterId: string
   passageId: string
+  artifactPassageSha256: string
   passageSha256: string
 }>
 
@@ -99,6 +104,7 @@ export type DnaOwnerBookDraftChapter = Readonly<{
   passages: readonly Readonly<{
     passageId: string
     range: DnaByteRange
+    canonicalText: string
   }>[]
 }>
 
@@ -141,12 +147,14 @@ export const DNA_OWNER_BOOK_LOCK_CONTRACT = Object.freeze({
     "passageId",
     "startByte",
     "endByteExclusive",
-    "passageSha256",
+    "artifactPassageSha256",
+    "canonicalPassageSha256",
   ]),
   claimBindingFields: Object.freeze([
     "claimId",
     "chapterId",
     "passageId",
+    "artifactPassageSha256",
     "passageSha256",
   ]),
   ownerApprovalSupports: Object.freeze(["product_definition"]),
@@ -278,11 +286,14 @@ export function buildDnaOwnerBookManifest(input: {
       ) {
         throw new Error("dna_book_lock_passage_outside_chapter")
       }
+      const canonicalText = String(passage.canonicalText || "").trim()
+      if (!canonicalText) throw new Error("dna_book_lock_empty_canonical_passage")
       const range = freezeRange(passage.range)
       return Object.freeze({
         passageId: passageIds[passageIndex],
         range,
-        passageSha256: sliceHash(artifactBytes, range),
+        artifactPassageSha256: sliceHash(artifactBytes, range),
+        canonicalPassageSha256: sha256(new TextEncoder().encode(stableJson(canonicalText))),
       })
     })
 
@@ -311,20 +322,36 @@ export function verifyDnaOwnerBookArtifact(
   artifactBytes: Uint8Array,
 ): boolean {
   try {
-    const rebuilt = buildDnaOwnerBookManifest({
-      bookId: manifest.bookId,
-      bookVersion: manifest.bookVersion,
-      artifactBytes,
-      chapters: manifest.chapters.map((chapter) => ({
-        chapterId: chapter.chapterId,
-        range: chapter.range,
-        passages: chapter.passages.map((passage) => ({
-          passageId: passage.passageId,
-          range: passage.range,
-        })),
-      })),
-    })
-    return stableJson(rebuilt) === stableJson(manifest)
+    const bytes = new Uint8Array(artifactBytes)
+    if (
+      bytes.byteLength !== manifest.byteLength
+      || sha256(bytes) !== manifest.artifactSha256
+      || manifest.chapters.length === 0
+    ) return false
+    requireStableId(manifest.bookId, "book_id")
+    requireStableId(manifest.bookVersion, "book_version")
+    assertUnique(manifest.chapters.map((chapter) =>
+      requireStableId(chapter.chapterId, "chapter_id")), "chapter_id")
+    assertNonOverlapping(manifest.chapters, "chapter_ranges")
+    const passageIds: string[] = []
+    for (const chapter of manifest.chapters) {
+      validateRange(chapter.range, bytes.byteLength, "chapter")
+      if (sliceHash(bytes, chapter.range) !== chapter.chapterSha256) return false
+      if (chapter.passages.length === 0) return false
+      assertNonOverlapping(chapter.passages, "passage_ranges")
+      for (const passage of chapter.passages) {
+        passageIds.push(requireStableId(passage.passageId, "passage_id"))
+        validateRange(passage.range, bytes.byteLength, "passage")
+        if (
+          passage.range.startByte < chapter.range.startByte
+          || passage.range.endByteExclusive > chapter.range.endByteExclusive
+          || sliceHash(bytes, passage.range) !== passage.artifactPassageSha256
+          || !SHA256_PATTERN.test(passage.canonicalPassageSha256)
+        ) return false
+      }
+    }
+    assertUnique(passageIds, "passage_id")
+    return true
   } catch {
     return false
   }
@@ -381,7 +408,14 @@ function assertApprovalMatchesManifest(
       !approval.approvedChapterRanges.some((row) => row.chapterId === chapter.chapterId) ||
       !passage ||
       !sameRange(passage.range, approved.range) ||
-      passage.passageSha256 !== requireSha256(approved.passageSha256, "passage_sha256")
+      passage.artifactPassageSha256 !== requireSha256(
+        approved.artifactPassageSha256,
+        "artifact_passage_sha256",
+      ) ||
+      passage.canonicalPassageSha256 !== requireSha256(
+        approved.canonicalPassageSha256,
+        "canonical_passage_sha256",
+      )
     ) {
       throw new Error("dna_book_lock_passage_approval_mismatch")
     }
@@ -396,6 +430,7 @@ function assertApprovalMatchesManifest(
 export function compileDnaOwnerBookLock(input: {
   manifest: DnaOwnerBookManifest
   artifactBytes: Uint8Array
+  canonicalPassageTexts: Readonly<Record<string, string>>
   approval: DnaOwnerBookApprovalRecord
   liveProductClaimIds: readonly string[]
   claimBindings: readonly DnaProductClaimBookBinding[]
@@ -404,7 +439,6 @@ export function compileDnaOwnerBookLock(input: {
     throw new Error("dna_book_lock_artifact_hash_mismatch")
   }
   assertApprovalMatchesManifest(input.manifest, input.approval)
-
   const liveClaimIds = input.liveProductClaimIds.map((claimId) =>
     requireStableId(claimId, "claim_id"))
   if (liveClaimIds.length === 0) {
@@ -423,14 +457,46 @@ export function compileDnaOwnerBookLock(input: {
     const claimId = requireStableId(binding.claimId, "claim_id")
     const chapterId = requireStableId(binding.chapterId, "chapter_id")
     const passageId = requireStableId(binding.passageId, "passage_id")
+    const artifactPassageSha256 = requireSha256(
+      binding.artifactPassageSha256,
+      "artifact_passage_sha256",
+    )
     const passageSha256 = requireSha256(binding.passageSha256, "passage_sha256")
     const approvedPassage = input.approval.approvedPassageRanges.find((row) =>
       row.chapterId === chapterId && row.passageId === passageId)
-    if (!approvedPassage || approvedPassage.passageSha256 !== passageSha256) {
+    if (
+      !approvedPassage
+      || approvedPassage.artifactPassageSha256 !== artifactPassageSha256
+      || approvedPassage.canonicalPassageSha256 !== passageSha256
+    ) {
       throw new Error("dna_book_lock_claim_passage_not_approved")
     }
-    return Object.freeze({ claimId, chapterId, passageId, passageSha256 })
+    return Object.freeze({
+      claimId,
+      chapterId,
+      passageId,
+      artifactPassageSha256,
+      passageSha256,
+    })
   })
+
+  for (const approved of input.approval.approvedPassageRanges) {
+    const canonicalText = String(input.canonicalPassageTexts[approved.passageId] || "").trim()
+    if (!canonicalText) throw new Error("dna_book_lock_missing_canonical_passage_text")
+    const canonicalSha256 = sha256(new TextEncoder().encode(stableJson(canonicalText)))
+    if (canonicalSha256 !== approved.canonicalPassageSha256) {
+      throw new Error("dna_book_lock_canonical_passage_hash_mismatch")
+    }
+    const registered = DNA_REGISTERED_OWNER_APPROVALS.some((record) =>
+      record.approvalRecordId === input.approval.approvalRecordId
+      && record.bookVersion === input.manifest.bookVersion
+      && record.bookSha256 === input.manifest.artifactSha256
+      && record.sectionId === approved.chapterId
+      && record.passageId === approved.passageId
+      && record.artifactPassageSha256 === approved.artifactPassageSha256
+      && record.canonicalPassageSha256 === approved.canonicalPassageSha256)
+    if (!registered) throw new Error("dna_book_lock_approval_not_registered")
+  }
 
   const state: DnaOwnerBookLockState = Object.freeze({
     schemaVersion: DNA_OWNER_BOOK_LOCK_CONTRACT_VERSION,
@@ -486,7 +552,11 @@ export function isDnaOwnerBookLockStateConsistent(state: DnaOwnerBookLockState):
       entry.chapterId === binding.chapterId)
     const passage = chapter?.passages.find((entry) =>
       entry.passageId === binding.passageId)
-    if (!passage || passage.passageSha256 !== binding.passageSha256) return false
+    if (
+      !passage
+      || passage.artifactPassageSha256 !== binding.artifactPassageSha256
+      || passage.canonicalPassageSha256 !== binding.passageSha256
+    ) return false
   }
   return true
 }

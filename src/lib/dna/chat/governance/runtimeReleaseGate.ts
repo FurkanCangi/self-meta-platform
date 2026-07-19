@@ -25,7 +25,11 @@ export type DnaChatRuntimeReleaseDescriptor =
   | Readonly<{
       generation: "v3"
       engineVersion: string
-      candidateIds: readonly string[]
+      releasePackageInputSha256: string
+      candidates: readonly Readonly<{
+        candidateId: string
+        authorizationDigest: string
+      }>[]
     }>
 
 export const DNA_CHAT_RUNTIME_RELEASE_BLOCK_CODES = [
@@ -34,9 +38,12 @@ export const DNA_CHAT_RUNTIME_RELEASE_BLOCK_CODES = [
   "legacy_rollback_disabled",
   "legacy_engine_not_allowlisted",
   "v3_engine_not_allowlisted",
-  "v3_candidate_ids_required",
+  "v3_release_package_hash_required",
+  "v3_release_package_hash_mismatch",
+  "v3_candidate_authorizations_required",
   "v3_duplicate_candidate_id",
   "v3_candidate_not_released",
+  "v3_candidate_authorization_mismatch",
 ] as const
 
 export type DnaChatRuntimeReleaseBlockCode =
@@ -93,21 +100,42 @@ export function evaluateDnaChatRuntimeRelease(
     if (descriptor.engineVersion !== DNA_V3_RUNTIME_ENGINE_VERSION) {
       return decision("v3", "v3_engine_not_allowlisted")
     }
-    if (!Array.isArray(descriptor.candidateIds)
-      || descriptor.candidateIds.length === 0
-      || descriptor.candidateIds.some((candidateId) =>
-        typeof candidateId !== "string" || candidateId.trim() !== candidateId || !candidateId)) {
-      return decision("v3", "v3_candidate_ids_required")
+    if (typeof descriptor.releasePackageInputSha256 !== "string"
+      || !/^[a-f0-9]{64}$/.test(descriptor.releasePackageInputSha256)) {
+      return decision("v3", "v3_release_package_hash_required")
+    }
+    if (descriptor.releasePackageInputSha256 !== DNA_CURRENT_V3_RELEASE_PACKAGE.inputSha256) {
+      return decision("v3", "v3_release_package_hash_mismatch")
+    }
+    if (!Array.isArray(descriptor.candidates)
+      || descriptor.candidates.length === 0
+      || descriptor.candidates.some((candidate) =>
+        !isRecord(candidate)
+        || typeof candidate.candidateId !== "string"
+        || candidate.candidateId.trim() !== candidate.candidateId
+        || !candidate.candidateId
+        || typeof candidate.authorizationDigest !== "string"
+        || !/^[a-f0-9]{64}$/.test(candidate.authorizationDigest))) {
+      return decision("v3", "v3_candidate_authorizations_required")
     }
 
-    const candidateIds = descriptor.candidateIds as string[]
+    const candidates = descriptor.candidates as Array<{
+      candidateId: string
+      authorizationDigest: string
+    }>
+    const candidateIds = candidates.map((candidate) => candidate.candidateId)
     if (new Set(candidateIds).size !== candidateIds.length) {
       return decision("v3", "v3_duplicate_candidate_id")
     }
 
-    const releasedCandidateIds = new Set(DNA_CURRENT_V3_RELEASE_PACKAGE.releasedCandidateIds)
-    if (candidateIds.some((candidateId) => !releasedCandidateIds.has(candidateId))) {
+    const releasedById = new Map(DNA_CURRENT_V3_RELEASE_PACKAGE.releasedCandidates
+      .map((candidate) => [candidate.candidateId, candidate.authorizationDigest]))
+    if (candidateIds.some((candidateId) => !releasedById.has(candidateId))) {
       return decision("v3", "v3_candidate_not_released")
+    }
+    if (candidates.some((candidate) =>
+      releasedById.get(candidate.candidateId) !== candidate.authorizationDigest)) {
+      return decision("v3", "v3_candidate_authorization_mismatch")
     }
     return decision("v3", null)
   }

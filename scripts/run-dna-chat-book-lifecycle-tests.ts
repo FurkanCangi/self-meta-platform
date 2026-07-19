@@ -98,6 +98,7 @@ function main(): void {
         passages: [{
           passageId: "dna.passage.self-regulation.definition",
           range: { startByte: 0, endByteExclusive: chapterBoundary - 1 },
+          canonicalText: "Bölüm bir: öz düzenleme tanımı.",
         }],
       },
       {
@@ -106,6 +107,7 @@ function main(): void {
         passages: [{
           passageId: "dna.passage.boundaries.case",
           range: { startByte: chapterBoundary, endByteExclusive: bytes.byteLength },
+          canonicalText: "Bölüm iki: yorum sınırları.",
         }],
       },
     ],
@@ -122,6 +124,7 @@ function main(): void {
         passages: [{
           passageId: "dna.passage.duplicate.one",
           range: { startByte: 0, endByteExclusive: chapterBoundary - 1 },
+          canonicalText: "Bölüm bir: öz düzenleme tanımı.",
         }],
       },
       {
@@ -130,6 +133,7 @@ function main(): void {
         passages: [{
           passageId: "dna.passage.duplicate.two",
           range: { startByte: chapterBoundary, endByteExclusive: bytes.byteLength },
+          canonicalText: "Bölüm iki: yorum sınırları.",
         }],
       },
     ],
@@ -154,26 +158,27 @@ function main(): void {
       chapterId: approvedChapter.chapterId,
       passageId: approvedPassage.passageId,
       range: approvedPassage.range,
-      passageSha256: approvedPassage.passageSha256,
+      artifactPassageSha256: approvedPassage.artifactPassageSha256,
+      canonicalPassageSha256: approvedPassage.canonicalPassageSha256,
     }],
   }
-  const locked = compileDnaOwnerBookLock({
+  assert.throws(() => compileDnaOwnerBookLock({
     manifest,
     artifactBytes: bytes,
+    canonicalPassageTexts: {
+      [approvedPassage.passageId]: "Bölüm bir: öz düzenleme tanımı.",
+    },
     approval,
     liveProductClaimIds: ["dna.claim.self-regulation.definition"],
     claimBindings: [{
       claimId: "dna.claim.self-regulation.definition",
       chapterId: approvedChapter.chapterId,
       passageId: approvedPassage.passageId,
-      passageSha256: approvedPassage.passageSha256,
+      artifactPassageSha256: approvedPassage.artifactPassageSha256,
+      passageSha256: approvedPassage.canonicalPassageSha256,
     }],
-  })
-  assert.equal(locked.status, "locked")
-  assert.equal(canOwnerBookApprovalSupportRole(locked, "product_definition"), true)
-  for (const role of DNA_OWNER_BOOK_LOCK_CONTRACT.ownerApprovalDoesNotEstablish) {
-    assert.equal(canOwnerBookApprovalSupportRole(locked, role), false, role)
-  }
+  }), /approval_not_registered/)
+  assert.equal(canOwnerBookApprovalSupportRole(DNA_CURRENT_OWNER_BOOK_LOCK, "product_definition"), false)
 
   // One-byte mutation invalidates the artifact and therefore the approval.
   const mutated = new Uint8Array(bytes)
@@ -182,20 +187,23 @@ function main(): void {
   assert.throws(() => compileDnaOwnerBookLock({
     manifest,
     artifactBytes: mutated,
+    canonicalPassageTexts: {},
     approval,
     liveProductClaimIds: ["dna.claim.self-regulation.definition"],
-    claimBindings: locked.productClaimBindings,
+    claimBindings: [],
   }), /artifact_hash_mismatch/)
   assert.throws(() => compileDnaOwnerBookLock({
     manifest,
     artifactBytes: bytes,
+    canonicalPassageTexts: {},
     approval: { ...approval, bookVersion: "dna-owner-book@2" },
     liveProductClaimIds: ["dna.claim.self-regulation.definition"],
-    claimBindings: locked.productClaimBindings,
+    claimBindings: [],
   }), /approval_artifact_mismatch/)
   assert.throws(() => compileDnaOwnerBookLock({
     manifest,
     artifactBytes: bytes,
+    canonicalPassageTexts: {},
     approval,
     liveProductClaimIds: [],
     claimBindings: [],
@@ -203,26 +211,34 @@ function main(): void {
   assert.throws(() => compileDnaOwnerBookLock({
     manifest,
     artifactBytes: bytes,
+    canonicalPassageTexts: {
+      [approvedPassage.passageId]: "Bölüm bir: öz düzenleme tanımı.",
+    },
     approval,
     liveProductClaimIds: ["dna.claim.one", "dna.claim.two"],
     claimBindings: [{
       claimId: "dna.claim.one",
       chapterId: approvedChapter.chapterId,
       passageId: approvedPassage.passageId,
-      passageSha256: approvedPassage.passageSha256,
+      artifactPassageSha256: approvedPassage.artifactPassageSha256,
+      passageSha256: approvedPassage.canonicalPassageSha256,
     }],
   }), /incomplete_live_claim_binding/)
   const unapprovedPassage = manifest.chapters[1].passages[0]
   assert.throws(() => compileDnaOwnerBookLock({
     manifest,
     artifactBytes: bytes,
+    canonicalPassageTexts: {
+      [approvedPassage.passageId]: "Bölüm bir: öz düzenleme tanımı.",
+    },
     approval,
     liveProductClaimIds: ["dna.claim.unapproved.chapter"],
     claimBindings: [{
       claimId: "dna.claim.unapproved.chapter",
       chapterId: manifest.chapters[1].chapterId,
       passageId: unapprovedPassage.passageId,
-      passageSha256: unapprovedPassage.passageSha256,
+      artifactPassageSha256: unapprovedPassage.artifactPassageSha256,
+      passageSha256: unapprovedPassage.canonicalPassageSha256,
     }],
   }), /claim_passage_not_approved/)
 

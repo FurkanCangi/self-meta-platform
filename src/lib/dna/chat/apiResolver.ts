@@ -1,4 +1,7 @@
-import { resolveDnaChat } from "./engine"
+import {
+  isDnaChatEngineResponseAuthentic,
+  resolveDnaChat,
+} from "./engine"
 import { evaluateDnaChatRuntimeRelease } from "./governance/runtimeReleaseGate"
 import { DNA_KNOWLEDGE_AUTHORITY_CONTRACT_VERSION } from "./knowledgeAuthority"
 import type { DnaKnowledgeAuthorityRef } from "./knowledgeAuthority"
@@ -209,10 +212,22 @@ export async function resolveDnaChatApiRequest(
     answer = loaded.answer
   }
 
+  // Engine-version allowlisting is not an authenticity proof: a caller could
+  // copy an arbitrary object and label it with an allowed version. Require the
+  // exact, unchanged object minted by the engine before any audit or public
+  // response work.
+  if (!isDnaChatEngineResponseAuthentic(answer)) {
+    return {
+      status: 500,
+      body: { ok: false, error: "dna_chat_failed" },
+      accessedCaseReport,
+    }
+  }
+
   // The current engine is retained only through the explicit V2 rollback
   // policy. Any future/forged engine version fails closed until it supplies a
-  // V3 descriptor whose candidate IDs are present in the committed release
-  // package.
+  // V3 descriptor whose package hash and candidate authorization digests match
+  // the committed release package.
   const runtimeRelease = evaluateDnaChatRuntimeRelease({
     generation: "v2_legacy",
     engineVersion: answer.engineVersion,

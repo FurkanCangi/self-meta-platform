@@ -2,6 +2,7 @@
   "schemaVersion": "dna-v3-release-compiler@1",
   "releaseGeneration": "v3",
   "currentReleasedCandidates": 0,
+  "currentReleasedAuthorizations": 0,
   "auditedRegistryVersion": "dna-v3-audited-release-registry@1",
   "auditedRegistryEntries": 0,
   "runtimeGateVersion": "dna-chat-runtime-release-gate@1",
@@ -15,16 +16,16 @@
     "component_lifecycle_released_for_science",
     "lifecycle_content_hash_matches_payload_hash",
     "actual_payload_is_rehashed_at_compile_time",
-    "candidate_digest_exists_in_immutable_audited_registry",
+    "candidate_authorization_digest_exists_in_immutable_audited_registry",
     "global_claim_source_passage_component_identity_conflicts_absent",
     "owner_book_locked_and_passage_bound_for_product",
-    "owner_book_passage_hash_matches_payload_hash",
+    "owner_book_artifact_and_canonical_passage_hashes_match",
     "source_passage_component_claim_provenance_hash",
     "source_identity_license_priority_hashes_bound_to_provenance",
     "question_specific_source_priority",
     "source_identity_and_family_deduplication",
     "component_level_license_clearance",
-    "attribution_and_sharealike_obligations_satisfied_with_notice_hashes"
+    "structured_attribution_and_sharealike_notices_recomputed_and_identity_bound"
   ],
   "currentBlockers": [
     "owner_book_deferred",
@@ -34,5 +35,5 @@
   ],
   "safetyPolicy": "fail_closed",
   "v2RuntimePolicy": "exact_engine_version_under_explicit_immutable_rollback_allowlist",
-  "v3RuntimePolicy": "nonempty_candidate_ids_must_all_exist_in_current_release_package"
+  "v3RuntimePolicy": "exact_release_package_input_hash_and_nonempty_candidate_authorization_digests_must_match_current_release_package"
 }

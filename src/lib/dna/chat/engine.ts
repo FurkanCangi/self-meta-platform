@@ -84,6 +84,29 @@ type DnaChatAnswerUnitInput = Omit<DnaChatAnswerUnit, "role"> & {
   role?: DnaKnowledgeAnswerRole
 }
 
+// Only responses minted by this module may cross the API boundary. The saved
+// JSON snapshot also makes the attestation fail closed if any public or nested
+// response field is changed after construction.
+const DNA_CHAT_ENGINE_RESPONSE_ATTESTATIONS = new WeakMap<object, string>()
+
+function attestDnaChatEngineResponse(response: DnaChatResponse): DnaChatResponse {
+  DNA_CHAT_ENGINE_RESPONSE_ATTESTATIONS.set(response, JSON.stringify(response))
+  return response
+}
+
+export function isDnaChatEngineResponseAuthentic(
+  response: unknown,
+): response is DnaChatResponse {
+  if (!response || typeof response !== "object") return false
+  const attestation = DNA_CHAT_ENGINE_RESPONSE_ATTESTATIONS.get(response)
+  if (!attestation) return false
+  try {
+    return JSON.stringify(response) === attestation
+  } catch {
+    return false
+  }
+}
+
 function roleForAuthority(
   authority: DnaKnowledgeAuthorityRef,
 ): DnaKnowledgeAnswerRole {
@@ -266,7 +289,7 @@ function makeResponse(input: {
       releaseEligible: authority.releaseEligible,
     }
   })
-  return {
+  return attestDnaChatEngineResponse({
     schemaVersion: DNA_CHAT_SCHEMA_VERSION,
     engineVersion: DNA_CHAT_ENGINE_VERSION,
     route,
@@ -289,7 +312,7 @@ function makeResponse(input: {
     authoritySummary,
     ...(input.contextRequest ? { contextRequest: input.contextRequest } : {}),
     ...(input.evidenceSummary ? { evidenceSummary: input.evidenceSummary } : {}),
-  }
+  })
 }
 
 function refusalResponse(safety: DnaChatSafetyResult): DnaChatResponse {

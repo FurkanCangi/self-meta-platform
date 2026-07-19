@@ -115,6 +115,8 @@ async function main() {
     bookSha256: "not-a-sha",
     sectionId: "section.1",
     passageId: "passage.1",
+    artifactPassageSha256: "b".repeat(64),
+    canonicalPassageSha256: "c".repeat(64),
   }), /invalid_book_sha256/)
   assert.throws(() => createAuditedExternalScienceAuthority({
     auditRunId: "audit.run",
@@ -129,6 +131,8 @@ async function main() {
     bookSha256: "a".repeat(64),
     sectionId: "section.1",
     passageId: "passage.1",
+    artifactPassageSha256: "b".repeat(64),
+    canonicalPassageSha256: "c".repeat(64),
   }), /owner_approval_not_registered/)
   assert.throws(() => createAuditedExternalScienceAuthority({
     auditRunId: "audit.run.1",

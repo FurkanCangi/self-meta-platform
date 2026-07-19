@@ -20,12 +20,14 @@
     "passageId",
     "startByte",
     "endByteExclusive",
-    "passageSha256"
+    "artifactPassageSha256",
+    "canonicalPassageSha256"
   ],
   "claimBindingFields": [
     "claimId",
     "chapterId",
     "passageId",
+    "artifactPassageSha256",
     "passageSha256"
   ],
   "ownerApprovalSupports": [

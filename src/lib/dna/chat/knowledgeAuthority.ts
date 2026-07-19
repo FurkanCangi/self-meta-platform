@@ -51,6 +51,8 @@ export type DnaProductAuthorityRef = AuthorityBase<
         readonly bookSha256: string
         readonly sectionId: string
         readonly passageId: string
+        readonly artifactPassageSha256: string
+        readonly canonicalPassageSha256: string
       }
     | null
 }
@@ -148,6 +150,8 @@ export const DNA_REGISTERED_OWNER_APPROVALS = Object.freeze([] as readonly {
   bookSha256: string
   sectionId: string
   passageId: string
+  artifactPassageSha256: string
+  canonicalPassageSha256: string
 }[])
 
 export const DNA_REGISTERED_SCIENCE_AUDITS = Object.freeze([] as readonly {
@@ -219,10 +223,20 @@ export function createOwnerApprovedProductAuthority(input: {
   bookSha256: string
   sectionId: string
   passageId: string
+  artifactPassageSha256: string
+  canonicalPassageSha256: string
 }): DnaProductAuthorityRef {
   const bookSha256 = String(input.bookSha256 || "").toLowerCase()
   if (!SHA256_PATTERN.test(bookSha256)) {
     throw new Error("dna_authority_invalid_book_sha256")
+  }
+  const artifactPassageSha256 = String(input.artifactPassageSha256 || "").toLowerCase()
+  const canonicalPassageSha256 = String(input.canonicalPassageSha256 || "").toLowerCase()
+  if (!SHA256_PATTERN.test(artifactPassageSha256)) {
+    throw new Error("dna_authority_invalid_artifact_passage_sha256")
+  }
+  if (!SHA256_PATTERN.test(canonicalPassageSha256)) {
+    throw new Error("dna_authority_invalid_canonical_passage_sha256")
   }
   const normalized = {
     approvalRecordId: requireStableId(input.approvalRecordId, "approval_record_id"),
@@ -230,13 +244,17 @@ export function createOwnerApprovedProductAuthority(input: {
     bookSha256,
     sectionId: requireStableId(input.sectionId, "section_id"),
     passageId: requireStableId(input.passageId, "passage_id"),
+    artifactPassageSha256,
+    canonicalPassageSha256,
   }
   const registered = DNA_REGISTERED_OWNER_APPROVALS.some((record) =>
     record.approvalRecordId === normalized.approvalRecordId &&
     record.bookVersion === normalized.bookVersion &&
     record.bookSha256 === normalized.bookSha256 &&
     record.sectionId === normalized.sectionId &&
-    record.passageId === normalized.passageId)
+    record.passageId === normalized.passageId &&
+    record.artifactPassageSha256 === normalized.artifactPassageSha256 &&
+    record.canonicalPassageSha256 === normalized.canonicalPassageSha256)
   if (!registered) throw new Error("dna_authority_owner_approval_not_registered")
 
   return freezeAuthority({
@@ -405,7 +423,9 @@ export function isReleaseEligibleAuthority(
         record.bookVersion === authority.proof?.bookVersion &&
         record.bookSha256 === authority.proof?.bookSha256 &&
         record.sectionId === authority.proof?.sectionId &&
-        record.passageId === authority.proof?.passageId)
+        record.passageId === authority.proof?.passageId &&
+        record.artifactPassageSha256 === authority.proof?.artifactPassageSha256 &&
+        record.canonicalPassageSha256 === authority.proof?.canonicalPassageSha256)
   }
   if (authority.layer === "external_scientific_information") {
     return authority.approvalRequirement === "codex_multi_pass_audited" &&

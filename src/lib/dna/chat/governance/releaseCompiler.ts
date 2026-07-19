@@ -32,6 +32,7 @@ import {
 } from "./sourceGovernance"
 
 export const DNA_V3_RELEASE_COMPILER_VERSION = "dna-v3-release-compiler@1" as const
+export const DNA_V3_RELEASE_AUTHORIZATION_VERSION = "dna-v3-release-authorization@1" as const
 const SHA256_PATTERN = /^[a-f0-9]{64}$/
 
 type LifecycleRecord = DnaContentLifecycleRecord | DnaV2LegacyLifecycleRecord
@@ -59,6 +60,8 @@ type DnaV3ReleaseCandidateBase = Readonly<{
 
 export type DnaV3ProductReleaseCandidate = DnaV3ReleaseCandidateBase & Readonly<{
   authority: "dna_product_information"
+  ownerChapterId: string
+  artifactPassageSha256: string
 }>
 
 export type DnaV3ScienceReleaseCandidate = DnaV3ReleaseCandidateBase & Readonly<{
@@ -69,6 +72,9 @@ export type DnaV3ScienceReleaseCandidate = DnaV3ReleaseCandidateBase & Readonly<
   componentId: string
   componentSha256: string
   componentPayload: DnaV3ReleasePayload
+  componentSourceId: string
+  passageSourceId: string
+  passageComponentId: string
   sourceLifecycle: LifecycleRecord
   componentLifecycle: LifecycleRecord
   priority: DnaSourcePriorityInput
@@ -85,14 +91,44 @@ export type DnaV3ScienceReleaseCandidate = DnaV3ReleaseCandidateBase & Readonly<
   provenance: DnaV3ScienceSupportProvenance
 }>
 
+export const DNA_V3_ATTRIBUTION_NOTICE_VERSION = "dna-v3-attribution-notice@1" as const
+export const DNA_V3_SHARE_ALIKE_NOTICE_VERSION = "dna-v3-share-alike-notice@1" as const
+
+export type DnaV3AttributionNoticePayload = Readonly<{
+  schemaVersion: typeof DNA_V3_ATTRIBUTION_NOTICE_VERSION
+  sourceId: string
+  identitySha256: string
+  licenseSha256: string
+  licenseComponent: DnaLicenseComponent
+  sourceTitle: string
+  sourceAuthors: readonly string[]
+  sourceYear: number
+  sourceVenue: string | null
+  declaredLicense: string
+  noticeText: string
+}>
+
+export type DnaV3ShareAlikeNoticePayload = Readonly<{
+  schemaVersion: typeof DNA_V3_SHARE_ALIKE_NOTICE_VERSION
+  sourceId: string
+  identitySha256: string
+  licenseSha256: string
+  licenseComponent: DnaLicenseComponent
+  declaredLicense: string
+  releaseLicensePolicy: "cc_by_sa"
+  noticeText: string
+}>
+
 export type DnaV3LicenseObligationFulfillment = Readonly<{
   attribution: Readonly<{
     status: "satisfied" | "not_required" | "pending"
+    noticePayload: DnaV3AttributionNoticePayload | null
     noticeSha256: string | null
   }>
   shareAlike: Readonly<{
     status: "satisfied" | "not_required" | "pending"
     releaseLicensePolicy: "cc_by_sa" | null
+    noticePayload: DnaV3ShareAlikeNoticePayload | null
     noticeSha256: string | null
   }>
 }>
@@ -123,7 +159,9 @@ export const DNA_V3_RELEASE_BLOCK_CODES = [
   "owner_book_lock_invalid",
   "owner_claim_not_bound_to_approved_passage",
   "owner_passage_hash_mismatch",
+  "owner_artifact_passage_hash_mismatch",
   "invalid_support_provenance",
+  "support_parent_mismatch",
   "source_priority_denied",
   "source_identity_collection_invalid",
   "source_identity_not_release_eligible",
@@ -144,8 +182,11 @@ export type DnaV3ScienceSupportProvenance = Readonly<{
   passageSha256: string
   componentId: string
   componentSha256: string
+  componentSourceId: string
   claimId: string
   claimSha256: string
+  passageSourceId: string
+  passageComponentId: string
   licenseComponent: DnaLicenseComponent
   identitySha256: string
   licenseSha256: string
@@ -156,13 +197,20 @@ export type DnaV3ScienceSupportProvenance = Readonly<{
 
 export type DnaV3ReleaseDecision = Readonly<{
   candidateId: string
+  authorizationDigest: string
   released: boolean
   blockCodes: readonly DnaV3ReleaseBlockCode[]
+}>
+
+export type DnaV3ReleasedCandidateAuthorization = Readonly<{
+  candidateId: string
+  authorizationDigest: string
 }>
 
 export type DnaV3ReleasePackage = Readonly<{
   schemaVersion: typeof DNA_V3_RELEASE_COMPILER_VERSION
   releaseGeneration: "v3"
+  releasedCandidates: readonly DnaV3ReleasedCandidateAuthorization[]
   releasedCandidateIds: readonly string[]
   blocked: readonly DnaV3ReleaseDecision[]
   releaseCount: number
@@ -176,12 +224,13 @@ export const DNA_V3_AUDITED_RELEASE_REGISTRY_VERSION =
   "dna-v3-audited-release-registry@1" as const
 
 /**
- * Only candidate digests committed after the complete independent audit may
- * enter the V3 runtime package. It is intentionally empty until real V3
- * content completes the lifecycle; synthetic fixtures and caller assertions
- * therefore remain blocked even when their local fields look plausible.
+ * Only authorization digests committed after the complete independent audit
+ * may enter the V3 runtime package. Product authorization includes the entire
+ * owner-book lock identity, so a later lock or binding change cannot reuse an
+ * earlier audit entry. The registry remains intentionally empty until real V3
+ * content completes the lifecycle.
  */
-export const DNA_AUDITED_V3_RELEASE_CANDIDATE_DIGESTS = Object.freeze(
+export const DNA_AUDITED_V3_RELEASE_AUTHORIZATION_DIGESTS = Object.freeze(
   [] as string[],
 )
 
@@ -201,10 +250,96 @@ export function dnaV3ReleasePayloadSha256(payload: DnaV3ReleasePayload): string 
   return sha256(payload)
 }
 
+function requireNoticeText(value: string): string {
+  const normalized = String(value || "").trim()
+  if (!normalized) throw new Error("dna_v3_license_notice_text_required")
+  return normalized
+}
+
+function assertNoticeIdentityLicenseBinding(input: {
+  identity: DnaSourceIdentityRecord
+  license: DnaSourceLicenseRecord
+}): void {
+  if (input.identity.sourceId !== input.license.sourceId) {
+    throw new Error("dna_v3_license_notice_source_mismatch")
+  }
+}
+
+export function createDnaV3AttributionNoticePayload(input: {
+  identity: DnaSourceIdentityRecord
+  license: DnaSourceLicenseRecord
+  licenseComponent: DnaLicenseComponent
+  noticeText: string
+}): DnaV3AttributionNoticePayload {
+  assertNoticeIdentityLicenseBinding(input)
+  return Object.freeze({
+    schemaVersion: DNA_V3_ATTRIBUTION_NOTICE_VERSION,
+    sourceId: input.identity.sourceId,
+    identitySha256: sha256(input.identity),
+    licenseSha256: sha256(input.license),
+    licenseComponent: input.licenseComponent,
+    sourceTitle: input.identity.bibliography.title,
+    sourceAuthors: Object.freeze([...input.identity.bibliography.authors]),
+    sourceYear: input.identity.bibliography.year,
+    sourceVenue: input.identity.bibliography.venue,
+    declaredLicense: input.license.declaredLicense,
+    noticeText: requireNoticeText(input.noticeText),
+  })
+}
+
+export function createDnaV3ShareAlikeNoticePayload(input: {
+  identity: DnaSourceIdentityRecord
+  license: DnaSourceLicenseRecord
+  licenseComponent: DnaLicenseComponent
+  noticeText: string
+}): DnaV3ShareAlikeNoticePayload {
+  assertNoticeIdentityLicenseBinding(input)
+  if (input.license.policy !== "cc_by_sa" || !input.license.obligations.shareAlikeRequired) {
+    throw new Error("dna_v3_share_alike_notice_not_required")
+  }
+  return Object.freeze({
+    schemaVersion: DNA_V3_SHARE_ALIKE_NOTICE_VERSION,
+    sourceId: input.identity.sourceId,
+    identitySha256: sha256(input.identity),
+    licenseSha256: sha256(input.license),
+    licenseComponent: input.licenseComponent,
+    declaredLicense: input.license.declaredLicense,
+    releaseLicensePolicy: "cc_by_sa",
+    noticeText: requireNoticeText(input.noticeText),
+  })
+}
+
+export function dnaV3LicenseNoticePayloadSha256(
+  payload: DnaV3AttributionNoticePayload | DnaV3ShareAlikeNoticePayload,
+): string {
+  return sha256(payload)
+}
+
 export function dnaV3ReleaseCandidateDigest(candidate: DnaV3ReleaseCandidate): string {
   return sha256({
     registryVersion: DNA_V3_AUDITED_RELEASE_REGISTRY_VERSION,
     candidate,
+  })
+}
+
+/**
+ * The authorization digest is distinct from the audited candidate digest.
+ * Product authorization deliberately commits the complete owner lock state,
+ * including the exact artifact, chapters, passages, approval record and claim
+ * bindings. Any change to that identity therefore yields a different digest.
+ */
+export function dnaV3ReleaseAuthorizationDigest(
+  candidate: DnaV3ReleaseCandidate,
+  ownerBookLock: DnaOwnerBookLockState = DNA_CURRENT_OWNER_BOOK_LOCK,
+): string {
+  return sha256({
+    schemaVersion: DNA_V3_RELEASE_AUTHORIZATION_VERSION,
+    registryVersion: DNA_V3_AUDITED_RELEASE_REGISTRY_VERSION,
+    candidateDigest: dnaV3ReleaseCandidateDigest(candidate),
+    authority: candidate.authority,
+    ownerBookLockIdentity: candidate.authority === "dna_product_information"
+      ? ownerBookLock
+      : null,
   })
 }
 
@@ -261,8 +396,11 @@ function verifyScienceSupportProvenance(
     sourceSha256: candidate.sourceSha256,
     passageId: candidate.passageId,
     passageSha256: candidate.passageSha256,
+    passageSourceId: candidate.passageSourceId,
+    passageComponentId: candidate.passageComponentId,
     componentId: candidate.componentId,
     componentSha256: candidate.componentSha256,
+    componentSourceId: candidate.componentSourceId,
     claimId: candidate.claimId,
     claimSha256: candidate.claimSha256,
     licenseComponent: candidate.licenseComponent,
@@ -285,23 +423,83 @@ function pushUnique(
   if (!values.includes(value)) values.push(value)
 }
 
+function attributionNoticeMatches(input: {
+  identity: DnaSourceIdentityRecord
+  license: DnaSourceLicenseRecord
+  licenseComponent: DnaLicenseComponent
+  notice: DnaV3AttributionNoticePayload
+}): boolean {
+  try {
+    const expected = createDnaV3AttributionNoticePayload({
+      identity: input.identity,
+      license: input.license,
+      licenseComponent: input.licenseComponent,
+      noticeText: input.notice.noticeText,
+    })
+    return stableJson(input.notice) === stableJson(expected)
+  } catch {
+    return false
+  }
+}
+
+function shareAlikeNoticeMatches(input: {
+  identity: DnaSourceIdentityRecord
+  license: DnaSourceLicenseRecord
+  licenseComponent: DnaLicenseComponent
+  notice: DnaV3ShareAlikeNoticePayload
+}): boolean {
+  try {
+    const expected = createDnaV3ShareAlikeNoticePayload({
+      identity: input.identity,
+      license: input.license,
+      licenseComponent: input.licenseComponent,
+      noticeText: input.notice.noticeText,
+    })
+    return stableJson(input.notice) === stableJson(expected)
+  } catch {
+    return false
+  }
+}
+
 function areLicenseObligationsFulfilled(
+  identity: DnaSourceIdentityRecord,
   license: DnaSourceLicenseRecord,
+  licenseComponent: DnaLicenseComponent,
   fulfillment: DnaV3LicenseObligationFulfillment,
 ): boolean {
   const attributionOk = license.obligations.attributionRequired
     ? fulfillment.attribution.status === "satisfied"
+      && fulfillment.attribution.noticePayload !== null
       && fulfillment.attribution.noticeSha256 !== null
       && SHA256_PATTERN.test(fulfillment.attribution.noticeSha256)
+      && dnaV3LicenseNoticePayloadSha256(fulfillment.attribution.noticePayload)
+        === fulfillment.attribution.noticeSha256
+      && attributionNoticeMatches({
+        identity,
+        license,
+        licenseComponent,
+        notice: fulfillment.attribution.noticePayload,
+      })
     : fulfillment.attribution.status === "not_required"
+      && fulfillment.attribution.noticePayload === null
       && fulfillment.attribution.noticeSha256 === null
   const shareAlikeOk = license.obligations.shareAlikeRequired
     ? fulfillment.shareAlike.status === "satisfied"
       && fulfillment.shareAlike.releaseLicensePolicy === "cc_by_sa"
+      && fulfillment.shareAlike.noticePayload !== null
       && fulfillment.shareAlike.noticeSha256 !== null
       && SHA256_PATTERN.test(fulfillment.shareAlike.noticeSha256)
+      && dnaV3LicenseNoticePayloadSha256(fulfillment.shareAlike.noticePayload)
+        === fulfillment.shareAlike.noticeSha256
+      && shareAlikeNoticeMatches({
+        identity,
+        license,
+        licenseComponent,
+        notice: fulfillment.shareAlike.noticePayload,
+      })
     : fulfillment.shareAlike.status === "not_required"
       && fulfillment.shareAlike.releaseLicensePolicy === null
+      && fulfillment.shareAlike.noticePayload === null
       && fulfillment.shareAlike.noticeSha256 === null
   return attributionOk && shareAlikeOk
 }
@@ -384,15 +582,14 @@ export function compileDnaV3ReleasePackage(input: {
   const decisions = input.candidates
     .map((candidate): DnaV3ReleaseDecision => {
       const blockCodes: DnaV3ReleaseBlockCode[] = []
+      const authorizationDigest = dnaV3ReleaseAuthorizationDigest(candidate, ownerBookLock)
       if ((candidateIdCounts.get(candidate.candidateId) ?? 0) > 1) {
         pushUnique(blockCodes, "duplicate_candidate_id")
       }
       if (!coverageCollectionTrusted) {
         pushUnique(blockCodes, "coverage_collection_untrusted")
       }
-      if (!DNA_AUDITED_V3_RELEASE_CANDIDATE_DIGESTS.includes(
-        dnaV3ReleaseCandidateDigest(candidate),
-      )) {
+      if (!DNA_AUDITED_V3_RELEASE_AUTHORIZATION_DIGESTS.includes(authorizationDigest)) {
         pushUnique(blockCodes, "candidate_not_in_audited_registry")
       }
       if (
@@ -447,11 +644,15 @@ export function compileDnaV3ReleasePackage(input: {
           }
           const binding = ownerBookLock.productClaimBindings.find((entry) =>
             entry.claimId === candidate.claimId
+            && entry.chapterId === candidate.ownerChapterId
             && entry.passageId === candidate.passageId)
           if (!binding) {
             pushUnique(blockCodes, "owner_claim_not_bound_to_approved_passage")
           } else if (binding.passageSha256 !== candidate.passageSha256) {
             pushUnique(blockCodes, "owner_passage_hash_mismatch")
+          }
+          if (!binding || binding.artifactPassageSha256 !== candidate.artifactPassageSha256) {
+            pushUnique(blockCodes, "owner_artifact_passage_hash_mismatch")
           }
         }
       } else {
@@ -483,6 +684,13 @@ export function compileDnaV3ReleasePackage(input: {
         }
         if (!verifyScienceSupportProvenance(candidate)) {
           pushUnique(blockCodes, "invalid_support_provenance")
+        }
+        if (
+          candidate.componentSourceId !== candidate.sourceId
+          || candidate.passageSourceId !== candidate.sourceId
+          || candidate.passageComponentId !== candidate.componentId
+        ) {
+          pushUnique(blockCodes, "support_parent_mismatch")
         }
         if (!isV3ContentReleaseEligible(candidate.sourceLifecycle)) {
           pushUnique(blockCodes, "source_lifecycle_not_released")
@@ -518,27 +726,38 @@ export function compileDnaV3ReleasePackage(input: {
           || !evaluateComponentRelease(candidate.license, candidate.licenseComponent).allowed) {
           pushUnique(blockCodes, "source_license_component_denied")
         }
-        if (!areLicenseObligationsFulfilled(candidate.license, candidate.licenseCompliance)) {
+        if (!areLicenseObligationsFulfilled(
+          candidate.identity,
+          candidate.license,
+          candidate.licenseComponent,
+          candidate.licenseCompliance,
+        )) {
           pushUnique(blockCodes, "source_license_obligations_unfulfilled")
         }
       }
 
       return Object.freeze({
         candidateId: candidate.candidateId,
+        authorizationDigest,
         released: blockCodes.length === 0,
         blockCodes: Object.freeze([...blockCodes].sort()),
       })
     })
     .sort((left, right) => left.candidateId.localeCompare(right.candidateId))
 
-  const releasedCandidateIds = decisions
+  const releasedCandidates = decisions
     .filter((decision) => decision.released)
-    .map((decision) => decision.candidateId)
+    .map((decision) => Object.freeze({
+      candidateId: decision.candidateId,
+      authorizationDigest: decision.authorizationDigest,
+    }))
+  const releasedCandidateIds = releasedCandidates.map((decision) => decision.candidateId)
   const blocked = decisions.filter((decision) => !decision.released)
 
   return Object.freeze({
     schemaVersion: DNA_V3_RELEASE_COMPILER_VERSION,
     releaseGeneration: "v3",
+    releasedCandidates: Object.freeze(releasedCandidates),
     releasedCandidateIds: Object.freeze(releasedCandidateIds),
     blocked: Object.freeze(blocked),
     releaseCount: releasedCandidateIds.length,
@@ -549,7 +768,7 @@ export function compileDnaV3ReleasePackage(input: {
       ownerBookLock,
     }),
     auditedRegistryVersion: DNA_V3_AUDITED_RELEASE_REGISTRY_VERSION,
-    auditedRegistryCount: DNA_AUDITED_V3_RELEASE_CANDIDATE_DIGESTS.length,
+    auditedRegistryCount: DNA_AUDITED_V3_RELEASE_AUTHORIZATION_DIGESTS.length,
   })
 }
 
