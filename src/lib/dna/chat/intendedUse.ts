@@ -163,7 +163,7 @@ export const DNA_INTELLIGENCE_REPORT_OWNERSHIP_NOTICE_TR =
   "Yalnız hesabınıza ait son 10 aktif DNA raporunun kimliği, danışan kodu, tarihi, sürümü ve yaş bandı listelenir. Kullanıcı seçiminden önce raporun yapılandırılmış klinik bağlamı sohbet motoruna aktarılmaz." as const
 
 export const DNA_INTELLIGENCE_AUDIT_NOTICE_TR =
-  "Sohbet metni kalıcı geçmişe kaydedilmez. Audit; istek kimliği, mod, intent etiketi, yanıt sınıfı, motor ve sözleşme sürümü, ret durumu ve kaynak kimlikleriyle sınırlıdır; soru veya cevap metni, danışan kodu, rapor kimliği, skor ya da vaka bulgusu içermez." as const
+  "Sohbet metni kalıcı geçmişe kaydedilmez. Audit; istek kimliği, mod, intent etiketi, yanıt sınıfı, motor ve sözleşme sürümü, otorite sözleşmesi ve politika sürümü, kullanılan otorite seti, ret durumu ve kaynak kimlikleriyle sınırlıdır; soru veya cevap metni, danışan kodu, rapor kimliği, skor ya da vaka bulgusu içermez." as const
 
 export const DNA_INTELLIGENCE_INTENDED_USE_CONTRACT = Object.freeze({
   schemaVersion: "dna-intelligence-intended-use-contract@1",

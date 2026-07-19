@@ -3,21 +3,25 @@ import { performance } from "node:perf_hooks"
 
 import {
   buildDnaChatAuditMetadata,
-  createDnaChatSafeCaseContext,
   DNA_CHAT_AUDIT_METADATA_KEYS,
   readDnaChatRequestBody,
+  resolveDnaChat,
   resolveDnaChatApiRequest,
   type DnaChatApiAuditInput,
   type DnaChatCaseLoadResult,
 } from "../src/lib/dna/chat"
+import {
+  createVerifiedTestCaseContext,
+  TEST_REPORT_LINEAGE_IDS,
+} from "./dna-chat-test-helpers"
 
 function percentile(values: readonly number[], p: number) {
   const sorted = [...values].sort((left, right) => left - right)
   return sorted[Math.max(0, Math.ceil(sorted.length * p) - 1)] ?? 0
 }
 
-const safeCaseContext = createDnaChatSafeCaseContext({
-  dataStatus: "synthetic",
+const safeCaseContext = createVerifiedTestCaseContext({
+  dataStatus: "deidentified",
   ageMonths: 48,
   scores: {
     physiological: 28,
@@ -55,9 +59,16 @@ function dependencies(options: {
     state: { get loadCalls() { return loadCalls }, audits },
     value: {
       createRequestId: () => options.requestId || "request-contract-1",
-      loadCaseContext: async () => {
+      loadCaseAnswer: async ({ question, mode, previousTopic }: {
+        question: string
+        mode?: "theory" | "dna" | "case"
+        previousTopic?: string | null
+      }) => {
         loadCalls += 1
-        return options.loadResult ?? { ok: true as const, caseContext: safeCaseContext }
+        return options.loadResult ?? {
+          ok: true as const,
+          answer: resolveDnaChat({ question, mode, previousTopic, caseContext: safeCaseContext }),
+        }
       },
       writeAudit: async (input: DnaChatApiAuditInput) => {
         audits.push(input)
@@ -77,6 +88,9 @@ const auditMetadata = buildDnaChatAuditMetadata({
   engineVersion: "dna-chat-engine@2",
   intendedUseVersion: "dna-intelligence-intended-use@1",
   sourceIds: ["source.one", "source.one", "source.two"],
+  authorityContractVersion: "dna-knowledge-authority@1",
+  policyVersion: "dna-intelligence-intended-use@1",
+  authoritySet: ["case_information", "safety_and_product_boundaries"],
 })
 assert.deepEqual(Object.keys(auditMetadata), [...DNA_CHAT_AUDIT_METADATA_KEYS])
 assert.deepEqual(auditMetadata.source_ids, ["source.one", "source.two"])
@@ -157,7 +171,7 @@ assert.equal(clarificationDeps.state.loadCalls, 0)
 const caseDeps = dependencies({ requestId: "case-request" })
 const caseResult = await resolveDnaChatApiRequest({
   question: "Son raporumu özetle.",
-  reportId: "owned-report-id",
+  reportId: TEST_REPORT_LINEAGE_IDS.reportId,
 }, caseDeps.value)
 assert.equal(caseResult.status, 200)
 assert.equal(caseResult.accessedCaseReport, true)
@@ -185,7 +199,7 @@ assert.deepEqual(foreign.body, missing.body, "Yabancı ve bulunmayan rapor ayır
 const failedCaseAuditDeps = dependencies({ auditOk: false })
 const failedCaseAudit = await resolveDnaChatApiRequest({
   question: "Son raporumu özetle.",
-  reportId: "owned-report-id",
+  reportId: TEST_REPORT_LINEAGE_IDS.reportId,
 }, failedCaseAuditDeps.value)
 assert.equal(failedCaseAudit.status, 503)
 assert.deepEqual(failedCaseAudit.body, { ok: false, error: "audit_unavailable" })
@@ -207,7 +221,7 @@ for (let index = 0; index < 100; index += 1) {
   const startedAt = performance.now()
   const result = await resolveDnaChatApiRequest({
     question: "Bu rapordaki bulguyu HRV teorisiyle birlikte tartış.",
-    reportId: "owned-report-id",
+    reportId: TEST_REPORT_LINEAGE_IDS.reportId,
   }, mockDependencies.value)
   durations.push(performance.now() - startedAt)
   assert.equal(result.status, 200)

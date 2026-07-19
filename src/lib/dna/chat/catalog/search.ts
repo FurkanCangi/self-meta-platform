@@ -90,6 +90,7 @@ const EXPLICIT_TOPIC_RULES: readonly ExplicitTopicRule[] = [
   { topicId: "dna.physiological_regulation", pattern: /\b(?:dna\w*.+)?fizyolojik regulasyon (?:alani|puani)\b/ },
   { topicId: "dna.sensory_regulation", pattern: /\b(?:dna\w*.+)?duyusal regulasyon (?:alani|puani)\b/ },
   { topicId: "dna.emotional_regulation", pattern: /\b(?:dna\w*.+)?duygusal regulasyon (?:alani|puani)\b/ },
+  { topicId: "dna.emotional_regulation", pattern: /\b(?:dna\w*.+)?duygusal duzenleme (?:alani|puani)\b/ },
   { topicId: "dna.cognitive_regulation", pattern: /\b(?:dna\w*.+)?bilissel regulasyon (?:alani|puani)\b/ },
   { topicId: "dna.executive_function_domain", pattern: /(?:\bdna\w*.+\byurutucu islev alani\b|\byurutucu islev alani\b)/ },
   { topicId: "dna.interoception_domain", pattern: /(?:\bdna\w*.+\binterosepsiyon alani\b|\binterosepsiyon (?:alani|puani)\b)/ },

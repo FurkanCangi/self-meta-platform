@@ -12,6 +12,10 @@ import {
   type DnaChatApiAuditInput,
 } from "../src/lib/dna/chat"
 import {
+  createVerifiedTestCaseContext,
+  TEST_REPORT_LINEAGE_IDS,
+} from "./dna-chat-test-helpers"
+import {
   DNA_INTELLIGENCE_INTENDED_USE_CONTRACT,
   DNA_INTELLIGENCE_INTENDED_USE_VERSION,
   DNA_INTELLIGENCE_PROHIBITED_CAPABILITY_IDS,
@@ -104,6 +108,21 @@ const safeCaseContext = createDnaChatSafeCaseContext({
     counterEvidenceLines: ["Bilişsel alan Tipik düzeydedir."],
     preservedCapacityLines: ["Bilişsel regülasyon göreli korunmuştur."],
     dataLimitations: ["Doğrudan fizyolojik ölçüm bulunmamaktadır."],
+  },
+})
+
+const ownedSafeCaseContext = createVerifiedTestCaseContext({
+  dataStatus: "deidentified",
+  ageMonths: safeCaseContext.ageMonths,
+  scores: safeCaseContext.scores,
+  levels: safeCaseContext.levels,
+  chatContext: {
+    primaryAxis: safeCaseContext.chatContext.primaryAxis,
+    secondaryAxes: safeCaseContext.chatContext.secondaryAxes,
+    caseEvidenceLines: safeCaseContext.chatContext.evidence,
+    counterEvidenceLines: safeCaseContext.chatContext.counterEvidence,
+    preservedCapacityLines: safeCaseContext.chatContext.preservedCapacities,
+    dataLimitations: safeCaseContext.chatContext.limitations,
   },
 })
 
@@ -238,9 +257,16 @@ async function main() {
   const audits: DnaChatApiAuditInput[] = []
   const apiDependencies = {
     createRequestId: () => "phase-1-intended-use-request",
-    loadCaseContext: async () => {
+    loadCaseAnswer: async ({ question, mode, previousTopic }: {
+      question: string
+      mode?: "theory" | "dna" | "case"
+      previousTopic?: string | null
+    }) => {
       loadCalls += 1
-      return { ok: true as const, caseContext: safeCaseContext }
+      return {
+        ok: true as const,
+        answer: resolveDnaChat({ question, mode, previousTopic, caseContext: ownedSafeCaseContext }),
+      }
     },
     writeAudit: async (input: DnaChatApiAuditInput) => {
       audits.push(input)
@@ -262,7 +288,7 @@ async function main() {
 
   const ownedReportAnswer = await resolveDnaChatApiRequest({
     question: "Son raporumu özetle.",
-    reportId: "owned-report-id",
+    reportId: TEST_REPORT_LINEAGE_IDS.reportId,
   }, apiDependencies)
   assert.equal(ownedReportAnswer.status, 200)
   assert.equal(loadCalls, 1)

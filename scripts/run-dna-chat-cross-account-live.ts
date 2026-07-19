@@ -450,8 +450,6 @@ async function createSyntheticFixture(fixture: Fixture) {
           version: "dna-chat-context@1",
           primaryAxis: fixture.contextMarker,
           secondaryAxes: ["Duyusal regülasyon"],
-          mechanismLabel: fixture.contextMarker,
-          mechanismSummary: fixture.contextMarker,
           caseEvidenceLines: ["Sentetik fizyolojik alan bulgusu."],
           counterEvidenceLines: ["Sentetik korunmuş bilişsel alan bulgusu."],
           preservedCapacityLines: ["Sentetik korunmuş kapasite bulgusu."],

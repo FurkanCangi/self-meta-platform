@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto"
 import { redactReportTextForPrivacy } from "../reportPrivacy"
 import {
   DNA_CHAT_DOMAIN_KEYS,
@@ -7,6 +8,16 @@ import {
   type DnaChatSafeCaseContext,
 } from "./types"
 import { stableUnique } from "./text"
+import {
+  createPendingCaseAuthority,
+  createSyntheticCaseAuthority,
+  isReleaseEligibleAuthority,
+  type DnaCaseAuthorityRef,
+} from "./knowledgeAuthority"
+import { normalizeDnaChatText } from "./text"
+
+const SAFE_REPORT_CONTEXT_VERSION = "dna-chat-context@1" as const
+const CASE_CONTEXT_AUTHORITIES = new WeakMap<object, DnaCaseAuthorityRef>()
 
 const DIRECT_IDENTIFIER_PATTERNS = [
   /\b[1-9][0-9]{10}\b/g,
@@ -19,33 +30,69 @@ const DIRECT_IDENTIFIER_PATTERNS = [
 
 const SAFE_LEVELS = new Set<DnaChatDomainLevel>(["Tipik", "Riskli", "Atipik"])
 
-type SanitizedText = { value: string; redactions: number }
+type SanitizedText = { value: string; redactions: number; unsafeClaims: number }
+
+const CASE_BIOLOGICAL_SUBJECT =
+  /\b(?:vagus\w*|vagal\w*|sempatik\w*|parasempatik\w*|otonom\w*|merkezi\s+sinir\w*|sinir\s+sistem\w*|insula\w*|insular\w*|korteks\w*|kortikal\w*|amigdala\w*|prefrontal\w*|singulat\w*|beyin\s+sap\w*|beyin\s+bolge\w*|nor(?:al|on)\w*|kortizol\w*|adrenalin\w*|noradrenalin\w*|norepinefrin\w*|dopamin\w*|serotonin\w*|oksitosin\w*|melatonin\w*|gaba|glutamat\w*|norotransmitter\w*|hormon\w*|endokrin\w*|bagisiklik\w*|inflamasyon\w*|sitokin\w*|hrv|eda|hpa|eeg|fmri|bold|elektrodermal\w*|pupil\w*|respiratuvar\s+sinus\w*|kalp\s+(?:hiz\w*|atim\w*)\s+degisken\w*|dorsal\s+vagal\w*|ventral\s+vagal\w*)\b/
+const CASE_BIOLOGICAL_MEASUREMENT =
+  /\b(?:vagal\w*\s+ton\w*|dorsal\s+vagal\w*|ventral\s+vagal\w*|sempatik\w*\s+baskin\w*|parasempatik\w*\s+yetersiz\w*|kortizol\w*\s+duzey\w*|insula\w*\s+aktivite\w*|biyolojik\s+mekanizma\w*)\b/
+
+export function containsUnsupportedCaseBiologicalInference(value: unknown): boolean {
+  const normalized = normalizeDnaChatText(String(value || ""))
+  if (!normalized) return false
+  // Vaka bağlamı davranışsal ve işlevsel kalır. Kaynaktaki cümle olumsuz veya
+  // ihtiyatlı görünse bile biyobelirteç, nöroanatomi ya da otonom mekanizma
+  // terimi serbest rapor metninden taşınmaz; güvenli sınır sistem tarafından
+  // ayrı ve sürümlü bir politika cümlesi olarak eklenir.
+  return CASE_BIOLOGICAL_MEASUREMENT.test(normalized) || CASE_BIOLOGICAL_SUBJECT.test(normalized)
+}
 
 function sanitizeCaseText(value: unknown, maxLength = 360): SanitizedText {
   const original = String(value || "").replace(/\s+/g, " ").trim().slice(0, maxLength)
-  if (!original) return { value: "", redactions: 0 }
+  if (!original) return { value: "", redactions: 0, unsafeClaims: 0 }
+  if (containsUnsupportedCaseBiologicalInference(original)) {
+    return { value: "", redactions: 0, unsafeClaims: 1 }
+  }
   let redacted = redactReportTextForPrivacy(original)
   for (const pattern of DIRECT_IDENTIFIER_PATTERNS) {
     redacted = redacted.replace(pattern, "[kişisel bilgi gizlendi]")
   }
   const redactions = redacted === original ? 0 : 1
-  return { value: redacted.replace(/\s+/g, " ").trim(), redactions }
+  return { value: redacted.replace(/\s+/g, " ").trim(), redactions, unsafeClaims: 0 }
 }
 
-function sanitizeList(values: unknown, limit = 8): { values: string[]; redactions: number } {
-  if (!Array.isArray(values)) return { values: [], redactions: 0 }
+function sanitizeList(values: unknown, limit = 8): { values: string[]; redactions: number; unsafeClaims: number } {
+  if (!Array.isArray(values)) return { values: [], redactions: 0, unsafeClaims: 0 }
   let redactions = 0
+  let unsafeClaims = 0
   const sanitized = values.slice(0, limit).map((value) => {
     const result = sanitizeCaseText(value)
     redactions += result.redactions
+    unsafeClaims += result.unsafeClaims
     return result.value
   })
-  return { values: stableUnique(sanitized, limit), redactions }
+  return { values: stableUnique(sanitized, limit), redactions, unsafeClaims }
 }
 
 function sanitizeOptionalText(value: unknown): SanitizedText {
-  if (value == null) return { value: "", redactions: 0 }
+  if (value == null) return { value: "", redactions: 0, unsafeClaims: 0 }
   return sanitizeCaseText(value)
+}
+
+function canonicalize(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalize)
+  if (!value || typeof value !== "object") return value
+  return Object.fromEntries(
+    Object.entries(value as Record<string, unknown>)
+      .sort(([left], [right]) => left.localeCompare(right))
+      .map(([key, entry]) => [key, canonicalize(entry)]),
+  )
+}
+
+export function dnaCaseContextPayloadSha256(
+  input: DnaChatCaseContextInput | DnaChatSafeCaseContext,
+): string {
+  return createHash("sha256").update(JSON.stringify(canonicalize(input))).digest("hex")
 }
 
 function sanitizeScores(value: unknown): Partial<Record<DnaChatDomainKey, number>> {
@@ -90,8 +137,12 @@ export function createDnaChatSafeCaseContext(
     throw new Error("dna_chat_case_context_requires_synthetic_or_deidentified_status")
   }
 
-  const raw = input as DnaChatCaseContextInput
   const previousSafeContext = input as Partial<DnaChatSafeCaseContext>
+  if (previousSafeContext.safe === true && CASE_CONTEXT_AUTHORITIES.has(input)) {
+    return input as DnaChatSafeCaseContext
+  }
+
+  const raw = input as DnaChatCaseContextInput
   const inheritedRedactionCount =
     previousSafeContext.safe === true &&
     Number.isSafeInteger(previousSafeContext.redactionCount) &&
@@ -105,8 +156,6 @@ export function createDnaChatSafeCaseContext(
   const externalFindings = sanitizeList(raw.externalFindings)
   const primaryAxis = sanitizeOptionalText(chat.primaryAxis)
   const secondaryAxes = sanitizeList(chat.secondaryAxes)
-  const mechanismLabel = sanitizeOptionalText(chat.mechanismLabel)
-  const mechanismSummary = sanitizeOptionalText(chat.mechanismSummary)
   const evidence = sanitizeList(chat.caseEvidenceLines ?? chat.evidence, 10)
   const counterEvidence = sanitizeList(chat.counterEvidenceLines ?? chat.counterEvidence, 8)
   const preservedCapacities = sanitizeList(
@@ -129,8 +178,6 @@ export function createDnaChatSafeCaseContext(
     externalFindings.redactions,
     primaryAxis.redactions,
     secondaryAxes.redactions,
-    mechanismLabel.redactions,
-    mechanismSummary.redactions,
     evidence.redactions,
     counterEvidence.redactions,
     preservedCapacities.redactions,
@@ -141,12 +188,28 @@ export function createDnaChatSafeCaseContext(
     strongDomains.redactions,
     patterns.redactions,
   ].reduce((sum, count) => sum + count, 0)
+  const unsafeClaimCount = [
+    primaryAxis.unsafeClaims,
+    secondaryAxes.unsafeClaims,
+    evidence.unsafeClaims,
+    counterEvidence.unsafeClaims,
+    preservedCapacities.unsafeClaims,
+    confidence.unsafeClaims,
+    confidenceRationale.unsafeClaims,
+    limitations.unsafeClaims,
+    weakDomains.unsafeClaims,
+    strongDomains.unsafeClaims,
+    patterns.unsafeClaims,
+    themes.unsafeClaims,
+    observations.unsafeClaims,
+    externalFindings.unsafeClaims,
+  ].reduce((sum, count) => sum + count, 0)
   const redactionCount = Math.min(
     Number.MAX_SAFE_INTEGER,
     inheritedRedactionCount + detectedRedactionCount,
   )
 
-  return Object.freeze({
+  const safeContext = Object.freeze({
     safe: true as const,
     dataStatus: raw.dataStatus,
     caseId: caseId.value,
@@ -159,20 +222,63 @@ export function createDnaChatSafeCaseContext(
     chatContext: Object.freeze({
       primaryAxis: primaryAxis.value || null,
       secondaryAxes: Object.freeze(secondaryAxes.values),
-      mechanismLabel: mechanismLabel.value || null,
-      mechanismSummary: mechanismSummary.value || null,
       evidence: Object.freeze(evidence.values),
       counterEvidence: Object.freeze(counterEvidence.values),
       preservedCapacities: Object.freeze(preservedCapacities.values),
       confidence: confidence.value || null,
       confidenceRationale: confidenceRationale.value || null,
-      limitations: Object.freeze(limitations.values),
+      limitations: Object.freeze(stableUnique([
+        ...limitations.values,
+        ...(unsafeClaimCount > 0
+          ? ["Rapor bağlamındaki biyolojik mekanizma ifadeleri doğrudan ölçümle doğrulanmadığı için sohbet bağlamına alınmadı."]
+          : []),
+      ], 8)),
       weakDomains: Object.freeze(weakDomains.values),
       strongDomains: Object.freeze(strongDomains.values),
       patterns: Object.freeze(patterns.values),
     }),
     redactionCount,
+    unsafeClaimCount,
   }) as DnaChatSafeCaseContext
+
+  CASE_CONTEXT_AUTHORITIES.set(
+    safeContext,
+    raw.dataStatus === "synthetic"
+      ? createSyntheticCaseAuthority(SAFE_REPORT_CONTEXT_VERSION)
+      : createPendingCaseAuthority(SAFE_REPORT_CONTEXT_VERSION),
+  )
+  return safeContext
+}
+
+/**
+ * Attaches an identity-registered case authority to an already canonical safe
+ * context. The authority issuer itself exists only in `ownedCaseAnswer.ts`.
+ * Shape-valid serialized objects fail `isReleaseEligibleAuthority` because the
+ * authority registry is identity based.
+ *
+ * @internal
+ */
+export function attachVerifiedReportCaseAuthorityInternal(
+  context: DnaChatSafeCaseContext,
+  authority: DnaCaseAuthorityRef,
+): void {
+  if (
+    context.dataStatus !== "deidentified" ||
+    context.redactionCount > 0 ||
+    context.unsafeClaimCount > 0 ||
+    authority.layer !== "case_information" ||
+    !isReleaseEligibleAuthority(authority)
+  ) {
+    throw new Error("dna_chat_owned_report_authority_not_verified")
+  }
+  CASE_CONTEXT_AUTHORITIES.set(context, authority)
+}
+
+export function getDnaChatCaseContextAuthority(
+  context: DnaChatSafeCaseContext,
+): DnaCaseAuthorityRef {
+  return CASE_CONTEXT_AUTHORITIES.get(context) ??
+    createPendingCaseAuthority(SAFE_REPORT_CONTEXT_VERSION)
 }
 
 export function hasUsableDnaCaseContext(context: DnaChatSafeCaseContext): boolean {

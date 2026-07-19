@@ -1,4 +1,8 @@
 import type { DnaIntelligencePublicIntendedUse } from "./intendedUse"
+import type {
+  DnaKnowledgeAuthorityLayer,
+  DnaKnowledgeAuthorityRef,
+} from "./knowledgeAuthority"
 
 export const DNA_CHAT_SCHEMA_VERSION = "1.0" as const
 export const DNA_CHAT_ENGINE_VERSION = "dna-chat-engine@2" as const
@@ -79,6 +83,7 @@ export type DnaChatSourceRef = {
   ageScope?: string
   studyType?: string
   sampleScope?: string
+  authority: DnaKnowledgeAuthorityRef
 }
 
 export type DnaChatCaseContextInput = {
@@ -93,7 +98,9 @@ export type DnaChatCaseContextInput = {
   chatContext?: {
     primaryAxis?: string | null
     secondaryAxes?: string[]
+    /** @deprecated V2 payload compatibility only; sanitizer discards this field. */
     mechanismLabel?: string | null
+    /** @deprecated V2 payload compatibility only; sanitizer discards this field. */
     mechanismSummary?: string | null
     caseEvidenceLines?: string[]
     counterEvidenceLines?: string[]
@@ -125,8 +132,6 @@ export type DnaChatSafeCaseContext = {
   readonly chatContext: {
     primaryAxis: string | null
     secondaryAxes: string[]
-    mechanismLabel: string | null
-    mechanismSummary: string | null
     evidence: string[]
     counterEvidence: string[]
     preservedCapacities: string[]
@@ -138,6 +143,7 @@ export type DnaChatSafeCaseContext = {
     patterns: string[]
   }
   readonly redactionCount: number
+  readonly unsafeClaimCount: number
 }
 
 export type DnaChatRequest = {
@@ -171,6 +177,7 @@ export type DnaChatSafetyResult = {
   code: string | null
   redactedQuestion: string
   boundaryTr: string
+  authority: DnaKnowledgeAuthorityRef
 }
 
 export type DnaChatDiagnostics = {
@@ -191,9 +198,35 @@ export type DnaChatContextRequest = {
 
 export type DnaChatEvidenceSummary = {
   level: string
+  scientificEvidenceLevel?: string
+  dnaValidationStatus?: "not_applicable" | "not_established" | "dna_specific_evidence"
   ageScope: string
   sampleScope: string
   boundary: string
+}
+
+export type DnaChatAuthoritySummaryEntry = {
+  contractVersion: DnaKnowledgeAuthorityRef["contractVersion"]
+  layer: DnaKnowledgeAuthorityLayer
+  labelTr: string
+  boundaryTr: string
+  approvalRequirement: DnaKnowledgeAuthorityRef["approvalRequirement"]
+  verificationStatus: DnaKnowledgeAuthorityRef["verificationStatus"]
+  releaseEligible: boolean
+}
+
+export type DnaChatAnswerUnit = {
+  id: string
+  kind: "summary" | "detail" | "case_evidence" | "limitation" | "safety_boundary"
+  role:
+    | "product_definition"
+    | "scientific_evidence"
+    | "dna_specific_validation"
+    | "case_finding"
+    | "safety_boundary"
+  text: string
+  authority: DnaKnowledgeAuthorityRef
+  sourceIds: string[]
 }
 
 export type DnaChatResponse = {
@@ -217,6 +250,8 @@ export type DnaChatResponse = {
   safety: DnaChatSafetyResult
   contextRequest?: DnaChatContextRequest
   evidenceSummary?: DnaChatEvidenceSummary
+  answerUnits: DnaChatAnswerUnit[]
+  authoritySummary: DnaChatAuthoritySummaryEntry[]
 }
 
 export type DnaChatIntentDefinition = {

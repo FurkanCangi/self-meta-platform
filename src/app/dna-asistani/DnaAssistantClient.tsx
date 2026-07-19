@@ -42,6 +42,34 @@ type ReportOption = {
   ageBand: string | null
 }
 
+type KnowledgeAuthority = {
+  contractVersion: string
+  layer:
+    | "dna_product_information"
+    | "external_scientific_information"
+    | "case_information"
+    | "safety_and_product_boundaries"
+  labelTr: string
+  approvalRequirement: string
+  verificationStatus: "pending" | "verified" | "test_only"
+  releaseEligible: boolean
+  boundaryTr?: string
+}
+
+type AnswerUnit = {
+  id: string
+  kind: "summary" | "detail" | "case_evidence" | "limitation" | "safety_boundary"
+  role:
+    | "product_definition"
+    | "scientific_evidence"
+    | "dna_specific_validation"
+    | "case_finding"
+    | "safety_boundary"
+  text: string
+  authority: KnowledgeAuthority
+  sourceIds: string[]
+}
+
 type SourceRef = {
   id: string
   type?: string
@@ -58,6 +86,7 @@ type SourceRef = {
   ageScope?: string
   studyType?: string
   sampleScope?: string
+  authority?: KnowledgeAuthority
 }
 
 type ContextRequest = {
@@ -67,6 +96,8 @@ type ContextRequest = {
 
 type EvidenceSummary = {
   level: string
+  scientificEvidenceLevel?: string
+  dnaValidationStatus?: string
   ageScope: string
   sampleScope: string
   boundary: string
@@ -86,6 +117,8 @@ type DnaAnswer = {
   topic: string | null
   contextRequest?: ContextRequest
   evidenceSummary?: EvidenceSummary
+  authoritySummary: KnowledgeAuthority[]
+  answerUnits: AnswerUnit[]
 }
 
 type ChatMessage =
@@ -140,6 +173,129 @@ function normalizeStringList(value: unknown): string[] {
     : []
 }
 
+const AUTHORITY_LAYERS = new Set<KnowledgeAuthority["layer"]>([
+  "dna_product_information",
+  "external_scientific_information",
+  "case_information",
+  "safety_and_product_boundaries",
+])
+const AUTHORITY_CONTRACT_VERSION = "dna-knowledge-authority@1"
+const AUTHORITY_STATUSES = new Set<KnowledgeAuthority["verificationStatus"]>([
+  "pending",
+  "verified",
+  "test_only",
+])
+const AUTHORITY_APPROVAL_BY_LAYER: Record<KnowledgeAuthority["layer"], string> = {
+  dna_product_information: "owner_approved",
+  external_scientific_information: "codex_multi_pass_audited",
+  case_information: "report_derived",
+  safety_and_product_boundaries: "policy_enforced",
+}
+const ANSWER_UNIT_KINDS = new Set<AnswerUnit["kind"]>([
+  "summary", "detail", "case_evidence", "limitation", "safety_boundary",
+])
+const ANSWER_UNIT_ROLES = new Set<AnswerUnit["role"]>([
+  "product_definition", "scientific_evidence", "dna_specific_validation", "case_finding", "safety_boundary",
+])
+const ANSWER_ROLE_LAYER: Record<AnswerUnit["role"], KnowledgeAuthority["layer"]> = {
+  product_definition: "dna_product_information",
+  scientific_evidence: "external_scientific_information",
+  dna_specific_validation: "external_scientific_information",
+  case_finding: "case_information",
+  safety_boundary: "safety_and_product_boundaries",
+}
+const ANSWER_UNIT_KIND_LABEL: Record<AnswerUnit["kind"], string> = {
+  summary: "Özet",
+  detail: "Ayrıntı",
+  case_evidence: "Rapor dayanağı",
+  limitation: "Sınırlılık",
+  safety_boundary: "Güvenlik sınırı",
+}
+
+function normalizeAuthority(value: unknown): KnowledgeAuthority | null {
+  if (!value || typeof value !== "object") return null
+  const row = value as Record<string, unknown>
+  const layer = String(row.layer || "") as KnowledgeAuthority["layer"]
+  const verificationStatus = String(row.verificationStatus || "") as KnowledgeAuthority["verificationStatus"]
+  const contractVersion = String(row.contractVersion || "").trim()
+  const labelTr = String(row.labelTr || "").trim()
+  const approvalRequirement = String(row.approvalRequirement || "").trim()
+  const releaseEligible = row.releaseEligible === true
+  if (
+    contractVersion !== AUTHORITY_CONTRACT_VERSION ||
+    !AUTHORITY_LAYERS.has(layer) ||
+    !AUTHORITY_STATUSES.has(verificationStatus) ||
+    !labelTr ||
+    approvalRequirement !== AUTHORITY_APPROVAL_BY_LAYER[layer] ||
+    (releaseEligible && verificationStatus !== "verified")
+  ) return null
+  return {
+    contractVersion,
+    layer,
+    labelTr,
+    approvalRequirement,
+    verificationStatus,
+    releaseEligible,
+    ...(String(row.boundaryTr || "").trim()
+      ? { boundaryTr: String(row.boundaryTr).trim() }
+      : {}),
+  }
+}
+
+function normalizeSource(value: unknown): SourceRef | null {
+  if (!value || typeof value !== "object") return null
+  const row = value as Record<string, unknown>
+  const id = String(row.id || "").trim()
+  if (!id) return null
+  const authority = normalizeAuthority(row.authority)
+  const optionalString = (key: string) => {
+    const candidate = String(row[key] || "").trim()
+    return candidate || undefined
+  }
+  const year = Number(row.year)
+  const publicationYear = Number(row.publicationYear)
+  const rawUrl = optionalString("url")
+  let safeUrl: string | undefined
+  if (rawUrl) {
+    try {
+      const parsed = new URL(rawUrl)
+      if (parsed.protocol === "https:" || parsed.protocol === "http:") safeUrl = parsed.toString()
+    } catch {}
+  }
+  return {
+    id,
+    type: optionalString("type"),
+    title: optionalString("title"),
+    labelTr: optionalString("labelTr"),
+    excerpt: optionalString("excerpt"),
+    excerptTr: optionalString("excerptTr"),
+    citation: optionalString("citation"),
+    publicationYear: Number.isFinite(publicationYear) ? publicationYear : undefined,
+    year: Number.isFinite(year) ? year : undefined,
+    doi: row.doi === null ? null : optionalString("doi"),
+    url: safeUrl,
+    claimBoundary: optionalString("claimBoundary"),
+    ageScope: optionalString("ageScope"),
+    studyType: optionalString("studyType"),
+    sampleScope: optionalString("sampleScope"),
+    ...(authority ? { authority } : {}),
+  }
+}
+
+function normalizeAnswerUnit(value: unknown): AnswerUnit | null {
+  if (!value || typeof value !== "object") return null
+  const row = value as Record<string, unknown>
+  const kind = String(row.kind || "") as AnswerUnit["kind"]
+  const role = String(row.role || "") as AnswerUnit["role"]
+  const authority = normalizeAuthority(row.authority)
+  const id = String(row.id || "").trim()
+  const text = String(row.text || "").trim()
+  if (!id || !text || !authority || !ANSWER_UNIT_KINDS.has(kind) || !ANSWER_UNIT_ROLES.has(role)) {
+    return null
+  }
+  return { id, kind, role, text, authority, sourceIds: normalizeStringList(row.sourceIds) }
+}
+
 function normalizeAnswer(value: unknown): DnaAnswer | null {
   if (!value || typeof value !== "object") return null
   const row = value as Record<string, unknown>
@@ -161,17 +317,51 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
     rawEvidenceSummary && typeof rawEvidenceSummary === "object"
       ? {
           level: String((rawEvidenceSummary as Record<string, unknown>).level || "").trim(),
+          scientificEvidenceLevel: String((rawEvidenceSummary as Record<string, unknown>).scientificEvidenceLevel || "").trim(),
+          dnaValidationStatus: String((rawEvidenceSummary as Record<string, unknown>).dnaValidationStatus || "").trim(),
           ageScope: String((rawEvidenceSummary as Record<string, unknown>).ageScope || "").trim(),
           sampleScope: String((rawEvidenceSummary as Record<string, unknown>).sampleScope || "").trim(),
           boundary: String((rawEvidenceSummary as Record<string, unknown>).boundary || "").trim(),
         }
       : undefined
 
+  const sources = Array.isArray(row.sources)
+    ? row.sources.map(normalizeSource).filter((entry): entry is SourceRef => Boolean(entry))
+    : []
+  if (Array.isArray(row.sources) && sources.length !== row.sources.length) return null
+  const authoritySummary = Array.isArray(row.authoritySummary)
+    ? row.authoritySummary
+        .map(normalizeAuthority)
+        .filter((entry): entry is KnowledgeAuthority => Boolean(entry))
+    : []
+  if (!Array.isArray(row.authoritySummary) || authoritySummary.length !== row.authoritySummary.length) {
+    return null
+  }
+  const answerUnits = Array.isArray(row.answerUnits)
+    ? row.answerUnits
+        .map(normalizeAnswerUnit)
+        .filter((entry): entry is AnswerUnit => Boolean(entry))
+    : []
+  if (!Array.isArray(row.answerUnits) || !answerUnits.length || answerUnits.length !== row.answerUnits.length) {
+    return null
+  }
+  const sourceById = new Map(sources.map((source) => [source.id, source]))
+  if (answerUnits.some((unit) =>
+    ANSWER_ROLE_LAYER[unit.role] !== unit.authority.layer ||
+    unit.sourceIds.some((sourceId) => {
+      const source = sourceById.get(sourceId)
+      return !source || source.authority?.layer !== unit.authority.layer
+    }))) {
+    return null
+  }
+
   return {
     classification,
     summary: String(row.summary || "Yanıt oluşturuldu.").trim(),
     details: normalizeStringList(row.details),
-    sources: Array.isArray(row.sources) ? (row.sources as SourceRef[]) : [],
+    sources,
+    authoritySummary,
+    answerUnits,
     caseEvidence: normalizeStringList(row.caseEvidence),
     limitations: normalizeStringList(row.limitations),
     safetyBoundary: String(row.safetyBoundary || "").trim(),
@@ -746,6 +936,19 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
     answer.classification === "not_available" &&
     (answer.caseEvidence.length > 0 || answer.limitations.some((item) => /\b(?:rapor|vaka)\b/i.test(item)))
   const meta = reportScopedNotAvailable ? { ...baseMeta, label: "Raporda Yok" } : baseMeta
+  const hasStructuredUnits = answer.answerUnits.length > 0
+
+  const authorityStateLabel = (authority: KnowledgeAuthority) =>
+    authority.releaseEligible
+      ? "Yayın uygun"
+      : authority.verificationStatus === "test_only"
+        ? "Yalnız test"
+        : "Denetim bekliyor"
+
+  const authorityStateClass = (authority: KnowledgeAuthority) =>
+    authority.releaseEligible
+      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+      : "border-amber-200 bg-amber-50 text-amber-800"
 
   return (
     <article className="w-full">
@@ -760,20 +963,78 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
             </span>
             <span className="text-[10px] font-bold text-[var(--sm-text-muted)]">{answer.engineVersion}</span>
           </div>
-          <p className="mt-3 text-sm font-bold leading-6 text-[var(--sm-text)]">{answer.summary}</p>
-
-      {answer.details.length ? (
-        <ul className="mt-3 list-disc space-y-2 pl-5 text-sm font-medium leading-6 text-[var(--sm-text-soft)] marker:text-blue-500">
-          {answer.details.map((detail) => (
-            <li key={detail}>{detail}</li>
-          ))}
-        </ul>
-      ) : null}
+          {answer.authoritySummary.length ? (
+            <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Yanıtta kullanılan bilgi otoriteleri">
+              {answer.authoritySummary.map((authority) => (
+                <li
+                  key={authority.layer}
+                  className={`inline-flex min-h-7 items-center gap-1.5 rounded-full border px-2.5 text-[10px] font-bold ${authorityStateClass(authority)}`}
+                >
+                  {authority.labelTr}
+                  <span aria-hidden="true">·</span>
+                  <span>{authorityStateLabel(authority)}</span>
+                </li>
+              ))}
+            </ul>
+          ) : null}
+          {hasStructuredUnits ? (
+            <ul className="mt-3 space-y-2" aria-label="Otoritesine göre ayrılmış yanıt">
+              {answer.answerUnits.map((unit) => (
+                <li
+                  key={unit.id}
+                  className="rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-3"
+                >
+                  <div className="flex flex-wrap items-center gap-1.5">
+                    <span className="rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface)] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[var(--sm-text-muted)]">
+                      {ANSWER_UNIT_KIND_LABEL[unit.kind]}
+                    </span>
+                    <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--sm-text-muted)]">
+                      {unit.authority.labelTr}
+                    </span>
+                    <span className={`rounded-full border px-2 py-0.5 text-[9px] font-black ${authorityStateClass(unit.authority)}`}>
+                      {authorityStateLabel(unit.authority)}
+                    </span>
+                    {unit.sourceIds.length ? (
+                      <span className="text-[9px] font-bold text-[var(--sm-text-muted)]">
+                        {unit.sourceIds.length} kaynak bağlantısı
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className={`mt-2 text-sm leading-6 text-[var(--sm-text)] ${unit.kind === "summary" ? "font-bold" : "font-medium"}`}>
+                    {unit.text}
+                  </p>
+                  {unit.authority.boundaryTr ? (
+                    <p
+                      className={`mt-2 rounded-lg border p-2 text-[11px] font-semibold leading-5 ${
+                        unit.authority.releaseEligible
+                          ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                          : "border-amber-200 bg-amber-50 text-amber-900"
+                      }`}
+                    >
+                      <strong>Bilgi sınırı:</strong> {unit.authority.boundaryTr}
+                    </p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <>
+              <p className="mt-3 text-sm font-bold leading-6 text-[var(--sm-text)]">{answer.summary}</p>
+              {answer.details.length ? (
+                <ul className="mt-3 list-disc space-y-2 pl-5 text-sm font-medium leading-6 text-[var(--sm-text-soft)] marker:text-blue-500">
+                  {answer.details.map((detail) => <li key={detail}>{detail}</li>)}
+                </ul>
+              ) : null}
+            </>
+          )}
 
       {answer.evidenceSummary ? (
         <div className="mt-4 grid gap-2 rounded-2xl border border-violet-200 bg-[var(--sm-surface-soft)] p-3 text-xs leading-5 sm:grid-cols-2">
           {answer.evidenceSummary.level ? (
             <div><span className="font-black text-[var(--sm-text)]">Kanıt düzeyi:</span> <span className="font-semibold text-[var(--sm-text-soft)]">{answer.evidenceSummary.level}</span></div>
+          ) : null}
+          {answer.evidenceSummary.scientificEvidenceLevel && answer.evidenceSummary.scientificEvidenceLevel !== answer.evidenceSummary.level ? (
+            <div><span className="font-black text-[var(--sm-text)]">Genel literatür:</span> <span className="font-semibold text-[var(--sm-text-soft)]">{answer.evidenceSummary.scientificEvidenceLevel}</span></div>
           ) : null}
           {answer.evidenceSummary.ageScope ? (
             <div><span className="font-black text-[var(--sm-text)]">Yaş kapsamı:</span> <span className="font-semibold text-[var(--sm-text-soft)]">{answer.evidenceSummary.ageScope}</span></div>
@@ -787,7 +1048,7 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
         </div>
       ) : null}
 
-      {answer.caseEvidence.length ? (
+      {!hasStructuredUnits && answer.caseEvidence.length ? (
         <div className="mt-4 rounded-2xl border border-cyan-200 bg-[var(--sm-surface-soft)] p-3">
           <div className="text-[11px] font-black uppercase tracking-[0.1em] text-cyan-700">Rapordaki dayanak</div>
           <ul className="mt-2 list-disc space-y-1.5 pl-4 text-xs font-semibold leading-5 text-[var(--sm-text-soft)]">
@@ -805,6 +1066,13 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
           <div className="space-y-2 border-t border-[var(--sm-border)] p-3">
             {answer.sources.map((source) => (
               <div key={source.id} className="rounded-xl border border-[var(--sm-border)] bg-[var(--sm-surface)] p-3">
+                {source.authority?.labelTr ? (
+                  <div className={`mb-2 inline-flex min-h-7 items-center gap-1.5 rounded-full border px-2.5 text-[10px] font-black ${authorityStateClass(source.authority)}`}>
+                    {source.authority.labelTr}
+                    <span aria-hidden="true">·</span>
+                    <span>{authorityStateLabel(source.authority)}</span>
+                  </div>
+                ) : null}
                 <div className="text-xs font-black leading-5 text-[var(--sm-text)]">{sourceTitle(source)}</div>
                 {source.publicationYear || source.year || source.doi ? (
                   <div className="mt-1 text-[11px] font-bold text-[var(--sm-text-muted)]">
@@ -816,6 +1084,17 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
                 ) : null}
                 {source.claimBoundary ? (
                   <p className="mt-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)]"><strong>İddia sınırı:</strong> {source.claimBoundary}</p>
+                ) : null}
+                {source.authority?.boundaryTr ? (
+                  <p
+                    className={`mt-2 rounded-lg border p-2 text-[11px] font-semibold leading-5 ${
+                      source.authority.releaseEligible
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                        : "border-amber-200 bg-amber-50 text-amber-900"
+                    }`}
+                  >
+                    <strong>Bilgi sınırı:</strong> {source.authority.boundaryTr}
+                  </p>
                 ) : null}
                 {source.ageScope || source.studyType ? (
                   <p className="mt-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)]">
@@ -836,14 +1115,14 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
         </details>
       ) : null}
 
-      {answer.limitations.length ? (
+      {!hasStructuredUnits && answer.limitations.length ? (
         <div className="mt-3 rounded-2xl border border-amber-200 bg-[var(--sm-surface-soft)] p-3 text-xs font-semibold leading-5 text-[var(--sm-text-soft)]">
           <div className="font-black">Sınırlılıklar</div>
           {answer.limitations.map((limitation) => <p key={limitation} className="mt-1">{limitation}</p>)}
         </div>
       ) : null}
 
-      {answer.safetyBoundary ? (
+      {!hasStructuredUnits && answer.safetyBoundary ? (
         <div className="mt-3 flex items-start gap-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)]">
           <ShieldCheck className="mt-0.5 shrink-0 text-blue-600" size={15} aria-hidden="true" />
           <span>{answer.safetyBoundary}</span>

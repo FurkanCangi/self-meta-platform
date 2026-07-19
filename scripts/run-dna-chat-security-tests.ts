@@ -534,6 +534,8 @@ for (const forbidden of ["answers", "anamnez", "snapshot_json", "evidenceAtoms",
 
 const route = read("src/app/api/app/dna-chat/route.ts")
 const apiResolver = read("src/lib/dna/chat/apiResolver.ts")
+const ownedCaseAnswer = read("src/lib/dna/chat/ownedCaseAnswer.ts")
+const ownedCaseCore = read("src/lib/dna/chat/ownedCaseContextCore.ts")
 const client = read("src/app/dna-asistani/DnaAssistantClient.tsx")
 const assistantPage = read("src/app/dna-asistani/page.tsx")
 const reportsPage = read("src/app/reports/page.tsx")
@@ -564,9 +566,12 @@ assert.match(route, /mode: z\.enum\(\["theory", "dna", "case"\]\)\.optional\(\)/
 assert.match(route, /limit: 12[\s\S]*?windowMs: 10_000/)
 assert.match(route, /limit: 120[\s\S]*?60 \* 60 \* 1_000/)
 assert.match(route, /Cache-Control["']?: "private, no-store/)
-assert.match(route, /\.from\("reports"\)[\s\S]*?\.from\("assessments_v2"\)[\s\S]*?\.from\("clients"\)/)
-assert.match(route, /\.eq\("owner_id", userId\)/)
-assert.ok(!/isAdminRole|adminScope|ownerAuditEmail/.test(route), "DNA chat ownership bypass içeriyor")
+assert.match(ownedCaseAnswer, /\.from\("reports"\)[\s\S]*?\.from\("assessments_v2"\)[\s\S]*?\.from\("clients"\)/)
+assert.match(ownedCaseAnswer, /import "server-only"/)
+assert.match(ownedCaseAnswer, /\.eq\("owner_id", input\.userId\)/)
+assert.ok(!/isAdminRole|adminScope|ownerAuditEmail/.test(ownedCaseAnswer), "DNA chat ownership bypass içeriyor")
+assert.match(route, /resolveOwnedDnaCaseAnswer/)
+assert.doesNotMatch(ownedCaseCore, /snapshot\.(?:chat_context|chatContext|report_text|anamnez|trace)/)
 assert.match(route, /resolveDnaChatApiRequest\(payload/)
 assert.match(route, /error: "report_not_found"/)
 assert.match(apiResolver, /requiresCaseContext && payload\.reportId/)
@@ -576,10 +581,9 @@ assert.match(apiResolver, /!audit\.ok && accessedCaseReport/)
 assert.match(apiResolver, /error: "audit_unavailable"/)
 assert.match(route, /Retry-After/)
 assert.match(route, /recentReports\.reports\.some\(\(report\) => report\.id === reportId\)/)
-assert.match(route, /candidateChatContext\.version === "dna-chat-context@1"/)
 const resolverBlock = apiResolver.slice(apiResolver.indexOf("export async function resolveDnaChatApiRequest"))
 assert.ok(
-  resolverBlock.indexOf("resolveDnaChat({") < resolverBlock.indexOf("dependencies.loadCaseContext"),
+  resolverBlock.indexOf("resolveDnaChat({") < resolverBlock.indexOf("dependencies.loadCaseAnswer"),
   "POST soruyu rapor depolamasına erişmeden önce sınıflandırmalı",
 )
 assert.match(client, /requestSequenceRef/)
@@ -613,6 +617,9 @@ const auditMetadata = buildDnaChatAuditMetadata({
   engineVersion: "dna-chat-engine@2",
   intendedUseVersion: "dna-intelligence-intended-use@1",
   sourceIds: ["source.one", "source.one", "source.two"],
+  authorityContractVersion: "dna-knowledge-authority@1",
+  policyVersion: "dna-intelligence-intended-use@1",
+  authoritySet: ["case_information", "safety_and_product_boundaries"],
 })
 assert.deepEqual(Object.keys(auditMetadata), [...DNA_CHAT_AUDIT_METADATA_KEYS])
 assert.deepEqual(auditMetadata.source_ids, ["source.one", "source.two"])

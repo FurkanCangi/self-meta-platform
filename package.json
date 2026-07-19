@@ -35,6 +35,7 @@
     "chat:intended-use": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-chat-intended-use && node .tmp/dna-chat-intended-use/scripts/run-dna-chat-intended-use-tests.js",
     "chat:intended-use:http": "npm run build && node scripts/run-dna-intended-use-http-tests.mjs",
     "chat:forbidden-imports": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-chat-forbidden-imports && node .tmp/dna-chat-forbidden-imports/scripts/run-dna-chat-forbidden-imports.js",
+    "chat:authority": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-chat-authority && node .tmp/dna-chat-authority/scripts/run-dna-chat-authority-tests.js",
     "security:smoke": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/security-smoke-tests.js",
     "security:readiness": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/security-readiness-check.js",
     "security:owner-scenarios": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/owner-security-scenario-tests.js",

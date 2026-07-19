@@ -12,8 +12,6 @@ const caseContext = createDnaChatSafeCaseContext({
   chatContext: {
     primaryAxis: "Duyusal yükle artan regülasyon kırılganlığı",
     secondaryAxes: ["Duygusal toparlanma"],
-    mechanismLabel: "Bağlama duyarlı yük",
-    mechanismSummary: "Uyaran yoğunluğu arttığında toparlanma uzuyor.",
     caseEvidenceLines: ["Duyusal alan Atipik düzeydedir."],
     counterEvidenceLines: ["Yapılandırılmış ortamda katılım korunmaktadır."],
     preservedCapacityLines: ["Bilişsel regülasyon Tipik düzeydedir."],

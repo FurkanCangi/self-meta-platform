@@ -22,6 +22,17 @@ import type {
   DnaChatRoute,
   DnaChatSourceRef,
 } from "./types"
+import {
+  authorityForCatalogClaim,
+  authorityForCatalogRelation,
+  authorityForCatalogSource,
+  authorityForCatalogTopic,
+  authorityForCatalogTopicDetail,
+} from "./authorityRegistry"
+import {
+  isAuthorityGraphEdgeAllowed,
+  type DnaKnowledgeAuthorityRef,
+} from "./knowledgeAuthority"
 
 const EVIDENCE_LABELS: Record<DnaChatCatalogEvidenceLevel, string> = {
   strong: "Güçlü",
@@ -60,6 +71,14 @@ export type DnaCatalogReasoningDraft = {
   limitations: string[]
   suggestedQuestions: string[]
   evidenceSummary: DnaChatEvidenceSummary
+  outputAuthorities?: {
+    summary: DnaKnowledgeAuthorityRef
+    details: DnaKnowledgeAuthorityRef[]
+  }
+  outputSourceIds?: {
+    summary: string[]
+    details: string[][]
+  }
 }
 
 function hasExplicitComparisonCue(normalizedQuestion: string): boolean {
@@ -150,6 +169,22 @@ function containsTopicPattern(normalizedQuestion: string, pattern: string): bool
   ).test(normalizedQuestion)
 }
 
+function topicPatternRanges(
+  normalizedQuestion: string,
+  pattern: string,
+): Array<{ start: number; end: number }> {
+  const escaped = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const expression = new RegExp(
+    `(^|\\s)(${escaped})(?:la|le|yla|yle|da|de|dan|den|a|e|i|u|un|in|nin|nun)?(?=\\s|$)`,
+    "g",
+  )
+  return Array.from(normalizedQuestion.matchAll(expression)).map((match) => {
+    const leadingLength = match[1]?.length ?? 0
+    const start = (match.index ?? 0) + leadingLength
+    return { start, end: start + (match[2]?.length ?? 0) }
+  })
+}
+
 function questionMentionsTopic(question: string, topic: DnaChatCatalogTopic): boolean {
   const normalized = normalizeDnaChatText(question)
   // "Dikkatle kullanmak/yorumlamak" bir kullanım biçimidir; dikkat konusu değildir.
@@ -174,9 +209,17 @@ function distinctMentionedTopics(
   question: string,
   selectedTopic: DnaChatCatalogTopic,
 ): DnaChatCatalogTopic[] {
+  const normalizedQuestion = normalizeDnaChatText(question)
+  const selectedRanges = topicIdentityPatterns(selectedTopic).flatMap((pattern) =>
+    topicPatternRanges(normalizedQuestion, pattern))
   return DNA_CHAT_CATALOG_TOPICS.filter((candidate) =>
     !topicsShareFamily(candidate.id, selectedTopic.id) &&
-    questionMentionsTopic(question, candidate)
+    questionMentionsTopic(question, candidate) &&
+    topicIdentityPatterns(candidate)
+      .flatMap((pattern) => topicPatternRanges(normalizedQuestion, pattern))
+      .some((candidateRange) => !selectedRanges.some((selectedRange) =>
+        selectedRange.start <= candidateRange.start &&
+        selectedRange.end >= candidateRange.end))
   )
 }
 
@@ -404,6 +447,7 @@ function sourceRef(source: DnaChatCatalogSource, excerpt: string): DnaChatSource
     ageScope: AGE_SCOPE_LABELS[source.ageScope],
     studyType: source.studyType,
     sampleScope: `${AGE_SCOPE_LABELS[source.ageScope]}; çalışma türü: ${source.studyType}. Ayrıntılı örneklem büyüklüğü ve özellikleri katalog kaydında yapılandırılmamıştır.`,
+    authority: authorityForCatalogSource(),
   }
 }
 
@@ -472,8 +516,12 @@ function evidenceSummary(
     topic.claimBoundary,
     ...relations.map((relation) => relation.claimBoundary),
   ], 3)
+  const scientificEvidenceLevel = EVIDENCE_LABELS[conservativeLevel]
+  const dnaProductTopic = topic.id.startsWith("dna.")
   return {
-    level: EVIDENCE_LABELS[conservativeLevel],
+    level: dnaProductTopic ? "DNA'ya özgü doğrulama yok" : scientificEvidenceLevel,
+    scientificEvidenceLevel,
+    dnaValidationStatus: dnaProductTopic ? "not_established" : "not_applicable",
     ageScope: ageScopes.join(" · "),
     sampleScope: sources.length
       ? `Yanıtta ${sources.length} kaynak kaydı kullanıldı. Çalışma türü ve yaş kapsamı kaynak kartlarında gösterilir; ayrıntılı örneklem büyüklüğü yapılandırılmamışsa bu eksiklik açıkça belirtilir.`
@@ -505,16 +553,6 @@ function ageScopeGuard(
         limitation: `Katalogdaki ${AGE_SCOPE_LABELS[entry.ageScope].toLocaleLowerCase("tr-TR")} kanıt, ${Math.round(ageMonths)} aylık vaka için uyumlu değildir.`,
       }
     : { blocked: false, limitation: null }
-}
-
-function relationDetails(
-  relations: readonly DnaChatCatalogRelation[],
-  topic: DnaChatCatalogTopic,
-): string[] {
-  return relations.slice(0, 2).map((relation) => {
-    const other = otherTopicForRelation(relation, topic.id)
-    return other ? `${other.title}: ${relation.summary}` : relation.summary
-  })
 }
 
 export function resolveDnaCatalogReasoning(input: {
@@ -615,7 +653,17 @@ export function resolveDnaCatalogReasoning(input: {
             ))
             .slice(0, 2)
       : []
-  const relationAgeGuards = selectedRelations.map((relation) => ({
+  const authoritySafeRelations = selectedRelations.filter((relation) => {
+    const from = getCatalogTopicById(relation.fromTopicId)
+    const to = getCatalogTopicById(relation.toTopicId)
+    if (!from || !to) return false
+    return isAuthorityGraphEdgeAllowed({
+      from: authorityForCatalogTopic(from).layer,
+      to: authorityForCatalogTopic(to).layer,
+      predicate: relation.predicate,
+    })
+  })
+  const relationAgeGuards = authoritySafeRelations.map((relation) => ({
     relation,
     guard: ageScopeGuard(relation, input.ageMonths),
   }))
@@ -626,7 +674,7 @@ export function resolveDnaCatalogReasoning(input: {
     relationAgeGuards.flatMap((entry) => entry.guard.limitation ? [entry.guard.limitation] : []),
     3,
   )
-  if (selectedRelations.length > 0 && relations.length === 0) {
+  if (authoritySafeRelations.length > 0 && relations.length === 0) {
     return {
       queryKind,
       route: queryKind === "dna_relation" ? "dna" : "theory",
@@ -767,17 +815,43 @@ export function resolveDnaCatalogReasoning(input: {
     }
   }
 
-  const relationLines = relationDetails(relations, topic)
-  const claimLines = claims.flatMap((claim) => [claim.text, claim.detail]).filter(Boolean)
-  const summary = relationLines[0] || claims[0]?.text || topic.summary
-  const details = stableUnique(
-    [
-      ...relationLines.slice(1),
-      ...claimLines,
-      ...topic.details,
-    ].filter((line) => line !== summary),
-    5,
-  )
+  const relationEntries = relations.slice(0, 2).map((relation) => {
+    const other = otherTopicForRelation(relation, topic.id)
+    return {
+      text: other ? `${other.title}: ${relation.summary}` : relation.summary,
+      authority: authorityForCatalogRelation(relation),
+      sourceIds: [...relation.sourceIds],
+    }
+  })
+  const claimEntries = claims.flatMap((claim) => [claim.text, claim.detail]
+    .filter(Boolean)
+    .map((text) => ({
+      text,
+      authority: authorityForCatalogClaim(claim),
+      sourceIds: [...claim.sourceIds],
+    })))
+  const topicEntries = topic.details.map((text) => ({
+    text,
+    authority: authorityForCatalogTopicDetail(topic, text),
+    sourceIds: [...topic.sourceIds],
+  }))
+  const summaryEntry = relationEntries[0] ?? claimEntries[0] ?? {
+    text: topic.summary,
+    authority: authorityForCatalogTopic(topic),
+    sourceIds: [...topic.sourceIds],
+  }
+  const seenDetails = new Set<string>()
+  const detailEntries = [
+    ...relationEntries.slice(1),
+    ...claimEntries,
+    ...topicEntries,
+  ].filter((entry) => {
+    if (!entry.text || entry.text === summaryEntry.text || seenDetails.has(entry.text)) return false
+    seenDetails.add(entry.text)
+    return true
+  }).slice(0, 5)
+  const summary = summaryEntry.text
+  const details = detailEntries.map((entry) => entry.text)
   const sources = collectSources(topic, claims, relations)
   const limitations = stableUnique([
     topic.claimBoundary,
@@ -788,8 +862,11 @@ export function resolveDnaCatalogReasoning(input: {
     topic.reviewStatus === "source_verified_expert_pending"
       ? "Kaynak doğrulaması tamamlandı; uzman içerik incelemesi henüz bekliyor."
       : "İçerik uzman incelemesinden geçmiştir.",
+    ...(topic.id.startsWith("dna.")
+      ? ["Genel bilimsel literatür DNA ürününün geçerliğini, güvenirliğini veya faktör yapısını otomatik olarak kanıtlamaz; ürün tanımı sahip onaylı DNA kitabına bağlanmalıdır."]
+      : []),
     "Bu açıklama genel bilimsel çerçevedir; tek vaka için tanı, kesin neden veya doğrudan biyolojik ölçüm değildir.",
-  ], 4)
+  ], 5)
 
   return {
     queryKind,
@@ -807,5 +884,13 @@ export function resolveDnaCatalogReasoning(input: {
       `${topic.title} DNA alanlarıyla nasıl ilişkilidir?`,
     ], 3),
     evidenceSummary: evidenceSummary(topic, claims, relations, sources),
+    outputAuthorities: {
+      summary: summaryEntry.authority,
+      details: detailEntries.map((entry) => entry.authority),
+    },
+    outputSourceIds: {
+      summary: summaryEntry.sourceIds,
+      details: detailEntries.map((entry) => entry.sourceIds),
+    },
   }
 }

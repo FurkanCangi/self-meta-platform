@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "dna-authority-migration@1",
+  "sourceEngine": "dna-chat-engine@2",
+  "targetAuthorityContract": "dna-knowledge-authority@1",
+  "legacyProductSources": {
+    "dna:assessment_overview": "pending_owner_approval",
+    "dna:domain_contract": "pending_owner_approval",
+    "dna:question_contract": "pending_owner_approval",
+    "dna:scoring_contract": "pending_owner_approval",
+    "dna:report_contract": "pending_owner_approval",
+    "dna:evidence_contract": "policy_enforced",
+    "dna:privacy_contract": "policy_enforced",
+    "dna:age_contract": "split_required_in_phase_3",
+    "dna:use_contract": "policy_enforced"
+  },
+  "catalogRules": {
+    "topicPrefix.dna.": "pending_owner_approval",
+    "allScientificSources": "pending_codex_multi_pass_audit",
+    "dnaProductAndMeasurementBoundaries": "policy_enforced",
+    "allCatalogSafetyRules": "policy_enforced",
+    "nonDnaTopicsClaimsRelations": "pending_codex_multi_pass_audit"
+  },
+  "caseRules": {
+    "ownedStructuredReport": "report_derived",
+    "ownershipProof": "server_only_report_assessment_client_owner_exact_match_plus_identity_registered_authority",
+    "publicLowLevelMint": "removed",
+    "synthetic": "test_only",
+    "untrustedDeidentified": "pending_not_release_eligible",
+    "mechanismLabel": "deprecated_input_ignored_not_persisted_or_echoed",
+    "mechanismSummary": "deprecated_input_ignored_not_persisted_or_echoed",
+    "productionFreeTextFields": "ignored_by_structured_allowlist",
+    "allowedSnapshotFields": [
+      "scores",
+      "domain_levels",
+      "age_months"
+    ],
+    "privateProvenanceHashes": [
+      "sourcePayloadSha256",
+      "safeContextSha256",
+      "lineageBindingSha256"
+    ]
+  },
+  "releaseEligibility": {
+    "shapeOnlyProofAccepted": false,
+    "plainSerializedAuthorityAccepted": false,
+    "ownerApprovalRegistryEntriesAtPhase2": 0,
+    "scienceAuditRegistryEntriesAtPhase2": 0,
+    "runtimeRoleAuthorityGate": true,
+    "runtimeSourceAuthorityParity": true,
+    "runtimeGraphAuthorityGate": true,
+    "unknownGraphPredicateAllowed": false,
+    "registeredPolicyVersion": "dna-intelligence-intended-use@1",
+    "unregisteredPolicyClauseAllowed": false
+  },
+  "userSurface": {
+    "answerUnitsRendered": true,
+    "perUnitAuthorityVisible": true,
+    "releaseStateVisible": true,
+    "pendingBoundaryVisible": true
+  },
+  "falseApprovalPolicy": {
+    "dna_contractIsOwnerApproved": false,
+    "legacyVerifiedEntryIsOwnerApproved": false,
+    "sourceVerifiedIsMultiPassAudit": false,
+    "expertPendingIsReleaseApproval": false
+  }
+}

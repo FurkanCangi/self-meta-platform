@@ -451,6 +451,8 @@ export const V5_SIX_DOMAINS_TOPICS: readonly DnaChatCatalogTopic[] =
       title: "DNA duygusal regülasyon alanı",
       aliases: [
         "duygusal regülasyon alanı",
+        "duygusal düzenleme alanı",
+        "dna duygusal düzenleme alanı",
         "dna duygusal",
         "duygusal alan",
         "duygu düzenleme alanı",

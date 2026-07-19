@@ -71,8 +71,6 @@ const benchmarkCase = createDnaChatSafeCaseContext({
   chatContext: {
     primaryAxis: "Duyusal yükle artan regülasyon kırılganlığı",
     secondaryAxes: ["Duygusal toparlanma", "Yürütücü organizasyon"],
-    mechanismLabel: "Bağlama duyarlı regülasyon yükü",
-    mechanismSummary: "Uyaran yoğunluğu arttığında toparlanma ve görev organizasyonu zorlaşıyor.",
     caseEvidenceLines: ["Duyusal alan Atipik, duygusal alan Riskli düzeydedir."],
     counterEvidenceLines: ["Bire bir yapılandırılmış görevde katılım korunmaktadır."],
     preservedCapacityLines: ["Bilişsel regülasyon alanı Tipik düzeydedir."],
@@ -221,8 +219,6 @@ for (const file of fixtureFiles) {
     chatContext: {
       primaryAxis: snapshot.primaryAxis,
       secondaryAxes: snapshot.secondaryAxes,
-      mechanismLabel: snapshot.mechanismLabel,
-      mechanismSummary: snapshot.mechanismSummary,
       caseEvidenceLines: snapshot.caseEvidenceLines,
       counterEvidenceLines: snapshot.counterEvidenceLines,
       preservedCapacityLines: snapshot.preservedCapacityLines,

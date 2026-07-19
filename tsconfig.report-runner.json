@@ -34,6 +34,7 @@
     "scripts/capture-dna-chat-baseline.ts",
     "scripts/run-dna-chat-intended-use-tests.ts",
     "scripts/run-dna-chat-forbidden-imports.ts",
+    "scripts/run-dna-chat-authority-tests.ts",
     "scripts/report-quality-cases.ts",
     "src/lib/dna/**/*.ts",
     "src/lib/assessment/**/*.ts"

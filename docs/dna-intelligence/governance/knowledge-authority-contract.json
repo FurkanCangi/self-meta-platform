@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "dna-knowledge-authority@1",
+  "authorities": [
+    {
+      "layer": "dna_product_information",
+      "labelTr": "DNA Ürün Bilgisi",
+      "authorityTr": "Sahibin onayladığı DNA kitabı",
+      "approvalRequirement": "owner_approved"
+    },
+    {
+      "layer": "external_scientific_information",
+      "labelTr": "Dış Bilimsel Bilgi",
+      "authorityTr": "Hakemli yayınlar, kılavuzlar ve kitaplar",
+      "approvalRequirement": "codex_multi_pass_audited"
+    },
+    {
+      "layer": "case_information",
+      "labelTr": "Vaka Bilgisi",
+      "authorityTr": "Sahipliği doğrulanmış yapılandırılmış güvenli rapor bağlamı",
+      "approvalRequirement": "report_derived"
+    },
+    {
+      "layer": "safety_and_product_boundaries",
+      "labelTr": "Güvenlik ve Ürün Sınırları",
+      "authorityTr": "Sürümlü güvenlik sözleşmesi",
+      "approvalRequirement": "policy_enforced"
+    }
+  ],
+  "nonSubstitutionRules": [
+    "dna_product_information_cannot_replace_external_science",
+    "external_science_cannot_validate_dna_product_automatically",
+    "case_information_cannot_claim_biological_measurement",
+    "policy_cannot_be_overridden_by_other_authorities",
+    "external_science_cannot_redefine_dna_product"
+  ],
+  "terminology": {
+    "approvalRequirement": "codex_multi_pass_audited",
+    "futureLifecycleStatus": "codex_audited_multi_pass",
+    "distinctionTr": "İlki bilgi otoritesinin onay gereksinimi, ikincisi Faz 28'de kullanılacak kayıt yaşam-döngüsü statüsüdür."
+  }
+}

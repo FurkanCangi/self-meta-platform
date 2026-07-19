@@ -1,6 +1,11 @@
 import { evaluateClaimGuard } from "../clinicalClaimRegistry"
 import { redactReportTextForPrivacy } from "../reportPrivacy"
-import { createDnaChatSafeCaseContext, hasUsableDnaCaseContext } from "./caseContext"
+import {
+  containsUnsupportedCaseBiologicalInference,
+  createDnaChatSafeCaseContext,
+  getDnaChatCaseContextAuthority,
+  hasUsableDnaCaseContext,
+} from "./caseContext"
 import {
   classifyEmbeddedCatalogQueryKind,
   classifyDnaChatQueryKind,
@@ -10,6 +15,19 @@ import {
 import { getCatalogTopicById } from "./catalog"
 import { DNA_CHAT_INTENT_BY_ID } from "./intents"
 import { DNA_INTELLIGENCE_PUBLIC_INTENDED_USE } from "./intendedUse"
+import {
+  DNA_PRODUCT_AUTHORITY_PENDING,
+  EXTERNAL_SCIENCE_AUTHORITY_PENDING,
+  authoritySet,
+  canAuthoritySupportAnswerRole,
+  isReleaseEligibleAuthority,
+  type DnaKnowledgeAnswerRole,
+  type DnaKnowledgeAuthorityRef,
+} from "./knowledgeAuthority"
+import {
+  authorityForCatalogTopic,
+  policyAuthorityForSafetyCategory,
+} from "./authorityRegistry"
 import {
   findDnaChatLiteratureSources,
   resolveDnaChatSources,
@@ -22,6 +40,7 @@ import {
   DNA_CHAT_ENGINE_VERSION,
   DNA_CHAT_SCHEMA_VERSION,
   type DnaChatClassification,
+  type DnaChatAnswerUnit,
   type DnaChatContextRequest,
   type DnaChatDomainKey,
   type DnaChatEvidenceSummary,
@@ -61,6 +80,19 @@ type CaseAnswerDraft = {
   sources: DnaChatSourceRef[]
 }
 
+type DnaChatAnswerUnitInput = Omit<DnaChatAnswerUnit, "role"> & {
+  role?: DnaKnowledgeAnswerRole
+}
+
+function roleForAuthority(
+  authority: DnaKnowledgeAuthorityRef,
+): DnaKnowledgeAnswerRole {
+  if (authority.layer === "dna_product_information") return "product_definition"
+  if (authority.layer === "external_scientific_information") return "scientific_evidence"
+  if (authority.layer === "case_information") return "case_finding"
+  return "safety_boundary"
+}
+
 function emptySafety(question: string): DnaChatSafetyResult {
   return inspectDnaChatSafety(question)
 }
@@ -85,15 +117,159 @@ function makeResponse(input: {
   intentId?: string | null
   contextRequest?: DnaChatContextRequest
   evidenceSummary?: DnaChatEvidenceSummary
+  answerAuthority?: DnaKnowledgeAuthorityRef
+  answerUnits?: readonly DnaChatAnswerUnitInput[]
+  authorityGateChecked?: boolean
 }): DnaChatResponse {
   const details = stableUnique((input.details ?? []).map(cleanOutput), 6)
   const sources = [...(input.sources ?? [])].slice(0, 4)
   const summary = cleanOutput(input.summary)
   const limitations = stableUnique((input.limitations ?? []).map(cleanOutput), 6)
+  const caseEvidence = stableUnique((input.caseEvidence ?? []).map(cleanOutput), 6)
+  const route = input.route ?? "unknown"
+  const answerAuthority = input.answerAuthority ??
+    (route === "case"
+      ? sources.find((source) => source.authority.layer === "case_information")?.authority
+      : route === "dna"
+        ? DNA_PRODUCT_AUTHORITY_PENDING
+        : sources.find((source) =>
+            source.authority.layer === "external_scientific_information")?.authority) ??
+    input.safety.authority
+  const caseAuthority = sources.find((source) =>
+    source.authority.layer === "case_information")?.authority ?? answerAuthority
+  const sourceIdsForLayer = (layer: DnaKnowledgeAuthorityRef["layer"]) =>
+    sources.filter((source) => source.authority.layer === layer).map((source) => source.id)
+  const generatedUnits: DnaChatAnswerUnit[] = [
+    ...(summary
+      ? [{
+          id: "summary",
+          kind: "summary" as const,
+          text: summary,
+          authority: answerAuthority,
+          role: roleForAuthority(answerAuthority),
+          sourceIds: sourceIdsForLayer(answerAuthority.layer),
+        }]
+      : []),
+    ...details.map((detail, index) => ({
+      id: `detail-${index + 1}`,
+      kind: "detail" as const,
+      text: detail,
+      authority: answerAuthority,
+      role: roleForAuthority(answerAuthority),
+      sourceIds: sourceIdsForLayer(answerAuthority.layer),
+    })),
+    ...caseEvidence.map((evidence, index) => ({
+      id: `case-evidence-${index + 1}`,
+      kind: "case_evidence" as const,
+      text: evidence,
+      authority: caseAuthority,
+      role: "case_finding" as const,
+      sourceIds: sourceIdsForLayer("case_information"),
+    })),
+    ...limitations.map((limitation, index) => ({
+      id: `limitation-${index + 1}`,
+      kind: "limitation" as const,
+      text: limitation,
+      authority: input.safety.authority,
+      role: "safety_boundary" as const,
+      sourceIds: [],
+    })),
+    ...(input.safety.boundaryTr
+      ? [{
+          id: "safety-boundary",
+          kind: "safety_boundary" as const,
+          text: input.safety.boundaryTr,
+          authority: input.safety.authority,
+          role: "safety_boundary" as const,
+          sourceIds: [],
+        }]
+      : []),
+  ]
+  const answerUnits: DnaChatAnswerUnit[] = [...(input.answerUnits ?? generatedUnits)].map((unit) => ({
+    ...unit,
+    role: unit.role ?? roleForAuthority(unit.authority),
+    text: cleanOutput(unit.text),
+    sourceIds: stableUnique(unit.sourceIds, 8),
+  }))
+  const authorityGateIssues = answerUnits.flatMap((unit) => {
+    const issues: string[] = []
+    if (!canAuthoritySupportAnswerRole(unit.authority, unit.role)) {
+      issues.push(`${unit.id}:authority_role_mismatch`)
+    }
+    if (
+      unit.authority.releaseEligible &&
+      !isReleaseEligibleAuthority(unit.authority)
+    ) {
+      issues.push(`${unit.id}:unregistered_release_authority`)
+    }
+    const linkedSources = unit.sourceIds.map((sourceId) =>
+      sources.find((source) => source.id === sourceId))
+    if (linkedSources.some((source) => !source)) {
+      issues.push(`${unit.id}:source_not_found`)
+    }
+    if (linkedSources.some((source) => source?.authority.layer !== unit.authority.layer)) {
+      issues.push(`${unit.id}:source_authority_mismatch`)
+    }
+    if (
+      ["summary", "detail", "case_evidence"].includes(unit.kind) &&
+      unit.authority.releaseEligible &&
+      unit.authority.layer !== "safety_and_product_boundaries" &&
+      unit.sourceIds.length === 0
+    ) {
+      issues.push(`${unit.id}:release_claim_without_source`)
+    }
+    if (
+      unit.authority.layer === "case_information" &&
+      containsUnsupportedCaseBiologicalInference(unit.text)
+    ) {
+      issues.push(`${unit.id}:case_biological_inference`)
+    }
+    return issues
+  })
+  for (const source of sources) {
+    if (
+      source.authority.releaseEligible &&
+      !isReleaseEligibleAuthority(source.authority)
+    ) {
+      authorityGateIssues.push(`${source.id}:unregistered_source_authority`)
+    }
+  }
+  if (authorityGateIssues.length && input.authorityGateChecked !== true) {
+    return makeResponse({
+      route,
+      outcome: "not_available",
+      classification: "not_available",
+      topic: input.topic,
+      intentId: input.intentId,
+      summary: "Bu yanıt bilgi otoritesi sınırları içinde güvenli biçimde oluşturulamadı.",
+      limitations: ["Yanıt birimi, kaynak veya otorite eşleşmesi çalışma zamanı korumasınca engellendi."],
+      safety: input.safety,
+      suggestedQuestions: input.suggestedQuestions,
+      answerAuthority: input.safety.authority,
+      authorityGateChecked: true,
+    })
+  }
+  const authorities = [
+    ...answerUnits.map((unit) => unit.authority),
+    ...sources.map((source) => source.authority),
+    input.safety.authority,
+  ]
+  const authoritySummary = authoritySet(authorities).map((layer) => {
+    const authority = authorities.find((candidate) => candidate.layer === layer)!
+    return {
+      contractVersion: authority.contractVersion,
+      layer,
+      labelTr: authority.labelTr,
+      boundaryTr: authority.boundaryTr,
+      approvalRequirement: authority.approvalRequirement,
+      verificationStatus: authority.verificationStatus,
+      releaseEligible: authority.releaseEligible,
+    }
+  })
   return {
     schemaVersion: DNA_CHAT_SCHEMA_VERSION,
     engineVersion: DNA_CHAT_ENGINE_VERSION,
-    route: input.route ?? "unknown",
+    route,
     outcome: input.outcome,
     classification: input.classification,
     topic: input.topic === undefined ? (input.intent?.labelTr ?? null) : input.topic,
@@ -103,12 +279,14 @@ function makeResponse(input: {
     answerTr: [summary, ...details].filter(Boolean).join("\n\n"),
     sourceRefs: sources,
     sources,
-    caseEvidence: stableUnique((input.caseEvidence ?? []).map(cleanOutput), 6),
+    caseEvidence,
     limitations,
     safetyBoundary: input.safety.boundaryTr,
     intendedUse: DNA_INTELLIGENCE_PUBLIC_INTENDED_USE,
     suggestedQuestions: stableUnique(input.suggestedQuestions ?? [], 4),
     safety: input.safety,
+    answerUnits,
+    authoritySummary,
     ...(input.contextRequest ? { contextRequest: input.contextRequest } : {}),
     ...(input.evidenceSummary ? { evidenceSummary: input.evidenceSummary } : {}),
   }
@@ -316,6 +494,68 @@ function catalogResponse(
     }
   }
 
+  const topicAuthority = authorityForCatalogTopic(
+    getCatalogTopicById(draft.topicId) ?? { id: draft.topicId },
+  )
+  const summaryAuthority = draft.outputAuthorities?.summary ?? topicAuthority
+  const detailAuthorities = draft.outputAuthorities?.details ?? draft.details.map(() => topicAuthority)
+  const sourceIdsForOutput = (
+    authority: DnaKnowledgeAuthorityRef,
+    provenanceIds: readonly string[] | undefined,
+  ) => {
+    const allowed = new Set(provenanceIds ?? [])
+    return draft.sources
+      .filter((source) =>
+        source.authority.layer === authority.layer && (
+          allowed.has(source.id) ||
+          allowed.has(source.id.slice(source.id.indexOf(":") + 1))
+        ))
+      .map((source) => source.id)
+  }
+  const catalogAnswerUnits: DnaChatAnswerUnitInput[] = [
+    {
+      id: "summary",
+      kind: "summary",
+      role: roleForAuthority(summaryAuthority),
+      text: draft.summary,
+      authority: summaryAuthority,
+      sourceIds: sourceIdsForOutput(
+        summaryAuthority,
+        draft.outputSourceIds?.summary,
+      ),
+    },
+    ...draft.details.map((detail, index) => {
+      const authority = detailAuthorities[index] ?? topicAuthority
+      return {
+        id: `detail-${index + 1}`,
+        kind: "detail" as const,
+        role: roleForAuthority(authority),
+        text: detail,
+        authority,
+        sourceIds: sourceIdsForOutput(
+          authority,
+          draft.outputSourceIds?.details[index],
+        ),
+      }
+    }),
+    ...draft.limitations.map((limitation, index) => ({
+      id: `limitation-${index + 1}`,
+      kind: "limitation" as const,
+      role: "safety_boundary" as const,
+      text: limitation,
+      authority: safety.authority,
+      sourceIds: [],
+    })),
+    {
+      id: "safety-boundary",
+      kind: "safety_boundary",
+      role: "safety_boundary",
+      text: safety.boundaryTr,
+      authority: safety.authority,
+      sourceIds: [],
+    },
+  ]
+
   return makeResponse({
     route: draft.route,
     outcome: answered ? "answered" : "not_available",
@@ -329,6 +569,8 @@ function catalogResponse(
     safety,
     evidenceSummary: draft.evidenceSummary,
     suggestedQuestions: draft.suggestedQuestions,
+    answerAuthority: topicAuthority,
+    answerUnits: catalogAnswerUnits,
   })
 }
 
@@ -429,7 +671,12 @@ function catalogClaimGuardBlocked(parts: readonly string[]): boolean {
   })
 }
 
-function caseSource(id: string, title: string, excerpt: string): DnaChatSourceRef {
+function caseSource(
+  context: DnaChatSafeCaseContext,
+  id: string,
+  title: string,
+  excerpt: string,
+): DnaChatSourceRef {
   return {
     id: `case:${id}`,
     type: "case",
@@ -437,6 +684,7 @@ function caseSource(id: string, title: string, excerpt: string): DnaChatSourceRe
     labelTr: "Açık kimliksiz vaka bağlamı",
     excerptTr: cleanOutput(excerpt),
     claimBoundary: "Yalnız açık vakada bulunan kimliksiz veri; başka vakalara genellenmez.",
+    authority: getDnaChatCaseContextAuthority(context),
   }
 }
 
@@ -519,7 +767,6 @@ function caseDraft(
           : "Açık vaka bağlamında genel örüntüyü özetlemek için yeterli alan bilgisi bulunmuyor."
     const evidence = context.chatContext.evidence.slice(0, 3)
     const details = [
-      context.chatContext.mechanismSummary ?? "",
       strong.length ? `Göreli korunmuş kapasiteler: ${strong.slice(0, 3).join(", ")}.` : "",
       ...evidence,
     ].filter(Boolean)
@@ -530,8 +777,8 @@ function caseDraft(
       evidence,
       limitations: [...context.chatContext.limitations, standardLimit],
       sources: stableSources([
-        ...(axis ? [caseSource("primary-axis", "Vaka ana ekseni", axis)] : []),
-        ...evidence.slice(0, 2).map((line, index) => caseSource(`evidence-${index + 1}`, "Vaka kanıt satırı", line)),
+        ...(axis ? [caseSource(context, "primary-axis", "Vaka ana ekseni", axis)] : []),
+        ...evidence.slice(0, 2).map((line, index) => caseSource(context, `evidence-${index + 1}`, "Vaka kanıt satırı", line)),
         ...clinicalSources,
       ]),
     }
@@ -545,11 +792,11 @@ function caseDraft(
       summary: axis
         ? `Mevcut rapor bağlamındaki ana eksen, kesin hüküm değil çalışma hipotezi olarak “${axis}” şeklinde kaydedilmiş.`
         : "Bu vaka için ana klinik eksen kaydı bulunmuyor.",
-      details: [context.chatContext.mechanismLabel ?? "", context.chatContext.mechanismSummary ?? "", ...evidence].filter(Boolean),
+      details: evidence,
       evidence,
       limitations: [...context.chatContext.limitations, standardLimit],
       sources: stableSources([
-        ...(axis ? [caseSource("primary-axis", "Vaka ana ekseni", axis)] : []),
+        ...(axis ? [caseSource(context, "primary-axis", "Vaka ana ekseni", axis)] : []),
         ...clinicalSources,
       ]),
     }
@@ -573,7 +820,7 @@ function caseDraft(
       evidence: labels,
       limitations: [...context.chatContext.limitations, standardLimit],
       sources: stableSources([
-        ...(labels.length ? [caseSource(weak ? "weak-domains" : "strong-domains", intent.labelTr, labels.join(", "))] : []),
+        ...(labels.length ? [caseSource(context, weak ? "weak-domains" : "strong-domains", intent.labelTr, labels.join(", "))] : []),
         ...clinicalSources,
       ]),
     }
@@ -591,7 +838,7 @@ function caseDraft(
       evidence: lines,
       limitations: ["Skorlar tek başına klinik anlam taşımaz; bağlam ve veri güveniyle birlikte okunur."],
       sources: stableSources([
-        ...(lines.length ? [caseSource("domain-scores", "Vaka alan skorları", lines.join(" "))] : []),
+        ...(lines.length ? [caseSource(context, "domain-scores", "Vaka alan skorları", lines.join(" "))] : []),
         ...clinicalSources,
       ]),
     }
@@ -614,7 +861,7 @@ function caseDraft(
       evidence: list.values,
       limitations: intent.id === "case_limitations" ? list.values : [...context.chatContext.limitations, standardLimit],
       sources: stableSources([
-        ...(list.values.length ? [caseSource(intent.id, list.title, list.values.join(" "))] : []),
+        ...(list.values.length ? [caseSource(context, intent.id, list.title, list.values.join(" "))] : []),
         ...clinicalSources,
       ]),
     }
@@ -629,7 +876,7 @@ function caseDraft(
       evidence: [confidence ?? "", context.chatContext.confidenceRationale ?? ""].filter(Boolean),
       limitations: [...context.chatContext.limitations, standardLimit],
       sources: stableSources([
-        ...(confidence ? [caseSource("confidence", "Vaka veri güveni", confidence)] : []),
+        ...(confidence ? [caseSource(context, "confidence", "Vaka veri güveni", confidence)] : []),
         ...clinicalSources,
       ]),
     }
@@ -655,7 +902,7 @@ function caseDraft(
       evidence,
       limitations: [...context.chatContext.limitations, standardLimit],
       sources: stableSources([
-        ...evidence.map((line, index) => caseSource(`evidence-${index + 1}`, "Vaka kanıt satırı", line)),
+        ...evidence.map((line, index) => caseSource(context, `evidence-${index + 1}`, "Vaka kanıt satırı", line)),
         ...literature,
       ]),
     }
@@ -681,8 +928,8 @@ function caseDraft(
       evidence,
       limitations: [...context.chatContext.limitations, standardLimit],
       sources: stableSources([
-        ...(dataPieces.length ? [caseSource(`domain-${intent.domain}`, `${label} vaka kaydı`, dataPieces.join(", "))] : []),
-        ...evidence.slice(0, 2).map((line, index) => caseSource(`${intent.domain}-evidence-${index + 1}`, `${label} vaka bulgusu`, line)),
+        ...(dataPieces.length ? [caseSource(context, `domain-${intent.domain}`, `${label} vaka kaydı`, dataPieces.join(", "))] : []),
+        ...evidence.slice(0, 2).map((line, index) => caseSource(context, `${intent.domain}-evidence-${index + 1}`, `${label} vaka bulgusu`, line)),
         ...clinicalSources,
       ]),
     }
@@ -802,6 +1049,82 @@ function catalogCaseTheoryResponse(
   const theoryAnswer = catalogResponse(draft, safety)
   if (theoryAnswer.outcome !== "answered") return theoryAnswer
 
+  const combinedSources = balancedStableSources([caseAnswer.sources, theoryAnswer.sources], 4)
+  const combinedLimitations = stableUnique([
+    "Bu vakada biyolojik mekanizma doğrudan ölçülmedi.",
+    ...caseAnswer.limitations,
+    ...theoryAnswer.limitations,
+  ], 6)
+  const caseAuthority = caseAnswer.answerUnits.find((unit) =>
+    unit.authority.layer === "case_information")?.authority ??
+    getDnaChatCaseContextAuthority(context)
+  const theoryAuthority = theoryAnswer.answerUnits.find((unit) =>
+    unit.kind === "summary")?.authority ?? EXTERNAL_SCIENCE_AUTHORITY_PENDING
+  const caseSourceIds = combinedSources
+    .filter((source) => source.authority.layer === "case_information")
+    .map((source) => source.id)
+  const theorySourceIds = combinedSources
+    .filter((source) => source.authority.layer === theoryAuthority.layer)
+    .map((source) => source.id)
+  const combinedAnswerUnits: DnaChatAnswerUnit[] = [
+    {
+      id: "case-summary",
+      kind: "summary",
+      text: caseAnswer.summary,
+      authority: caseAuthority,
+      role: "case_finding",
+      sourceIds: caseSourceIds,
+    },
+    ...caseAnswer.details.map((detail, index) => ({
+      id: `case-detail-${index + 1}`,
+      kind: "detail" as const,
+      text: detail,
+      authority: caseAuthority,
+      role: "case_finding" as const,
+      sourceIds: caseSourceIds,
+    })),
+    {
+      id: "theory-summary",
+      kind: "detail",
+      text: `Genel teori çerçevesi: ${theoryAnswer.summary}`,
+      authority: theoryAuthority,
+      role: "scientific_evidence",
+      sourceIds: theorySourceIds,
+    },
+    ...theoryAnswer.details.slice(0, 2).map((detail, index) => ({
+      id: `theory-detail-${index + 1}`,
+      kind: "detail" as const,
+      text: detail,
+      authority: theoryAuthority,
+      role: "scientific_evidence" as const,
+      sourceIds: theorySourceIds,
+    })),
+    ...caseAnswer.caseEvidence.map((evidence, index) => ({
+      id: `case-evidence-${index + 1}`,
+      kind: "case_evidence" as const,
+      text: evidence,
+      authority: caseAuthority,
+      role: "case_finding" as const,
+      sourceIds: caseSourceIds,
+    })),
+    ...combinedLimitations.map((limitation, index) => ({
+      id: `limitation-${index + 1}`,
+      kind: "limitation" as const,
+      text: limitation,
+      authority: safety.authority,
+      role: "safety_boundary" as const,
+      sourceIds: [],
+    })),
+    {
+      id: "safety-boundary",
+      kind: "safety_boundary",
+      text: safety.boundaryTr,
+      authority: safety.authority,
+      role: "safety_boundary",
+      sourceIds: [],
+    },
+  ]
+
   return makeResponse({
     route: "case",
     outcome: "answered",
@@ -814,19 +1137,16 @@ function catalogCaseTheoryResponse(
       `Genel teori çerçevesi: ${theoryAnswer.summary}`,
       ...theoryAnswer.details.slice(0, 2),
     ],
-    sources: balancedStableSources([caseAnswer.sources, theoryAnswer.sources], 4),
+    sources: combinedSources,
     caseEvidence: caseAnswer.caseEvidence,
-    limitations: [
-      "Bu vakada biyolojik mekanizma doğrudan ölçülmedi.",
-      ...caseAnswer.limitations,
-      ...theoryAnswer.limitations,
-    ],
+    limitations: combinedLimitations,
     safety,
     evidenceSummary: theoryAnswer.evidenceSummary,
     suggestedQuestions: stableUnique([
       ...caseAnswer.suggestedQuestions,
       ...theoryAnswer.suggestedQuestions,
     ], 4),
+    answerUnits: combinedAnswerUnits,
   })
 }
 
@@ -846,6 +1166,7 @@ function resolveSingleDnaChat(
         code: "invalid_case_context",
         redactedQuestion: "",
         boundaryTr: "Vaka bağlamı yalnız sentetik veya kimliksizleştirilmiş güvenli alanlardan oluşturulabilir.",
+        authority: policyAuthorityForSafetyCategory("unsafe_case_context"),
       })
     }
     if (caseContext.redactionCount > 0) {
@@ -855,6 +1176,7 @@ function resolveSingleDnaChat(
         code: "identifier_in_case_context",
         redactedQuestion: "",
         boundaryTr: "Vaka bağlamında doğrudan tanımlayıcı veya güvenli sözleşme dışında veri saptandı. Kimlik bilgilerini kaldırın.",
+        authority: policyAuthorityForSafetyCategory("unsafe_case_context"),
       })
     }
   }
@@ -1045,8 +1367,17 @@ function resolveSecondDnaChatQuestion(
 function combinedEvidenceSummary(responses: readonly DnaChatResponse[]): DnaChatEvidenceSummary | undefined {
   const summaries = responses.flatMap((response) => response.evidenceSummary ? [response.evidenceSummary] : [])
   if (!summaries.length) return undefined
+  const validationStatuses = summaries.flatMap((summary) =>
+    summary.dnaValidationStatus ? [summary.dnaValidationStatus] : [])
   return {
     level: stableUnique(summaries.map((summary) => summary.level), 3).join(" · "),
+    scientificEvidenceLevel: stableUnique(summaries.flatMap((summary) =>
+      summary.scientificEvidenceLevel ? [summary.scientificEvidenceLevel] : []), 3).join(" · ") || undefined,
+    dnaValidationStatus: validationStatuses.includes("not_established")
+      ? "not_established"
+      : validationStatuses.includes("dna_specific_evidence")
+        ? "dna_specific_evidence"
+        : "not_applicable",
     ageScope: stableUnique(summaries.map((summary) => summary.ageScope), 3).join(" · "),
     sampleScope: stableUnique(summaries.map((summary) => summary.sampleScope), 3).join(" · "),
     boundary: stableUnique(summaries.map((summary) => summary.boundary), 3).join(" "),
@@ -1091,32 +1422,100 @@ function combineDnaChatResponses(
       ? "answered"
       : "not_available"
 
+  const combinedSources = balancedStableSources(responses.map((response) => response.sources), 4)
+  const combinedSourceIds = new Set(combinedSources.map((source) => source.id))
+  const combinedLimitations = stableUnique([
+    ...(mixedCaseTheory ? ["Bu vakada biyolojik mekanizma doğrudan ölçülmedi."] : []),
+    ...(partiallyAnswered ? ["Yanıtlanamayan bölüm, yanıtlanan başlığın bilgisiyle tamamlanmadı."] : []),
+    ...responses.flatMap((response) => response.limitations),
+  ], 6)
+  const combinedSummary = contextRequest
+    ? "Sorunuzun vakaya özgü bölümünü yanıtlamak için bir DNA raporu seçin."
+    : partiallyAnswered
+      ? "Sorunuzun bir bölümü yanıtlandı; diğer bölüm için daha açık bir başlık veya doğrulanmış katalog bağlantısı gerekiyor."
+      : "Sorunuzdaki iki başlık ayrı ayrı değerlendirildi."
+  const combinedUnits: DnaChatAnswerUnit[] = [
+    {
+      id: "combined-summary",
+      kind: "summary",
+      text: combinedSummary,
+      authority: safety.authority,
+      role: "safety_boundary",
+      sourceIds: [],
+    },
+    ...responses.flatMap((response, responseIndex) => {
+      const responseAuthority = response.answerUnits.find((unit) =>
+        unit.kind === "summary")?.authority ?? safety.authority
+      const sourceIds = response.sources
+        .filter((source) => source.authority.layer === responseAuthority.layer && combinedSourceIds.has(source.id))
+        .map((source) => source.id)
+      return [
+        {
+          id: `response-${responseIndex + 1}-summary`,
+          kind: "detail" as const,
+          text: `${responseIndex + 1}. ${response.topic ?? "Başlık"}: ${response.summary}`,
+          authority: responseAuthority,
+          role: roleForAuthority(responseAuthority),
+          sourceIds,
+        },
+        ...response.details.slice(0, 2).map((detail, detailIndex) => ({
+          id: `response-${responseIndex + 1}-detail-${detailIndex + 1}`,
+          kind: "detail" as const,
+          text: detail,
+          authority: responseAuthority,
+          role: roleForAuthority(responseAuthority),
+          sourceIds,
+        })),
+        ...response.caseEvidence.map((evidence, evidenceIndex) => ({
+          id: `response-${responseIndex + 1}-case-evidence-${evidenceIndex + 1}`,
+          kind: "case_evidence" as const,
+          text: evidence,
+          authority: response.answerUnits.find((unit) =>
+            unit.kind === "case_evidence")?.authority ?? responseAuthority,
+          role: "case_finding" as const,
+          sourceIds: response.sources
+            .filter((source) => source.authority.layer === "case_information" && combinedSourceIds.has(source.id))
+            .map((source) => source.id),
+        })),
+      ]
+    }),
+    ...combinedLimitations.map((limitation, index) => ({
+      id: `combined-limitation-${index + 1}`,
+      kind: "limitation" as const,
+      text: limitation,
+      authority: safety.authority,
+      role: "safety_boundary" as const,
+      sourceIds: [],
+    })),
+    {
+      id: "combined-safety-boundary",
+      kind: "safety_boundary",
+      text: safety.boundaryTr,
+      authority: safety.authority,
+      role: "safety_boundary",
+      sourceIds: [],
+    },
+  ]
+
   return makeResponse({
     route,
     outcome,
     classification,
     topic: stableUnique(responses.flatMap((response) => response.topic ? [response.topic] : []), 2).join(" · ") || null,
     intentId: null,
-    summary: contextRequest
-      ? "Sorunuzun vakaya özgü bölümünü yanıtlamak için bir DNA raporu seçin."
-      : partiallyAnswered
-        ? "Sorunuzun bir bölümü yanıtlandı; diğer bölüm için daha açık bir başlık veya doğrulanmış katalog bağlantısı gerekiyor."
-      : "Sorunuzdaki iki başlık ayrı ayrı değerlendirildi.",
+    summary: combinedSummary,
     details: responses.flatMap((response, index) => [
       `${index + 1}. ${response.topic ?? "Başlık"}: ${response.summary}`,
       ...response.details.slice(0, 2),
     ]),
-    sources: balancedStableSources(responses.map((response) => response.sources), 4),
+    sources: combinedSources,
     caseEvidence: stableUnique(responses.flatMap((response) => response.caseEvidence), 6),
-    limitations: stableUnique([
-      ...(mixedCaseTheory ? ["Bu vakada biyolojik mekanizma doğrudan ölçülmedi."] : []),
-      ...(partiallyAnswered ? ["Yanıtlanamayan bölüm, yanıtlanan başlığın bilgisiyle tamamlanmadı."] : []),
-      ...responses.flatMap((response) => response.limitations),
-    ], 6),
+    limitations: combinedLimitations,
     safety,
     contextRequest,
     evidenceSummary: combinedEvidenceSummary(responses),
     suggestedQuestions: stableUnique(responses.flatMap((response) => response.suggestedQuestions), 4),
+    answerUnits: combinedUnits,
   })
 }
 

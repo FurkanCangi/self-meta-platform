@@ -6,6 +6,7 @@ import path from "node:path"
 const ROOT = process.cwd()
 const ENTRYPOINT = path.join(ROOT, "src/app/api/app/dna-chat/route.ts")
 const CHAT_ROOT = path.join(ROOT, "src/lib/dna/chat")
+const SERVER_ONLY_BOUNDARY = "src/lib/dna/chat/ownedCaseAnswer.ts"
 
 const REQUIRED_GRAPH_FILES = [
   "src/app/api/app/dna-chat/route.ts",
@@ -175,6 +176,12 @@ async function main() {
     const source = await fs.readFile(file, "utf8")
     const parsed = parseImports(source)
     for (const specifier of parsed.specifiers) {
+      if (specifier === "server-only") {
+        if (path.relative(ROOT, file) !== SERVER_ONLY_BOUNDARY) {
+          failures.push(`${path.relative(ROOT, file)}: server-only marker outside owned case boundary`)
+        }
+        continue
+      }
       if (!specifier.startsWith(".") && !specifier.startsWith("@/") && !specifier.startsWith("node:")) {
         failures.push(`${path.relative(ROOT, file)}: chat runtime external dependency: ${specifier}`)
       }
@@ -196,6 +203,7 @@ async function main() {
     externalSpecifiers: graph.externalSpecifiers,
     externalModelModules: 0,
     chatRuntimeNetworkPrimitives: 0,
+    serverOnlyOwnedCaseBoundary: true,
   }, null, 2))
 }
 

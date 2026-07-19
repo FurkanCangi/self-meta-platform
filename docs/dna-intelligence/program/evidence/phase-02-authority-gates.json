@@ -1,0 +1,226 @@
+{
+  "schemaVersion": "dna-intelligence-phase-evidence@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 2,
+  "title": "Dört ayrı bilgi otoritesi",
+  "generatedAt": "2026-07-19T11:30:34+03:00",
+  "sourceBaseGitSha": "c3576a5d7d14c4cbd5f776d779b6773841e4dbd2",
+  "branch": "codex/dna-intelligence-v3",
+  "contract": {
+    "version": "dna-knowledge-authority@1",
+    "authorities": 4,
+    "nonSubstitutionRules": 5,
+    "policyVersion": "dna-intelligence-intended-use@1",
+    "registeredPolicyClauses": 16,
+    "ownerApprovalRegistryEntries": 0,
+    "scienceAuditRegistryEntries": 0,
+    "caseContextVersion": "dna-chat-context@1",
+    "caseLineageVersion": "report-assessment-client-owner-chain@2"
+  },
+  "authorityGates": {
+    "dnaProductInformation": {
+      "approvalRequirement": "owner_approved",
+      "releaseEntries": 0,
+      "shapeOnlyProofAccepted": false
+    },
+    "externalScientificInformation": {
+      "approvalRequirement": "codex_multi_pass_audited",
+      "releaseEntries": 0,
+      "minimumIndependentPasses": 2,
+      "shapeOnlyProofAccepted": false
+    },
+    "caseInformation": {
+      "approvalRequirement": "report_derived",
+      "serverOnlyOwnershipBoundary": true,
+      "verifiedIssuerRuntimeConsumers": 1,
+      "callerOwnershipBooleanAccepted": false,
+      "plainSerializedAuthorityAccepted": false,
+      "productionAllowedSnapshotFields": [
+        "scores",
+        "domain_levels",
+        "age_months"
+      ],
+      "productionFreeTextFieldsAccepted": 0,
+      "privateProvenanceHashes": [
+        "sourcePayloadSha256",
+        "safeContextSha256",
+        "lineageBindingSha256"
+      ]
+    },
+    "safetyAndProductBoundaries": {
+      "approvalRequirement": "policy_enforced",
+      "exactPolicyVersionRequired": true,
+      "unregisteredClauseAccepted": false,
+      "overridableByOtherAuthority": false
+    }
+  },
+  "gates": {
+    "authority": {
+      "status": "passed",
+      "runtimeNonSubstitutionRules": "5/5",
+      "biologicalEchoFieldProbes": 98,
+      "canonicalFreeTextFieldsAccepted": 0,
+      "caseLineageSpoofBlocked": true,
+      "mixedAnswerPartitioned": true,
+      "uiAuthorityPartitionVisible": true,
+      "deterministicRuns": 20
+    },
+    "catalog": {
+      "status": "passed",
+      "topics": 118,
+      "liveClaims": 239,
+      "oneHopRelations": 166,
+      "sources": 160,
+      "safetyRules": 43,
+      "benchmarkQuestions": 1856,
+      "holdoutQuestions": 928,
+      "semanticTopicAccuracyPercent": 96.76,
+      "semanticKindAccuracyPercent": 98.57,
+      "p95Ms": 1.392
+    },
+    "reasoning": {
+      "status": "passed",
+      "allRowsAccuracyPercent": 96.61,
+      "supportedHoldoutAccuracyPercent": 98.42,
+      "safetyRefusalAccuracyPercent": 100,
+      "unsupportedSafeAccuracyPercent": 100,
+      "oneHopGraphOnly": true,
+      "unknownPredicateFailsClosed": true,
+      "p95Ms": 10.766
+    },
+    "security": {
+      "status": "passed",
+      "baselineRefusals": 48,
+      "canonicalSafeRefusals": 329,
+      "liveSafetyRefusals": 341,
+      "independentAdversarialRegression": "40/40",
+      "allowedTheoryAndBoundary": 25,
+      "ownership": "strict_chain_static_contract"
+    },
+    "api": {
+      "status": "passed",
+      "theorySkipsReportLoad": true,
+      "foreignAndMissingIndistinguishable": true,
+      "caseAuditFailClosed": true,
+      "internalProofAndLineageHidden": true,
+      "auditMetadataMinimized": true,
+      "mockRouteP95Ms": 16.542
+    },
+    "intendedUse": {
+      "status": "passed",
+      "supportedCoverage": "9/9",
+      "prohibitedCoverage": "10/10",
+      "prohibitedHoldout": "32/32",
+      "independentAdversarialRegression": "40/40",
+      "surfaceParity": true
+    },
+    "quality": {
+      "status": "passed",
+      "benchmark": "120/120",
+      "security": "20/20",
+      "caseFixtures": 50,
+      "suggestedQuestions": "119/119",
+      "engineP95Ms": 5.212,
+      "caseAssemblyP95Ms": 4.358
+    },
+    "determinism": {
+      "status": "passed",
+      "requests": 8,
+      "repeatsPerRequest": 20,
+      "p95Ms": 6.137,
+      "sampleHash": "70d1b0b18e3686f33331b4ad2117999f263025dfebf63341a6093c1920198a0d"
+    },
+    "externalRuntime": {
+      "status": "passed",
+      "entrypointGraphFiles": 66,
+      "chatRuntimeFiles": 35,
+      "unresolvedImports": 0,
+      "externalModelModules": 0,
+      "chatRuntimeNetworkPrimitives": 0,
+      "serverOnlyOwnedCaseBoundary": true
+    },
+    "liveCrossAccount": {
+      "status": "passed",
+      "siteOrigin": "https://self-meta-platform.vercel.app",
+      "runId": "dna-chat-cross-account-1784449790270-bb77aa54",
+      "steps": "8/8",
+      "foreignAndMissing404Indistinguishable": true,
+      "theoryIgnoresForeignReportContext": true,
+      "ownedCaseAuditGate": "open",
+      "syntheticFixtureCleanup": "passed"
+    },
+    "regressions": {
+      "v2RollbackBaseline": "passed",
+      "reportPrivacy": "passed",
+      "reportDeterminism": "passed_10_of_10",
+      "reportForbiddenImports": "passed",
+      "securitySmoke": "passed",
+      "securityReadiness": "passed",
+      "lint": "passed",
+      "build": "passed",
+      "gitDiffCheck": "passed"
+    },
+    "independentReview": {
+      "status": "passed_with_no_blockers",
+      "reviewers": [
+        "phase0_review",
+        "phase1_surface"
+      ],
+      "reviewedSnapshot": "uncommitted phase-2 worktree after all blocker fixes",
+      "reviewAreas": [
+        "authority capability and report lineage",
+        "structured case allowlist and private provenance hashes",
+        "policy and graph fail-closed behavior",
+        "claim-level source provenance",
+        "per-answer-unit UI authority visibility",
+        "public proof and identifier non-disclosure"
+      ]
+    }
+  },
+  "hashesSha256": {
+    "authorityDocumentation": "666d0b569ccd4ee8b9aba7e8c1bd634f52b4a75b4f5a885188f9f1f680cd211b",
+    "authorityContract": "2f1231027de1f35f78ca453744717122a1be0225f1239a6828b4b83774f873e5",
+    "migrationManifest": "fe2bbbdce9e56255e2b077ce24f94d81f313225dfdfd2174ae297a7ae3d928d0",
+    "runtimeAuthority": "cd4105a22cd9af19d51c32fe7d4385ef13806312a753267cb8f2f5af728079a2",
+    "authorityRegistry": "8c6327381f1ec7388f796c5fe7d056c255cad7bfd016bcc230f304150b869aa2",
+    "ownedCaseCanonicalizer": "cce8fe81cf25cedf2fa8153ed66a71e774099cfd5ba905fdb0dd2b364dc9fa4a",
+    "ownedCaseBoundary": "495e883ef8b4bc39be2d591fac1e587f9e16b64373c12d8ce2ddad7d7e44f0ba",
+    "caseContext": "83a54ca3b79491f8fcf1ebdc01b58fd3dd5f2492cae629190028dd2fd8c3ad35",
+    "engine": "b4ca1829e550c6e3688b332a0f88347f2a3d4d82e80414fe11811a3ebf4964ff",
+    "apiResolver": "7bb60988bff2ff9dcafeb453fdec6c8f8c3e8dd39c489419bb6de2f13accce3f",
+    "assistantUi": "70910c944c4f757fabbbe11063134a022903c85f021f393fe486c35036c50cac",
+    "authorityTest": "51a806e09740a4ae4e72442a231c5d6212d068b67292e1f0542e5cb6dee68cf2",
+    "authorityFixtures": "6f942cb4cbc13f8780cf27847f48cd8a150ad9b362c4f89a80e8c265a2e14298",
+    "forbiddenImportTest": "87992b379068068d81339bd1f06c1c540c2ff8016b9605a00d0f728b5b842e6e"
+  },
+  "limitations": [
+    "Owner-approved DNA kitabı kayıt deposu Faz 2 sonunda bilinçli olarak boştur; mevcut DNA ürün kayıtları owner_approved sayılmaz.",
+    "Dış bilim kayıt deposu Faz 2 sonunda bilinçli olarak boştur; mevcut kaynak etiketleri codex_multi_pass_audited sayılmaz.",
+    "Bu faz otorite ayrımı ve mühendislik güvenlik kanıtıdır; bağımsız klinik validasyon, psikometrik validasyon veya düzenleyici onay değildir.",
+    "Canlı çapraz-hesap testi o anda dağıtılmış üretim sürümünün izolasyonunu doğrular; henüz commit edilmemiş Faz 2 SHA'sının üretime dağıtıldığını göstermez.",
+    "Yeni veritabanı tablosu veya migration eklenmemiştir."
+  ],
+  "worktreeBoundary": {
+    "preservedUnrelatedPaths": [
+      "scripts/activity-pilot/",
+      "src/app/arastirma/CollaborationPage.tsx",
+      "src/app/arastirma/DataNetworkPage.tsx",
+      "src/app/arastirma/ProjectSupportPage.tsx",
+      "src/app/arastirma/researchContent.ts",
+      "src/app/components/ClinicalJourneySection.tsx",
+      "src/app/components/FooterContact.tsx",
+      "src/app/components/LandingHeader.tsx",
+      "src/app/components/LandingHeroV2.tsx",
+      "src/app/components/SolutionsGrid.tsx",
+      "src/app/components/TherapistsSection.tsx",
+      "src/app/cozumler/page.tsx",
+      "src/app/dna-nedir/DnaInfoPage.tsx",
+      "src/app/dna-nedir/content.ts",
+      "src/app/dna-nedir/page.tsx",
+      "src/app/fiyatlandirma/page.tsx",
+      "src/app/iletisim/ContactForm.tsx",
+      "src/app/klinik-alanlar/[slug]/page.tsx",
+      "src/app/self-regulasyon-nedir/page.tsx"
+    ]
+  }
+}

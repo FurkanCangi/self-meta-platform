@@ -1,4 +1,8 @@
-export { createDnaChatSafeCaseContext, hasUsableDnaCaseContext } from "./caseContext"
+export {
+  createDnaChatSafeCaseContext,
+  getDnaChatCaseContextAuthority,
+  hasUsableDnaCaseContext,
+} from "./caseContext"
 export { resolveDnaChat } from "./engine"
 export {
   buildDnaChatAuditMetadata,
@@ -24,6 +28,21 @@ export {
   DNA_INTELLIGENCE_TAGLINE_TR,
 } from "./intendedUse"
 export {
+  DNA_KNOWLEDGE_APPROVAL_REQUIREMENTS,
+  DNA_KNOWLEDGE_ANSWER_ROLES,
+  DNA_KNOWLEDGE_AUTHORITY_CONTRACT,
+  DNA_KNOWLEDGE_AUTHORITY_CONTRACT_VERSION,
+  DNA_KNOWLEDGE_AUTHORITY_LAYERS,
+  DNA_PRODUCT_AUTHORITY_PENDING,
+  EXTERNAL_SCIENCE_AUTHORITY_PENDING,
+  authoritySet,
+  canAuthoritySupportAnswerRole,
+  createAuditedExternalScienceAuthority,
+  createOwnerApprovedProductAuthority,
+  isReleaseEligibleAuthority,
+  isAuthorityGraphEdgeAllowed,
+} from "./knowledgeAuthority"
+export {
   DNA_CHAT_KNOWLEDGE_ENTRIES,
   DNA_CHAT_KNOWLEDGE_ENTRY_BY_TOPIC,
 } from "./knowledge"
@@ -44,6 +63,8 @@ export type {
 
 export type {
   DnaChatCaseContextInput,
+  DnaChatAnswerUnit,
+  DnaChatAuthoritySummaryEntry,
   DnaChatClassification,
   DnaChatContextRequest,
   DnaChatDomainKey,
@@ -62,3 +83,14 @@ export type {
   DnaChatSourceRef,
   DnaChatSourceType,
 } from "./types"
+
+export type {
+  DnaCaseAuthorityRef,
+  DnaExternalScienceAuthorityRef,
+  DnaKnowledgeApprovalRequirement,
+  DnaKnowledgeAnswerRole,
+  DnaKnowledgeAuthorityLayer,
+  DnaKnowledgeAuthorityRef,
+  DnaProductAuthorityRef,
+  DnaSafetyPolicyAuthorityRef,
+} from "./knowledgeAuthority"

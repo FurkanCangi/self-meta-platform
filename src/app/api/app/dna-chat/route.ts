@@ -7,12 +7,11 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 import {
   buildDnaChatAuditMetadata,
-  createDnaChatSafeCaseContext,
   readDnaChatRequestBody,
   resolveDnaChatApiRequest,
-  type DnaChatCaseContextInput,
   type DnaChatApiAuditInput,
 } from "@/lib/dna/chat"
+import { resolveOwnedDnaCaseAnswer } from "@/lib/dna/chat/ownedCaseAnswer"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -136,19 +135,6 @@ function finiteNumber(value: unknown): number | null {
 function stringValue(value: unknown): string | null {
   const string = typeof value === "string" ? value.trim() : ""
   return string || null
-}
-
-function stringList(value: unknown, limit = 8): string[] {
-  if (!Array.isArray(value)) return []
-
-  return value
-    .map((item) => {
-      if (typeof item === "string") return item.trim()
-      const row = asRecord(item)
-      return stringValue(row.label) || stringValue(row.name) || stringValue(row.key) || ""
-    })
-    .filter(Boolean)
-    .slice(0, limit)
 }
 
 function ageBandFromSnapshot(snapshotValue: unknown): string | null {
@@ -277,106 +263,6 @@ async function listOwnReports(userId: string) {
   return { ok: true as const, reports: newestReports }
 }
 
-async function loadOwnCaseReport(userId: string, reportId: string) {
-  const supabase = await createSupabaseServerClient()
-  const { data: reportData, error: reportError } = await supabase
-    .from("reports")
-    .select("id, assessment_id, version, created_at, snapshot_json")
-    .eq("id", reportId)
-    .maybeSingle()
-
-  if (reportError) return { ok: false as const, kind: "failed" as const }
-  const report = reportData as ReportRow | null
-  if (!report?.id || !report.assessment_id) return { ok: false as const, kind: "not_found" as const }
-
-  const { data: assessmentData, error: assessmentError } = await supabase
-    .from("assessments_v2")
-    .select("id, client_id")
-    .eq("id", report.assessment_id)
-    .is("deleted_at", null)
-    .maybeSingle()
-
-  if (assessmentError) return { ok: false as const, kind: "failed" as const }
-  const assessment = assessmentData as AssessmentRow | null
-  if (!assessment?.id || !assessment.client_id) return { ok: false as const, kind: "not_found" as const }
-
-  const { data: clientData, error: clientError } = await supabase
-    .from("clients")
-    .select("id")
-    .eq("id", assessment.client_id)
-    .eq("owner_id", userId)
-    .is("deleted_at", null)
-    .maybeSingle()
-
-  if (clientError) return { ok: false as const, kind: "failed" as const }
-  if (!clientData?.id) return { ok: false as const, kind: "not_found" as const }
-
-  return { ok: true as const, report }
-}
-
-function domainValue(source: JsonRecord, canonical: string, legacy: string) {
-  return source[canonical] ?? source[legacy]
-}
-
-function caseContextFromSnapshot(snapshotValue: unknown): DnaChatCaseContextInput {
-  const snapshot = asRecord(snapshotValue)
-  const scores = asRecord(snapshot.scores)
-  const levels = asRecord(snapshot.domain_levels ?? snapshot.domainLevels)
-  const candidateChatContext = asRecord(snapshot.chat_context ?? snapshot.chatContext)
-  const chatContext =
-    candidateChatContext.version === "dna-chat-context@1" ? candidateChatContext : {}
-
-  const scoreMap = {
-    physiological: finiteNumber(domainValue(scores, "physiological", "fizyolojik")),
-    sensory: finiteNumber(domainValue(scores, "sensory", "duyusal")),
-    emotional: finiteNumber(domainValue(scores, "emotional", "duygusal")),
-    cognitive: finiteNumber(domainValue(scores, "cognitive", "bilissel")),
-    executive: finiteNumber(domainValue(scores, "executive", "yurutucu")),
-    interoception: finiteNumber(domainValue(scores, "interoception", "intero")),
-  }
-
-  const levelMap = {
-    physiological: stringValue(domainValue(levels, "physiological", "fizyolojik")),
-    sensory: stringValue(domainValue(levels, "sensory", "duyusal")),
-    emotional: stringValue(domainValue(levels, "emotional", "duygusal")),
-    cognitive: stringValue(domainValue(levels, "cognitive", "bilissel")),
-    executive: stringValue(domainValue(levels, "executive", "yurutucu")),
-    interoception: stringValue(domainValue(levels, "interoception", "intero")),
-  }
-
-  const validLevels = Object.fromEntries(
-    Object.entries(levelMap).filter(([, value]) => value === "Tipik" || value === "Riskli" || value === "Atipik")
-  ) as DnaChatCaseContextInput["levels"]
-
-  const confidenceLevel = stringValue(chatContext.confidenceLevel ?? chatContext.confidence)
-  const confidenceRationale = stringValue(chatContext.confidenceRationale)
-
-  return {
-    dataStatus: "deidentified",
-    ageMonths: finiteNumber(snapshot.age_months ?? snapshot.ageMonths),
-    scores: Object.fromEntries(Object.entries(scoreMap).filter(([, value]) => value !== null)) as DnaChatCaseContextInput["scores"],
-    levels: validLevels,
-    chatContext: {
-      primaryAxis: stringValue(chatContext.primaryAxis),
-      secondaryAxes: stringList(chatContext.secondaryAxes, 4),
-      mechanismLabel: stringValue(chatContext.mechanismLabel),
-      mechanismSummary: stringValue(chatContext.mechanismSummary),
-      caseEvidenceLines: stringList(chatContext.caseEvidenceLines ?? chatContext.evidence, 5),
-      counterEvidenceLines: stringList(chatContext.counterEvidenceLines ?? chatContext.counterEvidence, 4),
-      preservedCapacityLines: stringList(
-        chatContext.preservedCapacityLines ?? chatContext.preservedCapacities,
-        4
-      ),
-      dataLimitations: stringList(chatContext.dataLimitations ?? chatContext.limitations, 5),
-      confidenceLevel,
-      confidenceRationale,
-      weakDomains: stringList(chatContext.weakDomains, 6),
-      strongDomains: stringList(chatContext.strongDomains, 6),
-      patterns: stringList(chatContext.patterns, 6),
-    },
-  }
-}
-
 async function writeDnaChatAudit(params: {
   userId: string
 } & DnaChatApiAuditInput) {
@@ -443,26 +329,19 @@ export async function POST(request: Request) {
     const payload = parsed.data
     const resolution = await resolveDnaChatApiRequest(payload, {
       createRequestId: () => crypto.randomUUID(),
-      loadCaseContext: async (reportId) => {
+      loadCaseAnswer: async ({ reportId, question, mode, previousTopic }) => {
         const recentReports = await listOwnReports(auth.user.id)
         if (!recentReports.ok) return { ok: false, status: 500, error: "dna_chat_failed" }
         if (!recentReports.reports.some((report) => report.id === reportId)) {
           return { ok: false, status: 404, error: "report_not_found" }
         }
-
-        const access = await loadOwnCaseReport(auth.user.id, reportId)
-        if (!access.ok) {
-          return access.kind === "not_found"
-            ? { ok: false, status: 404, error: "report_not_found" }
-            : { ok: false, status: 500, error: "dna_chat_failed" }
-        }
-
-        return {
-          ok: true,
-          caseContext: createDnaChatSafeCaseContext(
-            caseContextFromSnapshot(access.report.snapshot_json),
-          ),
-        }
+        return resolveOwnedDnaCaseAnswer({
+          userId: auth.user.id,
+          reportId,
+          question,
+          mode,
+          previousTopic,
+        })
       },
       writeAudit: (auditInput) => writeDnaChatAudit({ userId: auth.user.id, ...auditInput }),
     })

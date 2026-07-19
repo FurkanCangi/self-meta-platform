@@ -6,8 +6,6 @@ export type DnaChatReportSnapshotContext = {
   version: typeof DNA_CHAT_REPORT_CONTEXT_VERSION
   primaryAxis: string | null
   secondaryAxes: string[]
-  mechanismLabel: string | null
-  mechanismSummary: string | null
   caseEvidenceLines: string[]
   counterEvidenceLines: string[]
   preservedCapacityLines: string[]
@@ -80,10 +78,6 @@ export function buildDnaChatSnapshotContext(
       ? `${DOMAIN_LABELS[primary.key]} alanında göreli ${primary.level.toLocaleLowerCase("tr-TR")} örüntü`
       : null,
     secondaryAxes: secondary.map((domain) => DOMAIN_LABELS[domain.key]),
-    mechanismLabel: primary ? "Yapılandırılmış regülasyon örüntüsü" : null,
-    mechanismSummary: primary
-      ? `Ana eksen ${DOMAIN_LABELS[primary.key]} alanındaki yapılandırılmış skor ve düzey kaydıyla sınırlıdır.`
-      : null,
     caseEvidenceLines: (nonTypical.length ? nonTypical : ranked.slice(0, 2)).map(domainLine).slice(0, 5),
     counterEvidenceLines: typical.slice(0, 4).map(
       (domain) => `${DOMAIN_LABELS[domain.key]} alanındaki Tipik düzey, bulgunun tüm alanlara genellenmesini sınırlar.`,

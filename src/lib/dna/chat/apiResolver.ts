@@ -1,9 +1,10 @@
 import { resolveDnaChat } from "./engine"
+import { DNA_KNOWLEDGE_AUTHORITY_CONTRACT_VERSION } from "./knowledgeAuthority"
+import type { DnaKnowledgeAuthorityRef } from "./knowledgeAuthority"
 import type {
   DnaChatMode,
   DnaChatResponse,
   DnaChatRoute,
-  DnaChatSafeCaseContext,
 } from "./types"
 
 export type DnaChatApiPayload = {
@@ -22,6 +23,9 @@ export type DnaChatApiAuditInput = {
   engineVersion: string
   intendedUseVersion: string
   sourceIds: string[]
+  authorityContractVersion: string
+  policyVersion: string
+  authoritySet: string[]
 }
 
 export const DNA_CHAT_AUDIT_METADATA_KEYS = Object.freeze([
@@ -31,6 +35,9 @@ export const DNA_CHAT_AUDIT_METADATA_KEYS = Object.freeze([
   "classification",
   "engine_version",
   "intended_use_version",
+  "authority_contract_version",
+  "policy_version",
+  "authority_set",
   "refused",
   "source_ids",
 ] as const)
@@ -43,18 +50,26 @@ export function buildDnaChatAuditMetadata(input: DnaChatApiAuditInput) {
     classification: input.classification,
     engine_version: input.engineVersion,
     intended_use_version: input.intendedUseVersion,
+    authority_contract_version: input.authorityContractVersion,
+    policy_version: input.policyVersion,
+    authority_set: Array.from(new Set(input.authoritySet.filter(Boolean))).sort(),
     refused: input.classification === "refusal" || input.outcome === "refused",
     source_ids: Array.from(new Set(input.sourceIds.filter(Boolean))).slice(0, 16),
   }
 }
 
 export type DnaChatCaseLoadResult =
-  | { ok: true; caseContext: DnaChatSafeCaseContext }
+  | { ok: true; answer: DnaChatResponse }
   | { ok: false; status: 404 | 500; error: "report_not_found" | "dna_chat_failed" }
 
 export type DnaChatApiResolverDependencies = {
   createRequestId: () => string
-  loadCaseContext: (reportId: string) => Promise<DnaChatCaseLoadResult>
+  loadCaseAnswer: (input: {
+    reportId: string
+    question: string
+    mode?: DnaChatMode
+    previousTopic?: string | null
+  }) => Promise<DnaChatCaseLoadResult>
   writeAudit: (input: DnaChatApiAuditInput) => Promise<{ ok: boolean }>
 }
 
@@ -109,6 +124,30 @@ function sourceIdsFromAnswer(answer: DnaChatResponse): string[] {
   return Array.from(new Set(answer.sources.map((source) => source.id).filter(Boolean))).slice(0, 16)
 }
 
+function publicAuthority(authority: DnaKnowledgeAuthorityRef) {
+  const publicEvidence = authority.proof?.kind === "owner_approval"
+    ? {
+        bookVersion: authority.proof.bookVersion,
+        sectionId: authority.proof.sectionId,
+        passageId: authority.proof.passageId,
+      }
+    : authority.proof?.kind === "report_lineage"
+      ? { contextVersion: authority.proof.contextVersion }
+      : authority.proof?.kind === "policy_contract"
+        ? { policyVersion: authority.proof.policyVersion }
+        : undefined
+  return {
+    contractVersion: authority.contractVersion,
+    layer: authority.layer,
+    approvalRequirement: authority.approvalRequirement,
+    verificationStatus: authority.verificationStatus,
+    releaseEligible: authority.releaseEligible,
+    labelTr: authority.labelTr,
+    boundaryTr: authority.boundaryTr,
+    ...(publicEvidence ? { evidence: publicEvidence } : {}),
+  }
+}
+
 function publicAnswer(answer: DnaChatResponse, requestId: string) {
   return {
     ok: true,
@@ -116,7 +155,15 @@ function publicAnswer(answer: DnaChatResponse, requestId: string) {
     classification: answer.classification,
     summary: answer.summary,
     details: answer.details,
-    sources: answer.sources,
+    sources: answer.sources.map((source) => ({
+      ...source,
+      authority: publicAuthority(source.authority),
+    })),
+    answerUnits: answer.answerUnits.map((unit) => ({
+      ...unit,
+      authority: publicAuthority(unit.authority),
+    })),
+    authoritySummary: answer.authoritySummary,
     caseEvidence: answer.caseEvidence,
     limitations: answer.limitations,
     safetyBoundary: answer.safetyBoundary,
@@ -143,7 +190,12 @@ export async function resolveDnaChatApiRequest(
   let accessedCaseReport = false
   const requiresCaseContext = answer.route === "case" || answer.contextRequest?.type === "report"
   if (requiresCaseContext && payload.reportId) {
-    const loaded = await dependencies.loadCaseContext(payload.reportId)
+    const loaded = await dependencies.loadCaseAnswer({
+      reportId: payload.reportId,
+      question: payload.question,
+      mode: payload.mode,
+      previousTopic: payload.context?.previousTopic || null,
+    })
     if (!loaded.ok) {
       return {
         status: loaded.status,
@@ -153,12 +205,7 @@ export async function resolveDnaChatApiRequest(
     }
 
     accessedCaseReport = true
-    answer = await resolveDnaChat({
-      mode: payload.mode,
-      question: payload.question,
-      previousTopic: payload.context?.previousTopic || null,
-      caseContext: loaded.caseContext,
-    })
+    answer = loaded.answer
   }
 
   const requestId = dependencies.createRequestId()
@@ -173,6 +220,9 @@ export async function resolveDnaChatApiRequest(
     engineVersion: answer.engineVersion,
     intendedUseVersion: answer.intendedUse.version,
     sourceIds: sourceIdsFromAnswer(answer),
+    authorityContractVersion: DNA_KNOWLEDGE_AUTHORITY_CONTRACT_VERSION,
+    policyVersion: answer.intendedUse.version,
+    authoritySet: answer.authoritySummary.map((entry) => entry.layer),
   })
 
   if (!audit.ok && accessedCaseReport) {

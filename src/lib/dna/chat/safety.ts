@@ -7,6 +7,7 @@ import {
 } from "./catalog"
 import { normalizeDnaChatText } from "./text"
 import type { DnaChatSafetyCategory, DnaChatSafetyResult } from "./types"
+import { policyAuthorityForSafetyCategory } from "./authorityRegistry"
 
 const NATIONAL_ID_PATTERN = /\b[1-9][0-9]{10}\b/g
 const BIRTH_DATE_PATTERN = /\b\d{1,2}[./-]\d{1,2}[./-](?:19|20)\d{2}\b/g
@@ -724,6 +725,7 @@ function safetyResult(
     code,
     redactedQuestion,
     boundaryTr,
+    authority: policyAuthorityForSafetyCategory(category),
   }
 }
 

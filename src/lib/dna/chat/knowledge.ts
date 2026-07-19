@@ -13,6 +13,10 @@ import {
   type DnaChatKnowledgeEntry,
   type DnaChatSourceRef,
 } from "./types"
+import {
+  authorityForDnaContractSource,
+  authorityForKnowledgeSourceType,
+} from "./authorityRegistry"
 
 const DOMAIN_LABELS: Record<string, string> = {
   physiological: "Fizyolojik regülasyon",
@@ -28,19 +32,19 @@ const scaleCounts = questions.reduce<Record<string, number>>((counts, question) 
   return counts
 }, {})
 
-function approvedEntry(
+function legacyVerifiedEntry(
   input: Omit<DnaChatKnowledgeEntry, "version" | "evidenceStatus" | "reviewedAt">,
 ): DnaChatKnowledgeEntry {
   return Object.freeze({
     version: DNA_CHAT_KNOWLEDGE_CONTRACT_VERSION,
-    evidenceStatus: "approved" as const,
+    evidenceStatus: "verified" as const,
     reviewedAt: "2026-07-15",
     ...input,
   })
 }
 
 export const DNA_CHAT_KNOWLEDGE_ENTRIES: readonly DnaChatKnowledgeEntry[] = Object.freeze([
-  approvedEntry({
+  legacyVerifiedEntry({
     topic: "sinir-sistemi-genel-cerceve",
     summary:
       "Merkezi sinir sistemi (MSS), beyin ve omurilikte bilgiyi bütünleştiren ana yapıdır; otonom sinir sistemi (OSS) ise bedenin iç dengesine katılan istem dışı düzenleme süreçlerini kapsar.",
@@ -56,7 +60,7 @@ export const DNA_CHAT_KNOWLEDGE_ENTRIES: readonly DnaChatKnowledgeEntry[] = Obje
     keywords: ["mss", "oss", "merkezi sinir sistemi", "otonom sinir sistemi", "self regulasyon"],
     exampleQuestions: ["MSS ve OSS nedir?", "Sinir sistemi regülasyonu nasıl etkiler?"],
   }),
-  approvedEntry({
+  legacyVerifiedEntry({
     topic: "otonom-sinir-sistemi",
     summary:
       "Otonom sinir sistemi, kalp hızı, solunum, sindirim ve uyarılma gibi iç beden süreçlerinin koşullara göre ayarlanmasına katılır.",
@@ -72,7 +76,7 @@ export const DNA_CHAT_KNOWLEDGE_ENTRIES: readonly DnaChatKnowledgeEntry[] = Obje
     keywords: ["oss", "otonom", "bedensel denge", "uyarilma", "toparlanma"],
     exampleQuestions: ["Otonom sinir sistemi nedir?", "Otonom düzenleme ne demek?"],
   }),
-  approvedEntry({
+  legacyVerifiedEntry({
     topic: "sempatik-parasempatik-isleyis",
     summary:
       "Sempatik ve parasempatik süreçler, değişen taleplere göre enerji kullanımı ve bedensel toparlanmanın ayarlanmasına birlikte katılan otonom işleyişlerdir.",
@@ -88,7 +92,7 @@ export const DNA_CHAT_KNOWLEDGE_ENTRIES: readonly DnaChatKnowledgeEntry[] = Obje
     keywords: ["sempatik", "parasempatik", "otonom dallar", "enerji", "toparlanma"],
     exampleQuestions: ["Sempatik ve parasempatik nasıl çalışır?", "Otonom dallar ne yapar?"],
   }),
-  approvedEntry({
+  legacyVerifiedEntry({
     topic: "uyarilma-duzeyi",
     summary:
       "Uyarılma düzeyi, kişinin belirli bir anda çevresel ve içsel taleplere yanıt vermeye ne ölçüde hazır olduğunu anlatan değişken bedensel-davranışsal durumdur.",
@@ -103,7 +107,7 @@ export const DNA_CHAT_KNOWLEDGE_ENTRIES: readonly DnaChatKnowledgeEntry[] = Obje
     keywords: ["uyarilma", "arousal", "hazir olma", "bedensel durum"],
     exampleQuestions: ["Uyarılma düzeyi nedir?", "Arousal ne demek?"],
   }),
-  approvedEntry({
+  legacyVerifiedEntry({
     topic: "reaktivite",
     summary:
       "Reaktivite, bir uyaran veya talep karşısında tepkinin ne kadar hızlı ve yoğun ortaya çıktığını betimler.",
@@ -118,7 +122,7 @@ export const DNA_CHAT_KNOWLEDGE_ENTRIES: readonly DnaChatKnowledgeEntry[] = Obje
     keywords: ["reaktivite", "tepki", "yogunluk", "uyaran"],
     exampleQuestions: ["Reaktivite nedir?", "Uyaran karşısındaki tepki nasıl yorumlanır?"],
   }),
-  approvedEntry({
+  legacyVerifiedEntry({
     topic: "toparlanma",
     summary:
       "Toparlanma, uyarılma veya zorlanma sonrasında kişinin yeniden daha dengeli işlev düzeyine dönme sürecidir.",
@@ -133,7 +137,7 @@ export const DNA_CHAT_KNOWLEDGE_ENTRIES: readonly DnaChatKnowledgeEntry[] = Obje
     keywords: ["toparlanma", "sakinlesme", "dengeye donus", "stres sonrasi"],
     exampleQuestions: ["Toparlanma nedir?", "Sakinleşme süresi neyi anlatır?"],
   }),
-  approvedEntry({
+  legacyVerifiedEntry({
     topic: "uyku-ve-gunluk-ritim",
     summary:
       "Uyku ve günlük ritim, enerji düzeyi, uyarılma dengesi ve zorlanma sonrası toparlanmanın bağlamsal zeminidir.",
@@ -148,7 +152,7 @@ export const DNA_CHAT_KNOWLEDGE_ENTRIES: readonly DnaChatKnowledgeEntry[] = Obje
     keywords: ["uyku", "ritim", "rutin", "yorgunluk", "gece uyanma"],
     exampleQuestions: ["Uyku regülasyonu nasıl etkiler?", "Günlük ritim neden önemlidir?"],
   }),
-  approvedEntry({
+  legacyVerifiedEntry({
     topic: "dikkat-ve-yurutucu-kontrol",
     summary:
       "Dikkat ve yürütücü kontrol; odağı sürdürme, bilgiyi zihinde tutma, davranışı duruma göre ayarlama ve hedefe yönelik akışı yönetmede birlikte çalışan süreçlerdir.",
@@ -169,7 +173,7 @@ export const DNA_CHAT_KNOWLEDGE_ENTRY_BY_TOPIC = new Map(
   DNA_CHAT_KNOWLEDGE_ENTRIES.map((entry) => [entry.topic, entry]),
 )
 
-const DNA_CONTRACT_SOURCES: Record<string, DnaChatSourceRef> = {
+const DNA_CONTRACT_SOURCES: Record<string, Omit<DnaChatSourceRef, "authority">> = {
   assessment_overview: {
     id: "dna:assessment_overview",
     type: "dna_contract",
@@ -272,6 +276,7 @@ function knowledgeSource(sourceId: string): DnaChatSourceRef | null {
     excerptTr: chunk.text,
     claimBoundary:
       "Bu bilgi betimleyici klinik açıklama içindir; tek vaka için tanı, kesin neden veya uygulama talimatı üretmez.",
+    authority: authorityForKnowledgeSourceType("clinical_kb"),
   }
 }
 
@@ -296,10 +301,11 @@ function literatureSource(sourceId: string): DnaChatSourceRef | null {
     doi: source.doi,
     url: source.url,
     claimBoundary: source.claimBoundary,
+    authority: authorityForKnowledgeSourceType("literature"),
   }
 }
 
-function approvedKnowledgeSource(sourceId: string): DnaChatSourceRef | null {
+function knowledgeEntrySource(sourceId: string): DnaChatSourceRef | null {
   const topic = sourceId.replace(/^chat:/, "")
   const entry = DNA_CHAT_KNOWLEDGE_ENTRY_BY_TOPIC.get(topic)
   if (!entry) return null
@@ -307,17 +313,22 @@ function approvedKnowledgeSource(sourceId: string): DnaChatSourceRef | null {
     id: `chat:${entry.topic}`,
     type: "knowledge_entry",
     title: entry.exampleQuestions[0] ?? entry.topic,
-    labelTr: "Onaylı DNA Asistanı bilgi girişi",
+    labelTr: "Kaynağı doğrulanmış geçiş bilgi girişi",
     excerptTr: entry.summary,
     claimBoundary: entry.claimBoundary,
+    authority: authorityForKnowledgeSourceType("knowledge_entry"),
   }
 }
 
 export function resolveDnaChatSource(sourceId: string): DnaChatSourceRef | null {
   if (sourceId.startsWith("kb:")) return knowledgeSource(sourceId)
   if (sourceId.startsWith("lit:")) return literatureSource(sourceId)
-  if (sourceId.startsWith("chat:")) return approvedKnowledgeSource(sourceId)
-  if (sourceId.startsWith("dna:")) return DNA_CONTRACT_SOURCES[sourceId.slice(4)] ?? null
+  if (sourceId.startsWith("chat:")) return knowledgeEntrySource(sourceId)
+  if (sourceId.startsWith("dna:")) {
+    const sourceName = sourceId.slice(4)
+    const source = DNA_CONTRACT_SOURCES[sourceName]
+    return source ? { ...source, authority: authorityForDnaContractSource(sourceName) } : null
+  }
   return null
 }
 
