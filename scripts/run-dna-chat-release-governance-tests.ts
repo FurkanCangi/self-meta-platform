@@ -27,6 +27,7 @@ import {
   createDnaV3AttributionNoticePayload,
   createDnaV3ScienceSupportProvenance,
   createDnaV3ShareAlikeNoticePayload,
+  DNA_CURRENT_V3_RELEASE_CANDIDATES,
   dnaV3LicenseNoticePayloadSha256,
   dnaV3ReleaseAuthorizationDigest,
   type DnaV3ProductReleaseCandidate,
@@ -310,6 +311,8 @@ assert.equal(DNA_CURRENT_V3_RELEASE_PACKAGE.schemaVersion, DNA_V3_RELEASE_COMPIL
 assert.equal(DNA_CURRENT_V3_RELEASE_PACKAGE.releaseCount, 0)
 assert.equal(DNA_CURRENT_V3_RELEASE_PACKAGE.blockedCount, 0)
 assert.deepEqual(DNA_CURRENT_V3_RELEASE_PACKAGE.releasedCandidates, [])
+assert.equal(Object.isFrozen(DNA_CURRENT_V3_RELEASE_CANDIDATES), true)
+assert.deepEqual(DNA_CURRENT_V3_RELEASE_CANDIDATES, [])
 
 const registryBlocked = compileDnaV3ReleasePackage({
   candidates: [scienceCandidate()],
@@ -319,6 +322,42 @@ assert.equal(registryBlocked.releaseCount, 0)
 assert.deepEqual(registryBlocked.releasedCandidateIds, [])
 assert.ok(registryBlocked.blocked[0].blockCodes.includes("candidate_not_in_audited_registry"))
 assert.ok(registryBlocked.blocked[0].blockCodes.includes("coverage_collection_untrusted"))
+assert.ok(registryBlocked.blocked[0].blockCodes.includes("claim_review_bundle_missing"))
+assert.ok(registryBlocked.blocked[0].blockCodes.includes("publication_candidate_missing"))
+
+const forgedReviewAndPublication = compileDnaV3ReleasePackage({
+  candidates: [{
+    ...scienceCandidate(),
+    claimReviewBundle: {
+      claim: {
+        claimId: "claim.foreign",
+        claimSha256: "f".repeat(64),
+        passageIds: ["passage.foreign"],
+        sourceId: "source.foreign",
+      },
+      passages: [],
+    } as never,
+    publicationCandidate: {
+      subject: {
+        candidateId: "candidate.foreign",
+        claimId: "claim.foreign",
+        claimSha256: "f".repeat(64),
+        passageId: "passage.foreign",
+        passageSha256: "f".repeat(64),
+        sourceId: "source.foreign",
+        sourceSha256: "f".repeat(64),
+      },
+      publicationDigest: "f".repeat(64),
+    } as never,
+  }],
+  coverageCells: [RELEASE_CELL],
+})
+const forgedReviewBlocks = forgedReviewAndPublication.blocked[0].blockCodes
+assert.ok(forgedReviewBlocks.includes("claim_review_denied"))
+assert.ok(forgedReviewBlocks.includes("claim_review_binding_mismatch"))
+assert.ok(forgedReviewBlocks.includes("publication_candidate_denied"))
+assert.ok(forgedReviewBlocks.includes("publication_binding_mismatch"))
+assert.ok(forgedReviewBlocks.includes("claim_review_publication_binding_mismatch"))
 
 const secondClaimSameSource = {
   ...scienceCandidate(),
@@ -332,7 +371,9 @@ assert.equal(repeatedSourceReleased.releaseCount, 0)
 assert.ok(repeatedSourceReleased.blocked.every((decision) =>
   decision.blockCodes.every((code) =>
     code === "candidate_not_in_audited_registry"
-    || code === "coverage_collection_untrusted")),
+    || code === "coverage_collection_untrusted"
+    || code === "claim_review_bundle_missing"
+    || code === "publication_candidate_missing")),
 "Aynı kaynak aynı payload ile tekrarlandığında sahte içerik çatışması doğmamalı")
 
 const provenanceTampered = scienceCandidate()
@@ -744,6 +785,16 @@ console.log("DNA V3 release governance tests: PASS", JSON.stringify({
   currentReleased: DNA_CURRENT_V3_RELEASE_PACKAGE.releaseCount,
   auditedRegistryCount: DNA_CURRENT_V3_RELEASE_PACKAGE.auditedRegistryCount,
   syntheticFixtureBlocked: registryBlocked.releaseCount === 0,
+  missingClaimReviewBlocked: registryBlocked.blocked[0].blockCodes.includes(
+    "claim_review_bundle_missing",
+  ),
+  missingPublicationCandidateBlocked: registryBlocked.blocked[0].blockCodes.includes(
+    "publication_candidate_missing",
+  ),
+  forgedClaimReviewBlocked: forgedReviewBlocks.includes("claim_review_denied")
+    && forgedReviewBlocks.includes("claim_review_binding_mismatch"),
+  forgedPublicationCandidateBlocked: forgedReviewBlocks.includes("publication_candidate_denied")
+    && forgedReviewBlocks.includes("publication_binding_mismatch"),
   v2LegacyBlocked: legacyBlocked.releaseCount === 0,
   supportProvenanceTamperBlocked: provenanceBlocked.releaseCount === 0,
   contentHashTamperBlocked: payloadHashBlocked.releaseCount === 0,

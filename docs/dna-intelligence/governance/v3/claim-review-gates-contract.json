@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "dna-claim-review-gates-contract@1",
+  "implementationVersion": "dna-claim-review-gates@1",
+  "phases": [20, 21, 22, 23, 24],
+  "inputDisposition": "candidate_only",
+  "passingDisposition": "eligible_for_phase_25_conflict_processing_not_runtime",
+  "runtimeEligible": false,
+  "autonomousScientificReviewImplemented": false,
+  "sourceFidelity": {
+    "protocolVersion": "dna-source-fidelity-review@1",
+    "requiredEntailment": "entailed",
+    "requiredIssueState": "absent",
+    "issues": [
+      "scope_expansion",
+      "causal_escalation",
+      "age_generalization",
+      "species_generalization",
+      "group_to_individual_transfer",
+      "theory_presented_as_fact",
+      "source_type_mismatch"
+    ],
+    "claimPassageEntailmentRequiredForEveryClaim": true
+  },
+  "methodSupport": {
+    "protocolVersion": "dna-method-support-review@1",
+    "requiredAppraisalDisposition": "eligible_for_body_synthesis_with_limits",
+    "requiredFinding": "adequate_with_stated_limits",
+    "dimensions": [
+      "designSupportsClaim",
+      "correlationCausationAligned",
+      "measurementValidity",
+      "sampleAndAgeAligned",
+      "effectAndUncertaintyReflected",
+      "studyContextRespected"
+    ],
+    "trustedMethodAppraisalRequired": true
+  },
+  "adversarialReview": {
+    "protocolVersion": "dna-adversarial-review@1",
+    "comparisonBasis": "method_quality_over_recency_or_count",
+    "dimensions": [
+      "contrary_finding",
+      "stronger_synthesis_disagrees",
+      "contested_theory",
+      "publication_bias_concern",
+      "measure_validity_criticized",
+      "school_specificity",
+      "new_evidence_changes_conclusion",
+      "alternative_explanation"
+    ],
+    "cleanDisposition": "no_material_counterevidence_found",
+    "materialCounterevidenceDisposition": "contested_requires_phase_25_never_runtime",
+    "evidenceSetAndSearchCutoffRequired": true,
+    "newerAutomaticallyWins": false,
+    "largerStudyCountAutomaticallyWins": false
+  },
+  "clinicalSafety": {
+    "protocolVersion": "dna-clinical-safety-review@1",
+    "dimensions": [
+      "diagnostic_drift",
+      "treatment_or_medication_drift",
+      "individual_biological_inference",
+      "ambiguous_age_risk",
+      "behavior_to_brain_or_autonomic_inference",
+      "prognosis_impression",
+      "definitive_causality_impression",
+      "new_clinical_threshold"
+    ],
+    "automaticBlockers": [
+      "review_incomplete",
+      "new_clinical_threshold",
+      "diagnosis_or_differential",
+      "treatment_or_medication",
+      "prognosis",
+      "individual_biological_mechanism",
+      "behavior_to_brain_or_autonomic_inference",
+      "ambiguous_age_risk",
+      "definitive_causality",
+      "critical_clinical_conclusion_from_single_source",
+      "unexplained_statistic",
+      "unclear_or_prohibited_license",
+      "unresolved_scientific_conflict"
+    ],
+    "callerMayOmitDerivedBlocker": false
+  },
+  "turkishTransfer": {
+    "protocolVersion": "dna-turkish-transfer-review@1",
+    "direction": "english_to_turkish",
+    "originalEnglishPassageRetainedExactly": true,
+    "independentBackTranslationRequired": true,
+    "requiredSemanticStates": {
+      "conceptualEquivalence": "preserved",
+      "reverseMeaning": "absent",
+      "meaningScope": "preserved",
+      "causalStrength": "preserved",
+      "modality": "preserved"
+    },
+    "termFamilies": [
+      "association_causation",
+      "regulation_control",
+      "arousal_activation",
+      "recovery_restoration",
+      "awareness_accuracy",
+      "predict_explain",
+      "modality_may_can_is",
+      "evidence_proof"
+    ],
+    "sourceTermPresenceCrossChecked": true
+  },
+  "trust": {
+    "selfAssertedReviewAllowed": false,
+    "reviewPayloadBoundBySha256": true,
+    "claimPassageArtifactBindingRequired": true,
+    "reviewPassIdsAndEvidenceHashesMustBeUnique": true,
+    "reviewPassOrderStrictlyChronological": true,
+    "positivePathAvailableOnlyThroughExplicitTestRegistry": true,
+    "testRegistryRequiresFixtureEnvironmentAndNonProductionRuntime": true,
+    "productionRegisteredReviewCount": 0,
+    "releaseCompilerConsumesExactReviewBundle": true
+  }
+}

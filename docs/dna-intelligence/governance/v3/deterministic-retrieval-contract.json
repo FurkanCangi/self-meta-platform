@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "dna-v3-deterministic-retrieval-contract@1",
+  "phase": 31,
+  "engineVersion": "dna-chat-engine@3",
+  "retrievalVersion": "dna-v3-retrieval@1",
+  "runtimeDependencies": {
+    "externalModel": false,
+    "embedding": false,
+    "vectorDatabase": false,
+    "runtimeInternet": false,
+    "staticServerOnlyPackage": true
+  },
+  "orderedPipeline": [
+    "safety_gate",
+    "theory_case_intent",
+    "query_kind",
+    "exact_title_and_synonym",
+    "turkish_root_normalization",
+    "bm25",
+    "character_ngram_3_5",
+    "field_weights",
+    "age_evidence_license_entailment_filters",
+    "one_hop_graph",
+    "confidence_threshold",
+    "templated_answer",
+    "final_claim_guard"
+  ],
+  "thresholds": {
+    "answer": 0.72,
+    "clarification": 0.5,
+    "minimumAnswerMargin": 0.12,
+    "maxSubquestions": 2
+  },
+  "tieBreak": "stable_claim_id",
+  "previousTopicPolicy": "public_followup_hint_only_never_authorization",
+  "missingReportPolicy": "clarification_with_identity_registered_report_context_request",
+  "caseAnswerPolicy": "not_available_until_v3_case_assembler_is_bound",
+  "nonEmptyPackageRuntimeGate": "canonical_phase27_candidate_authorizations_required",
+  "relationshipPolicy": "explicit_direct_evidence_one_hop_only",
+  "currentProductionDisposition": {
+    "v3ReleasedClaims": 0,
+    "v3RuntimeResponse": "not_available",
+    "v2RuntimeChanged": false,
+    "v3ApiBound": false
+  },
+  "testPolicy": "synthetic_positive_paths_do_not_authorize_production_content"
+}

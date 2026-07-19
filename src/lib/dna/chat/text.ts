@@ -79,6 +79,24 @@ const TURKISH_SUFFIXES = [
   "yu",
 ] as const
 
+// High-value clinical terms are normalized before generic suffix stripping.
+// Turkish genitive/plural endings can otherwise truncate the lexical stem
+// (for example, `interosepsiyonun` used to become `interosepsiyo`).
+const DNA_DOMAIN_TOKEN_ROOTS = [
+  "interosepsiyon",
+  "regulasyon",
+  "norofizyoloji",
+  "parasempatik",
+  "prefrontal",
+  "sempatik",
+  "korteks",
+  "yetiskin",
+  "cocuk",
+  "ergen",
+  "bebek",
+  "otonom",
+] as const
+
 export function normalizeDnaChatText(value: string): string {
   return String(value || "")
     .toLocaleLowerCase("tr-TR")
@@ -91,6 +109,8 @@ export function normalizeDnaChatText(value: string): string {
 }
 
 function tokenRoot(token: string): string {
+  const domainRoot = DNA_DOMAIN_TOKEN_ROOTS.find((root) => token.startsWith(root))
+  if (domainRoot) return domainRoot
   for (const suffix of TURKISH_SUFFIXES) {
     if (token.endsWith(suffix) && token.length - suffix.length >= 4) {
       return token.slice(0, -suffix.length)

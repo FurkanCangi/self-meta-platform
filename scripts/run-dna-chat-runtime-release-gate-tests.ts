@@ -10,7 +10,10 @@ import {
   DNA_V2_LEGACY_RUNTIME_ROLLBACK_POLICY,
   evaluateDnaChatRuntimeRelease,
 } from "../src/lib/dna/chat/governance/runtimeReleaseGate"
-import { DNA_CURRENT_V3_RELEASE_PACKAGE } from "../src/lib/dna/chat/governance/releaseCompiler"
+import {
+  DNA_CURRENT_V3_RELEASE_CANDIDATES,
+  DNA_CURRENT_V3_RELEASE_PACKAGE,
+} from "../src/lib/dna/chat/governance/releaseCompiler"
 
 async function main() {
 const currentV2 = evaluateDnaChatRuntimeRelease({
@@ -25,6 +28,8 @@ assert.deepEqual(currentV2, {
 })
 assert.equal(Object.isFrozen(DNA_V2_LEGACY_RUNTIME_ROLLBACK_POLICY), true)
 assert.equal(Object.isFrozen(DNA_V2_LEGACY_RUNTIME_ROLLBACK_POLICY.allowedEngineVersions), true)
+assert.equal(Object.isFrozen(DNA_CURRENT_V3_RELEASE_CANDIDATES), true)
+assert.deepEqual(DNA_CURRENT_V3_RELEASE_CANDIDATES, [])
 
 assert.equal(evaluateDnaChatRuntimeRelease({
   generation: "v2_legacy",
@@ -47,6 +52,17 @@ assert.equal(evaluateDnaChatRuntimeRelease({
     authorizationDigest: "a".repeat(64),
   }],
 }).blockCode, "v3_candidate_not_released")
+
+assert.equal(evaluateDnaChatRuntimeRelease({
+  generation: "v3",
+  engineVersion: "dna-chat-engine@3",
+  releasePackageInputSha256: DNA_CURRENT_V3_RELEASE_PACKAGE.inputSha256,
+  candidates: [{
+    candidateId: "forged.rich-runtime-input",
+    authorizationDigest: "a".repeat(64),
+    claimId: "claim.must-not-be-caller-supplied",
+  }],
+}).blockCode, "v3_candidate_authorizations_required")
 
 assert.equal(evaluateDnaChatRuntimeRelease({
   generation: "v3",
@@ -138,6 +154,7 @@ console.log(JSON.stringify({
   forgedCandidateBlocked: true,
   releasePackageHashBound: true,
   candidateAuthorizationDigestRequired: true,
+  runtimeInputRestrictedToCandidateAndAuthorization: true,
   forgedEngineBlockedAtApiBoundary: true,
   forgedAllowlistedResponseBlockedAtApiBoundary: true,
   unknownGenerationBlocked: true,

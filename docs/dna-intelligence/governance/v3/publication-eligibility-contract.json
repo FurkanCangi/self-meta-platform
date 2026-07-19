@@ -1,0 +1,66 @@
+{
+  "schemaVersion": "dna-publication-eligibility@1",
+  "phaseRange": "25-27",
+  "status": "implemented_fail_closed",
+  "conflictSets": {
+    "schemaVersion": "dna-conflict-set@1",
+    "minimumMemberCount": 2,
+    "requiredDistinctDirections": 2,
+    "directions": [
+      "supports",
+      "opposes",
+      "mixed",
+      "inconclusive"
+    ],
+    "evidenceLevels": [
+      "high",
+      "moderate",
+      "low",
+      "very_low"
+    ],
+    "unresolvedConflictResponse": "Bulgular tutarlı değildir; bu nedenle bireysel vaka için kesin sonuç çıkarılamaz.",
+    "authorizedProductionRecords": 0
+  },
+  "dnaRelationship": {
+    "schemaVersion": "dna-relationship-classification@1",
+    "controlledValues": [
+      "product_definition",
+      "supported_relation",
+      "conceptual_proximity",
+      "theory_only",
+      "not_established",
+      "contradicted",
+      "not_applicable"
+    ],
+    "defaultValue": null,
+    "directRelationshipPhraseAllowedAsDefault": false,
+    "generalScienceValidatesDnaProduct": false,
+    "productDefinitionAuthority": "dna_product_information",
+    "externalScienceMayChangeProductDefinition": false,
+    "authorizedProductionRecords": 0
+  },
+  "publicationGates": [
+    "valid_source",
+    "license",
+    "retraction_check",
+    "real_passage",
+    "exact_locator",
+    "two_blind_extractions",
+    "source_fidelity",
+    "method_review",
+    "counter_evidence",
+    "safety_review",
+    "turkish_transfer",
+    "age_and_population",
+    "claim_boundary",
+    "dna_relationship"
+  ],
+  "publicationGateCount": 14,
+  "gateEvidenceBinding": "candidate_subject_sha256_and_gate_specific_evidence_sha256",
+  "finalAuthorization": "immutable_code_reviewed_publication_digest_registry",
+  "releaseCompilerBinding": "exact_claim_passage_source_review_publication_tuple",
+  "callerMayAuthorize": false,
+  "authorizedProductionPublications": 0,
+  "currentRuntimeDisposition": "candidate_only_no_v3_runtime_release",
+  "safetyPolicy": "fail_closed"
+}

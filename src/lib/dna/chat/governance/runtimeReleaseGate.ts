@@ -1,4 +1,8 @@
-import { DNA_CURRENT_V3_RELEASE_PACKAGE } from "./releaseCompiler"
+import {
+  DNA_CURRENT_V3_RELEASE_CANDIDATES,
+  DNA_CURRENT_V3_RELEASE_PACKAGE,
+  dnaV3ReleaseAuthorizationDigest,
+} from "./releaseCompiler"
 
 export const DNA_CHAT_RUNTIME_RELEASE_GATE_VERSION = "dna-chat-runtime-release-gate@1" as const
 export const DNA_V2_LEGACY_ENGINE_VERSION = "dna-chat-engine@2" as const
@@ -44,6 +48,7 @@ export const DNA_CHAT_RUNTIME_RELEASE_BLOCK_CODES = [
   "v3_duplicate_candidate_id",
   "v3_candidate_not_released",
   "v3_candidate_authorization_mismatch",
+  "v3_release_tuple_invalid",
 ] as const
 
 export type DnaChatRuntimeReleaseBlockCode =
@@ -70,6 +75,27 @@ function decision(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
+function isCurrentV3ReleaseTupleValid(): boolean {
+  return DNA_CURRENT_V3_RELEASE_PACKAGE.releasedCandidates.every((released) => {
+    const candidate = DNA_CURRENT_V3_RELEASE_CANDIDATES.find((row) =>
+      row.candidateId === released.candidateId)
+    if (!candidate?.publicationCandidate) return false
+    if (released.authorizationDigest !== dnaV3ReleaseAuthorizationDigest(candidate)
+      || released.authority !== candidate.authority
+      || released.claimId !== candidate.claimId
+      || released.claimSha256 !== candidate.claimSha256
+      || released.passageId !== candidate.passageId
+      || released.passageSha256 !== candidate.passageSha256
+      || released.publicationDigest !== candidate.publicationCandidate.publicationDigest) {
+      return false
+    }
+    return candidate.authority !== "external_scientific_information"
+      || (released.authority === "external_scientific_information"
+        && released.sourceId === candidate.sourceId
+        && released.sourceSha256 === candidate.sourceSha256)
+  })
 }
 
 /**
@@ -100,6 +126,9 @@ export function evaluateDnaChatRuntimeRelease(
     if (descriptor.engineVersion !== DNA_V3_RUNTIME_ENGINE_VERSION) {
       return decision("v3", "v3_engine_not_allowlisted")
     }
+    if (!isCurrentV3ReleaseTupleValid()) {
+      return decision("v3", "v3_release_tuple_invalid")
+    }
     if (typeof descriptor.releasePackageInputSha256 !== "string"
       || !/^[a-f0-9]{64}$/.test(descriptor.releasePackageInputSha256)) {
       return decision("v3", "v3_release_package_hash_required")
@@ -111,6 +140,7 @@ export function evaluateDnaChatRuntimeRelease(
       || descriptor.candidates.length === 0
       || descriptor.candidates.some((candidate) =>
         !isRecord(candidate)
+        || Object.keys(candidate).sort().join(",") !== "authorizationDigest,candidateId"
         || typeof candidate.candidateId !== "string"
         || candidate.candidateId.trim() !== candidate.candidateId
         || !candidate.candidateId

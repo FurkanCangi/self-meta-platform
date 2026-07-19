@@ -16,6 +16,14 @@ import {
   type DnaV2LegacyLifecycleRecord,
 } from "./lifecycle"
 import {
+  evaluateDnaClaimReviewGates,
+  type DnaClaimReviewBundle,
+} from "./claimReviewGates"
+import {
+  evaluateDnaPublicationEligibility,
+  type DnaPublicationCandidate,
+} from "./publicationEligibility"
+import {
   canSourceSupportClaim,
   deduplicateSourceFamilies,
   evaluateComponentRelease,
@@ -56,6 +64,8 @@ type DnaV3ReleaseCandidateBase = Readonly<{
   coverageCellId: DnaCoverageCell["id"]
   claimLifecycle: LifecycleRecord
   passageLifecycle: LifecycleRecord
+  claimReviewBundle?: DnaClaimReviewBundle
+  publicationCandidate?: DnaPublicationCandidate
 }>
 
 export type DnaV3ProductReleaseCandidate = DnaV3ReleaseCandidateBase & Readonly<{
@@ -168,6 +178,13 @@ export const DNA_V3_RELEASE_BLOCK_CODES = [
   "source_family_not_independent",
   "source_license_component_denied",
   "source_license_obligations_unfulfilled",
+  "claim_review_bundle_missing",
+  "claim_review_denied",
+  "claim_review_binding_mismatch",
+  "publication_candidate_missing",
+  "publication_candidate_denied",
+  "publication_binding_mismatch",
+  "claim_review_publication_binding_mismatch",
 ] as const
 
 export type DnaV3ReleaseBlockCode = (typeof DNA_V3_RELEASE_BLOCK_CODES)[number]
@@ -202,10 +219,25 @@ export type DnaV3ReleaseDecision = Readonly<{
   blockCodes: readonly DnaV3ReleaseBlockCode[]
 }>
 
-export type DnaV3ReleasedCandidateAuthorization = Readonly<{
+type DnaV3ReleasedCandidateAuthorizationBase = Readonly<{
   candidateId: string
+  claimId: string
+  claimSha256: string
+  passageId: string
+  passageSha256: string
+  publicationDigest: string
   authorizationDigest: string
 }>
+
+export type DnaV3ReleasedCandidateAuthorization =
+  | (DnaV3ReleasedCandidateAuthorizationBase & Readonly<{
+      authority: "dna_product_information"
+    }>)
+  | (DnaV3ReleasedCandidateAuthorizationBase & Readonly<{
+      authority: "external_scientific_information"
+      sourceId: string
+      sourceSha256: string
+    }>)
 
 export type DnaV3ReleasePackage = Readonly<{
   schemaVersion: typeof DNA_V3_RELEASE_COMPILER_VERSION
@@ -517,6 +549,81 @@ function collectConflictingIds(
   return conflicts
 }
 
+function evaluateCandidateReviewAndPublication(
+  candidate: DnaV3ReleaseCandidate,
+  blockCodes: DnaV3ReleaseBlockCode[],
+): void {
+  const bundle = candidate.claimReviewBundle
+  if (!bundle) {
+    pushUnique(blockCodes, "claim_review_bundle_missing")
+  } else {
+    let reviewEligible = false
+    try {
+      reviewEligible = evaluateDnaClaimReviewGates(bundle).status
+        === "eligible_for_phase_25_conflict_processing"
+    } catch {
+      reviewEligible = false
+    }
+    if (!reviewEligible) pushUnique(blockCodes, "claim_review_denied")
+
+    const boundPassage = Array.isArray(bundle.passages)
+      ? bundle.passages.find((passage) => passage?.id === candidate.passageId)
+      : undefined
+    const reviewBindingMatches = bundle.claim?.claimId === candidate.claimId
+      && bundle.claim?.claimSha256 === candidate.claimSha256
+      && Array.isArray(bundle.claim?.passageIds)
+      && bundle.claim.passageIds.includes(candidate.passageId)
+      && boundPassage?.id === candidate.passageId
+      && (candidate.authority !== "external_scientific_information"
+        || (bundle.claim.sourceId === candidate.sourceId
+          && boundPassage.sourceId === candidate.sourceId))
+    if (!reviewBindingMatches) pushUnique(blockCodes, "claim_review_binding_mismatch")
+  }
+
+  const publication = candidate.publicationCandidate
+  if (!publication) {
+    pushUnique(blockCodes, "publication_candidate_missing")
+    return
+  }
+
+  let publicationEligible = false
+  try {
+    publicationEligible = evaluateDnaPublicationEligibility(publication).releaseEligible
+  } catch {
+    publicationEligible = false
+  }
+  if (!publicationEligible) pushUnique(blockCodes, "publication_candidate_denied")
+
+  const subject = publication.subject
+  const publicationBindingMatches = subject?.candidateId === candidate.candidateId
+    && subject?.claimId === candidate.claimId
+    && subject?.claimSha256 === candidate.claimSha256
+    && subject?.passageId === candidate.passageId
+    && subject?.passageSha256 === candidate.passageSha256
+    && (candidate.authority !== "external_scientific_information"
+      || (subject?.sourceId === candidate.sourceId
+        && subject?.sourceSha256 === candidate.sourceSha256))
+  if (!publicationBindingMatches) pushUnique(blockCodes, "publication_binding_mismatch")
+
+  if (bundle) {
+    const reviewPublicationBindings = [
+      [subject?.sourceFidelityAuditSha256, bundle.sourceFidelity?.reviewPayloadSha256],
+      [subject?.methodReviewSha256, bundle.methodSupport?.reviewPayloadSha256],
+      [subject?.counterEvidenceAuditSha256, bundle.adversarial?.reviewPayloadSha256],
+      [subject?.safetyReviewSha256, bundle.clinicalSafety?.reviewPayloadSha256],
+      [subject?.turkishTransferAuditSha256, bundle.turkishTransfer?.reviewPayloadSha256],
+    ] as const
+    const reviewPublicationBindingMatches = reviewPublicationBindings.every(
+      ([subjectHash, reviewHash]) => typeof subjectHash === "string"
+        && /^[a-f0-9]{64}$/.test(subjectHash)
+        && subjectHash === reviewHash,
+    )
+    if (!reviewPublicationBindingMatches) {
+      pushUnique(blockCodes, "claim_review_publication_binding_mismatch")
+    }
+  }
+}
+
 export function compileDnaV3ReleasePackage(input: {
   readonly candidates: readonly DnaV3ReleaseCandidate[]
   readonly coverageCells?: readonly DnaCoverageCell[]
@@ -592,6 +699,7 @@ export function compileDnaV3ReleasePackage(input: {
       if (!DNA_AUDITED_V3_RELEASE_AUTHORIZATION_DIGESTS.includes(authorizationDigest)) {
         pushUnique(blockCodes, "candidate_not_in_audited_registry")
       }
+      evaluateCandidateReviewAndPublication(candidate, blockCodes)
       if (
         conflictingClaimIds.has(candidate.claimId)
         || conflictingPassageIds.has(candidate.passageId)
@@ -747,10 +855,29 @@ export function compileDnaV3ReleasePackage(input: {
 
   const releasedCandidates = decisions
     .filter((decision) => decision.released)
-    .map((decision) => Object.freeze({
-      candidateId: decision.candidateId,
-      authorizationDigest: decision.authorizationDigest,
-    }))
+    .map((decision): DnaV3ReleasedCandidateAuthorization => {
+      const candidate = input.candidates.find((row) => row.candidateId === decision.candidateId)
+      if (!candidate?.publicationCandidate) {
+        throw new Error("dna_v3_released_candidate_metadata_missing")
+      }
+      const base = {
+        candidateId: decision.candidateId,
+        claimId: candidate.claimId,
+        claimSha256: candidate.claimSha256,
+        passageId: candidate.passageId,
+        passageSha256: candidate.passageSha256,
+        publicationDigest: candidate.publicationCandidate.publicationDigest,
+        authorizationDigest: decision.authorizationDigest,
+      }
+      return candidate.authority === "external_scientific_information"
+        ? Object.freeze({
+            ...base,
+            authority: candidate.authority,
+            sourceId: candidate.sourceId,
+            sourceSha256: candidate.sourceSha256,
+          })
+        : Object.freeze({ ...base, authority: candidate.authority })
+    })
   const releasedCandidateIds = releasedCandidates.map((decision) => decision.candidateId)
   const blocked = decisions.filter((decision) => !decision.released)
 
@@ -777,6 +904,10 @@ export function compileDnaV3ReleasePackage(input: {
  * stay available through the V2 rollback path, but none are silently promoted
  * to V3 merely because they were previously marked approved or verified.
  */
+export const DNA_CURRENT_V3_RELEASE_CANDIDATES = Object.freeze(
+  [] as DnaV3ReleaseCandidate[],
+)
+
 export const DNA_CURRENT_V3_RELEASE_PACKAGE = compileDnaV3ReleasePackage({
-  candidates: Object.freeze([]),
+  candidates: DNA_CURRENT_V3_RELEASE_CANDIDATES,
 })

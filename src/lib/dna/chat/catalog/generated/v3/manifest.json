@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "dna-v3-static-package@1",
+  "graphVersion": "dna-v3-claim-passage-graph@1",
+  "generatedAt": "2026-07-19T00:00:00.000Z",
+  "sourceCutoffDate": "2026-07-19",
+  "inputManifestSha256": "c222f0b3938e98d11d002fa481f0742a30bcd3558a0b01f1ba5aaf29e24f8da7",
+  "releasePackageInputSha256": "74632950b10d55de833f29443d8e600bd186692a58e610fe81cd6edc2cb6616d",
+  "releaseAuthorizationSetSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+  "packageSha256": "797fc079ac2e21d799c906e80f972a34aefb55e8c67d8b28c69cf4f3d04aef96",
+  "counts": {
+    "included": {
+      "sources": 0,
+      "artifacts": 0,
+      "passages": 0,
+      "claims": 0,
+      "relations": 0,
+      "claimPassageLinks": 0,
+      "lexicalEntries": 0,
+      "topics": 0,
+      "answerUnits": 0
+    },
+    "excluded": {
+      "legacyV2Claims": 239,
+      "missingRealPassage": 239,
+      "legacyExpertPending": 239,
+      "orphanLegacySources": 7
+    }
+  },
+  "fileSha256": {
+    "sources": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "passages": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "claims": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "relations": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "claimPassageLinks": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "lexicalIndex": "13ab068388722de485d18642b66c0f9ec52613bc06a21913fc493700b58b4f93"
+  },
+  "v2ReauditSnapshotSha256": "f22abe41616cc361337127af77714f64afe4f77337e930918172f3bc6b0eafc1",
+  "releaseRegistryCount": 0,
+  "runtimeEligible": false
+}

@@ -25,7 +25,10 @@
     "question_specific_source_priority",
     "source_identity_and_family_deduplication",
     "component_level_license_clearance",
-    "structured_attribution_and_sharealike_notices_recomputed_and_identity_bound"
+    "structured_attribution_and_sharealike_notices_recomputed_and_identity_bound",
+    "phase20_24_claim_review_bundle_exactly_bound_and_eligible",
+    "phase27_publication_candidate_exactly_bound_and_release_eligible",
+    "released_tuple_binds_candidate_claim_passage_publication_and_science_source"
   ],
   "currentBlockers": [
     "owner_book_deferred",
@@ -35,5 +38,6 @@
   ],
   "safetyPolicy": "fail_closed",
   "v2RuntimePolicy": "exact_engine_version_under_explicit_immutable_rollback_allowlist",
-  "v3RuntimePolicy": "exact_release_package_input_hash_and_nonempty_candidate_authorization_digests_must_match_current_release_package"
+  "v3RuntimePolicy": "exact_release_package_input_hash_and_nonempty_candidate_authorization_digests_must_match_current_release_package",
+  "callerSuppliedReviewOrPublicationAuthority": false
 }

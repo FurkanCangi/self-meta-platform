@@ -1,0 +1,4651 @@
+{
+  "schemaVersion": "dna-v2-catalog-reaudit@1",
+  "auditedAt": "2026-07-19T00:00:00.000Z",
+  "v2MutationPerformed": false,
+  "claims": [
+    {
+      "auditId": "reaudit.claim.acc.heterogeneity",
+      "legacyClaimId": "claim.acc.heterogeneity",
+      "legacyClaimSha256": "44ebc6183e3e7680ec4299c98eb03c55fc05cca786c69cf8442f623dd6dafd17",
+      "topicId": "cns.anterior_cingulate",
+      "sourceIds": [
+        "BUSH_ET_AL_2000",
+        "HEILBRONNER_HAYDEN_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.acc.naming_boundary",
+      "legacyClaimId": "claim.acc.naming_boundary",
+      "legacyClaimSha256": "16ec8194436d5f93c050d92d2c2896b1a05eea7ea49ca7abb47591af91ed3016",
+      "topicId": "cns.anterior_cingulate",
+      "sourceIds": [
+        "BUSH_ET_AL_2000",
+        "HEILBRONNER_HAYDEN_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.acc.not_single_center",
+      "legacyClaimId": "claim.acc.not_single_center",
+      "legacyClaimSha256": "b2477172111d2c5dcb2bc3897bba8ee768c6c33a8f542929b65651e72b2596d4",
+      "topicId": "cns.anterior_cingulate",
+      "sourceIds": [
+        "BUSH_ET_AL_2000",
+        "CARTER_VAN_VEEN_2007",
+        "HEILBRONNER_HAYDEN_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.acc.profile_boundary",
+      "legacyClaimId": "claim.acc.profile_boundary",
+      "legacyClaimSha256": "e259be0c740ac6104d69b2ff47e5c14b5787c3f15fef54fec940cae31c587ecd",
+      "topicId": "cns.anterior_cingulate",
+      "sourceIds": [
+        "HEILBRONNER_HAYDEN_2016",
+        "POLDRAK_2006"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.allostasis.definition",
+      "legacyClaimId": "claim.allostasis.definition",
+      "legacyClaimSha256": "2ebd5218393c2826b9207e60e8b04c4410bcd5dfc46dc8e9ceb981aea02e3087",
+      "topicId": "ans.allostasis",
+      "sourceIds": [
+        "MCEWEN_1998",
+        "RAMSAY_WOODS_2014"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.allostatic_load.multisystem",
+      "legacyClaimId": "claim.allostatic_load.multisystem",
+      "legacyClaimSha256": "f9ab82f879ebb34facac384783b8df0b6963939d1d61566f16285203f972b81a",
+      "topicId": "ans.allostatic_load",
+      "sourceIds": [
+        "LUCENTE_GUIDI_2023",
+        "MCEWEN_1998",
+        "MCEWEN_2007"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.allostatic_load.no_universal_threshold",
+      "legacyClaimId": "claim.allostatic_load.no_universal_threshold",
+      "legacyClaimSha256": "ed160cf87b3f82e0b99eba386257b741a7bed1f96250821ab18ca5c0559da999",
+      "topicId": "ans.allostatic_load",
+      "sourceIds": [
+        "LUCENTE_GUIDI_2023",
+        "MCEWEN_2007"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ans.behavior_not_disorder",
+      "legacyClaimId": "claim.ans.behavior_not_disorder",
+      "legacyClaimSha256": "4fd946743420e1d067ba4b59c62d104bbc93117ff07219022341de7cf76bc1a7",
+      "topicId": "ans.overview",
+      "sourceIds": [
+        "BERNTSON_ET_AL_1991",
+        "WEHRWEIN_ET_AL_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ans.development",
+      "legacyClaimId": "claim.ans.development",
+      "legacyClaimSha256": "fb72d0858f7df2fafd8fc653d8f174f00dae3977e3ce0ebb0c771652e798a597",
+      "topicId": "ans.development",
+      "sourceIds": [
+        "GASIOR_ET_AL_2018",
+        "WHEDON_ET_AL_2018"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ans.measurement",
+      "legacyClaimId": "claim.ans.measurement",
+      "legacyClaimSha256": "96b1ad6d5d77934210e51e581c36ca25c831a4abe25f884bb9d66993491712cf",
+      "topicId": "ans.measurement_limits",
+      "sourceIds": [
+        "BOUCSEIN_ET_AL_2012",
+        "MATHOT_2018",
+        "TASK_FORCE_HRV_1996"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ans.not_personality",
+      "legacyClaimId": "claim.ans.not_personality",
+      "legacyClaimSha256": "cfafc5afd431b492bcdbdccd0147a4ee9ffa287a63f65eee5cbf4b9869d89c66",
+      "topicId": "ans.overview",
+      "sourceIds": [
+        "BERNTSON_ET_AL_1991",
+        "WEHRWEIN_ET_AL_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ans.overview",
+      "legacyClaimId": "claim.ans.overview",
+      "legacyClaimSha256": "8425e67d6daee4c8cfcdd0946d11225ed7d36d9710f3ec89cc5047b5721b3bd4",
+      "topicId": "ans.overview",
+      "sourceIds": [
+        "SAPER_2002",
+        "WEHRWEIN_ET_AL_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.arousal.contextual",
+      "legacyClaimId": "claim.arousal.contextual",
+      "legacyClaimSha256": "21eff3e06d0cdd697577235a820e04ef2a2504780f17b86e5752937897acb489",
+      "topicId": "selfreg.arousal",
+      "sourceIds": [
+        "ASTON_JONES_COHEN_2005",
+        "BATES_ET_AL_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.arousal.multicomponent",
+      "legacyClaimId": "claim.arousal.multicomponent",
+      "legacyClaimSha256": "e32876dc903c4d96271ff788278fa0618794be7e636337620d4f4583324cb95e",
+      "topicId": "selfreg.arousal",
+      "sourceIds": [
+        "ASTON_JONES_COHEN_2005",
+        "BATES_ET_AL_2022",
+        "BURT_OBRADOVIC_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.attention.development",
+      "legacyClaimId": "claim.attention.development",
+      "legacyClaimSha256": "0a7488265eef9cd30d0dc0b3713af9387b44ac166b4acebc21797de2a7adb5a2",
+      "topicId": "cns.attention_development",
+      "sourceIds": [
+        "BETTS_ET_AL_2006",
+        "FISHER_ET_AL_2013_ATTENTION",
+        "RUEDA_ET_AL_2004"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.attention.measurement_multimethod",
+      "legacyClaimId": "claim.attention.measurement_multimethod",
+      "legacyClaimSha256": "edaafae3912c07de547e8af5bf3cd550d47a159e8a6b2c916e45c0bff4af31b3",
+      "topicId": "cns.attention_measurement",
+      "sourceIds": [
+        "FISHER_ET_AL_2013_ATTENTION",
+        "HEDGE_ET_AL_2018",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.attention.multicomponent",
+      "legacyClaimId": "claim.attention.multicomponent",
+      "legacyClaimSha256": "56e27338f29b01e2a88f027b0d3ccc2cb43a1f17115cdf9be1daf2d616ffab0e",
+      "topicId": "cns.attention",
+      "sourceIds": [
+        "PETERSEN_POSNER_2012",
+        "RUEDA_ET_AL_2004"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.attention.networks_boundary",
+      "legacyClaimId": "claim.attention.networks_boundary",
+      "legacyClaimSha256": "202e1c977c47d6b3a087b3aa762c4ac363b04d2fb574417106f2c7867fda07ae",
+      "topicId": "cns.attention_networks",
+      "sourceIds": [
+        "PETERSEN_POSNER_2012",
+        "RUEDA_ET_AL_2004"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.attention.networks_interact",
+      "legacyClaimId": "claim.attention.networks_interact",
+      "legacyClaimSha256": "94c477ad11b64527320d3317c0a14831ccd97417a6f57d45aa72999154483f37",
+      "topicId": "cns.attention_networks",
+      "sourceIds": [
+        "PETERSEN_POSNER_2012",
+        "RUEDA_ET_AL_2004"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.attention.no_behavior_proxy",
+      "legacyClaimId": "claim.attention.no_behavior_proxy",
+      "legacyClaimSha256": "f49415fe1dcaf770aac1b266bebf47863dde0bb3f41890053a2ab9254a328129",
+      "topicId": "cns.attention",
+      "sourceIds": [
+        "FISHER_ET_AL_2013_ATTENTION",
+        "PETERSEN_POSNER_2012",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.autonomic.space",
+      "legacyClaimId": "claim.autonomic.space",
+      "legacyClaimSha256": "ff5d40eb8e0b5bc5f3105ff1d604bfa31f6e4aa0ceef4c6e2c5c1f7939076296",
+      "topicId": "ans.autonomic_space",
+      "sourceIds": [
+        "BERNTSON_ET_AL_1991",
+        "DAMPNEY_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.can.boundary",
+      "legacyClaimId": "claim.can.boundary",
+      "legacyClaimSha256": "1b593b12a6c6ac6347ba97c66a49020ca59464b7da35b934d16591c91b6e4c75",
+      "topicId": "cns.central_autonomic_network",
+      "sourceIds": [
+        "FERRARO_ET_AL_2022",
+        "POLDRAK_2006"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.can.network",
+      "legacyClaimId": "claim.can.network",
+      "legacyClaimSha256": "993c0e6d90f890f06df6263323713f2e0cdf06244fb79b51cbf2aefa6626b1e5",
+      "topicId": "cns.central_autonomic_network",
+      "sourceIds": [
+        "FERRARO_ET_AL_2022",
+        "LAMOTTE_ET_AL_2021",
+        "SAPER_2002"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.ai.confidence_boundary",
+      "legacyClaimId": "claim.case.ai.confidence_boundary",
+      "legacyClaimSha256": "165c5703f8ed86edb823cf25b38f309e64b59e8fda7b5aeb6a031b91e8bd922f",
+      "topicId": "case.ai_oversight",
+      "sourceIds": [
+        "NIST_AI_RMF_2023",
+        "VASEY_ET_AL_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.ai.human_oversight",
+      "legacyClaimId": "claim.case.ai.human_oversight",
+      "legacyClaimSha256": "30f34517d59b8289b1b7d94ca1b492f4d194586e81672d3f2768d0f73c9a2aae",
+      "topicId": "case.ai_oversight",
+      "sourceIds": [
+        "NIST_AI_RMF_2023",
+        "VASEY_ET_AL_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.ai.not_clinically_valid",
+      "legacyClaimId": "claim.case.ai.not_clinically_valid",
+      "legacyClaimSha256": "0af41605b5a99e66cf030f07d681191383c1e49df111ddfb4176073f98330479",
+      "topicId": "case.ai_oversight",
+      "sourceIds": [
+        "NIST_AI_RMF_2023",
+        "VASEY_ET_AL_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.biological.no_inference",
+      "legacyClaimId": "claim.case.biological.no_inference",
+      "legacyClaimSha256": "ba44eeade0f95d6e72004e929d25887cca3d67f517095d0b768219ad28aec358",
+      "topicId": "case.causal_biological_boundary",
+      "sourceIds": [
+        "AERA_APA_NCME_2014",
+        "APA_ASSESSMENT_GUIDELINES_2020",
+        "DOMBROWSKI_ET_AL_2022",
+        "FISHER_ET_AL_2018",
+        "ROHRER_2018"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.capacity.performance",
+      "legacyClaimId": "claim.case.capacity.performance",
+      "legacyClaimSha256": "1aa088b84efd44f5aee3618cc7a379a230a4dddf4d3669fbabec4cbe49991000",
+      "topicId": "case.capacity_performance",
+      "sourceIds": [
+        "TOPLAK_ET_AL_2013",
+        "WHO_ICF_2001"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.causality.correlation",
+      "legacyClaimId": "claim.case.causality.correlation",
+      "legacyClaimSha256": "634a189128969978e428f85c3f4586da4a9bc43feb990a2e88a58e46a0e07318",
+      "topicId": "case.causal_biological_boundary",
+      "sourceIds": [
+        "FISHER_ET_AL_2018",
+        "ROHRER_2018"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.change.error",
+      "legacyClaimId": "claim.case.change.error",
+      "legacyClaimSha256": "b23c634ae2b7a0fe588525c3ae15325463eb3b61cc2c29f0b8b982525ebb6dd5",
+      "topicId": "case.change_interpretation",
+      "sourceIds": [
+        "DE_VET_ET_AL_2006",
+        "KOTTNER_ET_AL_2011",
+        "MOKKINK_ET_AL_2010_COSMIN"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.change.not_treatment_effect",
+      "legacyClaimId": "claim.case.change.not_treatment_effect",
+      "legacyClaimSha256": "742907bbc436bed2110fc7db1d8a7f731f4b51b04e28bdcc36a7bad8622ba950",
+      "topicId": "case.change_interpretation",
+      "sourceIds": [
+        "AERA_APA_NCME_2014",
+        "FISHER_ET_AL_2018",
+        "KOTTNER_ET_AL_2011"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.change.regression_to_mean",
+      "legacyClaimId": "claim.case.change.regression_to_mean",
+      "legacyClaimSha256": "cb0ded90ae3f48e52e259d9366bb6041f54c11542d2792bf018be58b60d05037",
+      "topicId": "case.change_interpretation",
+      "sourceIds": [
+        "AERA_APA_NCME_2014",
+        "JACOBSON_TRUAX_1991",
+        "SPEER_1992"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.context.variability",
+      "legacyClaimId": "claim.case.context.variability",
+      "legacyClaimSha256": "dc9881dead9f94ea3a23f8cb2538d9b7293cf7911a86bf4a106b6d5d73c35ab5",
+      "topicId": "case.contextual_variability",
+      "sourceIds": [
+        "DE_LOS_REYES_ET_AL_2013",
+        "DE_LOS_REYES_KAZDIN_2005"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.culture.invariance",
+      "legacyClaimId": "claim.case.culture.invariance",
+      "legacyClaimSha256": "6976bf40d75f6991bcbc5c4445d6395397bf369ff8f72dafdfe569b0f16349f9",
+      "topicId": "case.development_culture",
+      "sourceIds": [
+        "AERA_APA_NCME_2014",
+        "PUTNICK_BORNSTEIN_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.culture.translation",
+      "legacyClaimId": "claim.case.culture.translation",
+      "legacyClaimSha256": "8191db0e0b843606baa1995197f73571a253d256fa5ca028eebe6cc0e647fe88",
+      "topicId": "case.development_culture",
+      "sourceIds": [
+        "AERA_APA_NCME_2014",
+        "PUTNICK_BORNSTEIN_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.development.age_equivalent",
+      "legacyClaimId": "claim.case.development.age_equivalent",
+      "legacyClaimSha256": "95f0aa007a9332f3d4aac913e7d5962ad49e53b65c65be248d09e613645d05e0",
+      "topicId": "case.development_culture",
+      "sourceIds": [
+        "AERA_APA_NCME_2014"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.informants.no_mechanical_average",
+      "legacyClaimId": "claim.case.informants.no_mechanical_average",
+      "legacyClaimSha256": "982460ed3377d719b3797622bcbb4626ba28eda435561008f40cb74a8c439159",
+      "topicId": "case.multi_informant",
+      "sourceIds": [
+        "DE_LOS_REYES_ET_AL_2013",
+        "DE_LOS_REYES_KAZDIN_2005",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.informants.perspectives",
+      "legacyClaimId": "claim.case.informants.perspectives",
+      "legacyClaimSha256": "11dfbf8c4b7e52e9cf049164015cceebbe99e479c61417aa2308dc5ad045abe2",
+      "topicId": "case.multi_informant",
+      "sourceIds": [
+        "DE_LOS_REYES_ET_AL_2013",
+        "DE_LOS_REYES_KAZDIN_2005",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.interpretation.intended_use",
+      "legacyClaimId": "claim.case.interpretation.intended_use",
+      "legacyClaimSha256": "651e94e2f66307b4e1790efeb502a3cafdd2ab985724ac61733428a661547250",
+      "topicId": "case.interpretation_boundaries",
+      "sourceIds": [
+        "AERA_APA_NCME_2014",
+        "APA_ASSESSMENT_GUIDELINES_2020"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.reliability.agreement_distinction",
+      "legacyClaimId": "claim.case.reliability.agreement_distinction",
+      "legacyClaimSha256": "b2e8410799efbf8c89cc679178470bbff32e75eeb784c5656c08af9f3ddb0275",
+      "topicId": "case.validity_reliability",
+      "sourceIds": [
+        "KOTTNER_ET_AL_2011",
+        "MOKKINK_ET_AL_2010_COSMIN"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.report.accessible",
+      "legacyClaimId": "claim.case.report.accessible",
+      "legacyClaimSha256": "65e3d2f6b2a2bc5b08ca6086f20de417acba469cccbc7f68465a43e01bcd51fc",
+      "topicId": "case.report_communication",
+      "sourceIds": [
+        "BAUM_ET_AL_2018",
+        "WHO_ICF_2001"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.report.layers",
+      "legacyClaimId": "claim.case.report.layers",
+      "legacyClaimSha256": "2dc5a16a00ae90f63e1e836c8ed1c99fe5814a52fb4ea6fd64b4d85021190188",
+      "topicId": "case.report_communication",
+      "sourceIds": [
+        "AERA_APA_NCME_2014",
+        "APA_ASSESSMENT_GUIDELINES_2020",
+        "DOMBROWSKI_ET_AL_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.score.cut_boundary",
+      "legacyClaimId": "claim.case.score.cut_boundary",
+      "legacyClaimSha256": "9b947481aa9b0e7976bea18372671ef59b32ed518febf64bdd72facb116c31a1",
+      "topicId": "case.score_interpretation",
+      "sourceIds": [
+        "AERA_APA_NCME_2014"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.score.norm_criterion_distinction",
+      "legacyClaimId": "claim.case.score.norm_criterion_distinction",
+      "legacyClaimSha256": "3c18f2cc32e13cf0dde7176d2159d7b55b1d8173d991f855e2d33f619e9dc5ba",
+      "topicId": "case.score_interpretation",
+      "sourceIds": [
+        "AERA_APA_NCME_2014"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.score.percentile",
+      "legacyClaimId": "claim.case.score.percentile",
+      "legacyClaimSha256": "dfcb6af8546460821dfc201cc2756e31a6411dcb28e79a26a30a7a79a415f342",
+      "topicId": "case.score_interpretation",
+      "sourceIds": [
+        "AERA_APA_NCME_2014"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.screening.assessment_distinction",
+      "legacyClaimId": "claim.case.screening.assessment_distinction",
+      "legacyClaimSha256": "935cf34aaddf0bccb1b15126d4579776aca696473d83384d0a059df2e0f965f8",
+      "topicId": "case.screening_diagnosis",
+      "sourceIds": [
+        "AERA_APA_NCME_2014",
+        "APA_ASSESSMENT_GUIDELINES_2020",
+        "SHELDRICK_ET_AL_2020"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.screening.not_diagnosis",
+      "legacyClaimId": "claim.case.screening.not_diagnosis",
+      "legacyClaimSha256": "344c43e2f6d54fa742c2b304c48f076b8699e368cac93f2933de883c34d0dcdf",
+      "topicId": "case.screening_diagnosis",
+      "sourceIds": [
+        "AERA_APA_NCME_2014",
+        "SHELDRICK_ET_AL_2020"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.screening.ppv_prevalence",
+      "legacyClaimId": "claim.case.screening.ppv_prevalence",
+      "legacyClaimSha256": "6fe38c6d56fcc5a59d3d49c13022e16a58baca07ea4dcf5df9f5dd47f08ad45c",
+      "topicId": "case.screening_diagnosis",
+      "sourceIds": [
+        "LEEFLANG_ET_AL_2013",
+        "SHELDRICK_ET_AL_2020"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.screening.single_score",
+      "legacyClaimId": "claim.case.screening.single_score",
+      "legacyClaimSha256": "a4bca1aaec230f95f78f31c036c5e3a455539017678530f422795df47c882944",
+      "topicId": "case.screening_diagnosis",
+      "sourceIds": [
+        "AERA_APA_NCME_2014",
+        "APA_ASSESSMENT_GUIDELINES_2020",
+        "SHELDRICK_ET_AL_2020"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.uncertainty.no_fabricated_interval",
+      "legacyClaimId": "claim.case.uncertainty.no_fabricated_interval",
+      "legacyClaimSha256": "8052cc44396567ba64809da675e9a11f793057839355fb7540fd5a8933b07ba5",
+      "topicId": "case.measurement_uncertainty",
+      "sourceIds": [
+        "AERA_APA_NCME_2014",
+        "MOKKINK_ET_AL_2010_COSMIN"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.uncertainty.score",
+      "legacyClaimId": "claim.case.uncertainty.score",
+      "legacyClaimSha256": "8c4eaa5cc2ffd0a8e800010a8cc63f5c9fd0f7956d828ffccaad8dcb4f899a60",
+      "topicId": "case.measurement_uncertainty",
+      "sourceIds": [
+        "AERA_APA_NCME_2014",
+        "MOKKINK_ET_AL_2010_COSMIN"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.validity.alpha_limit",
+      "legacyClaimId": "claim.case.validity.alpha_limit",
+      "legacyClaimSha256": "e8d0bb9e196974fbb3ace9e164c7e63e78071a1c0cfe9aa2030190242a3e3f3a",
+      "topicId": "case.validity_reliability",
+      "sourceIds": [
+        "AERA_APA_NCME_2014",
+        "KOTTNER_ET_AL_2011",
+        "MOKKINK_ET_AL_2010_COSMIN"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.case.validity.use_specific",
+      "legacyClaimId": "claim.case.validity.use_specific",
+      "legacyClaimSha256": "f7114d3447b509b1c3506df324c3ae6e6b5b13dc8f796eada6bb0638d97d866f",
+      "topicId": "case.validity_reliability",
+      "sourceIds": [
+        "AERA_APA_NCME_2014",
+        "APA_ASSESSMENT_GUIDELINES_2020",
+        "MOKKINK_ET_AL_2010_COSMIN"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.cingulo_opercular.definition",
+      "legacyClaimId": "claim.cingulo_opercular.definition",
+      "legacyClaimSha256": "08e463f00ba821bbc108c44ecc0ddb4b70e3f5ed810b2568982f08d77e40e7bf",
+      "topicId": "cns.cingulo_opercular_network",
+      "sourceIds": [
+        "MENON_UDDIN_2010",
+        "SEELEY_2019",
+        "UDDIN_ET_AL_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.cingulo_opercular.naming_boundary",
+      "legacyClaimId": "claim.cingulo_opercular.naming_boundary",
+      "legacyClaimSha256": "462f8cf0f44e6c50d562eabf416997377f29d17fd7f5dca90bb9c371fbf8b940",
+      "topicId": "cns.cingulo_opercular_network",
+      "sourceIds": [
+        "MENON_UDDIN_2010",
+        "SEELEY_2019",
+        "UDDIN_ET_AL_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.circadian.behavior_boundary",
+      "legacyClaimId": "claim.circadian.behavior_boundary",
+      "legacyClaimSha256": "7572e69fbec17f6359d84c0d53f87a2a7e33285dfa7336dbf979e312d56b24b9",
+      "topicId": "selfreg.circadian_rhythm",
+      "sourceIds": [
+        "BORBELY_ET_AL_2016",
+        "HASTINGS_ET_AL_2018"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.circadian.definition",
+      "legacyClaimId": "claim.circadian.definition",
+      "legacyClaimSha256": "475e4654410f36ad2e08d02cdc82564639671d5a89d0980512e135037ad3b557",
+      "topicId": "selfreg.circadian_rhythm",
+      "sourceIds": [
+        "BORBELY_ET_AL_2016",
+        "HASTINGS_ET_AL_2018"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.cns.distributed",
+      "legacyClaimId": "claim.cns.distributed",
+      "legacyClaimSha256": "b8fc8565ef25541c30f4af0eee0e38ea95ebdde2b4268feed1fca4d37fb4346c",
+      "topicId": "cns.distributed_networks",
+      "sourceIds": [
+        "FERRARO_ET_AL_2022",
+        "FRIEDMAN_ROBBINS_2022",
+        "QUADT_ET_AL_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.cns.not_single_center",
+      "legacyClaimId": "claim.cns.not_single_center",
+      "legacyClaimSha256": "fde67b22dbd699ae78556786438f308833948917fe089571188c0d46dfb3b6ce",
+      "topicId": "cns.distributed_networks",
+      "sourceIds": [
+        "FERRARO_ET_AL_2022",
+        "FRIEDMAN_ROBBINS_2022",
+        "QUADT_ET_AL_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.cns.overview",
+      "legacyClaimId": "claim.cns.overview",
+      "legacyClaimSha256": "e3949a1d46bb9139af3f6a956832d8a05ef0fb48e1f5f99013778bb8ba2b6720",
+      "topicId": "cns.overview",
+      "sourceIds": [
+        "FRIEDMAN_ROBBINS_2022",
+        "SAPER_2002"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.cognitive_flexibility.context",
+      "legacyClaimId": "claim.cognitive_flexibility.context",
+      "legacyClaimSha256": "d152d0fe6f9d2219d5fd177caccf5698132323e9535afce26cd8c55883045ad0",
+      "topicId": "cns.cognitive_flexibility",
+      "sourceIds": [
+        "DIAMOND_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.cognitive_flexibility.definition",
+      "legacyClaimId": "claim.cognitive_flexibility.definition",
+      "legacyClaimSha256": "39a0b7246b8e1e2fe4d8bbfacf7bea2d7747533bcc2ac04ca18e39e95966aa1d",
+      "topicId": "cns.cognitive_flexibility",
+      "sourceIds": [
+        "DIAMOND_2013",
+        "FRIEDMAN_ROBBINS_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coreg.codyregulation.definition",
+      "legacyClaimId": "claim.coreg.codyregulation.definition",
+      "legacyClaimSha256": "0186b330d4315b945f413078e59b2030fad917d0388827a66ceeff9a85c9ee46",
+      "topicId": "selfreg.codyregulation",
+      "sourceIds": [
+        "DEPASQUALE_2020_COREG",
+        "VERHAGEN_ET_AL_2024_COREG"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coreg.culture.context",
+      "legacyClaimId": "claim.coreg.culture.context",
+      "legacyClaimSha256": "e8f4232ff24dd3ebac95c6e5cce0f3306a811a6056e336f6be718ef61eccbb9a",
+      "topicId": "selfreg.coregulation_culture",
+      "sourceIds": [
+        "HENRICH_ET_AL_2010",
+        "NIELSEN_ET_AL_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coreg.development.form_changes",
+      "legacyClaimId": "claim.coreg.development.form_changes",
+      "legacyClaimSha256": "5b9789338d2a9edddfdf652b43b2b61463e8ffaf166c9cd1bf0017075d508f6a",
+      "topicId": "selfreg.coregulation_development",
+      "sourceIds": [
+        "BIRK_ET_AL_2022_COREG",
+        "ROSANBALM_MURRAY_2017",
+        "VERHAGEN_ET_AL_2024_COREG"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coreg.dna_measurement_boundary",
+      "legacyClaimId": "claim.coreg.dna_measurement_boundary",
+      "legacyClaimSha256": "04e53d55ff0ac79a4959099c58fb6c1c536270fd50af2301333f61c3cfcaf426",
+      "topicId": "selfreg.coregulation",
+      "sourceIds": [
+        "DEPASQUALE_2020_COREG",
+        "LUNKENHEIMER_ET_AL_2017_COREG",
+        "VERHAGEN_ET_AL_2024_COREG"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coreg.measurement.biological_boundary",
+      "legacyClaimId": "claim.coreg.measurement.biological_boundary",
+      "legacyClaimSha256": "d520372b2c8fe119f1db3166ceec2ff2ae64d2319d71141d00a4128eacf60451",
+      "topicId": "selfreg.coregulation_measurement",
+      "sourceIds": [
+        "ALEN_ET_AL_2022",
+        "DEPASQUALE_2020_COREG",
+        "GROSSMAN_2023",
+        "HOSTINAR_ET_AL_2014"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coreg.measurement.multimethod",
+      "legacyClaimId": "claim.coreg.measurement.multimethod",
+      "legacyClaimSha256": "aeac4d9b028026f717d98d63104ee90bf428e4ae4fabf2e1d48f679257e9537f",
+      "topicId": "selfreg.coregulation_measurement",
+      "sourceIds": [
+        "DEPASQUALE_2020_COREG",
+        "LUNKENHEIMER_ET_AL_2017_COREG",
+        "VERHAGEN_ET_AL_2024_COREG"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coreg.negative_emotion_dependency_boundary",
+      "legacyClaimId": "claim.coreg.negative_emotion_dependency_boundary",
+      "legacyClaimSha256": "915cdc2f7d6d320212a289b0fbaa110b84f0decf05cfef81e77e4b1e9779c7f5",
+      "topicId": "selfreg.coregulation",
+      "sourceIds": [
+        "MESMAN_ET_AL_2009_STILL_FACE",
+        "ROSANBALM_MURRAY_2017",
+        "VERHAGEN_ET_AL_2024_COREG"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coreg.process.function",
+      "legacyClaimId": "claim.coreg.process.function",
+      "legacyClaimSha256": "60f5f79c8fa399957571864d34867955895bfffa07695ebd5d4b9de612ebabb7",
+      "topicId": "selfreg.coregulation",
+      "sourceIds": [
+        "BLAIR_RAVER_2015",
+        "MESMAN_ET_AL_2009_STILL_FACE"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coreg.process.reciprocal",
+      "legacyClaimId": "claim.coreg.process.reciprocal",
+      "legacyClaimSha256": "e1236fddedbafc9e0990bbfd2fae865dfae8836603b61737adb192e650277c88",
+      "topicId": "selfreg.coregulation",
+      "sourceIds": [
+        "FELDMAN_2007_SYNCHRONY",
+        "VERHAGEN_ET_AL_2024_COREG"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coreg.repair.normal_mismatch",
+      "legacyClaimId": "claim.coreg.repair.normal_mismatch",
+      "legacyClaimSha256": "77782c0826b3516a8e1b5052a4cc5d71e9e41057cf78d728a7d445af3fd6abb6",
+      "topicId": "selfreg.interaction_repair",
+      "sourceIds": [
+        "MESMAN_ET_AL_2009_STILL_FACE"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coreg.scaffolding.complementary_support",
+      "legacyClaimId": "claim.coreg.scaffolding.complementary_support",
+      "legacyClaimSha256": "5cd94a1a0936b844f59cdaf4f10f19d823a16252575b7653715e20524d845157",
+      "topicId": "selfreg.coregulation_scaffolding",
+      "sourceIds": [
+        "ROSANBALM_MURRAY_2017",
+        "SANKALAITE_ET_AL_2021"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coreg.sensitivity.definition",
+      "legacyClaimId": "claim.coreg.sensitivity.definition",
+      "legacyClaimSha256": "9d02a03cfa69732e41bc7f95383564fcb2fd9c007861e259bbca82697ead45a0",
+      "topicId": "selfreg.caregiver_sensitivity",
+      "sourceIds": [
+        "MADIGAN_ET_AL_2024_SENSITIVITY"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coreg.sensitivity.small_group_association",
+      "legacyClaimId": "claim.coreg.sensitivity.small_group_association",
+      "legacyClaimSha256": "51ccd45176e9e59c2e8bf3a8a0debb4360be0a8ff18998c4235a1389a54adb61",
+      "topicId": "selfreg.caregiver_sensitivity",
+      "sourceIds": [
+        "COOKE_ET_AL_2022_SENSITIVITY"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coreg.social_buffering.definition",
+      "legacyClaimId": "claim.coreg.social_buffering.definition",
+      "legacyClaimSha256": "84fbba41c456742f45b9803dfd0569c8e41cd048bc1b2b3be696af569c64b9e6",
+      "topicId": "selfreg.social_buffering",
+      "sourceIds": [
+        "HOSTINAR_ET_AL_2014"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coreg.synchrony.definition",
+      "legacyClaimId": "claim.coreg.synchrony.definition",
+      "legacyClaimSha256": "b7dca1fd2db3515eed7c245cf527bce4cbc1135b167d274e09de07cc71d8d6e5",
+      "topicId": "selfreg.dyadic_synchrony",
+      "sourceIds": [
+        "BIRK_ET_AL_2022_COREG",
+        "DEPASQUALE_2020_COREG"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coreg.synchrony.valence_boundary",
+      "legacyClaimId": "claim.coreg.synchrony.valence_boundary",
+      "legacyClaimSha256": "2a46a623352ec104e839b93c39c62b0040cef05fbd471670e88ad9487c8db4d7",
+      "topicId": "selfreg.dyadic_synchrony",
+      "sourceIds": [
+        "DEPASQUALE_2020_COREG",
+        "VERHAGEN_ET_AL_2024_COREG"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.coregulation.support",
+      "legacyClaimId": "claim.coregulation.support",
+      "legacyClaimSha256": "b40a8686829d0f803cb321a9f9f6afc78e1edddec9c6e225000093256e90d862",
+      "topicId": "selfreg.coregulation",
+      "sourceIds": [
+        "BLAIR_RAVER_2015",
+        "ROSANBALM_MURRAY_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.cortisol.measurement_boundary",
+      "legacyClaimId": "claim.cortisol.measurement_boundary",
+      "legacyClaimSha256": "b789a2515f470099375ae80c68046959007e17e972f66e3fba18bed231c6c849",
+      "topicId": "selfreg.cortisol_measurement",
+      "sourceIds": [
+        "CHROUSOS_2009",
+        "STALDER_ET_AL_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.cortisol.time_scales",
+      "legacyClaimId": "claim.cortisol.time_scales",
+      "legacyClaimSha256": "aa6e4b96b6931d73fb04ca7660e36667825aeb7da8b09b140632701722edea61",
+      "topicId": "selfreg.cortisol_measurement",
+      "sourceIds": [
+        "CHROUSOS_2009",
+        "GUNNAR_QUEVEDO_2007",
+        "STALDER_ET_AL_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.daily_circadian.distinction",
+      "legacyClaimId": "claim.daily_circadian.distinction",
+      "legacyClaimSha256": "f28f16f318751d80a079ac56afbe208ca24dba69541241c75c9f42760e658e53",
+      "topicId": "selfreg.daily_rhythm",
+      "sourceIds": [
+        "BORBELY_ET_AL_2016",
+        "HASTINGS_ET_AL_2018"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.age_equivalent_limit",
+      "legacyClaimId": "claim.development.age_equivalent_limit",
+      "legacyClaimSha256": "2f53d00822750315d207f44a014c4340f848fa0da8407ce702071f60c2b8e5a6",
+      "topicId": "development.age_equivalent_limits",
+      "sourceIds": [
+        "DOENNECKE_ET_AL_2023",
+        "RAH_ET_AL_2023",
+        "THOMAS_ET_AL_2009",
+        "WHO_ICF_2001"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.age_not_mechanism",
+      "legacyClaimId": "claim.development.age_not_mechanism",
+      "legacyClaimSha256": "76992a87f9202736524e123b85a3f6e88651c8251c48c6e41c230caa1f59724e",
+      "topicId": "development.overview",
+      "sourceIds": [
+        "SAMEROFF_2010",
+        "THOMAS_ET_AL_2009"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.cascade",
+      "legacyClaimId": "claim.development.cascade",
+      "legacyClaimSha256": "19c68eba73edac3ac3a5252b8d5943ca8f9b2c3dc2b1ab1767e53484549ac448",
+      "topicId": "development.pathways",
+      "sourceIds": [
+        "MASTEN_CICCHETTI_2010",
+        "SAMEROFF_2010"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.context_variability",
+      "legacyClaimId": "claim.development.context_variability",
+      "legacyClaimSha256": "06113e7654347521ca2f4fdc012eb1123f6c82b7188384eb6878186cef534671",
+      "topicId": "development.variability",
+      "sourceIds": [
+        "CARNEIRO_ET_AL_2021",
+        "SAMEROFF_2010",
+        "WHO_ICF_2001"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.difference_context_demand",
+      "legacyClaimId": "claim.development.difference_context_demand",
+      "legacyClaimSha256": "d15b7ba7d78b895bbe814787dd3da51796825c1245cf42e876af800a3d784f4b",
+      "topicId": "development.differences",
+      "sourceIds": [
+        "DOEBEL_2020",
+        "SAMEROFF_2010",
+        "WHO_ICF_2001"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.difference_definition",
+      "legacyClaimId": "claim.development.difference_definition",
+      "legacyClaimSha256": "2f1b64a886e61de343cefcb027b3abca02ad6f92e605fae8568c1f2e518a93e6",
+      "topicId": "development.differences",
+      "sourceIds": [
+        "ASTLE_ET_AL_2022",
+        "DWYER_2022",
+        "WHO_ICF_2001"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.difference_early_childhood_assessment",
+      "legacyClaimId": "claim.development.difference_early_childhood_assessment",
+      "legacyClaimSha256": "0e0f63191ca8d6a5c027ac12cc7b1229fa5d1c22d13f7ca29687442ea4d61ab0",
+      "topicId": "development.differences",
+      "sourceIds": [
+        "LIPKIN_MACIAS_2020",
+        "SAMEROFF_2010",
+        "WHO_ICF_2001"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.difference_not_diagnosis",
+      "legacyClaimId": "claim.development.difference_not_diagnosis",
+      "legacyClaimSha256": "1eb262d155fe5bfbcfc533a53daefbd189ab3ae17a3baac76ec0297bb46c8b05",
+      "topicId": "development.differences",
+      "sourceIds": [
+        "ASTLE_ET_AL_2022",
+        "DWYER_2022",
+        "LIPKIN_MACIAS_2020"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.dynamic_systems",
+      "legacyClaimId": "claim.development.dynamic_systems",
+      "legacyClaimSha256": "b152466f2502664a904b281e1104e5b6c3998b3e08d1754d7965915691ca755d",
+      "topicId": "development.overview",
+      "sourceIds": [
+        "SAMEROFF_2010"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.equifinality",
+      "legacyClaimId": "claim.development.equifinality",
+      "legacyClaimSha256": "c3ba533e78828ad611caea9108a361d3cc3b1ebc897298a0f78d06cc1f734dc3",
+      "topicId": "development.pathways",
+      "sourceIds": [
+        "CICCHETTI_ROGOSCH_1996"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.informant_discrepancy",
+      "legacyClaimId": "claim.development.informant_discrepancy",
+      "legacyClaimSha256": "886f46cf3eb37645c6e76abaa630ab806fb0640290bd7c432d37737d92f022ff",
+      "topicId": "development.informant_context",
+      "sourceIds": [
+        "CARNEIRO_ET_AL_2021",
+        "WHO_ICF_2001"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.inter_vs_intra_variability",
+      "legacyClaimId": "claim.development.inter_vs_intra_variability",
+      "legacyClaimSha256": "e65d9f4cd6c5ef8afef4c04d65fd5af8f61d3709e951188505fa2f2c114d417d",
+      "topicId": "development.variability",
+      "sourceIds": [
+        "CARNEIRO_ET_AL_2021",
+        "MONTROY_ET_AL_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.measurement_invariance",
+      "legacyClaimId": "claim.development.measurement_invariance",
+      "legacyClaimSha256": "700842e76ef70dfed30bd5d873077c63a229c8da1493207bf792dfd2ff8fe2c3",
+      "topicId": "development.measurement_invariance",
+      "sourceIds": [
+        "DOENNECKE_ET_AL_2023",
+        "RAH_ET_AL_2023"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.multifinality",
+      "legacyClaimId": "claim.development.multifinality",
+      "legacyClaimSha256": "62d08cdbf8f0960e0d64e617166a3494b46ee90cfd83d37312be0c8523cf6a4f",
+      "topicId": "development.pathways",
+      "sourceIds": [
+        "CICCHETTI_ROGOSCH_1996"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.neurodiversity",
+      "legacyClaimId": "claim.development.neurodiversity",
+      "legacyClaimSha256": "db3e98555acecf87c9d847bdd456cc5e0294e5bf59cadcf5f2c22c369fdb759b",
+      "topicId": "development.neurodiversity",
+      "sourceIds": [
+        "ASTLE_ET_AL_2022",
+        "DWYER_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.person_task_environment",
+      "legacyClaimId": "claim.development.person_task_environment",
+      "legacyClaimSha256": "fc3d4dbc77fb513959bb3e5d5d5ba639a64496eda4e58984a0d47c3984642325",
+      "topicId": "development.person_environment",
+      "sourceIds": [
+        "SAMEROFF_2010",
+        "WHO_ICF_2001"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.plasticity_continues",
+      "legacyClaimId": "claim.development.plasticity_continues",
+      "legacyClaimSha256": "4ab46ff405a133d52ac2e4f98ef4f2e331ddcc206c64c6354fc6d3798ccd76d6",
+      "topicId": "development.plasticity",
+      "sourceIds": [
+        "KNUDSEN_2004",
+        "SAMEROFF_2010"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.screening_accuracy",
+      "legacyClaimId": "claim.development.screening_accuracy",
+      "legacyClaimSha256": "db1cefe702f91ae1529322ce3c0c55d53d45fd62f81a3d752226146176215259",
+      "topicId": "development.screening_assessment",
+      "sourceIds": [
+        "RAH_ET_AL_2023"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.screening_distinction",
+      "legacyClaimId": "claim.development.screening_distinction",
+      "legacyClaimSha256": "92f79b21b6e41c36929cdc68727d4e99ac79bb7bb28603624d80334f725b6ab6",
+      "topicId": "development.screening_assessment",
+      "sourceIds": [
+        "LIPKIN_MACIAS_2020",
+        "RAH_ET_AL_2023"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.sensitive_period",
+      "legacyClaimId": "claim.development.sensitive_period",
+      "legacyClaimSha256": "3fbdb56719b10dee20197dffceffa0cdc21fa0d61a0c203d5e613479b9d025e8",
+      "topicId": "development.plasticity",
+      "sourceIds": [
+        "KNUDSEN_2004"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.single_point_boundary",
+      "legacyClaimId": "claim.development.single_point_boundary",
+      "legacyClaimSha256": "6bdfdb283854cb9516f31a12301b31d5f9cad6d17b9742c00180146a20091b3c",
+      "topicId": "development.trajectory",
+      "sourceIds": [
+        "LIPKIN_MACIAS_2020",
+        "RAH_ET_AL_2023",
+        "THOMAS_ET_AL_2009"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.supported_performance",
+      "legacyClaimId": "claim.development.supported_performance",
+      "legacyClaimSha256": "348d03041ec6b869de69f3c7bde074cd7d9ee9b7d86b5c0406e9038de6826a8b",
+      "topicId": "development.supported_performance",
+      "sourceIds": [
+        "DIAMOND_2013",
+        "DOEBEL_2020",
+        "WHO_ICF_2001"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.trajectory_definition",
+      "legacyClaimId": "claim.development.trajectory_definition",
+      "legacyClaimSha256": "ce6799692461d2d1834413c1aea87607ebfeba39f3f90d59f3035cf4fee5dadf",
+      "topicId": "development.trajectory",
+      "sourceIds": [
+        "MONTROY_ET_AL_2016",
+        "THOMAS_ET_AL_2009"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.uneven_not_signature",
+      "legacyClaimId": "claim.development.uneven_not_signature",
+      "legacyClaimSha256": "a22d98cf0120dccfcd4ab6a51e23a11260b90a9fe4933f171e47fc898b92be21",
+      "topicId": "development.uneven_profile",
+      "sourceIds": [
+        "ASTLE_ET_AL_2022",
+        "THOMAS_ET_AL_2009"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.development.uneven_profile",
+      "legacyClaimId": "claim.development.uneven_profile",
+      "legacyClaimSha256": "fc9db7c65d472d0159d07c9928cded94024c29fcfb9840fc252b121e5b539f72",
+      "topicId": "development.uneven_profile",
+      "sourceIds": [
+        "ASTLE_ET_AL_2022",
+        "DOEBEL_2020",
+        "THOMAS_ET_AL_2009"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.capacity_performance.distinction",
+      "legacyClaimId": "claim.dna.capacity_performance.distinction",
+      "legacyClaimSha256": "a66d4bd89335ce6e662d766bb40c8f6ab2406f9bff43a5ae994bf0c81029438e",
+      "topicId": "dna.capacity_performance",
+      "sourceIds": [
+        "CHIEN_ET_AL_2016",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.capacity_performance.participation_boundary",
+      "legacyClaimId": "claim.dna.capacity_performance.participation_boundary",
+      "legacyClaimSha256": "7ce6563f4f0c643b51d1c8bb76d674788e268026b4d9c033f240937eb3394f0a",
+      "topicId": "dna.capacity_performance",
+      "sourceIds": [
+        "CHIEN_ET_AL_2016",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.cognitive.independence_not_established",
+      "legacyClaimId": "claim.dna.cognitive.independence_not_established",
+      "legacyClaimSha256": "58c97d98d675ee637b980ca1fe1cd3262e8198ff3a7f632d6a541408e27cf375",
+      "topicId": "dna.cognitive_regulation",
+      "sourceIds": [
+        "DOEBEL_2020",
+        "KARR_ET_AL_2018",
+        "NIGG_2017",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.cognitive.operational_definition",
+      "legacyClaimId": "claim.dna.cognitive.operational_definition",
+      "legacyClaimSha256": "9786ece96385bc680c07932032989b288b4489ff2cdbb5e0632f424ec268a211",
+      "topicId": "dna.cognitive_regulation",
+      "sourceIds": [
+        "DOEBEL_2020",
+        "INZLICHT_ET_AL_2021",
+        "NIGG_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.domain_overlap.multiple_paths",
+      "legacyClaimId": "claim.dna.domain_overlap.multiple_paths",
+      "legacyClaimSha256": "a14881f6d0972c78835ce27333610a518ef4d23aca1e760eff03556578625868",
+      "topicId": "dna.domain_overlap",
+      "sourceIds": [
+        "DOEBEL_2020",
+        "INZLICHT_ET_AL_2021",
+        "NIGG_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.domain_overlap.not_single_cause",
+      "legacyClaimId": "claim.dna.domain_overlap.not_single_cause",
+      "legacyClaimSha256": "a0174c232977cc7fe172ec31e83d0a441570636c6894b78f8594aa6e4021cfdd",
+      "topicId": "dna.domain_overlap",
+      "sourceIds": [
+        "INZLICHT_ET_AL_2021",
+        "NIGG_2017",
+        "POLDRAK_2006"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.emotional.calmness_boundary",
+      "legacyClaimId": "claim.dna.emotional.calmness_boundary",
+      "legacyClaimSha256": "7bbfdf35b1361a7a0b80319582f68c6f6ff8860c429cab18b3fcdc1b382ea447",
+      "topicId": "dna.emotional_regulation",
+      "sourceIds": [
+        "EISENBERG_SPINRAD_2004",
+        "GROSS_2015",
+        "THOMPSON_1994"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.emotional.functional_definition",
+      "legacyClaimId": "claim.dna.emotional.functional_definition",
+      "legacyClaimSha256": "da40a365dfd306f3be0fee211b6bc6dcc55c0939b3cb7033632f5ae5d1319b90",
+      "topicId": "dna.emotional_regulation",
+      "sourceIds": [
+        "COLE_ET_AL_2004",
+        "EISENBERG_SPINRAD_2004",
+        "GROSS_2015",
+        "THOMPSON_1994"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.executive.functional_definition",
+      "legacyClaimId": "claim.dna.executive.functional_definition",
+      "legacyClaimSha256": "f1029475d34cf106a73b26ff0df614d089ea272e24aaea65991ab24e22066c8b",
+      "topicId": "dna.executive_function_domain",
+      "sourceIds": [
+        "DIAMOND_2013",
+        "FRIEDMAN_MIYAKE_2017",
+        "MIYAKE_ET_AL_2000"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.executive.task_and_brain_boundary",
+      "legacyClaimId": "claim.dna.executive.task_and_brain_boundary",
+      "legacyClaimSha256": "6d9c940e4e35acb6dde2e0cd97a72a71047b38edd596bb4684fc1c22f0e09c6c",
+      "topicId": "dna.executive_function_domain",
+      "sourceIds": [
+        "KARR_ET_AL_2018",
+        "POLDRAK_2006",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.functional_profile.contextual",
+      "legacyClaimId": "claim.dna.functional_profile.contextual",
+      "legacyClaimSha256": "4b2aa88df0d18f0bc9c4e394c3862cff96d829bcef840bc78c9e3f39dfb3f3f9",
+      "topicId": "dna.functional_profile",
+      "sourceIds": [
+        "BLAIR_RAVER_2015",
+        "INZLICHT_ET_AL_2021",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.functional_profile.not_trajectory",
+      "legacyClaimId": "claim.dna.functional_profile.not_trajectory",
+      "legacyClaimSha256": "1010efe4fe8b072e882942d2999d63fe4242092889a23852a21bfa92eb7a3de3",
+      "topicId": "dna.functional_profile",
+      "sourceIds": [
+        "MONTROY_ET_AL_2016",
+        "ROBSON_ET_AL_2020",
+        "VAN_HULLE_ET_AL_2015"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.functional_profile.strategy_and_outcome",
+      "legacyClaimId": "claim.dna.functional_profile.strategy_and_outcome",
+      "legacyClaimSha256": "17f301df5cfd30ee21aabcdbbe2cd4ad6b94dc7c9e95438ae5dc00a680c66294",
+      "topicId": "dna.functional_profile",
+      "sourceIds": [
+        "COLE_ET_AL_2004",
+        "GROSS_2015",
+        "INZLICHT_ET_AL_2021"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.interoception.functional_definition",
+      "legacyClaimId": "claim.dna.interoception.functional_definition",
+      "legacyClaimSha256": "1e04c199af3595d0a2a0581eb44c217d74e849c4a4c16d1410c86b649275f136",
+      "topicId": "dna.interoception_domain",
+      "sourceIds": [
+        "KHALSA_ET_AL_2018",
+        "MURPHY_ET_AL_2019_INTEROCEPTION",
+        "QUIGLEY_ET_AL_2021"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.interoception.measurement_boundary",
+      "legacyClaimId": "claim.dna.interoception.measurement_boundary",
+      "legacyClaimSha256": "4e37e70407f867b26d4bc9948e369cdb770fb0dc9015f4cfc78bdf0ac2a13c2a",
+      "topicId": "dna.interoception_domain",
+      "sourceIds": [
+        "DESMEDT_ET_AL_2022_SELF_REPORT",
+        "GARFINKEL_ET_AL_2015",
+        "MURPHY_ET_AL_2019_INTEROCEPTION",
+        "POLDRAK_2006"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.measurement.correlation_boundary",
+      "legacyClaimId": "claim.dna.measurement.correlation_boundary",
+      "legacyClaimSha256": "93368cd4f3eca3a2fddf0d5192e35b82366b39e1970ab5bc6941e3de5c936b1b",
+      "topicId": "dna.measurement_levels",
+      "sourceIds": [
+        "DUCKWORTH_KERN_2011",
+        "ENKAVI_ET_AL_2019",
+        "KARR_ET_AL_2018",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.measurement.levels_distinct",
+      "legacyClaimId": "claim.dna.measurement.levels_distinct",
+      "legacyClaimSha256": "3ddeaeff70c511b4c79370aabe3fc949fa501c95e0c4f7356afbb984c16a8588",
+      "topicId": "dna.measurement_levels",
+      "sourceIds": [
+        "DUCKWORTH_KERN_2011",
+        "ENKAVI_ET_AL_2019",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.physiological.biological_boundary",
+      "legacyClaimId": "claim.dna.physiological.biological_boundary",
+      "legacyClaimSha256": "3d61e0e41b41e4ecf477f3c5cb3f602291cab05c92f6a2adb4964117013aecc2",
+      "topicId": "dna.physiological_regulation",
+      "sourceIds": [
+        "GUNNAR_QUEVEDO_2007",
+        "LABORDE_ET_AL_2017",
+        "MCEWEN_2007"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.physiological.functional_definition",
+      "legacyClaimId": "claim.dna.physiological.functional_definition",
+      "legacyClaimSha256": "9f354fb4b24ff30ec1ef6173dffb458b379bfba0b3ab9c3354d4ce27771389fc",
+      "topicId": "dna.physiological_regulation",
+      "sourceIds": [
+        "BLAIR_RAVER_2015",
+        "GUNNAR_QUEVEDO_2007",
+        "MCEWEN_2007"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.sensory.functional_definition",
+      "legacyClaimId": "claim.dna.sensory.functional_definition",
+      "legacyClaimSha256": "ea176b0a6e44472dc285916a6464752fcb24f1593dcad28d788351d6e7ba2252",
+      "topicId": "dna.sensory_regulation",
+      "sourceIds": [
+        "CHIEN_ET_AL_2016",
+        "DUNN_2001",
+        "WATKYNS_ET_AL_2024"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.sensory.measurement_boundary",
+      "legacyClaimId": "claim.dna.sensory.measurement_boundary",
+      "legacyClaimSha256": "901c656d3d106f4acfe6cc9a197e8d678813f597279ed028022e72cc3b17dd77",
+      "topicId": "dna.sensory_regulation",
+      "sourceIds": [
+        "DUNN_2001",
+        "GOMEZ_ET_AL_2017",
+        "WATKYNS_ET_AL_2024"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.six_domains.institutional_framework",
+      "legacyClaimId": "claim.dna.six_domains.institutional_framework",
+      "legacyClaimSha256": "2cdf5575df299377e22f6cc05668837a673d0df3240f0be3eb78eef4e53141f3",
+      "topicId": "dna.six_domains",
+      "sourceIds": [
+        "INZLICHT_ET_AL_2021",
+        "NIGG_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.six_domains.not_biological_taxonomy",
+      "legacyClaimId": "claim.dna.six_domains.not_biological_taxonomy",
+      "legacyClaimSha256": "e550e486fc78eed758265291e0c19e531316d57974363e19014c556b4790206c",
+      "topicId": "dna.six_domains",
+      "sourceIds": [
+        "INZLICHT_ET_AL_2021",
+        "NIGG_2017",
+        "POLDRAK_2006"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.dna.six_domains.psychometric_boundary",
+      "legacyClaimId": "claim.dna.six_domains.psychometric_boundary",
+      "legacyClaimSha256": "6d474ab658c9c4309905e3b8395c97f145e76c5879bf830558fe2b40cc161906",
+      "topicId": "dna.six_domains",
+      "sourceIds": [
+        "DUCKWORTH_KERN_2011",
+        "KARR_ET_AL_2018",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.eda.definition",
+      "legacyClaimId": "claim.eda.definition",
+      "legacyClaimSha256": "8bce77d3005e505089607c55cbe9a11acc1a78956c8d2daf53ce01bf017a4923",
+      "topicId": "ans.eda",
+      "sourceIds": [
+        "BOUCSEIN_ET_AL_2012"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.eda.sensory",
+      "legacyClaimId": "claim.eda.sensory",
+      "legacyClaimSha256": "12f6e39fba55011671833e74b2ff67471a22222bb434f218777f8eef28265ab4",
+      "topicId": "ans.eda",
+      "sourceIds": [
+        "CHRISTENSEN_ET_AL_2020",
+        "MCINTOSH_ET_AL_1999"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ef.components",
+      "legacyClaimId": "claim.ef.components",
+      "legacyClaimSha256": "a527cabf165d97994e9aa61f64b96254e57878bcaecb315f55180b788ba7e9f6",
+      "topicId": "selfreg.executive_functions",
+      "sourceIds": [
+        "DIAMOND_2013",
+        "NIGG_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ef.contextual_performance",
+      "legacyClaimId": "claim.ef.contextual_performance",
+      "legacyClaimSha256": "f3600138c85adfd872ab7c9914d9dd07441b3c53799ea4c23717c8471d8831ff",
+      "topicId": "cns.executive_models",
+      "sourceIds": [
+        "DIAMOND_2013",
+        "DOEBEL_2020",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ef.development",
+      "legacyClaimId": "claim.ef.development",
+      "legacyClaimSha256": "374e1f7d0275247b393c3dd36d7472cae8eb3568b97e18a0a8e294e156f7baca",
+      "topicId": "selfreg.executive_functions",
+      "sourceIds": [
+        "DIAMOND_2013",
+        "NIGG_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ef.development_not_uniform",
+      "legacyClaimId": "claim.ef.development_not_uniform",
+      "legacyClaimSha256": "9ec0d04f7705c69f3674eac40ba1f039cd4f0e4a663758e3fcb24ce5e9d866a0",
+      "topicId": "cns.executive_development",
+      "sourceIds": [
+        "DIAMOND_2013",
+        "GARON_ET_AL_2008",
+        "HENDRY_ET_AL_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ef.measurement_boundary",
+      "legacyClaimId": "claim.ef.measurement_boundary",
+      "legacyClaimSha256": "29c3eca4cd2e7c7b5bee16b93397dd266ba94bbee34474cde2eefec315321a02",
+      "topicId": "cns.executive_measurement",
+      "sourceIds": [
+        "POLDRAK_2006",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ef.measurement_distinction",
+      "legacyClaimId": "claim.ef.measurement_distinction",
+      "legacyClaimSha256": "7d1f82bc32172c9f08dad907aa11e9f6b0cfea843959a96d43ededd19986d5e8",
+      "topicId": "cns.executive_measurement",
+      "sourceIds": [
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ef.task_impurity",
+      "legacyClaimId": "claim.ef.task_impurity",
+      "legacyClaimSha256": "3bb592e51600454dedb1a1c4fd2a5a27bb615b9f832d3382f7b65fdf75a835e3",
+      "topicId": "cns.executive_development",
+      "sourceIds": [
+        "GARON_ET_AL_2008",
+        "HENDRY_ET_AL_2016",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ef.unity_diversity",
+      "legacyClaimId": "claim.ef.unity_diversity",
+      "legacyClaimSha256": "93ac953606d33081bf22132efa3ca7e9562a9f71054db14c8ab36e6506e2f249",
+      "topicId": "cns.executive_models",
+      "sourceIds": [
+        "DIAMOND_2013",
+        "DOEBEL_2020",
+        "KARR_ET_AL_2018",
+        "MIYAKE_ET_AL_2000"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.emotion.definition",
+      "legacyClaimId": "claim.emotion.definition",
+      "legacyClaimSha256": "17ad7c5b4b417b806bfdf70e773de42f30b2ac576b08fc59f46787cc0040e10e",
+      "topicId": "selfreg.emotion_regulation",
+      "sourceIds": [
+        "COLE_ET_AL_2004",
+        "GROSS_2015"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.emotion.flexibility_boundary",
+      "legacyClaimId": "claim.emotion.flexibility_boundary",
+      "legacyClaimSha256": "5359afd88d994039d6733e551f4bc99382140b74d89561938a494340e7ffc4c1",
+      "topicId": "selfreg.emotion_strategies",
+      "sourceIds": [
+        "BONANNO_BURTON_2013",
+        "GROSS_2015"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.emotion.measurement_boundary",
+      "legacyClaimId": "claim.emotion.measurement_boundary",
+      "legacyClaimSha256": "5987327ca8d8d340b12dc35fcc37b2afc00ee4836e711541a645400dd64b9d1b",
+      "topicId": "selfreg.emotion_measurement",
+      "sourceIds": [
+        "MAZEFSKY_ET_AL_2021",
+        "POLDRAK_2006",
+        "REITSEMA_ET_AL_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.emotion.multimethod",
+      "legacyClaimId": "claim.emotion.multimethod",
+      "legacyClaimSha256": "a463d91e12f32578c0162053799898293349c98f92c91a955aff0d349e990ad6",
+      "topicId": "selfreg.emotion_measurement",
+      "sourceIds": [
+        "COLE_ET_AL_2004",
+        "MAZEFSKY_ET_AL_2021",
+        "REITSEMA_ET_AL_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.emotion.not_calmness",
+      "legacyClaimId": "claim.emotion.not_calmness",
+      "legacyClaimSha256": "9a737594f80abca8a518ab70e23d2d760ffaa8d71832a4f5348a4afe0e51c1a5",
+      "topicId": "selfreg.emotion_regulation",
+      "sourceIds": [
+        "COLE_ET_AL_2004",
+        "GROSS_2015"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.emotion.reactivity_distinction",
+      "legacyClaimId": "claim.emotion.reactivity_distinction",
+      "legacyClaimSha256": "778cc3131876b384f432f93485789bb8b11d5833897b3cbc790e12d377d63aa7",
+      "topicId": "selfreg.emotion_regulation",
+      "sourceIds": [
+        "COLE_ET_AL_2004",
+        "REITSEMA_ET_AL_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.emotion.strategies.developmental_change",
+      "legacyClaimId": "claim.emotion.strategies.developmental_change",
+      "legacyClaimSha256": "83c99697e42fae58ce4b1a51d4f67eea429ca5306c9f74e754a3efc2968ecf14",
+      "topicId": "selfreg.emotion_strategies",
+      "sourceIds": [
+        "COLE_ET_AL_2004",
+        "GROSS_2015",
+        "THOMPSON_1994"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.emotion.strategy_context",
+      "legacyClaimId": "claim.emotion.strategy_context",
+      "legacyClaimSha256": "303873892689f243951e1435efdfe70e9ec90e17afd6d7dd3e072280a6e72132",
+      "topicId": "selfreg.emotion_strategies",
+      "sourceIds": [
+        "BONANNO_BURTON_2013",
+        "GROSS_2015"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ern.definition",
+      "legacyClaimId": "claim.ern.definition",
+      "legacyClaimSha256": "06a7f8fa96a2fe49af0fa82a1ff52006dc2a14f624eaf5172742bc725a890547",
+      "topicId": "cns.error_related_negativity",
+      "sourceIds": [
+        "CARTER_VAN_VEEN_2007",
+        "WIERSEMA_ET_AL_2007"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ern.development_measurement",
+      "legacyClaimId": "claim.ern.development_measurement",
+      "legacyClaimSha256": "d5d87048b818fc550b879f5c11c775ee7768c077fc23c448ef52fd623ded19f0",
+      "topicId": "cns.error_related_negativity",
+      "sourceIds": [
+        "WIERSEMA_ET_AL_2007"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.executive.measurement.test_retest_boundary",
+      "legacyClaimId": "claim.executive.measurement.test_retest_boundary",
+      "legacyClaimSha256": "14a3a14a527a57d6b22b4b2b27d3c94e9d0eda7a555e967c808e511167d7081d",
+      "topicId": "cns.executive_measurement",
+      "sourceIds": [
+        "ENKAVI_ET_AL_2019",
+        "HEDGE_ET_AL_2018"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.habituation.definition",
+      "legacyClaimId": "claim.habituation.definition",
+      "legacyClaimSha256": "67fbde6f6ea95200d23bd7e757b47b3d302e829216d131ca2af32e4cbfe6409f",
+      "topicId": "selfreg.habituation",
+      "sourceIds": [
+        "RANKIN_ET_AL_2009"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.habituation.distinction",
+      "legacyClaimId": "claim.habituation.distinction",
+      "legacyClaimSha256": "6bdc86d33326b9ae36ddf54c7a8494c8b38ccfb067efcbcf62bd013045c45b8b",
+      "topicId": "selfreg.habituation",
+      "sourceIds": [
+        "RANKIN_ET_AL_2009"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.homeostasis.definition",
+      "legacyClaimId": "claim.homeostasis.definition",
+      "legacyClaimSha256": "dcbcea06eb506ebd9a8a8f3e8271bf557521d5057494f6c87df33d643064a4bb",
+      "topicId": "ans.homeostasis",
+      "sourceIds": [
+        "RAMSAY_WOODS_2014"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.hpa.axis_definition",
+      "legacyClaimId": "claim.hpa.axis_definition",
+      "legacyClaimSha256": "4e3e5edab056e85ac9c858b1326deb09f825ed35cd28ef416237375051c6a61d",
+      "topicId": "selfreg.hpa_axis",
+      "sourceIds": [
+        "CHROUSOS_2009",
+        "GUNNAR_QUEVEDO_2007",
+        "MCEWEN_2007"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.hpa.behavior_boundary",
+      "legacyClaimId": "claim.hpa.behavior_boundary",
+      "legacyClaimSha256": "0c21a2cb9edb0fb706fa3786650f80a69711254af446d889207a49e0a70c480b",
+      "topicId": "selfreg.hpa_axis",
+      "sourceIds": [
+        "CHROUSOS_2009",
+        "GUNNAR_QUEVEDO_2007"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.hrv.association",
+      "legacyClaimId": "claim.hrv.association",
+      "legacyClaimSha256": "740f50b03f0256e20bb2342d8c3628808f8c2ec8c1f43b4ce61ec805e270819e",
+      "topicId": "ans.hrv",
+      "sourceIds": [
+        "GRAZIANO_DEREFINKO_2013",
+        "LABORDE_ET_AL_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.hrv.definition",
+      "legacyClaimId": "claim.hrv.definition",
+      "legacyClaimSha256": "ea629b41ad986ee4798409c35018c5acbf510c9be1d4238a52b9d732f78bb9a6",
+      "topicId": "ans.hrv",
+      "sourceIds": [
+        "LABORDE_ET_AL_2017",
+        "TASK_FORCE_HRV_1996"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.hrv.development_boundary",
+      "legacyClaimId": "claim.hrv.development_boundary",
+      "legacyClaimSha256": "78b3df9e2c1039db037f50594665cc627adf82402a90350508ae619705149bab",
+      "topicId": "ans.hrv",
+      "sourceIds": [
+        "GASIOR_ET_AL_2018",
+        "LABORDE_ET_AL_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.hrv.lfhf",
+      "legacyClaimId": "claim.hrv.lfhf",
+      "legacyClaimSha256": "76cd89724da4315fb1f4767c855637480cc3c66ab492f7f222753a4eb36ba0bd",
+      "topicId": "ans.hrv",
+      "sourceIds": [
+        "BILLMAN_2013",
+        "LABORDE_ET_AL_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.hrv.measurement_boundary",
+      "legacyClaimId": "claim.hrv.measurement_boundary",
+      "legacyClaimSha256": "bfd0eddaaad1eb177cd7333b2a329b0007ff7a9acd557169eae608c08920dbfd",
+      "topicId": "ans.hrv",
+      "sourceIds": [
+        "LABORDE_ET_AL_2017",
+        "TASK_FORCE_HRV_1996"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.inhibitory_control.definition",
+      "legacyClaimId": "claim.inhibitory_control.definition",
+      "legacyClaimSha256": "67ba135960a804800e9ba7f50ad12c6ca4dc76893aae2ddee036a5b31e865047",
+      "topicId": "cns.inhibitory_control",
+      "sourceIds": [
+        "DIAMOND_2013",
+        "FISKE_HOLMBOE_2019"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.inhibitory_control.development",
+      "legacyClaimId": "claim.inhibitory_control.development",
+      "legacyClaimSha256": "8be1c865311b97d7f6b706ef7f95a9cf4450fe0a3aad8b18122840fbc716900d",
+      "topicId": "cns.inhibitory_control",
+      "sourceIds": [
+        "DIAMOND_2013",
+        "FISKE_HOLMBOE_2019"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.insula.anatomical_gradients",
+      "legacyClaimId": "claim.insula.anatomical_gradients",
+      "legacyClaimSha256": "57ab9fbcd23139eb83b512bb548db87c4d7cce8a53a871e25e87f64bbaa7ea02",
+      "topicId": "cns.insula",
+      "sourceIds": [
+        "KURTH_ET_AL_2010",
+        "UDDIN_ET_AL_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.insula.boundary",
+      "legacyClaimId": "claim.insula.boundary",
+      "legacyClaimSha256": "6172c71cc55b3d38878ba47ef972a98a22ad525df83ce20bd6ff5ba6fd5837d9",
+      "topicId": "cns.insula",
+      "sourceIds": [
+        "MENON_UDDIN_2010",
+        "POLDRAK_2006"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.insula.development_boundary",
+      "legacyClaimId": "claim.insula.development_boundary",
+      "legacyClaimSha256": "7088ecddff49ef85bdb256cf44c3d04b07da5fe079553b172e7ba840c6122255",
+      "topicId": "cns.insula_development",
+      "sourceIds": [
+        "ADDABBO_MILANI_2025",
+        "POLDRAK_2006",
+        "UDDIN_ET_AL_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.insula.measurement_boundary",
+      "legacyClaimId": "claim.insula.measurement_boundary",
+      "legacyClaimSha256": "38a82937b7feaa4b41c15d68584d4aec5ece0b86b2bae61c62f7692d10f48d66",
+      "topicId": "cns.insula_measurement",
+      "sourceIds": [
+        "POLDRAK_2006",
+        "SCHULZ_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.insula.measurement_methods",
+      "legacyClaimId": "claim.insula.measurement_methods",
+      "legacyClaimSha256": "868d5d825e7cf1aeb97dcaca80c14f4b7acb1ad42a8bbb1263d69bc13c3394fc",
+      "topicId": "cns.insula_measurement",
+      "sourceIds": [
+        "KURTH_ET_AL_2010",
+        "SCHULZ_2016",
+        "UDDIN_ET_AL_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.insula.multifunction",
+      "legacyClaimId": "claim.insula.multifunction",
+      "legacyClaimSha256": "e8d6ac0024ce969d26b889d2554c35a0b54d769ff1cd87245dda18b78f200a09",
+      "topicId": "cns.insula",
+      "sourceIds": [
+        "CRITCHLEY_HARRISON_2013",
+        "KURTH_ET_AL_2010",
+        "MENON_UDDIN_2010",
+        "UDDIN_ET_AL_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.insula.subregion_boundary",
+      "legacyClaimId": "claim.insula.subregion_boundary",
+      "legacyClaimSha256": "3502fc3fb947ec0c01be7710571002aece3f1a173b6db45a71a05f133f01830d",
+      "topicId": "cns.insula_subregions",
+      "sourceIds": [
+        "POLDRAK_2006",
+        "UDDIN_ET_AL_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.insula.subregions",
+      "legacyClaimId": "claim.insula.subregions",
+      "legacyClaimSha256": "f3acbcef72b48e7de69eb46e2b7f8149a020772c1f25c217225764a85cf1e902",
+      "topicId": "cns.insula_subregions",
+      "sourceIds": [
+        "KURTH_ET_AL_2010",
+        "UDDIN_ET_AL_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.interoception.consciousness_boundary",
+      "legacyClaimId": "claim.interoception.consciousness_boundary",
+      "legacyClaimSha256": "1aac3323a1933e17c5fbf8900891a6d6abed73c4aca529ac073519f7a5494930",
+      "topicId": "ans.interoception",
+      "sourceIds": [
+        "CHEN_ET_AL_2021",
+        "QUIGLEY_ET_AL_2021"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.interoception.development_gap",
+      "legacyClaimId": "claim.interoception.development_gap",
+      "legacyClaimSha256": "8a38995670a119717bbf1ec5ffb7cc645b0d26ea99a51c8e936ea5b1685da1cc",
+      "topicId": "ans.interoception_development",
+      "sourceIds": [
+        "ADDABBO_MILANI_2025"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.interoception.dimensions_distinct",
+      "legacyClaimId": "claim.interoception.dimensions_distinct",
+      "legacyClaimSha256": "1b4f3c8420b9ec0251377eaf86cbb6e8d3c5f997c15a6c1c7f71ec598de91758",
+      "topicId": "ans.interoception_dimensions",
+      "sourceIds": [
+        "DESMEDT_ET_AL_2023",
+        "GARFINKEL_ET_AL_2015",
+        "KHALSA_ET_AL_2018"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.interoception.emotion",
+      "legacyClaimId": "claim.interoception.emotion",
+      "legacyClaimSha256": "a5c396ef3c7ea48a36b10dd6376e96598df8a1ac0dfd1602aab20e1ba6ab99f0",
+      "topicId": "ans.interoception",
+      "sourceIds": [
+        "KHALSA_ET_AL_2018",
+        "PINNA_EDWARDS_2020"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.interoception.infant_sensitivity",
+      "legacyClaimId": "claim.interoception.infant_sensitivity",
+      "legacyClaimSha256": "955aadfc238011fe1682953056a80f11d6b43ef913d20eadf945496963d97666",
+      "topicId": "ans.interoception_development",
+      "sourceIds": [
+        "MAISTER_ET_AL_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.interoception.modalities.fatigue",
+      "legacyClaimId": "claim.interoception.modalities.fatigue",
+      "legacyClaimSha256": "b46a202b5818977ad3d222237dbcd10d7833941a820450412701de62e8d1a37e",
+      "topicId": "ans.interoception_modalities",
+      "sourceIds": [
+        "KHALSA_ET_AL_2018",
+        "QUIGLEY_ET_AL_2021"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.interoception.modality_specificity",
+      "legacyClaimId": "claim.interoception.modality_specificity",
+      "legacyClaimSha256": "949fd09cd22fbed783ed9be0d27338c10aef0162cc89f23ea842d23af49d0f46",
+      "topicId": "ans.interoception_modalities",
+      "sourceIds": [
+        "CHEN_ET_AL_2021",
+        "QUIGLEY_ET_AL_2021"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.interoception.multidimensional",
+      "legacyClaimId": "claim.interoception.multidimensional",
+      "legacyClaimSha256": "7d5ef3dd9662613ecb77ff72d349f27364262a0871edd70255ed1d56c8fb6a88",
+      "topicId": "ans.interoception",
+      "sourceIds": [
+        "CHEN_ET_AL_2021",
+        "GARFINKEL_ET_AL_2015",
+        "KHALSA_ET_AL_2018",
+        "QUIGLEY_ET_AL_2021"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.interoception.multimodal",
+      "legacyClaimId": "claim.interoception.multimodal",
+      "legacyClaimSha256": "6bbf31c004f0139f46221550b292f86c380c39712b9b56857507b5a1f08cd261",
+      "topicId": "ans.interoception_modalities",
+      "sourceIds": [
+        "CHEN_ET_AL_2021",
+        "QUIGLEY_ET_AL_2021"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.interoception.no_gold_standard",
+      "legacyClaimId": "claim.interoception.no_gold_standard",
+      "legacyClaimSha256": "4151337aa80da8ecae1f99d47143de1cb2a1352a900e8cfa451d1c081faa62c1",
+      "topicId": "ans.interoception_measurement",
+      "sourceIds": [
+        "ADDABBO_MILANI_2025",
+        "DESMEDT_ET_AL_2023",
+        "DONAGHY_ET_AL_2025"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.interoception.tasks_not_equivalent",
+      "legacyClaimId": "claim.interoception.tasks_not_equivalent",
+      "legacyClaimSha256": "ec493930b3d04db1c5f6f6370bc710d70a58b16f13b63c61567c44623b5f46fb",
+      "topicId": "ans.interoception_measurement",
+      "sourceIds": [
+        "DESMEDT_ET_AL_2023",
+        "DONAGHY_ET_AL_2025"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.interoception.terminology_boundary",
+      "legacyClaimId": "claim.interoception.terminology_boundary",
+      "legacyClaimSha256": "a868e47253988b1d1956de356b763d33810de84d7eb61d7bcadbc2b81802580f",
+      "topicId": "ans.interoception_dimensions",
+      "sourceIds": [
+        "DESMEDT_ET_AL_2023",
+        "GARFINKEL_ET_AL_2015"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.midcingulate.anatomy",
+      "legacyClaimId": "claim.midcingulate.anatomy",
+      "legacyClaimSha256": "42f74c694c046475cfa5eb62bdff653253c72d732dca68efa9ccbd563a20d1d6",
+      "topicId": "cns.midcingulate",
+      "sourceIds": [
+        "HEILBRONNER_HAYDEN_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.midcingulate.naming",
+      "legacyClaimId": "claim.midcingulate.naming",
+      "legacyClaimSha256": "11af0a74101efdd736bdc558871f9a962af88ef7b5ed36b61522b1364ea39231",
+      "topicId": "cns.midcingulate",
+      "sourceIds": [
+        "BUSH_ET_AL_2000",
+        "HEILBRONNER_HAYDEN_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.performance_monitoring.distributed",
+      "legacyClaimId": "claim.performance_monitoring.distributed",
+      "legacyClaimSha256": "4c47c64277b04d6fb9353feccf20a6ff707f91b8600615249a63a002f1f7b2fd",
+      "topicId": "cns.performance_monitoring",
+      "sourceIds": [
+        "CARTER_VAN_VEEN_2007",
+        "FRIEDMAN_ROBBINS_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.performance_monitoring.process",
+      "legacyClaimId": "claim.performance_monitoring.process",
+      "legacyClaimSha256": "36347a8d50a35cc6051f5697bdef078a5524f06d4555025865412cc2d6cf183f",
+      "topicId": "cns.performance_monitoring",
+      "sourceIds": [
+        "CARTER_VAN_VEEN_2007",
+        "HEILBRONNER_HAYDEN_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.pfc.boundary",
+      "legacyClaimId": "claim.pfc.boundary",
+      "legacyClaimSha256": "beb5d3da5b5e29d40290a57802a74ed5bc26fd7663773ba3ee97147f9ecf42d3",
+      "topicId": "cns.prefrontal_control",
+      "sourceIds": [
+        "FRIEDMAN_ROBBINS_2022",
+        "POLDRAK_2006"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.pfc.control",
+      "legacyClaimId": "claim.pfc.control",
+      "legacyClaimSha256": "053634171450e8a09a211909fe7b629009d94e430d89f1335904ed08eea754a8",
+      "topicId": "cns.prefrontal_control",
+      "sourceIds": [
+        "DIAMOND_2013",
+        "FRIEDMAN_ROBBINS_2022",
+        "MILLER_COHEN_2001"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.pfc.development",
+      "legacyClaimId": "claim.pfc.development",
+      "legacyClaimSha256": "e5d29199bb3aedf7b1667b962ad4154039a8340d0a8e250ec4819e83853c5ec7",
+      "topicId": "cns.prefrontal_development",
+      "sourceIds": [
+        "FISKE_HOLMBOE_2019",
+        "KOLK_RAKIC_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.pfc.development_boundary",
+      "legacyClaimId": "claim.pfc.development_boundary",
+      "legacyClaimSha256": "cb4dcb7963ee71dc7917d046966235af5b74e2faee2402d2376ae78819c65c0a",
+      "topicId": "cns.prefrontal_development",
+      "sourceIds": [
+        "KOLK_RAKIC_2022",
+        "POLDRAK_2006"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.pfc.heterogeneity",
+      "legacyClaimId": "claim.pfc.heterogeneity",
+      "legacyClaimSha256": "aa86a64b393fd2fcebedd9dc98ebb1d1889743a4fdda3402dbd21924e4195ee9",
+      "topicId": "cns.prefrontal_control",
+      "sourceIds": [
+        "KOLK_RAKIC_2022",
+        "MILLER_COHEN_2001"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.polyvagal.boundary",
+      "legacyClaimId": "claim.polyvagal.boundary",
+      "legacyClaimSha256": "89780d90929bdb1ebbfa6d9de8bb2dbf077c15718d868befa998d31fcb65ba4c",
+      "topicId": "ans.polyvagal",
+      "sourceIds": [
+        "GROSSMAN_2023",
+        "LABORDE_ET_AL_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.polyvagal.status",
+      "legacyClaimId": "claim.polyvagal.status",
+      "legacyClaimSha256": "c3bf5da9c6f63cf6cfe5bedb26776c6c70f215a36f59119865e4a0d01d98024f",
+      "topicId": "ans.polyvagal",
+      "sourceIds": [
+        "GROSSMAN_2023",
+        "PORGES_2021"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.reactivity.components",
+      "legacyClaimId": "claim.reactivity.components",
+      "legacyClaimSha256": "d633c3afeb75cc20ddb4219995276ceb6f70adf4ce2d59aa950b2a9366a8bcf0",
+      "topicId": "selfreg.reactivity_recovery",
+      "sourceIds": [
+        "BURT_OBRADOVIC_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.reactivity.measurement_layers",
+      "legacyClaimId": "claim.reactivity.measurement_layers",
+      "legacyClaimSha256": "04597c57ed0f4aa06045f5a582c0943eded423443299f6bebbac673c9f5eeb9a",
+      "topicId": "selfreg.reactivity_recovery",
+      "sourceIds": [
+        "BATES_ET_AL_2022",
+        "BURT_OBRADOVIC_2013",
+        "SACREY_ET_AL_2021"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.reactivity.recovery",
+      "legacyClaimId": "claim.reactivity.recovery",
+      "legacyClaimSha256": "0f36e20203d24fcceeb49f19f9b0651d9de29a60b812d90644a50be764c866b6",
+      "topicId": "selfreg.reactivity_recovery",
+      "sourceIds": [
+        "BLAIR_RAVER_2015"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.reactivity.recovery_distinction",
+      "legacyClaimId": "claim.reactivity.recovery_distinction",
+      "legacyClaimSha256": "b45baac47041d241edd27cb09538a7553bd9e45ed11d341a06307a00ba479590",
+      "topicId": "selfreg.reactivity_recovery",
+      "sourceIds": [
+        "BURT_OBRADOVIC_2013",
+        "COLE_ET_AL_2004",
+        "COLE_ET_AL_2020"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.recovery.no_single_biomarker",
+      "legacyClaimId": "claim.recovery.no_single_biomarker",
+      "legacyClaimSha256": "111ca5c644de5ebbc9e8a33ff79a5cda0ef9855f883e7144b6af06ab84def564",
+      "topicId": "selfreg.recovery_measurement",
+      "sourceIds": [
+        "BURT_OBRADOVIC_2013",
+        "FISHER_ET_AL_2018",
+        "SACREY_ET_AL_2021"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.recovery.no_universal_duration",
+      "legacyClaimId": "claim.recovery.no_universal_duration",
+      "legacyClaimSha256": "c51a08bf19940cb2b946ff0508bc1eaf5d81144feb70bac601618ce0a9beefcc",
+      "topicId": "selfreg.recovery_measurement",
+      "sourceIds": [
+        "BURT_OBRADOVIC_2013",
+        "COLE_ET_AL_2020",
+        "JONES_MASON_ET_AL_2018"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.recovery.system_divergence",
+      "legacyClaimId": "claim.recovery.system_divergence",
+      "legacyClaimSha256": "5d0acfe47b37db5bc4990ae1b6f95c5b5d9fe62bd4c09af9296fb47a940ebb17",
+      "topicId": "selfreg.recovery_measurement",
+      "sourceIds": [
+        "BATES_ET_AL_2022",
+        "JONES_MASON_ET_AL_2018",
+        "SACREY_ET_AL_2021"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.recovery.trajectory",
+      "legacyClaimId": "claim.recovery.trajectory",
+      "legacyClaimSha256": "eb3fb5d21480f323b17581071d273dc0cacdf1f6eb442bbe862cec80fff095fb",
+      "topicId": "selfreg.reactivity_recovery",
+      "sourceIds": [
+        "BURT_OBRADOVIC_2013",
+        "COLE_ET_AL_2020",
+        "JONES_MASON_ET_AL_2018"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.reverse_inference",
+      "legacyClaimId": "claim.reverse_inference",
+      "legacyClaimSha256": "49acafc71444d053bf3e454cbadce974f8c7a0df7b75c2bca1015360e31b87d6",
+      "topicId": "cns.reverse_inference",
+      "sourceIds": [
+        "POLDRAK_2006"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.salience.network",
+      "legacyClaimId": "claim.salience.network",
+      "legacyClaimSha256": "3e2063116128cb8d0eb1e895393ea847ebb453dce77de368bc0c0a6ac0364439",
+      "topicId": "cns.salience_network",
+      "sourceIds": [
+        "MENON_UDDIN_2010",
+        "SEELEY_2019"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.selective_attention.context",
+      "legacyClaimId": "claim.selective_attention.context",
+      "legacyClaimSha256": "def21571aec2495f61d25d18cf3711b7f37a304e98906dff44ec1aad7dfcd7ee",
+      "topicId": "cns.selective_attention",
+      "sourceIds": [
+        "FISHER_ET_AL_2013_ATTENTION",
+        "PETERSEN_POSNER_2012"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.selective_attention.definition",
+      "legacyClaimId": "claim.selective_attention.definition",
+      "legacyClaimSha256": "d835055f7eb27f5344845a0af936e09f1c99a6a5dcbb66b8978e10f114d94b72",
+      "topicId": "cns.selective_attention",
+      "sourceIds": [
+        "FISHER_ET_AL_2013_ATTENTION",
+        "PETERSEN_POSNER_2012"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.selfcontrol.distinction",
+      "legacyClaimId": "claim.selfcontrol.distinction",
+      "legacyClaimSha256": "40ba48506381f8da7a63da0a9e62de7bd267e44d2628d8c87602e896dbe7a592",
+      "topicId": "selfreg.self_control",
+      "sourceIds": [
+        "INZLICHT_ET_AL_2021",
+        "NIGG_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.selforganization.boundary",
+      "legacyClaimId": "claim.selforganization.boundary",
+      "legacyClaimSha256": "897c24a3e75cfe611ca1d50291f29ea9d5f5384f158490014ea701172954faec",
+      "topicId": "selfreg.self_organization",
+      "sourceIds": [
+        "FISHER_ET_AL_2018",
+        "SMITH_THELEN_2003"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.selforganization.definition",
+      "legacyClaimId": "claim.selforganization.definition",
+      "legacyClaimSha256": "85c2785637ab9b52936a40346a45f8648cd0805c13b93311e80490387f1c41fd",
+      "topicId": "selfreg.self_organization",
+      "sourceIds": [
+        "COLE_ET_AL_2020",
+        "SMITH_THELEN_2003"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.selfreg.contextual",
+      "legacyClaimId": "claim.selfreg.contextual",
+      "legacyClaimSha256": "23df979494454ccb78d2a6b24845915fe208908dd84d05e91261ec51c4d29037",
+      "topicId": "selfreg.core",
+      "sourceIds": [
+        "BLAIR_RAVER_2015",
+        "INZLICHT_ET_AL_2021"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.selfreg.development",
+      "legacyClaimId": "claim.selfreg.development",
+      "legacyClaimSha256": "b04f120afaadd173c35acec0fb9e210450ede7f768841672cc159d77bd77a0c0",
+      "topicId": "selfreg.development",
+      "sourceIds": [
+        "BLAIR_RAVER_2015",
+        "MONTROY_ET_AL_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.selfreg.multicomponent",
+      "legacyClaimId": "claim.selfreg.multicomponent",
+      "legacyClaimSha256": "7bbee40c58ad27325c408f34d48e343e0d238347714f327fe0cbfab512bb0025",
+      "topicId": "selfreg.core",
+      "sourceIds": [
+        "BLAIR_RAVER_2015",
+        "INZLICHT_ET_AL_2021",
+        "NIGG_2017"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.selfreg.not_fixed_trait",
+      "legacyClaimId": "claim.selfreg.not_fixed_trait",
+      "legacyClaimSha256": "61be38b5472943cb1182b16fc2962108a657602951a9f00cb0bf686a3f14cacf",
+      "topicId": "selfreg.core",
+      "sourceIds": [
+        "BLAIR_RAVER_2015",
+        "INZLICHT_ET_AL_2021"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.selfreg.outcomes",
+      "legacyClaimId": "claim.selfreg.outcomes",
+      "legacyClaimSha256": "3d3ffb58a747e10bb5f8f7aecd189f11547002da14d23a98cbc4cce0536fc024",
+      "topicId": "selfreg.development",
+      "sourceIds": [
+        "ROBSON_ET_AL_2020"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sensory.definition",
+      "legacyClaimId": "claim.sensory.definition",
+      "legacyClaimSha256": "075882b292ae8a3d25abf7708a4e137644593fbf2cbc40173e063460958d5be9",
+      "topicId": "selfreg.sensory_modulation",
+      "sourceIds": [
+        "DUNN_2001",
+        "WATKYNS_ET_AL_2024"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sensory.dunn_boundary",
+      "legacyClaimId": "claim.sensory.dunn_boundary",
+      "legacyClaimSha256": "56d6eef7eae8e95107eeefdaa4d415896eee15cc0e73d2524bd76d2183cc99ae",
+      "topicId": "selfreg.sensory_modulation",
+      "sourceIds": [
+        "DUNN_2001"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sensory.multimethod",
+      "legacyClaimId": "claim.sensory.multimethod",
+      "legacyClaimSha256": "47969c0523b3b5b3abf8a797c93deb44e756affdcc1f9e628a91ea5c99a1fe4d",
+      "topicId": "selfreg.sensory_measurement",
+      "sourceIds": [
+        "WATKYNS_ET_AL_2024"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sensory.patterns",
+      "legacyClaimId": "claim.sensory.patterns",
+      "legacyClaimSha256": "182b3072968c78faef8b35b617b8ceda584b56589350d2783b016be7bd52cba0",
+      "topicId": "selfreg.sensory_modulation",
+      "sourceIds": [
+        "DUNN_2001",
+        "WATKYNS_ET_AL_2024"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sensory.physiology_boundary",
+      "legacyClaimId": "claim.sensory.physiology_boundary",
+      "legacyClaimSha256": "4e457eb8ad8f9181ce9d522b1141e117c83b4840d83b7426d0194b8eeaaa0be2",
+      "topicId": "selfreg.sensory_measurement",
+      "sourceIds": [
+        "GOMEZ_ET_AL_2017",
+        "WATKYNS_ET_AL_2024"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.development",
+      "legacyClaimId": "claim.sleep.development",
+      "legacyClaimSha256": "766016a67531864a1d78e4e8d12441984f6a741194335f467bdd72b8c512d3ad",
+      "topicId": "selfreg.sleep_development",
+      "sourceIds": [
+        "GALLAND_ET_AL_2012",
+        "PARUTHI_ET_AL_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.device_boundary",
+      "legacyClaimId": "claim.sleep.device_boundary",
+      "legacyClaimSha256": "edb9f9bedea8f0c5c2fc6a05d3477a2494b02073ae436382e0614864ea600c2f",
+      "topicId": "selfreg.sleep_measurement",
+      "sourceIds": [
+        "MELTZER_ET_AL_2012_SLEEP",
+        "SADEH_2004"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.function_association",
+      "legacyClaimId": "claim.sleep.function_association",
+      "legacyClaimSha256": "1176d5bb4cbbff8fe29b5fb8f907b8ffbe5118a785486f915b3aac8db6126db2",
+      "topicId": "selfreg.sleep_health",
+      "sourceIds": [
+        "ASTILL_ET_AL_2012",
+        "GREGORY_SADEH_2012"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.guidance_boundary",
+      "legacyClaimId": "claim.sleep.guidance_boundary",
+      "legacyClaimSha256": "fd40eb181406171473a1edfaf0228cbf3d635845a4d8ed9d967a58479c3ed490",
+      "topicId": "selfreg.sleep_development",
+      "sourceIds": [
+        "GALLAND_ET_AL_2012",
+        "PARUTHI_ET_AL_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.measurement_multimethod",
+      "legacyClaimId": "claim.sleep.measurement_multimethod",
+      "legacyClaimSha256": "9aa5600b0006db50c23bf3d46f06237576e7a427dae92389163fad969197a25a",
+      "topicId": "selfreg.sleep_measurement",
+      "sourceIds": [
+        "INHULSEN_ET_AL_2022",
+        "MELTZER_ET_AL_2012_SLEEP",
+        "SADEH_2004"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.multidimensional",
+      "legacyClaimId": "claim.sleep.multidimensional",
+      "legacyClaimSha256": "fbb27bd0099110e0d5d9a1ef3986ef7e11d69dddbc5fd8b949a90be90a597286",
+      "topicId": "selfreg.sleep_health",
+      "sourceIds": [
+        "GALLAND_ET_AL_2012",
+        "INHULSEN_ET_AL_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.two_process",
+      "legacyClaimId": "claim.sleep.two_process",
+      "legacyClaimSha256": "e3751d16694d5785f0ef7522b876b157f6a766277fb2f27f3be476b9dfc1a25d",
+      "topicId": "selfreg.sleep_regulation",
+      "sourceIds": [
+        "BORBELY_ET_AL_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.stress.multisystem",
+      "legacyClaimId": "claim.stress.multisystem",
+      "legacyClaimSha256": "933356bdb90e95ec93ac2ef0f6be8da390d61d334f1972054bd33e6f974b410b",
+      "topicId": "selfreg.stress_systems",
+      "sourceIds": [
+        "CHROUSOS_2009",
+        "GUNNAR_QUEVEDO_2007",
+        "MCEWEN_2007"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.stress.systems_not_interchangeable",
+      "legacyClaimId": "claim.stress.systems_not_interchangeable",
+      "legacyClaimSha256": "7f54a68a0222ccac7af493b68a052240fff496ff48e299c59934db4cb19a0396",
+      "topicId": "selfreg.stress_systems",
+      "sourceIds": [
+        "CHROUSOS_2009",
+        "DEJOSEPH_ET_AL_2024"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sustained_attention.development",
+      "legacyClaimId": "claim.sustained_attention.development",
+      "legacyClaimSha256": "a6870c4cc9c992f9c4570e94b4e7a79f8098a89698f72ebf19d8a87122c1bf1e",
+      "topicId": "cns.sustained_attention",
+      "sourceIds": [
+        "BETTS_ET_AL_2006",
+        "FISHER_ET_AL_2013_ATTENTION"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sustained_attention.task_load",
+      "legacyClaimId": "claim.sustained_attention.task_load",
+      "legacyClaimSha256": "621fc35062c0e3e4bab7354bb7916c7526dc8de73dad2502d753fe3e609d279e",
+      "topicId": "cns.sustained_attention",
+      "sourceIds": [
+        "BETTS_ET_AL_2006",
+        "FISHER_ET_AL_2013_ATTENTION"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sympathetic.measurement_boundary",
+      "legacyClaimId": "claim.sympathetic.measurement_boundary",
+      "legacyClaimSha256": "81f3270e2cb2b95b79d9cc709953ab1252d8b6604eb194a4c08265039435b100",
+      "topicId": "ans.sympathetic_parasympathetic",
+      "sourceIds": [
+        "BERNTSON_ET_AL_1991",
+        "BOUCSEIN_ET_AL_2012",
+        "MATHOT_2018",
+        "TASK_FORCE_HRV_1996",
+        "WEHRWEIN_ET_AL_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sympathetic.parasympathetic",
+      "legacyClaimId": "claim.sympathetic.parasympathetic",
+      "legacyClaimSha256": "f7561f16ca45d836eb5522512be7ff5ce9470a2cf07cf9c990e595b211300d64",
+      "topicId": "ans.sympathetic_parasympathetic",
+      "sourceIds": [
+        "BERNTSON_ET_AL_1991",
+        "WEHRWEIN_ET_AL_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.toxic_stress.framework",
+      "legacyClaimId": "claim.toxic_stress.framework",
+      "legacyClaimSha256": "8ae8c3ee66b536590266263731052d0caa97ab12665359704a0e6d48a240291d",
+      "topicId": "selfreg.toxic_stress",
+      "sourceIds": [
+        "GUNNAR_QUEVEDO_2007",
+        "SHONKOFF_ET_AL_2012"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.working_memory.boundary",
+      "legacyClaimId": "claim.working_memory.boundary",
+      "legacyClaimSha256": "decc543475a399c1e6c30c4148627b7d7b9a594962ab4b70b7496f776e1effb2",
+      "topicId": "cns.working_memory",
+      "sourceIds": [
+        "DIAMOND_2013",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.working_memory.definition",
+      "legacyClaimId": "claim.working_memory.definition",
+      "legacyClaimSha256": "be4a78e281af32da02b5da96efda09149ec89b4995d94819a19a486cf020ec3b",
+      "topicId": "cns.working_memory",
+      "sourceIds": [
+        "DIAMOND_2013",
+        "FRIEDMAN_ROBBINS_2022",
+        "MILLER_COHEN_2001"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.working_memory.development",
+      "legacyClaimId": "claim.working_memory.development",
+      "legacyClaimSha256": "f8407f0283386a5ef35db4c0e06c91c7c884ecab88fe37ee88600453d629e729",
+      "topicId": "cns.working_memory_development",
+      "sourceIds": [
+        "BADDELEY_2000",
+        "COWAN_2014",
+        "GATHERCOLE_ET_AL_2004"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.working_memory.multimethod",
+      "legacyClaimId": "claim.working_memory.multimethod",
+      "legacyClaimSha256": "0f915fb29671c100764effaeabacbb6dd225aa0175ada827288a53306f94f7b2",
+      "topicId": "cns.working_memory_measurement",
+      "sourceIds": [
+        "ANDERSON_REIDY_2012",
+        "HEDGE_ET_AL_2018",
+        "TOPLAK_ET_AL_2013"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.working_memory.short_term_distinction",
+      "legacyClaimId": "claim.working_memory.short_term_distinction",
+      "legacyClaimSha256": "3096ce9423ebbb37ad274b211262d121204f725b9e79a9bcabab0dbd823f4719",
+      "topicId": "cns.working_memory_development",
+      "sourceIds": [
+        "BADDELEY_2000",
+        "COWAN_2014"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    }
+  ],
+  "counts": {
+    "auditedClaims": 239,
+    "releaseEligibleClaims": 0,
+    "quarantinedClaims": 239,
+    "missingRealPassage": 239,
+    "legacyExpertPending": 239
+  },
+  "sourceAudit": {
+    "totalSources": 160,
+    "referencedByClaims": 151,
+    "referencedAnywhere": 153,
+    "unusedForClaimIds": [
+      "CRITCHLEY_GARFINKEL_2017",
+      "ENGLAND_MASON_ET_AL_2023",
+      "FREITAG_ET_AL_2023",
+      "FURNESS_2012",
+      "KASSAI_ET_AL_2019",
+      "NEUHUBER_BERTHOUD_2022",
+      "SCIONTI_ET_AL_2020",
+      "THAYER_LANE_2009",
+      "VANDENBROUCKE_ET_AL_2018"
+    ],
+    "orphanSourceIds": [
+      "CRITCHLEY_GARFINKEL_2017",
+      "FREITAG_ET_AL_2023",
+      "FURNESS_2012",
+      "KASSAI_ET_AL_2019",
+      "NEUHUBER_BERTHOUD_2022",
+      "SCIONTI_ET_AL_2020",
+      "THAYER_LANE_2009"
+    ]
+  },
+  "snapshotSha256": "f22abe41616cc361337127af77714f64afe4f77337e930918172f3bc6b0eafc1"
+}
