@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "dna-method-appraisal-contract@1",
+  "implementationVersion": "dna-method-appraisal@1",
+  "protocolVersion": "dna-method-appraisal-protocol@1",
+  "unitOfAssessment": "single_source",
+  "requiredFields": [
+    "studyDesign",
+    "sampleSize",
+    "population",
+    "ageScope",
+    "inclusionCriteria",
+    "exclusionCriteria",
+    "measures",
+    "blinding",
+    "randomization",
+    "missingData",
+    "confounding",
+    "multiplicity",
+    "effectSize",
+    "confidenceInterval",
+    "preregistration",
+    "reproducibility",
+    "funding",
+    "conflictOfInterest",
+    "generalizability",
+    "causalBoundary"
+  ],
+  "adaptedGradeDimensions": [
+    "riskOfBias",
+    "inconsistency",
+    "indirectness",
+    "imprecision",
+    "publicationBias"
+  ],
+  "gradeBoundary": {
+    "scope": "adapted_dimensions_not_certainty_rating",
+    "bodyOfEvidenceCertaintyOnSingleSource": "not_assessed",
+    "singleSourceInconsistency": "not_assessed",
+    "singleSourcePublicationBias": "not_assessed",
+    "numericQualityScoreAllowed": false,
+    "selfAssertedQualityLabelAllowed": false
+  },
+  "unknownPolicy": {
+    "unknownMethodValue": "not_reported_or_not_assessed",
+    "inferenceFromTitleOrSourceRoleAllowed": false,
+    "missingPopulationMayBeInferred": false,
+    "missingAgeScopeMayBeInferred": false
+  },
+  "pendingPolicy": {
+    "methodFindingsMayBeAsserted": false,
+    "allowedMethodValues": [
+      "not_assessed",
+      "not_reported"
+    ],
+    "evidenceRefsAllowed": false,
+    "reviewPassesAllowed": false
+  },
+  "auditPolicy": {
+    "requiredPassesForAuditedStatus": [
+      "method_appraisal_a",
+      "method_appraisal_b",
+      "method_appraisal_reconciliation"
+    ],
+    "claimExtractionPassesMayAuthorizeMethodAppraisal": false,
+    "payloadBoundBySha256": true,
+    "sourceEvidenceBoundBySha256": true,
+    "artifactAndLocatorTrustRegistryRequired": true,
+    "reviewPassEvidenceTrustRegistryRequired": true,
+    "passIdsAndEvidenceHashesMustBeUnique": true,
+    "requiredPassOrder": "method_appraisal_a_then_b_then_reconciliation",
+    "timestampsMustIncrease": true,
+    "trustedRegistryRequired": true,
+    "currentRegisteredAuditedAppraisals": 0
+  },
+  "runtimePolicy": {
+    "notAssessed": "blocked",
+    "pendingMultiPass": "blocked",
+    "contested": "blocked",
+    "quarantined": "blocked",
+    "auditedAppraisalAloneAuthorizesRuntime": false
+  }
+}

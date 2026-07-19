@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "dna-evidence-extraction-contract@1",
+  "implementationVersion": "dna-evidence-extraction@1",
+  "phases": [14, 15, 16, 17, 18, 19],
+  "parserPreference": [
+    "jats_xml",
+    "epub_xml",
+    "structural_html",
+    "approved_pdf_range",
+    "ocr"
+  ],
+  "passageRules": {
+    "minimumParagraphs": 1,
+    "maximumParagraphs": 3,
+    "adjacent": true,
+    "sameSection": true,
+    "exactLocationRequired": true,
+    "artifactHashBound": true,
+    "componentLicenseApprovalRequired": true,
+    "stableInternalSectionIdentityRequired": true,
+    "trustedPassageRegistryRequiredForBlindRun": true,
+    "overlapRejectedByBlindRun": true
+  },
+  "trustRegistry": {
+    "schemaVersion": "dna-evidence-trust-registry@1",
+    "callerSelfAssertionAllowed": false,
+    "productionGovernanceDigestAllowlistCount": 0,
+    "testFixtureAllowedInProduction": false,
+    "manualExtractedTextBoundToApproval": true
+  },
+  "atomicClaimRules": {
+    "verbatimPassageSupportRequired": true,
+    "compoundPropositionsAllowed": false,
+    "automatedCausalSupportAllowed": false,
+    "blindDnaRelationship": "none",
+    "effectRequiresPassageLocator": true,
+    "evidenceLevelRequiresTrustedMethodAppraisal": true,
+    "unboundEffectDisposition": "rejected",
+    "unboundEvidenceLevelDisposition": "rejected"
+  },
+  "blindProtocols": {
+    "A": "dna-blind-extraction-a@1",
+    "B": "dna-blind-extraction-b@1",
+    "distinctRunIdsRequired": true,
+    "peerOutputVisible": false,
+    "immutableHashBoundOutputs": true,
+    "autonomousExtractionImplemented": false,
+    "distinctInstructionCommitmentsRequired": true,
+    "claimRationaleAndUncertaintyCommitmentsRequired": true,
+    "blindnessIsCryptographicallyProven": false
+  },
+  "reconciliation": {
+    "protocolId": "dna-claim-reconciliation@1",
+    "comparisonFields": [
+      "passage",
+      "proposition",
+      "age_scope",
+      "causality",
+      "evidence_level",
+      "claim_boundary"
+    ],
+    "majorityVoteAllowed": false,
+    "exactOrSourceRereviewConsensusRequired": true,
+    "trustedCurrentPassageRequired": true,
+    "rereviewEvidenceIsDerivedCommitment": true
+  },
+  "releaseState": {
+    "acceptedClaimRegistryCount": 0,
+    "defaultStatus": "candidate_only",
+    "runtimeEligible": false
+  },
+  "actualJatsPilot": {
+    "sourceId": "cosmin-prom-systematic-reviews-v2-2024",
+    "artifactRelativePath": "evidence/cognition-development/cosmin-prom-systematic-reviews-v2-2024/raw/mokkink-2024.jats.xml",
+    "artifactSha256": "49150ead3ac7dfb2c1ffa7faeff61b4884eb8c6418888ed3289c006fbfdb0ff8",
+    "licenseDecision": "cleared",
+    "licenseEvidenceBasis": "verified_in_artifact",
+    "eligibleParagraphCount": 40,
+    "excludedStructureCount": 56,
+    "forbiddenSectionParagraphCount": 0,
+    "sourceManifestHashBound": true,
+    "realPassagesCreated": 0,
+    "realBlindClaimsCreated": 0,
+    "status": "candidate_only",
+    "runtimeEligible": false,
+    "rawTextPersistedInRepository": false
+  },
+  "runtimeNetworkAllowed": false,
+  "runtimeLlmAllowed": false,
+  "newDependencies": 0
+}
