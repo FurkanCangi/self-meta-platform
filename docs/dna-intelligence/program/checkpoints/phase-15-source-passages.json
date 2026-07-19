@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 15,
+  "title": "Kaynak pasajı provenance sözleşmesi",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_contract",
+  "source": {
+    "governanceGitSha": "3a50e993a5f319ffb094933920231b5541933b8f",
+    "passageVersion": "dna-source-passage@1",
+    "contractSha256": "a758f305f4615de6ce7fea90904404409c781cde9a81547b729321ece0e482eb"
+  },
+  "executionDisposition": {
+    "minimumAdjacentParagraphs": 1,
+    "maximumAdjacentParagraphs": 3,
+    "acceptedRealPassages": 0,
+    "productionTrustedPassages": 0,
+    "runtimeEligible": 0
+  },
+  "exitGates": {
+    "oneToThreeAdjacentParagraphsOnly": "passed",
+    "sameInternalSectionIdentityRequired": "passed",
+    "exactXmlOrPageLocationRequired": "passed",
+    "artifactAndContentHashBindingRequired": "passed",
+    "componentLevelLicenseApprovalRequired": "passed",
+    "ageEvidenceAndClaimBoundaryRequireTrustedMetadata": "passed",
+    "overlappingPassagesRejectedBeforeBlindRun": "passed",
+    "supportTextComesFromRealPassageNotClaimCopy": "passed"
+  },
+  "interpretation": "Pasaj üretim ve doğrulama sözleşmesi tamamlandı; gerçek korpusta onaylanmış pasaj registry'si bilerek sıfırdır.",
+  "releaseBoundary": "Sentetik pasajlar yalnız adversarial test içindir. Gerçek pasaj lisans, metadata, artefakt ve governance trust bağları olmadan kaydedilemez.",
+  "knownLimitations": [
+    "gerçek kaynak pasaj seçimi ve onayı henüz yürütülmedi"
+  ],
+  "nextPhase": 16
+}

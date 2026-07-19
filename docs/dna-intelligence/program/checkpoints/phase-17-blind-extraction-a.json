@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 17,
+  "title": "Kör çıkarım A kayıt ve doğrulama protokolü",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_contract",
+  "source": {
+    "governanceGitSha": "3a50e993a5f319ffb094933920231b5541933b8f",
+    "protocolId": "dna-blind-extraction-a@1",
+    "blindExtractionVersion": "dna-blind-extraction@1"
+  },
+  "executionDisposition": {
+    "realCorpusRuns": 0,
+    "syntheticProtocolRuns": 1,
+    "acceptedClaims": 0,
+    "runtimeEligible": 0
+  },
+  "exitGates": {
+    "peerBOutputForbiddenByStrictInputShape": "passed",
+    "artifactAndTrustedCurrentPassagesRevalidated": "passed",
+    "separateInstructionAndContextCommitmentsRequired": "passed",
+    "claimRationaleAndUncertaintyEvidenceCommitted": "passed",
+    "dnaProductInputsAndLinksForbidden": "passed",
+    "runAndClaimsImmutableHashBound": "passed"
+  },
+  "interpretation": "A protokolü, ayrı kontrollü okumanın sonucunu kaydeder ve doğrular; otonom claim üreticisi değildir. Gerçek korpus koşusu sıfırdır.",
+  "releaseBoundary": "Context commitment körlüğün veya bağımsız uzmanlığın kriptografik kanıtı değildir; yürütme ayrılığı üst süreçte sağlanmalıdır.",
+  "knownLimitations": [
+    "aynı model ailesinden geçiş bağımsız insan denetimi sayılmaz",
+    "gerçek A geçişleri henüz yürütülmedi"
+  ],
+  "nextPhase": 18
+}

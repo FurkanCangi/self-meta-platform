@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 11,
+  "title": "Kaynak edinme ve ResearchSSD arşivi",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_and_inventory_disposition",
+  "source": {
+    "governanceGitSha": "3a50e993a5f319ffb094933920231b5541933b8f",
+    "ledgerVersion": "dna-source-acquisition-ledger@1",
+    "snapshotSha256": "077895043eb0bd2449c86ce4b7e4bb39f04267124b31cf303014dcde56d2ac80"
+  },
+  "executionDisposition": {
+    "artifacts": 66,
+    "accepted": 66,
+    "rejected": 0,
+    "bytes": 312133875,
+    "pdf": 33,
+    "xml": 31,
+    "epub": 2,
+    "institutionalRepository": 36,
+    "officialPublisher": 19,
+    "openTextbookExport": 9,
+    "metadataOnly": 2,
+    "workArtifacts": 0,
+    "releaseArtifacts": 0
+  },
+  "exitGates": {
+    "sourceAndDownloadUrlProvenanceRecorded": "passed",
+    "acquisitionDateMediaTypeBytesShaLicenseAndMethodRecorded": "passed",
+    "pdfXmlAndEpubIntegrityVerified": "passed",
+    "realpathAndSymlinkEscapeBlocked": "passed",
+    "immutableHashAddressedAuditHistory": "passed",
+    "offlineVerificationHasNoNetworkOrWritePermission": "passed",
+    "repoContainsNoRawArtifactOrAbsoluteSsdPath": "passed"
+  },
+  "interpretation": "66/66 kabul, dosyanın arşiv ve format bütünlüğünü gösterir; bilimsel kalite, lisansla yayın hakkı veya claim doğruluğu anlamına gelmez.",
+  "releaseBoundary": "Ham kitap, PDF, XML, EPUB ve kısıtlı materyal ResearchSSD'de kalır; repo yalnız göreli kimlikler, sayımlar ve hash bağlı metadata taşır.",
+  "knownLimitations": [
+    "sekiz Pressbooks edinimi deterministik export endpoint provenance'ı kullanır",
+    "work ve release klasörleri bu checkpoint'te bilerek boştur"
+  ],
+  "nextPhase": 12
+}

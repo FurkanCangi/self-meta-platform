@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 12,
+  "title": "Kaynak yöntem değerlendirme sözleşmesi",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_and_inventory_disposition",
+  "source": {
+    "governanceGitSha": "3a50e993a5f319ffb094933920231b5541933b8f",
+    "appraisalVersion": "dna-method-appraisal@1",
+    "protocolVersion": "dna-method-appraisal-protocol@1",
+    "implementationSha256": "fc7948333e8c4a6166af77a589367446c44cfdf6907987334679faef36267e98"
+  },
+  "executionDisposition": {
+    "requiredMethodFields": 20,
+    "adaptedGradeDimensions": 5,
+    "sources": 47,
+    "pendingMethodAppraisals": 47,
+    "codexMultiPassAudited": 0,
+    "runtimeEligible": 0
+  },
+  "exitGates": {
+    "titleOrAbstractAloneCannotAuthorizeAppraisal": "passed",
+    "singleSourceGradeIsNotCertaintyRating": "passed",
+    "unknownAgePopulationAndMethodValuesNotInferred": "passed",
+    "pendingRecordsCannotAssertMethodFindings": "passed",
+    "artifactContentLocatorAndPassEvidenceMustBeTrusted": "passed",
+    "aThenBThenReconciliationOrderAndUniqueEvidenceRequired": "passed",
+    "registeredPayloadAndSourceEvidenceCrossBindingRequired": "passed",
+    "productionAppraisalTrustRegistryEmptyFailClosed": "passed"
+  },
+  "interpretation": "Yöntem değerlendirme şeması ve doğrulama kapıları tamamlandı; gerçek 47 kaynağın yöntem incelemesi tamamlanmadı ve 47/47 pending tutuldu.",
+  "releaseBoundary": "Tek kaynak kaydı yalnız uyarlanmış yöntem boyutlarını taşır; body-of-evidence kesinliği üretmez. Registered appraisal sayısı sıfırdır.",
+  "knownLimitations": [
+    "gerçek korpus yöntem değerlendirmeleri sonraki yürütme işidir",
+    "aynı model ailesindeki çoklu geçiş bağımsız insan değerlendirmesi değildir"
+  ],
+  "nextPhase": 13
+}

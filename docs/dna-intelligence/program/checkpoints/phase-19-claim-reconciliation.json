@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 19,
+  "title": "A/B iddia uzlaştırma ve kaynak yeniden okuma",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_contract",
+  "source": {
+    "governanceGitSha": "3a50e993a5f319ffb094933920231b5541933b8f",
+    "reconciliationVersion": "dna-claim-reconciliation@1",
+    "protocolId": "dna-claim-reconciliation@1"
+  },
+  "executionDisposition": {
+    "comparisonFields": 6,
+    "realReconciledClaims": 0,
+    "syntheticExactConsensusCases": 1,
+    "syntheticContestedCases": 1,
+    "syntheticRereviewCases": 1,
+    "acceptedClaims": 0,
+    "runtimeEligible": 0
+  },
+  "exitGates": {
+    "passagePropositionAgeCausalityEvidenceAndBoundaryCompared": "passed",
+    "majorityVoteForbidden": "passed",
+    "tamperedRunClaimRationaleOrProvenanceQuarantined": "passed",
+    "singleMismatchBecomesContested": "passed",
+    "sourceRereadRequiresTrustedCurrentPassages": "passed",
+    "rereviewEvidenceDerivedFromResolutionContent": "passed",
+    "consensusStillCandidateOnly": "passed"
+  },
+  "interpretation": "Uzlaştırma motoru ve adversarial testleri tamamlandı; gerçek korpusta uzlaştırılmış iddia sayısı sıfırdır.",
+  "releaseBoundary": "Exact veya yeniden-okuma consensus, accepted/released anlamına gelmez. Phase 20 kaynak sadakati dahil sonraki kapılar zorunludur.",
+  "knownLimitations": [
+    "gerçek A/B çıktıları olmadığı için gerçek uzlaştırma yürütülmedi",
+    "körlük ve bilimsel doğruluk bağımsız insan incelemesi olarak temsil edilemez"
+  ],
+  "nextPhase": 20
+}

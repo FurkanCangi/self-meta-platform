@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 18,
+  "title": "Kör çıkarım B kayıt ve doğrulama protokolü",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_contract",
+  "source": {
+    "governanceGitSha": "3a50e993a5f319ffb094933920231b5541933b8f",
+    "protocolId": "dna-blind-extraction-b@1",
+    "blindExtractionVersion": "dna-blind-extraction@1"
+  },
+  "executionDisposition": {
+    "realCorpusRuns": 0,
+    "syntheticProtocolRuns": 1,
+    "acceptedClaims": 0,
+    "runtimeEligible": 0
+  },
+  "exitGates": {
+    "peerAOutputForbiddenByStrictInputShape": "passed",
+    "runProtocolInstructionAndContextMustDifferFromA": "passed",
+    "copiedBlindContextRejectedAtReconciliation": "passed",
+    "artifactAndTrustedCurrentPassagesRevalidated": "passed",
+    "claimRationaleAndUncertaintyEvidenceCommitted": "passed",
+    "sourceAbsentInformationCannotEnterValidatedClaim": "passed"
+  },
+  "interpretation": "B protokolü ayrı bağlamı zorunlu kılan kayıt/doğrulama hattıdır; gerçek kaynaklarda B koşusu yapılmadı.",
+  "releaseBoundary": "B çıktısı A ile aynı görünse bile yalnız candidate olabilir; bağımsız insan değerlendirmesi veya bilimsel kabul değildir.",
+  "knownLimitations": [
+    "peer görünmezliği commitment ile kaydedilir ancak kriptografik olarak kanıtlanmaz",
+    "gerçek B geçişleri henüz yürütülmedi"
+  ],
+  "nextPhase": 19
+}

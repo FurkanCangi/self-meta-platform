@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 14,
+  "title": "Hash bağlı deterministik metin ayrıştırma",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_and_single_real_artifact_pilot",
+  "source": {
+    "governanceGitSha": "3a50e993a5f319ffb094933920231b5541933b8f",
+    "extractionVersion": "dna-evidence-extraction@1",
+    "implementationSha256": "2bfc2329fcd39f75ae340c9bfc9324119a97fb962cf2a66119c05bc8001f8a04",
+    "contractSha256": "a758f305f4615de6ce7fea90904404409c781cde9a81547b729321ece0e482eb"
+  },
+  "executionDisposition": {
+    "parserKinds": 5,
+    "exclusionKinds": 12,
+    "productionTrustRegistryEntries": 0,
+    "realPilotArtifacts": 1,
+    "pilotSourceId": "cosmin-prom-systematic-reviews-v2-2024",
+    "pilotArtifactSha256": "49150ead3ac7dfb2c1ffa7faeff61b4884eb8c6418888ed3289c006fbfdb0ff8",
+    "pilotEligibleParagraphs": 40,
+    "pilotExcludedStructures": 56,
+    "pilotForbiddenSectionParagraphs": 0,
+    "runtimeEligible": 0
+  },
+  "exitGates": {
+    "jatsEpubHtmlPdfOcrPriorityFixed": "passed",
+    "artifactAndParsedContentHashesBound": "passed",
+    "artifactChangeInvalidatesParsedOutput": "passed",
+    "referenceTableFigureCaptionSupplementAndRestrictedContentExcluded": "passed",
+    "sameTitleSectionsKeepIndependentInternalIdentity": "passed",
+    "manualPdfAndOcrRequireTrustedTextAndRangeCommitment": "passed",
+    "callerSelfAssertedApprovalRejected": "passed",
+    "realSsdJatsPilotManifestHashBound": "passed"
+  },
+  "interpretation": "Gerçek JATS pilotu yalnız ayrıştırma kapısını kanıtlar; 40 paragrafın bilimsel claim olarak onaylandığı anlamına gelmez.",
+  "releaseBoundary": "Bütün parser çıktıları candidate_only ve runtimeEligible=false kalır. Üretim trust allowlist'i bilerek boştur.",
+  "knownLimitations": [
+    "parser tam bir JATS şema doğrulayıcısı değildir",
+    "gerçek korpusun tamamı bu fazda ayrıştırılmadı"
+  ],
+  "nextPhase": 15
+}

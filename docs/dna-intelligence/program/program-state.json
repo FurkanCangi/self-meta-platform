@@ -11,7 +11,17 @@
     6,
     7,
     8,
-    9
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19
   ],
   "deferredPhases": [
     {
@@ -22,19 +32,26 @@
       "releaseBlocking": true
     }
   ],
-  "currentPhase": 10,
+  "currentPhase": 20,
   "status": "in_progress",
-  "lastCompletedCheckpoint": "docs/dna-intelligence/program/checkpoints/phase-09-component-licensing.json",
+  "lastCompletedCheckpoint": "docs/dna-intelligence/program/checkpoints/phase-19-claim-reconciliation.json",
   "rollbackTag": "dna-chat-v2-baseline-20260719",
-  "phaseOrderPolicy": "Bir fazın çıkış kapıları geçmeden sonraki faz tamamlanmış sayılmaz. Kullanıcının 2026-07-19 tarihli açık talebiyle Faz 3 owner kitabı gelene kadar deferred tutuldu; Faz 4-9 altyapısı tamamlandı ancak bu istisna Faz 3 release kapısını açmaz.",
+  "phaseOrderPolicy": "Bir fazın çıkış kapıları geçmeden sonraki faz tamamlanmış sayılmaz. Kullanıcının 2026-07-19 tarihli açık talebiyle Faz 3 owner kitabı gelene kadar deferred tutuldu. Faz 4-19 için completed, fail-closed mühendislik/workflow kapılarının ve gerçek envanter disposition'ının tamamlandığını ifade eder; pending bilimsel korpus kaydını audited veya released yapmaz ve Faz 3 release kapısını açmaz.",
   "releaseBlockers": [
     "owner_book_not_supplied",
     "owner_approved_product_claim_bindings_missing",
+    "source_integrity_pending_records",
+    "source_integrity_runtime_binding_required_before_first_v3_release",
+    "source_method_appraisals_pending",
+    "claim_level_age_and_population_scope_not_coded",
+    "accepted_source_passage_registry_empty",
+    "blind_extraction_corpus_runs_empty",
+    "reconciled_claim_registry_empty",
     "v3_audited_candidate_registry_empty",
     "coverage_release_ready_cells_zero",
     "gap_full_text_appraisal_pending",
-    "claim_level_age_and_sample_scope_not_coded"
+    "phase20_source_fidelity_not_completed"
   ],
-  "evidence": "docs/dna-intelligence/program/evidence/phase-03-09-governance-gates.json",
+  "evidence": "docs/dna-intelligence/program/evidence/phase-10-19-governance-gates.json",
   "updatedOn": "2026-07-19"
 }

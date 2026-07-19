@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 13,
+  "title": "Kanonik kaynak şeması ve normalizasyon",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_and_inventory_disposition",
+  "source": {
+    "governanceGitSha": "3a50e993a5f319ffb094933920231b5541933b8f",
+    "sourceVersion": "normalized-dna-source@1",
+    "collectionVersion": "normalized-dna-source-collection@1",
+    "implementationSha256": "daf62eb055d6fd227a6c50e7fc53991821dba566670e73295819ff1effd16a91"
+  },
+  "executionDisposition": {
+    "normalizedSources": 47,
+    "requiredFields": 33,
+    "identityVerified": 39,
+    "identityPending": 8,
+    "ageScopeNotReported": 47,
+    "populationNotReported": 5,
+    "runtimeEligible": 0,
+    "normalizedCollectionSha256": "47a182198e29419c59e43711e2b566d87419e83190feb22ceececc90d4ac0698"
+  },
+  "exitGates": {
+    "doiPmidPmcidAndIsbnCanonicalized": "passed",
+    "unknownPopulationAndAgeStoredAsNotReported": "passed",
+    "identityVersionCorrectionAndCohortProvenancePreserved": "passed",
+    "malformedIdentityInputReturnsControlledDomainError": "passed",
+    "pendingIdentityOrCorrectionCannotRelease": "passed",
+    "sourceIdentityEvidenceAndAppraisalHashesCrossBound": "passed",
+    "clientSuppliedRuntimeEligibilityRejected": "passed",
+    "productionReleaseTrustRegistryEmptyFailClosed": "passed"
+  },
+  "interpretation": "47 kayıt aynı sözleşmeye dönüştürüldü; normalizasyon kaynak uygunluğu veya bilimsel kabul değildir. Eksik yaş/popülasyon değerleri tahmin edilmedi.",
+  "releaseBoundary": "Kanonik kayıt ancak exact registered method appraisal, verified identity, çözümlenmiş sürüm/düzeltme, lisans, artefakt ve sonraki release kapılarıyla ilerleyebilir; mevcut uygun sayı sıfırdır.",
+  "knownLimitations": [
+    "47 kaynağın tamamında claim düzeyi yaş kapsamı henüz kodlanmadı",
+    "sekiz kaynak kimlik açısından pending kalır"
+  ],
+  "nextPhase": 14
+}

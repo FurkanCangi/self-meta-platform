@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 16,
+  "title": "Atomik bilimsel iddia sözleşmesi",
+  "status": "completed",
+  "completedOn": "2026-07-19",
+  "completionScope": "fail_closed_engineering_contract",
+  "source": {
+    "governanceGitSha": "3a50e993a5f319ffb094933920231b5541933b8f",
+    "claimVersion": "dna-atomic-claim@1",
+    "contractSha256": "a758f305f4615de6ce7fea90904404409c781cde9a81547b729321ece0e482eb"
+  },
+  "executionDisposition": {
+    "acceptedRealClaims": 0,
+    "acceptedClaimRegistryEntries": 0,
+    "runtimeEligible": 0
+  },
+  "exitGates": {
+    "propositionMustBeVerbatimInTrustedPassage": "passed",
+    "compoundPredicateRejected": "passed",
+    "causalLanguageCannotBeAutoSupported": "passed",
+    "effectMagnitudeRequiresPassageLocator": "passed",
+    "evidenceLevelRequiresTrustedMethodAppraisal": "passed",
+    "ageAndBoundaryMustMatchPassage": "passed",
+    "blindExtractionCannotCreateDnaRelationship": "passed",
+    "allOutputsRemainCandidateOrQuarantined": "passed"
+  },
+  "interpretation": "Atomik claim doğrulayıcısı hazırdır; gerçek bilimsel claim çıkarımı veya kabulü yapılmadı.",
+  "releaseBoundary": "Kaynaktaki nedensel dil otomatik doğrulanmaz ve karantinaya gider. Accepted claim registry sıfırdır.",
+  "knownLimitations": [
+    "V1 atomiklik denetimi fail-closed sözcüksel ve yapısal kurallara dayanır",
+    "gerçek korpus claim kayıtları sonraki yürütme işidir"
+  ],
+  "nextPhase": 17
+}

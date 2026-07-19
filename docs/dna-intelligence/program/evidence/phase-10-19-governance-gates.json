@@ -1,0 +1,205 @@
+{
+  "schemaVersion": "dna-intelligence-phase-evidence@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phases": [10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+  "generatedAt": "2026-07-19T17:10:15+03:00",
+  "sourceGitSha": "3a50e993a5f319ffb094933920231b5541933b8f",
+  "sourceTreeSha": "f17a69aa279281b1058deac77dd2fdaaa4becf6e",
+  "branch": "codex/dna-intelligence-v3",
+  "phaseDisposition": {
+    "completionScope": "fail_closed_engineering_workflow_and_real_inventory_disposition",
+    "engineeringPhasesCompleted": [10, 11, 12, 13, 14, 15, 16, 17, 18, 19],
+    "ownerBookPhase3": "deferred_owner_book",
+    "currentPhase": 20,
+    "currentRuntimeGeneration": "v2_legacy",
+    "currentV3Released": 0
+  },
+  "realCorpusDisposition": {
+    "sourceRecords": 47,
+    "methodAppraisalsPending": 47,
+    "acceptedRealPassages": 0,
+    "acceptedRealClaims": 0,
+    "blindExtractionARuns": 0,
+    "blindExtractionBRuns": 0,
+    "reconciledRealClaims": 0,
+    "v3RuntimeReleased": 0
+  },
+  "sourceIntegrity": {
+    "status": "passed_with_pending_records_fail_closed",
+    "verifiedClean": 7,
+    "pending": 40,
+    "quarantined": 0,
+    "withdrawn": 0,
+    "authorityUnavailable": 3,
+    "updateSignals": 2,
+    "immutableHistoryRuns": 5,
+    "syntheticIntegrityCases": 17,
+    "impactAnswerCases": 9,
+    "offlineNoNetworkNoWriteChecks": "10/10",
+    "runtimeConsumerBinding": "required_before_first_nonempty_v3_release"
+  },
+  "acquisitionArchive": {
+    "status": "passed",
+    "artifacts": 66,
+    "accepted": 66,
+    "rejected": 0,
+    "bytes": 312133875,
+    "pdf": 33,
+    "xml": 31,
+    "epub": 2,
+    "realpathAndSymlinkContainment": "passed",
+    "repoRawArtifacts": 0,
+    "repoAbsoluteSsdPaths": 0
+  },
+  "methodAppraisal": {
+    "status": "engineering_gate_passed_corpus_pending",
+    "requiredMethodFields": 20,
+    "adaptedGradeDimensions": 5,
+    "pending": 47,
+    "audited": 0,
+    "registeredProductionAppraisals": 0,
+    "runtimeEligible": 0,
+    "aBReconciliationEvidenceAndChronologyBound": true
+  },
+  "sourceNormalization": {
+    "status": "passed",
+    "normalized": 47,
+    "identityVerified": 39,
+    "identityPending": 8,
+    "ageScopeNotReported": 47,
+    "populationNotReported": 5,
+    "runtimeEligible": 0,
+    "collectionSha256": "47a182198e29419c59e43711e2b566d87419e83190feb22ceececc90d4ac0698"
+  },
+  "textParsing": {
+    "status": "engineering_gate_and_single_real_jats_pilot_passed",
+    "realPilotSourceId": "cosmin-prom-systematic-reviews-v2-2024",
+    "artifactSha256": "49150ead3ac7dfb2c1ffa7faeff61b4884eb8c6418888ed3289c006fbfdb0ff8",
+    "eligibleParagraphs": 40,
+    "excludedStructures": 56,
+    "forbiddenSectionParagraphs": 0,
+    "manifestHashBound": true,
+    "candidateOnly": true
+  },
+  "sourcePassages": {
+    "status": "engineering_gate_passed_real_registry_empty",
+    "oneToThreeAdjacentSameSection": true,
+    "trustedLicenseMetadataAndArtifactRequired": true,
+    "acceptedRealPassages": 0
+  },
+  "atomicClaims": {
+    "status": "engineering_gate_passed_real_registry_empty",
+    "compoundCausalEffectAndEvidenceGuards": "passed",
+    "dnaLinkingInBlindExtraction": false,
+    "acceptedRealClaims": 0
+  },
+  "blindExtractionA": {
+    "status": "recording_validation_protocol_passed_real_runs_empty",
+    "protocolId": "dna-blind-extraction-a@1",
+    "autonomousExtractor": false,
+    "realRuns": 0
+  },
+  "blindExtractionB": {
+    "status": "recording_validation_protocol_passed_real_runs_empty",
+    "protocolId": "dna-blind-extraction-b@1",
+    "independentHumanReview": false,
+    "realRuns": 0
+  },
+  "claimReconciliation": {
+    "status": "engineering_gate_passed_real_reconciliations_empty",
+    "comparisonFields": 6,
+    "majorityVoteAllowed": false,
+    "trustedSourceRereadRequired": true,
+    "realReconciliations": 0
+  },
+  "regressionGatesOnCleanImplementationCommit": {
+    "governanceV3WithResearchSsd": "passed",
+    "catalog": {
+      "status": "passed",
+      "topics": 118,
+      "claims": 239,
+      "relations": 166,
+      "sources": 160,
+      "benchmarkQuestions": 1856,
+      "holdoutQuestions": 928
+    },
+    "rawReview": {
+      "status": "passed",
+      "researchPacks": 20,
+      "records": 2703,
+      "reviewStatus": "expert_pending"
+    },
+    "reasoning": {
+      "status": "passed",
+      "allRowsAccuracyPercent": 96.61,
+      "supportedHoldoutAccuracyPercent": 98.42,
+      "safetyRefusalAccuracyPercent": 100,
+      "unsupportedSafeAccuracyPercent": 100,
+      "p95Ms": 10.124
+    },
+    "security": "passed",
+    "api": {
+      "status": "passed",
+      "foreignAndMissingIndistinguishable": true,
+      "caseAuditFailClosed": true,
+      "internalFieldsHidden": true,
+      "mockRouteP95Ms": 17.036
+    },
+    "intendedUse": "passed_9_supported_10_prohibited",
+    "quality": {
+      "status": "passed_120_of_120",
+      "security": "20_of_20",
+      "caseFixtures": 50,
+      "engineP95Ms": 5.531
+    },
+    "determinism": {
+      "status": "passed_8_requests_20_repeats",
+      "sampleHash": "70d1b0b18e3686f33331b4ad2117999f263025dfebf63341a6093c1920198a0d"
+    },
+    "forbiddenImports": "passed_external_model_modules_0",
+    "authority": "passed_four_authorities_five_non_substitution_rules",
+    "reportPrivacy": "passed",
+    "reportDeterminism": "passed_10_of_10",
+    "reportForbiddenImports": "passed",
+    "securitySmoke": "passed",
+    "securityReadiness": "passed",
+    "lint": "passed_typescript_no_emit",
+    "build": "passed_next_16_2_9_webpack"
+  },
+  "rollbackVerification": {
+    "status": "passed",
+    "tag": "dna-chat-v2-baseline-20260719",
+    "rollbackGitSha": "5ed87217280a40e4566a04289d4c98b1f3883494",
+    "testedSourceTreeSha": "c7138af491a7b2892f521cfef69117991b2460d6",
+    "sourceExecution": "clean_detached_git_worktree_at_rollback_commit",
+    "gates": ["raw-review", "catalog", "reasoning", "security", "api", "quality", "determinism", "lint", "build"]
+  },
+  "hashesSha256": {
+    "sourceIntegritySnapshot": "077895043eb0bd2449c86ce4b7e4bb39f04267124b31cf303014dcde56d2ac80",
+    "sourceAppraisalNormalizationSnapshot": "4f2c758e4e326c33ebafecb3431eaf4c3a65fb3b6be5d329add47c99ed286463",
+    "evidenceExtractionContract": "a758f305f4615de6ce7fea90904404409c781cde9a81547b729321ece0e482eb",
+    "sourceIntegrityImplementation": "dfe4c3e67213428a280889658cd9e2867541e1ef0c2e55034fdf3c094f34f60d",
+    "methodAppraisalImplementation": "fc7948333e8c4a6166af77a589367446c44cfdf6907987334679faef36267e98",
+    "normalizedSourceImplementation": "daf62eb055d6fd227a6c50e7fc53991821dba566670e73295819ff1effd16a91",
+    "evidenceExtractionImplementation": "2bfc2329fcd39f75ae340c9bfc9324119a97fb962cf2a66119c05bc8001f8a04"
+  },
+  "worktreeBoundary": {
+    "implementationVerification": "clean_detached_worktree_at_3a50e993a5f319ffb094933920231b5541933b8f",
+    "unrelatedUserChangesPreservedAndExcluded": true,
+    "rawBooksPdfsXmlOrEpubAddedToRepo": false,
+    "absoluteResearchSsdPathAddedToRepoEvidence": false
+  },
+  "verificationNotes": [
+    "İlk temiz lint koşusu test fixture'ındaki readonly NODE_ENV atamasını yakaladı; kaynak commit oluşturulmadan önce düzeltildi ve final lint/build yeniden geçti.",
+    "Symlink node_modules kullanan geçici worktree'deki V2 Turbopack denemesi ortam sınırlamasıyla durdu; gerçek node_modules kökünden başlatılan harness rollback kaynağını yine temiz detached worktree'de test etti ve dokuz kapının tamamı geçti."
+  ],
+  "limitations": [
+    "Faz 10-19 mühendislik/workflow kapılarının tamamlanması, 47 kaynağın bilimsel olarak denetlendiği veya çift dikiş korpus işleminin bittiği anlamına gelmez.",
+    "Faz 3 owner kitabı bekleniyor; owner-approved ürün claim bağları yoktur.",
+    "40 kaynak bütünlükte pending, 47 kaynak yöntem değerlendirmesinde pending durumundadır.",
+    "Gerçek accepted passage, claim, A/B run ve reconciliation registry'leri sıfırdır.",
+    "V3 release paketi boştur; kullanıcı deneyimi exact V2 rollback yolunda çalışır.",
+    "İlk boş olmayan V3 bilimsel yayından önce kaynak bütünlüğü etki gezgini runtime/release tüketicisine bağlanmalıdır.",
+    "Bu kanıtlar mühendislik ve kaynak yönetişimi kanıtıdır; bağımsız klinik veya psikometrik validasyon değildir."
+  ]
+}
