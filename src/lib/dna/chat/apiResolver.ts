@@ -1,4 +1,5 @@
 import { resolveDnaChat } from "./engine"
+import { evaluateDnaChatRuntimeRelease } from "./governance/runtimeReleaseGate"
 import { DNA_KNOWLEDGE_AUTHORITY_CONTRACT_VERSION } from "./knowledgeAuthority"
 import type { DnaKnowledgeAuthorityRef } from "./knowledgeAuthority"
 import type {
@@ -206,6 +207,22 @@ export async function resolveDnaChatApiRequest(
 
     accessedCaseReport = true
     answer = loaded.answer
+  }
+
+  // The current engine is retained only through the explicit V2 rollback
+  // policy. Any future/forged engine version fails closed until it supplies a
+  // V3 descriptor whose candidate IDs are present in the committed release
+  // package.
+  const runtimeRelease = evaluateDnaChatRuntimeRelease({
+    generation: "v2_legacy",
+    engineVersion: answer.engineVersion,
+  })
+  if (!runtimeRelease.allowed) {
+    return {
+      status: 500,
+      body: { ok: false, error: "dna_chat_failed" },
+      accessedCaseReport,
+    }
   }
 
   const requestId = dependencies.createRequestId()

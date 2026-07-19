@@ -1,0 +1,36 @@
+{
+  "version": "dna-coverage-gap-contract@1",
+  "coverageMapVersion": "dna-coverage-map@1",
+  "gapProtocolsVersion": "dna-gap-protocols@1",
+  "domainCount": 10,
+  "dimensionCount": 14,
+  "cellCount": 140,
+  "statusCounts": {
+    "release_ready": 0,
+    "bounded_partial": 120,
+    "not_available": 10,
+    "prohibited": 10
+  },
+  "gapProtocolCount": 10,
+  "linkedGapCellCount": 130,
+  "unlinkedGapCellCount": 0,
+  "releaseReadyRule": "released_claim_and_source_pair_required",
+  "executionTemplateState": "planned",
+  "frozenExecutionSnapshot": "gap-search-execution-2026-07-19.json",
+  "frozenExecutionStatus": "identification_and_title_abstract_screening_executed_full_text_pending",
+  "apiDownloadCapPerProtocolPerApi": 100,
+  "resultAndExclusionCounts": {
+    "identifiedReportedAcrossApisNonDeduplicated": 64239324,
+    "downloadedMetadata": 2824,
+    "deduplicatedMetadata": 2730,
+    "duplicatesRemoved": 94,
+    "titleAbstractScreened": 2730,
+    "titleAbstractExcluded": 1085,
+    "advancedToManualFullTextReview": 1645,
+    "fullTextAssessed": null,
+    "includedInEvidenceBase": null,
+    "releaseReadyClaims": 0
+  },
+  "cutoffDate": "2026-07-19",
+  "prismaBoundary": "PRISMA, arama ve seçim sürecinin yeniden üretilebilir raporlanmasına yardım eder; ürün doğruluğu, kaynak kalitesi, DNA geçerliği veya klinik güvenlik sertifikası değildir."
+}

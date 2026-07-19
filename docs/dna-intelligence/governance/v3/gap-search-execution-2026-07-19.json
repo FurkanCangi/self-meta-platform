@@ -1,0 +1,2184 @@
+{
+  "version": "dna-gap-search-execution@1",
+  "runId": "dna-gap-search-20260719-7cdbe80cbc0b-20260719115132792",
+  "frozenForDate": "2026-07-19",
+  "executedAt": "2026-07-19T11:51:32.792Z",
+  "executionStatus": "identification_and_title_abstract_screening_executed_full_text_pending",
+  "protocolSetSha256": "7cdbe80cbc0b0f36606832b95823b2ff838a1b1518940a8a4eab2e7690bc2727",
+  "apiDownloadCapPerProtocolPerApi": 100,
+  "apiCapBoundary": "Reported identified totals come from each API. Only the first 100 metadata records per protocol/API were downloaded; dedupe and screening counts therefore apply only to downloaded metadata.",
+  "publicApis": [
+    "NCBI PubMed E-utilities",
+    "Crossref REST API",
+    "OpenAlex REST API"
+  ],
+  "rawManifest": [
+    {
+      "relativePath": "01-gap.cellular.ion_plasticity_glia_neuromodulators/crossref-metadata.normalized.json",
+      "bytes": 97335,
+      "sha256": "7e3c93fc3ff5045d595bd9b8b9b77ce17c86153cded7ff88a0932cf5cba0c541"
+    },
+    {
+      "relativePath": "01-gap.cellular.ion_plasticity_glia_neuromodulators/crossref.raw.json",
+      "bytes": 95851,
+      "sha256": "68846d6a11d0e6728b1a64a3f30d5eb1984fcb3cdd3522c130d59c16cf96dddf"
+    },
+    {
+      "relativePath": "01-gap.cellular.ion_plasticity_glia_neuromodulators/dedupe-ledger.json",
+      "bytes": 531590,
+      "sha256": "ab1c7f09514f513321145ed96a1d6aedba2b59821f237a5bb02679fba1a05827"
+    },
+    {
+      "relativePath": "01-gap.cellular.ion_plasticity_glia_neuromodulators/downloaded-metadata.all-apis.json",
+      "bytes": 438797,
+      "sha256": "5c1f4ff105f863a1da41dbc6c535a3465b1dab302adeb97530359408599b9677"
+    },
+    {
+      "relativePath": "01-gap.cellular.ion_plasticity_glia_neuromodulators/openalex-metadata.normalized.json",
+      "bytes": 188710,
+      "sha256": "b63adee57c348bbded977a13f6b7b37716d1e366d1130e1ac5a973cf2a43d604"
+    },
+    {
+      "relativePath": "01-gap.cellular.ion_plasticity_glia_neuromodulators/openalex.raw.json",
+      "bytes": 3523185,
+      "sha256": "d13dbfcd53ca12382dae58e10a5ba7a84a350f5f7ab519991b0cfea8b2d4c9c4"
+    },
+    {
+      "relativePath": "01-gap.cellular.ion_plasticity_glia_neuromodulators/pubmed-fetch.raw.xml",
+      "bytes": 3413983,
+      "sha256": "daae2b54020022eea83a16ee79c89632a9f7fd61676fa995e8d533d0788102e1"
+    },
+    {
+      "relativePath": "01-gap.cellular.ion_plasticity_glia_neuromodulators/pubmed-metadata.normalized.json",
+      "bytes": 152758,
+      "sha256": "af4d24bf400adb32dff7338141ae8f1034b56b4b8ed228bb0786c3331432c475"
+    },
+    {
+      "relativePath": "01-gap.cellular.ion_plasticity_glia_neuromodulators/pubmed-search.raw.json",
+      "bytes": 1671,
+      "sha256": "df7e999181c890971f14ec1b20da3e2791f8ac61d696acbfd84ffa69f642e05b"
+    },
+    {
+      "relativePath": "01-gap.cellular.ion_plasticity_glia_neuromodulators/title-abstract-screening-ledger.json",
+      "bytes": 70923,
+      "sha256": "df459fb47f5aec480c33e49f2c1497087bfaffdb3abb539e77b5609f6b7936ca"
+    },
+    {
+      "relativePath": "02-gap.cns.brainstem_thalamus_basal_ganglia_cerebellum/crossref-metadata.normalized.json",
+      "bytes": 73321,
+      "sha256": "c88e2964f7800373f1dee590a7f85fe83cdbc035c9dc010251365fc58ea28e46"
+    },
+    {
+      "relativePath": "02-gap.cns.brainstem_thalamus_basal_ganglia_cerebellum/crossref.raw.json",
+      "bytes": 70768,
+      "sha256": "15e98216317c873e7e402730b57019b9247a218bf84127a3b57cc4ea66cad2c1"
+    },
+    {
+      "relativePath": "02-gap.cns.brainstem_thalamus_basal_ganglia_cerebellum/dedupe-ledger.json",
+      "bytes": 513658,
+      "sha256": "6690db97a11b1a2cc85505875168fde417f74ae06ccebeb178b74c521f74b82c"
+    },
+    {
+      "relativePath": "02-gap.cns.brainstem_thalamus_basal_ganglia_cerebellum/downloaded-metadata.all-apis.json",
+      "bytes": 438491,
+      "sha256": "a8e328b63ae71adcc84058edd6f26f9175845a3e93f82b5a4301dcaaa682aa18"
+    },
+    {
+      "relativePath": "02-gap.cns.brainstem_thalamus_basal_ganglia_cerebellum/openalex-metadata.normalized.json",
+      "bytes": 175639,
+      "sha256": "a08e57b902a1e8b5a08948e41bf52ee5c7e7dc8cc04015928f1d57fa28f06512"
+    },
+    {
+      "relativePath": "02-gap.cns.brainstem_thalamus_basal_ganglia_cerebellum/openalex.raw.json",
+      "bytes": 3983984,
+      "sha256": "ef616a73299663c9ee721f9f0018c8d681592e9be0b66c50801e154886e14027"
+    },
+    {
+      "relativePath": "02-gap.cns.brainstem_thalamus_basal_ganglia_cerebellum/pubmed-fetch.raw.xml",
+      "bytes": 3170954,
+      "sha256": "54bc9b0e9d78f7a9011e2c316d6269f6a33fc0a255f760365c0713bada5e3ef4"
+    },
+    {
+      "relativePath": "02-gap.cns.brainstem_thalamus_basal_ganglia_cerebellum/pubmed-metadata.normalized.json",
+      "bytes": 189537,
+      "sha256": "e3443e08b6bdc77748cd286ec9f709bf706c50991ae2e34c348b5932d0181e55"
+    },
+    {
+      "relativePath": "02-gap.cns.brainstem_thalamus_basal_ganglia_cerebellum/pubmed-search.raw.json",
+      "bytes": 1622,
+      "sha256": "70fa369658daeb53bace0ca9ce9f588b6d8e1085ad38a05ddbe3dcce940348ea"
+    },
+    {
+      "relativePath": "02-gap.cns.brainstem_thalamus_basal_ganglia_cerebellum/title-abstract-screening-ledger.json",
+      "bytes": 67968,
+      "sha256": "7cee6b53a354668e9fb1701637c4c21e0bbfa67e7b14c8e4cfdee4be1d54e3e3"
+    },
+    {
+      "relativePath": "03-gap.ans.central_network_baroreflex_respiration_posture/crossref-metadata.normalized.json",
+      "bytes": 66374,
+      "sha256": "9d6bafb35b520462aedbe847fa752c1404fad6a22dc2be71b9b6a1511c5d03be"
+    },
+    {
+      "relativePath": "03-gap.ans.central_network_baroreflex_respiration_posture/crossref.raw.json",
+      "bytes": 62818,
+      "sha256": "c817ea0644a68761e48fe682604eceb1656e0907ff910fa33b7cbac0d7403efa"
+    },
+    {
+      "relativePath": "03-gap.ans.central_network_baroreflex_respiration_posture/dedupe-ledger.json",
+      "bytes": 556132,
+      "sha256": "aca01d8b5fadfa9ddef1cee37e4847b48cca5051dcc08cf3c630b88d9174cc3b"
+    },
+    {
+      "relativePath": "03-gap.ans.central_network_baroreflex_respiration_posture/downloaded-metadata.all-apis.json",
+      "bytes": 460411,
+      "sha256": "3c637ad9143697bea75a6fe93e88002fbca79bdc4f1c65f89e0f707e314df37e"
+    },
+    {
+      "relativePath": "03-gap.ans.central_network_baroreflex_respiration_posture/openalex-metadata.normalized.json",
+      "bytes": 194711,
+      "sha256": "8a370af8073b5db88a93010457ee6e08a55840a1a290351e46c522ee671f2fa5"
+    },
+    {
+      "relativePath": "03-gap.ans.central_network_baroreflex_respiration_posture/openalex.raw.json",
+      "bytes": 2851207,
+      "sha256": "49078525bf58f797c78260a0b02dd1bc07187eaa324e5f083c393c2495b0f71d"
+    },
+    {
+      "relativePath": "03-gap.ans.central_network_baroreflex_respiration_posture/pubmed-fetch.raw.xml",
+      "bytes": 1633184,
+      "sha256": "a4780f32ea8f0a826fad96b440f1e740d60ce2e01792541dcbc4da0cbf7072f4"
+    },
+    {
+      "relativePath": "03-gap.ans.central_network_baroreflex_respiration_posture/pubmed-metadata.normalized.json",
+      "bytes": 199332,
+      "sha256": "41b915701e7a20bfd0ea0d2dd366f3226a20899be466f023263abce4b125de15"
+    },
+    {
+      "relativePath": "03-gap.ans.central_network_baroreflex_respiration_posture/pubmed-search.raw.json",
+      "bytes": 1571,
+      "sha256": "f6b4d5ebb6bb04e9f2f3439f46199de4e17daab67b96b214b9dccd29d0b08756"
+    },
+    {
+      "relativePath": "03-gap.ans.central_network_baroreflex_respiration_posture/title-abstract-screening-ledger.json",
+      "bytes": 70480,
+      "sha256": "6eb32fb42633bfb04f01545c61c3a83ded9ebc01331571ff79c0d54a6f687eb3"
+    },
+    {
+      "relativePath": "04-gap.stress.hpa_sam_child_adolescent_development/crossref-metadata.normalized.json",
+      "bytes": 86324,
+      "sha256": "f696bf8eae369f0a3770f785d6f24ccce64579ef6a09e8c402228ae89ddea91b"
+    },
+    {
+      "relativePath": "04-gap.stress.hpa_sam_child_adolescent_development/crossref.raw.json",
+      "bytes": 89488,
+      "sha256": "2c032761dfea8d0dede29b06ab3ebe0efbd213ff051261ab27cc5bbd4a07fa67"
+    },
+    {
+      "relativePath": "04-gap.stress.hpa_sam_child_adolescent_development/dedupe-ledger.json",
+      "bytes": 574697,
+      "sha256": "ab56971a33b658551063c550e11423e348defc9c6c77df70ac391862d7679db1"
+    },
+    {
+      "relativePath": "04-gap.stress.hpa_sam_child_adolescent_development/downloaded-metadata.all-apis.json",
+      "bytes": 473703,
+      "sha256": "ccf0d4df1ae34544585bc5cbec198d04ece43cb489f2be7896267d57918071c5"
+    },
+    {
+      "relativePath": "04-gap.stress.hpa_sam_child_adolescent_development/openalex-metadata.normalized.json",
+      "bytes": 183451,
+      "sha256": "6449ee7dd6dfdec4c206738dbd633c590d3088335b63d2b62b085b745eb423b1"
+    },
+    {
+      "relativePath": "04-gap.stress.hpa_sam_child_adolescent_development/openalex.raw.json",
+      "bytes": 3201262,
+      "sha256": "ea090a182c193b2498f848539098edcc07658cf8e7c6dff8260773826c2949ea"
+    },
+    {
+      "relativePath": "04-gap.stress.hpa_sam_child_adolescent_development/pubmed-fetch.raw.xml",
+      "bytes": 3131422,
+      "sha256": "0aae3533dfda12ba48bfef31582974c33d80335acf49c92db63b55a80ff34064"
+    },
+    {
+      "relativePath": "04-gap.stress.hpa_sam_child_adolescent_development/pubmed-metadata.normalized.json",
+      "bytes": 203934,
+      "sha256": "b0e390d3c656890ba91fad1a76e41818b1f4b773c877075d1c345f5768c0413b"
+    },
+    {
+      "relativePath": "04-gap.stress.hpa_sam_child_adolescent_development/pubmed-search.raw.json",
+      "bytes": 1636,
+      "sha256": "6f0c6f26055d6a936b6775f9c507ed91bafab3bcec7b52a62fbac7aa132ee56b"
+    },
+    {
+      "relativePath": "04-gap.stress.hpa_sam_child_adolescent_development/title-abstract-screening-ledger.json",
+      "bytes": 72857,
+      "sha256": "15158eba88bde973fc9e5ea7ba10b7d92db7b2d078cd07d8c4e405a212e270bf"
+    },
+    {
+      "relativePath": "05-gap.sensory.vestibular_proprioceptive_tactile_auditory_modulation/crossref-metadata.normalized.json",
+      "bytes": 80933,
+      "sha256": "81e17e769ce036bdc14b2705801159731ec89ca235c1d2f207f9d7b5159b45e1"
+    },
+    {
+      "relativePath": "05-gap.sensory.vestibular_proprioceptive_tactile_auditory_modulation/crossref.raw.json",
+      "bytes": 76723,
+      "sha256": "0d6c07fd3af4b3fb775c99c61930745e679758ed0efe812ec0f19dbf6fe7d1d1"
+    },
+    {
+      "relativePath": "05-gap.sensory.vestibular_proprioceptive_tactile_auditory_modulation/dedupe-ledger.json",
+      "bytes": 554059,
+      "sha256": "f3c3cddae504baad5025f16c832abf2c32c8692ef03363006c5ad4654286fe55"
+    },
+    {
+      "relativePath": "05-gap.sensory.vestibular_proprioceptive_tactile_auditory_modulation/downloaded-metadata.all-apis.json",
+      "bytes": 463312,
+      "sha256": "b46badc664f9959f07427d6fbdfdc69f3f281e59aca620219300af58d8653fa5"
+    },
+    {
+      "relativePath": "05-gap.sensory.vestibular_proprioceptive_tactile_auditory_modulation/openalex-metadata.normalized.json",
+      "bytes": 186089,
+      "sha256": "84d773a07f8ce0c68d3f92fcaa1add75974e3cfa235a416a0334b3b00977be40"
+    },
+    {
+      "relativePath": "05-gap.sensory.vestibular_proprioceptive_tactile_auditory_modulation/openalex.raw.json",
+      "bytes": 2915538,
+      "sha256": "b3b9f0b9190c2a063243bb53f8ed3e84fda7ca25e5f9a21abef4fcceb94c17ac"
+    },
+    {
+      "relativePath": "05-gap.sensory.vestibular_proprioceptive_tactile_auditory_modulation/pubmed-fetch.raw.xml",
+      "bytes": 2553717,
+      "sha256": "71deb6bdc03fabe24520eb1e46b57f3a053d8d5f95ca310bae740f8fa9de9f2d"
+    },
+    {
+      "relativePath": "05-gap.sensory.vestibular_proprioceptive_tactile_auditory_modulation/pubmed-metadata.normalized.json",
+      "bytes": 196296,
+      "sha256": "4864d1c2137b52de296ccb09d7fd445184d159b46e286c50852cb5158a08d63e"
+    },
+    {
+      "relativePath": "05-gap.sensory.vestibular_proprioceptive_tactile_auditory_modulation/pubmed-search.raw.json",
+      "bytes": 1635,
+      "sha256": "fd33deb976a410ead8870d0b1ff9edc82980d5aec42a5b079f565c2acf07b304"
+    },
+    {
+      "relativePath": "05-gap.sensory.vestibular_proprioceptive_tactile_auditory_modulation/title-abstract-screening-ledger.json",
+      "bytes": 70311,
+      "sha256": "f904818b1c2400478ee20eed7276bcd7389b78fcc6646f79107b8f0d5dc93adb"
+    },
+    {
+      "relativePath": "06-gap.coregulation.developmental_cultural_boundaries/crossref-metadata.normalized.json",
+      "bytes": 91804,
+      "sha256": "e976285c967c772e0971bf170c4805109eec9d5f72903812b93f2433f8d4181a"
+    },
+    {
+      "relativePath": "06-gap.coregulation.developmental_cultural_boundaries/crossref.raw.json",
+      "bytes": 90155,
+      "sha256": "90df0af470269db618c89c62efe5e1b6fe8be120e53e1b5bd4e00d41e9980723"
+    },
+    {
+      "relativePath": "06-gap.coregulation.developmental_cultural_boundaries/dedupe-ledger.json",
+      "bytes": 534858,
+      "sha256": "9f1eb59c500809824c987651782c006ee98e27688f0c24e37fb0725fe330396f"
+    },
+    {
+      "relativePath": "06-gap.coregulation.developmental_cultural_boundaries/downloaded-metadata.all-apis.json",
+      "bytes": 447182,
+      "sha256": "215c6af60e68feb815e7d7a8692e3049bc72689da945b95a885fa784b53f07d3"
+    },
+    {
+      "relativePath": "06-gap.coregulation.developmental_cultural_boundaries/openalex-metadata.normalized.json",
+      "bytes": 161080,
+      "sha256": "20be021bf4908b039417f40078068909ca18876fcb33e4a9fdbd0217406be4b4"
+    },
+    {
+      "relativePath": "06-gap.coregulation.developmental_cultural_boundaries/openalex.raw.json",
+      "bytes": 2794993,
+      "sha256": "24dfc0600c105db4e6866b6b22f33d98225dfa10a73f1f071ae4df5ef47fd505"
+    },
+    {
+      "relativePath": "06-gap.coregulation.developmental_cultural_boundaries/pubmed-fetch.raw.xml",
+      "bytes": 3711923,
+      "sha256": "aade07d5e154b8853bc609b367198b1253533d9ae6f113d5243232b514869875"
+    },
+    {
+      "relativePath": "06-gap.coregulation.developmental_cultural_boundaries/pubmed-metadata.normalized.json",
+      "bytes": 194304,
+      "sha256": "3dc972372e9fa3455945636c810c3bbac4135cb02c77cab7290fa3ab3d7e48b8"
+    },
+    {
+      "relativePath": "06-gap.coregulation.developmental_cultural_boundaries/pubmed-search.raw.json",
+      "bytes": 1526,
+      "sha256": "680f862da8ac89a3c11f893b833a99ebba94970cb5947caa7349d536e8498956"
+    },
+    {
+      "relativePath": "06-gap.coregulation.developmental_cultural_boundaries/title-abstract-screening-ledger.json",
+      "bytes": 71268,
+      "sha256": "d7283e43549d87c8ce69d456137883430b7cff2ecf5a416914fa7ba0483607f1"
+    },
+    {
+      "relativePath": "07-gap.executive.task_impurity/crossref-metadata.normalized.json",
+      "bytes": 110735,
+      "sha256": "5b6d8b3ad08fe1713e2a1c019591e0c7f63d05ab8dfafabd80b1f721e02bee38"
+    },
+    {
+      "relativePath": "07-gap.executive.task_impurity/crossref.raw.json",
+      "bytes": 119458,
+      "sha256": "dcf3296ee269ce7cdc099e2a4e1333f9738bdd66ec63e3b90007ab912d550582"
+    },
+    {
+      "relativePath": "07-gap.executive.task_impurity/dedupe-ledger.json",
+      "bytes": 621486,
+      "sha256": "6154c30d2fadb3199c3f5c2211b5b0a0de2e34173413196b273fbb85c613f870"
+    },
+    {
+      "relativePath": "07-gap.executive.task_impurity/downloaded-metadata.all-apis.json",
+      "bytes": 522338,
+      "sha256": "f12f7e91b179018f1d4c76c2be977c77d07e3a4c556289ebe61b02e6b4e32261"
+    },
+    {
+      "relativePath": "07-gap.executive.task_impurity/openalex-metadata.normalized.json",
+      "bytes": 204780,
+      "sha256": "1b7e15100e56842aa93caf09da96b47b43107c085229ed31449542841d3f3648"
+    },
+    {
+      "relativePath": "07-gap.executive.task_impurity/openalex.raw.json",
+      "bytes": 2767318,
+      "sha256": "69141c3863228280ddccb6a4230de7eefd7345029e222ddf01a5bf6f425abde4"
+    },
+    {
+      "relativePath": "07-gap.executive.task_impurity/pubmed-fetch.raw.xml",
+      "bytes": 2347774,
+      "sha256": "3493d1d6ddd8f0d064790746575bf7ec9c1feeb08b42f4dfbb19af4c1848c9b8"
+    },
+    {
+      "relativePath": "07-gap.executive.task_impurity/pubmed-metadata.normalized.json",
+      "bytes": 206829,
+      "sha256": "f5d56f718974a5ad371c0b6f5429fce5238a23ed9e34925fbe501e7cc2539974"
+    },
+    {
+      "relativePath": "07-gap.executive.task_impurity/pubmed-search.raw.json",
+      "bytes": 1539,
+      "sha256": "9123fab88ac53e060b4f59a479e9588ca11c9557dbbf5e9e87c4ea421a3dcb6a"
+    },
+    {
+      "relativePath": "07-gap.executive.task_impurity/title-abstract-screening-ledger.json",
+      "bytes": 71533,
+      "sha256": "662853ea6067a996d1a874dd4722da4e8cc7b094c901021de8a9c3e3963aa81f"
+    },
+    {
+      "relativePath": "08-gap.sleep.pediatric_circadian_development/crossref-metadata.normalized.json",
+      "bytes": 80615,
+      "sha256": "6740dd9f40e631a6fa240e41994ad590db9b610b7f5f4974569d9c3b42006614"
+    },
+    {
+      "relativePath": "08-gap.sleep.pediatric_circadian_development/crossref.raw.json",
+      "bytes": 84125,
+      "sha256": "4ebb9e4984cd96636ecc77b89d70ce768919b4abad1ca754d3f7af0ed826490b"
+    },
+    {
+      "relativePath": "08-gap.sleep.pediatric_circadian_development/dedupe-ledger.json",
+      "bytes": 557781,
+      "sha256": "6d5790dc2b5fe5c91471f61e838a936a7c47f350c9249ac13654b1c74bc4c4c1"
+    },
+    {
+      "relativePath": "08-gap.sleep.pediatric_circadian_development/downloaded-metadata.all-apis.json",
+      "bytes": 470928,
+      "sha256": "b7921ac702ad8a3e59be3fc2cfeff83df3c5c268ce9ab7032a1c59b323ea790d"
+    },
+    {
+      "relativePath": "08-gap.sleep.pediatric_circadian_development/openalex-metadata.normalized.json",
+      "bytes": 195495,
+      "sha256": "975654245e86fbc7661f5b894d79e947cc7799daf2ed3fd76795e075f78423bd"
+    },
+    {
+      "relativePath": "08-gap.sleep.pediatric_circadian_development/openalex.raw.json",
+      "bytes": 3563162,
+      "sha256": "77b7ff0b01c4a7842bbdf0b30b1f355bb1c9b5ae8ff1c17dc661b06cbddd8930"
+    },
+    {
+      "relativePath": "08-gap.sleep.pediatric_circadian_development/pubmed-fetch.raw.xml",
+      "bytes": 2834519,
+      "sha256": "3b4d9e602a80a5b5a751c3ff11196dbf6a20f9a3ae29c23fc31e5469b26944ab"
+    },
+    {
+      "relativePath": "08-gap.sleep.pediatric_circadian_development/pubmed-metadata.normalized.json",
+      "bytes": 194824,
+      "sha256": "94b9a0809641117caedac186f331911b14c51e608f593c3912dfa0c07c085345"
+    },
+    {
+      "relativePath": "08-gap.sleep.pediatric_circadian_development/pubmed-search.raw.json",
+      "bytes": 1574,
+      "sha256": "5623721064d7880a8ee343f2588bab716bb1932b4d590789d8411fcbbe645da4"
+    },
+    {
+      "relativePath": "08-gap.sleep.pediatric_circadian_development/title-abstract-screening-ledger.json",
+      "bytes": 70184,
+      "sha256": "cc65cb0bc12253af5837cdbf018a94c9e92ec48677801b855afef4f517bbf873"
+    },
+    {
+      "relativePath": "09-gap.development.conditions_adult_neurodiversity/crossref-metadata.normalized.json",
+      "bytes": 76081,
+      "sha256": "c87d7e4c199f781250686977d361f605d355d6293c61b5e4916fc850e0aa466f"
+    },
+    {
+      "relativePath": "09-gap.development.conditions_adult_neurodiversity/crossref.raw.json",
+      "bytes": 75270,
+      "sha256": "5053e2e96286206979947a817ad15c3a022dbb92adc887842b8281d4e4529edc"
+    },
+    {
+      "relativePath": "09-gap.development.conditions_adult_neurodiversity/dedupe-ledger.json",
+      "bytes": 322856,
+      "sha256": "b7416c998a89a1b126bfbf396de847c67387dfb6ff3e482aba3ccffed75793db"
+    },
+    {
+      "relativePath": "09-gap.development.conditions_adult_neurodiversity/downloaded-metadata.all-apis.json",
+      "bytes": 270529,
+      "sha256": "5addf95caacdfd9de886beac91d601fb4cbc431ed0f7af07966a9041b721a0bc"
+    },
+    {
+      "relativePath": "09-gap.development.conditions_adult_neurodiversity/openalex-metadata.normalized.json",
+      "bytes": 7331,
+      "sha256": "1fb1f285e06398e67d2b46fcbcbeb9b65b80ee39845a467e0c4941e35b6873e7"
+    },
+    {
+      "relativePath": "09-gap.development.conditions_adult_neurodiversity/openalex.raw.json",
+      "bytes": 148915,
+      "sha256": "5c2cc4c82d3bd4acf313a0f8fb1f84be739f8a252aa804f309ada71684b0b145"
+    },
+    {
+      "relativePath": "09-gap.development.conditions_adult_neurodiversity/pubmed-fetch.raw.xml",
+      "bytes": 1959584,
+      "sha256": "becf18c02f462b0a192b8b0b701d3bbddb97a7ee3dba740eb36bc939a91c014a"
+    },
+    {
+      "relativePath": "09-gap.development.conditions_adult_neurodiversity/pubmed-metadata.normalized.json",
+      "bytes": 187123,
+      "sha256": "765450e8db9e1840ba7282b43faf6c5b854793888e6ad33612a3064704f7d099"
+    },
+    {
+      "relativePath": "09-gap.development.conditions_adult_neurodiversity/pubmed-search.raw.json",
+      "bytes": 1651,
+      "sha256": "02ec2fe3aa0aaf0300d17a743181c9f48ad2d930018612e632cb58c21b9d4240"
+    },
+    {
+      "relativePath": "09-gap.development.conditions_adult_neurodiversity/title-abstract-screening-ledger.json",
+      "bytes": 45479,
+      "sha256": "93b827bf8940b053637958f5a0805181ac59b8e9c2c423088cf002fc9880bc90"
+    },
+    {
+      "relativePath": "10-gap.measurement.dna_psychometrics_individual_uncertainty/crossref-metadata.normalized.json",
+      "bytes": 120729,
+      "sha256": "66ec50b87c8712049e2677c567729de93d5643f90c7eb251f5d0e1764005c005"
+    },
+    {
+      "relativePath": "10-gap.measurement.dna_psychometrics_individual_uncertainty/crossref.raw.json",
+      "bytes": 122330,
+      "sha256": "0cafe8cdee33a41b915d09dd232b51b32cbd55377dcd32d5f00dc9c37b5b99d6"
+    },
+    {
+      "relativePath": "10-gap.measurement.dna_psychometrics_individual_uncertainty/dedupe-ledger.json",
+      "bytes": 444620,
+      "sha256": "0078ac183b50728cd18ecfff26874616e28b7095af2a8f54cdc5aa2c14169b6d"
+    },
+    {
+      "relativePath": "10-gap.measurement.dna_psychometrics_individual_uncertainty/downloaded-metadata.all-apis.json",
+      "bytes": 365541,
+      "sha256": "83b7a653ac3f2d00be80775babe2b4298ea5aa1cdfbf6da42b873298193ee268"
+    },
+    {
+      "relativePath": "10-gap.measurement.dna_psychometrics_individual_uncertainty/openalex-metadata.normalized.json",
+      "bytes": 202207,
+      "sha256": "79968c59bd75c562d8e0e0c4e2a1b617fb8136f58e9b01ab4db51728beef7dde"
+    },
+    {
+      "relativePath": "10-gap.measurement.dna_psychometrics_individual_uncertainty/openalex.raw.json",
+      "bytes": 3209430,
+      "sha256": "bc81fd11626c940efcf174ec1749bec15cdddec3a1630f7475a31db52e6c5c8a"
+    },
+    {
+      "relativePath": "10-gap.measurement.dna_psychometrics_individual_uncertainty/pubmed-fetch.raw.xml",
+      "bytes": 219072,
+      "sha256": "3012d9e89178891e1c6430039421295ec677d71cdecff18b6a3bf889dcd7721b"
+    },
+    {
+      "relativePath": "10-gap.measurement.dna_psychometrics_individual_uncertainty/pubmed-metadata.normalized.json",
+      "bytes": 42611,
+      "sha256": "a1c00959ca313eadbff949a1e99e61f53a4388d2665a2fe36b8730bd283d0a92"
+    },
+    {
+      "relativePath": "10-gap.measurement.dna_psychometrics_individual_uncertainty/pubmed-search.raw.json",
+      "bytes": 710,
+      "sha256": "1902fbca4dfdbe3f1259a83da711866ca48c52f766b5ffde43bc489aac909489"
+    },
+    {
+      "relativePath": "10-gap.measurement.dna_psychometrics_individual_uncertainty/title-abstract-screening-ledger.json",
+      "bytes": 54632,
+      "sha256": "5e72096cbfd45b394393295d4740c9d79b03fd62eb0b6037bd95951840567086"
+    }
+  ],
+  "rawArtifactManifestSha256": "2b3144aed93d7854f181fa33c416bdbdf66f91d12d92509d6f08191aa09a40de",
+  "protocolExecutions": [
+    {
+      "protocolId": "gap.cellular.ion_plasticity_glia_neuromodulators",
+      "domainId": "cellular_neurophysiology",
+      "protocolDefinitionSha256": "6b4cbc3520cf900a9e084c3f9b7741a162b2f319eb9ab59c89749730694044f6",
+      "executionStatus": "identification_and_title_abstract_screening_executed_full_text_pending",
+      "apiExecutions": [
+        {
+          "api": "PubMed",
+          "query": "((ion channel*[Title/Abstract] OR synaptic plasticity[Title/Abstract] OR glia*[Title/Abstract] OR neuromodulator*[Title/Abstract]) AND (human*[Title/Abstract] OR Humans[Mesh])) AND (review[Publication Type] OR systematic review[Title/Abstract] OR consensus[Title/Abstract])",
+          "querySha256": "3baddd37411c05ba8d135083b4674dae5b1058724decd33033db13157846b9ca",
+          "endpoint": "NCBI E-utilities eSearch/eFetch",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=100&sort=relevance&datetype=pdat&mindate=1900%2F01%2F01&maxdate=2026%2F07%2F19&term=%28%28ion+channel*%5BTitle%2FAbstract%5D+OR+synaptic+plasticity%5BTitle%2FAbstract%5D+OR+glia*%5BTitle%2FAbstract%5D+OR+neuromodulator*%5BTitle%2FAbstract%5D%29+AND+%28human*%5BTitle%2FAbstract%5D+OR+Humans%5BMesh%5D%29%29+AND+%28review%5BPublication+Type%5D+OR+systematic+review%5BTitle%2FAbstract%5D+OR+consensus%5BTitle%2FAbstract%5D%29",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1938.964,
+                  "error": null
+                }
+              ],
+              "responseSha256": "df7e999181c890971f14ec1b20da3e2791f8ac61d696acbfd84ffa69f642e05b",
+              "responseBytes": 1671,
+              "rawRelativePath": "01-gap.cellular.ion_plasticity_glia_neuromodulators/pubmed-search.raw.json",
+              "error": null
+            },
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=32980261%2C29462012%2C26037806%2C26698193%2C30359599%2C34302951%2C31362658%2C23686171%2C33810328%2C37686202%2C28623429%2C40412457%2C39722351%2C33939892%2C9501074%2C21958593%2C31646541%2C33794245%2C11741027%2C16904750%2C25087980%2C38876308%2C25862587%2C17948030%2C10389489%2C32663762%2C29080020%2C18495357%2C39043383%2C38359933%2C17419049%2C39223703%2C9663798%2C28414121%2C35193483%2C38325753%2C30390285%2C26330519%2C31614739%2C29723500%2C32723541%2C25897875%2C34531154%2C26447571%2C28299411%2C11516393%2C11130902%2C27565148%2C16427028%2C31607359%2C29118216%2C30212713%2C7576664%2C38796123%2C35666404%2C21219963%2C28049644%2C33314619%2C20236948%2C16935034%2C35139431%2C36318443%2C33647447%2C20633383%2C31180161%2C21104383%2C6382610%2C31866297%2C37518943%2C36031056%2C33336550%2C25929239%2C24712986%2C31060234%2C26687375%2C15254214%2C20182030%2C28890422%2C41373784%2C23466332%2C25498984%2C19825509%2C17940551%2C32789788%2C29024871%2C39393417%2C29770112%2C34201943%2C28511127%2C29425728%2C23774138%2C35513209%2C23639436%2C24298167%2C26453308%2C21967517%2C35034734%2C25239943%2C40515950%2C36868632",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1314.357,
+                  "error": null
+                }
+              ],
+              "responseSha256": "daae2b54020022eea83a16ee79c89632a9f7fd61676fa995e8d533d0788102e1",
+              "responseBytes": 3413983,
+              "rawRelativePath": "01-gap.cellular.ion_plasticity_glia_neuromodulators/pubmed-fetch.raw.xml",
+              "error": null
+            }
+          ],
+          "identifiedReported": 32089,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "af4d24bf400adb32dff7338141ae8f1034b56b4b8ed228bb0786c3331432c475",
+          "error": null
+        },
+        {
+          "api": "Crossref",
+          "query": "ion channels synaptic plasticity glia neuromodulators human neurophysiology review",
+          "querySha256": "2fe29cb04d74f1aeef6ce7dd23cfdd8cc940d7a6700dc3600ced3f2e32c73f47",
+          "endpoint": "Crossref REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.crossref.org/works?query.bibliographic=ion+channels+synaptic+plasticity+glia+neuromodulators+human+neurophysiology+review&rows=100&filter=until-pub-date%3A2026-07-19&select=DOI%2Ctitle%2Cabstract%2Cpublished%2Cpublished-print%2Cpublished-online%2Cissued%2Ccreated%2CURL%2Ctype",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 869.109,
+                  "error": null
+                }
+              ],
+              "responseSha256": "68846d6a11d0e6728b1a64a3f30d5eb1984fcb3cdd3522c130d59c16cf96dddf",
+              "responseBytes": 95851,
+              "rawRelativePath": "01-gap.cellular.ion_plasticity_glia_neuromodulators/crossref.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 11000861,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "7e3c93fc3ff5045d595bd9b8b9b77ce17c86153cded7ff88a0932cf5cba0c541",
+          "error": null
+        },
+        {
+          "api": "OpenAlex",
+          "query": "ion channels synaptic plasticity glia neuromodulators human neurophysiology review",
+          "querySha256": "2fe29cb04d74f1aeef6ce7dd23cfdd8cc940d7a6700dc3600ced3f2e32c73f47",
+          "endpoint": "OpenAlex REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.openalex.org/works?search=ion+channels+synaptic+plasticity+glia+neuromodulators+human+neurophysiology+review&per-page=100&filter=from_publication_date%3A1900-01-01%2Cto_publication_date%3A2026-07-19",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 2449.058,
+                  "error": null
+                }
+              ],
+              "responseSha256": "d13dbfcd53ca12382dae58e10a5ba7a84a350f5f7ab519991b0cfea8b2d4c9c4",
+              "responseBytes": 3523185,
+              "rawRelativePath": "01-gap.cellular.ion_plasticity_glia_neuromodulators/openalex.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 365,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "b63adee57c348bbded977a13f6b7b37716d1e366d1130e1ac5a973cf2a43d604",
+          "error": null
+        }
+      ],
+      "counts": {
+        "identifiedReportedAcrossApisNonDeduplicated": 11033315,
+        "identifiedCountCompleteAcrossAllApis": true,
+        "downloadedMetadata": 300,
+        "deduplicatedMetadata": 294,
+        "duplicatesRemoved": 6,
+        "titleAbstractScreened": 294,
+        "titleAbstractExcluded": 66,
+        "advancedToManualFullTextReview": 228,
+        "fullTextAssessed": null,
+        "includedInEvidenceBase": null
+      },
+      "exclusionReasons": {
+        "animal_only_title_abstract_signal": 19,
+        "off_topic_title_abstract": 43,
+        "unsupported_record_type": 4
+      },
+      "metadataLimitations": {
+        "recordsWithoutAbstract": 70,
+        "recordsWithoutYear": 0,
+        "recordsWithoutDoiAndPmid": 0
+      },
+      "dedupePolicy": [
+        "canonical DOI",
+        "PMID",
+        "normalized title plus year"
+      ],
+      "screeningPolicy": "deterministic_title_abstract_only",
+      "releaseReadyClaims": 0,
+      "evidenceBaseInclusionPerformed": false,
+      "ledgerHashes": {
+        "downloadedMetadataSha256": "5c1f4ff105f863a1da41dbc6c535a3465b1dab302adeb97530359408599b9677",
+        "dedupeLedgerSha256": "ab1c7f09514f513321145ed96a1d6aedba2b59821f237a5bb02679fba1a05827",
+        "titleAbstractScreeningLedgerSha256": "df459fb47f5aec480c33e49f2c1497087bfaffdb3abb539e77b5609f6b7936ca"
+      }
+    },
+    {
+      "protocolId": "gap.cns.brainstem_thalamus_basal_ganglia_cerebellum",
+      "domainId": "central_nervous_system_networks",
+      "protocolDefinitionSha256": "dae630a493c587f10ade4eefec0dcb4b09458aa8feacaf30cfd5e7c41e315985",
+      "executionStatus": "identification_and_title_abstract_screening_executed_full_text_pending",
+      "apiExecutions": [
+        {
+          "api": "PubMed",
+          "query": "((brainstem[Title/Abstract] OR thalamus[Title/Abstract] OR basal ganglia[Title/Abstract] OR cerebellum[Title/Abstract]) AND (network*[Title/Abstract] OR regulation[Title/Abstract])) AND (human*[Title/Abstract] OR Humans[Mesh])",
+          "querySha256": "0212a1a3c9065565a70d3b308bce2dc6aac705027e68b04f59d2073c6f754d96",
+          "endpoint": "NCBI E-utilities eSearch/eFetch",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=100&sort=relevance&datetype=pdat&mindate=1900%2F01%2F01&maxdate=2026%2F07%2F19&term=%28%28brainstem%5BTitle%2FAbstract%5D+OR+thalamus%5BTitle%2FAbstract%5D+OR+basal+ganglia%5BTitle%2FAbstract%5D+OR+cerebellum%5BTitle%2FAbstract%5D%29+AND+%28network*%5BTitle%2FAbstract%5D+OR+regulation%5BTitle%2FAbstract%5D%29%29+AND+%28human*%5BTitle%2FAbstract%5D+OR+Humans%5BMesh%5D%29",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1097.216,
+                  "error": null
+                }
+              ],
+              "responseSha256": "70fa369658daeb53bace0ca9ce9f588b6d8e1085ad38a05ddbe3dcce940348ea",
+              "responseBytes": 1622,
+              "rawRelativePath": "02-gap.cns.brainstem_thalamus_basal_ganglia_cerebellum/pubmed-search.raw.json",
+              "error": null
+            },
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=35422525%2C29903454%2C37738511%2C29643480%2C19812543%2C39993779%2C24132836%2C34376609%2C22377853%2C39884319%2C30710558%2C32657888%2C37576472%2C29224175%2C26618763%2C34954622%2C34098250%2C11742685%2C40911506%2C29524600%2C31688323%2C35430189%2C27638066%2C37562865%2C38918348%2C15196508%2C9679773%2C37962801%2C18267254%2C35661099%2C30348254%2C38695762%2C19689306%2C18950692%2C29089396%2C27590830%2C38196146%2C12785742%2C22841500%2C28843013%2C38043957%2C38918357%2C27852016%2C25239288%2C34792836%2C37293735%2C39066504%2C31039359%2C35842523%2C32712678%2C33512608%2C28232189%2C37129365%2C27028222%2C39106176%2C38032266%2C34184129%2C37973376%2C26030698%2C37011086%2C24333801%2C36242719%2C39333887%2C26409114%2C28681758%2C28363681%2C23893454%2C8907783%2C23579055%2C26883160%2C15944742%2C21320576%2C32215851%2C29123945%2C29891075%2C41074653%2C27089884%2C31999079%2C25514336%2C32407735%2C42019211%2C40506853%2C26307859%2C26530223%2C38492440%2C26459110%2C33883192%2C32686738%2C36575348%2C33120434%2C37649430%2C19744522%2C31736719%2C34389940%2C41429151%2C34225928%2C15564078%2C21645100%2C24132837%2C34344985",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1199.959,
+                  "error": null
+                }
+              ],
+              "responseSha256": "54bc9b0e9d78f7a9011e2c316d6269f6a33fc0a255f760365c0713bada5e3ef4",
+              "responseBytes": 3170954,
+              "rawRelativePath": "02-gap.cns.brainstem_thalamus_basal_ganglia_cerebellum/pubmed-fetch.raw.xml",
+              "error": null
+            }
+          ],
+          "identifiedReported": 13777,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "e3443e08b6bdc77748cd286ec9f709bf706c50991ae2e34c348b5932d0181e55",
+          "error": null
+        },
+        {
+          "api": "Crossref",
+          "query": "brainstem thalamus basal ganglia cerebellum regulation network human review",
+          "querySha256": "b75e43ba619fc0f4a1d59c980317fb00711728cd57b65becadc02ec4407124b9",
+          "endpoint": "Crossref REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.crossref.org/works?query.bibliographic=brainstem+thalamus+basal+ganglia+cerebellum+regulation+network+human+review&rows=100&filter=until-pub-date%3A2026-07-19&select=DOI%2Ctitle%2Cabstract%2Cpublished%2Cpublished-print%2Cpublished-online%2Cissued%2Ccreated%2CURL%2Ctype",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 289.261,
+                  "error": null
+                }
+              ],
+              "responseSha256": "15e98216317c873e7e402730b57019b9247a218bf84127a3b57cc4ea66cad2c1",
+              "responseBytes": 70768,
+              "rawRelativePath": "02-gap.cns.brainstem_thalamus_basal_ganglia_cerebellum/crossref.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 11962408,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "c88e2964f7800373f1dee590a7f85fe83cdbc035c9dc010251365fc58ea28e46",
+          "error": null
+        },
+        {
+          "api": "OpenAlex",
+          "query": "brainstem thalamus basal ganglia cerebellum regulation network human",
+          "querySha256": "d8381219a9dd03815898119af718c0fef114e6bc1f426068d1603b3dcf2bb2a8",
+          "endpoint": "OpenAlex REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.openalex.org/works?search=brainstem+thalamus+basal+ganglia+cerebellum+regulation+network+human&per-page=100&filter=from_publication_date%3A1900-01-01%2Cto_publication_date%3A2026-07-19",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 2299.238,
+                  "error": null
+                }
+              ],
+              "responseSha256": "ef616a73299663c9ee721f9f0018c8d681592e9be0b66c50801e154886e14027",
+              "responseBytes": 3983984,
+              "rawRelativePath": "02-gap.cns.brainstem_thalamus_basal_ganglia_cerebellum/openalex.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 4829,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "a08e57b902a1e8b5a08948e41bf52ee5c7e7dc8cc04015928f1d57fa28f06512",
+          "error": null
+        }
+      ],
+      "counts": {
+        "identifiedReportedAcrossApisNonDeduplicated": 11981014,
+        "identifiedCountCompleteAcrossAllApis": true,
+        "downloadedMetadata": 300,
+        "deduplicatedMetadata": 281,
+        "duplicatesRemoved": 19,
+        "titleAbstractScreened": 281,
+        "titleAbstractExcluded": 58,
+        "advancedToManualFullTextReview": 223,
+        "fullTextAssessed": null,
+        "includedInEvidenceBase": null
+      },
+      "exclusionReasons": {
+        "unsupported_record_type": 17,
+        "animal_only_title_abstract_signal": 13,
+        "off_topic_title_abstract": 28
+      },
+      "metadataLimitations": {
+        "recordsWithoutAbstract": 90,
+        "recordsWithoutYear": 0,
+        "recordsWithoutDoiAndPmid": 0
+      },
+      "dedupePolicy": [
+        "canonical DOI",
+        "PMID",
+        "normalized title plus year"
+      ],
+      "screeningPolicy": "deterministic_title_abstract_only",
+      "releaseReadyClaims": 0,
+      "evidenceBaseInclusionPerformed": false,
+      "ledgerHashes": {
+        "downloadedMetadataSha256": "a8e328b63ae71adcc84058edd6f26f9175845a3e93f82b5a4301dcaaa682aa18",
+        "dedupeLedgerSha256": "6690db97a11b1a2cc85505875168fde417f74ae06ccebeb178b74c521f74b82c",
+        "titleAbstractScreeningLedgerSha256": "7cee6b53a354668e9fb1701637c4c21e0bbfa67e7b14c8e4cfdee4be1d54e3e3"
+      }
+    },
+    {
+      "protocolId": "gap.ans.central_network_baroreflex_respiration_posture",
+      "domainId": "autonomic_nervous_system_hrv",
+      "protocolDefinitionSha256": "f04ff40a1ffdbd8c60407fc4c34f61cdbed101988994752c9e9f0333d38cbc33",
+      "executionStatus": "identification_and_title_abstract_screening_executed_full_text_pending",
+      "apiExecutions": [
+        {
+          "api": "PubMed",
+          "query": "((central autonomic network[Title/Abstract] OR baroreflex[Title/Abstract]) AND (respiration[Title/Abstract] OR posture[Title/Abstract] OR heart rate variability[Title/Abstract])) AND Humans[Mesh]",
+          "querySha256": "e21e9f1f5e204f40ce513b17a5a8d07dee485ec809369df9c7ca3f4b6cd547ca",
+          "endpoint": "NCBI E-utilities eSearch/eFetch",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=100&sort=relevance&datetype=pdat&mindate=1900%2F01%2F01&maxdate=2026%2F07%2F19&term=%28%28central+autonomic+network%5BTitle%2FAbstract%5D+OR+baroreflex%5BTitle%2FAbstract%5D%29+AND+%28respiration%5BTitle%2FAbstract%5D+OR+posture%5BTitle%2FAbstract%5D+OR+heart+rate+variability%5BTitle%2FAbstract%5D%29%29+AND+Humans%5BMesh%5D",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1259.933,
+                  "error": null
+                }
+              ],
+              "responseSha256": "f6b4d5ebb6bb04e9f2f3439f46199de4e17daab67b96b214b9dccd29d0b08756",
+              "responseBytes": 1571,
+              "rawRelativePath": "03-gap.ans.central_network_baroreflex_respiration_posture/pubmed-search.raw.json",
+              "error": null
+            },
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=35167847%2C1619751%2C38372446%2C39674129%2C35254592%2C17244940%2C16097498%2C36755066%2C29053016%2C29476276%2C29605837%2C39117958%2C34774410%2C12228049%2C40751053%2C38320522%2C36343372%2C36525923%2C19272312%2C38428323%2C12583507%2C20443135%2C2091609%2C36878486%2C10949066%2C31386920%2C7867230%2C8371002%2C29775234%2C16732466%2C22660999%2C17011098%2C28699532%2C38238457%2C40185626%2C12831970%2C36394777%2C31219036%2C22688783%2C25080269%2C37566112%2C21693507%2C30890343%2C36613082%2C37702351%2C15486114%2C32285231%2C36878488%2C9448898%2C33718981%2C28888482%2C38176987%2C39044725%2C8203614%2C9651739%2C11306527%2C35579767%2C1426801%2C24901074%2C25325476%2C33111377%2C7513871%2C29654380%2C36507976%2C37119426%2C33356983%2C37072006%2C8417519%2C39111062%2C37159491%2C38082600%2C31055043%2C34953334%2C40252198%2C41823051%2C28045562%2C40040234%2C35627614%2C38408523%2C21890520%2C35394413%2C9315988%2C23627490%2C29397314%2C41721744%2C10768902%2C35171410%2C27072546%2C31964286%2C34534600%2C29316181%2C29791601%2C39332747%2C38163669%2C11324990%2C27647521%2C3631301%2C9358508%2C30721903%2C14508023",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1076.469,
+                  "error": null
+                }
+              ],
+              "responseSha256": "a4780f32ea8f0a826fad96b440f1e740d60ce2e01792541dcbc4da0cbf7072f4",
+              "responseBytes": 1633184,
+              "rawRelativePath": "03-gap.ans.central_network_baroreflex_respiration_posture/pubmed-fetch.raw.xml",
+              "error": null
+            }
+          ],
+          "identifiedReported": 1576,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "41b915701e7a20bfd0ea0d2dd366f3226a20899be466f023263abce4b125de15",
+          "error": null
+        },
+        {
+          "api": "Crossref",
+          "query": "central autonomic network baroreflex respiration posture heart rate variability human",
+          "querySha256": "c4fff98bbcb283d79ef6286465fda3603c335b92d7bdd6027455de790694f5d8",
+          "endpoint": "Crossref REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.crossref.org/works?query.bibliographic=central+autonomic+network+baroreflex+respiration+posture+heart+rate+variability+human&rows=100&filter=until-pub-date%3A2026-07-19&select=DOI%2Ctitle%2Cabstract%2Cpublished%2Cpublished-print%2Cpublished-online%2Cissued%2Ccreated%2CURL%2Ctype",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 472.81,
+                  "error": null
+                }
+              ],
+              "responseSha256": "c817ea0644a68761e48fe682604eceb1656e0907ff910fa33b7cbac0d7403efa",
+              "responseBytes": 62818,
+              "rawRelativePath": "03-gap.ans.central_network_baroreflex_respiration_posture/crossref.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 150444,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "9d6bafb35b520462aedbe847fa752c1404fad6a22dc2be71b9b6a1511c5d03be",
+          "error": null
+        },
+        {
+          "api": "OpenAlex",
+          "query": "central autonomic network baroreflex respiration posture HRV human",
+          "querySha256": "6aca707b834278ec3760454fcf235faebf3eda9f82025f678f6c044ac38eeee2",
+          "endpoint": "OpenAlex REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.openalex.org/works?search=central+autonomic+network+baroreflex+respiration+posture+HRV+human&per-page=100&filter=from_publication_date%3A1900-01-01%2Cto_publication_date%3A2026-07-19",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1861.394,
+                  "error": null
+                }
+              ],
+              "responseSha256": "49078525bf58f797c78260a0b02dd1bc07187eaa324e5f083c393c2495b0f71d",
+              "responseBytes": 2851207,
+              "rawRelativePath": "03-gap.ans.central_network_baroreflex_respiration_posture/openalex.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 325,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "8a370af8073b5db88a93010457ee6e08a55840a1a290351e46c522ee671f2fa5",
+          "error": null
+        }
+      ],
+      "counts": {
+        "identifiedReportedAcrossApisNonDeduplicated": 152345,
+        "identifiedCountCompleteAcrossAllApis": true,
+        "downloadedMetadata": 300,
+        "deduplicatedMetadata": 293,
+        "duplicatesRemoved": 7,
+        "titleAbstractScreened": 293,
+        "titleAbstractExcluded": 51,
+        "advancedToManualFullTextReview": 242,
+        "fullTextAssessed": null,
+        "includedInEvidenceBase": null
+      },
+      "exclusionReasons": {
+        "off_topic_title_abstract": 43,
+        "animal_only_title_abstract_signal": 6,
+        "unsupported_record_type": 2
+      },
+      "metadataLimitations": {
+        "recordsWithoutAbstract": 99,
+        "recordsWithoutYear": 0,
+        "recordsWithoutDoiAndPmid": 0
+      },
+      "dedupePolicy": [
+        "canonical DOI",
+        "PMID",
+        "normalized title plus year"
+      ],
+      "screeningPolicy": "deterministic_title_abstract_only",
+      "releaseReadyClaims": 0,
+      "evidenceBaseInclusionPerformed": false,
+      "ledgerHashes": {
+        "downloadedMetadataSha256": "3c637ad9143697bea75a6fe93e88002fbca79bdc4f1c65f89e0f707e314df37e",
+        "dedupeLedgerSha256": "aca01d8b5fadfa9ddef1cee37e4847b48cca5051dcc08cf3c630b88d9174cc3b",
+        "titleAbstractScreeningLedgerSha256": "6eb32fb42633bfb04f01545c61c3a83ded9ebc01331571ff79c0d54a6f687eb3"
+      }
+    },
+    {
+      "protocolId": "gap.stress.hpa_sam_child_adolescent_development",
+      "domainId": "stress_arousal_reactivity_recovery",
+      "protocolDefinitionSha256": "105b8ea4cecaaefd2a9d13f962b4fce4524065724584ba5b06beab5185f1337a",
+      "executionStatus": "identification_and_title_abstract_screening_executed_full_text_pending",
+      "apiExecutions": [
+        {
+          "api": "PubMed",
+          "query": "((HPA axis[Title/Abstract] OR hypothalamic pituitary adrenal[Title/Abstract] OR sympathoadrenal[Title/Abstract] OR SAM system[Title/Abstract]) AND (child*[Title/Abstract] OR adolescen*[Title/Abstract]) AND (development*[Title/Abstract] OR reactivity[Title/Abstract] OR recovery[Title/Abstract]))",
+          "querySha256": "0474cee1b569d416c58ca9f70ff8bdd5a2115f3105adff4f504043659364183e",
+          "endpoint": "NCBI E-utilities eSearch/eFetch",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=100&sort=relevance&datetype=pdat&mindate=1900%2F01%2F01&maxdate=2026%2F07%2F19&term=%28%28HPA+axis%5BTitle%2FAbstract%5D+OR+hypothalamic+pituitary+adrenal%5BTitle%2FAbstract%5D+OR+sympathoadrenal%5BTitle%2FAbstract%5D+OR+SAM+system%5BTitle%2FAbstract%5D%29+AND+%28child*%5BTitle%2FAbstract%5D+OR+adolescen*%5BTitle%2FAbstract%5D%29+AND+%28development*%5BTitle%2FAbstract%5D+OR+reactivity%5BTitle%2FAbstract%5D+OR+recovery%5BTitle%2FAbstract%5D%29%29",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 912.011,
+                  "error": null
+                }
+              ],
+              "responseSha256": "6f0c6f26055d6a936b6775f9c507ed91bafab3bcec7b52a62fbac7aa132ee56b",
+              "responseBytes": 1636,
+              "rawRelativePath": "04-gap.stress.hpa_sam_child_adolescent_development/pubmed-search.raw.json",
+              "error": null
+            },
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=32450993%2C32002927%2C31374220%2C30072050%2C32204834%2C37559538%2C29058015%2C32624073%2C38090738%2C26547798%2C38493596%2C28693541%2C35202606%2C40703036%2C35599780%2C19499417%2C24175164%2C23465865%2C31927022%2C32725624%2C27751733%2C27569586%2C15758865%2C35033927%2C40768389%2C39358019%2C39622370%2C21290178%2C38522372%2C40007054%2C18606040%2C19782715%2C28751271%2C37745503%2C30949564%2C20117209%2C35095389%2C15328550%2C29729024%2C30155579%2C34022589%2C29682808%2C35835021%2C28577879%2C26851306%2C37628343%2C30590339%2C30366609%2C24729154%2C29275000%2C36822502%2C29225338%2C37866039%2C15471614%2C40157436%2C9065980%2C36087419%2C34402112%2C18339361%2C16908106%2C31102264%2C35843709%2C21944263%2C24342845%2C12204192%2C28364727%2C38335561%2C40725666%2C19132973%2C19616355%2C36536630%2C35219756%2C27589663%2C32649929%2C38426566%2C34410535%2C19661133%2C17308138%2C12732221%2C22239584%2C10751014%2C38281572%2C40669729%2C33711348%2C28619017%2C34365527%2C33358983%2C22281210%2C34092276%2C34708011%2C28818773%2C30079845%2C26638764%2C34455576%2C35474403%2C20080145%2C26647360%2C35871827%2C29393662%2C42036575",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1176.769,
+                  "error": null
+                }
+              ],
+              "responseSha256": "0aae3533dfda12ba48bfef31582974c33d80335acf49c92db63b55a80ff34064",
+              "responseBytes": 3131422,
+              "rawRelativePath": "04-gap.stress.hpa_sam_child_adolescent_development/pubmed-fetch.raw.xml",
+              "error": null
+            }
+          ],
+          "identifiedReported": 1630,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "b0e390d3c656890ba91fad1a76e41818b1f4b773c877075d1c345f5768c0413b",
+          "error": null
+        },
+        {
+          "api": "Crossref",
+          "query": "HPA SAM child adolescent development stress reactivity recovery systematic review",
+          "querySha256": "cfac81808412b659c54c60d702a5e3805f152d6efbe1e9aac0aab9ff2e9c8b9a",
+          "endpoint": "Crossref REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.crossref.org/works?query.bibliographic=HPA+SAM+child+adolescent+development+stress+reactivity+recovery+systematic+review&rows=100&filter=until-pub-date%3A2026-07-19&select=DOI%2Ctitle%2Cabstract%2Cpublished%2Cpublished-print%2Cpublished-online%2Cissued%2Ccreated%2CURL%2Ctype",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 256.188,
+                  "error": null
+                }
+              ],
+              "responseSha256": "2c032761dfea8d0dede29b06ab3ebe0efbd213ff051261ab27cc5bbd4a07fa67",
+              "responseBytes": 89488,
+              "rawRelativePath": "04-gap.stress.hpa_sam_child_adolescent_development/crossref.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 1029457,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "f696bf8eae369f0a3770f785d6f24ccce64579ef6a09e8c402228ae89ddea91b",
+          "error": null
+        },
+        {
+          "api": "OpenAlex",
+          "query": "HPA SAM child adolescent stress development reactivity recovery",
+          "querySha256": "2ee7de90443508b5300c26e008f26461a02b5c16097b52c6e5ec702ca9929c1d",
+          "endpoint": "OpenAlex REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.openalex.org/works?search=HPA+SAM+child+adolescent+stress+development+reactivity+recovery&per-page=100&filter=from_publication_date%3A1900-01-01%2Cto_publication_date%3A2026-07-19",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 2497.697,
+                  "error": null
+                }
+              ],
+              "responseSha256": "ea090a182c193b2498f848539098edcc07658cf8e7c6dff8260773826c2949ea",
+              "responseBytes": 3201262,
+              "rawRelativePath": "04-gap.stress.hpa_sam_child_adolescent_development/openalex.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 425,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "6449ee7dd6dfdec4c206738dbd633c590d3088335b63d2b62b085b745eb423b1",
+          "error": null
+        }
+      ],
+      "counts": {
+        "identifiedReportedAcrossApisNonDeduplicated": 1031512,
+        "identifiedCountCompleteAcrossAllApis": true,
+        "downloadedMetadata": 300,
+        "deduplicatedMetadata": 296,
+        "duplicatesRemoved": 4,
+        "titleAbstractScreened": 296,
+        "titleAbstractExcluded": 166,
+        "advancedToManualFullTextReview": 130,
+        "fullTextAssessed": null,
+        "includedInEvidenceBase": null
+      },
+      "exclusionReasons": {
+        "off_topic_title_abstract": 119,
+        "unsupported_record_type": 2,
+        "missing_required_scope_signal": 40,
+        "animal_only_title_abstract_signal": 5
+      },
+      "metadataLimitations": {
+        "recordsWithoutAbstract": 84,
+        "recordsWithoutYear": 0,
+        "recordsWithoutDoiAndPmid": 1
+      },
+      "dedupePolicy": [
+        "canonical DOI",
+        "PMID",
+        "normalized title plus year"
+      ],
+      "screeningPolicy": "deterministic_title_abstract_only",
+      "releaseReadyClaims": 0,
+      "evidenceBaseInclusionPerformed": false,
+      "ledgerHashes": {
+        "downloadedMetadataSha256": "ccf0d4df1ae34544585bc5cbec198d04ece43cb489f2be7896267d57918071c5",
+        "dedupeLedgerSha256": "ab56971a33b658551063c550e11423e348defc9c6c77df70ac391862d7679db1",
+        "titleAbstractScreeningLedgerSha256": "15158eba88bde973fc9e5ea7ba10b7d92db7b2d078cd07d8c4e405a212e270bf"
+      }
+    },
+    {
+      "protocolId": "gap.sensory.vestibular_proprioceptive_tactile_auditory_modulation",
+      "domainId": "interoception_sensory_processes",
+      "protocolDefinitionSha256": "8ce048db9fc1112e00d10040a30d11de7ea0503f92b7d5801bc36d98fbcef904",
+      "executionStatus": "identification_and_title_abstract_screening_executed_full_text_pending",
+      "apiExecutions": [
+        {
+          "api": "PubMed",
+          "query": "((vestibular[Title/Abstract] OR propriocept*[Title/Abstract] OR tactile[Title/Abstract] OR auditory[Title/Abstract]) AND (sensory modulation[Title/Abstract] OR sensory processing[Title/Abstract])) AND (human*[Title/Abstract] OR Humans[Mesh])",
+          "querySha256": "5742b48f104a0dc29e5534673b07b30bab50aaf99ddd0cca095e362898fe1f01",
+          "endpoint": "NCBI E-utilities eSearch/eFetch",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=100&sort=relevance&datetype=pdat&mindate=1900%2F01%2F01&maxdate=2026%2F07%2F19&term=%28%28vestibular%5BTitle%2FAbstract%5D+OR+propriocept*%5BTitle%2FAbstract%5D+OR+tactile%5BTitle%2FAbstract%5D+OR+auditory%5BTitle%2FAbstract%5D%29+AND+%28sensory+modulation%5BTitle%2FAbstract%5D+OR+sensory+processing%5BTitle%2FAbstract%5D%29%29+AND+%28human*%5BTitle%2FAbstract%5D+OR+Humans%5BMesh%5D%29",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 772.208,
+                  "error": null
+                }
+              ],
+              "responseSha256": "fd33deb976a410ead8870d0b1ff9edc82980d5aec42a5b079f565c2acf07b304",
+              "responseBytes": 1635,
+              "rawRelativePath": "05-gap.sensory.vestibular_proprioceptive_tactile_auditory_modulation/pubmed-search.raw.json",
+              "error": null
+            },
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=23648598%2C21289533%2C18826017%2C31261689%2C22641765%2C17436841%2C33482998%2C28044012%2C37028580%2C39005037%2C30042662%2C9378591%2C12965291%2C27638060%2C40593567%2C29703662%2C31077365%2C38780828%2C2689838%2C41022567%2C38837765%2C30231625%2C40353881%2C40525310%2C20733255%2C36239796%2C34242053%2C40947401%2C37889468%2C39552096%2C21146556%2C38417380%2C39005043%2C11540644%2C27389959%2C17964251%2C27235081%2C34664126%2C40986093%2C30391407%2C36239408%2C37771091%2C35840778%2C28089657%2C15195098%2C33776657%2C39317996%2C38977472%2C27718496%2C22157109%2C35971300%2C24971690%2C31401034%2C37376987%2C36151482%2C36574728%2C37041176%2C21838818%2C36640203%2C30266147%2C19533108%2C39515075%2C36749989%2C31420219%2C40616188%2C37036862%2C34791091%2C37004533%2C40662480%2C35812213%2C36610022%2C37500625%2C36073535%2C40999648%2C42150238%2C34016802%2C32090414%2C38564350%2C34285443%2C38400993%2C36307390%2C34705997%2C12356439%2C29860079%2C10589304%2C18986969%2C11098877%2C36711500%2C36584925%2C34953592%2C7775056%2C36116537%2C22593871%2C35817847%2C38397009%2C37079581%2C27521871%2C41654100%2C24636484%2C38183169",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1067.806,
+                  "error": null
+                }
+              ],
+              "responseSha256": "71deb6bdc03fabe24520eb1e46b57f3a053d8d5f95ca310bae740f8fa9de9f2d",
+              "responseBytes": 2553717,
+              "rawRelativePath": "05-gap.sensory.vestibular_proprioceptive_tactile_auditory_modulation/pubmed-fetch.raw.xml",
+              "error": null
+            }
+          ],
+          "identifiedReported": 1459,
+          "downloadCap": 100,
+          "downloadedMetadata": 99,
+          "truncatedByCap": true,
+          "metadataSha256": "4864d1c2137b52de296ccb09d7fd445184d159b46e286c50852cb5158a08d63e",
+          "error": null
+        },
+        {
+          "api": "Crossref",
+          "query": "vestibular proprioceptive tactile auditory sensory modulation human development measurement",
+          "querySha256": "445b82959bbb7f9d6a24eb2df0ddc46f0662e2124b60dac3ad6aa71257ff3b44",
+          "endpoint": "Crossref REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.crossref.org/works?query.bibliographic=vestibular+proprioceptive+tactile+auditory+sensory+modulation+human+development+measurement&rows=100&filter=until-pub-date%3A2026-07-19&select=DOI%2Ctitle%2Cabstract%2Cpublished%2Cpublished-print%2Cpublished-online%2Cissued%2Ccreated%2CURL%2Ctype",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 280.789,
+                  "error": null
+                }
+              ],
+              "responseSha256": "0d6c07fd3af4b3fb775c99c61930745e679758ed0efe812ec0f19dbf6fe7d1d1",
+              "responseBytes": 76723,
+              "rawRelativePath": "05-gap.sensory.vestibular_proprioceptive_tactile_auditory_modulation/crossref.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 7702431,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "81e17e769ce036bdc14b2705801159731ec89ca235c1d2f207f9d7b5159b45e1",
+          "error": null
+        },
+        {
+          "api": "OpenAlex",
+          "query": "vestibular proprioceptive tactile auditory sensory modulation human development",
+          "querySha256": "5ab9f5c7cebd15703d7c0586d33572f06a5b3727497e6150891919cd7aba3dd0",
+          "endpoint": "OpenAlex REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.openalex.org/works?search=vestibular+proprioceptive+tactile+auditory+sensory+modulation+human+development&per-page=100&filter=from_publication_date%3A1900-01-01%2Cto_publication_date%3A2026-07-19",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1897.429,
+                  "error": null
+                }
+              ],
+              "responseSha256": "b3b9f0b9190c2a063243bb53f8ed3e84fda7ca25e5f9a21abef4fcceb94c17ac",
+              "responseBytes": 2915538,
+              "rawRelativePath": "05-gap.sensory.vestibular_proprioceptive_tactile_auditory_modulation/openalex.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 1303,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "84d773a07f8ce0c68d3f92fcaa1add75974e3cfa235a416a0334b3b00977be40",
+          "error": null
+        }
+      ],
+      "counts": {
+        "identifiedReportedAcrossApisNonDeduplicated": 7705193,
+        "identifiedCountCompleteAcrossAllApis": true,
+        "downloadedMetadata": 299,
+        "deduplicatedMetadata": 291,
+        "duplicatesRemoved": 8,
+        "titleAbstractScreened": 291,
+        "titleAbstractExcluded": 57,
+        "advancedToManualFullTextReview": 234,
+        "fullTextAssessed": null,
+        "includedInEvidenceBase": null
+      },
+      "exclusionReasons": {
+        "animal_only_title_abstract_signal": 10,
+        "off_topic_title_abstract": 43,
+        "unsupported_record_type": 4
+      },
+      "metadataLimitations": {
+        "recordsWithoutAbstract": 88,
+        "recordsWithoutYear": 0,
+        "recordsWithoutDoiAndPmid": 1
+      },
+      "dedupePolicy": [
+        "canonical DOI",
+        "PMID",
+        "normalized title plus year"
+      ],
+      "screeningPolicy": "deterministic_title_abstract_only",
+      "releaseReadyClaims": 0,
+      "evidenceBaseInclusionPerformed": false,
+      "ledgerHashes": {
+        "downloadedMetadataSha256": "b46badc664f9959f07427d6fbdfdc69f3f281e59aca620219300af58d8653fa5",
+        "dedupeLedgerSha256": "f3c3cddae504baad5025f16c832abf2c32c8692ef03363006c5ad4654286fe55",
+        "titleAbstractScreeningLedgerSha256": "f904818b1c2400478ee20eed7276bcd7389b78fcc6646f79107b8f0d5dc93adb"
+      }
+    },
+    {
+      "protocolId": "gap.coregulation.developmental_cultural_boundaries",
+      "domainId": "emotion_self_coregulation",
+      "protocolDefinitionSha256": "c44e191f8ce886ca5c223e9916c01fcde61618748458b5aa641f8ac7eb850f46",
+      "executionStatus": "identification_and_title_abstract_screening_executed_full_text_pending",
+      "apiExecutions": [
+        {
+          "api": "PubMed",
+          "query": "((co-regulation[Title/Abstract] OR coregulation[Title/Abstract] OR dyadic regulation[Title/Abstract]) AND (development*[Title/Abstract] OR culture[Title/Abstract] OR cross-cultural[Title/Abstract]))",
+          "querySha256": "73c10ec1dc8cef7db3384789c7865b23d506d5ec08bcbd70624199faac4766aa",
+          "endpoint": "NCBI E-utilities eSearch/eFetch",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=100&sort=relevance&datetype=pdat&mindate=1900%2F01%2F01&maxdate=2026%2F07%2F19&term=%28%28co-regulation%5BTitle%2FAbstract%5D+OR+coregulation%5BTitle%2FAbstract%5D+OR+dyadic+regulation%5BTitle%2FAbstract%5D%29+AND+%28development*%5BTitle%2FAbstract%5D+OR+culture%5BTitle%2FAbstract%5D+OR+cross-cultural%5BTitle%2FAbstract%5D%29%29",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 523.76,
+                  "error": null
+                }
+              ],
+              "responseSha256": "680f862da8ac89a3c11f893b833a99ebba94970cb5947caa7349d536e8498956",
+              "responseBytes": 1526,
+              "rawRelativePath": "06-gap.coregulation.developmental_cultural_boundaries/pubmed-search.raw.json",
+              "error": null
+            },
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=35645742%2C32729116%2C31850239%2C38267638%2C38897736%2C40735382%2C36200099%2C38225249%2C36808541%2C40168994%2C35098427%2C35508662%2C26374893%2C37628322%2C35839557%2C38810137%2C36478934%2C26085709%2C35452856%2C12640731%2C37897520%2C41107849%2C30338754%2C30605734%2C28837622%2C36923254%2C35861547%2C32661735%2C30943392%2C25762985%2C22492350%2C30946988%2C36612099%2C36113366%2C38048118%2C12452278%2C34445149%2C39077043%2C34015107%2C29244620%2C37083924%2C37635981%2C34204094%2C41476262%2C35805200%2C38845486%2C30825002%2C34118652%2C39716839%2C37515832%2C36181337%2C33262773%2C36441373%2C38281341%2C9451447%2C38690995%2C40690927%2C37243670%2C20149904%2C29059375%2C36964204%2C12639977%2C39386533%2C31372788%2C34882832%2C21107619%2C39683010%2C28349761%2C36796156%2C33299184%2C27378984%2C37080668%2C24443956%2C28070784%2C18771507%2C40907886%2C38157845%2C35970063%2C35779387%2C38407094%2C30535503%2C17903278%2C36579860%2C31113821%2C37586175%2C32001551%2C17980714%2C39322855%2C40141201%2C19888599%2C38877525%2C35488254%2C35443935%2C30354281%2C40749427%2C36095130%2C39624583%2C10761694%2C33058316%2C17107999",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1341.981,
+                  "error": null
+                }
+              ],
+              "responseSha256": "aade07d5e154b8853bc609b367198b1253533d9ae6f113d5243232b514869875",
+              "responseBytes": 3711923,
+              "rawRelativePath": "06-gap.coregulation.developmental_cultural_boundaries/pubmed-fetch.raw.xml",
+              "error": null
+            }
+          ],
+          "identifiedReported": 863,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "3dc972372e9fa3455945636c810c3bbac4135cb02c77cab7290fa3ab3d7e48b8",
+          "error": null
+        },
+        {
+          "api": "Crossref",
+          "query": "co-regulation dyadic regulation development cultural cross-cultural review",
+          "querySha256": "df4886abf97adef9d0206d0fa789b80dee4710f4a3842c4c46d8abbf388da253",
+          "endpoint": "Crossref REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.crossref.org/works?query.bibliographic=co-regulation+dyadic+regulation+development+cultural+cross-cultural+review&rows=100&filter=until-pub-date%3A2026-07-19&select=DOI%2Ctitle%2Cabstract%2Cpublished%2Cpublished-print%2Cpublished-online%2Cissued%2Ccreated%2CURL%2Ctype",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 326.158,
+                  "error": null
+                }
+              ],
+              "responseSha256": "90df0af470269db618c89c62efe5e1b6fe8be120e53e1b5bd4e00d41e9980723",
+              "responseBytes": 90155,
+              "rawRelativePath": "06-gap.coregulation.developmental_cultural_boundaries/crossref.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 13493169,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "e976285c967c772e0971bf170c4805109eec9d5f72903812b93f2433f8d4181a",
+          "error": null
+        },
+        {
+          "api": "OpenAlex",
+          "query": "co-regulation dyadic regulation development cultural cross-cultural review",
+          "querySha256": "df4886abf97adef9d0206d0fa789b80dee4710f4a3842c4c46d8abbf388da253",
+          "endpoint": "OpenAlex REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.openalex.org/works?search=co-regulation+dyadic+regulation+development+cultural+cross-cultural+review&per-page=100&filter=from_publication_date%3A1900-01-01%2Cto_publication_date%3A2026-07-19",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1160.446,
+                  "error": null
+                }
+              ],
+              "responseSha256": "24dfc0600c105db4e6866b6b22f33d98225dfa10a73f1f071ae4df5ef47fd505",
+              "responseBytes": 2794993,
+              "rawRelativePath": "06-gap.coregulation.developmental_cultural_boundaries/openalex.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 12374,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "20be021bf4908b039417f40078068909ca18876fcb33e4a9fdbd0217406be4b4",
+          "error": null
+        }
+      ],
+      "counts": {
+        "identifiedReportedAcrossApisNonDeduplicated": 13506406,
+        "identifiedCountCompleteAcrossAllApis": true,
+        "downloadedMetadata": 300,
+        "deduplicatedMetadata": 288,
+        "duplicatesRemoved": 12,
+        "titleAbstractScreened": 288,
+        "titleAbstractExcluded": 189,
+        "advancedToManualFullTextReview": 99,
+        "fullTextAssessed": null,
+        "includedInEvidenceBase": null
+      },
+      "exclusionReasons": {
+        "off_topic_title_abstract": 176,
+        "unsupported_record_type": 6,
+        "animal_only_title_abstract_signal": 7
+      },
+      "metadataLimitations": {
+        "recordsWithoutAbstract": 67,
+        "recordsWithoutYear": 0,
+        "recordsWithoutDoiAndPmid": 1
+      },
+      "dedupePolicy": [
+        "canonical DOI",
+        "PMID",
+        "normalized title plus year"
+      ],
+      "screeningPolicy": "deterministic_title_abstract_only",
+      "releaseReadyClaims": 0,
+      "evidenceBaseInclusionPerformed": false,
+      "ledgerHashes": {
+        "downloadedMetadataSha256": "215c6af60e68feb815e7d7a8692e3049bc72689da945b95a885fa784b53f07d3",
+        "dedupeLedgerSha256": "9f1eb59c500809824c987651782c006ee98e27688f0c24e37fb0725fe330396f",
+        "titleAbstractScreeningLedgerSha256": "d7283e43549d87c8ce69d456137883430b7cff2ecf5a416914fa7ba0483607f1"
+      }
+    },
+    {
+      "protocolId": "gap.executive.task_impurity",
+      "domainId": "attention_working_memory_executive_functions",
+      "protocolDefinitionSha256": "29bb216a07793b3f0ad5353d6148358fc8e9d2e50b6ab78642fcd5bfd7b0a8ce",
+      "executionStatus": "identification_and_title_abstract_screening_executed_full_text_pending",
+      "apiExecutions": [
+        {
+          "api": "PubMed",
+          "query": "((executive function[Title/Abstract] OR cognitive control[Title/Abstract]) AND (task impurity[Title/Abstract] OR reliability[Title/Abstract] OR construct validity[Title/Abstract] OR test-retest[Title/Abstract]))",
+          "querySha256": "0f3c187d8d52f2c8fe80a26b5851f8df31b5bb1c470773c7571c38fc5f0453c8",
+          "endpoint": "NCBI E-utilities eSearch/eFetch",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=100&sort=relevance&datetype=pdat&mindate=1900%2F01%2F01&maxdate=2026%2F07%2F19&term=%28%28executive+function%5BTitle%2FAbstract%5D+OR+cognitive+control%5BTitle%2FAbstract%5D%29+AND+%28task+impurity%5BTitle%2FAbstract%5D+OR+reliability%5BTitle%2FAbstract%5D+OR+construct+validity%5BTitle%2FAbstract%5D+OR+test-retest%5BTitle%2FAbstract%5D%29%29",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 507.32,
+                  "error": null
+                }
+              ],
+              "responseSha256": "9123fab88ac53e060b4f59a479e9588ca11c9557dbbf5e9e87c4ea421a3dcb6a",
+              "responseBytes": 1539,
+              "rawRelativePath": "07-gap.executive.task_impurity/pubmed-search.raw.json",
+              "error": null
+            },
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=39429646%2C39798799%2C22642228%2C25977083%2C38217427%2C35904797%2C40032718%2C35928929%2C33338609%2C36878188%2C35298217%2C30881324%2C16018151%2C30793982%2C30859935%2C38091413%2C33391043%2C32113973%2C35720688%2C34165352%2C33444700%2C36087357%2C38590022%2C32341955%2C38868415%2C29249452%2C27841670%2C35873765%2C36317718%2C33274657%2C35482626%2C21643523%2C41945847%2C39452683%2C21199379%2C42021828%2C32709415%2C34216583%2C35762827%2C36048061%2C32083946%2C19375839%2C31899165%2C23414185%2C25120442%2C33910642%2C36508108%2C35985508%2C29564934%2C41393811%2C37076456%2C38989719%2C37780155%2C29913351%2C38461459%2C38869317%2C28754432%2C39995426%2C33120165%2C22683929%2C31877490%2C36183669%2C35984782%2C37121344%2C30570021%2C33831338%2C40079581%2C35087450%2C34482772%2C36221252%2C39365953%2C35786313%2C24468077%2C39733220%2C31797177%2C39862156%2C31911043%2C36607528%2C35106729%2C31424274%2C30311554%2C28511792%2C23479546%2C40426805%2C37561064%2C25650736%2C34384270%2C30642223%2C26670475%2C37001549%2C1447438%2C40666001%2C35579766%2C38578197%2C35911917%2C15823930%2C36239453%2C40347092%2C37188861%2C31375035",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 913.26,
+                  "error": null
+                }
+              ],
+              "responseSha256": "3493d1d6ddd8f0d064790746575bf7ec9c1feeb08b42f4dfbb19af4c1848c9b8",
+              "responseBytes": 2347774,
+              "rawRelativePath": "07-gap.executive.task_impurity/pubmed-fetch.raw.xml",
+              "error": null
+            }
+          ],
+          "identifiedReported": 778,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "f5d56f718974a5ad371c0b6f5429fce5238a23ed9e34925fbe501e7cc2539974",
+          "error": null
+        },
+        {
+          "api": "Crossref",
+          "query": "executive function task impurity reliability construct validity test retest",
+          "querySha256": "3dfa8c1fc6c61a38067055ba31697b2c54a4418667c92ec33ec288a03586b7b4",
+          "endpoint": "Crossref REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.crossref.org/works?query.bibliographic=executive+function+task+impurity+reliability+construct+validity+test+retest&rows=100&filter=until-pub-date%3A2026-07-19&select=DOI%2Ctitle%2Cabstract%2Cpublished%2Cpublished-print%2Cpublished-online%2Cissued%2Ccreated%2CURL%2Ctype",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 262.364,
+                  "error": null
+                }
+              ],
+              "responseSha256": "dcf3296ee269ce7cdc099e2a4e1333f9738bdd66ec63e3b90007ab912d550582",
+              "responseBytes": 119458,
+              "rawRelativePath": "07-gap.executive.task_impurity/crossref.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 2320499,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "5b6d8b3ad08fe1713e2a1c019591e0c7f63d05ab8dfafabd80b1f721e02bee38",
+          "error": null
+        },
+        {
+          "api": "OpenAlex",
+          "query": "executive function task impurity reliability construct validity test retest",
+          "querySha256": "3dfa8c1fc6c61a38067055ba31697b2c54a4418667c92ec33ec288a03586b7b4",
+          "endpoint": "OpenAlex REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.openalex.org/works?search=executive+function+task+impurity+reliability+construct+validity+test+retest&per-page=100&filter=from_publication_date%3A1900-01-01%2Cto_publication_date%3A2026-07-19",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1559.974,
+                  "error": null
+                }
+              ],
+              "responseSha256": "69141c3863228280ddccb6a4230de7eefd7345029e222ddf01a5bf6f425abde4",
+              "responseBytes": 2767318,
+              "rawRelativePath": "07-gap.executive.task_impurity/openalex.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 239,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "1b7e15100e56842aa93caf09da96b47b43107c085229ed31449542841d3f3648",
+          "error": null
+        }
+      ],
+      "counts": {
+        "identifiedReportedAcrossApisNonDeduplicated": 2321516,
+        "identifiedCountCompleteAcrossAllApis": true,
+        "downloadedMetadata": 300,
+        "deduplicatedMetadata": 290,
+        "duplicatesRemoved": 10,
+        "titleAbstractScreened": 290,
+        "titleAbstractExcluded": 163,
+        "advancedToManualFullTextReview": 127,
+        "fullTextAssessed": null,
+        "includedInEvidenceBase": null
+      },
+      "exclusionReasons": {
+        "off_topic_title_abstract": 97,
+        "unsupported_record_type": 12,
+        "missing_required_scope_signal": 52,
+        "animal_only_title_abstract_signal": 2
+      },
+      "metadataLimitations": {
+        "recordsWithoutAbstract": 60,
+        "recordsWithoutYear": 0,
+        "recordsWithoutDoiAndPmid": 13
+      },
+      "dedupePolicy": [
+        "canonical DOI",
+        "PMID",
+        "normalized title plus year"
+      ],
+      "screeningPolicy": "deterministic_title_abstract_only",
+      "releaseReadyClaims": 0,
+      "evidenceBaseInclusionPerformed": false,
+      "ledgerHashes": {
+        "downloadedMetadataSha256": "f12f7e91b179018f1d4c76c2be977c77d07e3a4c556289ebe61b02e6b4e32261",
+        "dedupeLedgerSha256": "6154c30d2fadb3199c3f5c2211b5b0a0de2e34173413196b273fbb85c613f870",
+        "titleAbstractScreeningLedgerSha256": "662853ea6067a996d1a874dd4722da4e8cc7b094c901021de8a9c3e3963aa81f"
+      }
+    },
+    {
+      "protocolId": "gap.sleep.pediatric_circadian_development",
+      "domainId": "sleep_circadian_processes",
+      "protocolDefinitionSha256": "ba634608c1e763ad5049b57d4851e827c96ce6b084e8fdcf73eb74814335b305",
+      "executionStatus": "identification_and_title_abstract_screening_executed_full_text_pending",
+      "apiExecutions": [
+        {
+          "api": "PubMed",
+          "query": "((sleep[Title/Abstract] OR circadian[Title/Abstract]) AND (child*[Title/Abstract] OR adolescen*[Title/Abstract] OR pediatric[Title/Abstract]) AND (development*[Title/Abstract] OR maturation[Title/Abstract] OR duration[Title/Abstract]))",
+          "querySha256": "38f855ad5fbe18f44cac1b2157b80bec78dfb7d0a05038baacba27a4371dc8f7",
+          "endpoint": "NCBI E-utilities eSearch/eFetch",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=100&sort=relevance&datetype=pdat&mindate=1900%2F01%2F01&maxdate=2026%2F07%2F19&term=%28%28sleep%5BTitle%2FAbstract%5D+OR+circadian%5BTitle%2FAbstract%5D%29+AND+%28child*%5BTitle%2FAbstract%5D+OR+adolescen*%5BTitle%2FAbstract%5D+OR+pediatric%5BTitle%2FAbstract%5D%29+AND+%28development*%5BTitle%2FAbstract%5D+OR+maturation%5BTitle%2FAbstract%5D+OR+duration%5BTitle%2FAbstract%5D%29%29",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 958.108,
+                  "error": null
+                }
+              ],
+              "responseSha256": "5623721064d7880a8ee343f2588bab716bb1932b4d590789d8411fcbbe645da4",
+              "responseBytes": 1574,
+              "rawRelativePath": "08-gap.sleep.pediatric_circadian_development/pubmed-search.raw.json",
+              "error": null
+            },
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=35216758%2C28211649%2C29093040%2C17383934%2C38140360%2C29318587%2C33601324%2C38004130%2C28117135%2C27250809%2C29908393%2C34419186%2C36881684%2C28287684%2C40146105%2C35703367%2C30528567%2C39354336%2C34506691%2C37120164%2C23099134%2C35488985%2C37120165%2C37120156%2C32382399%2C39857849%2C34334305%2C32109833%2C38302199%2C37614777%2C33223054%2C35754789%2C38065637%2C35499282%2C25442171%2C35873819%2C34525248%2C40676622%2C26600104%2C30668981%2C31870910%2C28848491%2C33870573%2C40347411%2C22050942%2C35551259%2C17118282%2C40694672%2C38065630%2C40792606%2C32390886%2C29373120%2C36754840%2C19963005%2C39656455%2C30223467%2C25561272%2C38268197%2C36064209%2C25398202%2C27250813%2C34354199%2C27584008%2C40625896%2C30858473%2C18853308%2C37305962%2C35124983%2C38759704%2C23674943%2C33984632%2C37275982%2C17064432%2C32052991%2C26576804%2C36054854%2C42254153%2C39342763%2C35554575%2C11768785%2C25247459%2C32672533%2C38164242%2C30042730%2C24170426%2C36939684%2C30392873%2C42449541%2C38500552%2C34238464%2C21302851%2C17557441%2C41769498%2C36880965%2C41120242%2C38735089%2C37745609%2C41008343%2C38150746%2C37933679",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1169.896,
+                  "error": null
+                }
+              ],
+              "responseSha256": "3b4d9e602a80a5b5a751c3ff11196dbf6a20f9a3ae29c23fc31e5469b26944ab",
+              "responseBytes": 2834519,
+              "rawRelativePath": "08-gap.sleep.pediatric_circadian_development/pubmed-fetch.raw.xml",
+              "error": null
+            }
+          ],
+          "identifiedReported": 14239,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "94b9a0809641117caedac186f331911b14c51e608f593c3912dfa0c07c085345",
+          "error": null
+        },
+        {
+          "api": "Crossref",
+          "query": "pediatric sleep circadian development maturation child adolescent systematic review",
+          "querySha256": "d24e48d57d949849e4bf159e262e429b84c7f0508089c7dcce2d517a5e9fe6f9",
+          "endpoint": "Crossref REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.crossref.org/works?query.bibliographic=pediatric+sleep+circadian+development+maturation+child+adolescent+systematic+review&rows=100&filter=until-pub-date%3A2026-07-19&select=DOI%2Ctitle%2Cabstract%2Cpublished%2Cpublished-print%2Cpublished-online%2Cissued%2Ccreated%2CURL%2Ctype",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 464.5,
+                  "error": null
+                }
+              ],
+              "responseSha256": "4ebb9e4984cd96636ecc77b89d70ce768919b4abad1ca754d3f7af0ed826490b",
+              "responseBytes": 84125,
+              "rawRelativePath": "08-gap.sleep.pediatric_circadian_development/crossref.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 12775417,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "6740dd9f40e631a6fa240e41994ad590db9b610b7f5f4974569d9c3b42006614",
+          "error": null
+        },
+        {
+          "api": "OpenAlex",
+          "query": "pediatric sleep circadian development child adolescent systematic review",
+          "querySha256": "131ff25eb564bdec3b327ec091e86d4b5a85ea7ac18fbd5bed56e62e45c73b9d",
+          "endpoint": "OpenAlex REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.openalex.org/works?search=pediatric+sleep+circadian+development+child+adolescent+systematic+review&per-page=100&filter=from_publication_date%3A1900-01-01%2Cto_publication_date%3A2026-07-19",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1848.093,
+                  "error": null
+                }
+              ],
+              "responseSha256": "77b7ff0b01c4a7842bbdf0b30b1f355bb1c9b5ae8ff1c17dc661b06cbddd8930",
+              "responseBytes": 3563162,
+              "rawRelativePath": "08-gap.sleep.pediatric_circadian_development/openalex.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 5555,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "975654245e86fbc7661f5b894d79e947cc7799daf2ed3fd76795e075f78423bd",
+          "error": null
+        }
+      ],
+      "counts": {
+        "identifiedReportedAcrossApisNonDeduplicated": 12795211,
+        "identifiedCountCompleteAcrossAllApis": true,
+        "downloadedMetadata": 300,
+        "deduplicatedMetadata": 290,
+        "duplicatesRemoved": 10,
+        "titleAbstractScreened": 290,
+        "titleAbstractExcluded": 95,
+        "advancedToManualFullTextReview": 195,
+        "fullTextAssessed": null,
+        "includedInEvidenceBase": null
+      },
+      "exclusionReasons": {
+        "off_topic_title_abstract": 52,
+        "missing_required_scope_signal": 39,
+        "unsupported_record_type": 3,
+        "animal_only_title_abstract_signal": 1
+      },
+      "metadataLimitations": {
+        "recordsWithoutAbstract": 93,
+        "recordsWithoutYear": 0,
+        "recordsWithoutDoiAndPmid": 0
+      },
+      "dedupePolicy": [
+        "canonical DOI",
+        "PMID",
+        "normalized title plus year"
+      ],
+      "screeningPolicy": "deterministic_title_abstract_only",
+      "releaseReadyClaims": 0,
+      "evidenceBaseInclusionPerformed": false,
+      "ledgerHashes": {
+        "downloadedMetadataSha256": "b7921ac702ad8a3e59be3fc2cfeff83df3c5c268ce9ab7032a1c59b323ea790d",
+        "dedupeLedgerSha256": "6d5790dc2b5fe5c91471f61e838a936a7c47f350c9249ac13654b1c74bc4c4c1",
+        "titleAbstractScreeningLedgerSha256": "cc65cb0bc12253af5837cdbf018a94c9e92ec48677801b855afef4f517bbf873"
+      }
+    },
+    {
+      "protocolId": "gap.development.conditions_adult_neurodiversity",
+      "domainId": "development_neurodevelopmental_differences",
+      "protocolDefinitionSha256": "e376a5202a5af6026625f6cd585546ecc296a188241f14cb9f2a155e3b4d82d4",
+      "executionStatus": "identification_and_title_abstract_screening_executed_full_text_pending",
+      "apiExecutions": [
+        {
+          "api": "PubMed",
+          "query": "((ADHD[Title/Abstract] OR developmental coordination disorder[Title/Abstract] OR dyslexia[Title/Abstract] OR developmental language disorder[Title/Abstract] OR Tourette[Title/Abstract] OR neurodiversity[Title/Abstract]) AND (adult*[Title/Abstract] OR developmental[Title/Abstract] OR lifespan[Title/Abstract]))",
+          "querySha256": "fbb62202846ba9b45c515f4ed75bb0b7cf1e1db55d5b73a06ae1d6f30129098e",
+          "endpoint": "NCBI E-utilities eSearch/eFetch",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=100&sort=relevance&datetype=pdat&mindate=1900%2F01%2F01&maxdate=2026%2F07%2F19&term=%28%28ADHD%5BTitle%2FAbstract%5D+OR+developmental+coordination+disorder%5BTitle%2FAbstract%5D+OR+dyslexia%5BTitle%2FAbstract%5D+OR+developmental+language+disorder%5BTitle%2FAbstract%5D+OR+Tourette%5BTitle%2FAbstract%5D+OR+neurodiversity%5BTitle%2FAbstract%5D%29+AND+%28adult*%5BTitle%2FAbstract%5D+OR+developmental%5BTitle%2FAbstract%5D+OR+lifespan%5BTitle%2FAbstract%5D%29%29",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1199.909,
+                  "error": null
+                }
+              ],
+              "responseSha256": "02ec2fe3aa0aaf0300d17a743181c9f48ad2d930018612e632cb58c21b9d4240",
+              "responseBytes": 1651,
+              "rawRelativePath": "09-gap.development.conditions_adult_neurodiversity/pubmed-search.raw.json",
+              "error": null
+            },
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=36082483%2C39874176%2C31232613%2C30195575%2C32996572%2C33897497%2C11516606%2C36164823%2C28745216%2C15559892%2C24255567%2C17094062%2C26298473%2C35237141%2C39145282%2C35460927%2C8655658%2C31337273%2C15814074%2C27694644%2C36397944%2C31608744%2C11138905%2C21432612%2C35401314%2C35884081%2C34800812%2C34693569%2C38970901%2C28361657%2C37790223%2C15567071%2C35165244%2C33035783%2C37797400%2C34420385%2C31910060%2C17111266%2C40649832%2C22617862%2C35814957%2C29225671%2C35053771%2C28601690%2C35748339%2C27064378%2C33055292%2C31393252%2C35874341%2C22633181%2C36731345%2C19687388%2C21142600%2C37706585%2C25597655%2C37660691%2C19913653%2C36680923%2C33359622%2C41237815%2C38275081%2C34167652%2C14624829%2C16473440%2C10998001%2C41361438%2C40676376%2C33658971%2C29446032%2C38947063%2C16970873%2C35278463%2C33759268%2C8543527%2C32129031%2C29763133%2C38275435%2C34736059%2C16777670%2C32266439%2C40929080%2C19761584%2C33472514%2C33934120%2C36874864%2C35661478%2C10405499%2C36354235%2C39108593%2C36041512%2C35911192%2C37704094%2C38765829%2C41052100%2C37667328%2C19182154%2C39325273%2C35121415%2C35180241%2C29608989",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1254.624,
+                  "error": null
+                }
+              ],
+              "responseSha256": "becf18c02f462b0a192b8b0b701d3bbddb97a7ee3dba740eb36bc939a91c014a",
+              "responseBytes": 1959584,
+              "rawRelativePath": "09-gap.development.conditions_adult_neurodiversity/pubmed-fetch.raw.xml",
+              "error": null
+            }
+          ],
+          "identifiedReported": 19967,
+          "downloadCap": 100,
+          "downloadedMetadata": 99,
+          "truncatedByCap": true,
+          "metadataSha256": "765450e8db9e1840ba7282b43faf6c5b854793888e6ad33612a3064704f7d099",
+          "error": null
+        },
+        {
+          "api": "Crossref",
+          "query": "ADHD DCD dyslexia language disorder Tourette adult neurodiversity lifespan review",
+          "querySha256": "46adf0bcc2de2989ef1476286e906c3f950508eaee8242064c399abd3f2cbf33",
+          "endpoint": "Crossref REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.crossref.org/works?query.bibliographic=ADHD+DCD+dyslexia+language+disorder+Tourette+adult+neurodiversity+lifespan+review&rows=100&filter=until-pub-date%3A2026-07-19&select=DOI%2Ctitle%2Cabstract%2Cpublished%2Cpublished-print%2Cpublished-online%2Cissued%2Ccreated%2CURL%2Ctype",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 202.216,
+                  "error": null
+                }
+              ],
+              "responseSha256": "5053e2e96286206979947a817ad15c3a022dbb92adc887842b8281d4e4529edc",
+              "responseBytes": 75270,
+              "rawRelativePath": "09-gap.development.conditions_adult_neurodiversity/crossref.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 171062,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "c87d7e4c199f781250686977d361f605d355d6293c61b5e4916fc850e0aa466f",
+          "error": null
+        },
+        {
+          "api": "OpenAlex",
+          "query": "ADHD DCD dyslexia language disorder Tourette adult neurodiversity lifespan review",
+          "querySha256": "46adf0bcc2de2989ef1476286e906c3f950508eaee8242064c399abd3f2cbf33",
+          "endpoint": "OpenAlex REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.openalex.org/works?search=ADHD+DCD+dyslexia+language+disorder+Tourette+adult+neurodiversity+lifespan+review&per-page=100&filter=from_publication_date%3A1900-01-01%2Cto_publication_date%3A2026-07-19",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1215.828,
+                  "error": null
+                }
+              ],
+              "responseSha256": "5c2cc4c82d3bd4acf313a0f8fb1f84be739f8a252aa804f309ada71684b0b145",
+              "responseBytes": 148915,
+              "rawRelativePath": "09-gap.development.conditions_adult_neurodiversity/openalex.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 4,
+          "downloadCap": 100,
+          "downloadedMetadata": 4,
+          "truncatedByCap": false,
+          "metadataSha256": "1fb1f285e06398e67d2b46fcbcbeb9b65b80ee39845a467e0c4941e35b6873e7",
+          "error": null
+        }
+      ],
+      "counts": {
+        "identifiedReportedAcrossApisNonDeduplicated": 191033,
+        "identifiedCountCompleteAcrossAllApis": true,
+        "downloadedMetadata": 203,
+        "deduplicatedMetadata": 188,
+        "duplicatesRemoved": 15,
+        "titleAbstractScreened": 188,
+        "titleAbstractExcluded": 41,
+        "advancedToManualFullTextReview": 147,
+        "fullTextAssessed": null,
+        "includedInEvidenceBase": null
+      },
+      "exclusionReasons": {
+        "unsupported_record_type": 12,
+        "off_topic_title_abstract": 28,
+        "animal_only_title_abstract_signal": 1
+      },
+      "metadataLimitations": {
+        "recordsWithoutAbstract": 75,
+        "recordsWithoutYear": 0,
+        "recordsWithoutDoiAndPmid": 0
+      },
+      "dedupePolicy": [
+        "canonical DOI",
+        "PMID",
+        "normalized title plus year"
+      ],
+      "screeningPolicy": "deterministic_title_abstract_only",
+      "releaseReadyClaims": 0,
+      "evidenceBaseInclusionPerformed": false,
+      "ledgerHashes": {
+        "downloadedMetadataSha256": "5addf95caacdfd9de886beac91d601fb4cbc431ed0f7af07966a9041b721a0bc",
+        "dedupeLedgerSha256": "b7416c998a89a1b126bfbf396de847c67387dfb6ff3e482aba3ccffed75793db",
+        "titleAbstractScreeningLedgerSha256": "93b827bf8940b053637958f5a0805181ac59b8e9c2c423088cf002fc9880bc90"
+      }
+    },
+    {
+      "protocolId": "gap.measurement.dna_psychometrics_individual_uncertainty",
+      "domainId": "measurement_case_clinical_boundaries",
+      "protocolDefinitionSha256": "4e6eee1c85646bb400a5f31a9c3d82923998a625363557d6362e056b0d94892a",
+      "executionStatus": "identification_and_title_abstract_screening_executed_full_text_pending",
+      "apiExecutions": [
+        {
+          "api": "PubMed",
+          "query": "((DNA assessment[Title/Abstract] OR DNA profile[Title/Abstract]) AND (psychometric*[Title/Abstract] OR reliability[Title/Abstract] OR validity[Title/Abstract] OR measurement invariance[Title/Abstract] OR measurement error[Title/Abstract]))",
+          "querySha256": "e68be457e7b42f08d346d611cd7dab61752c55db9a0a73e9b5489d7129685873",
+          "endpoint": "NCBI E-utilities eSearch/eFetch",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&retmode=json&retmax=100&sort=relevance&datetype=pdat&mindate=1900%2F01%2F01&maxdate=2026%2F07%2F19&term=%28%28DNA+assessment%5BTitle%2FAbstract%5D+OR+DNA+profile%5BTitle%2FAbstract%5D%29+AND+%28psychometric*%5BTitle%2FAbstract%5D+OR+reliability%5BTitle%2FAbstract%5D+OR+validity%5BTitle%2FAbstract%5D+OR+measurement+invariance%5BTitle%2FAbstract%5D+OR+measurement+error%5BTitle%2FAbstract%5D%29%29",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 653.845,
+                  "error": null
+                }
+              ],
+              "responseSha256": "1902fbca4dfdbe3f1259a83da711866ca48c52f766b5ffde43bc489aac909489",
+              "responseBytes": 710,
+              "rawRelativePath": "10-gap.measurement.dna_psychometrics_individual_uncertainty/pubmed-search.raw.json",
+              "error": null
+            },
+            {
+              "method": "GET",
+              "url": "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&retmode=xml&id=24727432%2C11390139%2C35666551%2C30798114%2C39316956%2C26392194%2C23087582%2C20655289%2C37646344%2C39266801%2C30476749%2C15809758%2C16732329%2C20859781%2C23286546%2C26432330%2C7812972%2C20120610%2C22287177%2C26787329%2C19948312%2C7968407",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 654.387,
+                  "error": null
+                }
+              ],
+              "responseSha256": "3012d9e89178891e1c6430039421295ec677d71cdecff18b6a3bf889dcd7721b",
+              "responseBytes": 219072,
+              "rawRelativePath": "10-gap.measurement.dna_psychometrics_individual_uncertainty/pubmed-fetch.raw.xml",
+              "error": null
+            }
+          ],
+          "identifiedReported": 22,
+          "downloadCap": 100,
+          "downloadedMetadata": 22,
+          "truncatedByCap": false,
+          "metadataSha256": "a1c00959ca313eadbff949a1e99e61f53a4388d2665a2fe36b8730bd283d0a92",
+          "error": null
+        },
+        {
+          "api": "Crossref",
+          "query": "DNA assessment psychometric reliability validity measurement invariance measurement error",
+          "querySha256": "bb647497b6a75760cd8a860bc8291cd6232eaf6b736e5a7e45b795fb4e2a89bf",
+          "endpoint": "Crossref REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.crossref.org/works?query.bibliographic=DNA+assessment+psychometric+reliability+validity+measurement+invariance+measurement+error&rows=100&filter=until-pub-date%3A2026-07-19&select=DOI%2Ctitle%2Cabstract%2Cpublished%2Cpublished-print%2Cpublished-online%2Cissued%2Ccreated%2CURL%2Ctype",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 281.819,
+                  "error": null
+                }
+              ],
+              "responseSha256": "0cafe8cdee33a41b915d09dd232b51b32cbd55377dcd32d5f00dc9c37b5b99d6",
+              "responseBytes": 122330,
+              "rawRelativePath": "10-gap.measurement.dna_psychometrics_individual_uncertainty/crossref.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 3521474,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "66ec50b87c8712049e2677c567729de93d5643f90c7eb251f5d0e1764005c005",
+          "error": null
+        },
+        {
+          "api": "OpenAlex",
+          "query": "DNA assessment psychometric reliability validity measurement invariance measurement error",
+          "querySha256": "bb647497b6a75760cd8a860bc8291cd6232eaf6b736e5a7e45b795fb4e2a89bf",
+          "endpoint": "OpenAlex REST API /works",
+          "status": "success",
+          "http": [
+            {
+              "method": "GET",
+              "url": "https://api.openalex.org/works?search=DNA+assessment+psychometric+reliability+validity+measurement+invariance+measurement+error&per-page=100&filter=from_publication_date%3A1900-01-01%2Cto_publication_date%3A2026-07-19",
+              "status": 200,
+              "ok": true,
+              "attempts": [
+                {
+                  "attempt": 1,
+                  "status": 200,
+                  "ok": true,
+                  "durationMs": 1782.842,
+                  "error": null
+                }
+              ],
+              "responseSha256": "bc81fd11626c940efcf174ec1749bec15cdddec3a1630f7475a31db52e6c5c8a",
+              "responseBytes": 3209430,
+              "rawRelativePath": "10-gap.measurement.dna_psychometrics_individual_uncertainty/openalex.raw.json",
+              "error": null
+            }
+          ],
+          "identifiedReported": 283,
+          "downloadCap": 100,
+          "downloadedMetadata": 100,
+          "truncatedByCap": true,
+          "metadataSha256": "79968c59bd75c562d8e0e0c4e2a1b617fb8136f58e9b01ab4db51728beef7dde",
+          "error": null
+        }
+      ],
+      "counts": {
+        "identifiedReportedAcrossApisNonDeduplicated": 3521779,
+        "identifiedCountCompleteAcrossAllApis": true,
+        "downloadedMetadata": 222,
+        "deduplicatedMetadata": 219,
+        "duplicatesRemoved": 3,
+        "titleAbstractScreened": 219,
+        "titleAbstractExcluded": 199,
+        "advancedToManualFullTextReview": 20,
+        "fullTextAssessed": null,
+        "includedInEvidenceBase": null
+      },
+      "exclusionReasons": {
+        "off_topic_title_abstract": 192,
+        "unsupported_record_type": 7
+      },
+      "metadataLimitations": {
+        "recordsWithoutAbstract": 53,
+        "recordsWithoutYear": 0,
+        "recordsWithoutDoiAndPmid": 3
+      },
+      "dedupePolicy": [
+        "canonical DOI",
+        "PMID",
+        "normalized title plus year"
+      ],
+      "screeningPolicy": "deterministic_title_abstract_only",
+      "releaseReadyClaims": 0,
+      "evidenceBaseInclusionPerformed": false,
+      "ledgerHashes": {
+        "downloadedMetadataSha256": "83b7a653ac3f2d00be80775babe2b4298ea5aa1cdfbf6da42b873298193ee268",
+        "dedupeLedgerSha256": "0078ac183b50728cd18ecfff26874616e28b7095af2a8f54cdc5aa2c14169b6d",
+        "titleAbstractScreeningLedgerSha256": "5e72096cbfd45b394393295d4740c9d79b03fd62eb0b6037bd95951840567086"
+      }
+    }
+  ],
+  "totals": {
+    "identifiedReportedAcrossApisNonDeduplicated": 64239324,
+    "downloadedMetadata": 2824,
+    "deduplicatedMetadata": 2730,
+    "duplicatesRemoved": 94,
+    "titleAbstractScreened": 2730,
+    "titleAbstractExcluded": 1085,
+    "advancedToManualFullTextReview": 1645,
+    "fullTextAssessed": null,
+    "includedInEvidenceBase": null,
+    "releaseReadyClaims": 0
+  },
+  "boundaries": {
+    "searchExecutionIsNotEvidenceRelease": true,
+    "titleAbstractAdvanceIsNotInclusion": true,
+    "fullTextAssessmentPending": true,
+    "dnaValidationNotEstablished": true,
+    "prismaIsReproducibilityReportingNotCertification": true
+  },
+  "storagePolicy": "research_ssd_required_no_local_fallback",
+  "rawRootRelative": "Datasets/DNA-Intelligence/source-searches/v3/2026-07-19/dna-gap-search-20260719-7cdbe80cbc0b-20260719115132792",
+  "snapshotPayloadSha256": "654305850fa3111d126bc637c596bc9559b8bd3da3d34b4c494e002c99f64c71"
+}

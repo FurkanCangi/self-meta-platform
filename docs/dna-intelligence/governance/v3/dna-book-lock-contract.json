@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "dna-owner-book-lock@1",
+  "currentStatus": "deferred_owner_book",
+  "deferredReason": "owner_book_not_supplied",
+  "currentOwnerApprovals": 0,
+  "lockIdentityFields": [
+    "bookId",
+    "bookVersion",
+    "artifactSha256",
+    "byteLength"
+  ],
+  "chapterIdentityFields": [
+    "chapterId",
+    "startByte",
+    "endByteExclusive",
+    "chapterSha256"
+  ],
+  "passageIdentityFields": [
+    "chapterId",
+    "passageId",
+    "startByte",
+    "endByteExclusive",
+    "passageSha256"
+  ],
+  "claimBindingFields": [
+    "claimId",
+    "chapterId",
+    "passageId",
+    "passageSha256"
+  ],
+  "ownerApprovalSupports": [
+    "product_definition"
+  ],
+  "ownerApprovalDoesNotEstablish": [
+    "external_scientific_evidence",
+    "psychometric_validity",
+    "reliability",
+    "factor_structure",
+    "measurement_invariance",
+    "criterion_validity"
+  ]
+}
