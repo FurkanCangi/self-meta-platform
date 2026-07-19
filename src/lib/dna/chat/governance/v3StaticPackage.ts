@@ -189,6 +189,21 @@ function assertStaticPackageReleaseBindings(
     throw new Error("dna_v3_static_claim_set_not_exactly_authorized")
   }
 
+  const sourceAuthorities = new Map<string, Set<DnaV3StaticClaimAuthorization["authority"]>>()
+  for (const claim of packageValue.claims) {
+    const authorities = new Set(authorizations
+      .filter((record) => record.claimId === claim.id)
+      .map((record) => record.authority))
+    for (const sourceId of claim.sourceIds) {
+      const collected = sourceAuthorities.get(sourceId) ?? new Set()
+      authorities.forEach((authority) => collected.add(authority))
+      sourceAuthorities.set(sourceId, collected)
+    }
+  }
+  if ([...sourceAuthorities.values()].some((authorities) => authorities.size !== 1)) {
+    throw new Error("dna_v3_static_source_mixed_authorities")
+  }
+
   for (const claim of packageValue.claims) {
     const records = authorizations.filter((record) => record.claimId === claim.id)
     if (!records.length || records.some((record) => record.claimSha256 !== claim.sha256)) {
@@ -196,6 +211,16 @@ function assertStaticPackageReleaseBindings(
     }
     if (new Set(records.map((record) => record.authority)).size !== 1) {
       throw new Error("dna_v3_static_claim_mixed_authorities")
+    }
+    const authority = records[0]!.authority
+    if (claim.authority !== authority) {
+      throw new Error("dna_v3_static_claim_authority_mismatch")
+    }
+    const expectedReleaseStatus = authority === "dna_product_information"
+      ? "owner_approved"
+      : "release_eligible"
+    if (claim.releaseStatus !== expectedReleaseStatus) {
+      throw new Error("dna_v3_static_claim_authority_release_status_mismatch")
     }
     const authorizedPassageIds = records.map((record) => record.passageId)
     if (!sameStringSet(claim.passageIds, authorizedPassageIds)) {
@@ -215,10 +240,15 @@ function assertStaticPackageReleaseBindings(
       }
     }
 
-    if (records.every((record) => record.authority === "external_scientific_information")) {
+    if (authority === "external_scientific_information") {
       const authorizedSourceIds = records.flatMap((record) => record.sourceId ? [record.sourceId] : [])
       if (!sameStringSet(claim.sourceIds, authorizedSourceIds)) {
         throw new Error("dna_v3_static_claim_source_set_mismatch")
+      }
+    } else {
+      const passageSourceIds = records.map((record) => passageById.get(record.passageId)?.sourceId ?? "")
+      if (!sameStringSet(claim.sourceIds, passageSourceIds)) {
+        throw new Error("dna_v3_static_product_claim_source_set_mismatch")
       }
     }
 
@@ -269,7 +299,7 @@ function assertStaticPackageExactSchema(packageValue: DnaV3StaticPackage): void 
   for (const source of packageValue.sources) {
     assertExactKeys(source, [
       "id", "sha256", "title", "authors", "year", "venue", "doi", "pmid", "pmcid", "isbn",
-      "licensePolicy", "artifacts",
+      "officialUrl", "studyDesign", "licensePolicy", "artifacts",
     ], "dna_v3_static_source_unknown_field")
     for (const artifact of source.artifacts) {
       assertExactKeys(artifact, ["id", "sha256", "format", "sourceToArtifactEvidence"],
@@ -287,7 +317,7 @@ function assertStaticPackageExactSchema(packageValue: DnaV3StaticPackage): void 
   for (const claim of packageValue.claims) {
     assertExactKeys(claim, [
       "id", "sha256", "text", "detail", "claimType", "evidenceLevel", "ageScope", "population",
-      "claimBoundary", "dnaRelation", "releaseStatus", "sourceIds", "passageIds",
+      "claimBoundary", "dnaRelation", "authority", "releaseStatus", "sourceIds", "passageIds",
     ], "dna_v3_static_claim_unknown_field")
   }
   for (const relation of packageValue.relations) {

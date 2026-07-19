@@ -15,6 +15,14 @@ import {
 export const DNA_OWNED_CASE_CONTEXT_VERSION = "dna-chat-context@1" as const
 export const DNA_OWNED_CASE_LINEAGE_VERSION =
   "report-assessment-client-owner-chain@2" as const
+export const DNA_OWNED_CASE_SNAPSHOT_GENERATIONS = Object.freeze([
+  "dna_chat_context_v1",
+  "structured_basic_v0",
+  "legacy_camelcase_v0",
+] as const)
+export type DnaOwnedCaseSnapshotGeneration =
+  (typeof DNA_OWNED_CASE_SNAPSHOT_GENERATIONS)[number]
+export type DnaOwnedCaseContextKind = "modern" | "basic" | "legacy"
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -48,6 +56,8 @@ export type DnaOwnedCasePrivateProvenance = Readonly<{
   sourcePayloadSha256: string
   safeContextSha256: string
   lineageBindingSha256: string
+  contextKind: DnaOwnedCaseContextKind
+  snapshotGeneration: DnaOwnedCaseSnapshotGeneration
 }>
 
 export type DnaCanonicalOwnedCaseContext = Readonly<{
@@ -85,6 +95,31 @@ function sha256(value: unknown): string {
 
 function domainValue(source: JsonRecord, canonical: string, legacy: string): unknown {
   return source[canonical] ?? source[legacy]
+}
+
+function snapshotGeneration(snapshotValue: unknown): Readonly<{
+  contextKind: DnaOwnedCaseContextKind
+  snapshotGeneration: DnaOwnedCaseSnapshotGeneration
+}> {
+  const snapshot = asRecord(snapshotValue)
+  const chatContext = asRecord(snapshot.chat_context)
+  if (chatContext.version === DNA_OWNED_CASE_CONTEXT_VERSION) {
+    return Object.freeze({
+      contextKind: "modern",
+      snapshotGeneration: "dna_chat_context_v1",
+    })
+  }
+  if (Object.prototype.hasOwnProperty.call(snapshot, "ageMonths")
+    || Object.prototype.hasOwnProperty.call(snapshot, "domainLevels")) {
+    return Object.freeze({
+      contextKind: "legacy",
+      snapshotGeneration: "legacy_camelcase_v0",
+    })
+  }
+  return Object.freeze({
+    contextKind: "basic",
+    snapshotGeneration: "structured_basic_v0",
+  })
 }
 
 function structuredPayloadFromSnapshot(snapshotValue: unknown) {
@@ -216,8 +251,9 @@ export function createCanonicalOwnedDnaCaseContext(
   chain: DnaOwnedCaseVerifiedChain,
 ): DnaCanonicalOwnedCaseContext {
   assertVerifiedChain(chain)
+  const generation = snapshotGeneration(snapshotValue)
   const structuredPayload = structuredPayloadFromSnapshot(snapshotValue)
-  const sourcePayloadSha256 = sha256(structuredPayload)
+  const sourcePayloadSha256 = sha256({ generation, structuredPayload })
   const context = createDnaChatSafeCaseContext(
     canonicalCaseInputFromStructured(structuredPayload),
   )
@@ -234,6 +270,8 @@ export function createCanonicalOwnedDnaCaseContext(
     ownerId: chain.ownerId,
     sourcePayloadSha256,
     safeContextSha256,
+    contextKind: generation.contextKind,
+    snapshotGeneration: generation.snapshotGeneration,
   })
   return Object.freeze({
     context,
@@ -243,6 +281,8 @@ export function createCanonicalOwnedDnaCaseContext(
       sourcePayloadSha256,
       safeContextSha256,
       lineageBindingSha256,
+      contextKind: generation.contextKind,
+      snapshotGeneration: generation.snapshotGeneration,
     }),
   })
 }

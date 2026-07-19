@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "dna-evaluation-readiness@1",
+  "generatedAt": "2026-07-19T00:00:00.000Z",
+  "developmentRegression": {
+    "state": "available",
+    "itemCount": 1856,
+    "familyCount": 1756,
+    "sha256": "ffb23823428fc7105eca8928bc971bfb8e640e1be0971a6683c69c749988898c",
+    "visibleDuringDevelopment": true
+  },
+  "lockedInternalBenchmark": {
+    "state": "blocked",
+    "itemCount": 0,
+    "targetItemCount": 2400,
+    "sha256": null,
+    "blockerCodes": [
+      "locked_2400_question_payload_not_authored_or_sealed",
+      "v3_release_claims_absent",
+      "v3_released_passages_absent"
+    ],
+    "visibleDuringTuning": false
+  },
+  "independentEvaluation": {
+    "state": "not_commissioned",
+    "preparedBy": "none",
+    "claimableAsIndependentClinicalValidation": false,
+    "blockerCodes": [
+      "external_human_evaluation_team_not_commissioned"
+    ]
+  },
+  "variationBank": {
+    "state": "blocked",
+    "itemCount": 0,
+    "minimumItemCount": 10000,
+    "sha256": null,
+    "blockerCodes": [
+      "locked_benchmark_unavailable",
+      "reviewed_variation_payload_not_authored_or_sealed"
+    ],
+    "marketingClassification": "test_variations_not_knowledge"
+  },
+  "releaseEvaluation": {
+    "state": "not_ready",
+    "blockerCodes": [
+      "evaluation_observations_absent",
+      "locked_2400_question_payload_not_authored_or_sealed",
+      "v3_release_claims_absent",
+      "v3_released_passages_absent",
+      "variation_bank_unavailable"
+    ]
+  }
+}

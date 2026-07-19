@@ -1,0 +1,43 @@
+{
+  "schemaVersion": "dna-v3-mixed-case-theory-contract@1",
+  "assemblerVersion": "dna-v3-case-theory-assembler@1",
+  "requiredSections": [
+    "report_finding",
+    "missing_or_incomplete_report_data",
+    "general_literature",
+    "result_not_inferable_for_this_case",
+    "preserved_capacity_or_counter_evidence",
+    "sources"
+  ],
+  "mandatoryBoundaryTr": "Bu rapor biyolojik mekanizmayı doğrudan ölçmez; rapor bulguları genel literatürle birlikte fakat ondan ayrı değerlendirilmelidir.",
+  "caseAuthority": {
+    "required": "identity_registered_release_eligible_report_derived_authority",
+    "selectionRule": "only_topic_matched_safe_field_values_or_explicit_not_recorded_boundary",
+    "valueBinding": "displayed_case_text_must_equal_the_selected_safe_field_value",
+    "allowedFields": [
+      "chatContext.primaryAxis",
+      "chatContext.evidence",
+      "chatContext.limitations",
+      "chatContext.preservedCapacities",
+      "chatContext.counterEvidence"
+    ],
+    "forbiddenInputs": [
+      "raw_answers",
+      "anamnesis",
+      "report_prose",
+      "trace",
+      "rule_id",
+      "internal_thresholds"
+    ]
+  },
+  "theoryAuthority": {
+    "required": "release_eligible_v3_claim_with_entailed_passage",
+    "missingTheoryOutcome": "not_available",
+    "caseFindingMayNotMintTheoryClaim": true
+  },
+  "currentScope": {
+    "mixedCaseTheory": "implemented",
+    "caseOnlyV3Answer": "not_available",
+    "productionStaticPackage": "empty_until_real_release_records_exist"
+  }
+}

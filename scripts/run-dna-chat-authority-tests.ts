@@ -605,11 +605,25 @@ async function main() {
     "source.authority?.boundaryTr",
     "!hasStructuredUnits && answer.caseEvidence.length",
     "!hasStructuredUnits && answer.limitations.length",
-    "!hasStructuredUnits && answer.safetyBoundary",
     "Yanıtta kullanılan bilgi otoriteleri",
   ]) {
     assert.ok(assistantUi.includes(requiredUiContract), `UI authority contract: ${requiredUiContract}`)
   }
+  assert.match(
+    assistantUi,
+    /const hasSafetyBoundaryUnit = Boolean\([\s\S]*?answer\.safetyBoundary[\s\S]*?answer\.answerUnits\.some\([\s\S]*?unit\.text\.trim\(\) === answer\.safetyBoundary\.trim\(\)/,
+    "UI, yapılandırılmış yanıtta birebir bulunan güvenlik sınırını güvenli biçimde tekilleştirmeli",
+  )
+  assert.match(
+    assistantUi,
+    /\{answer\.safetyBoundary && !hasSafetyBoundaryUnit \? \(/,
+    "UI, yapılandırılmış birimde bulunmayan güvenlik sınırını yanıt biçiminden bağımsız göstermeli",
+  )
+  assert.doesNotMatch(
+    assistantUi,
+    /!hasStructuredUnits && answer\.safetyBoundary/,
+    "Güvenlik sınırı yalnız legacy yanıtlara bağlanmamalı",
+  )
 
   const deterministicHashes = Array.from({ length: 20 }, () => stableAnswerHash(
     resolveDnaChat({ question: String(validationFixture.question) }),

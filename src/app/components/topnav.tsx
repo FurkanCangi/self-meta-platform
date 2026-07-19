@@ -254,7 +254,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
           <button
             type="button"
             onClick={() => setToggle?.(!toggle)}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
             aria-label="Menüyü Aç/Kapat"
             aria-expanded={toggle}
             title={toggle ? "Sol menüyü kapat" : "Sol menüyü aç"}
@@ -262,7 +262,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
             <AiOutlineMenu className="text-xl" />
           </button>
 
-          <div className="relative hidden md:block">
+          <div className="relative hidden lg:block">
             <AiOutlineSearch className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
@@ -276,7 +276,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
           <button
             type="button"
             onClick={toggleTheme}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
             aria-label={theme === "dark" ? "Açık temaya geç" : "Koyu temaya geç"}
             title={theme === "dark" ? "Açık tema" : "Koyu tema"}
           >
@@ -291,7 +291,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
             <button
               type="button"
               onClick={() => setNotificationOpen((value) => !value)}
-              className="relative inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
+              className="relative inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-900 shadow-sm transition hover:border-blue-200 hover:bg-blue-50/50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:hover:bg-slate-800"
               aria-label="Bildirimler"
               title="Bildirimler"
             >

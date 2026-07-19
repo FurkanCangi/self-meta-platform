@@ -10,6 +10,7 @@ import {
   resolveDnaChat,
 } from "../src/lib/dna/chat"
 import { DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS } from "../src/lib/dna/chat/catalog"
+import { createCanonicalOwnedDnaCaseContext } from "../src/lib/dna/chat/ownedCaseContextCore"
 
 const root = process.cwd()
 const read = (relativePath: string) => fs.readFileSync(path.join(root, relativePath), "utf8")
@@ -532,12 +533,66 @@ for (const forbidden of ["answers", "anamnez", "snapshot_json", "evidenceAtoms",
   assert.ok(!projected.includes(forbidden), `Public cevapta yasak alan bulundu: ${forbidden}`)
 }
 
+const maliciousSnapshotSentinels = Object.freeze([
+  "CHAT_CONTEXT_PRIMARY_AXIS_SENTINEL_7F19",
+  "CHAT_CONTEXT_CASE_EVIDENCE_SENTINEL_7F19",
+  "CHAT_CONTEXT_LIMITATION_SENTINEL_7F19",
+  "REPORT_TEXT_SENTINEL_7F19",
+  "ANAMNEZ_SENTINEL_7F19",
+  "TRACE_SENTINEL_7F19",
+])
+const maliciousChatContextProbe = createCanonicalOwnedDnaCaseContext({
+  age_months: 96,
+  scores: { sensory: 24, cognitive: 39 },
+  domain_levels: { sensory: "Riskli", cognitive: "Tipik" },
+  chat_context: {
+    version: "dna-chat-context@1",
+    primaryAxis: maliciousSnapshotSentinels[0],
+    caseEvidenceLines: [maliciousSnapshotSentinels[1]],
+    dataLimitations: [maliciousSnapshotSentinels[2]],
+    nestedClinicalPayload: { answer: maliciousSnapshotSentinels[1] },
+  },
+  report_text: maliciousSnapshotSentinels[3],
+  anamnez: maliciousSnapshotSentinels[4],
+  trace: { internal: maliciousSnapshotSentinels[5] },
+}, {
+  reportId: "11111111-1111-4111-8111-111111111111",
+  loadedReportId: "11111111-1111-4111-8111-111111111111",
+  assessmentId: "22222222-2222-4222-8222-222222222222",
+  loadedAssessmentId: "22222222-2222-4222-8222-222222222222",
+  clientId: "33333333-3333-4333-8333-333333333333",
+  loadedClientId: "33333333-3333-4333-8333-333333333333",
+  ownerId: "44444444-4444-4444-8444-444444444444",
+  sessionUserId: "44444444-4444-4444-8444-444444444444",
+})
+assert.equal(maliciousChatContextProbe.provenance.contextKind, "modern")
+assert.equal(maliciousChatContextProbe.provenance.snapshotGeneration, "dna_chat_context_v1")
+const maliciousProbeAnswer = resolveDnaChat({
+  mode: "case",
+  question: "Bu rapordaki yapılandırılmış ana bulguyu özetle.",
+  caseContext: maliciousChatContextProbe.context,
+})
+const maliciousProbePublicPayload = JSON.stringify({
+  context: maliciousChatContextProbe.context,
+  answer: publicProjection(maliciousProbeAnswer),
+})
+for (const sentinel of maliciousSnapshotSentinels) {
+  assert.equal(
+    maliciousProbePublicPayload.includes(sentinel),
+    false,
+    `Yasak snapshot/chat_context içeriği runtime cevap veya bağlama sızdı: ${sentinel}`,
+  )
+}
+
 const route = read("src/app/api/app/dna-chat/route.ts")
 const apiResolver = read("src/lib/dna/chat/apiResolver.ts")
 const ownedCaseAnswer = read("src/lib/dna/chat/ownedCaseAnswer.ts")
 const ownedCaseCore = read("src/lib/dna/chat/ownedCaseContextCore.ts")
 const client = read("src/app/dna-asistani/DnaAssistantClient.tsx")
 const assistantPage = read("src/app/dna-asistani/page.tsx")
+const supportPage = read("src/app/support/page.tsx")
+const supportClient = read("src/app/support/SupportClient.tsx")
+const globalStyles = read("src/app/globals.css")
 const reportsPage = read("src/app/reports/page.tsx")
 const catalogRuntimeFiles = fs
   .readdirSync(path.join(root, "src/lib/dna/chat/catalog"))
@@ -571,7 +626,41 @@ assert.match(ownedCaseAnswer, /import "server-only"/)
 assert.match(ownedCaseAnswer, /\.eq\("owner_id", input\.userId\)/)
 assert.ok(!/isAdminRole|adminScope|ownerAuditEmail/.test(ownedCaseAnswer), "DNA chat ownership bypass içeriyor")
 assert.match(route, /resolveOwnedDnaCaseAnswer/)
-assert.doesNotMatch(ownedCaseCore, /snapshot\.(?:chat_context|chatContext|report_text|anamnez|trace)/)
+const snapshotGenerationBlock = ownedCaseCore.slice(
+  ownedCaseCore.indexOf("function snapshotGeneration"),
+  ownedCaseCore.indexOf("function structuredPayloadFromSnapshot"),
+)
+assert.match(
+  snapshotGenerationBlock,
+  /const chatContext = asRecord\(snapshot\.chat_context\)/,
+  "Modern snapshot nesnesi yalnız chat_context record'una çevrilerek sınıflandırılmalı",
+)
+assert.deepEqual(
+  [...snapshotGenerationBlock.matchAll(/\bchatContext\.([A-Za-z_$][\w$]*)/g)]
+    .map((match) => match[1]),
+  ["version"],
+  "chat_context içinde yalnız version generation discriminator'ı okunabilir",
+)
+assert.equal(
+  [...ownedCaseCore.matchAll(/\bsnapshot\.chat_context\b/g)].length,
+  1,
+  "snapshot.chat_context yalnız generation discriminator hazırlığında okunabilir",
+)
+assert.equal(
+  [...snapshotGenerationBlock.matchAll(/\bchatContext\b/g)].length,
+  2,
+  "chatContext record'u alias, spread veya klinik alan erişimine açılamaz",
+)
+assert.doesNotMatch(
+  ownedCaseCore,
+  /\bsnapshot(?:\?\.|\.)(?:chatContext|report_text|reportText|anamnez|trace)\b|\bsnapshot\s*\[/,
+  "Serbest rapor, anamnez, trace veya bracket snapshot erişimi canonical case context'e giremez",
+)
+assert.doesNotMatch(
+  ownedCaseCore,
+  /\{[^}]*\b(?:chat_context|chatContext|report_text|reportText|anamnez|trace)\b[^}]*\}\s*=\s*snapshot\b/,
+  "Yasak snapshot alanları destructuring ile okunamaz",
+)
 assert.match(route, /resolveDnaChatApiRequest\(payload/)
 assert.match(route, /error: "report_not_found"/)
 assert.match(apiResolver, /requiresCaseContext && payload\.reportId/)
@@ -593,7 +682,21 @@ assert.match(client, /useState\(""\)/)
 assert.match(client, /answer\.contextRequest\?\.type === "report"/)
 assert.match(client, /setPendingReportQuestion\(cleanQuestion\)/)
 assert.match(client, /await loadReports\(controller\.signal\)/)
-assert.match(client, /sendQuestion\(waitingQuestion, \{ reportId, previousTopic: null \}\)/)
+const chooseReportBlock = client.slice(
+  client.indexOf("async function chooseReport"),
+  client.indexOf("function submitQuestion"),
+)
+assert.match(chooseReportBlock, /reportSelectionCoordinatorRef\.current/)
+assert.match(chooseReportBlock, /if \(reportSelectionBlocked\) return/)
+assert.match(chooseReportBlock, /coordinator\.claim\(/)
+assert.match(chooseReportBlock, /if \(!transition\) return/)
+assert.ok(
+  chooseReportBlock.indexOf("setPendingReportQuestion(null)")
+    < chooseReportBlock.indexOf("await sendQuestion"),
+  "Bekleyen rapor sorusu ilk await'ten önce atomik seçim yolunda temizlenmeli",
+)
+assert.match(chooseReportBlock, /finally \{[\s\S]*coordinator\.release\(\)/)
+assert.match(client, /disabled=\{reportSelectionBlocked\}/)
 assert.match(client, /firstReportButtonRef/)
 assert.match(client, /ref=\{index === 0 \? firstReportButtonRef : undefined\}/)
 assert.match(client, /reportPickerFocusPendingRef/)
@@ -605,6 +708,76 @@ assert.match(reportsPage, /setChatEligibleReportIds\(new Set\(eligibleIds\)\)/)
 assert.match(reportsPage, /\/dna-asistani\?report_id=/)
 assert.ok(!/\/dna-asistani\?mode=case/.test(reportsPage), "Yeni rapor bağlantısı gereksiz mode parametresi taşıyor")
 assert.match(assistantPage, /params\.report_id/)
+assert.match(route, /responseDepth: z\.enum\(\["short", "standard", "deep"\]\)\.optional\(\)/)
+assert.match(client, /RESPONSE_DEPTH_OPTIONS/)
+assert.match(client, /name="dna-response-depth"/)
+assert.match(client, /responseDepth,/)
+assert.match(client, /Bölüm\/sayfa:/)
+assert.match(client, /Kanıt düzeyi:/)
+assert.match(client, /Yaş kapsamı:/)
+assert.match(client, /Tartışmalı teori/)
+assert.match(client, /Raporda Yok/)
+assert.match(client, /Kanıt yetersiz/)
+assert.match(client, /Bu ilişki kurulmamıştır/)
+assert.match(client, /dnaValidationStatus === "not_established"/)
+assert.match(client, /Kaynak hatası bildir/)
+assert.match(client, /Cevapla ilgili sorun bildir/)
+assert.match(client, /env\(safe-area-inset-bottom\)/)
+assert.match(client, /aria-live="polite"/)
+assert.match(client, /new ResizeObserver\(updateHeight\)/)
+assert.match(client, /--dna-composer-height/)
+assert.match(client, /min-h-11 min-w-11/)
+assert.match(client, /citationCardIds/)
+for (const heading of [
+  "Raporda bulunan bulgu",
+  "Raporda bulunmayan veya eksik veri",
+  "Genel literatür",
+  "Bu vaka için çıkarılamayacak sonuç",
+  "Korunmuş kapasite veya karşı kanıt",
+  "Kanıt ve yorum sınırları",
+]) {
+  assert.ok(client.includes(heading), `V3 bölüm başlığı eksik: ${heading}`)
+}
+assert.match(client, /answer\.runtimeGeneration === "v3"\s*&&\s*unit\.section/)
+assert.match(client, /V3_ANSWER_SECTION_LABEL\[unit\.section\]/)
+assert.match(client, /\{ANSWER_UNIT_KIND_LABEL\[unit\.kind\]\}/,
+  "V2 yanıtları genel birim başlığına geri düşebilmeli")
+assert.match(
+  client,
+  /const hasSafetyBoundaryUnit = Boolean\([\s\S]*?unit\.text\.trim\(\) === answer\.safetyBoundary\.trim\(\)/,
+  "Yapılandırılmış yanıtta birebir bulunan güvenlik sınırı tekrar edilmemeli",
+)
+assert.match(
+  client,
+  /\{answer\.safetyBoundary && !hasSafetyBoundaryUnit \? \(/,
+  "Yapılandırılmış birimlerde yer almayan güvenlik sınırı ayrıca gösterilmeli",
+)
+assert.doesNotMatch(
+  client,
+  /!hasStructuredUnits && answer\.safetyBoundary/,
+  "Güvenlik sınırı yalnız eski yapılandırılmamış yanıtlara bağlanmamalı",
+)
+assert.match(apiResolver, /citationCardIds/)
+const publicV3UnitBlock = apiResolver.slice(
+  apiResolver.indexOf("function publicV3Unit"),
+  apiResolver.indexOf("function fallbackV3PolicyUnits"),
+)
+assert.doesNotMatch(publicV3UnitBlock, /\b(?:claimIds|passageIds)\s*:/,
+  "Dahili claim/passage kimlikleri public V3 answer unit'e açılmamalı")
+assert.match(apiResolver, /`citation-card-\$\{index \+ 1\}`/)
+assert.match(apiResolver, /`answer-unit-\$\{index \+ 1\}`/)
+assert.doesNotMatch(publicV3UnitBlock, /id:\s*unit\.id/,
+  "Dahili claim kimliği taşıyabilen V3 unit id public yanıta açılmamalı")
+assert.match(supportPage, /feedback !== "dna_source" && feedback !== "dna_answer"/)
+assert.match(supportPage, /danışan bilgisi, soru\/cevap metni veya klinik içerik paylaşmadan/)
+assert.match(supportPage, /Kaynak kartı referansı:/)
+assert.match(supportClient, /defaultValue=\{initialSubject\}/)
+assert.match(supportClient, /defaultValue=\{initialDescription\}/)
+assert.match(supportClient, /timeZone: "Europe\/Istanbul"/)
+assert.match(supportClient, /focus-within:ring-2/)
+assert.match(supportClient, /role="status" aria-live="polite"/)
+assert.match(supportClient, /role="alert"/)
+assert.match(globalStyles, /html\[data-theme="dark"\] \.support-surface/)
 
 const auditBlock = route.slice(route.indexOf("async function writeDnaChatAudit"), route.indexOf("export async function GET"))
 assert.match(auditBlock, /metadata: buildDnaChatAuditMetadata\(params\)/)
@@ -615,15 +788,22 @@ const auditMetadata = buildDnaChatAuditMetadata({
   classification: "hypothesis",
   outcome: "answered",
   engineVersion: "dna-chat-engine@2",
+  runtimeGeneration: "v2_legacy",
+  catalogVersion: "dna-chat-catalog@2",
+  packageVersion: "dna-chat-catalog@2",
+  packageSha256: null,
   intendedUseVersion: "dna-intelligence-intended-use@1",
   sourceIds: ["source.one", "source.one", "source.two"],
   authorityContractVersion: "dna-knowledge-authority@1",
   policyVersion: "dna-intelligence-intended-use@1",
   authoritySet: ["case_information", "safety_and_product_boundaries"],
+  responseDepth: "standard",
+  latencyCategory: "lt_100ms",
+  errorCode: null,
 })
 assert.deepEqual(Object.keys(auditMetadata), [...DNA_CHAT_AUDIT_METADATA_KEYS])
 assert.deepEqual(auditMetadata.source_ids, ["source.one", "source.two"])
-for (const forbidden of ["question", "answer", "client_code", "client_id", "report_id", "scores", "case_evidence", "anamnez", "ip_address", "user_agent"]) {
+for (const forbidden of ["question", "answer", "client_code", "client_id", "report_id", "scores", "case_evidence", "anamnez", "ip_address", "user_agent", "passage_text", "raw_answers", "retrieval_scores"]) {
   assert.ok(!(forbidden in auditMetadata), `Audit metadata yasak içerik taşıyor: ${forbidden}`)
 }
 

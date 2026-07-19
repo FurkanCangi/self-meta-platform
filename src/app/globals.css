@@ -256,6 +256,89 @@ html[data-theme="dark"] .dna-shell .shadow-sm {
   box-shadow: var(--sm-shadow) !important;
 }
 
+html[data-theme="dark"] .support-surface {
+  color: var(--sm-text);
+}
+
+html[data-theme="dark"] .support-surface .bg-white {
+  background-color: var(--sm-surface) !important;
+}
+
+html[data-theme="dark"] .support-surface .bg-slate-50,
+html[data-theme="dark"] .support-surface .bg-slate-100 {
+  background-color: var(--sm-surface-soft) !important;
+}
+
+html[data-theme="dark"] .support-surface .bg-blue-50 {
+  background-color: rgba(37, 99, 235, 0.18) !important;
+}
+
+html[data-theme="dark"] .support-surface .bg-cyan-50 {
+  background-color: rgba(8, 145, 178, 0.18) !important;
+}
+
+html[data-theme="dark"] .support-surface .bg-violet-50 {
+  background-color: rgba(124, 58, 237, 0.18) !important;
+}
+
+html[data-theme="dark"] .support-surface .bg-emerald-50 {
+  background-color: rgba(5, 150, 105, 0.18) !important;
+}
+
+html[data-theme="dark"] .support-surface .text-slate-950,
+html[data-theme="dark"] .support-surface .text-slate-900 {
+  color: var(--sm-text) !important;
+}
+
+html[data-theme="dark"] .support-surface .text-slate-700,
+html[data-theme="dark"] .support-surface .text-slate-600 {
+  color: var(--sm-text-soft) !important;
+}
+
+html[data-theme="dark"] .support-surface .text-slate-500 {
+  color: var(--sm-text-muted) !important;
+}
+
+html[data-theme="dark"] .support-surface .text-blue-900,
+html[data-theme="dark"] .support-surface .text-cyan-950,
+html[data-theme="dark"] .support-surface .text-cyan-900,
+html[data-theme="dark"] .support-surface .text-violet-900,
+html[data-theme="dark"] .support-surface .text-emerald-900,
+html[data-theme="dark"] .support-surface .text-emerald-800 {
+  color: #e0f2fe !important;
+}
+
+html[data-theme="dark"] .support-surface .text-blue-700,
+html[data-theme="dark"] .support-surface .text-cyan-700 {
+  color: #93c5fd !important;
+}
+
+html[data-theme="dark"] .support-surface .border-slate-100,
+html[data-theme="dark"] .support-surface .border-slate-200,
+html[data-theme="dark"] .support-surface .border-blue-100,
+html[data-theme="dark"] .support-surface .border-blue-200,
+html[data-theme="dark"] .support-surface .border-cyan-200,
+html[data-theme="dark"] .support-surface .border-violet-100,
+html[data-theme="dark"] .support-surface .border-violet-200,
+html[data-theme="dark"] .support-surface .border-emerald-100 {
+  border-color: var(--sm-border) !important;
+}
+
+html[data-theme="dark"] .support-surface input,
+html[data-theme="dark"] .support-surface textarea,
+html[data-theme="dark"] .support-surface select {
+  border-color: var(--sm-border) !important;
+  background-color: var(--sm-surface) !important;
+  color: var(--sm-text) !important;
+}
+
+html[data-theme="dark"] .support-surface .support-upload,
+html[data-theme="dark"] .support-surface .support-upload:hover {
+  --tw-gradient-from: rgba(37, 99, 235, 0.18) var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgba(8, 145, 178, 0.14) var(--tw-gradient-to-position) !important;
+  background-color: var(--sm-surface-soft) !important;
+}
+
 /* =========================
    DNA LANDING HEADER
    ========================= */

@@ -48,7 +48,7 @@ Doğrudan tanımlayıcı veri, kriz yönetimi ve prompt/reasoning çıkarma giri
 
 ## Veri, kanıt ve denetim sınırı
 
-Sohbet metni kalıcı geçmişe kaydedilmez. Güvenlik ve erişim denetimi için istek kimliği, mod, intent etiketi, yanıt sınıfı, motor ve sözleşme sürümü, ret durumu ve kaynak kimlikleriyle sınırlı metadata tutulabilir. Bu kayıt soru veya cevap metni, danışan kodu, rapor kimliği, skor ya da vaka bulgusu içermez. Vaka sorusunda rapor sahipliği her istek için yeniden doğrulanır; teori sorusunda seçili rapor kimliği bulunsa bile rapor içeriği okunmaz.
+Sohbet metni kalıcı geçmişe kaydedilmez. Güvenlik ve erişim denetimi için istek kimliği, mod, intent etiketi, yanıt sınıfı, motor, katalog, paket ve sözleşme sürümü, paket bütünlük özeti, ret durumu ve kaynak kimlikleriyle sınırlı metadata tutulabilir. Bu kayıt soru veya cevap metni, danışan kodu, rapor kimliği, skor ya da vaka bulgusu içermez. Vaka sorusunda rapor sahipliği her istek için yeniden doğrulanır; teori sorusunda seçili rapor kimliği bulunsa bile rapor içeriği okunmaz.
 
 Kaynak kartındaki çalışma türü ve yaş kapsamı gösterilir. Ayrıntılı örneklem büyüklüğü veya örneklem özelliği katalogda yapılandırılmamışsa sistem bunu açıkça söyler; eksik veriyi tamamlamaz. `source_verified_expert_pending` kaydı insan uzman onayı anlamına gelmez.
 

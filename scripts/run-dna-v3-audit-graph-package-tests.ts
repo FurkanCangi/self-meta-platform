@@ -34,10 +34,12 @@ import {
 import {
   compileDnaV3StaticPackage,
   compileDnaV3StaticPackageForTest,
+  validateCurrentDnaV3StaticPackage,
   validateDnaV3StaticPackage,
 } from "../src/lib/dna/chat/governance/v3StaticPackage"
 import { adaptDnaV3StaticPackageForRetrieval } from "../src/lib/dna/chat/v3RetrievalPackageAdapter"
 import { resolveDnaV3Retrieval } from "../src/lib/dna/chat/v3RetrievalCore"
+import { createDnaV3ScientificUnit } from "../src/lib/dna/chat/v3AnswerEvidence"
 
 const ROOT = process.cwd()
 const GENERATED = path.join(ROOT, "src/lib/dna/chat/catalog/generated/v3")
@@ -62,17 +64,33 @@ function emptyPackage(): DnaV3StaticPackage {
   })
 }
 
-function syntheticPackage(licensePolicy = "test_fixture_only"): DnaV3StaticPackage {
+function syntheticPackage(
+  licensePolicy = "test_fixture_only",
+  sourceOverrides: Readonly<{
+    doi?: string | null
+    pmid?: string | null
+    pmcid?: string | null
+    officialUrl?: string | null
+    studyDesign?: string
+    dnaRelation?: string
+    claimAuthority?: "dna_product_information" | "external_scientific_information"
+    releaseAuthority?: "dna_product_information" | "external_scientific_information"
+  }> = {},
+): DnaV3StaticPackage {
+  const claimAuthority = sourceOverrides.claimAuthority ?? "external_scientific_information"
+  const releaseAuthority = sourceOverrides.releaseAuthority ?? claimAuthority
   const sourceNode = {
     id: "source.synthetic",
     title: "Synthetic source",
     authors: ["Test Author"],
     year: 2026,
     venue: "Test Journal",
-    doi: "10.1234/synthetic",
-    pmid: null,
-    pmcid: null,
+    doi: sourceOverrides.doi === undefined ? "10.1234/synthetic" : sourceOverrides.doi,
+    pmid: sourceOverrides.pmid ?? null,
+    pmcid: sourceOverrides.pmcid ?? null,
     isbn: null,
+    officialUrl: sourceOverrides.officialUrl ?? null,
+    studyDesign: sourceOverrides.studyDesign ?? "systematic_review_meta_analysis",
     licensePolicy,
   } as const
   const sourceSha256 = dnaV3SourceNodeSha256(sourceNode)
@@ -100,8 +118,11 @@ function syntheticPackage(licensePolicy = "test_fixture_only"): DnaV3StaticPacka
     ageScope: "adult",
     population: "human",
     claimBoundary: "Synthetic contract fixture only.",
-    dnaRelation: "not_applicable",
-    releaseStatus: "release_eligible",
+    dnaRelation: sourceOverrides.dnaRelation ?? "not_applicable",
+    authority: claimAuthority,
+    releaseStatus: claimAuthority === "dna_product_information"
+      ? "owner_approved"
+      : "release_eligible",
     sourceIds: ["source.synthetic"],
     passageIds: ["passage.synthetic"],
   } as const
@@ -155,7 +176,7 @@ function syntheticPackage(licensePolicy = "test_fixture_only"): DnaV3StaticPacka
     reaudit: DNA_CURRENT_V2_CATALOG_REAUDIT,
     testReleaseRegistry: [{
       candidateId: "candidate.synthetic",
-      authority: "external_scientific_information",
+      authority: releaseAuthority,
       claimId: "claim.synthetic",
       claimSha256,
       passageId: "passage.synthetic",
@@ -166,8 +187,9 @@ function syntheticPackage(licensePolicy = "test_fixture_only"): DnaV3StaticPacka
         claimId: "claim.synthetic",
         claimSha256,
       }),
-      sourceId: "source.synthetic",
-      sourceSha256,
+      ...(releaseAuthority === "external_scientific_information"
+        ? { sourceId: "source.synthetic", sourceSha256 }
+        : {}),
     }],
     testReleasePackageInputSha256: dnaV3Sha256({ fixture: "synthetic-release-package" }),
     sources: [{
@@ -285,6 +307,7 @@ function syntheticTwoPassagePackage(base: DnaV3StaticPackage): DnaV3StaticPackag
     population: firstClaim.population,
     claimBoundary: firstClaim.claimBoundary,
     dnaRelation: firstClaim.dnaRelation,
+    authority: firstClaim.authority,
     releaseStatus: firstClaim.releaseStatus,
     sourceIds: [...firstClaim.sourceIds],
     passageIds: [base.passages[0]!.id, secondPassageNode.id],
@@ -416,15 +439,68 @@ async function writePackage(packageValue: DnaV3StaticPackage): Promise<void> {
   await fs.writeFile(SNAPSHOT, json(DNA_CURRENT_V2_CATALOG_REAUDIT), "utf8")
 }
 
+function literalModuleSpecifiers(source: string): readonly string[] {
+  const specifiers = new Set<string>()
+  for (const pattern of [
+    /\bimport\s+(?:type\s+)?(?:[^"']+?\s+from\s+)?["']([^"']+)["']/g,
+    /\bexport\s+(?:type\s+)?(?:\*(?:\s+as\s+[A-Za-z_$][\w$]*)?|\{[^}]*\})\s+from\s+["']([^"']+)["']/g,
+    /\bimport\s*\(\s*["']([^"']+)["']\s*\)/g,
+    /\brequire\s*\(\s*["']([^"']+)["']\s*\)/g,
+  ]) {
+    for (const match of source.matchAll(pattern)) specifiers.add(match[1]!)
+  }
+  return Object.freeze([...specifiers])
+}
+
+function importsGeneratedV3Json(source: string): boolean {
+  return literalModuleSpecifiers(source).some((specifier) =>
+    /(?:^|\/)(?:claims|passages|sources|relations|claim-passage-links|lexical-index|manifest)\.json$/.test(specifier))
+}
+
+function importsGeneratedV3Server(source: string): boolean {
+  return literalModuleSpecifiers(source).some((specifier) =>
+    /(?:^|\/)generated\/v3\/server$/.test(specifier))
+}
+
+function violatesGeneratedV3JsonBoundary(source: string, relativePath: string): boolean {
+  return relativePath !== "src/lib/dna/chat/catalog/generated/v3/server.ts"
+    && importsGeneratedV3Json(source)
+}
+
 async function assertServerBoundary(): Promise<void> {
   const serverFile = await fs.readFile(path.join(GENERATED, "server.ts"), "utf8")
   assert.match(serverFile, /^import "server-only"/)
+  assert.match(
+    serverFile,
+    /loadedPackage = validateCurrentDnaV3StaticPackage\(\{/,
+    "Generated loader birleşik paketi current trust root ile doğrulamalı",
+  )
+  assert.match(
+    serverFile,
+    /export const DNA_V3_STATIC_PACKAGE = loadDnaV3StaticPackage\(\)/,
+    "Generated loader doğrulamasını import anında eager çalıştırmalı",
+  )
   const retrievalServerFile = await fs.readFile(
     path.join(ROOT, "src/lib/dna/chat/v3RetrievalServer.ts"),
     "utf8",
   )
   assert.match(retrievalServerFile, /^import "server-only"/)
   assert.match(retrievalServerFile, /evaluateDnaChatRuntimeRelease/)
+  assert.match(
+    retrievalServerFile,
+    /const DNA_V3_VALIDATED_STATIC_PACKAGE = validateCurrentDnaV3StaticPackage\(\s*DNA_V3_STATIC_PACKAGE,?\s*\)/,
+    "Retrieval server, loader export'unu import sınırında yeniden doğrulamalı",
+  )
+  assert.match(
+    retrievalServerFile,
+    /adaptDnaV3StaticPackageForRetrieval\(\s*DNA_V3_VALIDATED_STATIC_PACKAGE,?\s*\)/,
+    "Retrieval adaptörü yalnız yeniden doğrulanmış paketi tüketmeli",
+  )
+  assert.doesNotMatch(
+    retrievalServerFile,
+    /adaptDnaV3StaticPackageForRetrieval\(\s*DNA_V3_STATIC_PACKAGE,?\s*\)/,
+    "Ham loader export'u doğrudan retrieval adaptörüne bağlanmamalı",
+  )
   assert.match(retrievalServerFile, /caseContext\?: DnaChatSafeCaseContext/)
   assert.doesNotMatch(retrievalServerFile, /hasVerifiedReportContext/)
   for (const barrel of [
@@ -432,8 +508,28 @@ async function assertServerBoundary(): Promise<void> {
     "src/lib/dna/chat/catalog/index.ts",
   ]) {
     const source = await fs.readFile(path.join(ROOT, barrel), "utf8")
-    assert.doesNotMatch(source, /generated\/v3\/server/)
+    assert.equal(importsGeneratedV3Server(source), false)
   }
+
+  const plainClosurePath =
+    '"src/lib/dna/chat/catalog/generated/v3/claims.json"'
+  const forbiddenOutsideImport =
+    'import forgedClaims from "./catalog/generated/v3/claims.json"'
+  assert.equal(importsGeneratedV3Json(plainClosurePath), false,
+    "Düz metin JSON yolu import olarak sınıflandırılmamalı")
+  assert.equal(
+    violatesGeneratedV3JsonBoundary(forbiddenOutsideImport, "src/lib/dna/chat/forged.ts"),
+    true,
+    "Server loader dışındaki gerçek JSON importu ihlal sayılmalı",
+  )
+  assert.equal(
+    violatesGeneratedV3JsonBoundary(
+      'import claims from "./claims.json"',
+      "src/lib/dna/chat/catalog/generated/v3/server.ts",
+    ),
+    false,
+    "Kanonik server loader JSON import yetkisini korumalı",
+  )
 
   async function walk(directory: string): Promise<string[]> {
     const rows = await fs.readdir(directory, { withFileTypes: true })
@@ -450,15 +546,14 @@ async function assertServerBoundary(): Promise<void> {
     if (!/\.(?:ts|tsx)$/.test(file)) continue
     const source = await fs.readFile(file, "utf8")
     if (/^[\s\r\n]*["']use client["']/m.test(source)
-      && /generated\/v3\/server/.test(source)) {
+      && importsGeneratedV3Server(source)) {
       clientImporters.push(path.relative(ROOT, file))
     }
     const relative = path.relative(ROOT, file)
-    if (/(?:claims|passages|sources|relations|claim-passage-links|lexical-index|manifest)\.json["']/.test(source)
-      && relative !== "src/lib/dna/chat/catalog/generated/v3/server.ts") {
+    if (violatesGeneratedV3JsonBoundary(source, relative)) {
       rawJsonImporters.push(relative)
     }
-    if (/generated\/v3\/server["']/.test(source)) serverRuntimeImporters.push(relative)
+    if (importsGeneratedV3Server(source)) serverRuntimeImporters.push(relative)
   }
   assert.deepEqual(clientImporters, [])
   assert.deepEqual(rawJsonImporters, [], "Generated V3 JSON yalnız server loader tarafından import edilmeli")
@@ -531,8 +626,41 @@ async function main(): Promise<void> {
   process.env.DNA_V3_STATIC_PACKAGE_TEST_FIXTURE = "1"
   const synthetic = syntheticPackage()
   const permittedSynthetic = syntheticPackage("cc_by")
+  const pmidSynthetic = syntheticPackage("cc_by", { doi: null, pmid: "12345678" })
+  const pmcidSynthetic = syntheticPackage("cc_by", {
+    doi: null,
+    pmid: "12345678",
+    pmcid: "PMC1234567",
+  })
+  const canonicalUrlSynthetic = syntheticPackage("cc_by", {
+    officialUrl: "https://evidence.example.org/reviews/synthetic-source",
+  })
+  const productSynthetic = syntheticPackage("all_rights_reserved", {
+    doi: null,
+    pmid: null,
+    pmcid: null,
+    officialUrl: "https://dna.example.org/books/owner-approved/chapter-1",
+    studyDesign: "textbook",
+    dnaRelation: "product_definition",
+    claimAuthority: "dna_product_information",
+  })
+  const externalProductSemanticSynthetic = syntheticPackage("cc_by", {
+    dnaRelation: "product_definition",
+  })
   const restrictedSynthetic = syntheticPackage("all_rights_reserved")
   const twoPassageSynthetic = syntheticTwoPassagePackage(permittedSynthetic)
+  assert.throws(() => syntheticPackage("cc_by", { studyDesign: "not_assessed" }),
+    /dna_v3_graph_source_study_design_not_audited/)
+  assert.throws(() => syntheticPackage("cc_by", {
+    doi: null, pmid: null, pmcid: null, officialUrl: null,
+  }), /dna_v3_graph_source_public_identity_missing/)
+  assert.throws(() => syntheticPackage("cc_by", {
+    officialUrl: "https://evidence.example.org/source?unreviewed=1",
+  }), /dna_v3_graph_source_official_url_invalid/)
+  assert.throws(() => syntheticPackage("cc_by", {
+    claimAuthority: "external_scientific_information",
+    releaseAuthority: "dna_product_information",
+  }), /dna_v3_static_claim_authority_mismatch/)
   assert.throws(() => compileDnaV3StaticPackage({
     reaudit: DNA_CURRENT_V2_CATALOG_REAUDIT,
     sources: synthetic.sources,
@@ -568,6 +696,39 @@ async function main(): Promise<void> {
   ])
   assert.ok(adapted.claims.every((claim) => claim.sourceClaimId === "claim.synthetic"))
   assert.ok(adapted.claims.every((claim) => claim.claimType === "relation"))
+  assert.equal(adapted.sources[0]?.sourceType, "systematic_review_meta_analysis")
+  assert.equal(adaptDnaV3StaticPackageForRetrieval(pmidSynthetic).sources[0]?.officialUrl,
+    "https://pubmed.ncbi.nlm.nih.gov/12345678/")
+  assert.equal(adaptDnaV3StaticPackageForRetrieval(pmcidSynthetic).sources[0]?.officialUrl,
+    "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1234567/")
+  assert.equal(adaptDnaV3StaticPackageForRetrieval(canonicalUrlSynthetic).sources[0]?.officialUrl,
+    "https://evidence.example.org/reviews/synthetic-source",
+    "Hash-bound kanonik URL, DOI fallback'ından önce gelmeli")
+  const adaptedProduct = adaptDnaV3StaticPackageForRetrieval(productSynthetic)
+  assert.equal(adaptedProduct.sources[0]?.officialUrl,
+    "https://dna.example.org/books/owner-approved/chapter-1")
+  assert.equal(adaptedProduct.sources[0]?.licenseStatus, "not_applicable")
+  assert.equal(adaptedProduct.sources[0]?.releaseStatus, "owner_approved")
+  assert.ok(adaptedProduct.claims.every((claim) =>
+    claim.authority === "dna_product_information" && claim.releaseStatus === "owner_approved"))
+  assert.equal(createDnaV3ScientificUnit({
+    claim: adaptedProduct.claims[0]!,
+    text: adaptedProduct.claims[0]!.summaryTr,
+  }).authority, "dna_product")
+  const productAnswer = resolveDnaV3Retrieval({
+    question: "Synthetic A ile Synthetic B ilişkisi nedir?",
+  }, adaptedProduct)
+  assert.equal(productAnswer.status, "answer")
+  assert.equal(productAnswer.sources[0]?.officialUrl,
+    "https://dna.example.org/books/owner-approved/chapter-1")
+  const adaptedExternalProductSemantic = adaptDnaV3StaticPackageForRetrieval(
+    externalProductSemanticSynthetic,
+  )
+  assert.equal(createDnaV3ScientificUnit({
+    claim: adaptedExternalProductSemantic.claims[0]!,
+    text: adaptedExternalProductSemantic.claims[0]!.summaryTr,
+  }).authority, "external_science",
+  "dnaRelation=product_definition tek başına ürün otoritesi üretememeli")
   assert.equal(adapted.passages[0]?.ageScope, "adult")
   assert.equal(adapted.passages[0]?.population, "human")
   assert.deepEqual(adapted.claimPassageLinks.map((link) => link.claimId), ["claim.synthetic"])
@@ -587,6 +748,20 @@ async function main(): Promise<void> {
   assert.equal(restricted.passages.length, 0)
   assert.equal(getDnaV3DirectOneHopRelations(synthetic.relations, "topic.synthetic.unknown").length, 0)
 
+  assert.throws(() => validateDnaV3EvidenceGraph({
+    ...synthetic,
+    sources: [{
+      ...synthetic.sources[0],
+      officialUrl: "https://tampered.example.org/source",
+    }],
+  }), /dna_v3_graph_source_content_hash_mismatch/)
+  assert.throws(() => validateDnaV3EvidenceGraph({
+    ...synthetic,
+    claims: [{
+      ...synthetic.claims[0],
+      authority: "dna_product_information",
+    }],
+  }), /dna_v3_graph_claim_content_hash_mismatch/)
   assert.throws(() => validateDnaV3EvidenceGraph({
     ...synthetic,
     claims: [{
@@ -671,7 +846,26 @@ async function main(): Promise<void> {
   if (process.env.DNA_WRITE_V3_PHASE_28_30 === "1") await writePackage(compiled)
   const checked = await readCheckedPackage()
   assert.deepEqual(checked, compiled, "Generated V3 package files are stale")
-  validateDnaV3StaticPackage(checked)
+  validateCurrentDnaV3StaticPackage(checked)
+  const forgedLoaderExport = {
+    manifest: checked.manifest,
+    sources: permittedSynthetic.sources,
+    passages: permittedSynthetic.passages,
+    claims: permittedSynthetic.claims,
+    relations: permittedSynthetic.relations,
+    claimPassageLinks: permittedSynthetic.claimPassageLinks,
+    lexicalIndex: permittedSynthetic.lexicalIndex,
+  } as DnaV3StaticPackage
+  assert.equal(
+    validateDnaV3EvidenceGraph(forgedLoaderExport).counts.claims,
+    permittedSynthetic.claims.length,
+    "Forge içeriği kendi node/edge hash'leriyle tutarlı olmalı; ret eski manifeste dayanmalı",
+  )
+  assert.throws(
+    () => validateCurrentDnaV3StaticPackage(forgedLoaderExport),
+    /dna_v3_static_component_hash_mismatch/,
+    "Eski manifest/hash ile değiştirilmiş claim ve passage sunan loader export'u reddedilmeli",
+  )
 
   const checkedSnapshot = JSON.parse(await fs.readFile(SNAPSHOT, "utf8")) as unknown
   assert.deepEqual(

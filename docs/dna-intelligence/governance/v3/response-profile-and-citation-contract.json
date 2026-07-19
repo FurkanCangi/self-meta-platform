@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "dna-v3-response-profile-citation-contract@1",
+  "engineVersion": "dna-chat-engine@3",
+  "responseDepths": {
+    "short": {
+      "maxSources": 2,
+      "maxScientificUnits": 1,
+      "requiredContent": [
+        "one_main_definition",
+        "one_primary_boundary"
+      ]
+    },
+    "standard": {
+      "maxSources": 4,
+      "maxScientificUnits": 4,
+      "requiredSections": [
+        "summary",
+        "function_or_relation",
+        "evidence_boundary",
+        "dna_boundary"
+      ]
+    },
+    "deep": {
+      "maxSources": 8,
+      "maxScientificUnits": 12,
+      "requiredSections": [
+        "definition",
+        "function_or_mechanism",
+        "development",
+        "measurement",
+        "evidence_status",
+        "counter_evidence",
+        "dna_boundary",
+        "case_context"
+      ],
+      "missingSectionPolicy": "state_not_available_without_generation"
+    }
+  },
+  "naturalLanguageResolution": {
+    "shortExamples": [
+      "kısaca söyle",
+      "özetle",
+      "tek cümle"
+    ],
+    "deepExamples": [
+      "detaylı anlat",
+      "kanıtlarıyla açıkla",
+      "kaynaklarıyla anlat"
+    ],
+    "clearNaturalCueOverridesRequestedDepth": true,
+    "conflictingCueFallback": "standard"
+  },
+  "sourceCardRequiredFields": [
+    "title",
+    "authors",
+    "year",
+    "doi_or_official_url",
+    "source_type",
+    "locator",
+    "evidence_level",
+    "age_scope",
+    "supported_limited_claim",
+    "known_boundary"
+  ],
+  "bindingRules": {
+    "scientificMaterialSentence": "exact_claim_passage_source_binding_required",
+    "displayedScientificSentence": "at_least_one_visible_exact_source_card_required",
+    "sourceCardCapacity": "one_card_per_displayed_claim_before_additional_passage_cards",
+    "sourceCardGranularity": "one_exact_claim_passage_edge",
+    "entailedLinkRequired": true,
+    "caseSentence": "topic_matched_enumerated_safe_report_field_and_exact_value_binding_required",
+    "policySentence": "versioned_policy_authority_no_scientific_citation",
+    "hiddenReasoning": "never_returned"
+  },
+  "releaseBoundary": "This contract changes presentation only. It cannot make a quarantined claim, unreviewed passage, restricted source, or empty V3 package answerable."
+}

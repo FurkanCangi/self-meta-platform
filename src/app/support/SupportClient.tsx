@@ -21,6 +21,8 @@ type SupportClientProps = {
   initialTickets: SupportTicket[]
   initialEmail: string
   initialCategory?: string
+  initialSubject?: string
+  initialDescription?: string
   authenticated: boolean
   setupRequired?: boolean
 }
@@ -48,6 +50,7 @@ function formatDateTime(value: string | null | undefined) {
     return new Intl.DateTimeFormat("tr-TR", {
       dateStyle: "medium",
       timeStyle: "short",
+      timeZone: "Europe/Istanbul",
     }).format(new Date(value))
   } catch {
     return value
@@ -203,6 +206,8 @@ export default function SupportClient({
   initialTickets,
   initialEmail,
   initialCategory = "technical",
+  initialSubject = "",
+  initialDescription = "",
   authenticated,
   setupRequired,
 }: SupportClientProps) {
@@ -268,7 +273,7 @@ export default function SupportClient({
   }
 
   return (
-    <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
+    <div className="support-surface mx-auto flex max-w-6xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href={isAppSurface ? "/starter?surface=app" : "/starter"}
@@ -278,14 +283,14 @@ export default function SupportClient({
           Terapist paneline dön
         </Link>
         {message ? (
-          <div className="rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-black text-cyan-900 shadow-sm">
+          <div aria-hidden="true" className="rounded-2xl border border-cyan-200 bg-cyan-50 px-4 py-3 text-sm font-black text-cyan-900 shadow-sm">
             Destek talebiniz gönderildi.
           </div>
         ) : null}
       </div>
 
       {message ? (
-        <div className="rounded-[1.5rem] border border-cyan-200 bg-cyan-50 p-5 text-cyan-950 shadow-sm">
+        <div role="status" aria-live="polite" className="rounded-[1.5rem] border border-cyan-200 bg-cyan-50 p-5 text-cyan-950 shadow-sm">
           <div className="flex items-start gap-3">
             <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-white text-cyan-700 shadow-sm">
               <CheckCircle2 className="h-5 w-5" />
@@ -354,7 +359,7 @@ export default function SupportClient({
             className="grid gap-4 bg-white p-6 sm:p-8 lg:p-10"
           >
             {setupRequired ? (
-              <div className="rounded-2xl border border-violet-200 bg-violet-50 p-4 text-sm font-semibold text-violet-900">
+              <div role="status" className="rounded-2xl border border-violet-200 bg-violet-50 p-4 text-sm font-semibold text-violet-900">
                 Destek kayıt alanı hazırlanıyor. Kısa süre sonra yeniden deneyebilirsiniz.
               </div>
             ) : null}
@@ -409,6 +414,7 @@ export default function SupportClient({
               Başlık
               <input
                 name="subject"
+                defaultValue={initialSubject}
                 required
                 minLength={3}
                 maxLength={140}
@@ -421,6 +427,7 @@ export default function SupportClient({
               Sorunu anlat
               <textarea
                 name="description"
+                defaultValue={initialDescription}
                 required
                 minLength={10}
                 maxLength={4000}
@@ -429,7 +436,7 @@ export default function SupportClient({
               />
             </label>
 
-            <label className="grid cursor-pointer gap-3 rounded-3xl border border-dashed border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50/70 p-5 text-sm font-bold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50">
+            <label className="support-upload grid cursor-pointer gap-3 rounded-3xl border border-dashed border-blue-200 bg-gradient-to-br from-blue-50 to-cyan-50/70 p-5 text-sm font-bold text-slate-700 transition hover:border-blue-300 hover:bg-blue-50 focus-within:outline-none focus-within:ring-2 focus-within:ring-blue-500 focus-within:ring-offset-2">
               <input
                 type="file"
                 multiple
@@ -460,7 +467,7 @@ export default function SupportClient({
             </div>
 
             {error ? (
-              <div className="flex items-start gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-900">
+              <div role="alert" className="flex items-start gap-2 rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm font-semibold text-slate-900">
                 <AlertCircle className="mt-0.5 h-4 w-4" />
                 {error}
               </div>

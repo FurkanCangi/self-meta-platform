@@ -5,7 +5,6 @@ import { createSupabaseServerClient } from "@/lib/supabase/server"
 import {
   attachVerifiedReportCaseAuthorityInternal,
 } from "./caseContext"
-import { resolveDnaChat } from "./engine"
 import {
   createVerifiedReportCaseAuthorityInternal,
 } from "./knowledgeAuthority"
@@ -13,10 +12,10 @@ import {
   createCanonicalOwnedDnaCaseContext,
   DNA_OWNED_CASE_CONTEXT_VERSION,
 } from "./ownedCaseContextCore"
-import type {
-  DnaChatMode,
-  DnaChatResponse,
-} from "./types"
+import type { DnaChatMode } from "./types"
+import type { DnaV3ResponseDepth } from "./v3ResponseProfiles"
+import { resolveCommittedDnaChatRuntime } from "./v3RetrievalServer"
+import type { DnaChatRuntimeAnswer } from "./runtimeAnswer"
 
 type ReportRow = {
   id: string
@@ -35,7 +34,7 @@ type ClientRow = {
 }
 
 export type DnaOwnedCaseAnswerResult =
-  | { ok: true; answer: DnaChatResponse }
+  | { ok: true; answer: DnaChatRuntimeAnswer }
   | { ok: false; status: 404 | 500; error: "report_not_found" | "dna_chat_failed" }
 
 /**
@@ -53,6 +52,7 @@ export async function resolveOwnedDnaCaseAnswer(input: {
   question: string
   mode?: DnaChatMode
   previousTopic?: string | null
+  responseDepth?: DnaV3ResponseDepth | null
 }): Promise<DnaOwnedCaseAnswerResult> {
   try {
     const supabase = await createSupabaseServerClient()
@@ -123,11 +123,12 @@ export async function resolveOwnedDnaCaseAnswer(input: {
 
     return {
       ok: true,
-      answer: resolveDnaChat({
+      answer: resolveCommittedDnaChatRuntime({
         mode: input.mode,
         question: input.question,
         previousTopic: input.previousTopic,
         caseContext: canonical.context,
+        responseDepth: input.responseDepth,
       }),
     }
   } catch {

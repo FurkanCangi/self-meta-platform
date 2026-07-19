@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto"
+import { isIP } from "node:net"
 
 import {
   DNA_V3_GRAPH_EVIDENCE_KINDS,
@@ -13,6 +14,7 @@ import {
   type DnaV3StaticRelation,
   type DnaV3StaticSource,
 } from "../catalog/generated/v3/types"
+import { DNA_STUDY_DESIGNS } from "./methodAppraisal"
 
 export const DNA_V3_EVIDENCE_GRAPH_VALIDATOR_VERSION =
   "dna-v3-evidence-graph-validator@1" as const
@@ -53,6 +55,8 @@ export function dnaV3SourceNodeSha256(
     | "pmid"
     | "pmcid"
     | "isbn"
+    | "officialUrl"
+    | "studyDesign"
     | "licensePolicy"
   >,
 ): string {
@@ -67,6 +71,8 @@ export function dnaV3SourceNodeSha256(
     pmid: source.pmid,
     pmcid: source.pmcid,
     isbn: source.isbn,
+    officialUrl: source.officialUrl,
+    studyDesign: source.studyDesign,
     licensePolicy: source.licensePolicy,
   })
 }
@@ -116,10 +122,37 @@ export function dnaV3ClaimNodeSha256(
     population: claim.population,
     claimBoundary: claim.claimBoundary,
     dnaRelation: claim.dnaRelation,
+    authority: claim.authority,
     releaseStatus: claim.releaseStatus,
     sourceIds: sortedIds(claim.sourceIds),
     passageIds: sortedIds(claim.passageIds),
   })
+}
+
+function requireCanonicalOfficialUrl(value: string | null): void {
+  if (value === null) return
+  if (!value || value !== value.trim() || value.length > 2_048
+    || /[\u0000-\u001f\u007f\\]/.test(value)
+    || /(?:^|\/)(?:\.{1,2}|%2e(?:%2e)?)(?:\/|$)/i.test(value)) {
+    throw new Error("dna_v3_graph_source_official_url_invalid")
+  }
+  let parsed: URL
+  try {
+    parsed = new URL(value)
+  } catch {
+    throw new Error("dna_v3_graph_source_official_url_invalid")
+  }
+  const hostname = parsed.hostname.toLocaleLowerCase("en-US")
+  if (parsed.protocol !== "https:"
+    || parsed.username || parsed.password || parsed.search || parsed.hash
+    || (parsed.port && parsed.port !== "443")
+    || !hostname.includes(".")
+    || hostname === "localhost" || hostname.endsWith(".localhost") || hostname.endsWith(".local")
+    || isIP(hostname) !== 0
+    || parsed.pathname.includes("//")
+    || parsed.href !== value) {
+    throw new Error("dna_v3_graph_source_official_url_invalid")
+  }
 }
 
 /** Hashes the claim-passage identity without recursively including its edge evidence. */
@@ -373,6 +406,14 @@ export function validateDnaV3EvidenceGraph(
     if (source.sha256 !== dnaV3SourceNodeSha256(source)) {
       throw new Error("dna_v3_graph_source_content_hash_mismatch")
     }
+    requireCanonicalOfficialUrl(source.officialUrl)
+    if (!source.officialUrl && !source.doi && !source.pmcid && !source.pmid) {
+      throw new Error("dna_v3_graph_source_public_identity_missing")
+    }
+    if (!DNA_STUDY_DESIGNS.includes(source.studyDesign as (typeof DNA_STUDY_DESIGNS)[number])
+      || ["not_reported", "not_assessed"].includes(source.studyDesign)) {
+      throw new Error("dna_v3_graph_source_study_design_not_audited")
+    }
     if (source.artifacts.length === 0) throw new Error("dna_v3_graph_source_without_artifact")
     assertSorted(source.artifacts, (value) => value.id, "dna_v3_graph_artifacts_not_sorted")
     for (const artifact of source.artifacts) {
@@ -444,8 +485,15 @@ export function validateDnaV3EvidenceGraph(
     if (claim.sha256 !== dnaV3ClaimNodeSha256(claim)) {
       throw new Error("dna_v3_graph_claim_content_hash_mismatch")
     }
-    if (claim.releaseStatus !== "release_eligible") {
-      throw new Error("dna_v3_graph_claim_not_release_eligible")
+    if (!(["dna_product_information", "external_scientific_information"] as const)
+      .includes(claim.authority)) {
+      throw new Error("dna_v3_graph_claim_authority_invalid")
+    }
+    const expectedReleaseStatus = claim.authority === "dna_product_information"
+      ? "owner_approved"
+      : "release_eligible"
+    if (claim.releaseStatus !== expectedReleaseStatus) {
+      throw new Error("dna_v3_graph_claim_authority_release_status_mismatch")
     }
     if (claim.sourceIds.length === 0 || claim.passageIds.length === 0) {
       throw new Error("dna_v3_graph_claim_without_direct_passage")

@@ -12,6 +12,7 @@ import {
   type DnaChatApiAuditInput,
 } from "@/lib/dna/chat"
 import { resolveOwnedDnaCaseAnswer } from "@/lib/dna/chat/ownedCaseAnswer"
+import { resolveCommittedDnaChatRuntime } from "@/lib/dna/chat/v3RetrievalServer"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -29,6 +30,7 @@ const NO_STORE_HEADERS = {
 const dnaChatPostSchema = z
   .object({
     mode: z.enum(["theory", "dna", "case"]).optional(),
+    responseDepth: z.enum(["short", "standard", "deep"]).optional(),
     question: z.string().trim().min(2).max(600),
     reportId: z.string().uuid().optional(),
     context: z
@@ -329,7 +331,8 @@ export async function POST(request: Request) {
     const payload = parsed.data
     const resolution = await resolveDnaChatApiRequest(payload, {
       createRequestId: () => crypto.randomUUID(),
-      loadCaseAnswer: async ({ reportId, question, mode, previousTopic }) => {
+      resolveRuntimeAnswer: resolveCommittedDnaChatRuntime,
+      loadCaseAnswer: async ({ reportId, question, mode, previousTopic, responseDepth }) => {
         const recentReports = await listOwnReports(auth.user.id)
         if (!recentReports.ok) return { ok: false, status: 500, error: "dna_chat_failed" }
         if (!recentReports.reports.some((report) => report.id === reportId)) {
@@ -341,6 +344,7 @@ export async function POST(request: Request) {
           question,
           mode,
           previousTopic,
+          responseDepth,
         })
       },
       writeAudit: (auditInput) => writeDnaChatAudit({ userId: auth.user.id, ...auditInput }),

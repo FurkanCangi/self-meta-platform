@@ -5,7 +5,9 @@ import {
   ChevronDown,
   CircleAlert,
   FileSearch,
+  Flag,
   LoaderCircle,
+  MessageSquareWarning,
   RefreshCw,
   ShieldCheck,
   Sparkles,
@@ -15,6 +17,11 @@ import Image from "next/image"
 import Link from "next/link"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useAppSurface } from "@/app/components/app-shell/useAppSurface"
+import {
+  canBeginDnaChatReportSelection,
+  createDnaChatReportSelectionCoordinator,
+  planDnaChatReportTransition,
+} from "@/lib/dna/chat/conversationPolicy"
 import {
   DNA_INTELLIGENCE_AUDIT_NOTICE_TR,
   DNA_INTELLIGENCE_COMPOSER_NOTICE_TR,
@@ -33,6 +40,8 @@ type DnaChatClassification =
   | "clarification"
   | "not_available"
   | "refusal"
+
+type ResponseDepth = "short" | "standard" | "deep"
 
 type ReportOption = {
   id: string
@@ -56,8 +65,25 @@ type KnowledgeAuthority = {
   boundaryTr?: string
 }
 
+type V3AnswerSection =
+  | "definition"
+  | "function_or_relation"
+  | "development"
+  | "measurement"
+  | "evidence_status"
+  | "counter_evidence"
+  | "dna_boundary"
+  | "case_context"
+  | "case_finding"
+  | "case_missing"
+  | "general_literature"
+  | "case_non_inference"
+  | "preserved_capacity"
+  | "boundary"
+
 type AnswerUnit = {
   id: string
+  section: V3AnswerSection | null
   kind: "summary" | "detail" | "case_evidence" | "limitation" | "safety_boundary"
   role:
     | "product_definition"
@@ -67,11 +93,24 @@ type AnswerUnit = {
     | "safety_boundary"
   text: string
   authority: KnowledgeAuthority
+  claimIds: string[]
+  passageIds: string[]
   sourceIds: string[]
+  citationCardIds: string[]
 }
+
+type DnaValidationStatus =
+  | "product_definition"
+  | "supported_relation"
+  | "conceptual_proximity"
+  | "theory_only"
+  | "not_established"
+  | "contradicted"
+  | "not_applicable"
 
 type SourceRef = {
   id: string
+  sourceId?: string
   type?: string
   title?: string
   labelTr?: string
@@ -86,6 +125,14 @@ type SourceRef = {
   ageScope?: string
   studyType?: string
   sampleScope?: string
+  authors?: string
+  sourceType?: string
+  officialUrl?: string
+  locator?: string
+  evidenceLevel?: string
+  supportedClaim?: string
+  knownBoundary?: string
+  supportedBoundary?: string
   authority?: KnowledgeAuthority
 }
 
@@ -97,13 +144,16 @@ type ContextRequest = {
 type EvidenceSummary = {
   level: string
   scientificEvidenceLevel?: string
-  dnaValidationStatus?: string
+  dnaValidationStatus?: DnaValidationStatus
   ageScope: string
   sampleScope: string
   boundary: string
 }
 
 type DnaAnswer = {
+  requestId: string
+  responseDepth: ResponseDepth
+  runtimeGeneration: "v2_legacy" | "v3"
   classification: DnaChatClassification
   summary: string
   details: string[]
@@ -114,6 +164,9 @@ type DnaAnswer = {
   intendedUse: DnaIntelligencePublicIntendedUse
   suggestedQuestions: string[]
   engineVersion: string
+  catalogVersion: string
+  packageVersion: string
+  packageSha256: string | null
   topic: string | null
   contextRequest?: ContextRequest
   evidenceSummary?: EvidenceSummary
@@ -133,6 +186,22 @@ const STARTER_QUESTIONS = [
   DNA_CHAT_STARTER_QUESTIONS.case[0],
   DNA_CHAT_STARTER_QUESTIONS.case[1],
 ].filter((question): question is string => Boolean(question))
+
+const RESPONSE_DEPTH_OPTIONS: ReadonlyArray<{
+  value: ResponseDepth
+  label: string
+  description: string
+}> = [
+  { value: "short", label: "Kısa", description: "Ana tanım ve temel sınır" },
+  { value: "standard", label: "Standart", description: "Özet, ilişki ve kanıt sınırı" },
+  { value: "deep", label: "Derin", description: "Daha fazla onaylı ayrıntı ve kaynak" },
+]
+
+const RESPONSE_DEPTH_LABEL: Record<ResponseDepth, string> = {
+  short: "Kısa yanıt",
+  standard: "Standart yanıt",
+  deep: "Derin yanıt",
+}
 
 const CLASSIFICATION_META: Record<DnaChatClassification, { label: string; className: string }> = {
   dna_concept: { label: "DNA Kavramı", className: "border-blue-200 bg-blue-50 text-blue-700" },
@@ -211,6 +280,31 @@ const ANSWER_UNIT_KIND_LABEL: Record<AnswerUnit["kind"], string> = {
   limitation: "Sınırlılık",
   safety_boundary: "Güvenlik sınırı",
 }
+const V3_ANSWER_SECTIONS = new Set<V3AnswerSection>([
+  "definition", "function_or_relation", "development", "measurement", "evidence_status",
+  "counter_evidence", "dna_boundary", "case_context", "case_finding", "case_missing",
+  "general_literature", "case_non_inference", "preserved_capacity", "boundary",
+])
+const DNA_VALIDATION_STATUSES = new Set<DnaValidationStatus>([
+  "product_definition", "supported_relation", "conceptual_proximity", "theory_only",
+  "not_established", "contradicted", "not_applicable",
+])
+const V3_ANSWER_SECTION_LABEL: Record<V3AnswerSection, string> = {
+  definition: "Tanım",
+  function_or_relation: "İşlev, mekanizma veya ilişki",
+  development: "Gelişim",
+  measurement: "Ölçüm",
+  evidence_status: "Kanıt durumu",
+  counter_evidence: "Karşı kanıt ve sınırlar",
+  dna_boundary: "DNA ilişkisinin sınırı",
+  case_context: "Vaka bağlamı",
+  case_finding: "Raporda bulunan bulgu",
+  case_missing: "Raporda bulunmayan veya eksik veri",
+  general_literature: "Genel literatür",
+  case_non_inference: "Bu vaka için çıkarılamayacak sonuç",
+  preserved_capacity: "Korunmuş kapasite veya karşı kanıt",
+  boundary: "Kanıt ve yorum sınırları",
+}
 
 function normalizeAuthority(value: unknown): KnowledgeAuthority | null {
   if (!value || typeof value !== "object") return null
@@ -254,7 +348,7 @@ function normalizeSource(value: unknown): SourceRef | null {
   }
   const year = Number(row.year)
   const publicationYear = Number(row.publicationYear)
-  const rawUrl = optionalString("url")
+  const rawUrl = optionalString("url") || optionalString("officialUrl")
   let safeUrl: string | undefined
   if (rawUrl) {
     try {
@@ -264,6 +358,7 @@ function normalizeSource(value: unknown): SourceRef | null {
   }
   return {
     id,
+    sourceId: optionalString("sourceId"),
     type: optionalString("type"),
     title: optionalString("title"),
     labelTr: optionalString("labelTr"),
@@ -278,11 +373,19 @@ function normalizeSource(value: unknown): SourceRef | null {
     ageScope: optionalString("ageScope"),
     studyType: optionalString("studyType"),
     sampleScope: optionalString("sampleScope"),
+    authors: optionalString("authors"),
+    sourceType: optionalString("sourceType"),
+    officialUrl: safeUrl,
+    locator: optionalString("locator"),
+    evidenceLevel: optionalString("evidenceLevel"),
+    supportedClaim: optionalString("supportedClaim"),
+    knownBoundary: optionalString("knownBoundary"),
+    supportedBoundary: optionalString("supportedBoundary"),
     ...(authority ? { authority } : {}),
   }
 }
 
-function normalizeAnswerUnit(value: unknown): AnswerUnit | null {
+function normalizeAnswerUnit(value: unknown, runtimeGeneration: DnaAnswer["runtimeGeneration"]): AnswerUnit | null {
   if (!value || typeof value !== "object") return null
   const row = value as Record<string, unknown>
   const kind = String(row.kind || "") as AnswerUnit["kind"]
@@ -290,10 +393,24 @@ function normalizeAnswerUnit(value: unknown): AnswerUnit | null {
   const authority = normalizeAuthority(row.authority)
   const id = String(row.id || "").trim()
   const text = String(row.text || "").trim()
+  const rawSection = String(row.section || "") as V3AnswerSection
+  const section = V3_ANSWER_SECTIONS.has(rawSection) ? rawSection : null
   if (!id || !text || !authority || !ANSWER_UNIT_KINDS.has(kind) || !ANSWER_UNIT_ROLES.has(role)) {
     return null
   }
-  return { id, kind, role, text, authority, sourceIds: normalizeStringList(row.sourceIds) }
+  if (runtimeGeneration === "v3" && !section) return null
+  return {
+    id,
+    section,
+    kind,
+    role,
+    text,
+    authority,
+    claimIds: normalizeStringList(row.claimIds),
+    passageIds: normalizeStringList(row.passageIds),
+    sourceIds: normalizeStringList(row.sourceIds),
+    citationCardIds: normalizeStringList(row.citationCardIds),
+  }
 }
 
 function normalizeAnswer(value: unknown): DnaAnswer | null {
@@ -301,6 +418,10 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
   const row = value as Record<string, unknown>
   const classification = String(row.classification || "") as DnaChatClassification
   if (!(classification in CLASSIFICATION_META)) return null
+  const requestId = String(row.requestId || "").trim()
+  const responseDepth = String(row.responseDepth || "standard") as ResponseDepth
+  const runtimeGeneration = row.runtimeGeneration === "v3" ? "v3" : "v2_legacy"
+  if (!requestId || !RESPONSE_DEPTH_OPTIONS.some((option) => option.value === responseDepth)) return null
 
   const rawContextRequest = row.contextRequest
   const contextRequest =
@@ -313,12 +434,17 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
         }
       : undefined
   const rawEvidenceSummary = row.evidenceSummary
+  const rawDnaValidationStatus = rawEvidenceSummary && typeof rawEvidenceSummary === "object"
+    ? String((rawEvidenceSummary as Record<string, unknown>).dnaValidationStatus || "") as DnaValidationStatus
+    : null
   const evidenceSummary =
     rawEvidenceSummary && typeof rawEvidenceSummary === "object"
       ? {
           level: String((rawEvidenceSummary as Record<string, unknown>).level || "").trim(),
           scientificEvidenceLevel: String((rawEvidenceSummary as Record<string, unknown>).scientificEvidenceLevel || "").trim(),
-          dnaValidationStatus: String((rawEvidenceSummary as Record<string, unknown>).dnaValidationStatus || "").trim(),
+          ...(rawDnaValidationStatus && DNA_VALIDATION_STATUSES.has(rawDnaValidationStatus)
+            ? { dnaValidationStatus: rawDnaValidationStatus }
+            : {}),
           ageScope: String((rawEvidenceSummary as Record<string, unknown>).ageScope || "").trim(),
           sampleScope: String((rawEvidenceSummary as Record<string, unknown>).sampleScope || "").trim(),
           boundary: String((rawEvidenceSummary as Record<string, unknown>).boundary || "").trim(),
@@ -339,23 +465,49 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
   }
   const answerUnits = Array.isArray(row.answerUnits)
     ? row.answerUnits
-        .map(normalizeAnswerUnit)
+        .map((entry) => normalizeAnswerUnit(entry, runtimeGeneration))
         .filter((entry): entry is AnswerUnit => Boolean(entry))
     : []
   if (!Array.isArray(row.answerUnits) || !answerUnits.length || answerUnits.length !== row.answerUnits.length) {
     return null
   }
-  const sourceById = new Map(sources.map((source) => [source.id, source]))
+  const sourceById = new Map<string, SourceRef>()
+  const sourceCardsBySourceId = new Map<string, SourceRef[]>()
+  sources.forEach((source) => {
+    sourceById.set(source.id, source)
+    const sourceId = source.sourceId || source.id
+    const cards = sourceCardsBySourceId.get(sourceId) || []
+    cards.push(source)
+    sourceCardsBySourceId.set(sourceId, cards)
+  })
   if (answerUnits.some((unit) =>
     ANSWER_ROLE_LAYER[unit.role] !== unit.authority.layer ||
     unit.sourceIds.some((sourceId) => {
-      const source = sourceById.get(sourceId)
-      return !source || source.authority?.layer !== unit.authority.layer
+      const cards = sourceCardsBySourceId.get(sourceId) || []
+      return !cards.length || cards.some((source) => source.authority?.layer !== unit.authority.layer)
     }))) {
     return null
   }
+  if (runtimeGeneration === "v3" && answerUnits.some((unit) => {
+    const isScientific = unit.role === "product_definition"
+      || unit.role === "scientific_evidence"
+      || unit.role === "dna_specific_validation"
+    if (!isScientific) return unit.citationCardIds.length > 0
+      || unit.claimIds.length > 0
+      || unit.passageIds.length > 0
+      || unit.sourceIds.length > 0
+    if (!unit.citationCardIds.length) return true
+    return unit.citationCardIds.some((cardId) => {
+      const card = sourceById.get(cardId)
+      return !card
+        || card.authority?.layer !== unit.authority.layer
+    })
+  })) return null
 
   return {
+    requestId,
+    responseDepth,
+    runtimeGeneration,
     classification,
     summary: String(row.summary || "Yanıt oluşturuldu.").trim(),
     details: normalizeStringList(row.details),
@@ -371,6 +523,11 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
         : DNA_INTELLIGENCE_PUBLIC_INTENDED_USE,
     suggestedQuestions: normalizeStringList(row.suggestedQuestions),
     engineVersion: String(row.engineVersion || "dna-chat-engine@2").trim(),
+    catalogVersion: String(row.catalogVersion || "dna-chat-catalog@2").trim(),
+    packageVersion: String(row.packageVersion || "dna-chat-catalog@2").trim(),
+    packageSha256: typeof row.packageSha256 === "string" && /^[a-f0-9]{64}$/.test(row.packageSha256)
+      ? row.packageSha256
+      : null,
     topic: typeof row.topic === "string" && row.topic.trim() ? row.topic.trim() : null,
     ...(contextRequest ? { contextRequest } : {}),
     ...(evidenceSummary && Object.values(evidenceSummary).some(Boolean) ? { evidenceSummary } : {}),
@@ -379,6 +536,35 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
 
 function sourceTitle(source: SourceRef) {
   return source.title || source.labelTr || source.citation || source.id
+}
+
+function sourceAuthorYear(source: SourceRef) {
+  const year = source.publicationYear || source.year
+  if (source.authors) return [source.authors, year].filter(Boolean).join(" · ")
+  if (source.labelTr) return source.labelTr
+  if (source.citation) return source.citation
+  return year ? String(year) : "Katalog kaydında belirtilmemiş"
+}
+
+function feedbackHref(
+  kind: "source" | "answer",
+  requestId: string,
+  sourceId?: string,
+  citationCardId?: string,
+) {
+  const params = new URLSearchParams({
+    surface: "app",
+    category: "technical",
+    feedback: kind === "source" ? "dna_source" : "dna_answer",
+    request: requestId,
+  })
+  if (kind === "source" && sourceId) params.set("source", sourceId)
+  if (kind === "source" && citationCardId) params.set("citation", citationCardId)
+  return `/support?${params.toString()}`
+}
+
+function sourceAnchor(requestId: string, index: number) {
+  return `dna-source-${requestId.replace(/[^a-zA-Z0-9_-]/g, "")}-${index + 1}`
 }
 
 export default function DnaAssistantClient({ initialReportId }: { initialReportId: string }) {
@@ -391,21 +577,31 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
   const [reportsError, setReportsError] = useState("")
   const [reportsErrorCode, setReportsErrorCode] = useState("")
   const [reportSelectionNotice, setReportSelectionNotice] = useState("")
+  const [reportSelectionInFlight, setReportSelectionInFlight] = useState(false)
   const [question, setQuestion] = useState("")
+  const [responseDepth, setResponseDepth] = useState<ResponseDepth>("standard")
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [previousTopic, setPreviousTopic] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState("")
   const [sendErrorCode, setSendErrorCode] = useState("")
+  const [composerHeight, setComposerHeight] = useState(224)
   const messageEndRef = useRef<HTMLDivElement>(null)
+  const composerFooterRef = useRef<HTMLElement>(null)
   const questionInputRef = useRef<HTMLTextAreaElement>(null)
   const reportPickerRef = useRef<HTMLElement>(null)
   const firstReportButtonRef = useRef<HTMLButtonElement>(null)
   const reportPickerFocusPendingRef = useRef(false)
   const requestSequenceRef = useRef(0)
   const activeRequestRef = useRef<AbortController | null>(null)
+  const reportSelectionCoordinatorRef = useRef(createDnaChatReportSelectionCoordinator())
 
   const selectedReport = reports.find((report) => report.id === selectedReportId) || null
+  const reportSelectionBlocked = !canBeginDnaChatReportSelection({
+    sending,
+    reportsLoading,
+    selectionInFlight: reportSelectionInFlight,
+  })
 
   const loadReports = useCallback(async (signal?: AbortSignal, linkedReportId = "") => {
     setReportsLoading(true)
@@ -471,7 +667,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
       behavior: reduceMotion ? "auto" : "smooth",
       block: "nearest",
     })
-  }, [messages, sending, reportPickerOpen])
+  }, [composerHeight, messages, sending, reportPickerOpen])
 
   useEffect(() => {
     if (!reportPickerOpen || reportsLoading || !reportPickerFocusPendingRef.current) return
@@ -503,6 +699,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
   }
 
   function removeReportContext() {
+    if (reportSelectionCoordinatorRef.current.isInFlight()) return
     clearConversation()
     setSelectedReportId("")
     setReportPickerOpen(false)
@@ -511,10 +708,15 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
   }
 
   function changeReportContext() {
-    clearConversation()
-    setSelectedReportId("")
+    if (reportSelectionCoordinatorRef.current.isInFlight()) return
+    const transition = planDnaChatReportTransition({
+      action: "change_report",
+      pendingReportQuestion,
+    })
+    if (transition.clearConversation) clearConversation()
+    setSelectedReportId(transition.selectedReportId ?? "")
     reportPickerFocusPendingRef.current = true
-    setReportPickerOpen(true)
+    setReportPickerOpen(transition.reportPickerOpen)
     setReportSelectionNotice("")
     void loadReports()
   }
@@ -553,6 +755,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
         signal: controller.signal,
         body: JSON.stringify({
           question: cleanQuestion,
+          responseDepth,
           ...(requestReportId ? { reportId: requestReportId } : {}),
           ...(requestPreviousTopic ? { context: { previousTopic: requestPreviousTopic } } : {}),
         }),
@@ -586,16 +789,35 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
   }
 
   async function chooseReport(reportId: string) {
-    const waitingQuestion = pendingReportQuestion
-    clearConversation()
-    setSelectedReportId(reportId)
-    reportPickerFocusPendingRef.current = false
-    setReportPickerOpen(false)
-    setReportSelectionNotice("")
-    if (waitingQuestion) {
-      await sendQuestion(waitingQuestion, { reportId, previousTopic: null })
-    } else {
-      moveQuestionFocus()
+    if (reportSelectionBlocked) return
+    const coordinator = reportSelectionCoordinatorRef.current
+    const transition = coordinator.claim({
+      reportId,
+      pendingReportQuestion,
+    })
+    if (!transition) return
+    setReportSelectionInFlight(true)
+    // Clear the public pending state synchronously in the claimed path. The
+    // coordinator ref is the same-tick guard until React commits this update.
+    setPendingReportQuestion(null)
+    try {
+      if (transition.clearConversation) clearConversation()
+      setSelectedReportId(transition.selectedReportId ?? "")
+      reportPickerFocusPendingRef.current = false
+      setReportPickerOpen(transition.reportPickerOpen)
+      setReportSelectionNotice("")
+      const [waitingQuestion] = transition.resubmitQuestions
+      if (waitingQuestion && transition.selectedReportId) {
+        await sendQuestion(waitingQuestion, {
+          reportId: transition.selectedReportId,
+          previousTopic: transition.previousTopic,
+        })
+      } else {
+        moveQuestionFocus()
+      }
+    } finally {
+      coordinator.release()
+      setReportSelectionInFlight(false)
     }
   }
 
@@ -612,6 +834,27 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
   }
 
   const hasConversation = messages.length > 0 || reportPickerOpen || sending
+
+  useEffect(() => {
+    if (!isAppSurface || !hasConversation) {
+      setComposerHeight(224)
+      return
+    }
+    const footer = composerFooterRef.current
+    if (!footer) return
+    const updateHeight = () => {
+      const nextHeight = Math.ceil(footer.getBoundingClientRect().height)
+      setComposerHeight((current) => current === nextHeight ? current : nextHeight)
+    }
+    updateHeight()
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", updateHeight)
+      return () => window.removeEventListener("resize", updateHeight)
+    }
+    const observer = new ResizeObserver(updateHeight)
+    observer.observe(footer)
+    return () => observer.disconnect()
+  }, [hasConversation, isAppSurface])
 
   useEffect(() => {
     const input = questionInputRef.current
@@ -635,6 +878,41 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
             ) : null}
           </div>
         ) : null}
+
+        <fieldset className="mb-2 flex flex-wrap items-center justify-between gap-2 px-1">
+          <legend className="sr-only">Yanıt ayrıntı düzeyi</legend>
+          <span className="text-[10px] font-black uppercase tracking-[0.1em] text-[var(--sm-text-muted)]">
+            Yanıt uzunluğu
+          </span>
+          <div className="flex min-h-11 items-center rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-1" aria-label="Yanıt uzunluğu seçimi">
+            {RESPONSE_DEPTH_OPTIONS.map((option) => (
+              <label
+                key={option.value}
+                className="relative flex min-h-11 cursor-pointer items-center rounded-full focus-within:outline-none"
+                title={option.description}
+              >
+                <input
+                  type="radio"
+                  name="dna-response-depth"
+                  value={option.value}
+                  checked={responseDepth === option.value}
+                  onChange={() => setResponseDepth(option.value)}
+                  className="peer sr-only"
+                />
+                <span
+                  className={[
+                    "inline-flex min-h-11 items-center rounded-full px-3 text-[11px] font-black transition peer-focus-visible:ring-2 peer-focus-visible:ring-blue-500 peer-focus-visible:ring-offset-2",
+                    responseDepth === option.value
+                      ? "bg-blue-600 text-white shadow-sm"
+                      : "text-[var(--sm-text-muted)] hover:bg-[var(--sm-surface)] hover:text-[var(--sm-text)]",
+                  ].join(" ")}
+                >
+                  {option.label}
+                </span>
+              </label>
+            ))}
+          </div>
+        </fieldset>
 
         <div
           className={[
@@ -739,15 +1017,17 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
                 <button
                   type="button"
                   onClick={changeReportContext}
-                  className="min-h-11 rounded-full px-2 font-black text-blue-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  disabled={reportSelectionInFlight}
+                  className="min-h-11 rounded-full px-2 font-black text-blue-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Değiştir
                 </button>
                 <button
                   type="button"
                   onClick={removeReportContext}
+                  disabled={reportSelectionInFlight}
                   aria-label="Rapor bağlamını kaldır ve yeni sohbet başlat"
-                  className="grid min-h-11 min-w-11 place-items-center rounded-full text-slate-500 hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                  className="grid min-h-11 min-w-11 place-items-center rounded-full text-slate-500 hover:bg-white/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <X size={17} aria-hidden="true" />
                 </button>
@@ -795,7 +1075,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
                     type="button"
                     onClick={() => moveQuestionFocus(suggestion)}
                     className={[
-                      "min-h-12 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface)] px-4 py-2.5 text-left text-xs font-bold leading-5 text-[var(--sm-text-soft)] shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-700 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
+                      "min-h-12 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface)] px-4 py-2.5 text-left text-xs font-bold leading-5 text-[var(--sm-text-soft)] shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-[var(--sm-surface-soft)] hover:text-[var(--sm-text)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
                       index > 1 ? "hidden sm:block" : "",
                     ].join(" ")}
                   >
@@ -810,8 +1090,13 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
             <div
               className={[
                 "flex-1 px-1 py-6 sm:px-4 sm:py-8",
-                isAppSurface ? "pb-40" : "",
+                isAppSurface
+                  ? "pb-[calc(var(--dna-composer-height)+90px+env(safe-area-inset-bottom))] lg:pb-8"
+                  : "",
               ].join(" ")}
+              style={isAppSurface
+                ? ({ "--dna-composer-height": `${composerHeight}px` } as React.CSSProperties)
+                : undefined}
               role="log"
               aria-live="polite"
               aria-relevant="additions text"
@@ -877,7 +1162,8 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
                         ref={index === 0 ? firstReportButtonRef : undefined}
                         type="button"
                         onClick={() => void chooseReport(report.id)}
-                        className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-3 py-2 text-left transition hover:border-blue-200 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                        disabled={reportSelectionBlocked}
+                        className="flex min-h-14 w-full items-center justify-between gap-3 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-3 py-2 text-left transition hover:border-blue-200 hover:bg-[var(--sm-surface)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         <span className="min-w-0">
                           <span className="block truncate text-xs font-black text-[var(--sm-text)]">
@@ -914,6 +1200,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
             </div>
 
             <footer
+              ref={composerFooterRef}
               className={[
                 "z-20 bg-[var(--sm-app-bg)]/95 px-1 pb-2 pt-3 backdrop-blur-xl sm:px-4",
                 isAppSurface
@@ -937,6 +1224,40 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
     (answer.caseEvidence.length > 0 || answer.limitations.some((item) => /\b(?:rapor|vaka)\b/i.test(item)))
   const meta = reportScopedNotAvailable ? { ...baseMeta, label: "Raporda Yok" } : baseMeta
   const hasStructuredUnits = answer.answerUnits.length > 0
+  const hasSafetyBoundaryUnit = Boolean(
+    answer.safetyBoundary
+      && answer.answerUnits.some((unit) => unit.text.trim() === answer.safetyBoundary.trim()),
+  )
+  const sourceNumberById = new Map<string, number>()
+  answer.sources.forEach((source, index) => {
+    if (!sourceNumberById.has(source.id)) sourceNumberById.set(source.id, index + 1)
+    if (source.sourceId && !sourceNumberById.has(source.sourceId)) {
+      sourceNumberById.set(source.sourceId, index + 1)
+    }
+  })
+  const boundaryText = [
+    answer.summary,
+    ...answer.details,
+    ...answer.limitations,
+    ...answer.answerUnits.map((unit) => unit.text),
+    answer.evidenceSummary?.level || "",
+    answer.evidenceSummary?.scientificEvidenceLevel || "",
+    answer.evidenceSummary?.dnaValidationStatus || "",
+    answer.evidenceSummary?.boundary || "",
+  ].join(" ").toLocaleLowerCase("tr-TR")
+  const answerStatusLabels = [
+    answer.evidenceSummary?.dnaValidationStatus === "theory_only"
+      || /(?:tartışmalı|tartismali|kuramsal|theory_only|polyvagal)/i.test(boundaryText)
+      ? "Tartışmalı teori"
+      : "",
+    /(?:kanıt yetersiz|kanit yetersiz|very_low|very low|çok düşük|cok dusuk|sınırlı kanıt|sinirli kanit)/i.test(boundaryText)
+      ? "Kanıt yetersiz"
+      : "",
+    answer.evidenceSummary?.dnaValidationStatus === "not_established"
+      || /(?:ilişki kurulmamıştır|iliski kurulmamistir|ilişki kaydı bulunmuyor|iliski kaydi bulunmuyor|not_established)/i.test(boundaryText)
+      ? "Bu ilişki kurulmamıştır"
+      : "",
+  ].filter(Boolean)
 
   const authorityStateLabel = (authority: KnowledgeAuthority) =>
     authority.releaseEligible
@@ -961,8 +1282,25 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
             <span className={`inline-flex min-h-7 items-center rounded-full border px-2.5 text-[10px] font-black uppercase tracking-[0.08em] ${meta.className}`}>
               {meta.label}
             </span>
-            <span className="text-[10px] font-bold text-[var(--sm-text-muted)]">{answer.engineVersion}</span>
+            <span
+              className="text-[10px] font-bold text-[var(--sm-text-muted)]"
+              title={`${answer.catalogVersion} · ${answer.packageVersion}${answer.packageSha256 ? ` · ${answer.packageSha256}` : ""}`}
+            >
+              {answer.engineVersion} · {answer.runtimeGeneration === "v3" ? "V3 yayın paketi" : "V2 güvenli geri dönüş"}
+            </span>
+            <span className="inline-flex min-h-7 items-center rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-2.5 text-[10px] font-black text-[var(--sm-text-muted)]">
+              {RESPONSE_DEPTH_LABEL[answer.responseDepth]}
+            </span>
           </div>
+          {answerStatusLabels.length ? (
+            <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Kanıt ve ilişki uyarıları">
+              {answerStatusLabels.map((label) => (
+                <li key={label} className="inline-flex min-h-7 items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 text-[10px] font-black text-amber-900">
+                  {label}
+                </li>
+              ))}
+            </ul>
+          ) : null}
           {answer.authoritySummary.length ? (
             <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Yanıtta kullanılan bilgi otoriteleri">
               {answer.authoritySummary.map((authority) => (
@@ -979,11 +1317,22 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
           ) : null}
           {hasStructuredUnits ? (
             <ul className="mt-3 space-y-2" aria-label="Otoritesine göre ayrılmış yanıt">
-              {answer.answerUnits.map((unit) => (
-                <li
-                  key={unit.id}
-                  className="rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-3"
-                >
+              {answer.answerUnits.map((unit, index) => {
+                const sectionHeading = answer.runtimeGeneration === "v3"
+                  && unit.section
+                  && answer.answerUnits[index - 1]?.section !== unit.section
+                    ? V3_ANSWER_SECTION_LABEL[unit.section]
+                    : null
+                return (
+                  <li
+                    key={unit.id}
+                    className="rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-3"
+                  >
+                  {sectionHeading ? (
+                    <h3 className="mb-2 text-xs font-black tracking-[-0.01em] text-[var(--sm-text)]">
+                      {sectionHeading}
+                    </h3>
+                  ) : null}
                   <div className="flex flex-wrap items-center gap-1.5">
                     <span className="rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface)] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[var(--sm-text-muted)]">
                       {ANSWER_UNIT_KIND_LABEL[unit.kind]}
@@ -994,9 +1343,30 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
                     <span className={`rounded-full border px-2 py-0.5 text-[9px] font-black ${authorityStateClass(unit.authority)}`}>
                       {authorityStateLabel(unit.authority)}
                     </span>
-                    {unit.sourceIds.length ? (
-                      <span className="text-[9px] font-bold text-[var(--sm-text-muted)]">
-                        {unit.sourceIds.length} kaynak bağlantısı
+                    {(unit.citationCardIds.length ? unit.citationCardIds : unit.sourceIds)
+                      .some((citationId) => sourceNumberById.has(citationId)) ? (
+                      <span
+                        className="inline-flex flex-wrap items-center gap-1 text-[10px] font-black text-blue-700"
+                        aria-label={unit.citationCardIds.length
+                          ? "Bu cümlenin claim ve passage düzeyindeki kaynakları"
+                          : "Bu cümleyle ilişkili geçiş kataloğu kaynakları"}
+                      >
+                        {(unit.citationCardIds.length ? unit.citationCardIds : unit.sourceIds).flatMap((citationId) => {
+                          const sourceNumber = sourceNumberById.get(citationId)
+                          if (!sourceNumber) return []
+                          return [
+                            <a
+                              key={`${unit.id}:${citationId}`}
+                              href={`#${sourceAnchor(answer.requestId, sourceNumber - 1)}`}
+                              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-blue-200 bg-blue-50 px-2 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                              aria-label={unit.citationCardIds.length
+                                ? `Claim ve passage eşleşmeli kaynak ${sourceNumber}'e git`
+                                : `İlişkili geçiş kataloğu kaynağı ${sourceNumber}'e git`}
+                            >
+                              [{sourceNumber}]
+                            </a>,
+                          ]
+                        })}
                       </span>
                     ) : null}
                   </div>
@@ -1014,8 +1384,9 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
                       <strong>Bilgi sınırı:</strong> {unit.authority.boundaryTr}
                     </p>
                   ) : null}
-                </li>
-              ))}
+                  </li>
+                )
+              })}
             </ul>
           ) : (
             <>
@@ -1035,6 +1406,9 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
           ) : null}
           {answer.evidenceSummary.scientificEvidenceLevel && answer.evidenceSummary.scientificEvidenceLevel !== answer.evidenceSummary.level ? (
             <div><span className="font-black text-[var(--sm-text)]">Genel literatür:</span> <span className="font-semibold text-[var(--sm-text-soft)]">{answer.evidenceSummary.scientificEvidenceLevel}</span></div>
+          ) : null}
+          {answer.evidenceSummary.dnaValidationStatus === "not_established" ? (
+            <div><span className="font-black text-[var(--sm-text)]">DNA ilişkisi:</span> <span className="font-semibold text-[var(--sm-text-soft)]">Doğrudan ilişki kurulmamıştır</span></div>
           ) : null}
           {answer.evidenceSummary.ageScope ? (
             <div><span className="font-black text-[var(--sm-text)]">Yaş kapsamı:</span> <span className="font-semibold text-[var(--sm-text-soft)]">{answer.evidenceSummary.ageScope}</span></div>
@@ -1064,8 +1438,12 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
             <ChevronDown className="transition group-open:rotate-180" size={17} aria-hidden="true" />
           </summary>
           <div className="space-y-2 border-t border-[var(--sm-border)] p-3">
-            {answer.sources.map((source) => (
-              <div key={source.id} className="rounded-xl border border-[var(--sm-border)] bg-[var(--sm-surface)] p-3">
+            {answer.sources.map((source, sourceIndex) => (
+              <div
+                key={`${source.id}-${sourceIndex}`}
+                id={sourceAnchor(answer.requestId, sourceIndex)}
+                className="scroll-mt-28 rounded-xl border border-[var(--sm-border)] bg-[var(--sm-surface)] p-3"
+              >
                 {source.authority?.labelTr ? (
                   <div className={`mb-2 inline-flex min-h-7 items-center gap-1.5 rounded-full border px-2.5 text-[10px] font-black ${authorityStateClass(source.authority)}`}>
                     {source.authority.labelTr}
@@ -1073,42 +1451,63 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
                     <span>{authorityStateLabel(source.authority)}</span>
                   </div>
                 ) : null}
-                <div className="text-xs font-black leading-5 text-[var(--sm-text)]">{sourceTitle(source)}</div>
-                {source.publicationYear || source.year || source.doi ? (
-                  <div className="mt-1 text-[11px] font-bold text-[var(--sm-text-muted)]">
-                    {[source.publicationYear || source.year, source.doi ? `DOI: ${source.doi}` : ""].filter(Boolean).join(" · ")}
+                <div className="text-xs font-black leading-5 text-[var(--sm-text)]">
+                  <span className="mr-1 text-blue-700">[{sourceIndex + 1}]</span>
+                  {sourceTitle(source)}
+                </div>
+                <div className="mt-1 text-[11px] font-bold text-[var(--sm-text-muted)]">
+                  <strong>Yazar/yıl:</strong>{" "}
+                  {sourceAuthorYear(source)}
+                </div>
+                <div className="mt-1 text-[11px] font-bold text-[var(--sm-text-muted)]">
+                  <strong>DOI veya resmî bağlantı:</strong>{" "}
+                  {source.doi ? `DOI: ${source.doi}` : source.url ? "Resmî bağlantı mevcut" : "Katalog kaydında belirtilmemiş"}
+                </div>
+                <dl className="mt-2 grid gap-1.5 rounded-xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)] sm:grid-cols-2">
+                  <div><dt className="inline font-black text-[var(--sm-text)]">Kaynak türü: </dt><dd className="inline">{source.sourceType || source.studyType || source.type || "Belirtilmemiş"}</dd></div>
+                  <div><dt className="inline font-black text-[var(--sm-text)]">Bölüm/sayfa: </dt><dd className="inline">{source.locator || "Katalog kaydında belirtilmemiş"}</dd></div>
+                  <div><dt className="inline font-black text-[var(--sm-text)]">Kanıt düzeyi: </dt><dd className="inline">{source.evidenceLevel || "Kaynak kartında belirtilmemiş"}</dd></div>
+                  <div><dt className="inline font-black text-[var(--sm-text)]">Yaş kapsamı: </dt><dd className="inline">{source.ageScope || "Kaynak kartında belirtilmemiş"}</dd></div>
+                </dl>
+                {!source.supportedClaim && (source.excerptTr || source.excerpt) ? (
+                  <div className="mt-2 rounded-xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-2 text-xs font-medium leading-5 text-[var(--sm-text-soft)]">
+                    <strong className="text-[var(--sm-text)]">Geçiş kataloğu özeti:</strong>{" "}
+                    {source.excerptTr || source.excerpt}
+                    <p className="mt-1 text-[10px] font-semibold text-[var(--sm-text-muted)]">
+                      Bu alan passage düzeyinde V3 destek iddiası değildir.
+                    </p>
                   </div>
                 ) : null}
-                {source.excerptTr || source.excerpt ? (
-                  <p className="mt-2 text-xs font-medium leading-5 text-[var(--sm-text-soft)]">{source.excerptTr || source.excerpt}</p>
+                {source.supportedClaim ? (
+                  <p className="mt-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)]"><strong>Desteklediği sınırlı iddia:</strong> {source.supportedClaim}</p>
                 ) : null}
-                {source.claimBoundary ? (
-                  <p className="mt-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)]"><strong>İddia sınırı:</strong> {source.claimBoundary}</p>
-                ) : null}
-                {source.authority?.boundaryTr ? (
-                  <p
-                    className={`mt-2 rounded-lg border p-2 text-[11px] font-semibold leading-5 ${
-                      source.authority.releaseEligible
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                        : "border-amber-200 bg-amber-50 text-amber-900"
-                    }`}
-                  >
-                    <strong>Bilgi sınırı:</strong> {source.authority.boundaryTr}
-                  </p>
-                ) : null}
-                {source.ageScope || source.studyType ? (
-                  <p className="mt-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)]">
-                    <strong>Çalışma kapsamı:</strong> {[source.ageScope, source.studyType].filter(Boolean).join(" · ")}
-                  </p>
-                ) : null}
+                <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2 text-[11px] font-semibold leading-5 text-amber-900">
+                  <strong>Bilinen sınır:</strong> {source.knownBoundary || source.supportedBoundary || source.claimBoundary || source.authority?.boundaryTr || "Kaynak kartında ayrıca belirtilmemiş"}
+                </p>
                 {source.sampleScope ? (
                   <p className="mt-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)]"><strong>Örneklem sınırı:</strong> {source.sampleScope}</p>
                 ) : null}
-                {source.url ? (
-                  <a href={source.url} target="_blank" rel="noreferrer" className="mt-2 inline-flex min-h-11 items-center text-xs font-black text-blue-700 underline-offset-4 hover:underline">
-                    Kaynağı aç
-                  </a>
-                ) : null}
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  {source.url ? (
+                    <a href={source.url} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-xl px-2 text-xs font-black text-blue-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
+                      Kaynağı aç
+                    </a>
+                  ) : null}
+                  <Link
+                    href={feedbackHref(
+                      "source",
+                      answer.requestId,
+                      source.sourceId || source.id,
+                      source.id,
+                    )}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-xs font-black text-[var(--sm-text-muted)] hover:bg-[var(--sm-surface-soft)] hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                    aria-label={`Kaynak ${sourceIndex + 1} için hata bildir`}
+                  >
+                    <Flag size={14} aria-hidden="true" /> Kaynak hatası bildir
+                  </Link>
+                </div>
               </div>
             ))}
           </div>
@@ -1122,7 +1521,7 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
         </div>
       ) : null}
 
-      {!hasStructuredUnits && answer.safetyBoundary ? (
+      {answer.safetyBoundary && !hasSafetyBoundaryUnit ? (
         <div className="mt-3 flex items-start gap-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)]">
           <ShieldCheck className="mt-0.5 shrink-0 text-blue-600" size={15} aria-hidden="true" />
           <span>{answer.safetyBoundary}</span>
@@ -1143,6 +1542,16 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
           ))}
         </div>
       ) : null}
+      <div className="mt-3 flex justify-end">
+        <Link
+          href={feedbackHref("answer", answer.requestId)}
+          target="_blank"
+          rel="noreferrer"
+          className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-[11px] font-black text-[var(--sm-text-muted)] hover:bg-[var(--sm-surface-soft)] hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+        >
+          <MessageSquareWarning size={15} aria-hidden="true" /> Cevapla ilgili sorun bildir
+        </Link>
+      </div>
         </div>
       </div>
     </article>

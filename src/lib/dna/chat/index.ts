@@ -54,11 +54,13 @@ export {
 
 export type {
   DnaChatApiAuditInput,
+  DnaChatAuditErrorCode,
   DnaChatApiPayload,
   DnaChatApiResolution,
   DnaChatApiResolverDependencies,
   DnaChatBodyReadResult,
   DnaChatCaseLoadResult,
+  DnaChatLatencyCategory,
 } from "./apiResolver"
 
 export type {

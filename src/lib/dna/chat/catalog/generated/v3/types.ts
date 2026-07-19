@@ -50,6 +50,10 @@ export type DnaV3StaticSource = Readonly<{
   pmid: string | null
   pmcid: string | null
   isbn: string | null
+  /** Canonical, reviewed landing page. Null when DOI/PMCID/PMID is authoritative. */
+  officialUrl: string | null
+  /** Multi-pass appraised design; never inferred from the title or venue. */
+  studyDesign: string
   licensePolicy: string
   artifacts: readonly DnaV3StaticArtifact[]
 }>
@@ -80,7 +84,9 @@ export type DnaV3StaticClaim = Readonly<{
   population: string
   claimBoundary: string
   dnaRelation: string
-  releaseStatus: "release_eligible"
+  /** Copied from and hash-bound to the canonical release authorization. */
+  authority: "dna_product_information" | "external_scientific_information"
+  releaseStatus: "release_eligible" | "owner_approved"
   sourceIds: readonly string[]
   passageIds: readonly string[]
 }>

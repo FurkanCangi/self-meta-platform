@@ -16,7 +16,31 @@ import {
   type DnaV3RetrievalSource,
 } from "../src/lib/dna/chat/v3RetrievalCore"
 import { tokenizeDnaChatText } from "../src/lib/dna/chat/text"
-import { createDnaChatSafeCaseContext } from "../src/lib/dna/chat/caseContext"
+import {
+  attachVerifiedReportCaseAuthorityInternal,
+  createDnaChatSafeCaseContext,
+} from "../src/lib/dna/chat/caseContext"
+import { createVerifiedReportCaseAuthorityInternal } from "../src/lib/dna/chat/knowledgeAuthority"
+import {
+  createCanonicalOwnedDnaCaseContext,
+  DNA_OWNED_CASE_CONTEXT_VERSION,
+} from "../src/lib/dna/chat/ownedCaseContextCore"
+import {
+  DNA_V3_CASE_THEORY_BOUNDARY_TR,
+  doesDnaV3CaseAnswerMatchContext,
+} from "../src/lib/dna/chat/v3CaseTheoryAssembler"
+import {
+  createDnaV3ScientificUnit,
+  createDnaV3SourceCards,
+  validateDnaV3AnswerEvidence,
+} from "../src/lib/dna/chat/v3AnswerEvidence"
+import {
+  resolveDnaV3ResponseDepth,
+} from "../src/lib/dna/chat/v3ResponseProfiles"
+import {
+  dnaV3CaseAgeGroupFromMonths,
+  doesDnaV3LockedAgeBoundaryMatchCase,
+} from "../src/lib/dna/chat/v3AgePolicy"
 
 function stableJson(value: unknown): string {
   if (value === null || typeof value !== "object") return JSON.stringify(value)
@@ -41,7 +65,7 @@ const source = (
   doi: `10.1000/${id}`,
   officialUrl: `https://doi.org/10.1000/${id}`,
   evidenceLevel: "moderate",
-  ageScope: "mixed",
+  ageScope: "all_ages",
   licenseStatus: "permitted",
   releaseStatus: "release_eligible",
   ...overrides,
@@ -58,7 +82,7 @@ const passage = (
   locator: `Bulgular/${id}`,
   originalText: `Original source passage for ${id}.`,
   approvedTurkishText,
-  ageScope: "mixed",
+  ageScope: "all_ages",
   population: "human",
   releaseStatus: "release_eligible",
   ...overrides,
@@ -75,6 +99,7 @@ const claim = (input: {
   sourceId: string
   ageScope?: string
   claimType?: string
+  authority?: DnaV3RetrievalClaim["authority"]
   dnaRelationship?: DnaV3RetrievalClaim["dnaRelationship"]
 }): DnaV3RetrievalClaim => Object.freeze({
   id: input.id,
@@ -89,10 +114,13 @@ const claim = (input: {
   passageIds: Object.freeze([input.passageId]),
   sourceIds: Object.freeze([input.sourceId]),
   evidenceLevel: "moderate",
-  ageScope: input.ageScope ?? "mixed",
+  ageScope: input.ageScope ?? "all_ages",
   claimBoundary: "Grup düzeyi bulgu bireysel biyolojik çıkarıma dönüştürülemez.",
+  authority: input.authority ?? "external_scientific_information",
   dnaRelationship: input.dnaRelationship ?? "not_applicable",
-  releaseStatus: "release_eligible",
+  releaseStatus: input.authority === "dna_product_information"
+    ? "owner_approved"
+    : "release_eligible",
 })
 
 const CLAIMS = Object.freeze([
@@ -182,8 +210,11 @@ const pkg = packageFrom()
 
 assert.equal(classifyDnaV3RetrievalIntent("İnsular korteks nedir?"), "theory")
 assert.equal(classifyDnaV3RetrievalIntent("Bu rapordaki insula bulgusu literatürle uyumlu mu?"), "case_theory")
+assert.equal(classifyDnaV3RetrievalIntent("Bu rapordaki karşı kanıtları özetle."), "case")
 assert.equal(classifyDnaV3QueryKind("İnsular korteks nedir?"), "definition")
 assert.equal(classifyDnaV3QueryKind("HRV nasıl ölçülür?"), "measurement")
+assert.equal(classifyDnaV3QueryKind("Çocukluk yaş grubunda insular korteks nedir?"), "definition")
+assert.equal(classifyDnaV3QueryKind("İnsular korteks gelişimi nasıldır?"), "development")
 assert.deepEqual(tokenizeDnaChatText("İnterosepsiyonun düzenlenmesi"), ["interosepsiyon", "duzenlenmesi"])
 assert.deepEqual(tokenizeDnaChatText("çocuklarda korteksin regulasyonu"), ["cocuk", "korteks", "regulasyon"])
 assert.deepEqual(splitDnaV3Subquestions("İnsula nedir? İnterosepsiyon nedir?"), {
@@ -200,6 +231,58 @@ assert.equal(exact.sources[0].locator, "Bulgular/passage.insula")
 assert.equal(exact.evidenceSummary?.boundary, CLAIMS[0].claimBoundary)
 assert.equal(exact.confidenceBand, "high")
 assert.ok(!JSON.stringify(exact).match(/(?:reasoningTrace|internalRuleId|artifactSha256)/))
+assert.equal(exact.responseDepth, "standard")
+assert.equal(validateDnaV3AnswerEvidence({
+  summary: exact.summary,
+  details: exact.details,
+  limitations: exact.limitations,
+  units: exact.answerUnits,
+  sources: exact.sources,
+  pkg,
+}).length, 0)
+assert.ok(exact.answerUnits
+  .filter((unit) => ["external_science", "dna_product"].includes(unit.authority))
+  .every((unit) => unit.claimIds.length > 0 && unit.passageIds.length > 0 && unit.sourceIds.length > 0))
+assert.equal(exact.sources[0].supportedClaimId, "claim.insula")
+assert.equal(exact.sources[0].supportedClaim, CLAIMS[0].summaryTr)
+assert.equal(exact.sources[0].knownBoundary, CLAIMS[0].claimBoundary)
+assert.ok(Boolean(exact.sources[0].doi || exact.sources[0].officialUrl))
+
+assert.equal(resolveDnaV3ResponseDepth("Kısaca söyle", "deep"), "short")
+assert.equal(resolveDnaV3ResponseDepth("Kanıtlarıyla detaylı anlat", "short"), "deep")
+assert.equal(resolveDnaV3ResponseDepth("Kısaca ama ayrıntılı anlat", "deep"), "standard")
+assert.equal(resolveDnaV3ResponseDepth("Normal biçimde açıkla", "short"), "short")
+
+const shortAnswer = resolveDnaV3Retrieval({
+  question: "İnsular korteks hakkında kısaca açıkla.",
+  responseDepth: "deep",
+}, pkg)
+assert.equal(shortAnswer.status, "answer")
+assert.equal(shortAnswer.responseDepth, "short", "Doğal kısa sinyali seçili profili değiştirebilmeli")
+assert.equal(shortAnswer.details.length, 0)
+assert.equal(shortAnswer.limitations.length, 1)
+assert.ok(shortAnswer.sources.length <= 2)
+
+const deepAnswer = resolveDnaV3Retrieval({
+  question: "İnsular korteks hakkında kanıtlarıyla detaylı anlat.",
+  responseDepth: "short",
+}, pkg)
+assert.equal(deepAnswer.status, "answer")
+assert.equal(deepAnswer.responseDepth, "deep", "Doğal derinlik sinyali seçili profili değiştirebilmeli")
+assert.ok(deepAnswer.sources.length <= 8)
+for (const requiredSection of [
+  "definition",
+  "function_or_relation",
+  "development",
+  "measurement",
+  "evidence_status",
+  "counter_evidence",
+  "dna_boundary",
+] as const) {
+  assert.ok(deepAnswer.sections.some((section) => section.kind === requiredSection))
+}
+assert.ok(deepAnswer.limitations.some((limitation) => /içerik üretilmeden bırakıldı/.test(limitation)))
+assert.ok(!JSON.stringify(deepAnswer).match(/(?:chain.of.thought|reasoningTrace|retrievalScore|internalThreshold)/i))
 
 const typo = resolveDnaV3Retrieval({ question: "İnsuler korteks nedir?" }, pkg)
 assert.equal(typo.status, "answer", "3-5 karakter n-gram yazım hatasını güvenle eşleştirmeli")
@@ -248,6 +331,158 @@ const boundedCaseTheory = resolveDnaV3Retrieval({
 assert.equal(boundedCaseTheory.status, "clarification",
   "Sentetik vaka context'i üretim rapor yetkisi sayılmamalı")
 
+const canonicalOwned = createCanonicalOwnedDnaCaseContext({
+  age_months: 96,
+  scores: {
+    physiological: 35,
+    sensory: 18,
+    emotional: 31,
+    cognitive: 33,
+    executive: 34,
+    interoception: 36,
+  },
+  domain_levels: {
+    physiological: "Tipik",
+    sensory: "Atipik",
+    emotional: "Tipik",
+    cognitive: "Tipik",
+    executive: "Tipik",
+    interoception: "Tipik",
+  },
+  anamnesis: "Bu alan V3 vaka bağlamına girmemelidir.",
+  answers: [{ secret: "ham yanıt" }],
+  trace: { ruleId: "internal.rule" },
+}, {
+  reportId: "11111111-1111-4111-8111-111111111111",
+  loadedReportId: "11111111-1111-4111-8111-111111111111",
+  assessmentId: "22222222-2222-4222-8222-222222222222",
+  loadedAssessmentId: "22222222-2222-4222-8222-222222222222",
+  clientId: "33333333-3333-4333-8333-333333333333",
+  loadedClientId: "33333333-3333-4333-8333-333333333333",
+  ownerId: "44444444-4444-4444-8444-444444444444",
+  sessionUserId: "44444444-4444-4444-8444-444444444444",
+})
+attachVerifiedReportCaseAuthorityInternal(
+  canonicalOwned.context,
+  createVerifiedReportCaseAuthorityInternal(DNA_OWNED_CASE_CONTEXT_VERSION),
+)
+const verifiedMixed = resolveDnaV3Retrieval({
+  question: "Bu rapordaki insular korteks bulgusu literatürle uyumlu mu?",
+  caseContext: canonicalOwned.context,
+  responseDepth: "standard",
+}, pkg)
+assert.equal(verifiedMixed.status, "answer")
+assert.equal(verifiedMixed.intent, "case_theory")
+assert.equal(verifiedMixed.classification, "case_finding")
+assert.equal(verifiedMixed.safetyBoundary, DNA_V3_CASE_THEORY_BOUNDARY_TR)
+assert.ok(verifiedMixed.details.includes(DNA_V3_CASE_THEORY_BOUNDARY_TR))
+const requiredMixedSections = [
+  "case_finding",
+  "case_missing",
+  "general_literature",
+  "case_non_inference",
+  "preserved_capacity",
+] as const
+for (const requiredSection of requiredMixedSections) {
+  assert.ok(verifiedMixed.sections.some((section) =>
+    section.kind === requiredSection && section.unitIds.length > 0))
+}
+assert.deepEqual(verifiedMixed.sections.map((section) => section.kind), [
+  ...requiredMixedSections,
+  "boundary",
+], "Karma vaka-teori cevabı altı zorunlu bölümü sabit sırada taşımalı")
+assert.deepEqual(
+  [...new Set(verifiedMixed.answerUnits.map((unit) => unit.section))],
+  [...requiredMixedSections, "boundary"],
+  "Sunuma açılan birimler zorunlu bölüm sırasını korumalı",
+)
+assert.equal(
+  verifiedMixed.answerUnits.filter((unit) => unit.text === DNA_V3_CASE_THEORY_BOUNDARY_TR).length,
+  1,
+  "Vaka için biyolojik çıkarım sınırı yalnız bir kez gösterilmeli",
+)
+assert.equal(validateDnaV3AnswerEvidence({
+  summary: verifiedMixed.summary,
+  details: verifiedMixed.details,
+  limitations: verifiedMixed.limitations,
+  units: verifiedMixed.answerUnits,
+  sources: verifiedMixed.sources,
+  pkg,
+}).length, 0)
+assert.ok(verifiedMixed.answerUnits.some((unit) =>
+  unit.authority === "case_report" && unit.caseFieldIds.length > 0))
+assert.ok(verifiedMixed.answerUnits.some((unit) =>
+  unit.authority === "external_science" && unit.claimIds.length > 0 && unit.passageIds.length > 0))
+assert.match(verifiedMixed.summary, /eşleşen bir vaka bulgusu kayıtlı değildir/i,
+  "İnsula sorusu ilişkisiz rapor ana eksenini vaka bulgusu gibi göstermemeli")
+assert.ok(!JSON.stringify(verifiedMixed).match(/(?:anamnesis|ham yanıt|internal\.rule|trace|ruleId)/i))
+
+const verifiedMixedBuVakada = resolveDnaV3Retrieval({
+  question: "Bu vakada insular korteks bulgusu literatürle uyumlu mu?",
+  caseContext: canonicalOwned.context,
+}, pkg)
+assert.equal(verifiedMixedBuVakada.status, "answer",
+  "'Bu vakada' ifadesi teori sorusundan güvenle ayrıştırılmalı")
+
+const verifiedCaseOnly = resolveDnaV3Retrieval({
+  question: "Bu rapordaki bulguları özetle.",
+  caseContext: canonicalOwned.context,
+}, pkg)
+assert.equal(verifiedCaseOnly.status, "answer",
+  "Kimliği doğrulanmış raporun enumerated güvenli alanları bounded vaka cevabı üretebilmeli")
+assert.equal(verifiedCaseOnly.intent, "case")
+assert.equal(verifiedCaseOnly.classification, "case_finding")
+assert.ok(verifiedCaseOnly.answerUnits.some((unit) =>
+  unit.authority === "case_report" && unit.caseFieldIds.length === 1))
+assert.ok(doesDnaV3CaseAnswerMatchContext(canonicalOwned.context, verifiedCaseOnly))
+assert.doesNotMatch(JSON.stringify(verifiedCaseOnly), /(?:anamnesis|ham yanıt|internal\.rule|trace|ruleId)/i)
+
+const verifiedPreserved = resolveDnaV3Retrieval({
+  question: "Bu rapordaki korunmuş kapasiteleri özetle.",
+  caseContext: canonicalOwned.context,
+}, pkg)
+assert.equal(verifiedPreserved.status, "answer")
+assert.ok(verifiedPreserved.answerUnits.some((unit) => unit.section === "preserved_capacity"))
+
+const verifiedCounter = resolveDnaV3Retrieval({
+  question: "Bu rapordaki karşı kanıtları özetle.",
+  caseContext: canonicalOwned.context,
+}, pkg)
+assert.equal(verifiedCounter.status, "answer")
+assert.ok(verifiedCounter.answerUnits.some((unit) => unit.section === "preserved_capacity"))
+
+const emptyOwned = createCanonicalOwnedDnaCaseContext({
+  anamnesis: "Bu serbest metin hiçbir zaman vaka cevabına girmemelidir.",
+  answers: [{ secret: "ham yanıt" }],
+  trace: { ruleId: "internal.rule" },
+}, {
+  reportId: "55555555-5555-4555-8555-555555555555",
+  loadedReportId: "55555555-5555-4555-8555-555555555555",
+  assessmentId: "66666666-6666-4666-8666-666666666666",
+  loadedAssessmentId: "66666666-6666-4666-8666-666666666666",
+  clientId: "77777777-7777-4777-8777-777777777777",
+  loadedClientId: "77777777-7777-4777-8777-777777777777",
+  ownerId: "88888888-8888-4888-8888-888888888888",
+  sessionUserId: "88888888-8888-4888-8888-888888888888",
+})
+attachVerifiedReportCaseAuthorityInternal(
+  emptyOwned.context,
+  createVerifiedReportCaseAuthorityInternal(DNA_OWNED_CASE_CONTEXT_VERSION),
+)
+const emptyCaseOnly = resolveDnaV3Retrieval({
+  question: "Bu rapordaki bulguları özetle.",
+  caseContext: emptyOwned.context,
+}, pkg)
+assert.equal(emptyCaseOnly.status, "not_available",
+  "Yalnız genel eksik-veri sınırı taşıyan legacy/basic bağlamda vaka bulgusu uydurulmamalı")
+assert.doesNotMatch(JSON.stringify(emptyCaseOnly), /(?:serbest metin|ham yanıt|internal\.rule|trace|ruleId)/i)
+
+const verifiedUnknownMixed = resolveDnaV3Retrieval({
+  question: "Bu rapordaki kuantum dolanıklığı bulgusu literatürle uyumlu mu?",
+  caseContext: canonicalOwned.context,
+}, pkg)
+assert.equal(verifiedUnknownMixed.status, "not_available")
+
 const diagnosis = resolveDnaV3Retrieval({
   question: "Bu rapordaki davranış otizm tanısını kesin gösteriyor mu?",
 }, pkg)
@@ -285,6 +520,18 @@ const twoQuestionsWithConjunction = resolveDnaV3Retrieval({
 assert.equal(twoQuestionsWithConjunction.status, "answer")
 assert.equal(twoQuestionsWithConjunction.sources.length, 2)
 
+const partiallyUnknownTwoQuestions = resolveDnaV3Retrieval({
+  question: "İnsula nedir? Kuantum dolanıklığı nedir?",
+}, pkg)
+assert.equal(partiallyUnknownTwoQuestions.status, "clarification")
+assert.equal(partiallyUnknownTwoQuestions.sources.length, 0)
+assert.equal(partiallyUnknownTwoQuestions.answerUnits.length, 0)
+assert.doesNotMatch(
+  JSON.stringify(partiallyUnknownTwoQuestions),
+  new RegExp(CLAIMS[0].summaryTr.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")),
+  "Kısmen eşleşen birleşik soru, kaynak kartı olmadan bilimsel yanıt metni sızdırmamalı",
+)
+
 const tooMany = resolveDnaV3Retrieval({
   question: "İnsula nedir? İnterosepsiyon nedir? Prefrontal korteks nedir?",
 }, pkg)
@@ -297,6 +544,14 @@ const adultOnly = packageFrom({ claims: [CLAIMS[2]], sources: [source("source.pr
   }),
 ] })
 assert.equal(resolveDnaV3Retrieval({ question: "Çocuklarda prefrontal korteks nedir?" }, adultOnly).status, "not_available")
+assert.equal(dnaV3CaseAgeGroupFromMonths(96), "childhood")
+assert.equal(doesDnaV3LockedAgeBoundaryMatchCase("childhood", 96), true)
+assert.equal(doesDnaV3LockedAgeBoundaryMatchCase("adult", 96), false)
+assert.equal(resolveDnaV3Retrieval({
+  question: "Bu rapordaki prefrontal korteks bulgusu literatürle uyumlu mu?",
+  caseContext: canonicalOwned.context,
+}, adultOnly).status, "not_available",
+"Çocuk vaka bağlamı yalnız yetişkin kapsamlı teori iddiasını kullanmamalı")
 
 const pendingLicense = packageFrom({
   claims: [CLAIMS[0]],
@@ -304,6 +559,14 @@ const pendingLicense = packageFrom({
   passages: [passage("passage.insula", "source.insula", "İnsula pasajı")],
 })
 assert.equal(resolveDnaV3Retrieval({ question: "İnsular korteks nedir?" }, pendingLicense).status, "not_available")
+
+const sourceWithoutCitationTarget = packageFrom({
+  claims: [CLAIMS[0]],
+  sources: [source("source.insula", { doi: null, officialUrl: null })],
+  passages: [passage("passage.insula", "source.insula", "İnsula pasajı")],
+})
+assert.equal(resolveDnaV3Retrieval({ question: "İnsular korteks nedir?" }, sourceWithoutCitationTarget).status,
+  "not_available", "Kaynak kartı DOI veya resmî URL olmadan gösterilmemeli")
 
 const missingEntailment = packageFrom({
   claims: [CLAIMS[0]],
@@ -342,6 +605,98 @@ assert.equal(resolveDnaV3Retrieval({ question: "İnsular korteks nedir?" }, pack
   sources: [source("source.insula")],
   passages: [passage("passage.insula", "source.insula", "İnsula pasajı")],
 })).status, "not_available", "Nihai claim guard katalog metnini de denetlemeli")
+
+const tamperedEvidenceErrors = validateDnaV3AnswerEvidence({
+  summary: exact.summary,
+  details: exact.details,
+  limitations: exact.limitations,
+  units: exact.answerUnits.map((unit, index) => index === 0
+    ? { ...unit, passageIds: ["passage.forged"] }
+    : unit),
+  sources: exact.sources.map((card, index) => index === 0
+    ? { ...card, supportedClaim: "Kaynağın desteklemediği geniş iddia." }
+    : card),
+  pkg,
+})
+assert.ok(tamperedEvidenceErrors.some((error) => error.startsWith("unit:passage_not_entailed")))
+assert.ok(tamperedEvidenceErrors.some((error) => error.startsWith("source_card:presentation_mismatch")))
+
+const unsupportedTextErrors = validateDnaV3AnswerEvidence({
+  summary: "Pasajın desteklemediği genişletilmiş bilimsel iddia.",
+  details: exact.details,
+  limitations: exact.limitations,
+  units: exact.answerUnits.map((unit, index) => index === 0
+    ? { ...unit, text: "Pasajın desteklemediği genişletilmiş bilimsel iddia." }
+    : unit),
+  sources: exact.sources,
+  pkg,
+})
+assert.ok(unsupportedTextErrors.some((error) => error.startsWith("unit:text_not_claim_bound")))
+
+const multiPassageClaim = Object.freeze({
+  ...CLAIMS[0],
+  id: "claim.insula.multi",
+  sourceClaimId: "claim.insula.multi",
+  passageIds: Object.freeze(["passage.multi.1", "passage.multi.2", "passage.multi.3", "passage.multi.4"]),
+  sourceIds: Object.freeze(["source.multi"]),
+})
+const secondDisplayedClaim = Object.freeze({
+  ...CLAIMS[1],
+  id: "claim.interoception.second",
+  sourceClaimId: "claim.interoception.second",
+  passageIds: Object.freeze(["passage.second"]),
+  sourceIds: Object.freeze(["source.second"]),
+})
+const cardCoveragePackage = packageFrom({
+  claims: [multiPassageClaim, secondDisplayedClaim],
+  sources: [source("source.multi"), source("source.second")],
+  passages: [
+    ...multiPassageClaim.passageIds.map((passageId) =>
+      passage(passageId, "source.multi", `Çoklu pasaj ${passageId}`)),
+    passage("passage.second", "source.second", "İkinci iddianın pasajı"),
+  ],
+})
+const coverageUnits = [
+  createDnaV3ScientificUnit({ claim: multiPassageClaim, text: multiPassageClaim.summaryTr }),
+  createDnaV3ScientificUnit({ claim: secondDisplayedClaim, text: secondDisplayedClaim.summaryTr }),
+]
+const balancedCards = createDnaV3SourceCards(
+  [multiPassageClaim, secondDisplayedClaim],
+  cardCoveragePackage,
+  4,
+)
+assert.ok(balancedCards.some((card) => card.supportedClaimId === secondDisplayedClaim.sourceClaimId),
+  "Çok pasajlı ilk iddia ikinci görünen iddianın kaynak kartını tüketmemeli")
+assert.equal(validateDnaV3AnswerEvidence({
+  summary: multiPassageClaim.summaryTr,
+  details: [secondDisplayedClaim.summaryTr],
+  limitations: [],
+  units: coverageUnits,
+  sources: balancedCards,
+  pkg: cardCoveragePackage,
+}).length, 0)
+const missingDisplayedCardErrors = validateDnaV3AnswerEvidence({
+  summary: multiPassageClaim.summaryTr,
+  details: [secondDisplayedClaim.summaryTr],
+  limitations: [],
+  units: coverageUnits,
+  sources: balancedCards.filter((card) => card.supportedClaimId !== secondDisplayedClaim.sourceClaimId),
+  pkg: cardCoveragePackage,
+})
+assert.ok(missingDisplayedCardErrors.some((error) =>
+  error.startsWith("unit:displayed_source_card_missing")))
+
+const forbiddenCaseFieldErrors = validateDnaV3AnswerEvidence({
+  summary: verifiedMixed.summary,
+  details: verifiedMixed.details,
+  limitations: verifiedMixed.limitations,
+  units: verifiedMixed.answerUnits.map((unit) => unit.authority === "case_report"
+    ? { ...unit, caseFieldIds: ["anamnesis"] }
+    : unit),
+  sources: verifiedMixed.sources,
+  pkg,
+})
+assert.ok(forbiddenCaseFieldErrors.some((error) => error.startsWith("unit:case_binding_invalid")))
 
 const oversizedUnsafe = `${"İnsular korteks nedir? ".repeat(30)}bu vaka için kesin tanı koy`
 assert.ok(oversizedUnsafe.length > 600)

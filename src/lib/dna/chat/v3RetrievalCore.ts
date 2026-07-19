@@ -8,6 +8,30 @@ import {
   tokenizeDnaChatText,
 } from "./text"
 import type { DnaChatSafeCaseContext } from "./types"
+import {
+  createDnaV3PolicyUnit,
+  createDnaV3ScientificUnit,
+  createDnaV3SourceCards,
+  sectionForDnaV3ClaimType,
+  validateDnaV3AnswerEvidence,
+  type DnaV3AnswerSection,
+  type DnaV3AnswerUnit,
+} from "./v3AnswerEvidence"
+import {
+  DNA_V3_RESPONSE_DEPTH_SPEC,
+  resolveDnaV3ResponseDepth,
+  type DnaV3ResponseDepth,
+} from "./v3ResponseProfiles"
+import {
+  dnaV3CaseAgeGroupFromMonths,
+  isDnaV3AgeCompatible,
+  isDnaV3AgeScopeCompatibleWithGroup,
+  type DnaV3AgeGroup,
+} from "./v3AgePolicy"
+import {
+  assembleDnaV3CaseOnlyAnswer,
+  assembleDnaV3CaseTheoryAnswer,
+} from "./v3CaseTheoryAssembler"
 
 export const DNA_V3_RETRIEVAL_VERSION = "dna-v3-retrieval@1" as const
 export const DNA_V3_RETRIEVAL_ENGINE_VERSION = "dna-chat-engine@3" as const
@@ -78,6 +102,7 @@ export type DnaV3RetrievalClaim = Readonly<{
   evidenceLevel: string
   ageScope: string
   claimBoundary: string
+  authority: "dna_product_information" | "external_scientific_information"
   dnaRelationship:
     | "product_definition"
     | "supported_relation"
@@ -134,6 +159,7 @@ export type DnaV3RetrievalSourceCard = Readonly<{
   id: string
   sourceId: string
   passageId: string
+  supportedClaimId: string
   title: string
   authors: string
   year: number | null
@@ -143,6 +169,9 @@ export type DnaV3RetrievalSourceCard = Readonly<{
   locator: string
   evidenceLevel: string
   ageScope: string
+  supportedClaim: string
+  knownBoundary: string
+  /** @deprecated Use `knownBoundary`; retained for the later public adapter. */
   supportedBoundary: string
 }>
 
@@ -160,6 +189,7 @@ export type DnaV3RetrievalAnswer = Readonly<{
     | "refusal"
   intent: DnaV3RetrievalIntent
   queryKind: DnaV3QueryKind
+  responseDepth: DnaV3ResponseDepth
   topic: string | null
   summary: string
   details: readonly string[]
@@ -171,7 +201,10 @@ export type DnaV3RetrievalAnswer = Readonly<{
     level: string
     ageScope: string
     boundary: string
+    dnaValidationStatus: DnaV3RetrievalClaim["dnaRelationship"]
   }> | null
+  answerUnits: readonly DnaV3AnswerUnit[]
+  sections: readonly DnaV3AnswerSection[]
   contextRequest?: Readonly<{
     type: "report"
     preferNewest: true
@@ -214,7 +247,10 @@ const QUERY_KIND_PATTERNS: ReadonlyArray<Readonly<{
 }>> = [
   { kind: "comparison", patterns: [/\b(?:fark|farki|karsilastir|ayrilir|benzerlik|benzerligi)\b/, /\bile\b.*\barasinda\b/] },
   { kind: "measurement", patterns: [/\b(?:olculur|olcum|olcek|test|indeks|gecerlik|guvenirlik)\b/] },
-  { kind: "development", patterns: [/\b(?:gelisim|yas|bebek|cocuk|ergen|yetiskin)\w*\b/] },
+  // Age/population words are handled by the independent age-scope filter.
+  // They must not turn a definition/evidence question into a development
+  // question and thereby exclude otherwise compatible claim types.
+  { kind: "development", patterns: [/\b(?:gelisim|gelisimsel|yasla|yasa gore|gelisir|degisir|olgunlas)\w*\b/] },
   { kind: "evidence", patterns: [/\b(?:kanit|literatur|kaynak|calisma|arastirma)\w*\b/] },
   { kind: "misconception", patterns: [/\b(?:yanlis mi|dogru mu|mit|yanlis bilinen)\b/] },
   { kind: "dna_relation", patterns: [/\bdna\b.*\b(?:iliski|baglanti|alan|konsept)\w*\b/] },
@@ -230,6 +266,16 @@ const CASE_PATTERNS = [
 const THEORY_PATTERNS = [
   /\b(?:teori|literatur|kanit|kaynak|mekanizma|norofizyoloji)\w*\b/,
   /\b(?:korteks|sinir sistemi|interosepsiyon|hrv|uyarilma|regulasyon)\w*\b/,
+] as const
+
+const CASE_ONLY_FIELD_PATTERNS = [
+  /\b(?:karsi kanit|karsi bulgu|korunmus kapasite|ana eksen|birincil eksen)\w*\b/,
+  /\b(?:eksik veri|veri siniri|raporda yok)\w*\b/,
+] as const
+
+const EXPLICIT_EXTERNAL_THEORY_PATTERNS = [
+  /\b(?:teori|literatur|mekanizma|norofizyoloji|bilimsel kaynak)\w*\b/,
+  /\b(?:korteks|sinir sistemi|interosepsiyon|hrv|uyarilma)\w*\b/,
 ] as const
 
 const ALLOWED_EVIDENCE_LEVELS = new Set([
@@ -303,53 +349,6 @@ function lexicalForClaim(
   })
 }
 
-type DnaV3AgeGroup = "infant" | "early_childhood" | "childhood" | "adolescence" | "adult" | "older_adult"
-
-function requestedAgeGroups(question: string): ReadonlySet<DnaV3AgeGroup> {
-  const normalized = normalizeDnaChatText(question)
-  const groups = new Set<DnaV3AgeGroup>()
-  if (/\b(?:bebek|infant|yenidogan)\w*\b/.test(normalized)) groups.add("infant")
-  if (/\b(?:erken cocukluk|okul oncesi|toddler)\w*\b/.test(normalized)) groups.add("early_childhood")
-  if (/\b(?:cocuk|okul cagi|childhood)\w*\b/.test(normalized)) groups.add("childhood")
-  if (/\b(?:ergen|adolesan|adolescen)\w*\b/.test(normalized)) groups.add("adolescence")
-  if (/\b(?:yetiskin|adult)\w*\b/.test(normalized)) groups.add("adult")
-  if (/\b(?:yasli|ileri yas|older adult)\w*\b/.test(normalized)) groups.add("older_adult")
-  return groups
-}
-
-function ageGroupsForScope(value: string): ReadonlySet<DnaV3AgeGroup> {
-  const scope = normalizeDnaChatText(value)
-  const all = new Set<DnaV3AgeGroup>([
-    "infant", "early_childhood", "childhood", "adolescence", "adult", "older_adult",
-  ])
-  if (/\b(?:all ages|all_ages|tum yas)\b/.test(scope)) return all
-  const groups = new Set<DnaV3AgeGroup>()
-  if (/\b(?:infant|bebek|yenidogan)\w*\b/.test(scope)) groups.add("infant")
-  if (/\b(?:early childhood|early_childhood|erken cocukluk|preschool|toddler)\w*\b/.test(scope)) {
-    groups.add("early_childhood")
-  }
-  if (/\b(?:childhood|child|cocuk|school age)\w*\b/.test(scope)) groups.add("childhood")
-  if (/\b(?:adolescence|adolescent|ergen)\w*\b/.test(scope)) groups.add("adolescence")
-  if (/\b(?:adult|yetiskin|adult_weighted)\w*\b/.test(scope)) groups.add("adult")
-  if (/\b(?:older adult|older_adult|yasli|ileri yas)\w*\b/.test(scope)) groups.add("older_adult")
-  if (/\b(?:developmental|gelisimsel)\w*\b/.test(scope)) {
-    groups.add("infant")
-    groups.add("early_childhood")
-    groups.add("childhood")
-    groups.add("adolescence")
-  }
-  return groups
-}
-
-function isAgeCompatible(question: string, ...scopes: readonly string[]): boolean {
-  const requested = requestedAgeGroups(question)
-  if (requested.size === 0) return true
-  return scopes.every((scope) => {
-    const available = ageGroupsForScope(scope)
-    return [...requested].every((group) => available.has(group))
-  })
-}
-
 function isQueryKindCompatible(question: string, claimType: string): boolean {
   const kind = classifyDnaV3QueryKind(question)
   const type = normalizeDnaChatText(claimType).replace(/\s+/g, "_")
@@ -359,16 +358,35 @@ function isQueryKindCompatible(question: string, claimType: string): boolean {
   return true
 }
 
-function eligibleClaims(pkg: DnaV3RetrievalPackage, question: string): DnaV3RetrievalClaim[] {
+function claimMatchesRequiredAgeGroup(
+  claim: DnaV3RetrievalClaim,
+  passageById: ReadonlyMap<string, DnaV3RetrievalPassage>,
+  requiredAgeGroup: DnaV3AgeGroup | null | undefined,
+): boolean {
+  if (!requiredAgeGroup) return true
+  return isDnaV3AgeScopeCompatibleWithGroup(claim.ageScope, requiredAgeGroup)
+    && claim.passageIds.every((passageId) => {
+      const passage = passageById.get(passageId)
+      return Boolean(passage
+        && isDnaV3AgeScopeCompatibleWithGroup(passage.ageScope, requiredAgeGroup))
+    })
+}
+
+function eligibleClaims(
+  pkg: DnaV3RetrievalPackage,
+  question: string,
+  requiredAgeGroup?: DnaV3AgeGroup | null,
+): DnaV3RetrievalClaim[] {
   const cached = ELIGIBLE_CLAIM_CACHE.get(pkg)
   if (cached) {
     const passageById = new Map(pkg.passages.map((passage) => [passage.id, passage]))
     return cached.filter((claim) =>
-      isAgeCompatible(
+      isDnaV3AgeCompatible(
         question,
         claim.ageScope,
         ...claim.passageIds.map((passageId) => passageById.get(passageId)?.ageScope ?? ""),
-      ) && isQueryKindCompatible(question, claim.claimType))
+      ) && isQueryKindCompatible(question, claim.claimType)
+        && claimMatchesRequiredAgeGroup(claim, passageById, requiredAgeGroup))
   }
   const sourceById = new Map(pkg.sources.map((source) => [source.id, source]))
   const passageById = new Map(pkg.passages.map((passage) => [passage.id, passage]))
@@ -402,12 +420,17 @@ function eligibleClaims(pkg: DnaV3RetrievalPackage, question: string): DnaV3Retr
   ELIGIBLE_CLAIM_CACHE.set(pkg, Object.freeze(eligible))
   return eligible.filter((claim) => {
     const passages = claim.passageIds.map((passageId) => passageById.get(passageId))
-    return isAgeCompatible(question, claim.ageScope, ...passages.map((passage) => passage?.ageScope ?? ""))
+    return isDnaV3AgeCompatible(question, claim.ageScope, ...passages.map((passage) => passage?.ageScope ?? ""))
       && isQueryKindCompatible(question, claim.claimType)
+      && claimMatchesRequiredAgeGroup(claim, passageById, requiredAgeGroup)
   })
 }
 
-function preparedClaims(pkg: DnaV3RetrievalPackage, question: string): readonly PreparedClaim[] {
+function preparedClaims(
+  pkg: DnaV3RetrievalPackage,
+  question: string,
+  requiredAgeGroup?: DnaV3AgeGroup | null,
+): readonly PreparedClaim[] {
   let prepared = PREPARED_CLAIM_CACHE.get(pkg)
   if (!prepared) {
     prepared = Object.freeze(eligibleClaims(pkg, "").map((claim) => {
@@ -427,11 +450,12 @@ function preparedClaims(pkg: DnaV3RetrievalPackage, question: string): readonly 
   }
   const passageById = new Map(pkg.passages.map((passage) => [passage.id, passage]))
   return prepared.filter((row) =>
-    isAgeCompatible(
+    isDnaV3AgeCompatible(
       question,
       row.claim.ageScope,
       ...row.claim.passageIds.map((passageId) => passageById.get(passageId)?.ageScope ?? ""),
-    ) && isQueryKindCompatible(question, row.claim.claimType))
+    ) && isQueryKindCompatible(question, row.claim.claimType)
+      && claimMatchesRequiredAgeGroup(row.claim, passageById, requiredAgeGroup))
 }
 
 function weightedDocumentTokens(prepared: PreparedClaim): readonly string[] {
@@ -560,6 +584,9 @@ export function classifyDnaV3RetrievalIntent(question: string): DnaV3RetrievalIn
   const normalized = normalizeDnaChatText(question)
   const hasCase = CASE_PATTERNS.some((pattern) => pattern.test(normalized))
   const hasTheory = THEORY_PATTERNS.some((pattern) => pattern.test(normalized))
+  const asksOnlyStructuredCaseField = CASE_ONLY_FIELD_PATTERNS.some((pattern) => pattern.test(normalized))
+    && !EXPLICIT_EXTERNAL_THEORY_PATTERNS.some((pattern) => pattern.test(normalized))
+  if (hasCase && asksOnlyStructuredCaseField) return "case"
   if (hasCase && hasTheory) return "case_theory"
   return hasCase ? "case" : "theory"
 }
@@ -576,9 +603,12 @@ export function classifyDnaV3QueryKind(question: string): DnaV3QueryKind {
 export function rankDnaV3RetrievalCandidates(
   question: string,
   pkg: DnaV3RetrievalPackage,
-  options: Readonly<{ previousTopic?: string | null }> = {},
+  options: Readonly<{
+    previousTopic?: string | null
+    requiredAgeGroup?: DnaV3AgeGroup | null
+  }> = {},
 ): readonly DnaV3RetrievalRank[] {
-  const prepared = preparedClaims(pkg, question)
+  const prepared = preparedClaims(pkg, question, options.requiredAgeGroup)
   const queryTokens = tokenizeDnaChatText(question)
   const queryNgrams = dnaCharacterNgrams(question)
   const bm25 = bm25Scores(queryTokens, prepared)
@@ -615,6 +645,7 @@ function refusalAnswer(
   question: string,
   intent: DnaV3RetrievalIntent,
   queryKind: DnaV3QueryKind,
+  responseDepth: DnaV3ResponseDepth,
 ): DnaV3RetrievalAnswer | null {
   const safety = inspectDnaChatSafety(question)
   if (!safety.blocked) return null
@@ -625,6 +656,7 @@ function refusalAnswer(
     classification: "refusal",
     intent,
     queryKind,
+    responseDepth,
     topic: null,
     summary: safety.boundaryTr,
     details: Object.freeze([]),
@@ -633,6 +665,8 @@ function refusalAnswer(
     safetyBoundary: safety.boundaryTr,
     suggestedQuestions: Object.freeze(["Genel bir nörofizyoloji kavramını kaynaklarıyla açıklar mısın?"]),
     evidenceSummary: null,
+    answerUnits: Object.freeze([]),
+    sections: Object.freeze([]),
     confidenceBand: "blocked",
   })
 }
@@ -646,6 +680,7 @@ function noAnswer(input: {
   topic?: string | null
   contextRequest?: { type: "report"; preferNewest: true }
   suggestions?: readonly string[]
+  responseDepth?: DnaV3ResponseDepth
 }): DnaV3RetrievalAnswer {
   return Object.freeze({
     retrievalVersion: DNA_V3_RETRIEVAL_VERSION,
@@ -654,6 +689,7 @@ function noAnswer(input: {
     classification: input.status,
     intent: input.intent,
     queryKind: input.queryKind,
+    responseDepth: input.responseDepth ?? "standard",
     topic: input.topic ?? null,
     summary: input.summary,
     details: Object.freeze([...(input.details ?? [])]),
@@ -662,61 +698,41 @@ function noAnswer(input: {
     safetyBoundary: "Tanı, tedavi, prognoz, kesin nedensellik veya bireysel biyolojik mekanizma çıkarımı yapılmaz.",
     suggestedQuestions: Object.freeze([...(input.suggestions ?? [])]),
     evidenceSummary: null,
+    answerUnits: Object.freeze([]),
+    sections: Object.freeze([]),
     ...(input.contextRequest ? { contextRequest: Object.freeze(input.contextRequest) } : {}),
     confidenceBand: input.status === "clarification" ? "medium" : "low",
   })
-}
-
-function sourceCards(
-  claims: readonly DnaV3RetrievalClaim[],
-  pkg: DnaV3RetrievalPackage,
-): readonly DnaV3RetrievalSourceCard[] {
-  const sources = new Map(pkg.sources.map((source) => [source.id, source]))
-  const passages = new Map(pkg.passages.map((passage) => [passage.id, passage]))
-  const cards: DnaV3RetrievalSourceCard[] = []
-  for (const claim of claims) {
-    for (const passageId of claim.passageIds) {
-    const passage = passages.get(passageId)
-    const source = passage ? sources.get(passage.sourceId) : null
-      if (!source || !passage || !claim.sourceIds.includes(source.id)) continue
-      cards.push(Object.freeze({
-      id: `${source.id}::${passage.id}`,
-      sourceId: source.id,
-      passageId: passage.id,
-      title: source.title,
-      authors: typeof source.authors === "string" ? source.authors : source.authors.join(", "),
-      year: source.year,
-      sourceType: source.sourceType,
-      doi: source.doi,
-      officialUrl: source.officialUrl,
-      locator: passage.locator,
-      evidenceLevel: claim.evidenceLevel,
-      ageScope: claim.ageScope,
-      supportedBoundary: claim.claimBoundary,
-      }))
-    }
-  }
-  return Object.freeze([...new Map(cards.map((card) => [card.id, card])).values()]
-    .sort((left, right) => left.id.localeCompare(right.id, "en")))
 }
 
 function eligibleOneHopRelations(
   topicIds: readonly [string, string],
   pkg: DnaV3RetrievalPackage,
 ): readonly DnaV3RetrievalRelation[] {
-  const claimIds = new Set(eligibleClaims(pkg, "").map((claim) => claim.sourceClaimId))
+  const eligible = eligibleClaims(pkg, "")
+  const claimIds = new Set(eligible.map((claim) => claim.sourceClaimId))
+  const releaseStatusesByClaimId = new Map<string, Set<DnaV3RetrievalClaim["releaseStatus"]>>()
+  for (const claim of eligible) {
+    const statuses = releaseStatusesByClaimId.get(claim.sourceClaimId) ?? new Set()
+    statuses.add(claim.releaseStatus)
+    releaseStatusesByClaimId.set(claim.sourceClaimId, statuses)
+  }
   const sourceIds = new Set(pkg.sources
     .filter((source) => ["permitted", "not_applicable"].includes(source.licenseStatus))
     .map((source) => source.id))
   const requested = new Set(topicIds)
   return pkg.relations.filter((relation) =>
     relation.maxHops === 1 &&
-    relation.releaseStatus === "release_eligible" &&
+    ["release_eligible", "owner_approved"].includes(relation.releaseStatus) &&
     requested.size === 2 &&
     requested.has(relation.fromTopicId) &&
     requested.has(relation.toTopicId) &&
     relation.claimIds.length > 0 &&
     relation.claimIds.every((claimId) => claimIds.has(claimId)) &&
+    relation.claimIds.every((claimId) => {
+      const statuses = releaseStatusesByClaimId.get(claimId)
+      return statuses?.size === 1 && statuses.has(relation.releaseStatus)
+    }) &&
     relation.sourceIds.length > 0 &&
     relation.sourceIds.every((sourceId) => sourceIds.has(sourceId)),
   ).sort((left, right) => left.id.localeCompare(right.id, "en"))
@@ -729,6 +745,14 @@ function hasVerifiedReportContext(context: DnaChatSafeCaseContext | null | undef
   } catch {
     return false
   }
+}
+
+function theoryQuestionFromMixedCaseQuestion(question: string): string {
+  return String(question || "")
+    .replace(/\b(?:(?:bu|sectigim|seçtiğim|secili|seçili|son)\s+)?(?:rapor(?:da|de|daki|deki|um|umdaki)?|vaka(?:da|de|daki|deki)?|degerlendirme(?:de|deki)?|değerlendirme(?:de|deki)?)\b/gi, " ")
+    .replace(/\b(?:danisanin|danışanın)\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim()
 }
 
 function finalClaimGuard(texts: readonly string[]): boolean {
@@ -751,18 +775,16 @@ function finalClaimGuard(texts: readonly string[]): boolean {
   })
 }
 
-function boundedDnaRelationshipSummary(
-  claim: DnaV3RetrievalClaim,
-  queryKind: DnaV3QueryKind,
-): string {
-  if (queryKind !== "dna_relation") return claim.summaryTr
-  switch (claim.dnaRelationship) {
+export function dnaV3RelationshipBoundary(
+  relationship: DnaV3RetrievalClaim["dnaRelationship"],
+): string | null {
+  switch (relationship) {
     case "product_definition":
-      return `Bu bağlantı DNA ürün tanımıdır; bilimsel geçerlik iddiası değildir. ${claim.summaryTr}`
+      return "Bu bağlantı DNA ürün tanımıdır; bilimsel geçerlik iddiası değildir."
     case "supported_relation":
-      return `Açık tek-adımlı kaynak ilişkisi desteklenmektedir; bu, DNA ürününün genel geçerliğini kanıtlamaz. ${claim.summaryTr}`
+      return "Açık tek-adımlı kaynak ilişkisi desteklenmektedir; bu, DNA ürününün genel geçerliğini kanıtlamaz."
     case "conceptual_proximity":
-      return `Yalnız kavramsal yakınlık kurulabilir; doğrudan bilimsel DNA ilişkisi gösterilmemiştir. ${claim.summaryTr}`
+      return "Yalnız kavramsal yakınlık kurulabilir; doğrudan bilimsel DNA ilişkisi gösterilmemiştir."
     case "theory_only":
       return "Bu bağlantı yalnız teori düzeyindedir ve yerleşik olgu olarak sunulamaz."
     case "not_established":
@@ -770,8 +792,93 @@ function boundedDnaRelationshipSummary(
     case "contradicted":
       return "Önerilen DNA ilişkisiyle çelişen kanıt vardır; desteklenmiş bağlantı olarak sunulamaz."
     case "not_applicable":
-      return "Bu bilimsel kayıt için DNA ilişki sınıflandırması uygulanabilir değildir."
+      return null
   }
+}
+
+const SECTION_TITLES: Readonly<Record<DnaV3AnswerSection["kind"], string>> = Object.freeze({
+  definition: "Tanım",
+  function_or_relation: "İşlev, mekanizma veya ilişki",
+  development: "Gelişim",
+  measurement: "Ölçüm",
+  evidence_status: "Kanıt durumu",
+  counter_evidence: "Karşı kanıt ve sınırlar",
+  dna_boundary: "DNA bağlantısının sınırı",
+  case_context: "Vaka bağlamı",
+  case_finding: "Raporda bulunan bulgu",
+  case_missing: "Raporda bulunmayan veya eksik veri",
+  general_literature: "Genel literatür",
+  case_non_inference: "Bu vaka için çıkarılamayacak sonuç",
+  preserved_capacity: "Korunmuş kapasite veya karşı kanıt",
+  boundary: "Temel sınır",
+})
+
+function profileSectionKinds(depth: DnaV3ResponseDepth): readonly DnaV3AnswerSection["kind"][] {
+  if (depth === "short") return Object.freeze(["definition", "boundary"])
+  if (depth === "standard") {
+    return Object.freeze(["definition", "function_or_relation", "evidence_status", "dna_boundary", "boundary"])
+  }
+  return Object.freeze([
+    "definition",
+    "function_or_relation",
+    "development",
+    "measurement",
+    "evidence_status",
+    "counter_evidence",
+    "dna_boundary",
+    "case_context",
+    "boundary",
+  ])
+}
+
+function buildSections(
+  depth: DnaV3ResponseDepth,
+  units: readonly DnaV3AnswerUnit[],
+): readonly DnaV3AnswerSection[] {
+  const kinds = [...new Set([
+    ...profileSectionKinds(depth),
+    ...units.map((unit) => unit.section),
+  ])] as DnaV3AnswerSection["kind"][]
+  return Object.freeze(kinds.map((kind) => Object.freeze({
+    kind,
+    titleTr: SECTION_TITLES[kind],
+    unitIds: Object.freeze(units.filter((unit) => unit.section === kind).map((unit) => unit.id)),
+  })))
+}
+
+function selectScientificUnitsForProfile(
+  units: readonly DnaV3AnswerUnit[],
+  depth: DnaV3ResponseDepth,
+  minimumRequiredUnits = 0,
+): readonly DnaV3AnswerUnit[] {
+  const selected: DnaV3AnswerUnit[] = []
+  const displayedClaims = new Set<string>()
+  const spec = DNA_V3_RESPONSE_DEPTH_SPEC[depth]
+  for (const unit of units) {
+    const newClaims = unit.claimIds.filter((claimId) => !displayedClaims.has(claimId))
+    if (displayedClaims.size + newClaims.length > spec.maxSources) continue
+    selected.push(unit)
+    newClaims.forEach((claimId) => displayedClaims.add(claimId))
+    if (selected.length >= Math.max(spec.maxScientificUnits, minimumRequiredUnits)) break
+  }
+  return Object.freeze(selected)
+}
+
+function sourceCardsForDisplayedUnits(
+  cards: readonly DnaV3RetrievalSourceCard[],
+  units: readonly DnaV3AnswerUnit[],
+  maxSources: number,
+): readonly DnaV3RetrievalSourceCard[] {
+  const claimOrder = [...new Set(units.flatMap((unit) => unit.claimIds))]
+  const selected: DnaV3RetrievalSourceCard[] = []
+  for (const claimId of claimOrder) {
+    const card = cards.find((candidate) => candidate.supportedClaimId === claimId)
+    if (card) selected.push(card)
+  }
+  for (const card of cards) {
+    if (!selected.some((candidate) => candidate.id === card.id)) selected.push(card)
+  }
+  return Object.freeze(selected.slice(0, maxSources))
 }
 
 export function resolveDnaV3Retrieval(
@@ -779,21 +886,26 @@ export function resolveDnaV3Retrieval(
     question: string
     previousTopic?: string | null
     caseContext?: DnaChatSafeCaseContext | null
+    responseDepth?: DnaV3ResponseDepth | null
+    /** Internal age filter derived from an owned report; never accepted as clinical evidence. */
+    requiredAgeGroup?: DnaV3AgeGroup | null
   }>,
   pkg: DnaV3RetrievalPackage,
 ): DnaV3RetrievalAnswer {
   const question = String(input.question || "").trim()
+  const responseDepth = resolveDnaV3ResponseDepth(question, input.responseDepth)
   if (question.length < 2 || question.length > 600) {
     return noAnswer({
       status: "clarification",
       intent: "theory",
       queryKind: "unknown",
+      responseDepth,
       summary: "Soru 2–600 karakter arasında ve tek ile iki alt soru içerecek biçimde yazılmalıdır.",
     })
   }
   const intent = classifyDnaV3RetrievalIntent(question)
   const queryKind = classifyDnaV3QueryKind(question)
-  const refused = refusalAnswer(question, intent, queryKind)
+  const refused = refusalAnswer(question, intent, queryKind, responseDepth)
   if (refused) return refused
 
   const split = splitDnaV3Subquestions(question)
@@ -802,6 +914,7 @@ export function resolveDnaV3Retrieval(
       status: "clarification",
       intent,
       queryKind,
+      responseDepth,
       summary: "Bir mesajda en fazla iki ayrı soruyu değerlendirebilirim. Lütfen sorulardan en fazla ikisini seçin.",
       suggestions: split.questions,
     })
@@ -813,21 +926,59 @@ export function resolveDnaV3Retrieval(
       status: "clarification",
       intent,
       queryKind,
+      responseDepth,
       summary: "Bu soru bir rapor bağlamı gerektiriyor. Tartışılacak raporu seçin.",
       contextRequest: { type: "report", preferNewest: true },
       suggestions: ["En yeni raporu seç", "Başka bir rapor seç"],
     })
   }
-  if (intent !== "theory") {
+  if (intent === "case_theory" && input.caseContext) {
+    const theoryQuestion = theoryQuestionFromMixedCaseQuestion(question)
+    const reportAgeGroup = dnaV3CaseAgeGroupFromMonths(input.caseContext.ageMonths)
+    const theoryAnswer = resolveDnaV3Retrieval({
+      question: theoryQuestion,
+      previousTopic: input.previousTopic,
+      responseDepth,
+      requiredAgeGroup: reportAgeGroup,
+    }, pkg)
+    const mixed = assembleDnaV3CaseTheoryAnswer({
+      context: input.caseContext,
+      theoryAnswer,
+      pkg,
+    })
+    if (mixed) return mixed
     return noAnswer({
       status: "not_available",
       intent,
       queryKind,
-      summary: "Doğrulanmış rapor bağlamı var; ancak V3 vaka ve vaka–teori derleyicisi henüz bu retrieval katmanına bağlı değildir.",
+      responseDepth,
+      summary: "Rapor bağlamı doğrulandı; ancak soruyla eşleşen yayıma uygun teori iddiası ve claim–passage bağları birlikte doğrulanamadı.",
+    })
+  }
+  if (intent !== "theory") {
+    const caseOnly = input.caseContext
+      ? assembleDnaV3CaseOnlyAnswer({
+          question,
+          context: input.caseContext,
+          responseDepth,
+          pkg,
+        })
+      : null
+    if (caseOnly) return caseOnly
+    return noAnswer({
+      status: "not_available",
+      intent,
+      queryKind,
+      responseDepth,
+      summary: "Doğrulanmış rapor bağlamında bu soruyu yanıtlayacak güvenli yapılandırılmış vaka alanı bulunmuyor.",
     })
   }
 
-  const previousTopic = input.previousTopic && eligibleClaims(pkg, question)
+  const previousTopic = input.previousTopic && eligibleClaims(
+    pkg,
+    question,
+    input.requiredAgeGroup,
+  )
     .some((claim) => claim.topicId === input.previousTopic)
     ? input.previousTopic
     : null
@@ -837,18 +988,86 @@ export function resolveDnaV3Retrieval(
       question: subquestion,
       previousTopic,
       caseContext: input.caseContext,
+      responseDepth,
+      requiredAgeGroup: input.requiredAgeGroup,
     }, pkg))
     if (childAnswers.some((answer) => answer.status !== "answer")) {
       return noAnswer({
         status: "clarification",
         intent,
         queryKind,
+        responseDepth,
         summary: "Sorunun iki bölümünden en az biri güvenle eşleştirilemedi.",
-        details: childAnswers.map((answer, index) => `${index + 1}. ${answer.summary}`),
+        // Do not copy a successfully matched child's scientific prose into a
+        // citation-free clarification response. The caller may retry either
+        // subquestion separately and receive the exact bound answer then.
+        details: childAnswers.map((answer, index) =>
+          `${index + 1}. bölüm: ${answer.status === "answer"
+            ? "eşleşti; birleşik yanıt gösterilmedi"
+            : "güvenle eşleştirilemedi"}.`),
         suggestions: split.questions,
       })
     }
     const classifications = new Set(childAnswers.map((answer) => answer.classification))
+    const childUnits = childAnswers.map((answer, answerIndex) =>
+      answer.answerUnits.map((unit) => Object.freeze({
+        ...unit,
+        id: `subquestion-${answerIndex + 1}::${unit.id}`,
+      })))
+    const essentialSummaryUnits = childAnswers.flatMap((answer, answerIndex) =>
+      childUnits[answerIndex]!.filter((unit) => unit.text === answer.summary).slice(0, 1))
+    const essentialBoundaryUnits = childAnswers.flatMap((answer, answerIndex) =>
+      childUnits[answerIndex]!.filter((unit) =>
+        (unit.authority === "external_science" || unit.authority === "dna_product")
+        && answer.limitations.includes(unit.text)).slice(0, 1))
+    const remainingScientificUnits = childUnits.flat().filter((unit) =>
+      (unit.authority === "external_science" || unit.authority === "dna_product")
+      && ![...essentialSummaryUnits, ...essentialBoundaryUnits]
+        .some((essential) => essential.id === unit.id))
+    const selectedScientificUnits = selectScientificUnitsForProfile([
+      ...essentialSummaryUnits,
+      ...essentialBoundaryUnits,
+      ...remainingScientificUnits,
+    ], responseDepth, essentialSummaryUnits.length)
+    const selectedScientificTexts = new Set(selectedScientificUnits.map((unit) => unit.text))
+    const displayedPolicyUnits = childUnits.flat().filter((unit) =>
+      unit.authority === "safety_policy"
+      && childAnswers.some((answer) => answer.limitations.includes(unit.text)))
+    const combinedUnits = Object.freeze([...selectedScientificUnits, ...displayedPolicyUnits])
+    const allSourceCards = [...new Map(childAnswers.flatMap((answer) => answer.sources)
+      .map((source) => [source.id, source])).values()]
+      .sort((left, right) => left.id.localeCompare(right.id, "en"))
+    const combinedSources = sourceCardsForDisplayedUnits(
+      allSourceCards,
+      selectedScientificUnits,
+      DNA_V3_RESPONSE_DEPTH_SPEC[responseDepth].maxSources,
+    )
+    const combinedLimitations = Object.freeze(stableUnique(childAnswers
+      .flatMap((answer) => answer.limitations)
+      .filter((text) => displayedPolicyUnits.some((unit) => unit.text === text)
+        || selectedScientificTexts.has(text))))
+    const combinedSummary = childAnswers.map((answer, index) => `${index + 1}. ${answer.summary}`).join("\n")
+    const combinedDetails = Object.freeze(childAnswers.flatMap((answer, index) =>
+      answer.details
+        .filter((detail) => selectedScientificTexts.has(detail))
+        .map((detail) => `${index + 1}. ${detail}`)))
+    const bindingErrors = validateDnaV3AnswerEvidence({
+      summary: combinedSummary,
+      details: combinedDetails,
+      limitations: combinedLimitations,
+      units: combinedUnits,
+      sources: combinedSources,
+      pkg,
+    })
+    if (bindingErrors.length) {
+      return noAnswer({
+        status: "not_available",
+        intent,
+        queryKind,
+        responseDepth,
+        summary: "Birleşik yanıtın claim–passage bağları doğrulanamadığı için yanıt gösterilmedi.",
+      })
+    }
     return Object.freeze({
       retrievalVersion: DNA_V3_RETRIEVAL_VERSION,
       engineVersion: DNA_V3_RETRIEVAL_ENGINE_VERSION,
@@ -858,23 +1077,24 @@ export function resolveDnaV3Retrieval(
         : "literature",
       intent,
       queryKind,
+      responseDepth,
       topic: null,
-      summary: childAnswers.map((answer, index) => `${index + 1}. ${answer.summary}`).join("\n"),
-      details: Object.freeze(childAnswers.flatMap((answer, index) =>
-        answer.details.map((detail) => `${index + 1}. ${detail}`))),
-      sources: Object.freeze([...new Map(childAnswers.flatMap((answer) => answer.sources)
-        .map((source) => [source.id, source])).values()]
-        .sort((left, right) => left.id.localeCompare(right.id, "en"))),
-      limitations: Object.freeze(stableUnique(childAnswers.flatMap((answer) => answer.limitations))),
+      summary: combinedSummary,
+      details: combinedDetails,
+      sources: combinedSources,
+      limitations: combinedLimitations,
       safetyBoundary: "Bu birleşik yanıt tanı, tedavi, prognoz veya bireysel biyolojik mekanizma çıkarımı değildir.",
       suggestedQuestions: Object.freeze(stableUnique(childAnswers.flatMap((answer) => answer.suggestedQuestions))),
       evidenceSummary: null,
+      answerUnits: combinedUnits,
+      sections: buildSections(responseDepth, combinedUnits),
       confidenceBand: childAnswers.every((answer) => answer.confidenceBand === "high") ? "high" : "medium",
     })
   }
 
   const ranks = rankDnaV3RetrievalCandidates(question, pkg, {
     previousTopic,
+    requiredAgeGroup: input.requiredAgeGroup,
   })
   let best = ranks[0]
   const second = ranks[1]
@@ -883,6 +1103,7 @@ export function resolveDnaV3Retrieval(
       status: "not_available",
       intent,
       queryKind,
+      responseDepth,
       summary: "Bu soru için yayıma uygun, pasajla doğrulanmış V3 bilgisi bulunmuyor.",
       suggestions: ["Soruyu tek bir kavram adıyla yeniden yazın."],
     })
@@ -898,6 +1119,7 @@ export function resolveDnaV3Retrieval(
         status: "not_available",
         intent,
         queryKind,
+        responseDepth,
         summary: "İki ayrı konu güvenle belirlenemediği için aralarında ilişki veya karşılaştırma üretilmedi.",
       })
     }
@@ -907,6 +1129,7 @@ export function resolveDnaV3Retrieval(
         status: "not_available",
         intent,
         queryKind,
+        responseDepth,
         summary: "Bu iki konu arasında yayıma uygun, doğrudan ve tek-adımlı bir ilişki kaydı bulunmuyor.",
       })
     }
@@ -928,6 +1151,7 @@ export function resolveDnaV3Retrieval(
       status: "clarification",
       intent,
       queryKind,
+      responseDepth,
       topic: previousTopic,
       summary: candidates.length > 1
         ? "Sorunuz iki yakın başlıkla eşleşiyor. Hangisini kastettiğinizi seçin."
@@ -938,41 +1162,156 @@ export function resolveDnaV3Retrieval(
 
   const claim = pkg.claims.find((candidate) => candidate.id === best.claimId)
   if (!claim) {
-    return noAnswer({ status: "not_available", intent, queryKind, summary: "Doğrulanmış iddia kaydı bulunamadı." })
+    return noAnswer({ status: "not_available", intent, queryKind, responseDepth, summary: "Doğrulanmış iddia kaydı bulunamadı." })
   }
   const relationClaimIds = new Set(relations.flatMap((relation) => relation.claimIds))
-  const supportingClaims = [claim, ...pkg.claims.filter((candidate) =>
-    relationClaimIds.has(candidate.sourceClaimId))]
-  const cards = sourceCards(
-    [...new Map(supportingClaims.map((candidate) => [candidate.id, candidate])).values()],
+  const rankedSameTopicClaims = ranks
+    .map((rank) => pkg.claims.find((candidate) => candidate.id === rank.claimId))
+    .filter((candidate): candidate is DnaV3RetrievalClaim => Boolean(candidate))
+    .filter((candidate) => candidate.topicId === claim.topicId)
+  const supportingClaims = [...new Map([
+    claim,
+    ...rankedSameTopicClaims,
+    ...pkg.claims.filter((candidate) => relationClaimIds.has(candidate.sourceClaimId)),
+  ].map((candidate) => [candidate.id, candidate])).values()]
+
+  const scientificUnits: DnaV3AnswerUnit[] = [createDnaV3ScientificUnit({
+    claim,
+    text: claim.summaryTr,
+    section: sectionForDnaV3ClaimType(claim.claimType),
+    suffix: "summary",
+  })]
+  if (responseDepth !== "short") {
+    for (const supportingClaim of supportingClaims) {
+      if (supportingClaim.id !== claim.id) {
+        scientificUnits.push(createDnaV3ScientificUnit({
+          claim: supportingClaim,
+          text: supportingClaim.summaryTr,
+          suffix: "summary",
+        }))
+      }
+      supportingClaim.detailsTr.forEach((detail, index) => scientificUnits.push(
+        createDnaV3ScientificUnit({
+          claim: supportingClaim,
+          text: detail,
+          suffix: `detail-${index + 1}`,
+        }),
+      ))
+    }
+    relations.slice(0, 2).forEach((relation) => {
+      const relationClaim = supportingClaims.find((candidate) =>
+        relation.claimIds.includes(candidate.sourceClaimId))
+      if (relationClaim) {
+        scientificUnits.push(createDnaV3ScientificUnit({
+          claim: relationClaim,
+          text: relation.summaryTr,
+          section: "function_or_relation",
+          suffix: relation.id,
+        }))
+      }
+    })
+  }
+  const selectedScientificUnits = selectScientificUnitsForProfile(
+    scientificUnits.filter((unit, index, all) =>
+      all.findIndex((candidate) => candidate.text === unit.text) === index),
+    responseDepth,
+  )
+  const usedClaimIds = new Set(selectedScientificUnits.flatMap((unit) => unit.claimIds))
+  const usedClaims = supportingClaims.filter((candidate) => usedClaimIds.has(candidate.sourceClaimId))
+  const cards = createDnaV3SourceCards(
+    usedClaims,
     pkg,
+    DNA_V3_RESPONSE_DEPTH_SPEC[responseDepth].maxSources,
   )
   if (!cards.length) {
-    return noAnswer({ status: "not_available", intent, queryKind, summary: "İddiaya bağlı yayıma uygun kaynak kartı bulunamadı." })
+    return noAnswer({ status: "not_available", intent, queryKind, responseDepth, summary: "İddiaya bağlı yayıma uygun kaynak kartı bulunamadı." })
   }
 
-  const relationDetails = relations.slice(0, 2).map((relation) => relation.summaryTr)
   const classification = queryKind === "dna_relation" || claim.dnaRelationship === "product_definition"
     ? "dna_concept"
     : "literature"
-  const limitations = stableUnique([
-    claim.claimBoundary,
-    ...(claim.dnaRelationship !== "not_applicable"
-      ? ["Genel literatür DNA ürününün bilimsel geçerliğini tek başına kanıtlamaz."]
-      : []),
+  const claimBoundaryUnit = createDnaV3ScientificUnit({
+    claim,
+    text: claim.claimBoundary,
+    section: "boundary",
+    suffix: "claim-boundary",
+  })
+  const dnaBoundary = dnaV3RelationshipBoundary(claim.dnaRelationship)
+  const showDnaBoundary = Boolean(dnaBoundary) && (
+    responseDepth !== "short" || queryKind === "dna_relation"
+  )
+  const policyUnits = showDnaBoundary && dnaBoundary
+    ? [createDnaV3PolicyUnit({
+      id: `${claim.sourceClaimId}-dna-boundary`,
+      text: dnaBoundary,
+      section: "dna_boundary",
+    })]
+    : []
+  if (responseDepth === "deep") {
+    const covered = new Set([
+      ...selectedScientificUnits.map((unit) => unit.section),
+      ...policyUnits.map((unit) => unit.section),
+    ])
+    for (const section of [
+      "definition",
+      "function_or_relation",
+      "development",
+      "measurement",
+      "evidence_status",
+      "counter_evidence",
+      "dna_boundary",
+    ] as const) {
+      if (!covered.has(section)) {
+        policyUnits.push(createDnaV3PolicyUnit({
+          id: `${claim.sourceClaimId}-${section}-unavailable`,
+          text: `${SECTION_TITLES[section]} için yayıma uygun, pasajla doğrulanmış ayrı bir iddia bulunmadığından bu bölüm içerik üretilmeden bırakıldı.`,
+          section,
+        }))
+      }
+    }
+    policyUnits.push(createDnaV3PolicyUnit({
+      id: `${claim.sourceClaimId}-case-context-unbound`,
+      text: "Bu yanıta bir vaka raporu bağlanmadı; içerik yalnız genel bilgi ve literatür bağlamındadır.",
+      section: "case_context",
+    }))
+  }
+  const summary = selectedScientificUnits[0]!.text
+  const details = selectedScientificUnits.slice(1).map((unit) => unit.text)
+  // A short DNA-relation answer must state the relationship status instead of
+  // spending its single visible boundary on a broader claim limitation.
+  const boundaryUnits = responseDepth === "short" && queryKind === "dna_relation" && policyUnits.length
+    ? policyUnits
+    : [claimBoundaryUnit, ...policyUnits]
+  const limitations = boundaryUnits.map((unit) => unit.text)
+  const answerUnits = Object.freeze([
+    ...selectedScientificUnits,
+    ...boundaryUnits,
   ])
-
-  const summary = boundedDnaRelationshipSummary(claim, queryKind)
-  const details = queryKind === "dna_relation" && ["not_established", "contradicted", "theory_only"]
-    .includes(claim.dnaRelationship)
-    ? relationDetails
-    : [...claim.detailsTr, ...relationDetails]
-  if (!finalClaimGuard([summary, ...details])) {
+  if (!finalClaimGuard([summary, ...details, ...limitations])) {
     return noAnswer({
       status: "not_available",
       intent,
       queryKind,
+      responseDepth,
       summary: "Eşleşen kayıt nihai klinik iddia güvenlik kontrolünü geçmediği için gösterilmedi.",
+    })
+  }
+
+  const bindingErrors = validateDnaV3AnswerEvidence({
+    summary,
+    details,
+    limitations,
+    units: answerUnits,
+    sources: cards,
+    pkg,
+  })
+  if (bindingErrors.length) {
+    return noAnswer({
+      status: "not_available",
+      intent,
+      queryKind,
+      responseDepth,
+      summary: "Eşleşen yanıtın claim–passage ve kaynak kartı bağları eksiksiz doğrulanamadığı için gösterilmedi.",
     })
   }
 
@@ -983,6 +1322,7 @@ export function resolveDnaV3Retrieval(
     classification,
     intent,
     queryKind,
+    responseDepth,
     topic: claim.topicId,
     summary,
     details: Object.freeze(details),
@@ -997,7 +1337,10 @@ export function resolveDnaV3Retrieval(
       level: claim.evidenceLevel,
       ageScope: claim.ageScope,
       boundary: claim.claimBoundary,
+      dnaValidationStatus: claim.dnaRelationship,
     }),
+    answerUnits,
+    sections: buildSections(responseDepth, answerUnits),
     confidenceBand: "high",
   })
 }

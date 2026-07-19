@@ -35,6 +35,20 @@ function licenseIsPermitted(policy: string): boolean {
   return PERMITTED_LICENSE_POLICIES.has(normalized)
 }
 
+function releaseStatusForAuthority(
+  authority: DnaV3StaticClaim["authority"],
+): DnaV3RetrievalClaim["releaseStatus"] {
+  return authority === "dna_product_information" ? "owner_approved" : "release_eligible"
+}
+
+function officialSourceUrl(source: DnaV3StaticPackage["sources"][number]): string | null {
+  if (source.officialUrl) return source.officialUrl
+  if (source.doi) return `https://doi.org/${source.doi}`
+  if (source.pmcid) return `https://www.ncbi.nlm.nih.gov/pmc/articles/${source.pmcid}/`
+  if (source.pmid) return `https://pubmed.ncbi.nlm.nih.gov/${source.pmid}/`
+  return null
+}
+
 function stableUnique(values: readonly string[]): string[] {
   return [...new Set(values.filter(Boolean))]
     .sort((left, right) => left.localeCompare(right, "en"))
@@ -81,8 +95,9 @@ function adaptClaim(
     evidenceLevel: claim.evidenceLevel,
     ageScope: claim.ageScope,
     claimBoundary: claim.claimBoundary,
+    authority: claim.authority,
     dnaRelationship: claim.dnaRelation,
-    releaseStatus: "release_eligible",
+    releaseStatus: releaseStatusForAuthority(claim.authority),
   })
 }
 
@@ -95,25 +110,70 @@ export function adaptDnaV3StaticPackageForRetrieval(
   pkg: DnaV3StaticPackage,
 ): DnaV3RetrievalPackage {
   const lexicalByClaim = lexicalEntriesByClaimId(pkg)
+  const sourceById = new Map(pkg.sources.map((source) => [source.id, source]))
+  const passageById = new Map(pkg.passages.map((passage) => [passage.id, passage]))
+  const sourceAuthorities = new Map<string, Set<DnaV3StaticClaim["authority"]>>()
+  const passageAuthorities = new Map<string, Set<DnaV3StaticClaim["authority"]>>()
+  for (const claim of pkg.claims) {
+    for (const sourceId of claim.sourceIds) {
+      const values = sourceAuthorities.get(sourceId) ?? new Set()
+      values.add(claim.authority)
+      sourceAuthorities.set(sourceId, values)
+    }
+    for (const passageId of claim.passageIds) {
+      const values = passageAuthorities.get(passageId) ?? new Set()
+      values.add(claim.authority)
+      passageAuthorities.set(passageId, values)
+    }
+  }
+  const sourceClaims = pkg.claims.filter((claim) => {
+    const expectedStatus = releaseStatusForAuthority(claim.authority)
+    if (claim.releaseStatus !== expectedStatus
+      || claim.sourceIds.length === 0
+      || claim.passageIds.length === 0) return false
+    const validSources = claim.sourceIds.every((sourceId) => {
+      const source = sourceById.get(sourceId)
+      return Boolean(source
+        && sourceAuthorities.get(sourceId)?.size === 1
+        && officialSourceUrl(source)
+        && (claim.authority === "dna_product_information"
+          || licenseIsPermitted(source.licensePolicy)))
+    })
+    const validPassages = claim.passageIds.every((passageId) => {
+      const passage = passageById.get(passageId)
+      return Boolean(passage
+        && passageAuthorities.get(passageId)?.size === 1
+        && claim.sourceIds.includes(passage.sourceId))
+    })
+    return validSources && validPassages
+  })
+  const acceptedClaimIds = new Set(sourceClaims.map((claim) => claim.id))
+  const acceptedSourceIds = new Set(sourceClaims.flatMap((claim) => claim.sourceIds))
+  const acceptedPassageIds = new Set(sourceClaims.flatMap((claim) => claim.passageIds))
   const sources = pkg.sources
-    .filter((source) => licenseIsPermitted(source.licensePolicy))
+    .filter((source) => acceptedSourceIds.has(source.id))
     .map((source) => Object.freeze({
       id: source.id,
       title: source.title,
       authors: Object.freeze([...source.authors]),
       year: source.year,
-      sourceType: "scientific_source",
+      sourceType: source.studyDesign,
       doi: source.doi,
-      officialUrl: source.doi ? `https://doi.org/${source.doi}` : null,
+      officialUrl: officialSourceUrl(source),
       evidenceLevel: "bound_at_claim_level",
       ageScope: "bound_at_claim_level",
-      licenseStatus: "permitted" as const,
-      releaseStatus: "release_eligible" as const,
+      licenseStatus: sourceAuthorities.get(source.id)?.has("dna_product_information")
+        ? "not_applicable" as const
+        : "permitted" as const,
+      releaseStatus: sourceAuthorities.get(source.id)?.has("dna_product_information")
+        ? "owner_approved" as const
+        : "release_eligible" as const,
     }))
     .sort((left, right) => left.id.localeCompare(right.id, "en"))
   const permittedSourceIds = new Set(sources.map((source) => source.id))
   const passages = pkg.passages
-    .filter((passage) => permittedSourceIds.has(passage.sourceId))
+    .filter((passage) => acceptedPassageIds.has(passage.id)
+      && permittedSourceIds.has(passage.sourceId))
     .map((passage) => Object.freeze({
       id: passage.id,
       sourceId: passage.sourceId,
@@ -122,15 +182,12 @@ export function adaptDnaV3StaticPackageForRetrieval(
       approvedTurkishText: passage.approvedTurkishText,
       ageScope: passage.ageScope,
       population: passage.population,
-      releaseStatus: "release_eligible" as const,
+      releaseStatus: passageAuthorities.get(passage.id)?.has("dna_product_information")
+        ? "owner_approved" as const
+        : "release_eligible" as const,
     }))
     .sort((left, right) => left.id.localeCompare(right.id, "en"))
   const permittedPassageIds = new Set(passages.map((passage) => passage.id))
-  const sourceClaims = pkg.claims.filter((claim) =>
-    claim.sourceIds.length > 0 &&
-    claim.passageIds.length > 0 &&
-    claim.sourceIds.every((sourceId) => permittedSourceIds.has(sourceId)) &&
-    claim.passageIds.every((passageId) => permittedPassageIds.has(passageId)))
   const claims = sourceClaims
     .flatMap((claim) => (lexicalByClaim.get(claim.id) ?? [])
       .map((entry) => adaptClaim(claim, entry)))
@@ -153,7 +210,8 @@ export function adaptDnaV3StaticPackageForRetrieval(
     passages: Object.freeze(passages),
     claims: Object.freeze(claims),
     relations: Object.freeze(pkg.relations
-      .filter((relation) => acceptedSourceClaimIds.has(relation.claimId))
+      .filter((relation) => acceptedClaimIds.has(relation.claimId)
+        && acceptedSourceClaimIds.has(relation.claimId))
       .map((relation) => {
         const claim = staticClaimById.get(relation.claimId)
         return Object.freeze({
@@ -165,7 +223,9 @@ export function adaptDnaV3StaticPackageForRetrieval(
           claimIds: Object.freeze([relation.claimId]),
           sourceIds: Object.freeze([...(claim?.sourceIds ?? [])]),
           maxHops: 1 as const,
-          releaseStatus: "release_eligible" as const,
+          releaseStatus: claim
+            ? releaseStatusForAuthority(claim.authority)
+            : "release_eligible" as const,
         })
       })
       .sort((left, right) => left.id.localeCompare(right.id, "en"))),
