@@ -129,6 +129,7 @@ export async function resolveOwnedDnaCaseAnswer(input: {
         previousTopic: input.previousTopic,
         caseContext: canonical.context,
         responseDepth: input.responseDepth,
+        rolloutSubjectKey: input.userId,
       }),
     }
   } catch {

@@ -46,7 +46,7 @@ import {
 
 async function main() {
 const exactEngineSourceClosure = assertCurrentDnaEvaluationEngineSourceClosure(process.cwd())
-assert.equal(exactEngineSourceClosure.length, 105)
+assert.equal(exactEngineSourceClosure.length, 116)
 assert.deepEqual(DNA_EVALUATION_ENGINE_CLOSURE_EXCLUSIONS, [
   "src/lib/dna/chat/evaluation/generated/currentEngineCodeAuthority.ts",
 ], "Yalnız self-referential generated authority closure dışında kalabilir")
@@ -71,6 +71,8 @@ for (const requiredEngineAuthoritySource of [
   "src/lib/dna/chat/evaluation/evaluationGates.ts",
   "src/lib/dna/chat/evaluation/evaluationGovernance.ts",
   "src/lib/dna/chat/index.ts",
+  "src/lib/dna/chat/release/previewPromotion.ts",
+  "src/lib/dna/chat/release/runtimeDeploymentAuthorization.ts",
   "src/lib/dna/reportPrivacy.ts",
   "src/lib/security/apiGuards.ts",
   "src/lib/security/privacyOps.ts",
@@ -87,6 +89,7 @@ for (const requiredEngineAuthoritySource of [
 for (const removedCriticalDependency of [
   "src/lib/dna/reportPrivacy.ts",
   "src/lib/security/privacyOps.ts",
+  "src/lib/dna/chat/release/runtimeDeploymentAuthorization.ts",
 ] as const) {
   assert.throws(
     () => assertCurrentDnaEvaluationEngineSourceClosure(
@@ -112,6 +115,7 @@ assert.equal(
 for (const mutatedCriticalDependency of [
   "src/lib/dna/reportPrivacy.ts",
   "src/lib/security/privacyOps.ts",
+  "src/lib/dna/chat/release/runtimeDeploymentAuthorization.ts",
 ] as const) {
   assert.notEqual(
     computeDnaEvaluationEngineCodeHash((relativePath) => {

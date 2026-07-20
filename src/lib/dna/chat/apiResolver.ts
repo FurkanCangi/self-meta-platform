@@ -22,6 +22,12 @@ import {
 } from "./v3ResponseProfiles"
 import type { DnaV3RetrievalAnswer } from "./v3RetrievalCore"
 import type { DnaV3AnswerAuthority, DnaV3AnswerUnit } from "./v3AnswerEvidence"
+import {
+  buildDnaChatTelemetryRecord,
+  DNA_CHAT_TELEMETRY_VERSION,
+  type DnaChatIssueCategory,
+  type DnaChatTelemetryAuditResult,
+} from "./operations/telemetry"
 
 export type DnaChatApiPayload = {
   question: string
@@ -62,51 +68,65 @@ export type DnaChatApiAuditInput = {
   responseDepth: DnaV3ResponseDepth
   latencyCategory: DnaChatLatencyCategory
   errorCode: DnaChatAuditErrorCode | null
+  citationCount?: number
+  httpResult?: number
+  auditStatus?: DnaChatTelemetryAuditResult
+  userIssueCategory?: DnaChatIssueCategory | null
 }
 
 export const DNA_CHAT_AUDIT_METADATA_KEYS = Object.freeze([
+  "schema_version",
   "request_id",
-  "mode",
-  "intent",
+  "engine_version",
+  "pack_version",
+  "topic",
   "classification",
   "outcome",
-  "engine_version",
-  "runtime_generation",
-  "catalog_version",
-  "package_version",
-  "package_sha256",
-  "intended_use_version",
-  "authority_contract_version",
-  "policy_version",
-  "authority_set",
-  "refused",
-  "source_ids",
   "response_depth",
+  "source_ids",
+  "citation_count",
   "latency_category",
-  "error_code",
+  "http_result",
+  "audit_status",
+  "user_issue_category",
 ] as const)
 
 export function buildDnaChatAuditMetadata(input: DnaChatApiAuditInput) {
-  return {
-    request_id: input.requestId,
-    mode: input.mode,
-    intent: input.intentId,
+  const sourceIds = Array.from(new Set(input.sourceIds.filter(Boolean))).slice(0, 16)
+  const telemetry = buildDnaChatTelemetryRecord({
+    requestId: input.requestId,
+    engineVersion: input.engineVersion,
+    packVersion: input.packageVersion,
+    topic: input.intentId,
     classification: input.classification,
     outcome: input.outcome,
-    engine_version: input.engineVersion,
-    runtime_generation: input.runtimeGeneration,
-    catalog_version: input.catalogVersion,
-    package_version: input.packageVersion,
-    package_sha256: input.packageSha256,
-    intended_use_version: input.intendedUseVersion,
-    authority_contract_version: input.authorityContractVersion,
-    policy_version: input.policyVersion,
-    authority_set: Array.from(new Set(input.authoritySet.filter(Boolean))).sort(),
-    refused: input.classification === "refusal" || input.outcome === "refused",
-    source_ids: Array.from(new Set(input.sourceIds.filter(Boolean))).slice(0, 16),
-    response_depth: input.responseDepth,
-    latency_category: input.latencyCategory,
-    error_code: input.errorCode,
+    responseDepth: input.responseDepth,
+    sourceIds,
+    citationCount: input.citationCount ?? sourceIds.length,
+    latencyCategory: input.latencyCategory,
+    httpStatus: input.httpResult ?? 200,
+    auditResult: input.auditStatus ?? "written",
+    userIssueCategory: input.userIssueCategory ?? null,
+  })
+  if (!telemetry.accepted || !telemetry.record) {
+    throw new Error(`dna_chat_audit_metadata_rejected:${telemetry.reasonCodes.join(",")}`)
+  }
+  const record = telemetry.record
+  return {
+    schema_version: DNA_CHAT_TELEMETRY_VERSION,
+    request_id: record.requestId,
+    engine_version: record.engineVersion,
+    pack_version: record.packVersion,
+    topic: record.topic,
+    classification: record.classification,
+    outcome: record.outcome,
+    response_depth: record.responseDepth,
+    source_ids: record.sourceIds,
+    citation_count: record.citationCount,
+    latency_category: record.latencyCategory,
+    http_result: record.httpStatus,
+    audit_status: record.auditResult,
+    user_issue_category: record.userIssueCategory,
   }
 }
 
@@ -725,6 +745,13 @@ export async function resolveDnaChatApiRequest(
     responseDepth,
     latencyCategory: latencyCategory(monotonicNow() - startedAt),
     errorCode: null,
+    citationCount: sourceIdsFromRuntime(
+      runtimeAnswer,
+      DNA_V3_RESPONSE_DEPTH_SPEC[responseDepth].maxSources,
+    ).length,
+    httpResult: 200,
+    auditStatus: "written",
+    userIssueCategory: null,
   })
 
   if (!audit.ok && accessedCaseReport) {

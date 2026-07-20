@@ -15,6 +15,7 @@ export const DNA_VARIATION_BANK_VERSION = "dna-variation-bank@1" as const
  * adding or removing an engine dependency intentionally invalidates old runs.
  */
 export const DNA_EVALUATION_ENGINE_ROOT_FILES = Object.freeze([
+  "src/app/api/app/dna-chat/feedback/route.ts",
   "src/app/api/app/dna-chat/route.ts",
   "src/app/dna-asistani/DnaAssistantClient.tsx",
   "src/lib/dna/clinicalClaimRegistry.ts",
@@ -60,9 +61,11 @@ export const DNA_EVALUATION_ENGINE_CLOSURE_EXCLUSIONS = Object.freeze([
  */
 export const DNA_EVALUATION_ENGINE_SOURCE_FILES = Object.freeze([
   "scripts/run-dna-evaluation-release-check.ts",
+  "src/app/api/app/dna-chat/feedback/route.ts",
   "src/app/api/app/dna-chat/route.ts",
   "src/app/components/app-shell/useAppSurface.ts",
   "src/app/dna-asistani/DnaAssistantClient.tsx",
+  "src/app/dna-asistani/DnaIssueFeedback.tsx",
   "src/lib/assessment/assessmentEngine.ts",
   "src/lib/assessment/itemScoring.ts",
   "src/lib/dna/anamnezUtils.ts",
@@ -120,8 +123,17 @@ export const DNA_EVALUATION_ENGINE_SOURCE_FILES = Object.freeze([
   "src/lib/dna/chat/intents.ts",
   "src/lib/dna/chat/knowledge.ts",
   "src/lib/dna/chat/knowledgeAuthority.ts",
+  "src/lib/dna/chat/operations/incidentResponse.ts",
+  "src/lib/dna/chat/operations/telemetry.ts",
+  "src/lib/dna/chat/operations/userFeedback.ts",
   "src/lib/dna/chat/ownedCaseAnswer.ts",
   "src/lib/dna/chat/ownedCaseContextCore.ts",
+  "src/lib/dna/chat/release/hardNoGo.ts",
+  "src/lib/dna/chat/release/previewPromotion.ts",
+  "src/lib/dna/chat/release/releaseEvidenceBundle.ts",
+  "src/lib/dna/chat/release/runtimeDeploymentAuthorization.ts",
+  "src/lib/dna/chat/release/runtimeReleaseMode.ts",
+  "src/lib/dna/chat/release/stagedRollout.ts",
   "src/lib/dna/chat/reportSnapshot.ts",
   "src/lib/dna/chat/router.ts",
   "src/lib/dna/chat/runtimeAnswer.ts",

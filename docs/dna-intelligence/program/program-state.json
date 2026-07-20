@@ -54,7 +54,7 @@
   "status": "in_progress",
   "lastCompletedCheckpoint": "docs/dna-intelligence/program/checkpoints/phase-37-evaluation-governance.json",
   "rollbackTag": "dna-chat-v2-baseline-20260719",
-  "phaseOrderPolicy": "Bir fazın çıkış kapıları geçmeden sonraki faz tamamlanmış sayılmaz. Kullanıcının 2026-07-19 tarihli açık talebiyle Faz 3 owner kitabı gelene kadar deferred tutuldu. Faz 4-37 için completed, fail-closed mühendislik/workflow kapılarının ve ilgili gerçek envanter disposition'ının tamamlandığını ifade eder; pending bilimsel korpus kaydını audited veya released yapmaz ve Faz 3 release kapısını açmaz. Faz 38 gerçek 2.400 soruluk kilitli payload olmadığı için current kalır; Faz 39-44 mühendislik kapıları hazır olsa da sıraya göre tamamlanmış sayılmaz.",
+  "phaseOrderPolicy": "Bir fazın çıkış kapıları geçmeden sonraki faz tamamlanmış sayılmaz. Kullanıcının 2026-07-19 tarihli açık talebiyle Faz 3 owner kitabı gelene kadar deferred tutuldu. Faz 4-37 için completed, fail-closed mühendislik/workflow kapılarının ve ilgili gerçek envanter disposition'ının tamamlandığını ifade eder; pending bilimsel korpus kaydını audited veya released yapmaz ve Faz 3 release kapısını açmaz. Faz 38 gerçek 2.400 soruluk kilitli payload olmadığı için current kalır; Faz 39-60 mühendislik kapıları hazır olsa da sıraya ve eksik gerçek kanıtlara göre tamamlanmış sayılmaz.",
   "releaseBlockers": [
     "owner_book_not_supplied",
     "owner_approved_product_claim_bindings_missing",
@@ -70,13 +70,26 @@
     "locked_benchmark_0_of_2400",
     "variation_bank_0_of_10000",
     "phase41_44_observations_absent",
-    "independent_human_evaluation_not_commissioned"
+    "independent_human_evaluation_not_commissioned",
+    "phase45_preview_audit_failure_injection_absent",
+    "phase46_exact_production_p95_p99_artifact_absent",
+    "phase47_real_therapist_study_absent",
+    "v3_release_evidence_bundle_absent",
+    "preview_verification_manifest_absent",
+    "production_verification_manifest_absent",
+    "external_live_observation_trust_root_not_provisioned",
+    "preview_external_live_observation_attestation_absent",
+    "production_external_live_observation_attestation_absent",
+    "production_runtime_promotion_receipt_absent",
+    "production_v3_canary_bootstrap_authorization_not_implemented",
+    "second_independent_runtime_activation_signature_not_implemented",
+    "staged_rollout_authority_absent"
   ],
   "runtimeStatus": {
     "currentGeneration": "v2_legacy",
     "v3Activation": "release_attestation_gated",
-    "engineSourceClosure": "105_of_105",
-    "engineCodeHash": "a8d165bb72484cc401a52b60bda640ba3e338023904a48b1a41a09de8a60524d"
+    "engineSourceClosure": "116_of_116",
+    "engineCodeHash": "78f702b76caf56353308ed35ca3eada1785ad4cc242d10a903a21de4f7446624"
   },
   "evaluationStatus": {
     "lockedBenchmark": "0_of_2400",
@@ -84,6 +97,10 @@
     "phases41To44": "not_ready",
     "independentEvaluation": "not_commissioned"
   },
-  "evidence": "docs/dna-intelligence/program/evidence/phase-32-44-engineering-and-readiness.json",
-  "updatedOn": "2026-07-19"
+  "evidence": "docs/dna-intelligence/program/evidence/phase-45-60-engineering-and-readiness.json",
+  "evidenceHistory": [
+    "docs/dna-intelligence/program/evidence/phase-32-44-engineering-and-readiness.json",
+    "docs/dna-intelligence/program/evidence/phase-45-60-engineering-and-readiness.json"
+  ],
+  "updatedOn": "2026-07-20"
 }

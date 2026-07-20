@@ -5,9 +5,7 @@ import {
   ChevronDown,
   CircleAlert,
   FileSearch,
-  Flag,
   LoaderCircle,
-  MessageSquareWarning,
   RefreshCw,
   ShieldCheck,
   Sparkles,
@@ -31,6 +29,7 @@ import {
   type DnaIntelligencePublicIntendedUse,
 } from "@/lib/dna/chat/intendedUse"
 import { DNA_CHAT_STARTER_QUESTIONS } from "@/lib/dna/chat/suggestions"
+import DnaIssueFeedback from "./DnaIssueFeedback"
 
 type DnaChatClassification =
   | "dna_concept"
@@ -223,6 +222,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   too_many_requests: "Çok hızlı soru gönderildi. Kısa bir süre bekleyip yeniden deneyin.",
   audit_unavailable: "Vaka erişimi güvenli biçimde kaydedilemediği için cevap gösterilmedi.",
   dna_chat_failed: "DNA Asistanı şu anda yanıt veremiyor. Biraz sonra yeniden deneyin.",
+  dna_chat_unavailable: "DNA Asistanı güvenli bakım modunda. Daha sonra yeniden deneyin.",
 }
 
 function messageId(prefix: string) {
@@ -544,23 +544,6 @@ function sourceAuthorYear(source: SourceRef) {
   if (source.labelTr) return source.labelTr
   if (source.citation) return source.citation
   return year ? String(year) : "Katalog kaydında belirtilmemiş"
-}
-
-function feedbackHref(
-  kind: "source" | "answer",
-  requestId: string,
-  sourceId?: string,
-  citationCardId?: string,
-) {
-  const params = new URLSearchParams({
-    surface: "app",
-    category: "technical",
-    feedback: kind === "source" ? "dna_source" : "dna_answer",
-    request: requestId,
-  })
-  if (kind === "source" && sourceId) params.set("source", sourceId)
-  if (kind === "source" && citationCardId) params.set("citation", citationCardId)
-  return `/support?${params.toString()}`
 }
 
 function sourceAnchor(requestId: string, index: number) {
@@ -1493,20 +1476,12 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
                       Kaynağı aç
                     </a>
                   ) : null}
-                  <Link
-                    href={feedbackHref(
-                      "source",
-                      answer.requestId,
-                      source.sourceId || source.id,
-                      source.id,
-                    )}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-2 text-xs font-black text-[var(--sm-text-muted)] hover:bg-[var(--sm-surface-soft)] hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                    aria-label={`Kaynak ${sourceIndex + 1} için hata bildir`}
-                  >
-                    <Flag size={14} aria-hidden="true" /> Kaynak hatası bildir
-                  </Link>
+                  <DnaIssueFeedback
+                    scope="source"
+                    requestId={answer.requestId}
+                    sourceId={source.sourceId || source.id}
+                    sourceIndex={sourceIndex + 1}
+                  />
                 </div>
               </div>
             ))}
@@ -1543,14 +1518,7 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
         </div>
       ) : null}
       <div className="mt-3 flex justify-end">
-        <Link
-          href={feedbackHref("answer", answer.requestId)}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-[11px] font-black text-[var(--sm-text-muted)] hover:bg-[var(--sm-surface-soft)] hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-        >
-          <MessageSquareWarning size={15} aria-hidden="true" /> Cevapla ilgili sorun bildir
-        </Link>
+        <DnaIssueFeedback scope="answer" requestId={answer.requestId} />
       </div>
         </div>
       </div>

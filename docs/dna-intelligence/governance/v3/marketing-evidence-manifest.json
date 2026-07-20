@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "dna-marketing-evidence-manifest@1",
+  "manifestId": "dna-marketing-evidence.current-v3",
+  "releaseStatus": "no_go",
+  "v3ReleaseReady": false,
+  "claims": [],
+  "knownBlocks": [
+    "dna_owner_book_not_locked",
+    "locked_benchmark_payload_missing",
+    "robustness_variation_payload_missing",
+    "independent_evaluation_not_completed",
+    "v3_static_runtime_package_empty"
+  ]
+}

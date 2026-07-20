@@ -103,6 +103,12 @@ const auditMetadata = buildDnaChatAuditMetadata({
 })
 assert.deepEqual(Object.keys(auditMetadata), [...DNA_CHAT_AUDIT_METADATA_KEYS])
 assert.deepEqual(auditMetadata.source_ids, ["source.one", "source.two"])
+assert.equal(auditMetadata.schema_version, "dna-chat-telemetry@1")
+assert.equal(auditMetadata.topic, "selfreg.interoception")
+assert.equal(auditMetadata.citation_count, 2)
+assert.equal(auditMetadata.http_result, 200)
+assert.equal(auditMetadata.audit_status, "written")
+assert.equal(auditMetadata.user_issue_category, null)
 for (const forbiddenAuditField of [
   "question",
   "answer",

@@ -19,8 +19,12 @@ type EnvConfig = {
   serviceKey: string
 }
 
+type FixtureLabel = "A" | "B" | "OWNER" | "ADMIN" | "UI"
+type FixtureProfileRole = "expert" | "owner" | "admin"
+
 type Fixture = {
-  label: "A" | "B" | "UI"
+  label: FixtureLabel
+  profileRole: FixtureProfileRole
   email: string
   password: string
   userAgent: string
@@ -52,6 +56,7 @@ const runId = `dna-chat-cross-account-${Date.now()}-${randomBytes(4).toString("h
 const requiredConfirmation = "CREATE_AND_DELETE_SYNTHETIC_DNA_CHAT_FIXTURES"
 const uiHoldConfirmation = "HOLD_SYNTHETIC_FIXTURE_FOR_BROWSER_QA"
 const liveMatrixConfirmation = "RUN_BOUNDED_LIVE_QUESTION_MATRIX"
+const privilegedRoleMatrixConfirmation = "RUN_BOUNDED_PRIVILEGED_ROLE_MATRIX"
 const steps: Step[] = []
 const cleanupErrors: string[] = []
 const secrets = new Set<string>()
@@ -336,7 +341,10 @@ class CookieJar {
   }
 }
 
-function createFixture(label: "A" | "B" | "UI"): Fixture {
+function createFixture(
+  label: FixtureLabel,
+  profileRole: FixtureProfileRole = "expert",
+): Fixture {
   const suffix = `${runId}-${label.toLowerCase()}`
   const useBrowserFixture =
     label === "UI" && process.env.DNA_CHAT_CROSS_ACCOUNT_UI_HOLD === uiHoldConfirmation
@@ -358,6 +366,7 @@ function createFixture(label: "A" | "B" | "UI"): Fixture {
 
   return {
     label,
+    profileRole,
     email,
     password,
     userAgent,
@@ -388,7 +397,7 @@ async function createSyntheticFixture(fixture: Fixture) {
   const profile = await admin.from("profiles").upsert(
     {
       user_id: fixture.userId,
-      role: "expert",
+      role: fixture.profileRole,
       plan: "professional",
       updated_at: new Date().toISOString(),
     },
@@ -640,6 +649,71 @@ function responseContainsFixture(response: JsonRecord, fixture: Fixture) {
   ].some((value) => Boolean(value && haystack.includes(value)))
 }
 
+function assertNoStore(response: JsonResponse, label: string) {
+  invariant(
+    String(response.headers.get("cache-control") || "").includes("no-store"),
+    `${label} is missing no-store cache control.`,
+  )
+  invariant(
+    String(response.headers.get("vary") || "").toLocaleLowerCase().includes("cookie"),
+    `${label} is missing Vary: Cookie.`,
+  )
+}
+
+async function resetSyntheticQuestionRateLimits(fixture: Fixture) {
+  invariant(admin, "Admin client is not initialized during rate-limit reset.")
+  invariant(fixture.userId, `Fixture ${fixture.label} user ID is missing.`)
+  const { error } = await admin
+    .from("api_rate_limits")
+    .delete()
+    .in("key", [
+      `dna-chat:question:burst:${fixture.userId}`,
+      `dna-chat:question:hour:${fixture.userId}`,
+    ])
+  failIfError(`Fixture ${fixture.label} rate-limit reset failed`, error)
+}
+
+function supabaseAccessTokenFromCookies(fixture: Fixture) {
+  invariant(fixture.cookies, `Fixture ${fixture.label} has no authenticated cookie jar.`)
+  const authCookieNames = fixture.cookies.names()
+    .filter((name) => name.includes("-auth-token"))
+    .sort((left, right) => {
+      const suffix = (name: string) => Number(name.match(/\.(\d+)$/)?.[1] ?? -1)
+      return suffix(left) - suffix(right)
+    })
+  invariant(authCookieNames.length > 0, `Fixture ${fixture.label} auth cookie is missing.`)
+  const encoded = authCookieNames.map((name) => fixture.cookies!.get(name) || "").join("")
+  let serialized = decodeURIComponent(encoded)
+  if (serialized.startsWith("base64-")) {
+    serialized = Buffer.from(serialized.slice("base64-".length), "base64url").toString("utf8")
+  }
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(serialized)
+  } catch {
+    throw new Error(`Fixture ${fixture.label} auth cookie could not be decoded.`)
+  }
+  const record = asRecord(parsed)
+  const token = typeof record.access_token === "string"
+    ? record.access_token
+    : Array.isArray(parsed) && typeof parsed[0] === "string"
+      ? parsed[0]
+      : null
+  invariant(token && /^eyJ[A-Za-z0-9_-]+\./.test(token),
+    `Fixture ${fixture.label} access token is missing from its auth cookie.`)
+  secrets.add(token)
+  return token
+}
+
+async function createDirectAuthenticatedClient(config: EnvConfig, fixture: Fixture) {
+  const accessToken = supabaseAccessTokenFromCookies(fixture)
+  const client = createClient(config.supabaseUrl, config.anonKey, {
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    auth: { autoRefreshToken: false, persistSession: false, detectSessionInUrl: false },
+  })
+  return client
+}
+
 async function deleteEq(table: string, column: string, value: string) {
   invariant(admin, "Admin client is not initialized during cleanup.")
   const { error } = await admin.from(table).delete().eq(column, value)
@@ -773,6 +847,12 @@ async function main() {
   let config: EnvConfig | null = null
   let fatal: string | null = null
   const fixtures: Fixture[] = [createFixture("A"), createFixture("B")]
+  const privilegedRoleMatrixEnabled =
+    process.env.DNA_CHAT_CROSS_ACCOUNT_PRIVILEGED_ROLE_MATRIX ===
+      privilegedRoleMatrixConfirmation
+  if (privilegedRoleMatrixEnabled) {
+    fixtures.push(createFixture("OWNER", "owner"), createFixture("ADMIN", "admin"))
+  }
 
   try {
     config = loadConfig()
@@ -787,14 +867,14 @@ async function main() {
       })
     }
 
-    await runStep("create two isolated synthetic users and reports", async () => {
+    await runStep("create isolated synthetic users and reports", async () => {
       for (const fixture of fixtures) await createSyntheticFixture(fixture)
-      return "fixtures=2"
+      return `fixtures=${fixtures.length}`
     })
 
-    await runStep("establish two real site app sessions", async () => {
+    await runStep("establish real site app sessions", async () => {
       for (const fixture of fixtures) await loginThroughSite(config!, fixture)
-      return "sessions=2"
+      return `sessions=${fixtures.length}`
     })
 
     await runStep("registered app sessions are active and user-bound", async () => {
@@ -815,7 +895,8 @@ async function main() {
           `Fixture ${fixture.label} app session is expired.`,
         )
       }
-      return `sessions=2 cookies=${fixtures[0]?.cookies?.names().length || 0}/${fixtures[1]?.cookies?.names().length || 0}`
+      return `sessions=${fixtures.length} cookies=${fixtures
+        .map((fixture) => fixture.cookies?.names().length || 0).join("/")}`
     })
 
     await runStep("direct authenticated security-table reads stay closed", async () => {
@@ -857,10 +938,7 @@ async function main() {
         `Report list returned HTTP ${result.status} (${String(result.body.error || "unknown").slice(0, 80)}).`,
       )
       invariant(result.body.ok === true, "Report list did not return ok=true.")
-      invariant(
-        String(result.headers.get("cache-control") || "").includes("no-store"),
-        "Report list is missing no-store cache control.",
-      )
+      assertNoStore(result, "Report list")
 
       const reports = Array.isArray(result.body.reports) ? result.body.reports : []
       invariant(reports.length === 1, `User A report list returned ${reports.length} rows, expected 1.`)
@@ -876,32 +954,124 @@ async function main() {
       return "owned=1 foreign=0"
     })
 
+    await runStep("query parameter cannot widen report-list scope", async () => {
+      const baseline = await requestJson(config!, fixtureA, "/api/app/dna-chat", { method: "GET" })
+      const injected = await requestJson(
+        config!,
+        fixtureA,
+        `/api/app/dna-chat?report_id=${encodeURIComponent(fixtureB.reportId!)}`,
+        { method: "GET" },
+      )
+      invariant(baseline.status === 200 && injected.status === 200, "Report-list query test failed.")
+      assertNoStore(injected, "Query-parameter report list")
+      invariant(
+        canonicalJson(baseline.body) === canonicalJson(injected.body),
+        "A foreign report query parameter changed the owner-scoped list.",
+      )
+      invariant(!responseContainsFixture(injected.body, fixtureB), "Query parameter leaked foreign fixture data.")
+      return "query_parameter=ignored owner_scope=stable"
+    })
+
+    await runStep("direct authenticated RLS reads hide foreign ownership chain", async () => {
+      const pairs = [[fixtureA, fixtureB], [fixtureB, fixtureA]] as const
+      for (const [actor, target] of pairs) {
+        const userClient = await createDirectAuthenticatedClient(config!, actor)
+        const ownReads = [
+          await userClient.from("reports").select("id").eq("id", actor.reportId!).maybeSingle(),
+          await userClient.from("assessments_v2").select("id").eq("id", actor.assessmentId!).maybeSingle(),
+          await userClient.from("clients").select("id").eq("id", actor.clientId!).maybeSingle(),
+        ]
+        invariant(
+          ownReads.every((read) => !read.error && Boolean(read.data)),
+          `Fixture ${actor.label} could not read its own trusted-session ownership chain.`,
+        )
+        const foreignReads = [
+          await userClient.from("reports").select("id").eq("id", target.reportId!).maybeSingle(),
+          await userClient.from("assessments_v2").select("id").eq("id", target.assessmentId!).maybeSingle(),
+          await userClient.from("clients").select("id").eq("id", target.clientId!).maybeSingle(),
+        ]
+        for (const read of foreignReads) {
+          const errorCode = String((read.error as { code?: unknown } | null)?.code || "")
+          invariant(
+            !read.data && (!read.error || errorCode === "42501"),
+            `Fixture ${actor.label} directly read fixture ${target.label}'s ownership chain.`,
+          )
+        }
+      }
+      return "directions=2 tables=3 own_rows=6 foreign_rows=0"
+    })
+
+    if (privilegedRoleMatrixEnabled) {
+      await runStep("expert owner and admin profiles remain report-owner scoped", async () => {
+        let attempts = 0
+        for (const actor of fixtures) {
+          await resetSyntheticQuestionRateLimits(actor)
+          for (const target of fixtures) {
+            if (actor === target) continue
+            const response = await postQuestion(config!, actor, {
+              question: "Son raporumu özetle.",
+              reportId: target.reportId!,
+            })
+            attempts += 1
+            invariant(response.status === 404, `Role matrix returned HTTP ${response.status}.`)
+            invariant(response.body.error === "report_not_found", "Role matrix error contract changed.")
+            invariant(!responseContainsFixture(response.body, target), "Role matrix leaked foreign fixture data.")
+          }
+        }
+        return `profiles=${fixtures.length} attempts=${attempts} leaks=0`
+      })
+    }
+
     if (process.env.DNA_CHAT_CROSS_ACCOUNT_LIVE_MATRIX === liveMatrixConfirmation) {
       await runStep("bounded 60-question live theory safety and flexibility matrix", async () => {
+        // Earlier ownership probes intentionally consume the same per-user
+        // production counters. Reset only these synthetic fixture keys before
+        // the independently bounded 60-question matrix.
+        await Promise.all(fixtures.map((fixture) => resetSyntheticQuestionRateLimits(fixture)))
         const result = await runLiveQuestionMatrix(config!, fixtures)
         return `questions=${result.total} p95_ms=${result.p95} classes=${result.classifications}`
       })
     }
 
-    await runStep("foreign and nonexistent report IDs return the same 404", async () => {
-      const foreign = await postQuestion(config!, fixtureA, {
-        question: "Son raporumu özetle.",
-        reportId: fixtureB.reportId!,
-      })
-      const nonexistent = await postQuestion(config!, fixtureA, {
-        question: "Son raporumu özetle.",
-        reportId: randomUUID(),
-      })
+    await runStep("bidirectional foreign and nonexistent report IDs return the same 404", async () => {
+      const directions = [[fixtureA, fixtureB], [fixtureB, fixtureA]] as const
+      for (const [actor, target] of directions) {
+        const foreign = await postQuestion(config!, actor, {
+          question: "Son raporumu özetle.",
+          reportId: target.reportId!,
+        })
+        const nonexistent = await postQuestion(config!, actor, {
+          question: "Son raporumu özetle.",
+          reportId: randomUUID(),
+        })
 
-      invariant(foreign.status === 404, `Foreign report request returned HTTP ${foreign.status}.`)
-      invariant(nonexistent.status === 404, `Missing report request returned HTTP ${nonexistent.status}.`)
-      invariant(foreign.body.error === "report_not_found", "Foreign report returned an unexpected error contract.")
-      invariant(
-        canonicalJson(foreign.body) === canonicalJson(nonexistent.body),
-        "Foreign and nonexistent report responses are distinguishable.",
-      )
-      invariant(!responseContainsFixture(foreign.body, fixtureB), "Foreign-report 404 leaked fixture data.")
-      return "status=404 contract=indistinguishable"
+        invariant(foreign.status === 404, `Foreign report request returned HTTP ${foreign.status}.`)
+        invariant(nonexistent.status === 404, `Missing report request returned HTTP ${nonexistent.status}.`)
+        invariant(foreign.body.error === "report_not_found", "Foreign report returned an unexpected error contract.")
+        invariant(
+          canonicalJson(foreign.body) === canonicalJson(nonexistent.body),
+          "Foreign and nonexistent report responses are distinguishable.",
+        )
+        assertNoStore(foreign, "Foreign-report response")
+        assertNoStore(nonexistent, "Missing-report response")
+        invariant(!responseContainsFixture(foreign.body, target), "Foreign-report 404 leaked fixture data.")
+      }
+      return "directions=2 status=404 contract=indistinguishable"
+    })
+
+    await runStep("bounded concurrent UUID enumeration stays indistinguishable", async () => {
+      await resetSyntheticQuestionRateLimits(fixtureA)
+      const responses = await Promise.all(Array.from({ length: 8 }, (_, index) =>
+        postQuestion(config!, fixtureA, {
+          question: "Son raporumu özetle.",
+          reportId: index === 0 ? fixtureB.reportId! : randomUUID(),
+        })))
+      const bodies = new Set(responses.map((response) => canonicalJson(response.body)))
+      invariant(responses.every((response) => response.status === 404), "Enumeration did not remain at HTTP 404.")
+      invariant(bodies.size === 1, "Concurrent foreign/missing responses became distinguishable.")
+      invariant(responses.every((response) => !responseContainsFixture(response.body, fixtureB)),
+        "Concurrent enumeration leaked foreign fixture data.")
+      return `attempts=${responses.length} distinct_contracts=${bodies.size} leaks=0`
     })
 
     await runStep("theory response ignores a foreign report ID", async () => {
@@ -938,6 +1108,7 @@ async function main() {
         question: "Son raporumu özetle.",
         reportId: fixtureA.reportId!,
       })
+      assertNoStore(ownCase, "Owned-case response")
 
       if (ownCase.status === 503) {
         invariant(ownCase.body.error === "audit_unavailable", "Owned case returned an unexpected 503 contract.")
@@ -955,7 +1126,59 @@ async function main() {
           `route=${String(ownCase.body.route || "missing").slice(0, 40)}).`,
       )
       invariant(!responseContainsFixture(ownCase.body, fixtureB), "Owned case leaked foreign fixture data.")
-      return "case=answered audit_gate=open"
+      const requestId = String(ownCase.body.requestId || "")
+      invariant(requestId, "Owned case response is missing requestId.")
+      const audit = await admin!
+        .from("data_access_audit_events")
+        .select("action, resource_type, resource_id, metadata")
+        .eq("actor_user_id", fixtureA.userId!)
+        .eq("resource_id", requestId)
+        .maybeSingle()
+      failIfError("Owned case audit lookup failed", audit.error)
+      invariant(audit.data?.action === "dna_chat_answer", "Owned case audit event is missing.")
+      const metadata = asRecord(audit.data?.metadata)
+      const currentMetadataKeys = new Set([
+        "schema_version", "request_id", "engine_version", "pack_version", "topic",
+        "classification", "outcome", "response_depth", "source_ids", "citation_count",
+        "latency_category", "http_result", "audit_status", "user_issue_category",
+      ])
+      const legacyMetadataKeys = new Set([
+        "request_id", "mode", "intent", "classification", "outcome",
+        "engine_version", "runtime_generation", "catalog_version", "package_version",
+        "package_sha256", "intended_use_version", "authority_contract_version",
+        "policy_version", "authority_set", "refused", "source_ids", "response_depth",
+        "latency_category", "error_code",
+      ])
+      const expectedMetadataKeys = metadata.schema_version === "dna-chat-telemetry@1"
+        ? currentMetadataKeys
+        : legacyMetadataKeys
+      invariant(Object.keys(metadata).every((key) => expectedMetadataKeys.has(key)),
+        "Owned case audit contains fields outside the minimized contract.")
+      invariant(!responseContainsFixture(metadata, fixtureA),
+        "Owned case audit metadata contains synthetic clinical fixture content.")
+      return `case=answered audit_gate=open metadata_keys=${Object.keys(metadata).length}`
+    })
+
+    await runStep("expired app session cannot list or request reports", async () => {
+      invariant(fixtureB.userId && fixtureB.cookies, "Fixture B session data is missing.")
+      const sessionId = appSessionIdFromCookie(fixtureB.cookies.get("sm_active_session"))
+      invariant(sessionId, "Fixture B app-session cookie is missing.")
+      const expiredAt = new Date(Date.now() - 60_000).toISOString()
+      const expiryUpdate = await admin!
+        .from("account_sessions")
+        .update({ expires_at: expiredAt })
+        .eq("id", sessionId)
+        .eq("user_id", fixtureB.userId)
+        .select("id")
+        .maybeSingle()
+      failIfError("Fixture B session expiry injection failed", expiryUpdate.error)
+      invariant(expiryUpdate.data?.id, "Fixture B session was not expired.")
+
+      const response = await requestJson(config!, fixtureB, "/api/app/dna-chat", { method: "GET" })
+      invariant(response.status === 401, `Expired session returned HTTP ${response.status}.`)
+      invariant(response.body.error === "session_expired", "Expired session error contract changed.")
+      assertNoStore(response, "Expired-session response")
+      return "status=401 contract=session_expired"
     })
 
     if (process.env.DNA_CHAT_CROSS_ACCOUNT_UI_HOLD === uiHoldConfirmation) {
@@ -992,6 +1215,18 @@ async function main() {
     runId,
     siteOrigin: config ? new URL(config.siteUrl).origin : null,
     steps,
+    coverage: {
+      bidirectionalTherapists: true,
+      boundedUuidEnumeration: true,
+      queryParameter: true,
+      directApi: true,
+      noStoreAndVaryCookie: true,
+      concurrentRequests: true,
+      expiredSession: true,
+      directRlsOwnershipChain: true,
+      privilegedRoleMatrix: privilegedRoleMatrixEnabled ? "executed" : "not_run",
+      auditFailureInjection: "requires_preview_fault_injection",
+    },
     cleanup: {
       ok: cleanupErrors.length === 0,
       errors: cleanupErrors,
@@ -1001,6 +1236,7 @@ async function main() {
       "Synthetic credentials, report payloads, and clinical fixture values are never printed.",
       "This is a black-box isolation test; query-level read tracing requires separate database instrumentation.",
       "Login and session-registration rate-limit rows are cleaned only when their unique run marker is present.",
+      "Owner/admin profile checks run only with the separate bounded privileged-role confirmation.",
     ],
   }
 

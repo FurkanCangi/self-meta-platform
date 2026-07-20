@@ -11,8 +11,12 @@ import {
   resolveDnaChatApiRequest,
   type DnaChatApiAuditInput,
 } from "@/lib/dna/chat"
+import { evaluateDnaChatOperationalEnvironment } from "@/lib/dna/chat/operations/incidentResponse"
 import { resolveOwnedDnaCaseAnswer } from "@/lib/dna/chat/ownedCaseAnswer"
-import { resolveCommittedDnaChatRuntime } from "@/lib/dna/chat/v3RetrievalServer"
+import {
+  getCommittedDnaChatRuntimeStatus,
+  resolveCommittedDnaChatRuntime,
+} from "@/lib/dna/chat/v3RetrievalServer"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -74,6 +78,14 @@ function json(payload: unknown, init?: ResponseInit) {
 
 function errorResponse(error: string, status: number, extra?: Record<string, unknown>) {
   return json({ ok: false, error, ...(extra || {}) }, { status })
+}
+
+function operationalAvailability(route: "dna-chat" | "dna-chat-reports") {
+  const runtimeStatus = getCommittedDnaChatRuntimeStatus()
+  return evaluateDnaChatOperationalEnvironment({
+    route,
+    packSha256: runtimeStatus.packageSha256,
+  })
 }
 
 function hasDeclaredOversizeBody(request: Request) {
@@ -288,6 +300,9 @@ async function writeDnaChatAudit(params: {
 
 export async function GET() {
   try {
+    if (!operationalAvailability("dna-chat-reports").allowed) {
+      return errorResponse("dna_chat_unavailable", 503)
+    }
     const auth = await requireConfirmedUser()
     if (!auth.ok) return normalizeAuthFailure(auth.response)
 
@@ -310,6 +325,9 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
+    if (!operationalAvailability("dna-chat").allowed) {
+      return errorResponse("dna_chat_unavailable", 503)
+    }
     // Reject an explicitly oversized body before authentication or rate-limit
     // work. Streaming requests without Content-Length are still bounded by
     // readDnaChatRequestBody below.
@@ -331,7 +349,12 @@ export async function POST(request: Request) {
     const payload = parsed.data
     const resolution = await resolveDnaChatApiRequest(payload, {
       createRequestId: () => crypto.randomUUID(),
-      resolveRuntimeAnswer: resolveCommittedDnaChatRuntime,
+      // The authenticated owner ID is used only as the deterministic rollout
+      // bucket input. It is never exposed in the answer or audit metadata.
+      resolveRuntimeAnswer: (input) => resolveCommittedDnaChatRuntime({
+        ...input,
+        rolloutSubjectKey: auth.user.id,
+      }),
       loadCaseAnswer: async ({ reportId, question, mode, previousTopic, responseDepth }) => {
         const recentReports = await listOwnReports(auth.user.id)
         if (!recentReports.ok) return { ok: false, status: 500, error: "dna_chat_failed" }

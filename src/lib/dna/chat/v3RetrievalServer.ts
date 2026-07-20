@@ -12,6 +12,13 @@ import {
   createDnaV3RuntimeAnswerInternal,
   type DnaChatRuntimeAnswer,
 } from "./runtimeAnswer"
+import { evaluateCurrentDnaV3ReleaseHardNoGo } from "./release/hardNoGo"
+import { evaluateCurrentDnaRuntimeDeploymentAuthorization } from "./release/runtimeDeploymentAuthorization"
+import {
+  decideDnaRuntimeReleaseExecution,
+  readDnaRuntimeReleaseConfiguration,
+} from "./release/runtimeReleaseMode"
+import { evaluateCurrentDnaStagedRolloutAuthorization } from "./release/stagedRollout"
 import { selectDnaChatRuntime } from "./runtimeSelection"
 import { resolveDnaV3Retrieval } from "./v3RetrievalCore"
 import { adaptDnaV3StaticPackageForRetrieval } from "./v3RetrievalPackageAdapter"
@@ -30,7 +37,12 @@ const DNA_V3_RETRIEVAL_PACKAGE = adaptDnaV3StaticPackageForRetrieval(
   DNA_V3_VALIDATED_STATIC_PACKAGE,
 )
 
-function committedRuntimeSelection() {
+/** Server-only source identity check for privacy-safe categorical feedback. */
+export function hasCommittedDnaV3SourceId(sourceId: string): boolean {
+  return DNA_V3_VALIDATED_STATIC_PACKAGE.sources.some((source) => source.id === sourceId)
+}
+
+function committedV3ReleaseSelection() {
   const releaseDecision = DNA_V3_VALIDATED_STATIC_PACKAGE.manifest.runtimeEligible
     ? evaluateDnaChatRuntimeRelease({
         generation: "v3",
@@ -66,8 +78,45 @@ function committedRuntimeSelection() {
   })
 }
 
-export function getCommittedDnaChatRuntimeStatus() {
-  const selection = committedRuntimeSelection()
+function committedRuntimeSelection(rolloutSubjectKey?: string | null) {
+  const v3ReleaseSelection = committedV3ReleaseSelection()
+  const hardNoGo = evaluateCurrentDnaV3ReleaseHardNoGo()
+  const configuration = readDnaRuntimeReleaseConfiguration()
+  const deploymentAuthorization = evaluateCurrentDnaRuntimeDeploymentAuthorization()
+  const rolloutAuthorization = configuration.rolloutPercent === 0
+    ? { allowed: true, blockCode: null }
+    : evaluateCurrentDnaStagedRolloutAuthorization({
+        rolloutPercent: configuration.rolloutPercent,
+        packageSha256: DNA_V3_VALIDATED_STATIC_PACKAGE.manifest.packageSha256,
+      })
+  const execution = decideDnaRuntimeReleaseExecution({
+    configuration,
+    v3ReleaseAvailable: v3ReleaseSelection.generation === "v3",
+    releaseHardNoGoAllowed: hardNoGo.allowed,
+    deploymentAuthorized: deploymentAuthorization.allowed,
+    rolloutStageAuthorized: rolloutAuthorization.allowed,
+    packageSha256: DNA_V3_VALIDATED_STATIC_PACKAGE.manifest.packageSha256,
+    rolloutSubjectKey,
+  })
+  const generation = execution.execution === "blocked"
+    ? "blocked" as const
+    : execution.execution === "v2_legacy"
+      ? "v2_legacy" as const
+      : "v3" as const
+  return Object.freeze({
+    generation,
+    reason: execution.reason,
+    requestedMode: execution.requestedMode,
+    runtimeExecution: execution.execution,
+    hardNoGoBlockCodes: hardNoGo.blockCodes,
+    rolloutAuthorizationBlockCode: rolloutAuthorization.blockCode,
+    deploymentAuthorizationBlockCode: deploymentAuthorization.blockCode,
+    v3ReleaseReason: v3ReleaseSelection.reason,
+  })
+}
+
+export function getCommittedDnaChatRuntimeStatus(rolloutSubjectKey?: string | null) {
+  const selection = committedRuntimeSelection(rolloutSubjectKey)
   return Object.freeze({
     ...selection,
     engineVersion: selection.generation === "v3"
@@ -93,8 +142,9 @@ export function resolveCommittedDnaV3Retrieval(input: Readonly<{
   previousTopic?: string | null
   caseContext?: DnaChatSafeCaseContext | null
   responseDepth?: DnaV3ResponseDepth | null
+  rolloutSubjectKey?: string | null
 }>) {
-  const selection = committedRuntimeSelection()
+  const selection = committedRuntimeSelection(input.rolloutSubjectKey)
   if (selection.generation !== "v3") {
     throw new Error(`dna_v3_runtime_unavailable:${selection.reason}`)
   }
@@ -102,9 +152,12 @@ export function resolveCommittedDnaV3Retrieval(input: Readonly<{
 }
 
 /**
- * Production runtime switch. The current empty V3 trust root stays explicitly
- * on V2. Once a nonempty committed package is both runtime-eligible and passes
- * the release tuple gate, the same API path moves to V3 automatically.
+ * Production runtime switch. Missing configuration is explicitly V2. A
+ * hybrid-v3 or v3 flag can reach V3 only after the committed package,
+ * evaluation attestation, immutable evidence bundle and hard NO-GO gate all
+ * pass. Hybrid uses V3 only for its released passage-backed surface; an
+ * unsupported question remains a bounded V3 not_available response rather
+ * than silently mixing unsealed V2 claims into a V3 answer.
  */
 export function resolveCommittedDnaChatRuntime(input: Readonly<{
   question: string
@@ -112,8 +165,9 @@ export function resolveCommittedDnaChatRuntime(input: Readonly<{
   previousTopic?: string | null
   caseContext?: DnaChatSafeCaseContext | null
   responseDepth?: DnaV3ResponseDepth | null
+  rolloutSubjectKey?: string | null
 }>): DnaChatRuntimeAnswer {
-  const selection = committedRuntimeSelection()
+  const selection = committedRuntimeSelection(input.rolloutSubjectKey)
   if (selection.generation === "blocked") {
     throw new Error(`dna_chat_runtime_selection_blocked:${selection.reason}`)
   }
