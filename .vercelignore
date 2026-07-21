@@ -1,0 +1,27 @@
+# Local dependencies and build outputs
+.git/
+.next/
+.tmp/
+node_modules/
+out/
+output/
+tmp/
+coverage/
+*.tsbuildinfo
+
+# Non-web delivery artifacts and local services
+android/
+build-artifacts/
+services/
+picture/
+src.zip
+ai/
+
+# Local archives, repair snapshots, and secrets
+.site_cleanup_archive/
+.fix_backup_*/
+.fix_*/
+.DS_Store
+.env
+.env.*
+*.pem
