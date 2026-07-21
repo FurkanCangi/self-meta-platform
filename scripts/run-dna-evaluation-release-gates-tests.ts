@@ -41,6 +41,7 @@ import type {
   DnaLockedBenchmarkQuestion,
 } from "../src/lib/dna/chat/evaluation/evaluationGovernance"
 import {
+  createDnaEvaluationAuthorityRegistry,
   createDnaVariationTransformationEvidence,
   dnaEvaluationQuestionSha256,
 } from "../src/lib/dna/chat/evaluation/evaluationGovernance"
@@ -296,6 +297,18 @@ const bindingIndex: DnaEvaluationPackageIndex = Object.freeze({
   passageIds: new Set(["passage.bound"]),
   claimPassageKeys: new Set(["claim.bound\u0000passage.bound"]),
   releasedTopicIds: new Set(["topic.bound"]),
+  authorityRegistry: createDnaEvaluationAuthorityRegistry({
+    externalScienceClaims: [{
+      claimId: "claim.bound",
+      sourceIds: ["source.bound"],
+    }],
+    dnaProduct: {
+      bookLockStatus: "deferred_owner_book",
+      bookVersion: null,
+      bookSha256: null,
+      ownerApprovedClaimIds: [],
+    },
+  }),
 })
 const bindingQuestion: DnaLockedBenchmarkQuestion = Object.freeze({
   id: "question.bound",

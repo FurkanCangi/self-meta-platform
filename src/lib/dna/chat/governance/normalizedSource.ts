@@ -185,6 +185,7 @@ type SnapshotPriorityRecord = {
 
 type SnapshotLicenseRecord = {
   readonly sourceId: string
+  readonly mixedEmbeddedMaterial: boolean
   readonly policy: string
   readonly obligations: {
     readonly attributionRequired: boolean
@@ -398,6 +399,7 @@ function validateLicenseSnapshotRecords(records: unknown): asserts records is re
   for (const [index, value] of records.entries()) {
     assertExactObjectKeys(value, [
       "sourceId",
+      "mixedEmbeddedMaterial",
       "policy",
       "obligations",
       "matrixSha256",
@@ -406,6 +408,9 @@ function validateLicenseSnapshotRecords(records: unknown): asserts records is re
     ], `invalid_license_record_shape:${index}`)
     const record = value as unknown as SnapshotLicenseRecord
     if (!STABLE_ID_PATTERN.test(record.sourceId)) throw new Error(`invalid_license_source_id:${index}`)
+    if (typeof record.mixedEmbeddedMaterial !== "boolean") {
+      throw new Error(`invalid_mixed_embedded_material_flag:${record.sourceId}`)
+    }
     if (!isEnumValue(LICENSE_POLICIES, record.policy)) {
       throw new Error(`invalid_license_policy:${record.sourceId}`)
     }
@@ -445,6 +450,10 @@ function validateLicenseSnapshotRecords(records: unknown): asserts records is re
       }
       if (decision === "cleared" && component === "metadata" && evidenceBasis === "unverified") {
         throw new Error(`metadata_cleared_without_evidence:${record.sourceId}`)
+      }
+      if (record.mixedEmbeddedMaterial && (component === "abstract" || component === "full_text")
+        && decision === "cleared") {
+        throw new Error(`mixed_embedded_material_component_cleared:${record.sourceId}:${component}`)
       }
     }
   }
@@ -754,12 +763,18 @@ function normalizeOneSource(input: {
     input.identity.verifiedIdentifiers,
   )
   const bibliography = input.identity.verifiedBibliography
+  // Pending or mismatched identity records can intentionally lack a verified
+  // field. Preserve their declared metadata for audit/display only; the
+  // identityVerificationStatus remains fail-closed and prevents release.
+  const declaredBibliography = input.identity.bibliography
   const payload: Omit<NormalizedDnaSource, "sourcePayloadSha256"> = {
     schemaVersion: DNA_NORMALIZED_SOURCE_VERSION,
     id: input.identity.sourceId,
-    title: bibliography.title.normalize("NFC").trim(),
-    authors: Object.freeze(bibliography.authors.map((author) => author.normalize("NFC").trim())),
-    year: bibliography.year,
+    title: (bibliography.title || declaredBibliography.title).normalize("NFC").trim(),
+    authors: Object.freeze((bibliography.authors.length > 0
+      ? bibliography.authors : declaredBibliography.authors)
+      .map((author) => author.normalize("NFC").trim())),
+    year: bibliography.year ?? declaredBibliography.year,
     doi: identifiers.doi,
     pmid: identifiers.pmid,
     pmcid: identifiers.pmcid,

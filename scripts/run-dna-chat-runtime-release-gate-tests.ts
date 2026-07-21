@@ -46,7 +46,7 @@ import {
 
 async function main() {
 const exactEngineSourceClosure = assertCurrentDnaEvaluationEngineSourceClosure(process.cwd())
-assert.equal(exactEngineSourceClosure.length, 116)
+assert.equal(exactEngineSourceClosure.length, 118)
 assert.deepEqual(DNA_EVALUATION_ENGINE_CLOSURE_EXCLUSIONS, [
   "src/lib/dna/chat/evaluation/generated/currentEngineCodeAuthority.ts",
 ], "Yalnız self-referential generated authority closure dışında kalabilir")
@@ -68,8 +68,10 @@ for (const requiredEngineAuthoritySource of [
   "src/lib/dna/chat/catalog/generated/v3/server.ts",
   "src/lib/dna/chat/catalog/generated/v3/types.ts",
   "src/lib/dna/chat/conversationPolicy.ts",
+  "src/lib/dna/chat/evaluation/evaluationDatasetIntegrity.ts",
   "src/lib/dna/chat/evaluation/evaluationGates.ts",
   "src/lib/dna/chat/evaluation/evaluationGovernance.ts",
+  "src/lib/dna/chat/evaluation/generated/currentDevelopmentHistoryAuthority.json",
   "src/lib/dna/chat/index.ts",
   "src/lib/dna/chat/release/previewPromotion.ts",
   "src/lib/dna/chat/release/runtimeDeploymentAuthorization.ts",

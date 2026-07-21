@@ -1,4 +1,5 @@
 import assert from "node:assert/strict"
+import { spawnSync } from "node:child_process"
 import { createHash } from "node:crypto"
 import {
   existsSync,
@@ -44,6 +45,10 @@ const SNAPSHOT_PATH = resolve(
   process.cwd(),
   "docs/dna-intelligence/governance/v3/source-library-governance-snapshot.json",
 )
+const OFFICIAL_AUTHORITY_REGISTRY_PATH = resolve(
+  process.cwd(),
+  "docs/dna-intelligence/governance/v3/official-source-authority-registry.json",
+)
 
 type JsonRecord = Record<string, unknown>
 
@@ -53,6 +58,56 @@ function readJson(path: string): JsonRecord {
 
 function sha256File(path: string): string {
   return createHash("sha256").update(readFileSync(path)).digest("hex")
+}
+
+function runOnlineAuditJatsLicenseSyntheticTests(): void {
+  const auditScript = resolve(process.cwd(), "scripts/audit-dna-source-governance-online.mjs")
+  const result = spawnSync(process.execPath, [auditScript, "--self-test-jats-license"], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+    env: process.env,
+  })
+  assert.equal(result.status, 0, result.stderr || result.stdout)
+  const summary = JSON.parse(result.stdout) as {
+    ok: boolean
+    caseCount: number
+    negativeCaseCount: number
+    inspectionVersion: string
+    auditorScriptSha256: string
+  }
+  assert.deepEqual(summary, {
+    ok: true,
+    caseCount: 24,
+    negativeCaseCount: 21,
+    inspectionVersion: "dna-jats-license-inspector@2",
+    auditorScriptSha256: sha256File(auditScript),
+  })
+}
+
+function runOfficialAuthorityAdapterSyntheticTests(): void {
+  const auditScript = resolve(process.cwd(), "scripts/audit-dna-source-governance-online.mjs")
+  const result = spawnSync(process.execPath, [auditScript, "--self-test-official-adapters"], {
+    cwd: process.cwd(),
+    encoding: "utf8",
+    env: { ...process.env, DNA_SOURCE_LIBRARY_ROOT: "/intentionally/unavailable" },
+  })
+  assert.equal(result.status, 0, result.stderr || result.stdout)
+  const summary = JSON.parse(result.stdout) as {
+    ok: boolean
+    caseCount: number
+    negativeCaseCount: number
+    auditorVersion: string
+    officialAuthorityRegistrySha256: string
+    auditorScriptSha256: string
+  }
+  assert.deepEqual(summary, {
+    ok: true,
+    caseCount: 14,
+    negativeCaseCount: 4,
+    auditorVersion: "dna-source-governance-auditor@2",
+    officialAuthorityRegistrySha256: sha256File(OFFICIAL_AUTHORITY_REGISTRY_PATH),
+    auditorScriptSha256: sha256File(auditScript),
+  })
 }
 
 function dateOnly(value: unknown): string {
@@ -107,6 +162,9 @@ function sourceRecordIdentity(record: JsonRecord): {
 }
 
 function buildSnapshot(root: string): JsonRecord {
+  const officialAuthorityRegistry = readJson(OFFICIAL_AUTHORITY_REGISTRY_PATH)
+  assert.equal(officialAuthorityRegistry.schemaVersion, "dna-official-source-authority-registry@1")
+  assert.ok(Array.isArray(officialAuthorityRegistry.records))
   const manifests = [
     "manifests/verification-report.json",
     "manifests/online-source-verification.json",
@@ -298,7 +356,22 @@ function buildSnapshot(root: string): JsonRecord {
     })),
   }))
 
-  const licenseRecords = asArray(licenseAudit.records).map((row) => {
+  const rawLicenseRecords = asArray(licenseAudit.records)
+  const mixedEmbeddedBySource = new Map(rawLicenseRecords.map((row) => [
+    String(row.sourceId),
+    Boolean((row.audit as JsonRecord | undefined)?.mixedEmbeddedMaterial),
+  ]))
+  for (const row of rawLicenseRecords) {
+    if (!mixedEmbeddedBySource.get(String(row.sourceId))) continue
+    const decisions = new Map(asArray(row.components).map((component) => [
+      String(component.component), String(component.decision),
+    ]))
+    assert.notEqual(decisions.get("abstract"), "cleared",
+      `${String(row.sourceId)}: mixed embedded material cannot clear abstract as a whole`)
+    assert.notEqual(decisions.get("full_text"), "cleared",
+      `${String(row.sourceId)}: mixed embedded material cannot clear full text as a whole`)
+  }
+  const licenseRecords = rawLicenseRecords.map((row) => {
     const { audit: _audit, ...record } = row
     return record as DnaSourceLicenseRecord
   }).sort((left, right) => left.sourceId.localeCompare(right.sourceId))
@@ -310,6 +383,7 @@ function buildSnapshot(root: string): JsonRecord {
   }
   const licenseRecordSummary = licenseRecords.map((record) => ({
     sourceId: record.sourceId,
+    mixedEmbeddedMaterial: mixedEmbeddedBySource.get(record.sourceId) || false,
     policy: record.policy,
     obligations: record.obligations,
     matrixSha256: createHash("sha256").update(JSON.stringify(record)).digest("hex"),
@@ -350,6 +424,12 @@ function buildSnapshot(root: string): JsonRecord {
     governanceVersion: DNA_SOURCE_GOVERNANCE_VERSION,
     snapshotBasisAt: auditSummary.auditedAt,
     rootPolicy: "ResearchSSD_only_no_runtime_absolute_path_dependency",
+    officialAuthorityRegistry: {
+      relativePath: "docs/dna-intelligence/governance/v3/official-source-authority-registry.json",
+      schemaVersion: String(officialAuthorityRegistry.schemaVersion),
+      recordCount: (officialAuthorityRegistry.records as JsonRecord[]).length,
+      sha256: sha256File(OFFICIAL_AUTHORITY_REGISTRY_PATH),
+    },
     manifests: manifestRows,
     counts: {
       sourceRecords: Number(verificationCounts.sourceRecords),
@@ -968,8 +1048,12 @@ function main() {
   assert.equal((snapshot.counts as JsonRecord).totalMetadataRecords, 47)
   assert.equal((snapshot.counts as JsonRecord).duplicateDoiRecords, 0)
   assert.equal((snapshot.counts as JsonRecord).unresolvedCategories, 0)
-  assert.equal((snapshot.identityState as JsonRecord).fullyCrossIdentifierVerifiedRecords, 39)
-  assert.equal((snapshot.identityState as JsonRecord).pendingIdentityRecords, 8)
+  const officialAuthorityRegistry = snapshot.officialAuthorityRegistry as JsonRecord
+  assert.equal(officialAuthorityRegistry.schemaVersion, "dna-official-source-authority-registry@1")
+  assert.equal(officialAuthorityRegistry.recordCount, 7)
+  assert.equal(officialAuthorityRegistry.sha256, sha256File(OFFICIAL_AUTHORITY_REGISTRY_PATH))
+  assert.equal((snapshot.identityState as JsonRecord).fullyCrossIdentifierVerifiedRecords, 47)
+  assert.equal((snapshot.identityState as JsonRecord).pendingIdentityRecords, 0)
   assert.equal((snapshot.identityState as JsonRecord).mismatchIdentityRecords, 0)
   assert.equal((snapshot.priorityState as JsonRecord).normalizedQuestionSpecificPriorityRecords, 47)
   assert.equal((snapshot.licenseState as JsonRecord).componentMatricesCompleted, 47)
@@ -1001,6 +1085,10 @@ function main() {
     for (const component of ["table", "figure", "scale", "test_items"]) {
       assert.equal(decisions[component], "restricted")
     }
+    if (record.mixedEmbeddedMaterial) {
+      assert.notEqual(decisions.abstract, "cleared")
+      assert.notEqual(decisions.full_text, "cleared")
+    }
   }
   assert.equal((snapshot.contentPolicy as JsonRecord).includesFullText, false)
   assert.equal((snapshot.contentPolicy as JsonRecord).includesPassages, false)
@@ -1010,6 +1098,8 @@ function main() {
   runPriorityTests()
   runIdentityTests(snapshot)
   runLicenseTests()
+  runOnlineAuditJatsLicenseSyntheticTests()
+  runOfficialAuthorityAdapterSyntheticTests()
 
   console.log(JSON.stringify({
     ok: true,

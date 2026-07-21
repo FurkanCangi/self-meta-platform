@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "dna-official-source-authority-registry@1",
+  "policy": {
+    "runtimeInternetAllowed": false,
+    "auditTimeNetworkOnly": true,
+    "allowlistedAdaptersOnly": true,
+    "rawAuthorityResponseHashRequired": true,
+    "officialMetadataDoesNotAuthorizeLicenseMethodClaimOrRuntime": true
+  },
+  "records": [
+    {
+      "sourceId": "book.neuroscience-canadian-3e",
+      "adapter": "official_pressbooks_html",
+      "url": "https://ecampusontario.pressbooks.pub/neurosciencecdn3/",
+      "expectedTitle": "Neuroscience: Canadian 3rd Edition",
+      "expectedAuthors": ["Dr William Ju", "Maksym Shcherbina", "Adel Halawa", "Justin Jarovi", "Maryna Pilkiw"],
+      "expectedYear": 2022,
+      "expectedMinBytes": 10000,
+      "yearBasis": "citation_publication_date"
+    },
+    {
+      "sourceId": "book.physiology-uw-2023",
+      "adapter": "official_pressbooks_html",
+      "url": "https://uw.pressbooks.pub/physiology/",
+      "expectedTitle": "Physiology",
+      "expectedAuthors": ["Charles Asbury", "Fred Rieke", "Bertil Hille", "Mark Bothwell", "John Tuthill", "Oscar Vivas"],
+      "expectedYear": 2023,
+      "expectedMinBytes": 10000,
+      "yearBasis": "citation_publication_date"
+    },
+    {
+      "sourceId": "book.science-of-sleep",
+      "adapter": "open_textbook_library_json",
+      "url": "https://open.umn.edu/opentextbooks/textbooks/1200",
+      "catalogId": 1200,
+      "yearBasis": "copyright_year"
+    },
+    {
+      "sourceId": "book.understanding-human-development-2025",
+      "adapter": "open_textbook_library_json",
+      "url": "https://open.umn.edu/opentextbooks/textbooks/1925",
+      "catalogId": 1925,
+      "yearBasis": "copyright_year"
+    },
+    {
+      "sourceId": "child-growth-development-2019",
+      "adapter": "official_pdf_metadata",
+      "landingUrl": "https://www.palomar.edu/childdevelopment/chdv-100-online-textbook/",
+      "documentUrl": "https://www.palomar.edu/childdevelopment/wp-content/uploads/sites/261/2020/07/CHDV-100-OER-Textbook-updatedJuly2020.pdf",
+      "expectedTitle": "Child Growth and Development",
+      "expectedAuthors": ["Jennifer Paris", "Antoinette Ricardo", "Dawn Rymond"],
+      "expectedYear": 2019,
+      "expectedVersion": "1.2",
+      "expectedDocumentSha256": "232731cf849a84c253a52a4d33f095f2cb48d43691c81ec280805be673da017c",
+      "expectedDocumentBytes": 40914033,
+      "expectedPages": 368,
+      "requireLandingDocumentLink": true,
+      "requireLocalArtifactMatch": true,
+      "publisher": "College of the Canyons",
+      "yearBasis": "document_title_page"
+    },
+    {
+      "sourceId": "restricted.autism-crc-2023-assessment-guideline",
+      "adapter": "official_guideline_pdf",
+      "landingUrl": "https://www.autismcrc.com.au/best-practice/assessment-and-diagnosis/second-edition",
+      "documentUrl": "https://www.autismcrc.com.au/best-practice/sites/default/files/resources/Assessment_and_Diagnosis_Guideline.pdf",
+      "yearBasis": "document_updated_year",
+      "expectedIsbn": "9781922365521",
+      "publisher": "Autism CRC"
+    },
+    {
+      "sourceId": "restricted.apa-2020-assessment-guidelines",
+      "adapter": "official_pdf_metadata",
+      "documentUrl": "https://www.apa.org/about/policy/guidelines-psychological-assessment-evaluation.pdf",
+      "expectedTitle": "APA Guidelines for Psychological Assessment and Evaluation",
+      "expectedAuthors": [],
+      "expectedYear": 2020,
+      "expectedVersion": null,
+      "expectedDocumentSha256": "59f4239c57ecc403b5cec418b35f908d4926b2493071c36b03f42c1a5644062f",
+      "expectedDocumentBytes": 674892,
+      "expectedPages": 32,
+      "expectedPdfInfoTitle": "APA Guidelines for Psychological Assessment and Evaluation",
+      "expectedPdfInfoAuthor": "American Psychological Association",
+      "publisher": "American Psychological Association",
+      "yearBasis": "document_title_page"
+    }
+  ]
+}

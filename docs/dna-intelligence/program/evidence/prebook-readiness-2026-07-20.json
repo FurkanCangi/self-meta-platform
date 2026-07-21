@@ -1,0 +1,200 @@
+{
+  "schemaVersion": "dna-intelligence-prebook-readiness@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "generatedAt": "2026-07-20T13:46:57+03:00",
+  "evidenceClass": "current_readiness_snapshot_not_phase_completion_or_release_evidence",
+  "repository": {
+    "branch": "codex/dna-intelligence-v3",
+    "baselineGitSha": "06a3e7f64a31e15f1dbed9d2093da46848e4cc80",
+    "workingTreeClean": false,
+    "identityBoundary": "The baseline commit and the exact artifact hashes below identify this in-progress snapshot. A dirty worktree cannot be represented as an immutable release commit and therefore cannot authorize preview or production promotion."
+  },
+  "programPosition": {
+    "currentPhase": 38,
+    "lastCompletedPhase": 37,
+    "ownerBookPhase": "phase_3_deferred_owner_book",
+    "ownerBookReleaseBlocking": true,
+    "orderedProgramComplete": false
+  },
+  "runtimeBoundary": {
+    "currentGeneration": "v2_legacy",
+    "v3Activation": "no_go_release_attestation_gated",
+    "v3DeploymentPerformed": false,
+    "v3PromotionPerformed": false,
+    "v3RuntimeSources": 0,
+    "v3RuntimePassages": 0,
+    "v3RuntimeClaims": 0,
+    "v3RuntimeRelations": 0,
+    "v3ReleaseEligibleCandidateRecords": 0,
+    "safeDefaultAndRollbackVerified": true
+  },
+  "engineAuthority": {
+    "engineVersion": "dna-chat-engine@3",
+    "sourceClosure": "118_of_118",
+    "sourceListSha256": "574e436f10ee30c5862947f2e48471a347386e6c264cf31bb2b2cb7aecc0bd97",
+    "engineCodeSha256": "ad79427b637a3c69a5c3c5d6044b28774a3d4b98fd544c9acf6ff130d4bd657b",
+    "authorityFileRawBytesSha256": "d76a31c8a3a48c45b067609cfddc32cafaac455cc609ef5a66fce0d3ca8d1147"
+  },
+  "evaluationAuthority": {
+    "developmentRegressionItems": 1856,
+    "developmentSemanticFamilies": 1756,
+    "developmentCollectionSha256": "ffb23823428fc7105eca8928bc971bfb8e640e1be0971a6683c69c749988898c",
+    "developmentHistoryLedgerSha256": "683b2b03495264425fa4be1d32934769022def5152ba80d554c1ec3027a5d385",
+    "developmentHistoryAuthorityCanonicalSha256": "63b74a88efe63bdcba8d564ce927f760206cfa14c14f5d271eef34a46d3dcd39",
+    "developmentHistoryAuthorityFileRawBytesSha256": "c2faba18098409f494d0b2560381c377fc9a8d6adbaec5df4852ac24600eb697",
+    "lockedInternalBenchmark": "0_of_2400",
+    "lockedInternalBenchmarkVisibleDuringTuning": false,
+    "variationBank": "0_of_10000",
+    "independentEvaluation": "not_commissioned",
+    "claimableAsIndependentClinicalValidation": false,
+    "semanticAuthorityResolution": {
+      "classes": [
+        "external_science",
+        "dna_product",
+        "safety_policy",
+        "case_policy",
+        "unsupported_boundary"
+      ],
+      "realRegistryResolutionRequiredAtSeal": true,
+      "dnaProductRequiresLockedOwnerBook": true,
+      "dnaProductSealPossibleBeforeOwnerBook": false,
+      "authorityRegistryHashBoundToBenchmarkManifest": true
+    }
+  },
+  "sourceIntegrity": {
+    "sourceCount": 47,
+    "verifiedClean": 33,
+    "pending": 14,
+    "corrected": 0,
+    "superseded": 0,
+    "quarantined": 0,
+    "withdrawn": 0,
+    "authorityUnavailable": 3,
+    "updateSignals": 2,
+    "immutableAuditRuns": 6,
+    "runtimeReleased": 0,
+    "repoSnapshotRawBytesSha256": "d68e8cb3b964a91bd2d603a0e31856f3d1d9f3518eb6767e83a3d2313ef2e218",
+    "ssdAuditRawBytesSha256": "11cfe4dc4499ac680c84dc068ac43b2d4e57755b78ae7fe5fdbc7e2981e984c1",
+    "interpretationBoundary": "verified_clean means only that the source passed the integrity gate at the audit timestamp; it does not grant scientific, passage, claim, runtime, or release authority."
+  },
+  "sourceGovernance": {
+    "identityVerified": 39,
+    "identityPending": 8,
+    "identityMismatch": 0,
+    "componentMatrices": 47,
+    "componentsAudited": 376,
+    "passageLicense": {
+      "cleared": 24,
+      "unknown": 6,
+      "restricted": 14,
+      "metadataOnly": 3,
+      "runtimeReleased": 0
+    },
+    "jatsReadOnlyVerification": {
+      "declaredRecords": 26,
+      "verifiedNarrativePassageRecords": 24,
+      "syntheticCases": 24,
+      "negativeSyntheticCases": 21,
+      "inspectionVersion": "dna-jats-license-inspector@2",
+      "auditorScriptSha256": "76e86cca3bc07cb338e3d55e2c8ffe2dbd96ff502bf9d1e009d926179696e907",
+      "blocked": [
+        {
+          "sourceId": "electrical-chemical-transmission-2024",
+          "reasonCode": "jats_license_url_missing"
+        },
+        {
+          "sourceId": "tripod-ai-2024",
+          "reasonCode": "jats_permissions_block_noncommercial"
+        }
+      ]
+    },
+    "repoSnapshotRawBytesSha256": "97d2de01aec3cc70efe71876bfbba14179dd49c8f7d45a20630158ff30cab412",
+    "componentLicenseAuditRawBytesSha256": "8e9ea5404726980132c0693a3b0d9abaa810ca2db717043d0b7e09da3256e1ee"
+  },
+  "candidateCorpus": {
+    "status": "candidate_only",
+    "artifactCount": 26,
+    "paragraphCount": 1724,
+    "exclusionCount": 401,
+    "integrityClearedArtifacts": 23,
+    "passageLicenseClearedArtifacts": 24,
+    "crossGateEligibleArtifacts": 22,
+    "methodReviewWorkpacks": 22,
+    "releaseEligible": 0,
+    "declaredManifestSha256": "208728a3d63f3b26acb84f7df76f5ecb623f45dbc24e01d981cf9d502392dff4",
+    "manifestFileRawBytesSha256": "b8ae8c9641ebe8af6efe09f93d3e2edcf41360e9bae87a15a5ab18e49c6a3e4a",
+    "declaredWorkpackIndexSha256": "b70e3c295d3743599c8400c624b55f090ee34385cf2e6fe0d3638ef8d031ebe5",
+    "workpackIndexFileRawBytesSha256": "4d98a136a11ab708e02948668f8296c5b005bbab6a59de403d94d1136a406985"
+  },
+  "methodAppraisalPilot": {
+    "sourceId": "sleep-emotional-reactivity-meta-2022",
+    "status": "candidate_chain_rereview_verified_not_registered",
+    "methodFields": 20,
+    "adaptedGradeDimensions": 5,
+    "resolvedParagraphLocators": 58,
+    "sourceFidelityAfterNarrowing": "25_of_25",
+    "currentWorkpackSha256": "a6aca4b309996a44f23308378fcfd91b22ba98ee6d0f0dd6c5fb404d521a6296",
+    "currentWorkpackFileRawBytesSha256": "49d3caec15cc6ebe7838964274d256c40df9f116c3a2e02fc380f3ea9bd51fed",
+    "governanceEnvelopeRebound": true,
+    "scientificPayloadChainUnchanged": true,
+    "negativeTamperSelfTests": 3,
+    "meaningfulRereviewChanges": 1,
+    "unchangedOtherFields": 24,
+    "changeBoundary": "Only the unsupported frequency implication in methodFields.missingData was narrowed; the original reconciliation remains immutable.",
+    "passAFileRawBytesSha256": "15ea18f659e4748f379536f3d0e89dcc0f6f95d85cb555041354854c50e90c08",
+    "passBFileRawBytesSha256": "2ebd7580a52d3d073aa0ff4abda4cd49cfe26f84526946d8250421ea8f1784aa",
+    "passBIndependenceAttestationFileRawBytesSha256": "3ccbd6633961caf28428e560dfffc7003f10527e26609e48ecd2514cde5f810f",
+    "originalReconciliationFileRawBytesSha256": "c156e9d461b40bc4f6d56afbb1114f86628b8d171f4b54b898e44fef044ccb83",
+    "rereviewFileRawBytesSha256": "21eaf780823798c8170b94cf578753acd644faae58b50547532a8cf565a476be",
+    "rereviewCanonicalPayloadSha256": "08db15c66e014092d8200715aa6dad9761d8310c758b407425ec917e77401477",
+    "effectiveReconciliationBytesSha256": "8c10c950b653e607da9ff97d671db84f7fa0dc32274dcd4daf2694adcb74340c",
+    "registeredMethodAppraisals": 0,
+    "runtimeEligible": false,
+    "releaseEligible": false
+  },
+  "verification": {
+    "testedAt": "2026-07-20T13:51:13+03:00",
+    "passedCommands": [
+      "node scripts/audit-dna-source-governance-online.mjs --self-test-jats-license",
+      "RESEARCH_SSD_ROOT=/Volumes/ResearchSSD node scripts/audit-dna-source-governance-online.mjs --verify-jats-licenses-read-only",
+      "npm run chat:source-appraisal",
+      "npm run chat:method-appraisal-pilot:ssd",
+      "RESEARCH_SSD_ROOT=/Volumes/ResearchSSD npm run chat:governance-v3:ssd",
+      "npm run chat:quality",
+      "npm run chat:security",
+      "npm run chat:determinism",
+      "npm run chat:api",
+      "npm run chat:forbidden-imports",
+      "npm run lint",
+      "npm run build",
+      "git diff --check"
+    ],
+    "pendingCommands": [],
+    "diagnosticNotes": [
+      "A concurrent lint/build attempt observed transient missing .next/types files while build regenerated that directory. The authoritative serial lint run after the successful build passed."
+    ]
+  },
+  "releaseBlockers": [
+    "owner_book_not_supplied",
+    "owner_approved_product_claim_bindings_missing",
+    "source_integrity_pending_14",
+    "source_method_appraisals_pending_47",
+    "accepted_real_passages_zero",
+    "phase20_24_real_review_bundles_zero",
+    "authorized_conflict_relationship_and_publication_records_zero",
+    "v3_static_package_empty",
+    "v3_release_attestation_absent",
+    "locked_benchmark_0_of_2400",
+    "variation_bank_0_of_10000",
+    "phase41_44_observations_absent",
+    "independent_human_evaluation_not_commissioned",
+    "preview_and_production_verification_manifests_absent",
+    "staged_rollout_authority_absent"
+  ],
+  "limitations": [
+    "This snapshot does not complete Phase 38 or any later ordered program phase.",
+    "Candidate passages and one completed appraisal pilot are not released knowledge and cannot enter runtime.",
+    "The locked benchmark and variation bank cannot be authored honestly until released V3 claims and passages exist.",
+    "No preview or production deployment or promotion was performed for V3."
+  ]
+}

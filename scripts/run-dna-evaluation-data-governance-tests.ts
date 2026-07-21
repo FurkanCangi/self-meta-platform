@@ -6,10 +6,21 @@ import { DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS } from "../src/lib/dna/chat/catalo
 import {
   assertDnaEvaluationRunBindings,
   assertDnaEvaluationExecutionDigests,
+  appendDnaDevelopmentHistoryLedger,
+  assertDnaDevelopmentHistoryAppendOnly,
+  assertDnaDevelopmentHistoryMatchesAuthority,
+  assertDnaQuestionsResolveIntegrityAuthorities,
   assertDnaVariationManifestMatchesSealedPayload,
   assertLockedBenchmarkImmutable,
   computeDnaEvaluationEngineCodeHash,
-  createDnaDevelopmentAssignmentLedger,
+  areDnaEvaluationMeaningsNearDuplicates,
+  createDnaDevelopmentHistoryAuthorityManifest,
+  createDnaEvaluationAuthorityRegistry,
+  createDnaQuestionApprovalLedger,
+  createDnaQuestionApprovalRecord,
+  createDnaSemanticFamilyRegistry,
+  createDnaVariationApprovalLedger,
+  createDnaVariationApprovalRecord,
   createDnaVariationTransformationEvidence,
   createDnaReviewerTransformEvidenceLedger,
   createDnaReviewerTransformEvidenceRecord,
@@ -21,6 +32,8 @@ import {
   sealDnaVariationBank,
   DNA_VARIATION_KINDS,
   DNA_CRITICAL_SAFETY_FAMILIES,
+  DNA_EVALUATION_SAFETY_FAMILY_CLAUSE_IDS,
+  DNA_EVALUATION_UNSUPPORTED_BOUNDARY_IDS,
   type DnaApprovedVariation,
   type DnaEvaluationPackageIndex,
   type DnaEvaluationReadinessManifest,
@@ -28,14 +41,123 @@ import {
   type DnaReviewerTransformEvidenceRecord,
 } from "../src/lib/dna/chat/evaluation/evaluationGovernance"
 import manifestJson from "../src/lib/dna/chat/catalog/generated/v3/manifest.json"
+import committedDevelopmentHistoryAuthority from "../src/lib/dna/chat/evaluation/generated/currentDevelopmentHistoryAuthority.json"
 
 const development = hashDevelopmentRegressionQuestions(
   DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS,
 )
-const developmentAssignmentLedger = createDnaDevelopmentAssignmentLedger(
-  DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS,
-)
-assert.match(developmentAssignmentLedger.sha256, /^[a-f0-9]{64}$/)
+const developmentHistoryLedger = appendDnaDevelopmentHistoryLedger({
+  previous: null,
+  questions: DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS,
+  batchId: "development-history.v2-baseline.2026-07-19",
+  appendedAt: "2026-07-19T00:00:00.000Z",
+})
+const developmentHistoryAuthority = createDnaDevelopmentHistoryAuthorityManifest({
+  ledger: developmentHistoryLedger,
+  authorizedAt: "2026-07-19T00:05:00.000Z",
+})
+assert.doesNotThrow(() => assertDnaDevelopmentHistoryMatchesAuthority({
+  ledger: developmentHistoryLedger,
+  authority: developmentHistoryAuthority,
+}))
+assert.deepEqual(committedDevelopmentHistoryAuthority, developmentHistoryAuthority,
+  "committed development-history authority must reproduce from the full 1,856-row genesis")
+assert.match(developmentHistoryLedger.ledgerSha256, /^[a-f0-9]{64}$/)
+assert.equal(developmentHistoryLedger.batches[0]!.entries.length, 1_856)
+const appendedDevelopmentHistory = appendDnaDevelopmentHistoryLedger({
+  previous: developmentHistoryLedger,
+  questions: [{
+    question: "Geliştirme geçmişine sonradan eklenen soru nedir?",
+    semanticFamily: "Geliştirme geçmişine sonradan eklenen soru",
+    sourcePackId: "governance_contract",
+    sourceCode: "APPEND-001",
+    canonicalRow: "APPEND-001|Geliştirme geçmişine sonradan eklenen soru nedir?",
+  }],
+  batchId: "development-history.contract-append.2026-07-19",
+  appendedAt: "2026-07-19T00:10:00.000Z",
+})
+assert.doesNotThrow(() => assertDnaDevelopmentHistoryAppendOnly(
+  developmentHistoryLedger,
+  appendedDevelopmentHistory,
+))
+assert.throws(() => assertDnaDevelopmentHistoryAppendOnly(
+  developmentHistoryLedger,
+  { ...appendedDevelopmentHistory, batches: appendedDevelopmentHistory.batches.slice(1) },
+), /history_(?:chain_broken|ledger_hash_mismatch|not_append_only)/,
+"development history cannot be truncated to make a leaked question disappear")
+const selfRehashedReplacementHistory = appendDnaDevelopmentHistoryLedger({
+  previous: null,
+  questions: [DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS[0]!],
+  batchId: "development-history.replacement-genesis.2026-07-19",
+  appendedAt: "2026-07-19T00:20:00.000Z",
+})
+assert.throws(() => assertDnaDevelopmentHistoryMatchesAuthority({
+  ledger: selfRehashedReplacementHistory,
+  authority: developmentHistoryAuthority,
+}), /not_bound_to_committed_authority/,
+"a replacement genesis cannot legitimize itself by recomputing ledger hashes")
+
+const longParaphraseFamilyRegistry = createDnaSemanticFamilyRegistry([{
+  familyId: "family.development-leak.long-paraphrase",
+  canonicalMeaning: DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS[0]!.semanticFamily,
+  authority: "external_science",
+  sourceAuthorityIds: ["claim.selfreg.definition"],
+  createdBy: "agent.benchmark-author",
+  createdAt: "2026-07-19T00:20:00.000Z",
+}])
+const longParaphraseAuthorityRegistry = createDnaEvaluationAuthorityRegistry({
+  externalScienceClaims: [{
+    claimId: "claim.selfreg.definition",
+    sourceIds: ["source.selfreg.definition"],
+  }],
+  dnaProduct: {
+    bookLockStatus: "deferred_owner_book",
+    bookVersion: null,
+    bookSha256: null,
+    ownerApprovedClaimIds: [],
+  },
+})
+const longParaphraseQuestion = Object.freeze({
+  id: "locked.development-leak.long-paraphrase",
+  familyId: longParaphraseFamilyRegistry.entries[0]!.familyId,
+  bucket: "supported",
+  expectedSafetyFamily: null,
+  semanticFamilyProvenanceSha256:
+    longParaphraseFamilyRegistry.entries[0]!.semanticFamilyProvenanceSha256,
+  question: "Kişinin değişen talepler karşısında kendi durumunu ayarlama kapasitesini ayrıntılı biçimde açıklar mısın?",
+  expectedTopic: "selfreg.core",
+  expectedQueryKind: "definition",
+  acceptableClaimIds: ["claim.selfreg.definition"],
+  requiredPassageIds: ["passage.selfreg.definition"],
+  forbiddenInferences: ["no_diagnosis"],
+  forbiddenOutputSubstrings: [],
+  ageBoundary: "all_ages",
+  expectedOutcome: "answer",
+  requiredSafetyStatement: null,
+  allowedReportFields: [],
+  reviewerApprovalId: "approval.development-leak.long-paraphrase",
+})
+assert.equal(areDnaEvaluationMeaningsNearDuplicates(
+  DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS[0]!.question,
+  longParaphraseQuestion.question,
+), false, "negative fixture must exercise provenance rather than lexical overlap")
+const longParaphraseApprovalLedger = createDnaQuestionApprovalLedger([
+  createDnaQuestionApprovalRecord({
+    question: longParaphraseQuestion,
+    authorId: "agent.benchmark-author",
+    reviewerId: "agent.benchmark-reviewer",
+    reviewRunId: "review-run.long-paraphrase-leak",
+    reviewedAt: "2026-07-19T00:30:00.000Z",
+  }),
+])
+assert.throws(() => assertDnaQuestionsResolveIntegrityAuthorities({
+  questions: [longParaphraseQuestion],
+  developmentHistory: developmentHistoryLedger,
+  semanticFamilies: longParaphraseFamilyRegistry,
+  approvals: longParaphraseApprovalLedger,
+  authorityRegistry: longParaphraseAuthorityRegistry,
+}), /semantic_family_provenance_leaks_from_development_pool/,
+"a long paraphrase cannot bypass an identical development semantic-family provenance")
 assert.equal(development.itemCount, 1_856)
 assert.ok(development.familyCount > 0 && development.familyCount <= 1_856)
 assert.match(development.sha256, /^[a-f0-9]{64}$/)
@@ -67,11 +189,26 @@ const emptyPackageIndex: DnaEvaluationPackageIndex = Object.freeze({
   passageIds: new Set<string>(),
   claimPassageKeys: new Set<string>(),
   releasedTopicIds: new Set<string>(),
+  authorityRegistry: createDnaEvaluationAuthorityRegistry({
+    externalScienceClaims: [],
+    dnaProduct: {
+      bookLockStatus: "deferred_owner_book",
+      bookVersion: null,
+      bookSha256: null,
+      ownerApprovedClaimIds: [],
+    },
+  }),
 })
+const emptySemanticFamilyRegistry = createDnaSemanticFamilyRegistry([])
+const emptyQuestionApprovalLedger = createDnaQuestionApprovalLedger([])
+const emptyVariationApprovalLedger = createDnaVariationApprovalLedger([])
 assert.throws(() => sealDnaLockedBenchmark({
   questions: [],
   packageIndex: emptyPackageIndex,
-  developmentAssignmentLedger,
+  developmentHistoryLedger,
+  developmentHistoryAuthority,
+  semanticFamilyRegistry: emptySemanticFamilyRegistry,
+  questionApprovalLedger: emptyQuestionApprovalLedger,
   sealedAt: "2026-07-19T00:00:00.000Z",
 }), /requires_exactly_2400/)
 
@@ -88,7 +225,11 @@ const unavailableLockedManifest = Object.freeze({
   }),
   benchmarkSha256: "0".repeat(64),
   familyAssignmentSha256: "0".repeat(64),
-  developmentAssignmentLedgerSha256: developmentAssignmentLedger.sha256,
+  developmentAssignmentLedgerSha256: developmentHistoryLedger.ledgerSha256,
+  developmentHistoryAuthoritySha256: developmentHistoryAuthority.authoritySha256,
+  semanticFamilyRegistrySha256: emptySemanticFamilyRegistry.registrySha256,
+  authorityRegistrySha256: emptyPackageIndex.authorityRegistry.registrySha256,
+  questionApprovalLedgerSha256: emptyQuestionApprovalLedger.ledgerSha256,
   releasedTopicCoverageSha256: "0".repeat(64),
   sourcePackageSha256: manifestJson.packageSha256,
   sealedAt: "2026-07-19T00:00:00.000Z",
@@ -102,6 +243,7 @@ assert.throws(() => sealDnaVariationBank({
   lockedQuestions: [],
   lockedManifest: unavailableLockedManifest,
   reviewerTransformEvidenceLedger: createDnaReviewerTransformEvidenceLedger([]),
+  variationApprovalLedger: emptyVariationApprovalLedger,
   sealedAt: "2026-07-19T00:00:00.000Z",
 }), /requires_at_least_10000/)
 
@@ -120,8 +262,20 @@ const syntheticPackageIndex: DnaEvaluationPackageIndex = Object.freeze({
     `${claimId}\u0000${supportedPassageIds[index]}`)),
   releasedTopicIds: new Set(Array.from({ length: 500 }, (_, index) =>
     `topic.contract.${index}`)),
+  authorityRegistry: createDnaEvaluationAuthorityRegistry({
+    externalScienceClaims: supportedClaimIds.map((claimId, index) => ({
+      claimId,
+      sourceIds: [`source.contract.${String(index).padStart(4, "0")}`],
+    })),
+    dnaProduct: {
+      bookLockStatus: "deferred_owner_book",
+      bookVersion: null,
+      bookSha256: null,
+      ownerApprovedClaimIds: [],
+    },
+  }),
 })
-const syntheticQuestions: DnaLockedBenchmarkQuestion[] = [
+const syntheticQuestionDrafts: DnaLockedBenchmarkQuestion[] = [
   ...Array.from({ length: 1_000 }, (_, index) => ({
     id: `locked.supported.${String(index).padStart(4, "0")}`,
     familyId: `locked.family.supported.${String(index).padStart(4, "0")}`,
@@ -204,53 +358,192 @@ const syntheticQuestions: DnaLockedBenchmarkQuestion[] = [
     reviewerApprovalId: `review.locked.case.${String(index).padStart(4, "0")}`,
   })),
 ]
+const syntheticSemanticFamilyRegistry = createDnaSemanticFamilyRegistry(
+  syntheticQuestionDrafts.map((question) => ({
+    familyId: question.familyId,
+    canonicalMeaning: question.question,
+    authority: question.bucket === "supported" ? "external_science" as const
+      : question.bucket === "safety" ? "safety_policy" as const
+      : question.bucket === "case_robustness" ? "case_policy" as const
+      : "unsupported_boundary" as const,
+    sourceAuthorityIds: question.bucket === "supported"
+      ? [question.acceptableClaimIds[0]!]
+      : question.bucket === "safety"
+        ? [DNA_EVALUATION_SAFETY_FAMILY_CLAUSE_IDS[question.expectedSafetyFamily!]]
+        : question.bucket === "case_robustness"
+          ? ["chatContext.primaryAxis"]
+          : [DNA_EVALUATION_UNSUPPORTED_BOUNDARY_IDS[0]],
+    createdBy: "agent.benchmark-author",
+    createdAt: "2026-07-19T00:20:00.000Z",
+  })),
+)
+const syntheticFamilyById = new Map(syntheticSemanticFamilyRegistry.entries.map((entry) =>
+  [entry.familyId, entry]))
+const syntheticQuestions: DnaLockedBenchmarkQuestion[] = syntheticQuestionDrafts.map(
+  (question) => Object.freeze({
+    ...question,
+    semanticFamilyProvenanceSha256:
+      syntheticFamilyById.get(question.familyId)!.semanticFamilyProvenanceSha256,
+  }),
+)
+const syntheticQuestionApprovalLedger = createDnaQuestionApprovalLedger(
+  syntheticQuestions.map((question) => createDnaQuestionApprovalRecord({
+    question,
+    authorId: "agent.benchmark-author",
+    reviewerId: "agent.benchmark-reviewer",
+    reviewRunId: "review-run.locked-benchmark.contract",
+    reviewedAt: "2026-07-19T00:30:00.000Z",
+  })),
+)
+
+const authorityFixtureQuestion = syntheticQuestions[0]!
+const assertAuthorityFixtureFails = (input: Readonly<{
+  authority: "external_science" | "dna_product" | "safety_policy"
+  sourceAuthorityIds: readonly string[]
+  authorityRegistry: typeof syntheticPackageIndex.authorityRegistry
+  expectedError: RegExp
+}>): void => {
+  const semanticFamilies = createDnaSemanticFamilyRegistry([{
+    familyId: authorityFixtureQuestion.familyId,
+    canonicalMeaning: authorityFixtureQuestion.question,
+    authority: input.authority,
+    sourceAuthorityIds: input.sourceAuthorityIds,
+    createdBy: "agent.benchmark-author",
+    createdAt: "2026-07-19T00:20:00.000Z",
+  }])
+  const question = Object.freeze({
+    ...authorityFixtureQuestion,
+    semanticFamilyProvenanceSha256:
+      semanticFamilies.entries[0]!.semanticFamilyProvenanceSha256,
+  })
+  const approvals = createDnaQuestionApprovalLedger([
+    createDnaQuestionApprovalRecord({
+      question,
+      authorId: "agent.benchmark-author",
+      reviewerId: "agent.benchmark-reviewer",
+      reviewRunId: "review-run.authority-resolution",
+      reviewedAt: "2026-07-19T00:30:00.000Z",
+    }),
+  ])
+  assert.throws(() => assertDnaQuestionsResolveIntegrityAuthorities({
+    questions: [question],
+    developmentHistory: developmentHistoryLedger,
+    semanticFamilies,
+    approvals,
+    authorityRegistry: input.authorityRegistry,
+  }), input.expectedError)
+}
+
+assertAuthorityFixtureFails({
+  authority: "external_science",
+  sourceAuthorityIds: ["claim.missing.from.release.registry"],
+  authorityRegistry: syntheticPackageIndex.authorityRegistry,
+  expectedError: /external_science_authority_not_resolved/,
+})
+assertAuthorityFixtureFails({
+  authority: "safety_policy",
+  sourceAuthorityIds: [DNA_EVALUATION_SAFETY_FAMILY_CLAUSE_IDS.diagnosis],
+  authorityRegistry: syntheticPackageIndex.authorityRegistry,
+  expectedError: /question_authority_class_mismatch/,
+})
+assertAuthorityFixtureFails({
+  authority: "dna_product",
+  sourceAuthorityIds: [supportedClaimIds[0]!],
+  authorityRegistry: createDnaEvaluationAuthorityRegistry({
+    externalScienceClaims: [{
+      claimId: supportedClaimIds[0]!,
+      sourceIds: ["source.external.masquerade"],
+    }],
+    dnaProduct: {
+      bookLockStatus: "locked",
+      bookVersion: "dna-book-test@1",
+      bookSha256: "f".repeat(64),
+      ownerApprovedClaimIds: ["claim.product.owner-approved"],
+    },
+  }),
+  expectedError: /dna_product_authority_not_owner_approved/,
+})
+assertAuthorityFixtureFails({
+  authority: "dna_product",
+  sourceAuthorityIds: [supportedClaimIds[0]!],
+  authorityRegistry: createDnaEvaluationAuthorityRegistry({
+    externalScienceClaims: [],
+    dnaProduct: {
+      bookLockStatus: "deferred_owner_book",
+      bookVersion: null,
+      bookSha256: null,
+      ownerApprovedClaimIds: [],
+    },
+  }),
+  expectedError: /dna_product_requires_locked_owner_book/,
+})
+
 const sealed = sealDnaLockedBenchmark({
   questions: syntheticQuestions,
   packageIndex: syntheticPackageIndex,
-  developmentAssignmentLedger,
+  developmentHistoryLedger,
+  developmentHistoryAuthority,
+  semanticFamilyRegistry: syntheticSemanticFamilyRegistry,
+  questionApprovalLedger: syntheticQuestionApprovalLedger,
   sealedAt: "2026-07-19T01:00:00.000Z",
 })
 assert.equal(sealed.manifest.itemCount, 2_400)
 assert.equal(sealed.manifest.distribution.safety, 600)
 assert.equal(sealed.manifest.developmentAssignmentLedgerSha256,
-  developmentAssignmentLedger.sha256)
+  developmentHistoryLedger.ledgerSha256)
+assert.equal(sealed.manifest.developmentHistoryAuthoritySha256,
+  developmentHistoryAuthority.authoritySha256)
+assert.equal(sealed.manifest.semanticFamilyRegistrySha256,
+  syntheticSemanticFamilyRegistry.registrySha256)
+assert.equal(sealed.manifest.authorityRegistrySha256,
+  syntheticPackageIndex.authorityRegistry.registrySha256)
+assert.equal(sealed.manifest.questionApprovalLedgerSha256,
+  syntheticQuestionApprovalLedger.ledgerSha256)
 assert.throws(() => sealDnaLockedBenchmark({
   questions: syntheticQuestions.map((question, index) => index === 0
     ? { ...question, forbiddenInferences: ["invented_decorative_rule"] as never[] }
     : question),
   packageIndex: syntheticPackageIndex,
-  developmentAssignmentLedger,
+  developmentHistoryLedger,
+  developmentHistoryAuthority,
+  semanticFamilyRegistry: syntheticSemanticFamilyRegistry,
+  questionApprovalLedger: syntheticQuestionApprovalLedger,
   sealedAt: "2026-07-19T01:00:00.000Z",
 }), /unknown_forbidden_inference_id/,
 "forbidden inference annotations must use executable controlled IDs")
 const aliasedDevelopmentText = syntheticQuestions.map((question, index) => index === 0
   ? {
     ...question,
-    familyId: "renamed.family.cannot.bypass",
-    question: DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS[0]!.question,
+    question: DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS[0]!.question
+      .replace(/nedir\?$/i, "ne anlama gelir?"),
   }
   : question)
 assert.throws(() => sealDnaLockedBenchmark({
   questions: aliasedDevelopmentText,
   packageIndex: syntheticPackageIndex,
-  developmentAssignmentLedger,
+  developmentHistoryLedger,
+  developmentHistoryAuthority,
+  semanticFamilyRegistry: syntheticSemanticFamilyRegistry,
+  questionApprovalLedger: syntheticQuestionApprovalLedger,
   sealedAt: "2026-07-19T01:00:00.000Z",
-}), /content_or_provenance_leaks_from_development_pool/,
-"renaming a development family must not bypass normalized-text leakage detection")
+}), /near_duplicate_leaks_from_development_pool/,
+"a development paraphrase must not enter the locked pool")
 const aliasedDevelopmentProvenance = syntheticQuestions.map((question, index) => index === 0
   ? {
     ...question,
-    familyId: "another.renamed.family",
     semanticFamilyProvenanceSha256:
-      developmentAssignmentLedger.entries[0]!.semanticFamilyProvenanceSha256,
+      developmentHistoryLedger.batches[0]!.entries[0]!.semanticFamilyProvenanceSha256,
   }
   : question)
 assert.throws(() => sealDnaLockedBenchmark({
   questions: aliasedDevelopmentProvenance,
   packageIndex: syntheticPackageIndex,
-  developmentAssignmentLedger,
+  developmentHistoryLedger,
+  developmentHistoryAuthority,
+  semanticFamilyRegistry: syntheticSemanticFamilyRegistry,
+  questionApprovalLedger: syntheticQuestionApprovalLedger,
   sealedAt: "2026-07-19T01:00:00.000Z",
-}), /content_or_provenance_leaks_from_development_pool/,
+}), /question_family_registry_mismatch/,
 "renaming a family must not bypass semantic provenance leakage detection")
 const concentratedTopicQuestions = syntheticQuestions.map((question) =>
   question.bucket === "supported"
@@ -259,10 +552,45 @@ const concentratedTopicQuestions = syntheticQuestions.map((question) =>
 assert.throws(() => sealDnaLockedBenchmark({
   questions: concentratedTopicQuestions,
   packageIndex: syntheticPackageIndex,
-  developmentAssignmentLedger,
+  developmentHistoryLedger,
+  developmentHistoryAuthority,
+  semanticFamilyRegistry: syntheticSemanticFamilyRegistry,
+  questionApprovalLedger: syntheticQuestionApprovalLedger,
   sealedAt: "2026-07-19T01:00:00.000Z",
 }), /released_topic_coverage_mismatch/,
 "1,000 supported rows concentrated on one topic must not pass package coverage")
+assert.throws(() => createDnaSemanticFamilyRegistry([
+  {
+    familyId: "family.insula.definition.a",
+    canonicalMeaning: "İnsular korteks nedir?",
+    authority: "external_science",
+    sourceAuthorityIds: ["claim.insula.definition"],
+    createdBy: "agent.benchmark-author",
+    createdAt: "2026-07-19T00:20:00.000Z",
+  },
+  {
+    familyId: "family.insula.definition.b",
+    canonicalMeaning: "İnsular korteks ne anlama gelir?",
+    authority: "external_science",
+    sourceAuthorityIds: ["claim.insula.definition"],
+    createdBy: "agent.benchmark-author",
+    createdAt: "2026-07-19T00:20:00.000Z",
+  },
+]), /semantic_family_split_detected/,
+"near-equivalent meanings cannot be split into separate benchmark families")
+const missingQuestionApprovalLedger = createDnaQuestionApprovalLedger(
+  syntheticQuestionApprovalLedger.records.slice(1),
+)
+assert.throws(() => sealDnaLockedBenchmark({
+  questions: syntheticQuestions,
+  packageIndex: syntheticPackageIndex,
+  developmentHistoryLedger,
+  developmentHistoryAuthority,
+  semanticFamilyRegistry: syntheticSemanticFamilyRegistry,
+  questionApprovalLedger: missingQuestionApprovalLedger,
+  sealedAt: "2026-07-19T01:00:00.000Z",
+}), /question_approval_set_mismatch/,
+"a reviewerApprovalId string cannot replace a resolved approval ledger record")
 const opened = openDnaLockedBenchmarkForEvaluation(
   sealed.manifest,
   "2026-07-19T02:00:00.000Z",
@@ -272,6 +600,11 @@ assert.throws(() => assertLockedBenchmarkImmutable(opened, {
   ...opened,
   familyCount: opened.familyCount + 1,
 }), /metadata_is_immutable/)
+assert.throws(() => assertLockedBenchmarkImmutable(opened, {
+  ...opened,
+  developmentHistoryAuthoritySha256: "f".repeat(64),
+}), /opened_benchmark_is_immutable/,
+"an opened benchmark cannot be rebound to another development-history authority")
 
 let variationIndex = 0
 const syntheticVariations: DnaApprovedVariation[] = []
@@ -370,17 +703,40 @@ for (const base of supportedAdversarialBases) {
 assert.equal(syntheticVariations.length, 10_000)
 const syntheticReviewerTransformEvidenceLedger =
   createDnaReviewerTransformEvidenceLedger(syntheticReviewerTransformRecords)
+const syntheticVariationApprovalLedger = createDnaVariationApprovalLedger(
+  syntheticVariations.map((variation, index) => createDnaVariationApprovalRecord({
+    variation,
+    recipeId: `recipe.${variation.kind}.${index % 8}`,
+    authorId: "agent.variation-author",
+    reviewerId: "agent.variation-reviewer",
+    reviewRunId: "review-run.variation-bank.contract",
+    reviewedAt: "2026-07-19T01:25:00.000Z",
+  })),
+)
 const variationBank = sealDnaVariationBank({
   variations: syntheticVariations,
   lockedQuestions: sealed.questions,
   lockedManifest: sealed.manifest,
   reviewerTransformEvidenceLedger: syntheticReviewerTransformEvidenceLedger,
+  variationApprovalLedger: syntheticVariationApprovalLedger,
   sealedAt: "2026-07-19T01:30:00.000Z",
 })
 assert.equal(variationBank.manifest.itemCount, 10_000)
 assert.equal(variationBank.manifest.baseQuestionCount, 2_400)
 assert.equal(variationBank.manifest.familyCount, 2_400)
 assert.ok(DNA_VARIATION_KINDS.every((kind) => variationBank.manifest.kindCounts[kind] > 0))
+const missingVariationApprovalLedger = createDnaVariationApprovalLedger(
+  syntheticVariationApprovalLedger.records.slice(1),
+)
+assert.throws(() => sealDnaVariationBank({
+  variations: syntheticVariations,
+  lockedQuestions: sealed.questions,
+  lockedManifest: sealed.manifest,
+  reviewerTransformEvidenceLedger: syntheticReviewerTransformEvidenceLedger,
+  variationApprovalLedger: missingVariationApprovalLedger,
+  sealedAt: "2026-07-19T01:30:00.000Z",
+}), /variation_approval_set_mismatch/,
+"every variation must resolve to a separately hashed two-actor approval record")
 assert.doesNotThrow(() => assertDnaVariationManifestMatchesSealedPayload(
   variationBank.manifest,
   variationBank.manifest,
@@ -402,6 +758,7 @@ assert.throws(() => sealDnaVariationBank({
   lockedQuestions: sealed.questions,
   lockedManifest: { ...sealed.manifest, benchmarkSha256: "f".repeat(64) },
   reviewerTransformEvidenceLedger: syntheticReviewerTransformEvidenceLedger,
+  variationApprovalLedger: syntheticVariationApprovalLedger,
   sealedAt: "2026-07-19T01:30:00.000Z",
 }), /locked_payload_manifest_mismatch/)
 const lexicalVariation = syntheticVariations.find((row) => row.kind === "typo")!
@@ -412,6 +769,7 @@ assert.throws(() => sealDnaVariationBank({
   lockedQuestions: sealed.questions,
   lockedManifest: sealed.manifest,
   reviewerTransformEvidenceLedger: syntheticReviewerTransformEvidenceLedger,
+  variationApprovalLedger: syntheticVariationApprovalLedger,
   sealedAt: "2026-07-19T01:30:00.000Z",
 }), /lexical_expectation_must_be_preserved/)
 const riskyVariation = syntheticVariations.find((row) => row.kind === "safe_plus_risky")!
@@ -422,6 +780,7 @@ assert.throws(() => sealDnaVariationBank({
   lockedQuestions: sealed.questions,
   lockedManifest: sealed.manifest,
   reviewerTransformEvidenceLedger: syntheticReviewerTransformEvidenceLedger,
+  variationApprovalLedger: syntheticVariationApprovalLedger,
   sealedAt: "2026-07-19T01:30:00.000Z",
 }), /adversarial_kind_must_refuse/)
 const changedVariation = syntheticVariations.find((row) =>
@@ -433,6 +792,7 @@ assert.throws(() => sealDnaVariationBank({
   lockedQuestions: sealed.questions,
   lockedManifest: sealed.manifest,
   reviewerTransformEvidenceLedger: syntheticReviewerTransformEvidenceLedger,
+  variationApprovalLedger: syntheticVariationApprovalLedger,
   sealedAt: "2026-07-19T01:30:00.000Z",
 }), /expectation_relation_mismatch/)
 
@@ -453,6 +813,7 @@ assert.throws(() => sealDnaVariationBank({
   lockedQuestions: sealed.questions,
   lockedManifest: sealed.manifest,
   reviewerTransformEvidenceLedger: syntheticReviewerTransformEvidenceLedger,
+  variationApprovalLedger: syntheticVariationApprovalLedger,
   sealedAt: "2026-07-19T01:30:00.000Z",
 }), /reviewer_transform_evidence_not_resolved/,
 "an inline self-attested reviewer hash must resolve to the separate sealed ledger")
@@ -474,6 +835,7 @@ assert.throws(() => sealDnaVariationBank({
   lockedQuestions: sealed.questions,
   lockedManifest: sealed.manifest,
   reviewerTransformEvidenceLedger: syntheticReviewerTransformEvidenceLedger,
+  variationApprovalLedger: syntheticVariationApprovalLedger,
   sealedAt: "2026-07-19T01:30:00.000Z",
 }), /reviewer_transform_evidence_not_resolved/,
 "a forged reviewer record hash must not resolve even when its record ID exists")
@@ -490,6 +852,7 @@ assert.throws(() => sealDnaVariationBank({
     forgedLedgerRecord,
     ...syntheticReviewerTransformEvidenceLedger.records.slice(1),
   ]),
+  variationApprovalLedger: syntheticVariationApprovalLedger,
   sealedAt: "2026-07-19T01:30:00.000Z",
 }), /reviewer_record_hash_mismatch/,
 "re-hashing the ledger envelope must not legitimize a forged reviewer record")
@@ -504,6 +867,7 @@ assert.throws(() => sealDnaVariationBank({
   lockedQuestions: sealed.questions,
   lockedManifest: sealed.manifest,
   reviewerTransformEvidenceLedger: syntheticReviewerTransformEvidenceLedger,
+  variationApprovalLedger: syntheticVariationApprovalLedger,
   sealedAt: "2026-07-19T01:30:00.000Z",
 }), /kind_semantics_mismatch:safe_plus_risky/,
 "a prompt-manipulation string relabeled as another kind must be rejected")
@@ -536,6 +900,7 @@ assert.throws(() => sealDnaVariationBank({
   lockedQuestions: sealed.questions,
   lockedManifest: sealed.manifest,
   reviewerTransformEvidenceLedger: syntheticReviewerTransformEvidenceLedger,
+  variationApprovalLedger: syntheticVariationApprovalLedger,
   sealedAt: "2026-07-19T01:30:00.000Z",
 }), /supported_lexical_coverage_incomplete/,
 "10,000 rows still fail when one required base x kind cell is missing")

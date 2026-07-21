@@ -5,7 +5,6 @@ import { join, relative, resolve } from "node:path"
 
 import { z } from "zod"
 
-import { DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS } from "../src/lib/dna/chat/catalog"
 import claimPassageLinksJson from "../src/lib/dna/chat/catalog/generated/v3/claim-passage-links.json"
 import claimsJson from "../src/lib/dna/chat/catalog/generated/v3/claims.json"
 import lexicalIndexJson from "../src/lib/dna/chat/catalog/generated/v3/lexical-index.json"
@@ -14,21 +13,27 @@ import passagesJson from "../src/lib/dna/chat/catalog/generated/v3/passages.json
 import relationsJson from "../src/lib/dna/chat/catalog/generated/v3/relations.json"
 import sourcesJson from "../src/lib/dna/chat/catalog/generated/v3/sources.json"
 import type { DnaV3StaticPackage } from "../src/lib/dna/chat/catalog/generated/v3/types"
+import committedDevelopmentHistoryAuthorityJson from "../src/lib/dna/chat/evaluation/generated/currentDevelopmentHistoryAuthority.json"
 import {
+  assertDnaDevelopmentHistoryMatchesAuthority,
   assertDnaEvaluationRunBindings,
   assertDnaEvaluationExecutionDigests,
   assertCurrentDnaEvaluationEngineSourceClosure,
   assertDnaVariationManifestMatchesSealedPayload,
   computeDnaEvaluationEngineCodeHash,
-  createDnaDevelopmentAssignmentLedger,
   createDnaEvaluationPackageIndex,
   DNA_FORBIDDEN_INFERENCE_IDS,
   sealDnaLockedBenchmark,
   sealDnaVariationBank,
   type DnaApprovedVariation,
+  type DnaDevelopmentHistoryAuthorityManifest,
+  type DnaDevelopmentHistoryLedger,
   type DnaLockedBenchmarkManifest,
   type DnaLockedBenchmarkQuestion,
+  type DnaQuestionApprovalLedger,
   type DnaReviewerTransformEvidenceLedger,
+  type DnaSemanticFamilyRegistry,
+  type DnaVariationApprovalLedger,
   type DnaVariationBankManifest,
 } from "../src/lib/dna/chat/evaluation/evaluationGovernance"
 import {
@@ -135,6 +140,10 @@ const lockedManifestSchema = z.object({
   benchmarkSha256: sha256,
   familyAssignmentSha256: sha256,
   developmentAssignmentLedgerSha256: sha256,
+  developmentHistoryAuthoritySha256: sha256,
+  semanticFamilyRegistrySha256: sha256,
+  authorityRegistrySha256: sha256,
+  questionApprovalLedgerSha256: sha256,
   releasedTopicCoverageSha256: sha256,
   sourcePackageSha256: sha256,
   sealedAt: z.string().datetime({ offset: true }),
@@ -177,6 +186,7 @@ const variationManifestSchema = z.object({
   kindFamilyCounts: z.record(z.string(), z.number().int().nonnegative()),
   coverageSha256: sha256,
   reviewerTransformEvidenceLedgerSha256: sha256,
+  variationApprovalLedgerSha256: sha256,
   variationSha256: sha256,
   lockedBenchmarkSha256: sha256,
   sealedAt: z.string().datetime({ offset: true }),
@@ -488,21 +498,44 @@ try {
   const lockedManifest = lockedManifestSchema.parse(readJson(join(
     evaluationRoot, "locked-benchmark/manifest.json",
   ))) as DnaLockedBenchmarkManifest
+  const developmentHistoryLedger = readJson(join(
+    evaluationRoot, "development-history/ledger.json",
+  )) as DnaDevelopmentHistoryLedger
+  const developmentHistoryAuthority = committedDevelopmentHistoryAuthorityJson as unknown as DnaDevelopmentHistoryAuthorityManifest
+  assertDnaDevelopmentHistoryMatchesAuthority({
+    ledger: developmentHistoryLedger,
+    authority: developmentHistoryAuthority,
+  })
+  const semanticFamilyRegistry = readJson(join(
+    evaluationRoot, "locked-benchmark/semantic-families.json",
+  )) as DnaSemanticFamilyRegistry
+  const questionApprovalLedger = readJson(join(
+    evaluationRoot, "locked-benchmark/question-approvals.json",
+  )) as DnaQuestionApprovalLedger
   if (lockedManifest.state !== "opened_for_evaluation" || !lockedManifest.openedAt) {
     throw new Error("locked_benchmark_not_opened_for_release_evaluation")
   }
   const recomputedLocked = sealDnaLockedBenchmark({
     questions,
     packageIndex,
-    developmentAssignmentLedger: createDnaDevelopmentAssignmentLedger(
-      DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS,
-    ),
+    developmentHistoryLedger,
+    developmentHistoryAuthority,
+    semanticFamilyRegistry,
+    questionApprovalLedger,
     sealedAt: lockedManifest.sealedAt,
   })
   if (recomputedLocked.manifest.benchmarkSha256 !== lockedManifest.benchmarkSha256
     || recomputedLocked.manifest.familyAssignmentSha256 !== lockedManifest.familyAssignmentSha256
     || recomputedLocked.manifest.developmentAssignmentLedgerSha256
       !== lockedManifest.developmentAssignmentLedgerSha256
+    || recomputedLocked.manifest.developmentHistoryAuthoritySha256
+      !== lockedManifest.developmentHistoryAuthoritySha256
+    || recomputedLocked.manifest.semanticFamilyRegistrySha256
+      !== lockedManifest.semanticFamilyRegistrySha256
+    || recomputedLocked.manifest.authorityRegistrySha256
+      !== lockedManifest.authorityRegistrySha256
+    || recomputedLocked.manifest.questionApprovalLedgerSha256
+      !== lockedManifest.questionApprovalLedgerSha256
     || recomputedLocked.manifest.releasedTopicCoverageSha256
       !== lockedManifest.releasedTopicCoverageSha256
     || recomputedLocked.manifest.sourcePackageSha256 !== lockedManifest.sourcePackageSha256
@@ -520,6 +553,9 @@ try {
   const reviewerTransformEvidenceLedger = reviewerTransformEvidenceLedgerSchema.parse(readJson(join(
     evaluationRoot, "variation-bank/reviewer-transform-evidence.json",
   ))) as DnaReviewerTransformEvidenceLedger
+  const variationApprovalLedger = readJson(join(
+    evaluationRoot, "variation-bank/variation-approvals.json",
+  )) as DnaVariationApprovalLedger
   if (Date.parse(variationManifest.sealedAt) > Date.parse(lockedManifest.openedAt)) {
     throw new Error("variation_bank_sealed_after_locked_benchmark_opened")
   }
@@ -528,6 +564,7 @@ try {
     lockedQuestions: recomputedLocked.questions,
     lockedManifest: recomputedLocked.manifest,
     reviewerTransformEvidenceLedger,
+    variationApprovalLedger,
     sealedAt: variationManifest.sealedAt,
   })
   assertDnaVariationManifestMatchesSealedPayload(

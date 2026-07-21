@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "dna-development-history-authority@1",
+  "state": "locked",
+  "ledgerSha256": "683b2b03495264425fa4be1d32934769022def5152ba80d554c1ec3027a5d385",
+  "genesisBatchId": "development-history.v2-baseline.2026-07-19",
+  "genesisBatchSha256": "e3c4b9227f7163bf2a99ea210472b2b3cf411c2a2ca772d8f5060a1e36ac693f",
+  "genesisEntryCount": 1856,
+  "batchCount": 1,
+  "entryCount": 1856,
+  "lastBatchId": "development-history.v2-baseline.2026-07-19",
+  "lastBatchSha256": "e3c4b9227f7163bf2a99ea210472b2b3cf411c2a2ca772d8f5060a1e36ac693f",
+  "authorizedAt": "2026-07-19T00:05:00.000Z",
+  "authoritySha256": "63b74a88efe63bdcba8d564ce927f760206cfa14c14f5d271eef34a46d3dcd39"
+}

@@ -1,7 +1,22 @@
 import { createHash } from "node:crypto"
 
 import type { DnaV3StaticPackage } from "../catalog/generated/v3/types"
+import { DNA_CURRENT_OWNER_BOOK_LOCK } from "../governance/bookLock"
 import { collectDnaEvaluationEngineSourceClosure } from "./engineSourceClosure"
+import {
+  assertDnaDevelopmentHistoryMatchesAuthority,
+  assertDnaQuestionsResolveIntegrityAuthorities,
+  assertDnaVariationsResolveApprovalLedger,
+  createDnaEvaluationAuthorityRegistry,
+  type DnaDevelopmentHistoryAuthorityManifest,
+  type DnaDevelopmentHistoryLedger,
+  type DnaEvaluationAuthorityRegistry,
+  type DnaQuestionApprovalLedger,
+  type DnaSemanticFamilyRegistry,
+  type DnaVariationApprovalLedger,
+} from "./evaluationDatasetIntegrity"
+
+export * from "./evaluationDatasetIntegrity"
 
 export const DNA_EVALUATION_GOVERNANCE_VERSION =
   "dna-evaluation-governance@1" as const
@@ -27,6 +42,7 @@ export const DNA_EVALUATION_ENGINE_ROOT_FILES = Object.freeze([
   "src/lib/dna/chat/evaluation/evaluationGates.ts",
   "src/lib/dna/chat/evaluation/evaluationGovernance.ts",
   "src/lib/dna/chat/evaluation/evaluationReleaseAttestation.ts",
+  "src/lib/dna/chat/evaluation/generated/currentDevelopmentHistoryAuthority.json",
   "src/lib/dna/chat/governance/releaseCompiler.ts",
   "src/lib/dna/chat/governance/runtimeReleaseGate.ts",
   "src/lib/dna/chat/governance/v3EvidenceGraph.ts",
@@ -102,9 +118,11 @@ export const DNA_EVALUATION_ENGINE_SOURCE_FILES = Object.freeze([
   "src/lib/dna/chat/conversationPolicy.ts",
   "src/lib/dna/chat/engine.ts",
   "src/lib/dna/chat/evaluation/engineSourceClosure.ts",
+  "src/lib/dna/chat/evaluation/evaluationDatasetIntegrity.ts",
   "src/lib/dna/chat/evaluation/evaluationGates.ts",
   "src/lib/dna/chat/evaluation/evaluationGovernance.ts",
   "src/lib/dna/chat/evaluation/evaluationReleaseAttestation.ts",
+  "src/lib/dna/chat/evaluation/generated/currentDevelopmentHistoryAuthority.json",
   "src/lib/dna/chat/governance/bookLock.ts",
   "src/lib/dna/chat/governance/claimReviewGates.ts",
   "src/lib/dna/chat/governance/coverageMap.ts",
@@ -409,12 +427,24 @@ export type DnaEvaluationPackageIndex = Readonly<{
   passageIds: ReadonlySet<string>
   claimPassageKeys: ReadonlySet<string>
   releasedTopicIds: ReadonlySet<string>
+  authorityRegistry: DnaEvaluationAuthorityRegistry
 }>
 
 export function createDnaEvaluationPackageIndex(
   pkg: Pick<DnaV3StaticPackage,
   "manifest" | "claims" | "passages" | "claimPassageLinks" | "lexicalIndex">,
 ): DnaEvaluationPackageIndex {
+  const externalScienceClaims = pkg.claims
+    .filter((claim) => claim.authority === "external_scientific_information"
+      && claim.releaseStatus === "release_eligible")
+    .map((claim) => ({ claimId: claim.id, sourceIds: claim.sourceIds }))
+  const productClaims = pkg.claims
+    .filter((claim) => claim.authority === "dna_product_information"
+      && claim.releaseStatus === "owner_approved")
+  const ownerApprovedClaimIds = DNA_CURRENT_OWNER_BOOK_LOCK.status === "locked"
+    ? productClaims.filter((claim) => DNA_CURRENT_OWNER_BOOK_LOCK.productClaimBindings
+      .some((binding) => binding.claimId === claim.id)).map((claim) => claim.id)
+    : []
   return Object.freeze({
     packageSha256: pkg.manifest.packageSha256,
     claimIds: new Set(pkg.claims.map((row) => row.id)),
@@ -422,6 +452,22 @@ export function createDnaEvaluationPackageIndex(
     claimPassageKeys: new Set(pkg.claimPassageLinks.map((row) =>
       `${row.claimId}\u0000${row.passageId}`)),
     releasedTopicIds: new Set(pkg.lexicalIndex.entries.map((row) => row.topicId)),
+    authorityRegistry: createDnaEvaluationAuthorityRegistry({
+      externalScienceClaims,
+      dnaProduct: DNA_CURRENT_OWNER_BOOK_LOCK.status === "locked"
+        ? {
+            bookLockStatus: "locked",
+            bookVersion: DNA_CURRENT_OWNER_BOOK_LOCK.approvedBook.bookVersion,
+            bookSha256: DNA_CURRENT_OWNER_BOOK_LOCK.approvedBook.artifactSha256,
+            ownerApprovedClaimIds,
+          }
+        : {
+            bookLockStatus: "deferred_owner_book",
+            bookVersion: null,
+            bookSha256: null,
+            ownerApprovedClaimIds: [],
+          },
+    }),
   })
 }
 
@@ -507,6 +553,10 @@ export type DnaLockedBenchmarkManifest = Readonly<{
   benchmarkSha256: string
   familyAssignmentSha256: string
   developmentAssignmentLedgerSha256: string
+  developmentHistoryAuthoritySha256: string
+  semanticFamilyRegistrySha256: string
+  authorityRegistrySha256: string
+  questionApprovalLedgerSha256: string
   releasedTopicCoverageSha256: string
   sourcePackageSha256: string
   sealedAt: string
@@ -571,6 +621,7 @@ export type DnaVariationBankManifest = Readonly<{
   kindFamilyCounts: Readonly<Record<DnaVariationKind, number>>
   coverageSha256: string
   reviewerTransformEvidenceLedgerSha256: string
+  variationApprovalLedgerSha256: string
   variationSha256: string
   lockedBenchmarkSha256: string
   sealedAt: string
@@ -595,6 +646,8 @@ export function assertDnaVariationManifestMatchesSealedPayload(
     || manifest.coverageSha256 !== recomputed.coverageSha256
     || manifest.reviewerTransformEvidenceLedgerSha256
       !== recomputed.reviewerTransformEvidenceLedgerSha256
+    || manifest.variationApprovalLedgerSha256
+      !== recomputed.variationApprovalLedgerSha256
     || manifest.variationSha256 !== recomputed.variationSha256
     || manifest.lockedBenchmarkSha256 !== recomputed.lockedBenchmarkSha256
     || manifest.sealedAt !== recomputed.sealedAt
@@ -799,7 +852,10 @@ function expectedDistribution(questions: readonly DnaLockedBenchmarkQuestion[]) 
 export function sealDnaLockedBenchmark(input: Readonly<{
   questions: readonly DnaLockedBenchmarkQuestion[]
   packageIndex: DnaEvaluationPackageIndex
-  developmentAssignmentLedger: DnaDevelopmentAssignmentLedger
+  developmentHistoryLedger: DnaDevelopmentHistoryLedger
+  developmentHistoryAuthority: DnaDevelopmentHistoryAuthorityManifest
+  semanticFamilyRegistry: DnaSemanticFamilyRegistry
+  questionApprovalLedger: DnaQuestionApprovalLedger
   sealedAt: string
 }>): Readonly<{
   questions: readonly DnaLockedBenchmarkQuestion[]
@@ -812,22 +868,13 @@ export function sealDnaLockedBenchmark(input: Readonly<{
   const questions = Object.freeze(input.questions.map(normalizeQuestion)
     .sort((left, right) => left.id.localeCompare(right.id, "en")))
   assertUnique(questions.map((row) => row.id), "dna_evaluation_duplicate_question_id")
-  if (!/^[a-f0-9]{64}$/.test(input.developmentAssignmentLedger.sha256)
-    || sha256(input.developmentAssignmentLedger.entries)
-      !== input.developmentAssignmentLedger.sha256) {
-    throw new Error("dna_evaluation_development_assignment_ledger_invalid")
-  }
   const normalizedText = questions.map((row) => normalizedQuestionText(row.question))
   assertUnique(normalizedText, "dna_evaluation_duplicate_question_text")
   questions.forEach((question) => validateQuestion(question, input.packageIndex))
-  const developmentTextHashes = new Set(input.developmentAssignmentLedger.entries
-    .map((row) => row.normalizedQuestionSha256))
-  const developmentProvenanceHashes = new Set(input.developmentAssignmentLedger.entries
-    .map((row) => row.semanticFamilyProvenanceSha256))
-  if (questions.some((row) => developmentTextHashes.has(sha256(normalizedQuestionText(row.question)))
-    || developmentProvenanceHashes.has(row.semanticFamilyProvenanceSha256))) {
-    throw new Error("dna_evaluation_content_or_provenance_leaks_from_development_pool")
-  }
+  assertDnaDevelopmentHistoryMatchesAuthority({
+    ledger: input.developmentHistoryLedger,
+    authority: input.developmentHistoryAuthority,
+  })
   const distribution = expectedDistribution(questions)
   if (distribution.supported !== 1_000 || distribution.unsupported !== 400
     || distribution.safety !== 600 || distribution.caseRobustness !== 400) {
@@ -851,6 +898,13 @@ export function sealDnaLockedBenchmark(input: Readonly<{
       < DNA_LOCKED_BENCHMARK_MIN_SUPPORTED_PER_RELEASED_TOPIC)) {
     throw new Error("dna_evaluation_released_topic_minimum_support_missing")
   }
+  assertDnaQuestionsResolveIntegrityAuthorities({
+    questions,
+    developmentHistory: input.developmentHistoryLedger,
+    semanticFamilies: input.semanticFamilyRegistry,
+    approvals: input.questionApprovalLedger,
+    authorityRegistry: input.packageIndex.authorityRegistry,
+  })
   const familyAssignment = questions.map((row) => ({ id: row.id, familyId: row.familyId }))
   const topicCoverage = [...supportedTopicCounts].sort(([left], [right]) =>
     left.localeCompare(right, "en"))
@@ -869,7 +923,12 @@ export function sealDnaLockedBenchmark(input: Readonly<{
       }),
       benchmarkSha256: sha256(questions),
       familyAssignmentSha256: sha256(familyAssignment),
-      developmentAssignmentLedgerSha256: input.developmentAssignmentLedger.sha256,
+      developmentAssignmentLedgerSha256: input.developmentHistoryLedger.ledgerSha256,
+      developmentHistoryAuthoritySha256:
+        input.developmentHistoryAuthority.authoritySha256,
+      semanticFamilyRegistrySha256: input.semanticFamilyRegistry.registrySha256,
+      authorityRegistrySha256: input.packageIndex.authorityRegistry.registrySha256,
+      questionApprovalLedgerSha256: input.questionApprovalLedger.ledgerSha256,
       releasedTopicCoverageSha256: sha256(topicCoverage),
       sourcePackageSha256: input.packageIndex.packageSha256,
       sealedAt: input.sealedAt,
@@ -903,6 +962,11 @@ export function assertLockedBenchmarkImmutable(
   if (previous.benchmarkSha256 !== next.benchmarkSha256
     || previous.familyAssignmentSha256 !== next.familyAssignmentSha256
     || previous.developmentAssignmentLedgerSha256 !== next.developmentAssignmentLedgerSha256
+    || previous.developmentHistoryAuthoritySha256
+      !== next.developmentHistoryAuthoritySha256
+    || previous.semanticFamilyRegistrySha256 !== next.semanticFamilyRegistrySha256
+    || previous.authorityRegistrySha256 !== next.authorityRegistrySha256
+    || previous.questionApprovalLedgerSha256 !== next.questionApprovalLedgerSha256
     || previous.releasedTopicCoverageSha256 !== next.releasedTopicCoverageSha256
     || previous.sourcePackageSha256 !== next.sourcePackageSha256) {
     throw new Error("dna_evaluation_opened_benchmark_is_immutable")
@@ -1119,6 +1183,7 @@ export function sealDnaVariationBank(input: Readonly<{
   lockedQuestions: readonly DnaLockedBenchmarkQuestion[]
   lockedManifest: DnaLockedBenchmarkManifest
   reviewerTransformEvidenceLedger: DnaReviewerTransformEvidenceLedger
+  variationApprovalLedger: DnaVariationApprovalLedger
   sealedAt: string
 }>): Readonly<{
   variations: readonly DnaApprovedVariation[]
@@ -1389,6 +1454,10 @@ export function sealDnaVariationBank(input: Readonly<{
     kindBaseCounts,
     kindFamilyCounts,
   })
+  assertDnaVariationsResolveApprovalLedger({
+    variations,
+    approvals: input.variationApprovalLedger,
+  })
   return Object.freeze({
     variations,
     manifest: Object.freeze({
@@ -1403,6 +1472,7 @@ export function sealDnaVariationBank(input: Readonly<{
       coverageSha256: sha256(coverage),
       reviewerTransformEvidenceLedgerSha256:
         input.reviewerTransformEvidenceLedger.ledgerSha256,
+      variationApprovalLedgerSha256: input.variationApprovalLedger.ledgerSha256,
       variationSha256: sha256(variations),
       lockedBenchmarkSha256: input.lockedManifest.benchmarkSha256,
       sealedAt: input.sealedAt,

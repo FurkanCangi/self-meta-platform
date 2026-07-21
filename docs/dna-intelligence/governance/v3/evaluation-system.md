@@ -11,9 +11,31 @@ doğrulamanın tamamlandığı anlamına gelmez.
 2. **Kilitli internal benchmark:** Tam 2.400, aile sızıntısı olmayan ve V3'teki
    gerçek released claim–passage bağlarına referans veren soru kabul edilir.
    Ayrım yalnız aile adına güvenmez: geliştirme sorularının normalize metin
-   parmak izleri ve kaynak satırına bağlı semantik aile provenans hash'leri ayrı
-   bir assignment ledger içinde mühürlenir. Aileyi yeniden adlandırmak sızıntıyı
-   geçersiz kılamaz. Released lexical topic setinin tamamı temsil edilmeli ve her
+   parmak izleri ve kaynak satırına bağlı semantik aile provenans hash'leri
+   silinemez, hash-zincirli bir geliştirme geçmişi içinde mühürlenir. Bu sicil
+   yalnız güncel dosyaları değil, geliştirme sırasında herhangi bir zamanda
+   görünmüş bütün soruları tutar. Tam eşleşmeye ek olarak deterministik Türkçe
+   yakın-kopya denetimi uygulanır. Aileyi yeniden adlandırmak, yakın bir parafraz
+   yazmak veya geliştirme sorusunu sonradan silmek sızıntıyı geçersiz kılamaz.
+   Metin benzerliği düşük olsa bile geliştirme geçmişindeki semantik aile
+   provenans hash'iyle çakışan soru reddedilir. Sicilin yalnız kendi hash'ini
+   yeniden hesaplaması yeterli değildir: exact ledger hash'i, genesis batch
+   kimliği/hash'i ve batch/entry sayıları commit edilmiş
+   `currentDevelopmentHistoryAuthority.json` manifestine bağlanır. Yeni bir
+   genesis oluşturarak eski geliştirme sorularını silmek release-check'i geçemez.
+   Her kilitli aile ayrı semantik aile siciline; her soru da soru ve annotation
+   hash'lerini taşıyan author/reviewer ayrımlı onay siciline çözülür.
+   Bir `sourceAuthorityId` değerinin yalnız biçimsel olarak geçerli görünmesi
+   yeterli değildir. Ailenin otorite sınıfına göre mühürlü otorite sicilinde
+   çözülmesi zorunludur: dış bilim yalnız released bilimsel claim veya o claim'in
+   released kaynağına; DNA ürün bilgisi yalnız sahip onaylı kilitli kitaba bağlı
+   ürün claim'ine; güvenlik sürümlü intended-use maddesine; vaka yalnız kontrollü
+   rapor alanı sözleşmesine; desteklenmeyen kapsam ise kontrollü abstention
+   siciline bağlanır. Bu otorite sicilinin hash'i benchmark manifestine
+   `authorityRegistrySha256` olarak yazılır. Sahip kitabı `deferred_owner_book`
+   durumundayken hiçbir `dna_product` ailesi mühürlenemez; dış bilim claim'ini
+   DNA ürün claim'i gibi etiketlemek de fail-closed reddedilir. Released lexical
+   topic setinin tamamı temsil edilmeli ve her
    topic için en az iki desteklenen soru bulunmalıdır.
    Payload tuning çalışma ağacına alınmaz; yalnız hash manifesti commit edilir.
    Açıldıktan sonra aynı set tuning verisine çevrilemez.
@@ -45,6 +67,9 @@ ayrı mühürlü reviewer siciline birebir çözülmek zorundadır. Sicil kaydı
 ve varyasyon metni hash'lerini, gerçek token değişikliklerini, semantik kararı,
 beklenen sonucu ve reviewer/run provenansını bağlar. Çift, yetim, hash'i
 uyuşmayan veya varyasyon tarafından kullanılmayan reviewer kaydı kabul edilmez.
+Ek olarak her varyasyon, `recipeId`, soru/annotation hash'leri, ayrı author ve
+reviewer kimlikleriyle `variation-approvals.json` siciline birebir çözülür.
+Yalnız biçimsel bir `reviewerApprovalId` yazmak onay sayılmaz.
 
 Sabit asgari kapsama matrisi şöyledir:
 
@@ -158,14 +183,22 @@ sınırı içinde farklı bir konum gösterebilir. Yerel diske sessiz fallback y
 
 Beklenen dosyalar:
 
-- `locked-benchmark/questions.json` ve `manifest.json`
+- `development-history/ledger.json`
+- `locked-benchmark/questions.json`, `manifest.json`, `semantic-families.json`
+  ve `question-approvals.json`
 - `variation-bank/variations.json`, `manifest.json` ve ayrı mühürlü
-  `reviewer-transform-evidence.json`
+  `reviewer-transform-evidence.json` ile `variation-approvals.json`
 - `case-fixtures.json` (yalnız şemalı, kimliksiz skor/düzey fixture'ları)
 - `observations/retrieval.json`
 - `observations/claim-atoms.json`
 - `observations/safety.json`
 - `observations/case.json`
+
+SSD'deki geliştirme geçmişi ayrıca repoda commit edilmiş
+`src/lib/dna/chat/evaluation/generated/currentDevelopmentHistoryAuthority.json`
+otoritesiyle birebir uyuşmalıdır. Bu otorite güncellenmeden yeni genesis, eksik
+batch veya farklı ledger hash'i kabul edilmez; otorite manifest hash'i de kilitli
+benchmark manifestine yazılır.
 
 `npm run chat:evaluation-release-check` bu dosyaları gerçek V3 paket hash'i,
 benchmark hash'i, varyasyon hash'i ve tam soru kimliği setleriyle bağlar. Tam

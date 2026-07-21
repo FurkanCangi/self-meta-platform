@@ -8,7 +8,7 @@
   "completionScope": "fail_closed_engineering_and_inventory_disposition",
   "source": {
     "governanceGitSha": "3a50e993a5f319ffb094933920231b5541933b8f",
-    "integrityVersion": "dna-source-integrity@1",
+    "integrityVersion": "dna-source-integrity@2",
     "impactVersion": "dna-source-integrity-impact@1",
     "snapshotSha256": "077895043eb0bd2449c86ce4b7e4bb39f04267124b31cf303014dcde56d2ac80"
   },
@@ -24,6 +24,16 @@
     "immutableAuditRuns": 5,
     "currentV3Released": 0
   },
+  "latestReaudit": {
+    "auditedAt": "2026-07-20T09:52:34.693Z",
+    "verifiedClean": 33,
+    "pending": 14,
+    "quarantined": 0,
+    "withdrawn": 0,
+    "immutableAuditRuns": 6,
+    "runtimeReleased": 0,
+    "snapshotSha256": "d68e8cb3b964a91bd2d603a0e31856f3d1d9f3518eb6767e83a3d2313ef2e218"
+  },
   "exitGates": {
     "retractionCorrectionErratumSupersessionAndIdentityChecks": "passed",
     "withdrawalHistoryStickyUntilVerifiedReinstatement": "passed",
@@ -33,7 +43,7 @@
     "noSafeAlternativeReturnsNotAvailable": "passed",
     "rawAuthorityResponsesHashBound": "passed"
   },
-  "interpretation": "7 kayıt yalnız Faz 10 bütünlük kapısını geçmiştir. Bu sayı bilimsel yöntem onayı veya V3 yayın sayısı değildir; 40 kayıt pending olarak kapalıdır.",
+  "interpretation": "7 kayıt Faz 10 tamamlandığı anda bütünlük kapısını geçmişti; 2026-07-20 yeniden denetiminde bu sayı 33'e çıktı. Bu sayı bilimsel yöntem onayı veya V3 yayın sayısı değildir; kalan 14 kayıt pending olarak kapalıdır.",
   "releaseBoundary": "Etki gezgini ve çevrim dışı audit doğrulayıcısı hazırdır. V3 cevap ağı henüz boş olduğu için runtime tüketicisi yoktur; ilk V3 bilimsel yayınından önce bu tüketici bağlantısı zorunlu release blocker olarak kalır.",
   "knownLimitations": [
     "auditSha256 kurcalama belirleyen checksum'dır; dijital imza değildir",

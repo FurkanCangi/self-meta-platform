@@ -329,14 +329,43 @@ assert.ok(duplicatePassEvidenceValidation.errors.includes("review_pass_1:duplica
 
 const nonChronologicalAppraisal = withRecomputedAppraisalHash({
   ...selfAssertedAuditedAppraisal,
-  reviewPasses: selfAssertedAuditedAppraisal.reviewPasses.map((pass, index) => index === 1
+  reviewPasses: selfAssertedAuditedAppraisal.reviewPasses.map((pass, index) => index === 2
     ? { ...pass, completedAt: selfAssertedAuditedAppraisal.reviewPasses[0].completedAt }
     : pass),
 })
 const nonChronologicalValidation = validateDnaMethodAppraisal(nonChronologicalAppraisal)
 assert.ok(nonChronologicalValidation.errors.includes(
-  "review_pass_1:non_chronological_completion",
+  "review_pass_2:non_chronological_completion",
 ))
+
+const blindPassesMayCompleteInEitherOrder = withRecomputedAppraisalHash({
+  ...selfAssertedAuditedAppraisal,
+  reviewPasses: selfAssertedAuditedAppraisal.reviewPasses.map((pass, index) => index === 0
+    ? { ...pass, completedAt: "2025-01-02T00:00:00.000Z" }
+    : index === 1
+      ? { ...pass, completedAt: "2025-01-01T00:00:00.000Z" }
+      : { ...pass, completedAt: "2025-01-03T00:00:00.000Z" }),
+})
+const blindPassOrderValidation = validateDnaMethodAppraisalWithExplicitTestRegistry(
+  blindPassesMayCompleteInEitherOrder,
+  {
+    ...explicitMethodTrustRegistry,
+    passEvidence: blindPassesMayCompleteInEitherOrder.reviewPasses.map((pass) => ({
+      appraisalId: blindPassesMayCompleteInEitherOrder.id,
+      passId: pass.passId,
+      reviewerRole: pass.reviewerRole,
+      evidenceSha256: pass.evidenceSha256,
+    })),
+    appraisals: [{
+      appraisalId: blindPassesMayCompleteInEitherOrder.id,
+      sourceId: blindPassesMayCompleteInEitherOrder.sourceId,
+      sourceEvidencePayloadSha256:
+        blindPassesMayCompleteInEitherOrder.sourceEvidencePayloadSha256,
+      appraisalPayloadSha256: blindPassesMayCompleteInEitherOrder.appraisalPayloadSha256,
+    }],
+  },
+)
+assert.equal(blindPassOrderValidation.ok, true, blindPassOrderValidation.errors.join(","))
 
 const claimExtractionPassesCannotAuthorizeMethodAppraisal = withRecomputedAppraisalHash({
   ...selfAssertedAuditedAppraisal,

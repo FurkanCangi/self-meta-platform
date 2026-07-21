@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "dna-evaluation-preopen-authority-contract@1",
+  "purpose": "A locked benchmark may be opened only once and only against the exact V3 engine, package, repository and evaluation authorities that existed before access.",
+  "authoritySchemaVersion": "dna-evaluation-preopen-authority@1",
+  "requiredBindings": [
+    "engineVersion",
+    "engineCodeSha256",
+    "catalogVersion",
+    "catalogPackageSha256",
+    "sourceGitCommit",
+    "sourceTreeSha256",
+    "lockedBenchmarkManifestSha256",
+    "lockedBenchmarkPayloadSha256",
+    "variationBankManifestSha256",
+    "variationBankPayloadSha256",
+    "developmentHistoryAuthoritySha256",
+    "semanticFamilyRegistrySha256",
+    "questionApprovalLedgerSha256",
+    "variationApprovalLedgerSha256"
+  ],
+  "lifecycle": {
+    "ledgerSchemaVersion": "dna-evaluation-lifecycle-ledger@1",
+    "orderedEvents": [
+      "sealed",
+      "opened_for_evaluation",
+      "closed_after_evaluation"
+    ],
+    "appendOnlyHashChain": true,
+    "maximumOpenEventsPerAuthority": 1,
+    "openReceiptRequired": true,
+    "openReceiptSchemaVersion": "dna-evaluation-open-receipt@1",
+    "openingBeforeSealAllowed": false,
+    "closingBeforeOpenAllowed": false
+  },
+  "failClosedRules": [
+    "any_binding_change_blocks_open",
+    "unknown_or_missing_field_blocks",
+    "hash_mismatch_blocks",
+    "authority_or_ledger_mismatch_blocks",
+    "second_open_blocks",
+    "receipt_or_event_chain_tamper_blocks"
+  ],
+  "currentState": {
+    "state": "blocked_not_materialized",
+    "reason": "The final 2400-question benchmark and 10000-item variation bank have not been authored, independently reviewed and sealed.",
+    "runtimeEffect": "none",
+    "v3ReleaseEligible": false
+  },
+  "implementation": {
+    "module": "src/lib/dna/chat/evaluation/evaluationPreOpenAuthority.ts",
+    "test": "scripts/run-dna-evaluation-preopen-authority-tests.ts",
+    "command": "npm run chat:evaluation-preopen-authority"
+  }
+}

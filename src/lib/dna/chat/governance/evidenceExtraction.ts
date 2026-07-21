@@ -150,7 +150,7 @@ export type DnaEvidenceTrustRecord = Readonly<{
 export type DnaEvidenceTrustRegistry = Readonly<{
   schemaVersion: typeof DNA_EVIDENCE_TRUST_REGISTRY_VERSION
   registryId: string
-  authority: "governance_audit" | "test_fixture"
+  authority: "governance_audit" | "candidate_audit" | "test_fixture"
   records: readonly DnaEvidenceTrustRecord[]
   registrySha256: string
 }>
@@ -253,11 +253,11 @@ function trustRegistryCore(registry: DnaEvidenceTrustRegistry) {
 
 export function createDnaEvidenceTrustRegistry(input: Readonly<{
   registryId: string
-  authority: "governance_audit" | "test_fixture"
+  authority: "governance_audit" | "candidate_audit" | "test_fixture"
   records: readonly DnaEvidenceTrustRecord[]
 }>): DnaEvidenceTrustRegistry {
   const registryId = requireStableId(input.registryId, "trust_registry_id")
-  if (input.authority !== "governance_audit" && input.authority !== "test_fixture") {
+  if (!["governance_audit", "candidate_audit", "test_fixture"].includes(input.authority)) {
     throw new Error("dna_evidence_invalid_trust_registry_authority")
   }
   const keys = new Set<string>()
@@ -311,7 +311,7 @@ export function isDnaEvidenceTrustRegistryValid(
 ): boolean {
   try {
     return registry.schemaVersion === DNA_EVIDENCE_TRUST_REGISTRY_VERSION
-      && (registry.authority === "governance_audit" || registry.authority === "test_fixture")
+      && ["governance_audit", "candidate_audit", "test_fixture"].includes(registry.authority)
       && registry.registrySha256 === sha256Object(trustRegistryCore(registry))
       && createDnaEvidenceTrustRegistry({
         registryId: registry.registryId,
@@ -330,8 +330,16 @@ export function isDnaEvidenceTrustRegistryAuthorized(
   if (registry.authority === "governance_audit") {
     return DNA_REGISTERED_EVIDENCE_TRUST_REGISTRY_SHA256.includes(registry.registrySha256)
   }
+  if (registry.authority === "candidate_audit") return false
   return process.env.NODE_ENV !== "production"
     && process.env.DNA_EVIDENCE_TEST_FIXTURE_MODE === "1"
+}
+
+export function isDnaCandidateEvidenceTrustRegistryValid(
+  registry: DnaEvidenceTrustRegistry,
+): boolean {
+  return registry.authority === "candidate_audit"
+    && isDnaEvidenceTrustRegistryValid(registry)
 }
 
 function requireTrustedSubject(input: Readonly<{
@@ -341,11 +349,15 @@ function requireTrustedSubject(input: Readonly<{
   sourceId: string
   artifactSha256: string
   subjectSha256: string
+  authorizationMode?: "runtime_pinned" | "candidate_pipeline"
 }>): void {
   if (!input.registry || !isDnaEvidenceTrustRegistryValid(input.registry)) {
     throw new Error("dna_evidence_trust_registry_required")
   }
-  if (!isDnaEvidenceTrustRegistryAuthorized(input.registry)) {
+  const authorized = input.authorizationMode === "candidate_pipeline"
+    ? isDnaCandidateEvidenceTrustRegistryValid(input.registry)
+    : isDnaEvidenceTrustRegistryAuthorized(input.registry)
+  if (!authorized) {
     throw new Error("dna_evidence_trust_registry_not_authorized")
   }
   const match = input.registry.records.find((record) =>
@@ -1056,7 +1068,7 @@ function sameSection(
   return stableJson(left) === stableJson(right)
 }
 
-export function createDnaSourcePassage(input: Readonly<{
+export type DnaSourcePassageCreationInput = Readonly<{
   id: string
   parsedArtifact: DnaParsedArtifact
   paragraphIds: readonly string[]
@@ -1066,7 +1078,12 @@ export function createDnaSourcePassage(input: Readonly<{
   licenseApproval: DnaPassageLicenseApproval
   metadataApproval: DnaPassageMetadataApproval
   trustRegistry: DnaEvidenceTrustRegistry
-}>): DnaSourcePassage {
+}>
+
+function createDnaSourcePassageInternal(
+  input: DnaSourcePassageCreationInput,
+  authorizationMode: "runtime_pinned" | "candidate_pipeline",
+): DnaSourcePassage {
   const id = requireStableId(input.id, "passage_id")
   if (!isDnaParsedArtifactIntegrityValid(input.parsedArtifact)) {
     throw new Error("dna_evidence_parsed_artifact_status_invalid")
@@ -1134,6 +1151,7 @@ export function createDnaSourcePassage(input: Readonly<{
     sourceId: input.parsedArtifact.sourceId,
     artifactSha256: input.parsedArtifact.artifactSha256,
     subjectSha256: sha256Object(license),
+    authorizationMode,
   })
 
   const review = input.metadataApproval
@@ -1158,6 +1176,7 @@ export function createDnaSourcePassage(input: Readonly<{
     sourceId: input.parsedArtifact.sourceId,
     artifactSha256: input.parsedArtifact.artifactSha256,
     subjectSha256: sha256Object(review),
+    authorizationMode,
   })
 
   const originalText = paragraphs.map((paragraph) => paragraph.text).join("\n\n")
@@ -1196,6 +1215,18 @@ export function createDnaSourcePassage(input: Readonly<{
     metadataEvidenceSha256,
   })
   return deepFreeze({ ...core, provenanceSha256: sha256Object(core) })
+}
+
+export function createDnaSourcePassage(
+  input: DnaSourcePassageCreationInput,
+): DnaSourcePassage {
+  return createDnaSourcePassageInternal(input, "runtime_pinned")
+}
+
+export function createDnaCandidateSourcePassage(
+  input: DnaSourcePassageCreationInput,
+): DnaSourcePassage {
+  return createDnaSourcePassageInternal(input, "candidate_pipeline")
 }
 
 export function isDnaSourcePassageCurrent(
@@ -1458,6 +1489,7 @@ function createAtomicClaim(input: Readonly<{
   passageById: ReadonlyMap<string, DnaSourcePassage>
   trustRegistry: DnaEvidenceTrustRegistry
   draft: DnaAtomicClaimDraft
+  authorizationMode: "runtime_pinned" | "candidate_pipeline"
 }>): DnaAtomicClaim {
   requireExactKeys(input.draft, CLAIM_DRAFT_KEYS, "dna_evidence_atomic_claim_shape_invalid")
   const claimId = requireStableId(input.draft.claimId, "claim_id")
@@ -1638,6 +1670,7 @@ function createAtomicClaim(input: Readonly<{
         appraisalSha256,
         assessedLevel: evidence.assessedLevel,
       }),
+      authorizationMode: input.authorizationMode,
     })
     evidenceLevelEvidence = {
       kind: "method_appraisal",
@@ -1762,7 +1795,7 @@ const BLIND_RUN_INPUT_KEYS = Object.freeze([
   "rationales",
 ] as const)
 
-export function createDnaBlindExtractionRun(input: Readonly<{
+export type DnaBlindExtractionRunInput = Readonly<{
   lane: DnaBlindExtractionLane
   protocolId: string
   runId: string
@@ -1775,7 +1808,12 @@ export function createDnaBlindExtractionRun(input: Readonly<{
   contextCommitment: DnaBlindContextCommitment
   claimDrafts: readonly DnaAtomicClaimDraft[]
   rationales: readonly DnaBlindClaimRationale[]
-}>): DnaBlindExtractionRun {
+}>
+
+function createDnaBlindExtractionRunInternal(
+  input: DnaBlindExtractionRunInput,
+  authorizationMode: "runtime_pinned" | "candidate_pipeline",
+): DnaBlindExtractionRun {
   requireExactKeys(input, BLIND_RUN_INPUT_KEYS, "dna_evidence_blind_input_leak_or_shape_invalid")
   const protocol = DNA_BLIND_EXTRACTION_PROTOCOLS[input.lane]
   if (!protocol || input.protocolId !== protocol.protocolId) {
@@ -1810,6 +1848,7 @@ export function createDnaBlindExtractionRun(input: Readonly<{
       sourceId,
       artifactSha256,
       subjectSha256: passage.provenanceSha256,
+      authorizationMode,
     })
   }
   if (!validateDnaPassageSet(input.passages).ok) {
@@ -1826,6 +1865,7 @@ export function createDnaBlindExtractionRun(input: Readonly<{
     passageById,
     trustRegistry: input.trustRegistry,
     draft,
+    authorizationMode,
   }))
   if (new Set(claims.map((claim) => claim.claimId)).size !== claims.length) {
     throw new Error("dna_evidence_duplicate_claim_id")
@@ -1929,6 +1969,18 @@ export function createDnaBlindExtractionRun(input: Readonly<{
   return deepFreeze({ ...core, runSha256: sha256Object(core) })
 }
 
+export function createDnaBlindExtractionRun(
+  input: DnaBlindExtractionRunInput,
+): DnaBlindExtractionRun {
+  return createDnaBlindExtractionRunInternal(input, "runtime_pinned")
+}
+
+export function createDnaCandidateBlindExtractionRun(
+  input: DnaBlindExtractionRunInput,
+): DnaBlindExtractionRun {
+  return createDnaBlindExtractionRunInternal(input, "candidate_pipeline")
+}
+
 export const DNA_RECONCILIATION_COMPARISON_FIELDS = Object.freeze([
   "passage",
   "proposition",
@@ -1970,7 +2022,7 @@ function blindRunCore(run: DnaBlindExtractionRun) {
   return core
 }
 
-function blindRunIntegrityValid(run: DnaBlindExtractionRun): boolean {
+export function isDnaBlindExtractionRunIntegrityValid(run: DnaBlindExtractionRun): boolean {
   return run.schemaVersion === DNA_BLIND_EXTRACTION_VERSION
     && run.status === "candidate_only"
     && run.runtimeEligible === false
@@ -2017,8 +2069,8 @@ export function reconcileDnaBlindClaims(input: Readonly<{
     || input.runA.runId === input.runB.runId
     || input.runA.contextCommitmentSha256 === input.runB.contextCommitmentSha256
     || input.runA.instructionSha256 === input.runB.instructionSha256
-    || !blindRunIntegrityValid(input.runA)
-    || !blindRunIntegrityValid(input.runB)) {
+    || !isDnaBlindExtractionRunIntegrityValid(input.runA)
+    || !isDnaBlindExtractionRunIntegrityValid(input.runB)) {
     throw new Error("dna_evidence_blind_independence_or_integrity_invalid")
   }
   const claimA = input.runA.claims.find((claim) => claim.claimId === input.claimAId)
@@ -2157,12 +2209,12 @@ export function applyDnaClaimRereview(input: Readonly<{
     "parsedArtifact",
     "trustRegistry",
   ], "dna_evidence_rereview_shape_invalid")
-  if (input.reconciliation.status !== "contested"
+  if (!["contested", "quarantined"].includes(input.reconciliation.status)
     || input.reconciliation.reconciliationSha256 !== sha256Object((({
       reconciliationSha256: _hash,
       ...core
     }) => core)(input.reconciliation))) {
-    throw new Error("dna_evidence_rereview_requires_valid_contested_record")
+    throw new Error("dna_evidence_rereview_requires_valid_nonconsensus_record")
   }
   const resolution = input.resolution
   requireExactKeys(resolution, [
@@ -2212,6 +2264,8 @@ export function applyDnaClaimRereview(input: Readonly<{
       sourceId: resolution.sourceId,
       artifactSha256: resolution.artifactSha256,
       subjectSha256: passage.provenanceSha256,
+      authorizationMode: input.trustRegistry.authority === "candidate_audit"
+        ? "candidate_pipeline" : "runtime_pinned",
     })
     return passage
   })
@@ -2292,6 +2346,8 @@ export function applyDnaClaimRereview(input: Readonly<{
           ),
           assessedLevel: levelEvidence.assessedLevel,
         }),
+        authorizationMode: input.trustRegistry.authority === "candidate_audit"
+          ? "candidate_pipeline" : "runtime_pinned",
       })
       if (levelEvidence.assessedLevel !== resolution.resolved.evidenceLevel) {
         throw new Error("dna_evidence_rereview_level_appraisal_mismatch")

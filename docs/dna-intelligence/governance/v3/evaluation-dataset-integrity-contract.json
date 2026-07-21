@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "dna-evaluation-dataset-integrity-contract@2",
+  "scope": "phase_37_to_39_governance_hardening",
+  "developmentHistory": {
+    "schemaVersion": "dna-development-history-ledger@1",
+    "appendOnly": true,
+    "allEverVisibleQuestionsRetained": true,
+    "batchHashChainRequired": true,
+    "entryContentAndSourceHashesRequired": true,
+    "committedAuthorityManifest": "src/lib/dna/chat/evaluation/generated/currentDevelopmentHistoryAuthority.json",
+    "committedAuthorityBindsExactLedgerHash": true,
+    "committedAuthorityBindsGenesisBatch": true,
+    "committedAuthorityBindsBatchAndEntryCounts": true,
+    "replacementSelfRehashedGenesisAccepted": false,
+    "deletionCannotMakeAQuestionLockedEligible": true
+  },
+  "semanticFamilies": {
+    "schemaVersion": "dna-semantic-family-registry@1",
+    "provenanceHashDerivedFromCanonicalMeaning": true,
+    "callerSuppliedUnresolvedHashesAccepted": false,
+    "nearDuplicateFamilySplitAllowed": false,
+    "deterministicTurkishNormalization": true,
+    "externalModelOrEmbeddingUsed": false,
+    "sourceAuthorityIdFormatAloneIsSufficient": false,
+    "authorityRegistryResolutionRequiredBeforeSeal": true
+  },
+  "authorityResolution": {
+    "schemaVersion": "dna-evaluation-authority-registry@1",
+    "manifestHashBinding": "authorityRegistrySha256",
+    "external_science": "released external-science claim id or a source id used by that released claim",
+    "dna_product": "owner-approved claim id bound to a locked owner book",
+    "safety_policy": "registered clause in dna-intelligence-intended-use@1",
+    "case_policy": "registered field in dna-evaluation-report-field-contract@1",
+    "unsupported_boundary": "registered boundary in dna-evaluation-unsupported-boundary-registry@1",
+    "bucketAuthorityClassMustMatch": true,
+    "externalClaimMayMasqueradeAsDnaProduct": false,
+    "dnaProductFamilyMaySealWhileOwnerBookDeferred": false,
+    "unknownOrWrongClassIdFailsClosed": true
+  },
+  "questionApprovals": {
+    "schemaVersion": "dna-benchmark-question-approval-ledger@1",
+    "oneResolvedRecordPerQuestion": true,
+    "questionAndAnnotationHashesRequired": true,
+    "authorReviewerSeparationRequired": true,
+    "authorityClass": "codex_multi_pass_not_independent",
+    "claimableAsIndependentClinicalValidation": false
+  },
+  "variationApprovals": {
+    "schemaVersion": "dna-variation-approval-ledger@1",
+    "oneResolvedRecordPerVariation": true,
+    "variationAndAnnotationHashesRequired": true,
+    "recipeIdRequired": true,
+    "authorReviewerSeparationRequired": true,
+    "authorityClass": "codex_multi_pass_not_independent",
+    "automaticGenerationAloneCanPass": false
+  },
+  "contaminationPolicy": {
+    "exactNormalizedTextRejected": true,
+    "semanticProvenanceCollisionRejected": true,
+    "longParaphraseWithDevelopmentProvenanceRejected": true,
+    "deterministicNearDuplicateRejected": true,
+    "nearEquivalentQuestionsInDifferentFamiliesRejected": true,
+    "familyRenameBypassRejected": true
+  },
+  "payloadBoundary": {
+    "realLockedQuestionPayloadAuthored": false,
+    "realVariationPayloadAuthored": false,
+    "currentLockedQuestionCount": 0,
+    "currentVariationCount": 0,
+    "testVariationsCountAsKnowledge": false
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "schemaVersion": "dna-method-appraisal-batch-contract@1",
+  "reviewPassSchemaVersion": "dna-method-appraisal-review-pass@2",
+  "reconciliationSchemaVersion": "dna-method-appraisal-reconciliation@2",
+  "fidelityPassSchemaVersion": "dna-method-appraisal-fidelity-pass@1",
+  "candidateSchemaVersion": "dna-method-appraisal-candidate@1",
+  "reviewArchitecture": "output_blinded_codex_multi_pass_not_independent",
+  "authorityBoundary": {
+    "codexPassesAreIndependentHumanReview": false,
+    "outputBlindingReducesAnchoringButDoesNotCreateReviewerIndependence": true,
+    "candidateCompilationGrantsAuditedStatus": false,
+    "candidateCompilationGrantsRuntimeOrRelease": false,
+    "trustedRegistryIsPopulatedByThisBatch": false
+  },
+  "commonPassPolicy": {
+    "roles": [
+      "method_appraisal_a",
+      "method_appraisal_b"
+    ],
+    "sameSchemaForBothRoles": true,
+    "sameRequiredFieldsForBothRoles": true,
+    "otherPassOutputMayBeReadBeforePassCompletion": false,
+    "findingInferenceFromTitleOrSourceRoleAllowed": false,
+    "assertedFindingRequiresWorkpackParagraphEvidence": true
+  },
+  "sampleSizePolicy": {
+    "fields": [
+      "studyCount",
+      "participantCount",
+      "datasetCount"
+    ],
+    "ambiguousTotalFieldAllowed": false,
+    "multipleOutcomeCountsMayBeSummed": false,
+    "nonDeduplicatedMultipleCountsRequireBoundary": true,
+    "missingCountsRemainNotReportedOrNotAssessed": true
+  },
+  "requiredSequence": [
+    "method_appraisal_a",
+    "method_appraisal_b",
+    "method_appraisal_reconciliation",
+    "source_fidelity"
+  ],
+  "fidelityPolicy": {
+    "mandatoryBeforeCandidateCompilation": true,
+    "requiredChecks": [
+      "allFindingsEntailed",
+      "allLocatorsResolve",
+      "countsNotConflated",
+      "unsupportedMechanismAbsent",
+      "boundariesPreserved"
+    ],
+    "issuesMustBeEmptyForCompilation": true,
+    "dispositionMustBePassedForCompilation": true
+  },
+  "designProfilePolicy": {
+    "registrySchemaVersion": "dna-method-appraisal-design-profiles@1",
+    "exactDeclaredDesignAliasRequired": true,
+    "unknownDesignFailsClosed": true,
+    "profileSelectsQuestionsButCannotCreateFindings": true
+  },
+  "singleSourceBoundary": {
+    "bodyOfEvidenceCertainty": "not_assessed",
+    "inconsistency": "not_assessed",
+    "publicationBias": "not_assessed",
+    "numericQualityScoreAllowed": false,
+    "dnaProductValidityAssessed": false,
+    "individualClinicalInferenceAllowed": false
+  },
+  "runIndexPolicy": {
+    "statuses": [
+      "queued",
+      "pass_a_complete",
+      "pass_b_complete",
+      "awaiting_reconciliation",
+      "awaiting_fidelity",
+      "awaiting_compile",
+      "candidate_complete_unregistered",
+      "needs_revision",
+      "contested",
+      "quarantined",
+      "stale_inputs"
+    ],
+    "artifactHashKind": "file_sha256",
+    "receiptHashKind": "file_sha256_bound_in_run_index",
+    "sourceDirectoryPattern": "sources/{sourceId}",
+    "expectedFiles": {
+      "passAFileSha256": "pass-a.json",
+      "passBFileSha256": "pass-b.json",
+      "reconciliationFileSha256": "reconciliation.json",
+      "fidelityPassFileSha256": "fidelity-pass.json",
+      "candidateFileSha256": "candidate.json"
+    },
+    "appendOnlyEvidenceReceiptsRequired": true,
+    "artifactRevisionFilesAreNeverOverwritten": true,
+    "workpackAndPolicyHashesRequired": true,
+    "pilotStoredAsCalibrationRecordNotCompletedBatchSource": true,
+    "runtimeEligibleCountMustRemainZeroWithoutSeparateTrustedReleaseRegistry": true,
+    "releaseEligibleCountMustRemainZeroWithoutSeparateTrustedReleaseRegistry": true
+  }
+}

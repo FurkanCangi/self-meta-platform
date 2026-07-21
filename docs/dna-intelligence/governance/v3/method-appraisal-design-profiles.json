@@ -1,0 +1,136 @@
+{
+  "schemaVersion": "dna-method-appraisal-design-profiles@1",
+  "profiles": [
+    {
+      "id": "profile.evidence_synthesis",
+      "label": "Systematic review and evidence synthesis",
+      "applicableDimensions": ["searchAndSelection", "studyEligibility", "riskOfBias", "synthesisModel", "heterogeneity", "smallStudyEffects", "certaintyBoundary"],
+      "notApplicableByDefault": ["participantRandomization", "participantBlinding"],
+      "mandatoryQuestions": ["Were databases, dates, terms and selection steps reported?", "Were study-level bias and synthesis assumptions assessed?", "Are study, participant and dataset counts kept separate?"],
+      "countSemantics": ["studyCount", "participantCount", "datasetCount"]
+    },
+    {
+      "id": "profile.intervention_trial",
+      "label": "Randomized or nonrandomized intervention",
+      "applicableDimensions": ["allocation", "concealment", "blinding", "attrition", "protocolDeviation", "outcomeSelection", "effectEstimate"],
+      "notApplicableByDefault": ["studyLevelHeterogeneity"],
+      "mandatoryQuestions": ["How was allocation generated and concealed?", "Were missing outcomes and protocol deviations handled?", "Were effect estimates and uncertainty reported?"],
+      "countSemantics": ["participantCount", "datasetCount"]
+    },
+    {
+      "id": "profile.observational",
+      "label": "Cohort, case-control or cross-sectional observation",
+      "applicableDimensions": ["sampling", "temporality", "exposureMeasurement", "outcomeMeasurement", "confounding", "missingData", "analysisSpecification"],
+      "notApplicableByDefault": ["randomization", "allocationConcealment"],
+      "mandatoryQuestions": ["Does the sampling frame support the target population?", "Were major confounders prespecified and addressed?", "Does the design support association only or a narrower boundary?"],
+      "countSemantics": ["participantCount", "datasetCount"]
+    },
+    {
+      "id": "profile.measurement_validation",
+      "label": "Measurement and psychometric validation",
+      "applicableDimensions": ["constructDefinition", "contentValidity", "structuralValidity", "reliability", "measurementError", "criterionValidity", "responsiveness"],
+      "notApplicableByDefault": ["interventionRandomization"],
+      "mandatoryQuestions": ["Is the construct and target population explicit?", "Are validity and reliability properties evaluated separately?", "Is the sample adequate for each measurement analysis?"],
+      "countSemantics": ["studyCount", "participantCount", "datasetCount"]
+    },
+    {
+      "id": "profile.diagnostic_accuracy",
+      "label": "Diagnostic accuracy",
+      "applicableDimensions": ["patientSelection", "indexTest", "referenceStandard", "flowAndTiming", "thresholdSpecification", "precision"],
+      "notApplicableByDefault": ["interventionRandomization"],
+      "mandatoryQuestions": ["Was the reference standard appropriate and blinded?", "Were thresholds prespecified?", "Were all participants included in the analysis flow?"],
+      "countSemantics": ["participantCount", "datasetCount"]
+    },
+    {
+      "id": "profile.qualitative",
+      "label": "Qualitative study",
+      "applicableDimensions": ["samplingRationale", "researcherReflexivity", "dataCollection", "analyticApproach", "informationPower", "interpretiveSupport"],
+      "notApplicableByDefault": ["effectSize", "confidenceInterval", "randomization"],
+      "mandatoryQuestions": ["Is sampling and information power justified?", "Is the analytic process transparent?", "Are interpretations grounded in presented data?"],
+      "countSemantics": ["participantCount", "datasetCount"]
+    },
+    {
+      "id": "profile.case_based",
+      "label": "Case series or single-case experiment",
+      "applicableDimensions": ["caseDefinition", "selection", "baseline", "repeatedMeasurement", "phaseReplication", "attrition", "externalValidity"],
+      "notApplicableByDefault": ["groupRandomization"],
+      "mandatoryQuestions": ["Are cases and selection methods explicit?", "For experiments, are phase changes and repeated measures adequate?", "Is generalization kept within the design boundary?"],
+      "countSemantics": ["participantCount", "datasetCount"]
+    },
+    {
+      "id": "profile.basic_mechanistic",
+      "label": "Animal, in-vitro, ontology or mechanistic data study",
+      "applicableDimensions": ["modelDefinition", "experimentalUnit", "replication", "batchEffects", "measurementValidity", "analysisTransparency", "translationBoundary"],
+      "notApplicableByDefault": ["humanClinicalGeneralizability"],
+      "mandatoryQuestions": ["What is the experimental or data unit?", "Were replication and batch effects addressed?", "Is translation to humans explicitly bounded?"],
+      "countSemantics": ["studyCount", "participantCount", "datasetCount"]
+    },
+    {
+      "id": "profile.guideline_consensus_standard",
+      "label": "Guideline, consensus, nomenclature or reporting standard",
+      "applicableDimensions": ["panelComposition", "conflictManagement", "evidenceSearch", "recommendationMethod", "externalReview", "updatePlan", "scopeBoundary"],
+      "notApplicableByDefault": ["participantRandomization"],
+      "mandatoryQuestions": ["How were panel members and conflicts managed?", "Was evidence identification systematic?", "Are consensus and evidence-supported recommendations distinguished?"],
+      "countSemantics": ["studyCount"]
+    },
+    {
+      "id": "profile.narrative_theory_textbook",
+      "label": "Narrative review, theory or textbook",
+      "applicableDimensions": ["scopeDefinition", "sourceSelectionTransparency", "citationTraceability", "balanceOfAlternatives", "currency", "theoryEvidenceBoundary"],
+      "notApplicableByDefault": ["participantRandomization", "metaAnalyticHeterogeneity"],
+      "mandatoryQuestions": ["Is source selection reproducible or explicitly narrative?", "Are claims traceable to primary sources?", "Are theory and empirical evidence kept separate?"],
+      "countSemantics": ["studyCount"]
+    },
+    {
+      "id": "profile.protocol_other",
+      "label": "Protocol or unresolved design",
+      "applicableDimensions": ["objective", "prespecification", "eligibility", "measures", "analysisPlan", "deviationHandling", "scopeBoundary"],
+      "notApplicableByDefault": ["completedResults", "effectEstimate"],
+      "mandatoryQuestions": ["Is the design sufficiently specified to route appraisal?", "Which fields are prospectively prespecified?", "Which findings must remain not assessed because results do not yet exist?"],
+      "countSemantics": ["studyCount", "participantCount", "datasetCount"]
+    }
+  ],
+  "declaredDesignAliases": {
+    "committee_guideline_and_review": "profile.guideline_consensus_standard",
+    "consensus_perspective_and_reporting_standard": "profile.guideline_consensus_standard",
+    "direct_stimulation_narrative_review": "profile.narrative_theory_textbook",
+    "expert_consensus_view": "profile.guideline_consensus_standard",
+    "methodological_guideline": "profile.guideline_consensus_standard",
+    "multi_society_consensus_statement": "profile.guideline_consensus_standard",
+    "narrative_review": "profile.narrative_theory_textbook",
+    "nomenclature_standard": "profile.guideline_consensus_standard",
+    "ontology_data_descriptor": "profile.basic_mechanistic",
+    "reporting_guideline": "profile.guideline_consensus_standard",
+    "systematic_review": "profile.evidence_synthesis",
+    "systematic_review_and_meta_analysis": "profile.evidence_synthesis",
+    "systematic_review_and_method_guidelines": "profile.evidence_synthesis",
+    "translational_expert_white_paper": "profile.guideline_consensus_standard",
+    "consensus_perspective": "profile.guideline_consensus_standard",
+    "narrative_theoretical_review": "profile.narrative_theory_textbook"
+  },
+  "canonicalDesignAliases": {
+    "animal_experimental": "profile.basic_mechanistic",
+    "case_control": "profile.observational",
+    "case_series": "profile.case_based",
+    "consensus": "profile.guideline_consensus_standard",
+    "cross_sectional": "profile.observational",
+    "diagnostic_accuracy": "profile.diagnostic_accuracy",
+    "guideline": "profile.guideline_consensus_standard",
+    "in_vitro": "profile.basic_mechanistic",
+    "narrative_review": "profile.narrative_theory_textbook",
+    "nonrandomized_intervention": "profile.intervention_trial",
+    "not_assessed": "profile.protocol_other",
+    "not_reported": "profile.protocol_other",
+    "other": "profile.protocol_other",
+    "prospective_cohort": "profile.observational",
+    "protocol": "profile.protocol_other",
+    "psychometric_validation": "profile.measurement_validation",
+    "qualitative": "profile.qualitative",
+    "randomized_controlled_trial": "profile.intervention_trial",
+    "retrospective_cohort": "profile.observational",
+    "single_case_experimental": "profile.case_based",
+    "systematic_review_meta_analysis": "profile.evidence_synthesis",
+    "textbook": "profile.narrative_theory_textbook",
+    "theory": "profile.narrative_theory_textbook"
+  }
+}

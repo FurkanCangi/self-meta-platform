@@ -42,6 +42,7 @@
   },
   "unknownPolicy": {
     "unknownMethodValue": "not_reported_or_not_assessed",
+    "nonPopulationMethodologyAgeScope": "not_applicable",
     "inferenceFromTitleOrSourceRoleAllowed": false,
     "missingPopulationMayBeInferred": false,
     "missingAgeScopeMayBeInferred": false
@@ -70,7 +71,9 @@
     "requiredPassOrder": "method_appraisal_a_then_b_then_reconciliation",
     "timestampsMustIncrease": true,
     "trustedRegistryRequired": true,
-    "currentRegisteredAuditedAppraisals": 0
+    "repoPinnedRuntimeRegisteredAuditedAppraisals": 0,
+    "ssdMethodPipelineRegistrationsAreRuntimeAuthority": false,
+    "currentCountsAuthority": "docs/dna-intelligence/program/evidence/prebook-readiness-current.json"
   },
   "runtimePolicy": {
     "notAssessed": "blocked",

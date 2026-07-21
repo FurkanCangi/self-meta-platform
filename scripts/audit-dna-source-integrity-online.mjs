@@ -13,6 +13,8 @@ import {
 import { basename, dirname, extname, join, relative, resolve, sep } from "node:path"
 import { spawnSync } from "node:child_process"
 
+import { validateDnaCorrectionResolutionAttestation } from "./dna-correction-resolution-lib.mjs"
+
 import {
   DNA_SOURCE_ACQUISITION_LEDGER_VERSION,
   evaluateDnaSourceIntegrity,
@@ -28,6 +30,11 @@ if (!researchSsdRootInput) throw new Error("RESEARCH_SSD_ROOT is required")
 const researchSsdRootCandidate = resolve(researchSsdRootInput)
 if (!existsSync(researchSsdRootCandidate)) throw new Error("ResearchSSD root is not mounted")
 const researchSsdRoot = realpathSync(researchSsdRootCandidate)
+const repositoryRoot = resolve(dirname(resolve(process.argv[1])), "..")
+const correctionAttestationPath = resolve(
+  repositoryRoot,
+  "docs/dna-intelligence/governance/v3/correction-resolution-attestations/tripod-ai-2024.json",
+)
 const rootCandidate = resolve(
   process.env.DNA_SOURCE_LIBRARY_ROOT
     || process.argv.find((argument) => argument.startsWith("--root="))?.slice(7)
@@ -70,6 +77,41 @@ if (!offlineVerify) {
 
 function readJson(path) {
   return JSON.parse(readFileSync(path, "utf8"))
+}
+
+function loadVerifiedCorrectionAttestations() {
+  if (!existsSync(correctionAttestationPath)) return new Map()
+  const attestation = readJson(correctionAttestationPath)
+  const validation = validateDnaCorrectionResolutionAttestation(attestation)
+  if (!validation.ok || attestation.decision?.status !== "verified_applied") return new Map()
+  const verifier = spawnSync(
+    process.execPath,
+    [resolve(repositoryRoot, "scripts/verify-dna-correction-resolution-attestation.mjs"), "--ssd"],
+    {
+      cwd: repositoryRoot,
+      encoding: "utf8",
+      env: { ...process.env, RESEARCH_SSD_ROOT: researchSsdRoot },
+      timeout: 60_000,
+    },
+  )
+  if (verifier.status !== 0) return new Map()
+  try {
+    const result = JSON.parse(verifier.stdout)
+    if (!result.ok || result.attestationSha256 !== attestation.attestationSha256
+      || result.ssdArchiveVerified !== true) return new Map()
+  } catch {
+    return new Map()
+  }
+  return new Map([[attestation.source.sourceId, Object.freeze({
+    schemaVersion: attestation.schemaVersion,
+    attestationId: attestation.attestationId,
+    attestationSha256: attestation.attestationSha256,
+    checkedAt: attestation.checkedAt,
+    decision: attestation.decision,
+    passedCheckCount: attestation.checks.filter((check) => check.status === "passed").length,
+    requiredCheckCount: attestation.checks.length,
+    ssdArchiveVerified: true,
+  })]])
 }
 
 function readContainedJson(path) {
@@ -189,6 +231,7 @@ function walk(directory) {
 }
 
 const priorArchivedAudit = refresh ? archiveCurrentAuditIfComplete() : null
+const verifiedCorrectionAttestations = loadVerifiedCorrectionAttestations()
 
 function canonicalDoi(value) {
   if (!value) return null
@@ -196,9 +239,55 @@ function canonicalDoi(value) {
     .replace(/^https?:\/\/(?:dx\.)?doi\.org\//i, "").replace(/[.,;:]+$/, "").toLowerCase()
 }
 
+function canonicalIsbn(value) {
+  if (!value) return null
+  return String(value).replace(/^isbn(?:-1[03])?\s*:\s*/i, "")
+    .replace(/[^0-9X]/gi, "").toUpperCase() || null
+}
+
 function firstString(value) {
   if (Array.isArray(value)) return value.find((item) => typeof item === "string") || null
   return typeof value === "string" ? value : null
+}
+
+function firstYear(...values) {
+  for (const value of values) {
+    const match = String(value ?? "").match(/(?:18|19|20|21)\d{2}/)
+    if (match) return Number(match[0])
+  }
+  return null
+}
+
+function crossrefYear(work) {
+  return work?.published?.["date-parts"]?.[0]?.[0]
+    || work?.issued?.["date-parts"]?.[0]?.[0]
+    || work?.created?.["date-parts"]?.[0]?.[0]
+    || null
+}
+
+function cslYear(work) {
+  return work?.issued?.["date-parts"]?.[0]?.[0]
+    || work?.published?.["date-parts"]?.[0]?.[0]
+    || firstYear(work?.issued?.raw, work?.published?.raw)
+}
+
+function personNames(rows) {
+  return Array.isArray(rows) ? rows.map((person) => {
+    if (typeof person === "string") return person
+    return [person?.given, person?.family || person?.name].filter(Boolean).join(" ")
+  }).filter(Boolean) : []
+}
+
+function remoteAuthors({ crossref, doiCsl, pubmed, europePmc, officialIdentity }) {
+  const candidates = [
+    personNames(crossref?.author),
+    personNames(doiCsl?.author),
+    Array.isArray(pubmed?.authors) ? pubmed.authors.map((author) => author.name).filter(Boolean) : [],
+    Array.isArray(europePmc?.authorList?.author)
+      ? europePmc.authorList.author.map((author) => author.fullName || author.lastName).filter(Boolean) : [],
+    officialIdentity ? [...(officialIdentity.verifiedBibliography?.authors || [])] : [],
+  ]
+  return candidates.find((authors) => authors.length > 0) || []
 }
 
 function canonicalText(value) {
@@ -246,12 +335,17 @@ function pubmedCorrectionUpdate(update) {
   }
 }
 
-async function fetchJson(url) {
+async function fetchJson(url, options = {}) {
   let lastError = null
   for (let attempt = 0; attempt < 4; attempt += 1) {
     try {
       const response = await fetch(url, {
-        headers: { "user-agent": "SelfMetaAI-DNA-IntegrityAuditor/1.0 (research@selfmetacognition.com)" },
+        headers: {
+          "user-agent": "SelfMetaAI-DNA-IntegrityAuditor/2.0 (research@selfmetacognition.com)",
+          accept: "application/json",
+          ...(options.headers || {}),
+        },
+        signal: AbortSignal.timeout(30_000),
       })
       if (!response.ok) {
         if (response.status === 429 && attempt < 3) {
@@ -375,6 +469,7 @@ function localSourceMetadata() {
       record,
       publisher: String(record.publisher || bibliography.publisher || "") || null,
       venue: String(record.venue || bibliography.venue || bibliography.journal || "") || null,
+      version: String(record.version || bibliography.version || "") || null,
     })
   }
   const restricted = readContainedJson(join(root, "restricted-metadata", "sources.json"))
@@ -384,12 +479,14 @@ function localSourceMetadata() {
       record: row,
       publisher: String(row.publisher || "") || null,
       venue: String(row.venue || "") || null,
+      version: String(row.version || row.bibliography?.version || "") || null,
     })
   }
   return result
 }
 
 const identityAudit = readContainedJson(join(root, "governance-audit", "v1", "identity-audit.json"))
+const identityRaw = readContainedJson(join(root, "governance-audit", "v1", "raw-online-identity-responses.json"))
 const previousIntegrity = existsSync(integrityAuditPath) ? readContainedJson(integrityAuditPath) : null
 const previousById = new Map((previousIntegrity?.records || []).map((row) => [row.sourceId, row]))
 const localMetadata = localSourceMetadata()
@@ -412,8 +509,22 @@ const integrityFacts = await mapLimit(identityRecords, 2, async (identity) => {
   const doi = canonicalDoi(identity.identifiers?.doi || identity.verifiedIdentifiers?.doi)
   const pmid = String(identity.identifiers?.pmid || identity.verifiedIdentifiers?.pmid || "") || null
   const local = localMetadata.get(identity.sourceId)
+  const correctionAttestation = verifiedCorrectionAttestations.get(identity.sourceId) || null
+  const officialRaw = identityRaw.officialMetadata?.[identity.sourceId] || null
+  const officialApplicable = Object.prototype.hasOwnProperty.call(
+    identityRaw.officialMetadata || {}, identity.sourceId,
+  )
+  const officialObservedIdentity = officialApplicable && !officialRaw?.error ? identity : null
+  const officialIdentity = officialObservedIdentity
+    && identity.identityVerification?.status === "verified"
+    && /official|Open Textbook Library|eCampusOntario|Autism CRC/i.test(identity.identityVerification?.authority || "")
+    ? identity : null
   let crossref = null
   let crossrefError = null
+  let doiRegistrationAgency = null
+  let doiRegistrationAgencyError = null
+  let doiCsl = null
+  let doiCslError = null
   let europePmc = null
   let europePmcError = null
   let pubmed = null
@@ -421,9 +532,26 @@ const integrityFacts = await mapLimit(identityRecords, 2, async (identity) => {
 
   if (doi) {
     try {
-      crossref = (await fetchJson(`https://api.crossref.org/works/${encodeURIComponent(doi)}`)).message
+      const agencyRows = await fetchJson(`https://doi.org/ra/${encodeURIComponent(doi)}`)
+      doiRegistrationAgency = Array.isArray(agencyRows) ? agencyRows[0] || null : null
     } catch (error) {
-      crossrefError = String(error?.message || error)
+      doiRegistrationAgencyError = String(error?.message || error)
+    }
+    const registrationAgency = String(doiRegistrationAgency?.RA || "").toLowerCase()
+    if (registrationAgency === "crossref") {
+      try {
+        crossref = (await fetchJson(`https://api.crossref.org/works/${encodeURIComponent(doi)}`)).message
+      } catch (error) {
+        crossrefError = String(error?.message || error)
+      }
+    } else if (doiRegistrationAgency) {
+      try {
+        doiCsl = await fetchJson(`https://doi.org/${encodeURIComponent(doi)}`, {
+          headers: { accept: "application/vnd.citationstyles.csl+json" },
+        })
+      } catch (error) {
+        doiCslError = String(error?.message || error)
+      }
     }
   }
   if (pmid) {
@@ -439,6 +567,8 @@ const integrityFacts = await mapLimit(identityRecords, 2, async (identity) => {
     if (!pubmed) pubmedError = pubmedBatchError || "no_result"
   }
 
+  const registrationAgency = String(doiRegistrationAgency?.RA || "").toLowerCase()
+  const isCrossrefDoi = registrationAgency === "crossref"
   const crossrefUpdatedBy = Array.isArray(crossref?.["updated-by"]) ? crossref["updated-by"] : []
   const crossrefUpdateTo = Array.isArray(crossref?.["update-to"]) ? crossref["update-to"] : []
   const europeCorrections = europePmc?.commentCorrectionList?.commentCorrection || []
@@ -455,37 +585,93 @@ const integrityFacts = await mapLimit(identityRecords, 2, async (identity) => {
   ]
   const expectedVenue = identity.bibliography?.venue || local?.venue
     || identity.verifiedBibliography?.venue || null
-  const expectedPublisher = local?.publisher || null
+  // Some legacy article manifests stored the journal/container in the
+  // `publisher` field. If that value is the same as the independently resolved
+  // venue, treat it as an unasserted publisher instead of comparing a journal
+  // title with Crossref's publishing organization.
+  const publisherIsVenueAlias = Boolean(local?.publisher && expectedVenue
+    && canonicalText(local.publisher) === canonicalText(expectedVenue))
+  const expectedPublisher = publisherIsVenueAlias ? null : local?.publisher || null
+  const expectedYear = Number(identity.bibliography?.year) || null
+  const expectedAuthors = Array.isArray(identity.bibliography?.authors)
+    ? identity.bibliography.authors.filter(Boolean) : []
+  const expectedIsbn = canonicalIsbn(identity.identifiers?.isbn)
+  const expectedVersion = local?.version || null
+  const observedYearCandidates = [...new Set([
+    crossrefYear(crossref),
+    cslYear(doiCsl),
+    firstYear(pubmed?.pubdate, pubmed?.epubdate),
+    Number(europePmc?.pubYear) || null,
+    Number(officialObservedIdentity?.verifiedBibliography?.year) || null,
+  ].filter((year) => Number.isInteger(year) && year > 0))]
+  // Online-first and issue publication years can legitimately differ. Prefer
+  // the locally asserted year only when at least one independent authority
+  // reports it; otherwise retain the first authority year and fail closed.
+  const observedYear = observedYearCandidates.includes(expectedYear)
+    ? expectedYear : observedYearCandidates[0] || null
+  const observedAuthors = remoteAuthors({
+    crossref,
+    doiCsl,
+    pubmed,
+    europePmc,
+    officialIdentity: officialObservedIdentity,
+  })
+  const observedIsbn = canonicalIsbn(
+    firstString(crossref?.ISBN) || firstString(doiCsl?.ISBN)
+      || officialObservedIdentity?.verifiedIdentifiers?.isbn,
+  )
+  const observedVersion = officialIdentity?.verifiedBibliography?.version || null
   const input = {
     sourceId: identity.sourceId,
     checkedAt,
     publicationKind: identity.publicationRole === "book"
       ? "book"
-      : /guideline/i.test(identity.bibliography?.title || "") ? "guideline" : "article",
+      : identity.publicationRole === "guideline" ? "guideline" : "article",
     expected: {
       title: identity.bibliography?.title || "",
       doi,
+      year: expectedYear,
+      authors: expectedAuthors,
+      isbn: expectedIsbn,
+      version: expectedVersion,
       venue: expectedVenue,
       publisher: expectedPublisher,
     },
     observed: {
       title: bestTitle(identity.bibliography?.title || "", [
-        firstString(crossref?.title), pubmed?.title, europePmc?.title,
+        firstString(crossref?.title), doiCsl?.title, pubmed?.title, europePmc?.title,
+        officialObservedIdentity?.verifiedBibliography?.title,
       ]),
-      doi: canonicalDoi(crossref?.DOI || pubmed?.articleids?.find((item) => item.idtype === "doi")?.value || europePmc?.doi),
-      venue: firstString(crossref?.["container-title"]) || pubmed?.source || europePmc?.journalInfo?.journal?.title || null,
-      publisher: String(crossref?.publisher || "") || null,
+      doi: canonicalDoi(crossref?.DOI || doiCsl?.DOI
+        || pubmed?.articleids?.find((item) => item.idtype === "doi")?.value || europePmc?.doi),
+      year: observedYear,
+      authors: observedAuthors,
+      isbn: observedIsbn,
+      version: observedVersion,
+      venue: firstString(crossref?.["container-title"]) || doiCsl?.["container-title"]
+        || pubmed?.source || europePmc?.journalInfo?.journal?.title
+        || officialObservedIdentity?.verifiedBibliography?.venue || null,
+      publisher: String(crossref?.publisher || doiCsl?.publisher
+        || officialObservedIdentity?.verifiedBibliography?.publisher || "") || null,
     },
     authorityCoverage: {
-      crossref: doi ? crossref ? "checked" : "unavailable" : "not_applicable",
-      retractionWatch: doi ? crossref ? "checked" : "unavailable" : "not_applicable",
-      crossmark: doi ? crossref ? "checked" : "unavailable" : "not_applicable",
+      doiRegistrationAgency: doi
+        ? doiRegistrationAgency ? "checked" : "unavailable" : "not_applicable",
+      doiMetadata: doi
+        ? crossref || doiCsl ? "checked" : "unavailable" : "not_applicable",
+      officialMetadata: officialApplicable
+        ? officialRaw && !officialRaw.error ? "checked" : "unavailable" : "not_applicable",
+      crossref: doi ? isCrossrefDoi ? crossref ? "checked" : "unavailable" : "not_applicable" : "not_applicable",
+      retractionWatch: doi ? isCrossrefDoi ? crossref ? "checked" : "unavailable" : "not_applicable" : "not_applicable",
+      crossmark: doi ? isCrossrefDoi ? crossref ? "checked" : "unavailable" : "not_applicable" : "not_applicable",
       pubmed: pmid ? pubmed ? "checked" : "unavailable" : "not_applicable",
       europePmc: pmid ? europePmc ? "checked" : "unavailable" : "not_applicable",
     },
     updates,
     publicationTypes,
-    correctionResolution: identity.correctionResolution === "resolved"
+    correctionResolution: correctionAttestation?.decision.sourceIntegrityResolution === "applied"
+      ? "applied"
+      : identity.correctionResolution === "resolved"
       || identity.correctionResolution === "applied"
       ? "applied"
       : identity.correctionResolution === "not_applicable" ? "not_applicable" : "pending",
@@ -497,7 +683,28 @@ const integrityFacts = await mapLimit(identityRecords, 2, async (identity) => {
     sourceId: identity.sourceId,
     input,
     record,
-    raw: { crossref, crossrefError, europePmc, europePmcError, pubmed, pubmedError },
+    raw: {
+      doiRegistrationAgency,
+      doiRegistrationAgencyError,
+      doiCsl,
+      doiCslError,
+      crossref,
+      crossrefError,
+      europePmc,
+      europePmcError,
+      pubmed,
+      pubmedError,
+      officialMetadata: officialRaw,
+      officialIdentityEvidenceSha256: officialApplicable
+        ? identity.identityVerification?.evidenceSha256 || null : null,
+      correctionAttestation,
+    },
+    metadataNormalization: {
+      publisherExpectation: publisherIsVenueAlias
+        ? "legacy_venue_alias_not_used_as_publisher_assertion"
+        : expectedPublisher ? "local_publisher_assertion" : "not_asserted",
+    },
+    correctionAttestation,
     crossmark: {
       updatePolicy: crossref?.["update-policy"] || null,
       updatedByCount: crossrefUpdatedBy.length,
@@ -509,14 +716,18 @@ const integrityFacts = await mapLimit(identityRecords, 2, async (identity) => {
 })
 
 const rawOnline = {
-  schemaVersion: "dna-source-integrity-raw-authority-responses@1",
+  schemaVersion: "dna-source-integrity-raw-authority-responses@2",
   checkedAt,
   authorities: {
     crossref: "https://api.crossref.org/works/{doi}",
+    doiRegistrationAgency: "https://doi.org/ra/{doi}",
+    doiCslMetadata: "https://doi.org/{doi} with application/vnd.citationstyles.csl+json",
     retractionWatch: "Crossref updated-by/update-to source=retraction-watch",
     crossmark: "Crossref updated-by/update-to/update-policy",
     pubmed: "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi",
     europePmc: "https://www.ebi.ac.uk/europepmc/webservices/rest/search",
+  officialMetadata: "hash-bound official source authority pass from governance-audit/v1",
+    correctionResolution: "repository attestation plus append-only ResearchSSD evidence archive",
   },
   responses: Object.fromEntries(integrityFacts.map((fact) => [fact.sourceId, fact.raw])),
 }
@@ -527,6 +738,8 @@ const integrityRecords = integrityFacts.map((fact) => ({
   inputSha256: sha256(fact.input),
   rawAuthorityResponseSha256: sha256(fact.raw),
   crossmark: fact.crossmark,
+  correctionAttestation: fact.correctionAttestation,
+  metadataNormalization: fact.metadataNormalization,
 }))
 const integrityCounts = Object.fromEntries(
   ["verified_clean", "corrected", "superseded", "pending", "quarantined", "withdrawn"]
@@ -535,7 +748,7 @@ const integrityCounts = Object.fromEntries(
 const authorityUnavailableCount = integrityRecords.filter((record) =>
   Object.values(record.authorityCoverage).some((state) => state === "unavailable")).length
 const integrityAudit = {
-  schemaVersion: "dna-source-integrity-audit@1",
+  schemaVersion: "dna-source-integrity-audit@2",
   checkedAt,
   sourceCount: integrityRecords.length,
   rawAuthorityResponses: "integrity-audit/v1/raw-online-integrity-responses.json",

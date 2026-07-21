@@ -647,13 +647,14 @@ function validateDnaMethodAppraisalAgainstRegistry(
         if (validatedReviewPasses[index]?.reviewerRole !== requiredRole) {
           errors.push(`review_pass_${index}:invalid_role_order`)
         }
-        if (index > 0) {
-          const previous = Date.parse(validatedReviewPasses[index - 1]?.completedAt ?? "")
-          const current = Date.parse(validatedReviewPasses[index]?.completedAt ?? "")
-          if (!Number.isFinite(previous) || !Number.isFinite(current) || current <= previous) {
-            errors.push(`review_pass_${index}:non_chronological_completion`)
-          }
-        }
+      }
+      const passATime = Date.parse(validatedReviewPasses[0]?.completedAt ?? "")
+      const passBTime = Date.parse(validatedReviewPasses[1]?.completedAt ?? "")
+      const reconciliationTime = Date.parse(validatedReviewPasses[2]?.completedAt ?? "")
+      if (!Number.isFinite(passATime) || !Number.isFinite(passBTime)
+        || !Number.isFinite(reconciliationTime)
+        || reconciliationTime <= passATime || reconciliationTime <= passBTime) {
+        errors.push("review_pass_2:non_chronological_completion")
       }
     }
     if (!Array.isArray(record.evidenceRefs) || record.evidenceRefs.length === 0) {

@@ -12,6 +12,16 @@
       "hashLocked": true,
       "developmentSeparationBoundByNormalizedTextAndSemanticProvenance": true,
       "developmentAssignmentLedgerHashRequired": true,
+      "appendOnlyAllEverVisibleDevelopmentHistoryRequired": true,
+      "committedDevelopmentHistoryAuthorityRequired": true,
+      "replacementGenesisRejected": true,
+      "deterministicNearDuplicateGuardRequired": true,
+      "semanticFamilyRegistryRequired": true,
+      "authorityRegistryResolutionRequired": true,
+      "authorityRegistryHashBoundToManifest": true,
+      "dnaProductFamiliesRequireLockedOwnerBook": true,
+      "questionApprovalLedgerRequired": true,
+      "authorReviewerSeparationRequired": true,
       "allReleasedTopicsRequired": true,
       "minimumSupportedQuestionsPerReleasedTopic": 2,
       "questionFamiliesKeptTogether": true,
@@ -81,6 +91,15 @@
       "semanticJudgmentAndExpectedOutcomeMustResolve": true,
       "reviewerAndRunProvenanceRequired": true,
       "duplicateOrOrphanRecordsAllowed": false
+    },
+    "allVariationApprovalLedger": {
+      "requiredArtifact": "variation-bank/variation-approvals.json",
+      "oneRecordPerVariation": true,
+      "questionAndAnnotationHashesMustResolve": true,
+      "recipeIdRequired": true,
+      "authorReviewerSeparationRequired": true,
+      "manifestLedgerHashBindingRequired": true,
+      "authorityClass": "codex_multi_pass_not_independent"
     },
     "fixedMinimumCoverageMatrix": [
       {
@@ -158,7 +177,8 @@
       "kindBaseCounts",
       "kindFamilyCounts",
       "coverageSha256",
-      "reviewerTransformEvidenceLedgerSha256"
+      "reviewerTransformEvidenceLedgerSha256",
+      "variationApprovalLedgerSha256"
     ],
     "marketingClassification": "test_variations_not_knowledge"
   },
@@ -172,6 +192,10 @@
       "variation-bank/variations.json",
       "variation-bank/manifest.json",
       "variation-bank/reviewer-transform-evidence.json",
+      "development-history/ledger.json",
+      "locked-benchmark/semantic-families.json",
+      "locked-benchmark/question-approvals.json",
+      "variation-bank/variation-approvals.json",
       "case-fixtures.json",
       "observations/retrieval.json",
       "observations/claim-atoms.json",
@@ -187,11 +211,17 @@
       "runId",
       "evaluatedAt",
       "developmentAssignmentLedgerSha256",
+      "developmentHistoryAuthoritySha256",
+      "semanticFamilyRegistrySha256",
+      "authorityRegistrySha256",
+      "questionApprovalLedgerSha256",
       "releasedTopicCoverageSha256",
-      "reviewerTransformEvidenceLedgerSha256"
+      "reviewerTransformEvidenceLedgerSha256",
+      "variationApprovalLedgerSha256"
     ],
     "perRowExecutionBindings": ["inputSha256", "outputSha256"],
     "releaseCheckerRerunsCommittedEngine": true,
+    "committedDevelopmentHistoryAuthority": "src/lib/dna/chat/evaluation/generated/currentDevelopmentHistoryAuthority.json",
     "declarativeBooleansAloneCanPass": false,
     "sourceIntegrationEvidence": "derived_from_validated_static_package_and_release_registry",
     "callerAuthoredAllClearSignalsAccepted": false,

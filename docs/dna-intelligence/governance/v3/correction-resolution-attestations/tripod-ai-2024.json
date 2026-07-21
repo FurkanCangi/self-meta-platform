@@ -1,0 +1,129 @@
+{
+  "schemaVersion": "dna-correction-resolution-attestation@1",
+  "attestationId": "correction.tripod-ai-2024.bmj-q902",
+  "checkedAt": "2026-07-20T11:16:09.704Z",
+  "decision": {
+    "status": "verified_applied",
+    "sourceIntegrityResolution": "applied",
+    "affectedScope": "author_affiliations_only",
+    "scientificClaimImpact": "not_indicated_by_official_notice"
+  },
+  "source": {
+    "sourceId": "tripod-ai-2024",
+    "doi": "10.1136/bmj-2023-078378",
+    "pmcid": "PMC11019967",
+    "sourceRecordPath": "evidence/cognition-development/tripod-ai-2024/source.json",
+    "downloadedAt": "2026-07-18",
+    "manifestSha256": "648d56c1cfe3bc694c8a27940b32403fdf4f706bce3097bd5d99fbbd00bf5cbb"
+  },
+  "correctionNotice": {
+    "doi": "10.1136/bmj.q902",
+    "pmcid": "PMC11025451",
+    "publicationDate": "2024-04-18",
+    "articleType": "correction",
+    "relationType": "corrected-article",
+    "targetDoi": "10.1136/bmj-2023-078378",
+    "targetPmcid": "PMC11019967",
+    "scope": "author_affiliations_only",
+    "minorChanges": true,
+    "otherAffectedFieldsIndicated": false,
+    "articleUpdated": true,
+    "pdfUpdated": true,
+    "sourceUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11025451/fullTextXML",
+    "archivedRelativePath": "correction-audit/v1/history/2026-07-20T11-16-09-704Z--588d7ddf69355bbe/bmj-q902-notice.jats.xml",
+    "bytes": 3743,
+    "sha256": "588d7ddf69355bbe50ba6d89cb928a21e1abf4636a75bde876e62d0f0c52acde",
+    "normalizedStatementSha256": "1a6c1a6bab713aa437f27d59c642ca3fecff3be4c50ca67245790ca4d7895cdd"
+  },
+  "artifacts": {
+    "jats": {
+      "localRelativePath": "evidence/cognition-development/tripod-ai-2024/raw/collins-2024.jats.xml",
+      "remoteUrl": "https://www.ebi.ac.uk/europepmc/webservices/rest/PMC11019967/fullTextXML",
+      "retrievedAt": "2026-07-20T11:16:09.704Z",
+      "doi": "10.1136/bmj-2023-078378",
+      "pmcid": "PMC11019967",
+      "localBytes": 208453,
+      "remoteBytes": 208453,
+      "localSha256": "cec3e93600443cbc3bede38794057f1b19681f55d96dc618768a9256f7ff3b8f",
+      "remoteSha256": "cec3e93600443cbc3bede38794057f1b19681f55d96dc618768a9256f7ff3b8f",
+      "manifestSha256": "cec3e93600443cbc3bede38794057f1b19681f55d96dc618768a9256f7ff3b8f",
+      "authority": "Europe PMC current fullTextXML"
+    },
+    "pdf": {
+      "localRelativePath": "evidence/cognition-development/tripod-ai-2024/raw/collins-2024.pdf",
+      "remoteUrl": "https://discovery.ucl.ac.uk/id/eprint/10191161/1/bmj-2023-078378.full.pdf",
+      "retrievedAt": "2026-07-20T11:16:09.704Z",
+      "documentModifiedAt": "2024-04-22T12:21:34.000Z",
+      "localBytes": 291492,
+      "remoteBytes": 291492,
+      "localSha256": "8d3dd38873690eb8d86bb4d4f66a74a78448444013571462543ada35443ab9d5",
+      "remoteSha256": "8d3dd38873690eb8d86bb4d4f66a74a78448444013571462543ada35443ab9d5",
+      "manifestSha256": "8d3dd38873690eb8d86bb4d4f66a74a78448444013571462543ada35443ab9d5",
+      "authority": "UCL Discovery official institutional repository; publisher-version copy",
+      "publisherEndpoint": {
+        "url": "https://www.bmj.com/content/bmj/385/bmj-2023-078378.full.pdf",
+        "status": 403,
+        "contentType": "text/html; charset=UTF-8",
+        "usableAsEvidence": false
+      }
+    }
+  },
+  "checks": [
+    {
+      "id": "notice_identity",
+      "status": "passed",
+      "evidenceRefs": ["correction_notice_jats"],
+      "failureReason": null
+    },
+    {
+      "id": "notice_target_relation",
+      "status": "passed",
+      "evidenceRefs": ["correction_notice_jats", "source_manifest"],
+      "failureReason": null
+    },
+    {
+      "id": "notice_scope",
+      "status": "passed",
+      "evidenceRefs": ["correction_notice_jats"],
+      "failureReason": null
+    },
+    {
+      "id": "notice_update_statement",
+      "status": "passed",
+      "evidenceRefs": ["correction_notice_jats"],
+      "failureReason": null
+    },
+    {
+      "id": "source_manifest_binding",
+      "status": "passed",
+      "evidenceRefs": ["local_current_jats", "local_current_pdf", "source_manifest"],
+      "failureReason": null
+    },
+    {
+      "id": "current_jats_binding",
+      "status": "passed",
+      "evidenceRefs": ["local_current_jats", "remote_current_jats", "source_manifest"],
+      "failureReason": null
+    },
+    {
+      "id": "current_pdf_binding",
+      "status": "passed",
+      "evidenceRefs": ["local_current_pdf", "remote_repository_pdf", "source_manifest"],
+      "failureReason": null
+    },
+    {
+      "id": "post_notice_timing",
+      "status": "passed",
+      "evidenceRefs": ["correction_notice_jats", "local_current_pdf", "source_manifest"],
+      "failureReason": null
+    }
+  ],
+  "reasonCodes": [],
+  "limitations": [
+    "The decision verifies the correction notice, its stated scope, and the current artifact bindings; it is not a scientific-validity appraisal.",
+    "No pre-correction binary was available, so the attestation does not independently diff every pre/post field.",
+    "The scientific-claim-impact statement is limited to what the official correction notice indicates; it does not prove that no undisclosed change exists.",
+    "The PDF byte match uses the publisher-version copy held by the official institutional repository because the BMJ PDF endpoint denied automated retrieval during this audit."
+  ],
+  "attestationSha256": "3735ff5062ddb64833b7df25cb720fd3d046490bc3ba48e9c4c72859d89510e1"
+}

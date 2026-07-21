@@ -1,6 +1,6 @@
 {
   "schemaVersion": "dna-source-integrity-archive-snapshot@1",
-  "auditedAt": "2026-07-19T13:56:08.426Z",
+  "auditedAt": "2026-07-20T11:42:39.377Z",
   "storagePolicy": {
     "rootAlias": "ResearchSSD:",
     "repoContainsRawArtifacts": false,
@@ -14,31 +14,37 @@
   "integrity": {
     "sourceCount": 47,
     "stateCounts": {
-      "verified_clean": 7,
-      "corrected": 0,
+      "verified_clean": 46,
+      "corrected": 1,
       "superseded": 0,
-      "pending": 40,
+      "pending": 0,
       "quarantined": 0,
       "withdrawn": 0
     },
-    "integrityGateEligibleCount": 7,
-    "integrityGateBlockedCount": 40,
+    "integrityGateEligibleCount": 47,
+    "integrityGateBlockedCount": 0,
     "runtimeReleasedCount": 0,
-    "authorityUnavailableCount": 3,
+    "authorityUnavailableCount": 0,
     "updateSignalCount": 2,
     "retractionWatchMarkerCount": 0,
     "retractionOrWithdrawalCount": 0,
     "expressionOfConcernCount": 0,
-    "publisherConsistencyPendingSourceIds": [
-      "chen-et-al-2024-self-regulation-measures",
-      "corrigan-et-al-2021"
-    ],
-    "authorityUnavailableSourceIds": [
-      "restricted.grossman-et-al-2026-polyvagal-evaluation",
-      "restricted.porges-2025-polyvagal-current-status",
-      "restricted.porges-2026-polyvagal-response"
-    ]
+    "publisherConsistencyPendingSourceIds": [],
+    "authorityUnavailableSourceIds": []
   },
+  "correctionResolutionAttestations": [
+    {
+      "sourceId": "tripod-ai-2024",
+      "repositoryRelativePath": "docs/dna-intelligence/governance/v3/correction-resolution-attestations/tripod-ai-2024.json",
+      "repositorySha256": "e64bacc2f63548214a4b9ef19cb62b78b745f69cac384f81f903108802f79792",
+      "attestationSha256": "3735ff5062ddb64833b7df25cb720fd3d046490bc3ba48e9c4c72859d89510e1",
+      "decision": "corrected",
+      "scope": "author_affiliations_only",
+      "requiredChecks": 8,
+      "passedChecks": 8,
+      "ssdArchiveVerified": true
+    }
+  ],
   "acquisition": {
     "rawArtifactCount": 66,
     "ledgerEntryCount": 66,
@@ -46,10 +52,10 @@
     "rejectedCount": 0,
     "bytes": 312133875,
     "mediaTypeCounts": {
+      "application/epub+zip": 2,
       "application/pdf": 33,
       "application/xml": 24,
-      "application/xml+jats": 7,
-      "application/epub+zip": 2
+      "application/xml+jats": 7
     },
     "acquisitionMethodCounts": {
       "institutional_repository_download": 36,
@@ -58,48 +64,48 @@
       "official_publisher_download": 19
     },
     "downloadUrlEvidenceCounts": {
-      "explicit_artifact": 34,
-      "official_access": 21,
+      "curated_registry": 3,
       "deterministic_export_endpoint": 8,
-      "curated_registry": 3
+      "explicit_artifact": 34,
+      "official_access": 21
     },
     "sourceAndDownloadUrlDifferCount": 11
   },
   "history": {
-    "immutableRunCount": 5,
-    "currentRunId": "2026-07-19T13-56-08-426Z--e121ca2ded4f1ce8",
-    "currentBundleSha256": "e121ca2ded4f1ce8ca5e910de28c4e52f3e49fa818c255219ebdf93702d5bae2",
-    "currentManifestRelativePath": "Datasets/SelfMetaAI/dna-knowledge/source-library/audit-history/v1/2026-07-19T13-56-08-426Z--e121ca2ded4f1ce8/manifest.json"
+    "immutableRunCount": 14,
+    "currentRunId": "2026-07-20T11-42-39-377Z--c9d199e35d7b5c5d",
+    "currentBundleSha256": "c9d199e35d7b5c5d87ed829b27d34cbc5e6f68f24add0d21abe27c64de2bc353",
+    "currentManifestRelativePath": "Datasets/SelfMetaAI/dna-knowledge/source-library/audit-history/v1/2026-07-20T11-42-39-377Z--c9d199e35d7b5c5d/manifest.json"
   },
   "ssdAuditFiles": [
     {
       "relativePath": "Datasets/SelfMetaAI/dna-knowledge/source-library/integrity-audit/v1/raw-online-integrity-responses.json",
-      "sha256": "1d510118f56a823625eee76b543a18c94bef767ec0ae70871a3530b1a7aac86b"
+      "sha256": "8ce8941670ffd166fc1fae66060cb319cfb0851630dcdf459abf5ec9a551c0d6"
     },
     {
       "relativePath": "Datasets/SelfMetaAI/dna-knowledge/source-library/integrity-audit/v1/source-integrity-audit.json",
-      "sha256": "462fe4d77793a1f497cbb4a9ddf054234734e7017b2e4587a2fd4279fc119d41"
+      "sha256": "9cb376011a57b66c6e0743a8ac0fc162da8370e4945064d01f658c91b90345ec"
     },
     {
       "relativePath": "Datasets/SelfMetaAI/dna-knowledge/source-library/integrity-audit/v1/source-integrity-summary.json",
-      "sha256": "6eb05e7ba93a567b2b16f5920806b8193bb5061580c5748d2fcfb7ab4894f528"
+      "sha256": "6de07105c5330fbb8b3b20de95135f5d6d83c07c65c0f3ce7dbaf95d2004bfc7"
     },
     {
       "relativePath": "Datasets/SelfMetaAI/dna-knowledge/source-library/acquisition-audit/v1/acquisition-ledger.json",
-      "sha256": "29bfa77fa58c163387f46dea07ccb85ccef7fd709e64ecd84d9a33aeb16c26ea"
+      "sha256": "f3864f652a9f2869aae1c658ed596d85e6656bb1e20bc47d90ffeb3c8dd9dfc4"
     },
     {
       "relativePath": "Datasets/SelfMetaAI/dna-knowledge/source-library/acquisition-audit/v1/acquisition-verification.json",
-      "sha256": "91d161a3dcff3417ce646e4184614e96c7c737e50f6948dbb00290369ccec85a"
+      "sha256": "c23af478245c975abaae9682f6d0b2277a783dcd02ad58075dc0614ce651332c"
     },
     {
       "relativePath": "Datasets/SelfMetaAI/dna-knowledge/source-library/audit-history/v1/current.json",
-      "sha256": "3f43f553adcd88fedd36659fdfc3a1466923f084d517bfd40acb0d9cde9c84fc"
+      "sha256": "473f3177005f044c581de633b9c63a9d3f06a7c54c508a236e92116c6e6566b4"
     },
     {
-      "relativePath": "Datasets/SelfMetaAI/dna-knowledge/source-library/audit-history/v1/2026-07-19T13-56-08-426Z--e121ca2ded4f1ce8/manifest.json",
-      "sha256": "23df80d323c7e336924e8f5406947d73683a06f496627aef8feda0126ac92c0f"
+      "relativePath": "Datasets/SelfMetaAI/dna-knowledge/source-library/audit-history/v1/2026-07-20T11-42-39-377Z--c9d199e35d7b5c5d/manifest.json",
+      "sha256": "74f5e77cc97dda34eb4a33d2f48cfca9e4b9da148388e23e5791baca74442305"
     }
   ],
-  "interpretationBoundary": "Seven records passed only the Phase 10 integrity gate. No source or answer is released to V3 runtime until every independent lifecycle, identity, method, passage, claim, licence and release gate also passes. Zero observed markers means no marker was returned by the checked authorities at the audit timestamp; it is not a permanent guarantee."
+  "interpretationBoundary": "47 records passed only the Phase 10 integrity gate. No source or answer is released to V3 runtime until every independent lifecycle, identity, method, passage, claim, licence and release gate also passes. Zero observed markers means no marker was returned by the checked authorities at the audit timestamp; it is not a permanent guarantee."
 }

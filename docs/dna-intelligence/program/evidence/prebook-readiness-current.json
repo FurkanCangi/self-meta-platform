@@ -1,0 +1,278 @@
+{
+  "schemaVersion": "dna-intelligence-prebook-readiness@4",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "generatedAt": "2026-07-21T11:02:49.160Z",
+  "evidenceClass": "current_generated_readiness_not_phase_completion_or_release_evidence",
+  "repository": {
+    "branch": "codex/dna-intelligence-v3",
+    "headGitSha": "06a3e7f64a31e15f1dbed9d2093da46848e4cc80",
+    "workingTreeClean": false,
+    "identityBoundary": "HEAD and exact artifact hashes identify the measured in-progress state. A dirty worktree is not immutable release evidence."
+  },
+  "readinessProjectionSha256": "8c1f867ef97e18a20f574d16c66c6a8b3d9e826fdaac08bc5d3bf2041fd8c02f",
+  "projection": {
+    "ownerBook": {
+      "status": "deferred_owner_book",
+      "approvalCount": 0,
+      "productClaimBindings": 0,
+      "releaseBlocking": true,
+      "contractRawBytesSha256": "196d0c62470932eab2b37a641e23c7d7759c75d892a4e52266fa8188979a0e44"
+    },
+    "sourceIntegrity": {
+      "sourceCount": 47,
+      "verified_clean": 46,
+      "corrected": 1,
+      "superseded": 0,
+      "pending": 0,
+      "quarantined": 0,
+      "withdrawn": 0,
+      "integrityGateEligible": 47,
+      "integrityGateBlocked": 0,
+      "authorityUnavailable": 0,
+      "updateSignals": 2,
+      "immutableAuditRuns": 14,
+      "runtimeReleased": 0,
+      "auditedAt": "2026-07-20T11:42:39.377Z",
+      "snapshotRawBytesSha256": "40d89a1f2e5aff9061f6fb41df3078dd9cee80ec93fe678a3f3c5081361f35db"
+    },
+    "sourceGovernance": {
+      "sourceCount": 47,
+      "identityVerified": 47,
+      "identityEligible": 39,
+      "identityPending": 0,
+      "identityMismatch": 0,
+      "componentMatrices": 47,
+      "componentsAudited": 376,
+      "passageLicenseCleared": 24,
+      "runtimeReleasedPassages": 0,
+      "snapshotBasisAt": "2026-07-20T11:42:20.981Z",
+      "snapshotRawBytesSha256": "29d906c5cecab52dd9d3373f3b68459ef02094069226a00e7fbf9a6d9b47e72c"
+    },
+    "candidateCorpus": {
+      "artifactCount": 26,
+      "paragraphCount": 1724,
+      "exclusionCount": 401,
+      "integrityClearedArtifacts": 26,
+      "passageLicenseClearedArtifacts": 24,
+      "crossGateEligibleArtifacts": 24,
+      "methodReviewWorkpacks": 24,
+      "releaseEligible": 0,
+      "manifestSha256": "2a6c7e0f1c3d198cba5c0e60341b1fc99e8445e1ee819818276eaf1578b43951",
+      "manifestRawBytesSha256": "976e3e1f8a60a64d318c7c2369fd740fbdbe451cfdf50dcf7b5bd36d381d4aa0",
+      "workpackIndexSha256": "53e3ffffd6da23b3924d37b1096e10a2328b5cd26d2b9d4f1619925ce25cbd47",
+      "workpackIndexRawBytesSha256": "eba8f96229a3eb4a24a1598b69f19828d453afda684d1793b1955340588f1512"
+    },
+    "methodAppraisal": {
+      "sourceCount": 47,
+      "pending": 47,
+      "registered": 14,
+      "normalizedSnapshotRegistered": 0,
+      "candidateChainsOnDisk": 1,
+      "reviewWorkpacks": 24,
+      "queuedWorkpacks": 6,
+      "batchInProgress": 3,
+      "batchCandidateCompleteUnregistered": 15,
+      "batchContestedOrQuarantined": 0,
+      "batchRunIndexRawBytesSha256": "8ee7c063c5b5849f1ca9640c8ae633e0c5928bc488443f6fe8949b796d4f187a",
+      "batchRunIndexPayloadSha256": "a149c8ebcde0744636401310369de4d7af3cd8d02d7439e0fe6cad99156e3af2",
+      "registrationIndexRawBytesSha256": "e0cbd0de5f7413a98d4785adde58266ffbf5bc3f70eee7a754a44c769f04c5db",
+      "registrationIndexPayloadSha256": "b00487593e54360e59420c3c2dc2f1cca4bc9f2272fff5c0ed64649c8f10b8fd",
+      "compiledTrustRegistrySha256": "78ea3019970944e95a1e7c8ff2b452c5b3b1280adeb3dcc39e928914d81950ad",
+      "registeredAppraisalCollectionSha256": "4ca4bc8eca341a44dc54f13ad1ec333515d2d86937cd39c9b1dc2c9fff6b82e1",
+      "runtimeEligible": 0,
+      "releaseEligible": 0,
+      "snapshotRawBytesSha256": "3a2632dabb1f09bd458f2c8d87eb51f94528fc2ab67877d98cb77be995e74051"
+    },
+    "candidatePassages": {
+      "preparedReviewPackets": 14,
+      "registeredSources": 14,
+      "candidatePassages": 245,
+      "indexState": "present",
+      "indexRawBytesSha256": "d4304f08c2c561c530f45ef302bc89e46a989fc3d95eb2efe3edcfbb6d64a985",
+      "indexPayloadSha256": "32727e3dd36ddd9405d32335b0662ac68608f2128611037e3159427441aea631",
+      "runtimeEligible": 0,
+      "releaseEligible": 0
+    },
+    "candidateClaims": {
+      "preparedBlindPackets": 28,
+      "sources": 14,
+      "passAComplete": 14,
+      "passBComplete": 14,
+      "awaitingReconciliation": 14,
+      "candidateRuns": 28,
+      "candidateClaims": 746,
+      "indexState": "present",
+      "indexRawBytesSha256": "c391711d8dc83f4bec899bd41c972b148eed1fca125c21530a7182b8a988402d",
+      "indexPayloadSha256": "b2ba0e6576d0a893695b85c79f9117fac7ae929941754a6f998fbd6bc98b737c",
+      "runtimeEligible": 0,
+      "releaseEligible": 0
+    },
+    "candidateClaimReconciliations": {
+      "preparedPackets": 14,
+      "sources": 14,
+      "reconciliations": 243,
+      "exactConsensus": 0,
+      "contested": 0,
+      "quarantined": 243,
+      "unmatchedA": 126,
+      "unmatchedB": 134,
+      "indexState": "present",
+      "indexRawBytesSha256": "c9db8099c9c665202b19ebbb55d2485899e23a37760dd01bf403355ccb19f291",
+      "indexPayloadSha256": "5e6f10eb0f5829f2b2f9f03ae630421142ce67245c005e72b68e2b3fb54183e3",
+      "runtimeEligible": 0,
+      "releaseEligible": 0
+    },
+    "candidateClaimRereviews": {
+      "preparedPackets": 14,
+      "sources": 14,
+      "rereviews": 243,
+      "consensus": 220,
+      "contested": 23,
+      "quarantined": 0,
+      "indexState": "present",
+      "indexRawBytesSha256": "fbe3ea6ea8cbd6fb4f0a66c5edaf8881e342919a609cbcf15946fe1a07fe5857",
+      "indexPayloadSha256": "29a136bdbffb1611483412f169e4a468f024dc5b11a5449e8ade355a7fa21c08",
+      "runtimeEligible": 0,
+      "releaseEligible": 0
+    },
+    "publicationPipeline": {
+      "acceptedRealPassages": 0,
+      "releasedClaims": 0,
+      "releasedRelations": 0,
+      "releasedSources": 0,
+      "releaseRegistryRecords": 0,
+      "packageRuntimeEligible": false,
+      "packageSha256": "797fc079ac2e21d799c906e80f972a34aefb55e8c67d8b28c69cf4f3d04aef96",
+      "packageManifestRawBytesSha256": "8bd969ae1be457058e1bc9f984baa15579f23aea77602bc0436a938ccca46035"
+    },
+    "evaluation": {
+      "developmentItems": 1856,
+      "developmentFamilies": 1756,
+      "lockedBenchmarkItems": 0,
+      "lockedBenchmarkTarget": 2400,
+      "variationItems": 0,
+      "variationMinimum": 10000,
+      "independentEvaluation": "not_commissioned",
+      "currentReadinessRawBytesSha256": "0d8caab465c2f4d1a062ef0d7740befee7dbf11d0a17e72be75153e06d8bc561"
+    },
+    "runtime": {
+      "safeDefaultGeneration": "v2_legacy",
+      "activeGenerationLastVerified": "v2_legacy",
+      "liveObservationRecordedAt": "2026-07-20T11:59:55+03:00",
+      "liveObservationBoundary": "point_in_time_historical_observation_not_continuous_monitoring",
+      "v3ReleaseDecision": "no_go",
+      "v3DeploymentPerformed": false,
+      "v3PromotionPerformed": false,
+      "marketingReleaseStatus": "no_go",
+      "marketingEvidenceRawBytesSha256": "342b33da8445606f8a0960bca769ed30cb81613c45d376993acef5309f60be6b"
+    }
+  },
+  "corpusExecutionTruth": {
+    "state": "in_progress",
+    "firstIncompleteScientificReviewPhase": 12,
+    "phase12": "14_registered_15_candidate_complete_6_queued_workpacks",
+    "phase14": "candidate_jats_extraction_executed_not_released",
+    "phases15To27": "245_candidate_passages_28_blind_runs_746_candidate_claims_0_exact_consensus_220_rereview_consensus_candidates_publication_chain_not_completed",
+    "phases29To31": "engineering_ready_real_graph_and_runtime_package_empty"
+  },
+  "orderedProgramTruth": {
+    "programComplete": false,
+    "ownerBookPhase3": "deferred_release_blocking",
+    "engineeringSequenceCursor": 38,
+    "scientificCorpusExecutionCursor": 12,
+    "releaseDecision": "no_go"
+  },
+  "blockerScope": {
+    "ownerBook": [
+      "owner_book_not_supplied",
+      "owner_approved_product_claim_bindings_missing"
+    ],
+    "sourceLocal": [
+      "source_method_appraisals_pending_47",
+      "method_appraisal_workpacks_queued_6",
+      "method_appraisal_candidate_chains_1_registered_14",
+      "accepted_real_passages_0",
+      "released_real_claims_0",
+      "released_real_relations_0"
+    ],
+    "evaluationAndExternalHuman": [
+      "locked_benchmark_0_of_2400",
+      "variation_bank_0_of_10000",
+      "phase41_44_release_observations_absent",
+      "independent_human_evaluation_not_commissioned",
+      "phase47_real_therapist_study_absent"
+    ],
+    "liveDeployment": [
+      "v3_release_evidence_bundle_absent",
+      "preview_verification_manifest_absent",
+      "production_verification_manifest_absent",
+      "external_live_observation_trust_root_not_provisioned",
+      "production_runtime_promotion_receipt_absent",
+      "staged_rollout_authority_absent"
+    ],
+    "globalRelease": [
+      "v3_static_package_empty",
+      "v3_release_attestation_absent",
+      "v3_release_no_go"
+    ]
+  },
+  "historicalEvidence": [
+    {
+      "path": "docs/dna-intelligence/program/evidence/phase-01-intended-use-gates.json",
+      "recordedAt": "2026-07-19T03:09:13+03:00",
+      "schemaVersion": "dna-intelligence-phase-evidence@1",
+      "rawBytesSha256": "afcaa8abfb89a94277071c8fcd852c4ea1eeec3d159c08d88149e9458fceff1a",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/phase-02-authority-gates.json",
+      "recordedAt": "2026-07-19T11:30:34+03:00",
+      "schemaVersion": "dna-intelligence-phase-evidence@1",
+      "rawBytesSha256": "d84429f026c7188b32c5ceb2de98e01b031d07f2b6f13717b8f753e9938e9f9e",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/phase-03-09-governance-gates.json",
+      "recordedAt": "2026-07-19T16:06:07+03:00",
+      "schemaVersion": "dna-intelligence-phase-evidence@1",
+      "rawBytesSha256": "61d19ff744f1e2fa8d89c6668e971035eacb8de9c9b8ad693e3337f8e35d4f03",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/phase-10-19-governance-gates.json",
+      "recordedAt": "2026-07-19T17:10:15+03:00",
+      "schemaVersion": "dna-intelligence-phase-evidence@1",
+      "rawBytesSha256": "0f9ade408bfc2de216380ee008ef012086417f23b2879df534a891be65975b79",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/phase-20-31-governance-gates.json",
+      "recordedAt": "2026-07-19T18:20:25+03:00",
+      "schemaVersion": "dna-intelligence-phase-evidence@1",
+      "rawBytesSha256": "f44e8ad5ada4e741bcf8f4ef9246f54befe650fd674097538ce3d6f0b7ba4677",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/phase-32-44-engineering-and-readiness.json",
+      "recordedAt": "2026-07-19T21:24:28+03:00",
+      "schemaVersion": "dna-intelligence-phase-evidence@1",
+      "rawBytesSha256": "459f6b4afc5137edad49d1eb578ddb91e31d92d15a9806c60cbdde755197ee3f",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/phase-45-60-engineering-and-readiness.json",
+      "recordedAt": "2026-07-20T11:59:55+03:00",
+      "schemaVersion": "dna-intelligence-phase-evidence@1",
+      "rawBytesSha256": "f3d239d0aa4846e9a8a6b81fbbc19b2fa231a1bb2c8d2b3b3f3317afe56cee23",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/prebook-readiness-2026-07-20.json",
+      "recordedAt": "2026-07-20T13:46:57+03:00",
+      "schemaVersion": "dna-intelligence-prebook-readiness@1",
+      "rawBytesSha256": "d0a524e0db0a8bc3d772b5e9395c226cef4289a47f574f9e2c29d7c6663e5603",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    }
+  ],
+  "interpretationBoundary": "Engineering contracts, candidate extraction, method-pipeline registration, and ongoing multi-pass appraisal are not equivalent to released knowledge, independent validation, or a V3 deployment."
+}

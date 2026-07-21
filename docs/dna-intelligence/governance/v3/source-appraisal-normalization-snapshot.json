@@ -1,8 +1,8 @@
 {
   "schemaVersion": "dna-source-appraisal-normalization-snapshot@1",
   "sourceCollectionSchemaVersion": "normalized-dna-source-collection@1",
-  "snapshotBasisAt": "2026-07-19T12:24:38.551Z",
-  "sourceGovernanceSnapshotSha256": "287e2f3516841872c539f3bc79e1909d56a97673d1c3ebb09cb3b3d2ad2da5fa",
+  "snapshotBasisAt": "2026-07-20T11:42:20.981Z",
+  "sourceGovernanceSnapshotSha256": "29d906c5cecab52dd9d3373f3b68459ef02094069226a00e7fbf9a6d9b47e72c",
   "counts": {
     "sourceRecords": 47,
     "pendingMethodAppraisals": 47,
@@ -32,12 +32,10 @@
       "not_reported": 47
     },
     "identityVerificationStatus": {
-      "pending": 8,
-      "verified": 39
+      "verified": 47
     },
     "versionStatus": {
-      "unknown": 7,
-      "version_of_record": 40
+      "version_of_record": 47
     },
     "correctionResolution": {
       "not_applicable": 47
@@ -50,384 +48,384 @@
     }
   },
   "hashes": {
-    "sourceEvidenceCollectionSha256": "9e1869491f3796787ee216e004eb7d62fb2bf42efb5ac6f6e0faff250365daa8",
-    "normalizedSourceCollectionSha256": "47a182198e29419c59e43711e2b566d87419e83190feb22ceececc90d4ac0698",
-    "pendingAppraisalCollectionSha256": "e16baa2b37b4f5bcfa823a9374ccebe877e31238cc2bc599595535c7dc8cb7f9"
+    "sourceEvidenceCollectionSha256": "3239d75badc3820271679b457f92ea26b3af99e2afcf0c802d59cef0b272ba05",
+    "normalizedSourceCollectionSha256": "a5ed1fc8a2e59aa626801a5e8102eb2595ee6f7dbaa46370e0dd235242500a0d",
+    "pendingAppraisalCollectionSha256": "2a92de54cdb8ded2b179a7026e7ac8e706ed1f036e8c1f549c8153c51d3c3f3c"
   },
   "sources": [
     {
       "id": "applied-human-neuroanatomy-2022",
-      "evidencePayloadSha256": "3a9ddee966275049620b4840004f84df9ed736ae57103e2e69f614c1321cae37",
-      "sourcePayloadSha256": "f76faaaba2f0ed4ff4eda892c5fc86e0dc7bc855b89ee5d6a7af67b81052bf4c",
-      "appraisalPayloadSha256": "bc07272195e99c15bb68f08ac81631af5bc5c89f1c6a10ebdf8ca0d81a9a8dc4",
+      "evidencePayloadSha256": "45d357d8571bb1b790d9e83e75103a35e9d4ce9d3a1f7952ee893633347f43ab",
+      "sourcePayloadSha256": "15a3df57534a9bf7a2b374e7cbc16536f42303dec83160d6a22a12e2da4178bb",
+      "appraisalPayloadSha256": "2181d2520a9ae8fce62d58e39252b9282c57155d9c2a82b2c3f4627ff904c1d8",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "atom-brain-atlas-ontology-2023",
-      "evidencePayloadSha256": "59cc92ab9d734f6231b1a31a6a4a6c38acddf8ee5c880be7e553c3aa5eb411e3",
-      "sourcePayloadSha256": "886e7af762fddb7010e588d76d972c5057aa8994e2c6bd10b6422b1a75cbf30a",
-      "appraisalPayloadSha256": "8a9324b3a299311b22ff076234eb4fc81fef07789855935c58cabaa593053ba8",
+      "evidencePayloadSha256": "99a2f0863ce41f051484e0aba0175932f5db85fda9a61630b17a0dd78382196a",
+      "sourcePayloadSha256": "6990f1beb91aad8235c3a76b20e64512c317f45a8bde057892ebc49266872628",
+      "appraisalPayloadSha256": "8d0170c588a10f1578663ce9ba74f7bbd2831ae80f4982571fac07e7f5737ab5",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "book.neuroscience-canadian-3e",
-      "evidencePayloadSha256": "8c30917b29f1ed5a4571ea0aea3210b46be40ecac9f7e6c037a54a9a2ccda59a",
-      "sourcePayloadSha256": "df4443430378fee1b0fa3ccf2b845b94de925e451e82d8f6ec770b1197cbfe42",
-      "appraisalPayloadSha256": "723b14373061b0c5a086741be557cdced7b7c10ddaa9633a29564d21e38b5ca2",
+      "evidencePayloadSha256": "6fb9a8a84ba19e653e47053bf91b945193934a85f8a11787188d7fa809839b53",
+      "sourcePayloadSha256": "a27f99c36c7728a5b58fbef3469374398d3016be2cf9185212dee1d943a3d5d0",
+      "appraisalPayloadSha256": "bade4909ad7a7fcc140a595a2e0431a94e35ecd1d2fb9fce50a6b988d6a4fc12",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "book.physiology-uw-2023",
-      "evidencePayloadSha256": "e9cd0e7402a3ccd8e45060ae2781cf2045d73a1e56b4f33d14bd80182aaa9deb",
-      "sourcePayloadSha256": "682f13ec4dfdbcc537056e66a37d10d500bbd6bb6a5c6e558a6b5fb3149f05ee",
-      "appraisalPayloadSha256": "eb2b58d2fe2423a03aa2f3f739925dc70a99c0ffc0fe1d6021fc744181940c5d",
+      "evidencePayloadSha256": "47a24a7e57d28bddcbbbccca6ee3f336de8da7ed15a7dfaf487c75eb0853eba0",
+      "sourcePayloadSha256": "d63951531267ec3694a00c10caa94c9f95dea77c44f5992f3a10c949e1845028",
+      "appraisalPayloadSha256": "e9f5cde1e833ca8c0f1cfff75366ffe48d780b8198dc02377130bc4f7d1c40a4",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "book.science-of-sleep",
-      "evidencePayloadSha256": "5f71a2b7cdb7ba7abde0ccd9879e9c2c0b6aaf11208d2b76446e2d1734051874",
-      "sourcePayloadSha256": "fa972aedafff807e62c70a8f102b5d4588e21a0a89e1683a2a6d9d33dbea7282",
-      "appraisalPayloadSha256": "0c206c44518e67d5e7d5e691020772b681d4b3a2fb0e74f7c40d153ffaefe061",
+      "evidencePayloadSha256": "ca23b22782c93ce5da88b7d151f390f19e21cb973ec6aeeb46a1ba9abf1d68e9",
+      "sourcePayloadSha256": "05ee4b7e85a2265673c1bb67d2aff5bddbf2b25cba794d5f87903381a28d9e19",
+      "appraisalPayloadSha256": "f9c1271812ceec2404996998aa47f2da09229c117f4d6257a7b9cc71e95597e7",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "book.understanding-human-development-2025",
-      "evidencePayloadSha256": "9874841084ade78315690b372e7a98330efaf8b187486f3e111da007b2aaa066",
-      "sourcePayloadSha256": "119021d19e4cad585ae623e5e0c7c749e771be37e5067e4e4e7a129ff7da2add",
-      "appraisalPayloadSha256": "1869a9e1308ca49cfa5ae01dfbc1944b9abd99d80db25e6942a71f207d7d089c",
+      "evidencePayloadSha256": "cf2c13888d2ed066d9c07e778ad84bde26add471732c17f05115bad024ee17a6",
+      "sourcePayloadSha256": "a27a63448ddca190df07f8818895cf5e5719727c57be743c864cb838063278db",
+      "appraisalPayloadSha256": "b5bf790eec6654bc2780517c65afaa2856a2fbeddad4481bbf798faa7230c501",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "chen-et-al-2024",
-      "evidencePayloadSha256": "04d783ddbf2ef76b560f1059f35b38f8a933bf0d1d85c73d7677cf8fb46a9efb",
-      "sourcePayloadSha256": "ee42128095f32a6615c810f1d228949899dfd469712154a7c18709c22fe03c08",
-      "appraisalPayloadSha256": "004a69384dcbd8e6529440b2db52c629fb3e9fec26cedefdcf6a9f4d44eb6b8f",
+      "evidencePayloadSha256": "23ae8c96ef1fbb6c89666974773a9c0fe142d3b0770118122988b79fc6b25bec",
+      "sourcePayloadSha256": "dd2c5d334f0f066abce81279b4459570b8ab88837c572d0e2062cb2142fd4f6a",
+      "appraisalPayloadSha256": "e9262c859280c9b67b77a0b81b951a65649cd81fba0634ec7a640a4241d01390",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "chen-et-al-2024-self-regulation-measures",
-      "evidencePayloadSha256": "7e9ab85cddea74ee812214823ce232cfa5a25fedca85662b62744d2b4c272625",
-      "sourcePayloadSha256": "717cf8c291f81cbeaea996717c4e35bfd1e4d6882689316afb426d32f611f688",
-      "appraisalPayloadSha256": "574f49173093da3767db9abc8b99eaef7eec60fe274faea5b88916895b67036c",
+      "evidencePayloadSha256": "6b1cad80bf77450bbba429ba5d73fb7593e3736721468b83717602227db4a4f0",
+      "sourcePayloadSha256": "88c2df4bb204f1c66c98402512b960583e2656c7df8eb9ae0e457f7f25f3bbf8",
+      "appraisalPayloadSha256": "540f57627aa5329bd9f38382324994794f486e4e73c957b8c0581197f60e8524",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "child-growth-development-2019",
-      "evidencePayloadSha256": "5e756a5c06fdd80f1f0c5ebc82645ebb81ebdee3f410f1bfd7a9cc95a04201d6",
-      "sourcePayloadSha256": "5cb3fdf3b46459fb2f01ea0a37b794a8f2119be939dfef2e22f04dffdcfebe7a",
-      "appraisalPayloadSha256": "6e3d5db1675f61424590bd49a1707008751b81abb30561e22e9e97ee24773683",
+      "evidencePayloadSha256": "697271fed55732b322d25a7ae0e3f2c9085c78574dfe1b7dc355191b0d0f24b1",
+      "sourcePayloadSha256": "3b87874130b0b547327bdf51733b2145aa0546ab298a31fd48a658e13b42c099",
+      "appraisalPayloadSha256": "b94b45bed897b143c1b3e47f7e4a72720d3ed2b8658063e8aae48dae19a4e7ad",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "circadian-light-consensus-2022",
-      "evidencePayloadSha256": "8e2fcc247a2b00eb36525010aab0e10cb7202f75a39d264842fdfe171ef15b98",
-      "sourcePayloadSha256": "299caca65ee7e806ef1663a17f6d52c37c5896c1a762cdd177387165a3f81335",
-      "appraisalPayloadSha256": "1074fc8d372053b0281514641379dcc18f8e002112e52ac439dff4d593d00807",
+      "evidencePayloadSha256": "6d5ad4ec9f44affa72d78f08be052c4280bbb656bff119db1c9abc0ac71f8b74",
+      "sourcePayloadSha256": "50da8bf35f6a7cb38cb20cb20232f9f69c7f2cd17e10d655d81156246f11f3a7",
+      "appraisalPayloadSha256": "075cf5edcd88f8c613a6fcce0e69638e8dc702f42e00ee6ce1311059fccdf415",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "common-cell-type-nomenclature-2020",
-      "evidencePayloadSha256": "cec576e0f8b99dca22a9e774365f814f59472c502c5800289a00f205509a7cf0",
-      "sourcePayloadSha256": "a0f002f6f3727eccfcb414dc8ea7bbb56829d73f1a9a0a8c47e4e39be1edd6ed",
-      "appraisalPayloadSha256": "e17133c88320814786dddb04db8bae8ece28ab9fbb216f14755d0fb5dee60eed",
+      "evidencePayloadSha256": "ad0935e2ce0620082de337ccc26b01eb75f02ed67087d8a223e06195f8c082b5",
+      "sourcePayloadSha256": "95d7fafee7982cc44efb5acf30082152933edc8711c712aab07c4d6b892640ba",
+      "appraisalPayloadSha256": "8f2dbc208a5943d9d0444bdde5ebcf258640664a4e1273f2f992a619b5e70ae6",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "corrigan-et-al-2021",
-      "evidencePayloadSha256": "72ea94eb88f1211253b1a049a9e1a3a1e54f5b9ccdfdd5404e8e6992ad9b96a4",
-      "sourcePayloadSha256": "c8e31528e52aba41f3755b742006a8abc38d848fba93b7d263d9532325810e98",
-      "appraisalPayloadSha256": "19359ce947e14e3b0a03ab83834dcf4abc75feffed14f63da233f2c3d621e0ce",
+      "evidencePayloadSha256": "61f76b5484f31bce660250064f55746bdff4af43e24947582849b1246625a958",
+      "sourcePayloadSha256": "89b5a9cccd731ea343a1109719290c417805c528f741d69b8fad0588feb9ebea",
+      "appraisalPayloadSha256": "eeba107dcf0252c565d3e99552ca97e43820f0f575fa158f5df49a94103023b5",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "cosmin-prom-systematic-reviews-v2-2024",
-      "evidencePayloadSha256": "3f8c2e55fdbd7d1b5c8f4d12d9fa2b6bac17fbb2d3984428325f14b9dd30d252",
-      "sourcePayloadSha256": "33dfc52ba39d54dd0c60df7d9bd7f51eb467c632ad1608116c8cc2dab0c38258",
-      "appraisalPayloadSha256": "001222d1f2658b27fd5cd38c4a011f98a28cec95e408ed7dbf9a39394f2c1fef",
+      "evidencePayloadSha256": "822a1fdd4e1c61e422bf6232e18b7c63d25ced78aeae764f99820f678085fb88",
+      "sourcePayloadSha256": "d0946eec8277d425bf71472cd27cb6331290f0cc50f61f03468d5ecb784b3970",
+      "appraisalPayloadSha256": "7f90334e1a38da9a867ee5480fabc282ea1520f45f52e4e0ea45cc50078b5f69",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "de-raeymaecker-dhar-2022",
-      "evidencePayloadSha256": "dd12bc55e15e9b3e1e47e6fe7b1eb4fe4c5ab44567b1bc6aaaca66eebc8a5df7",
-      "sourcePayloadSha256": "4ce505f135f2ab3b168e0564a63a70846404708ea1651838e1c6b2084e522620",
-      "appraisalPayloadSha256": "4ce30b4cb7c3ebc89d8855d3d2315f557238d7fd17a8971aedf9f3b2b6d8baa1",
+      "evidencePayloadSha256": "2f19877dbfba5af1aef57b70b94e8de9f70785ff1106420d54a454c012e64f6d",
+      "sourcePayloadSha256": "48da81fe37ea640806efb8d68d310e936a07db035adee6efaf16e668d18da5cc",
+      "appraisalPayloadSha256": "43be2b87ea1657add3013528e8642bf71fd88ae48f1b0a9813c9b36029fcff6b",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "efas-autonomic-testing-consensus-2021",
-      "evidencePayloadSha256": "c478cd0c196822cb73616b2bc0abf5dce02ee6dd9f0cf14fdb05bd532cac4589",
-      "sourcePayloadSha256": "b815c1e1a41796c8efb51c82378a8e72887c1d9f24e1891459d7037e9544284f",
-      "appraisalPayloadSha256": "b9738c0e4e2d32b231b036a1aac54e2ee0bf250aff8b14b411deeb7c3848894e",
+      "evidencePayloadSha256": "82969803ce5b531f867c6974514ea9358759549917bf4ecbbe32064e6e6636ce",
+      "sourcePayloadSha256": "82ad88076bdcde1afd9d5fbfbb993911820487d7ff41e2f9e1ad64ebdd7a39ff",
+      "appraisalPayloadSha256": "458016058217970bddd890d82c18025d007f2a03bd5ea3868f7f1a87e9d81609",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "electrical-chemical-transmission-2024",
-      "evidencePayloadSha256": "8e1d295b7e974c5e19b45066aa82514ca852a0e8b213af8efd70256828b69ca6",
-      "sourcePayloadSha256": "05a57f84bd1291403bbc138a9455389aaf71b0c6f95852c770d54a73182f09e6",
-      "appraisalPayloadSha256": "c0d6e681b261058da64fee3123b19646b31273ca1cd09828af04f734307105cc",
+      "evidencePayloadSha256": "8b4597eead10ca5f9d15ac8215f57eb11e4ea14a2e3ee317bffedf0502565d63",
+      "sourcePayloadSha256": "e6c5b7582593cf74a73f5fca78287460e1b95b587725025f488a4e293996f9fe",
+      "appraisalPayloadSha256": "d619a303ef9f29bc86867adde03e28872bcada3a13ee4a87f695a95bd330376a",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "european-insomnia-guideline-2023",
-      "evidencePayloadSha256": "f702c17b9eb42422462ba73b9e21da9896938ec1ca9f661051e21224ef93b3e4",
-      "sourcePayloadSha256": "60f181901ea5358b76eb9e190c1ad0e12000e434775fb2cf5fde2db5ad4027ad",
-      "appraisalPayloadSha256": "9908c44c9e02e01e03ce4278c3e6f746f15204d79212f0c637178cf39e666fa2",
+      "evidencePayloadSha256": "49105c8e50254f8e50d6d76390ba56728356e55c4354b2329b0f482f01b3b64e",
+      "sourcePayloadSha256": "4e06371fd91e861f0cd17b7a8598166109b40a8750213e871acf67b8764899b0",
+      "appraisalPayloadSha256": "c5452b90cc41f2a46367086fa01be428569db8b0229a09752ad9208d94a744de",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "executive-function-ndc-meta-2024",
-      "evidencePayloadSha256": "1b2c97e71d661c4771deaf045230c51de5c27a90e15b038525f13fd6459a1e46",
-      "sourcePayloadSha256": "afbb8eed5c6157abd9258454ecbb6ca8840ccd46e91aea63d90ecff0fc5e08e1",
-      "appraisalPayloadSha256": "6b241b0ace86d3b92cc9b94811764382dcec4a420b226a543e6ae29a0e886256",
+      "evidencePayloadSha256": "a8f6026b9db0126379d9a90ae40b17282797636ac6e23bf8ecc67aa23f9e9393",
+      "sourcePayloadSha256": "7698889018d79ed246af57fd6973a1421127862f1515698c3cc9a55debe519fd",
+      "appraisalPayloadSha256": "a9f959a2dad1d369b9e3ee12a1a7e8bd0c53b0262cf1a994fb547b8ce2ed9db3",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "executive-functions-development-2021",
-      "evidencePayloadSha256": "5c8967d9e6428577b088a98412c26f91ee70b68370db7996812b4ff3594cbb0a",
-      "sourcePayloadSha256": "41ea8a9e8bc61ac3657130a24d30503c8ffe18bff2f5a4ee1f9e7aff7e8f322c",
-      "appraisalPayloadSha256": "b7c32ec141e95b023e481402cd034af5e274232cc1618a03296ab0b3f9e24414",
+      "evidencePayloadSha256": "4ad07fd02c4c75fa93558029da9b9fa9bb5aa77442a61f0eb9175c0e0b0745cb",
+      "sourcePayloadSha256": "0ee15a9522de9044f0d9348cd1cd723366f09419bcfab56e9e78dda2c48ce559",
+      "appraisalPayloadSha256": "7ad0f0c69f9f1738ad21aa4104714ce9e5f6273b5e5191ab528ccab57da187e2",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "gibello-rufo-et-al-2026",
-      "evidencePayloadSha256": "6962cecbd5a74e621ed7f3c2ea21994d4df5fc7bfbda292013535f0787a66535",
-      "sourcePayloadSha256": "39427140165cd65f8d09e24ba275f936bedfb04fce3fd059eca9a5e971632f26",
-      "appraisalPayloadSha256": "2e44b59afac69f54a0783c0021ae3903e275cc10c15063eb609fb5643c0ef230",
+      "evidencePayloadSha256": "8b55ab43eb79ad1653cd3560f42a50db2a30e2bc3abbd684dedc8af704948707",
+      "sourcePayloadSha256": "2b33885f229b2bc71a10f9bb5f18428c58977ec1db9d8a0b89764a13a2751152",
+      "appraisalPayloadSha256": "354ccb55b05a9ab15a9352d04b3ae0b4ca1076fb7a56d274cafc2f92e0e18d54",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "hrv-biofeedback-methods-2023",
-      "evidencePayloadSha256": "9152c4139701449d31a3b587d193d61d80fe87e21a02c268b83302aee2b254e0",
-      "sourcePayloadSha256": "26ca730c8c7f4c4550bf74ffafd62c975fcd5c3ff099522655ae06a6a20a717f",
-      "appraisalPayloadSha256": "61b6f104f644555594f7cd984e51da0ce4d77ef675dd07debee5fffa137fcef6",
+      "evidencePayloadSha256": "ae231cb62534e9d1d431ed2016bc945bd10b958cbc4f201ff5fcf06de3f2fd50",
+      "sourcePayloadSha256": "c3b3c07809afb363667eb00e879e35f0074ae0b819c052556f2661b0c2780269",
+      "appraisalPayloadSha256": "74d35cc5910b604e46d8f3a25d5e2bb8668816bc7e7406b07e72053289d9e0a4",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "hrv-influencing-factors-2024",
-      "evidencePayloadSha256": "323655a73fb21c2d85a8deebc45d8e6ef6c1c5d04eeadc83dc3970081ff27b81",
-      "sourcePayloadSha256": "e403f892525f4e291e6a6f71e39ba1b7f80a3fa3779fd4aa902c0cfd60d7f165",
-      "appraisalPayloadSha256": "fbd7a323200e1927e37a590efea894f3cd0a84b34411a2e17b6ecfb88200100a",
+      "evidencePayloadSha256": "a0a365c680e78fd64a2202b259455522c4632dd2deb5286f23ef3437c7fca8fa",
+      "sourcePayloadSha256": "97c7d327a841bb71e9f168c01ff350b7e88a09c1ab2025dab5f7d59c11f19821",
+      "appraisalPayloadSha256": "e1a26599948e88c9fa3d88981eac56f1aaf2d1fc3555b0424d06dd4e138aed44",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "hrv-publication-guidelines-2024",
-      "evidencePayloadSha256": "5eb40aae8fa3ddf863b61f61b5fdf241feab3b67d0de1e88f17aafb909d56ec4",
-      "sourcePayloadSha256": "5bb789ef2e60abec57af8accacb6afda10773330ce75c11e80218600bdcd8f79",
-      "appraisalPayloadSha256": "5b3bb582060f0faec590d81dd70f8c7e29ae7ea707b3b48dfc6fd1b7d4c311f0",
+      "evidencePayloadSha256": "e4230a61c1d831ddeef27b1f071b908d6f7677c95beee30777cba242f8f71b1b",
+      "sourcePayloadSha256": "29f6fb0c21a1205305eabe7f4c2c690c333106517245f9cab90a024e0b229631",
+      "appraisalPayloadSha256": "f049a8f7313297935887d730e203c50e16c80cc0300921fc5d493250e1d478b1",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "insula-direct-stimulation-review-2024",
-      "evidencePayloadSha256": "798b3f42207aa28151e69e9b079548415d1171655006585827276fce6d2ea0e3",
-      "sourcePayloadSha256": "890e7d9666cf620d41365bf6c4ecb38f8f6c06f02de9adc7222540337225f7b1",
-      "appraisalPayloadSha256": "7e1e1740588db50917ae60dbdcd525513accd965b4b6f0414153365e24f42daf",
+      "evidencePayloadSha256": "480e0ae2f5dd1374e26f5b57f83b5e86cf2fbdaa51f735e951788132496b9e30",
+      "sourcePayloadSha256": "f9c724220760ccda9b4b1c883ae78a46376e8ec68563fc06b748ac842e35cdd5",
+      "appraisalPayloadSha256": "725c849782414fac56c9bd86045c769f14e72b41ef0f11d459f9962f2e38ee54",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "kane-et-al-2025",
-      "evidencePayloadSha256": "16f747ee80f09e914441762b73ecd413866d0f71987a6130aa86d4318faae22f",
-      "sourcePayloadSha256": "31c5ff07c742c10bc19e1237becd7b3d2889244c241e8baa0dfccd85c85b28a2",
-      "appraisalPayloadSha256": "0b513016c4879900bce6f8912bd8173807da3c47c91fad085d06737f1e723fbf",
+      "evidencePayloadSha256": "be8224dfc4f72c4fa4e3776a83ce0f9a07ff0fa9a8240d27841cc77485f11679",
+      "sourcePayloadSha256": "ca2a78eefb8fec2afafd14ed1af6d3653adc04199e743bdc89cbb910486dbeab",
+      "appraisalPayloadSha256": "dd5358d18aeaedd9e4763537a663a6b0d63c5caebdd084602090393843b37347",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "klein-et-al-2025",
-      "evidencePayloadSha256": "ddf6656b1729cf0eeebe110ddcf4cc739c810934d54418429de0d83785402c85",
-      "sourcePayloadSha256": "f356441a5d0a89fa5c55a4307b873b6f00afe5b5d76e7095833904775d4a1509",
-      "appraisalPayloadSha256": "9121867ad42000d8d8ced5291534c0cb7a6b409b9f8f00c5e595efc9e0e657a7",
+      "evidencePayloadSha256": "4cf9c603b01aed2a6c170ea24e3ca7c224e6b6273581dc8cc8f2b4049f6c2a82",
+      "sourcePayloadSha256": "b8d558cdbe59924d6a37dadb2e5e38785ad891c027abd7b01a3a0a02f9ac10d6",
+      "appraisalPayloadSha256": "de4de7afdc0ee61482bd722a80687113d38e7eb26414ce890ac6793628f1ea69",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "neurocardiology-translational-white-paper-2025",
-      "evidencePayloadSha256": "74ac4911ea186c9079a73c632e4c4412a62a1bc9e409a5d4a8e45b73e93fe7fe",
-      "sourcePayloadSha256": "af290be1f88c5a4a47ba61b7a0e55cf7584c815a9f0102ecfc0979f2c05d73a8",
-      "appraisalPayloadSha256": "b209732ce120f910d738c6498c4ce5593661c43a08c69027cdfda037a9fbe0d5",
+      "evidencePayloadSha256": "3385523d05a7034749f60146ecd48ddfa40337a2fd26ea4b28c34fbd66636d4d",
+      "sourcePayloadSha256": "8944b20275620194e3af521ff548f06f64cc8cb3088b515a683e19d492b23755",
+      "appraisalPayloadSha256": "8a2cc2bc3baf2a6b037ff07874de854dc797197b3d3a15e796c3ec7890d44730",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "pfc-cognitive-control-review-2022",
-      "evidencePayloadSha256": "fcf6c0e5e302060b2d9b84873a5ca7b405491a13fc61c7973a66793f19d5a638",
-      "sourcePayloadSha256": "f2eb722dc09d82c5fbdfdfb8709179ce62356f5e568214371f033d0cb5604002",
-      "appraisalPayloadSha256": "c7ccdd354c625689100d485840c0a5b668fd274303ab0c51f25c3501ecc59b03",
+      "evidencePayloadSha256": "0f4a674f5b7ba76cd1e119270bb858cc48b816e323831898b10ebaef1067b110",
+      "sourcePayloadSha256": "0cd1db10a7e646e50b2160da97449582f628027d1177d7ba0b6fcfefe79ec628",
+      "appraisalPayloadSha256": "35f6bc9c69b4a822c8014f8b90b53aa8bc7e6e08d9bc689c20b85707d1d4e8dc",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "prisma-cosmin-omis-2024",
-      "evidencePayloadSha256": "aad51b60c1b1ae0f6c4bfcf6595de2beb156abd8fd529ebdb8aa54528f07e4cd",
-      "sourcePayloadSha256": "e28c19c3383526103ff1692f0364c65f300d8fa0f6ac9197c25a04891ebc97e0",
-      "appraisalPayloadSha256": "bc7f2506740a061bd5b04d21270579b6c104489ae87c06a56c22c393cce65e9d",
+      "evidencePayloadSha256": "fb7d8af74faab990cb61a40b04a16d94d048e2208087d6872c9d8473093473a4",
+      "sourcePayloadSha256": "e13c59ae36236449174d935463699a198bb1d1d1e19c38a3ec84373ca08fa2f6",
+      "appraisalPayloadSha256": "18a7c1ec4e064f1c08c999fb0cba71912f4c8f6afdef74bb824d0376304afba9",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "restricted.apa-2020-assessment-guidelines",
-      "evidencePayloadSha256": "7398f7b26e9ae401b2fa2a82b7c37abc73b25c985b242e97e751cd457ca750a7",
-      "sourcePayloadSha256": "5c9cdfb3380ee3f9f05b6b9bedfe53d81567f00990f9cb585a7baf39abbbde65",
-      "appraisalPayloadSha256": "e5638729d7a783deb73a3ba08266f2853272dbad811afac23d5a9149fbc3924f",
+      "evidencePayloadSha256": "77eff3a57b2c9cbe17e57b815644b732cb4f241d88d405223d93d2e1f461c01d",
+      "sourcePayloadSha256": "693bcf401f13cdb3451b39ab1062b356249a6a0e1d6772aaadb2a4d6ff6204d0",
+      "appraisalPayloadSha256": "ba8ba7954e7b9e5241e8a9cd55f864b590821cc10203c84d4702de740bb1c7fc",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "restricted.autism-crc-2023-assessment-guideline",
-      "evidencePayloadSha256": "c10d6c4eee36f7417429711e8983a2ac6f86f05a07436cb0710c50e2234f2172",
-      "sourcePayloadSha256": "970cbad9f7502a8d61ee2e0d71f311799d7b3d6f9b5b8d4fbcd5f45c3f8c7e10",
-      "appraisalPayloadSha256": "e94c725ecc72770b4cabe785886a7869ab474908d2e7539197a8483987cab5ab",
+      "evidencePayloadSha256": "690c6ec9d86011f99d17958b68a7bd60eb6437f0302fc82dc733f19473553f72",
+      "sourcePayloadSha256": "f24fac0076b87436eb9fc48e1d0e9dfebbc9b57caf2fb01b8ee3ac6fe65df7f9",
+      "appraisalPayloadSha256": "f7d5686cf3e4af40bc5de7ce4096a634d6c6e5b040b336a520a55f97da5d9a9a",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "restricted.clamor-2026-emotion-regulation",
-      "evidencePayloadSha256": "c9e811c21e3891312da388b8af352f249da643f395fcc0390524e0c9a201a36e",
-      "sourcePayloadSha256": "4c004a9a06b2f898746bd01f63578fa8435f39eca4436aed74ac8c7c67e9e4a7",
-      "appraisalPayloadSha256": "b307a94d37a8cb426388f248c0419f2543a70803523758338179d60f23e13956",
+      "evidencePayloadSha256": "2bf539ba420308c2f555143136379fe6aac5c98531876c421cdd6ecfa35c5559",
+      "sourcePayloadSha256": "c04809f77a61f49a68d1515330c320aee48ce0ad41cb34cf0f40e322813e864c",
+      "appraisalPayloadSha256": "23e34ca5c7f9e540e1260f9d955bb2ae5fca7f4d59cade55a42907e6858e19fa",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "restricted.edler-valentino-2024-coregulation",
-      "evidencePayloadSha256": "94613674fe3a91ec9f3b5de7cbbd691b0c3c2a7f1a3aaab5efb27802143ab4c0",
-      "sourcePayloadSha256": "6bbf5a078e892aace51d548a76766286850fd7083d853ed8b825614b5fd5528f",
-      "appraisalPayloadSha256": "41bb9294ea21e1f7c72252dcc25e93fb4e3bd41974d25a53a49e85322a01266d",
+      "evidencePayloadSha256": "a78f11cc4698ec461753fb0d3c40565b3bf1c235d30c45f2a2e1e370989f914d",
+      "sourcePayloadSha256": "0a34445b0b3e7a08ef7ceddfcb29f837d1522522c422ff0e3a136d2b22af6def",
+      "appraisalPayloadSha256": "f464881422cd53f9d1a1592f6a2d54a73d50c3d967478a909d4d9ac768fa0d8e",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "restricted.grossman-et-al-2026-polyvagal-evaluation",
-      "evidencePayloadSha256": "4b51e488fb218409aaa83b5d90d53fe307edbb0024bd0a11fb3b613b2d247bad",
-      "sourcePayloadSha256": "1912fc46d41369d1c67f70e277e0e8866536582ab39f89392302323476e43025",
-      "appraisalPayloadSha256": "6c9a8fe1151745565811a3248292160012dbaa3a931b57dd6909557e24ccffff",
+      "evidencePayloadSha256": "b13710bb3f7a693707ff6ea17c3198884a57de6a2713bb35028a1b57b511b4a7",
+      "sourcePayloadSha256": "469877628670c36703409add7ee269fc26418c7af68a25543068d3dc8ae66314",
+      "appraisalPayloadSha256": "afcfdefc9e2c33a3179aa0ad6ea4436ec1dbc004473beb9da0e8cf469becbca5",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "restricted.jenkinson-2024-interoception",
-      "evidencePayloadSha256": "3099f33a0ec307bfb35d3b599a29562d45eb78748725c5f86bccd521f57146a6",
-      "sourcePayloadSha256": "d6f3cba952153679cc4dfef409cfd019f0563fc022ca118e40135cb0a725467a",
-      "appraisalPayloadSha256": "a0e03e24824fb15ecc1d14bb1f1c86bb093e304d405b5c8d41835a27b08191df",
+      "evidencePayloadSha256": "a018f0d5a1c05a6b34a9358ef3273f510def6dabbe913e5ab6f5bcef43eda264",
+      "sourcePayloadSha256": "03417d1a7601c70e88e4ebcfeb4a19778c0d71504973208e330562ed8dca04ef",
+      "appraisalPayloadSha256": "312c83d4eedf24a9daac0a79c656caca0141d1c41b5595ec4e7231756cae9ffc",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "restricted.myers-et-al-2025-acc-circuits",
-      "evidencePayloadSha256": "d2594632cb06c2cd5be27e06f84915624cbd2e18b761bed50678da0b7447ccac",
-      "sourcePayloadSha256": "d21d466c22fd60d4b38c807c045a9fdd82a59cdd80a3a814ae51111ddede67f2",
-      "appraisalPayloadSha256": "2ed540746d93db9dd2fc9392f8d9e76145f336e97a43d615f7713183e82945e0",
+      "evidencePayloadSha256": "776707da052c9e5e89dcc1e089d76c3772030d83756e5d0b0c9196ea698272dd",
+      "sourcePayloadSha256": "b3e3020609cf61a0f5be4d1a3f1d3465ba4ca8ea3052c604cd4f0fb35057a956",
+      "appraisalPayloadSha256": "b0931706148533f30ee3aa15988bab2261e43212c9dc42376e4cfe86ec8e43a8",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "restricted.porges-2025-polyvagal-current-status",
-      "evidencePayloadSha256": "959a27c91c57fe85cd99f7c3f330ab51c91b6eb442a62b0d7748148d5baaae68",
-      "sourcePayloadSha256": "4155034bfc89ea9c65af9b25f36f3404ad91c869fbaef4f93837ec7d920d7f09",
-      "appraisalPayloadSha256": "2de2df2725a00e6811ae74f0919696d85f2f3b04152543e22548c8b3153b4885",
+      "evidencePayloadSha256": "7b0f7b41cde896bab080637b303feeef7f3e9a9270136872813840f191200b7f",
+      "sourcePayloadSha256": "c38ed0e743326db83eaaf051d1f61865f6c72850601766f1e1924c8af6481daf",
+      "appraisalPayloadSha256": "67944bb98cf4766796a2a7e01c9b1ae15d3151051ce19061046f31499270bac0",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "restricted.porges-2026-polyvagal-response",
-      "evidencePayloadSha256": "3f0385cb9b489ea10d4a518059a8c636d5d34b3d40a8a9d6cacd8807124133e7",
-      "sourcePayloadSha256": "e3501e5219eb885dc79548ff5bd4934f4b206fe0393a970f7efbc4d618bdace5",
-      "appraisalPayloadSha256": "b85cc7fa8dbdc767b49de4e54e111f91b0dee0e32adcd1cee19ff7995141e0d0",
+      "evidencePayloadSha256": "b6ed78e778bcd20738151465555d235ee239b2af5a98111590d9e2b9f2e1198f",
+      "sourcePayloadSha256": "9a3b1f07db01598fea89a83572ad607207c853a209e542770e23532d6edd7f8a",
+      "appraisalPayloadSha256": "3b539932362556ffafdd1f9067023d5fd3e9e5906550b8de70993b07f931e540",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "restricted.wagland-2025-neurodiversity-affirming-care",
-      "evidencePayloadSha256": "8c86d453850cc1981a28bde4aae1524334b2368d98bcd7f319aa876f9d559f7f",
-      "sourcePayloadSha256": "aeaba9bdce1cd5defdb8f99e31b3053263715baed28923a15309576b90b75d69",
-      "appraisalPayloadSha256": "0876c88460797415b314283648f1c6cbed37543dde2bfc81e675ce6abbb25c24",
+      "evidencePayloadSha256": "1c892ad267283f3dc504dbe867e3e19c63db27ee149cda19237f98731ff2b2b0",
+      "sourcePayloadSha256": "f76709950dcbd1e26af6e384fa4da045969b96b541dc8bdcaaef4810a5ff67d3",
+      "appraisalPayloadSha256": "98cfec71bf2a2431c3ec8b12e3c13b090bfbb1a4b840cf57031f92a453efbf16",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "restricted.wesarg-menzel-2024-cortisol",
-      "evidencePayloadSha256": "f91d70ab5fc88a635aba4b442a7c785e8f691bef36364f2ccadd9dd06e05bb1c",
-      "sourcePayloadSha256": "c15df6b0d935821f507615684ba43a686a2b8706bd9e67e1803fb0921c1cef65",
-      "appraisalPayloadSha256": "f1c80fc925652865466e5e949ee6a84b0ea573183926588884834a2123fdec44",
+      "evidencePayloadSha256": "13557337abc5f1778d2b9c04cf2273fcb9bda3262f13abe609d766ddd6a4fa53",
+      "sourcePayloadSha256": "b8e1a373742fe7bb14a722f1b21babceaf4bfab72b8a68317ced05acbf099366",
+      "appraisalPayloadSha256": "1d6b7b019a18dea2cb320c23bc446cd65318416375ab7ba5fc03cc0ec25b0085",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "review.grossman-2023-polyvagal-premises",
-      "evidencePayloadSha256": "845d0ff4b9d765c4c74be3838808b1f31921f50e27b7defcac9448c1ef5c3ea7",
-      "sourcePayloadSha256": "68049ed60365439d40d0a27f267dd44529e84c545053d41bf6dd1479d8240430",
-      "appraisalPayloadSha256": "0f25d67aa7269e07555ac3395ef96227d39a4e5a1378d63bba89f58ddf9de39b",
+      "evidencePayloadSha256": "963ef447a0b16d8882f219cfa0be027e4feb81dbec801e90855ff6a305218b8f",
+      "sourcePayloadSha256": "a1a774a5e7e102853e426a090f3ea28d7d6b1b4a52e6eaf739568080f7a0e553",
+      "appraisalPayloadSha256": "ed46fe8dfaf896d231a236b915d08e5b23b6d4d5a28b87ad439979408be95ac8",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "review.porges-2021-polyvagal-theory",
-      "evidencePayloadSha256": "86205a8a072f64e1668fbd52d5d3a4a630ef24e3775daa9841412463f93493a9",
-      "sourcePayloadSha256": "c39ac889b4b79af9639692d008c4ddc8a2c77f948e2cb5d8eda303bee6bd2251",
-      "appraisalPayloadSha256": "62bd6db10bd6b8fed02e8f040bcccbf6d8c903f31f1bba0245b0ff17b8a09d2c",
+      "evidencePayloadSha256": "75873e0335d5955b77f2ebf195594c60056474937051cf25759b5efb15ebf409",
+      "sourcePayloadSha256": "eb524027b9f0001c25c7c6922bbcfbffb73c776db22c486c6954ce00af2a3eea",
+      "appraisalPayloadSha256": "8c5f388caa40c7a51601336867da7604989346a4df27b172a6790ac0243067a5",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "saccaro-et-al-2024",
-      "evidencePayloadSha256": "efd551d26a09cb99281ecebc04109e8590e35e3b3657edb22dee6b85125d8cfc",
-      "sourcePayloadSha256": "a0b09da0fe2cc9bf52ae8344e90775f6e9a9c5cee05ef005add373a91bc64d7f",
-      "appraisalPayloadSha256": "e429680821b3d5f5d23eccebde6f6ff552d2e411080e18b446fda3c0b1dd41e0",
+      "evidencePayloadSha256": "ab0892ef71f7160a00e7c04a6423bf82ee911b081690ec67e1b8a838cf08eec9",
+      "sourcePayloadSha256": "46774995fa6aea8078b642b5ccf54c175fabad57163c1c2d6b711653ade5dfe9",
+      "appraisalPayloadSha256": "b0bf580ff5d68686c9c05f8f71dd5009836ad8948afde7712dbb7bff495aae8f",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "sleep-emotional-reactivity-meta-2022",
-      "evidencePayloadSha256": "577551f54efee28fd4f0c6a7d307216e994bf5b43f358d1f8af68499b80e2d85",
-      "sourcePayloadSha256": "95bb734debf0005955ffb09efab7380577a78438530b002ebe48be5c913a9acd",
-      "appraisalPayloadSha256": "fadc0a3a67e0a4eda145f053057229133142a03b60d1353951a0a4ee9ae06dfd",
+      "evidencePayloadSha256": "aa4475144eff577043f5989845017fb1941d279abeeaa86108f3c26049737bb4",
+      "sourcePayloadSha256": "bbba33ee71f6f1fd3355901e22b0b562f7b9ca4cd2aed9810de872160ea731f0",
+      "appraisalPayloadSha256": "1f310ae1c13c66b15be7b7a09515ead1faa9bc1a83380560721d406d58b6d9ce",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "tripod-ai-2024",
-      "evidencePayloadSha256": "21cd978d2cfcab044509d29dc018d09b291c05036f680d67c52490c8d2702770",
-      "sourcePayloadSha256": "4e636d672d83865a5705b5907c6795b7cefcc1162779d7e5c418317f0b551597",
-      "appraisalPayloadSha256": "828a14573c1b2d0ad4e3ef14f38c2a859dc6cfd85a88c48b2e08d40343d68cd0",
+      "evidencePayloadSha256": "2604b61b3a9877a4e2f6c0ada0fd63a2b2fb29d1a038c95743996f824c7df0df",
+      "sourcePayloadSha256": "467f2b84bfef460555d6e8b6aecf23d44669335111b10cdda94f68b9d733dba2",
+      "appraisalPayloadSha256": "9f0dad79452c1b6c36e03c38d64a25fb160711580751aadbf5b73557a42d0ea7",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "walther-wirtz-2023",
-      "evidencePayloadSha256": "fc968058c06f07d65b96a3e23b31500d0f80c659740a9880d39a660cab789a58",
-      "sourcePayloadSha256": "4551bcd779993ea7a996056658b9153925b489938089537359fb631c470d847e",
-      "appraisalPayloadSha256": "c227a980a36bb89082d29050e58c5a99a8b5866b8ed7288c5740679edafa9ae3",
+      "evidencePayloadSha256": "552bc6ccb5a220cb3898efbdcde8c04d58cc6882ad80e9a4558a835916d8a279",
+      "sourcePayloadSha256": "08785ee836e3f90aecea94cc72145285401724ed82a59e27e4e50555b595dafe",
+      "appraisalPayloadSha256": "33f0f089f9b9873703dfdf691d29f9e484411dbaa332d2b6049254bc8a88f790",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     },
     {
       "id": "whatnet-network-nomenclature-2023",
-      "evidencePayloadSha256": "24ae1554bc1c1dac3a0ec998d6c3134a789cdf45d3c85198fdca75d274a2052a",
-      "sourcePayloadSha256": "3017b2e91bedad1df341633ba2f1aac9ac3b097740b67c92fb6b24e2059d16f8",
-      "appraisalPayloadSha256": "1ebea74c53623f342a18568f7bba31fb9dbdb540a75726789b18aaa717aaa0ed",
+      "evidencePayloadSha256": "5f58e8a5e0101098c27fd2f698c520ce93cf95f2d7aab311041b0f5efbbc68fb",
+      "sourcePayloadSha256": "15c7083e46111c463909676c4f8abb4adbc8c695621568cb65c80c6d2884217a",
+      "appraisalPayloadSha256": "d132c5dcdbd7d295ff353be5d346205b5ef0acaa78da9caf92a71c271bd39342",
       "reviewStatus": "method_appraisal_pending",
       "runtimeEligibility": "blocked_pending_method_appraisal"
     }

@@ -1,8 +1,18 @@
 import assert from "node:assert/strict"
 import { execFileSync, spawnSync } from "node:child_process"
 import { createHash } from "node:crypto"
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs"
-import { join, resolve } from "node:path"
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs"
+import { dirname, join, relative, resolve } from "node:path"
 
 import {
   evaluateDnaSourceIntegrity,
@@ -36,6 +46,23 @@ function sha256File(path: string): string {
   return createHash("sha256").update(readFileSync(path)).digest("hex")
 }
 
+function walkFiles(root: string): string[] {
+  if (!existsSync(root)) return []
+  const output: string[] = []
+  for (const entry of readdirSync(root, { withFileTypes: true })) {
+    const absolute = join(root, entry.name)
+    if (entry.isDirectory()) output.push(...walkFiles(absolute))
+    else if (entry.isFile()) output.push(absolute)
+  }
+  return output.sort()
+}
+
+function countBy<T>(values: readonly T[], key: (value: T) => string): Record<string, number> {
+  const counts = new Map<string, number>()
+  for (const value of values) counts.set(key(value), (counts.get(key(value)) || 0) + 1)
+  return Object.fromEntries([...counts.entries()].sort(([left], [right]) => left.localeCompare(right)))
+}
+
 function baseInput(overrides: Partial<DnaSourceIntegrityInput> = {}): DnaSourceIntegrityInput {
   return {
     sourceId: "source.clean",
@@ -44,16 +71,27 @@ function baseInput(overrides: Partial<DnaSourceIntegrityInput> = {}): DnaSourceI
     expected: {
       title: "A controlled neurophysiology study",
       doi: "10.1234/example.1",
+      year: 2025,
+      authors: ["Ada Example", "Bora Sample"],
+      isbn: null,
+      version: null,
       venue: "Clinical Neurophysiology",
       publisher: "Example Publisher",
     },
     observed: {
       title: "A controlled neurophysiology study",
       doi: "10.1234/example.1",
+      year: 2025,
+      authors: ["Ada Example", "Bora Sample"],
+      isbn: null,
+      version: null,
       venue: "Clin Neurophysiology",
       publisher: "Example Publisher Ltd",
     },
     authorityCoverage: {
+      doiRegistrationAgency: "checked",
+      doiMetadata: "checked",
+      officialMetadata: "not_applicable",
       crossref: "checked",
       retractionWatch: "checked",
       crossmark: "checked",
@@ -86,12 +124,39 @@ const clean = evaluateDnaSourceIntegrity(baseInput())
 assert.equal(clean.state, "verified_clean")
 assert.equal(clean.runtimeEligibility, "eligible")
 
+for (const publicationKind of ["article", "guideline"] as const) {
+  const publisherNotLocallyAsserted = evaluateDnaSourceIntegrity(baseInput({
+    sourceId: `source.${publicationKind}_without_asserted_publisher`,
+    publicationKind,
+    expected: { ...baseInput().expected, publisher: null },
+  }))
+  assert.equal(publisherNotLocallyAsserted.identityChecks.publisher, "not_applicable")
+  assert.equal(publisherNotLocallyAsserted.state, "verified_clean")
+}
+
+const bookPublisherNotAsserted = evaluateDnaSourceIntegrity(baseInput({
+  sourceId: "source.book_without_asserted_publisher",
+  publicationKind: "book",
+  expected: { ...baseInput().expected, publisher: null },
+}))
+assert.equal(bookPublisherNotAsserted.identityChecks.publisher, "not_applicable")
+assert.equal(bookPublisherNotAsserted.state, "verified_clean")
+
 const publisherOnlyMismatch = evaluateDnaSourceIntegrity(baseInput({
   sourceId: "source.publisher_pending",
   expected: { ...baseInput().expected, publisher: "Journal Name" },
 }))
+assert.equal(publisherOnlyMismatch.identityChecks.publisher, "mismatched")
 assert.equal(publisherOnlyMismatch.state, "pending")
 assert.ok(publisherOnlyMismatch.reasonCodes.includes("publisher_consistency_mismatch"))
+
+const assertedPublisherMissingFromAuthority = evaluateDnaSourceIntegrity(baseInput({
+  sourceId: "source.asserted_publisher_missing",
+  observed: { ...baseInput().observed, publisher: null },
+}))
+assert.equal(assertedPublisherMissingFromAuthority.identityChecks.publisher, "not_reported")
+assert.equal(assertedPublisherMissingFromAuthority.state, "pending")
+assert.ok(assertedPublisherMissingFromAuthority.reasonCodes.includes("bibliographic_identity_unverifiable"))
 
 const criticalTitleMismatch = evaluateDnaSourceIntegrity(baseInput({
   sourceId: "source.title_mismatch",
@@ -373,8 +438,16 @@ assert.match(accidentalExecution.stderr, /Choose exactly one mode/)
 const integrityAudit = readJson(`${sourceRoot}/integrity-audit/v1/source-integrity-audit.json`)
 const integritySummary = readJson(`${sourceRoot}/integrity-audit/v1/source-integrity-summary.json`)
 const acquisitionLedger = readJson(`${sourceRoot}/acquisition-audit/v1/acquisition-ledger.json`)
+const acquisitionVerification = readJson(`${sourceRoot}/acquisition-audit/v1/acquisition-verification.json`)
 assert.equal(integrityAudit.sourceCount, 47)
 assert.equal(integrityAudit.records.length, 47)
+const tripodIntegrity = integrityAudit.records.find((record: any) => record.sourceId === "tripod-ai-2024")
+assert.ok(tripodIntegrity)
+assert.equal(tripodIntegrity.state, "corrected")
+assert.equal(tripodIntegrity.auditInput.correctionResolution, "applied")
+assert.equal(tripodIntegrity.correctionAttestation?.decision?.affectedScope, "author_affiliations_only")
+assert.equal(tripodIntegrity.correctionAttestation?.passedCheckCount, 8)
+assert.equal(tripodIntegrity.correctionAttestation?.ssdArchiveVerified, true)
 assert.equal(Object.values(integritySummary.stateCounts).reduce((sum: number, value: any) => sum + value, 0), 47)
 assert.equal(acquisitionLedger.entries.length, 66)
 assert.ok(acquisitionLedger.entries.every((entry: any) => !entry.relativePath.startsWith("/")))
@@ -383,8 +456,103 @@ const repoSnapshotPath = resolve(
   repoRoot,
   "docs/dna-intelligence/governance/v3/source-integrity-archive-snapshot.json",
 )
+if (process.env.DNA_WRITE_SOURCE_INTEGRITY_SNAPSHOT === "1" || process.argv.includes("--write-snapshot")) {
+  const historyCurrentPath = join(sourceRoot, "audit-history/v1/current.json")
+  const historyCurrent = readJson(historyCurrentPath)
+  const historyManifestPath = join(sourceRoot, historyCurrent.manifestRelativePath)
+  const auditPaths = [
+    join(sourceRoot, "integrity-audit/v1/raw-online-integrity-responses.json"),
+    join(sourceRoot, "integrity-audit/v1/source-integrity-audit.json"),
+    join(sourceRoot, "integrity-audit/v1/source-integrity-summary.json"),
+    join(sourceRoot, "acquisition-audit/v1/acquisition-ledger.json"),
+    join(sourceRoot, "acquisition-audit/v1/acquisition-verification.json"),
+    historyCurrentPath,
+    historyManifestPath,
+  ]
+  const historyRunCount = readdirSync(join(sourceRoot, "audit-history/v1"), { withFileTypes: true })
+    .filter((entry) => entry.isDirectory()).length
+  const snapshot = {
+    schemaVersion: "dna-source-integrity-archive-snapshot@1",
+    auditedAt: integritySummary.checkedAt,
+    storagePolicy: {
+      rootAlias: "ResearchSSD:",
+      repoContainsRawArtifacts: false,
+      repoContainsAbsoluteStoragePaths: false,
+      sourceLibraryRelativePath: relative(resolve(researchSsdRoot), sourceRoot).replaceAll("\\", "/"),
+      workRelativePath: relative(resolve(researchSsdRoot), workRoot).replaceAll("\\", "/"),
+      releaseRelativePath: relative(resolve(researchSsdRoot), releaseRoot).replaceAll("\\", "/"),
+      workFileCount: walkFiles(workRoot).length,
+      releaseFileCount: walkFiles(releaseRoot).length,
+    },
+    integrity: {
+      sourceCount: integritySummary.sourceCount,
+      stateCounts: integritySummary.stateCounts,
+      integrityGateEligibleCount: integritySummary.eligibleCount,
+      integrityGateBlockedCount: integritySummary.blockedCount,
+      runtimeReleasedCount: 0,
+      authorityUnavailableCount: integritySummary.authorityUnavailableCount,
+      updateSignalCount: integritySummary.updateSignalCount,
+      retractionWatchMarkerCount: integritySummary.retractionWatchMarkerCount,
+      retractionOrWithdrawalCount: integritySummary.retractionOrWithdrawalCount,
+      expressionOfConcernCount: integritySummary.expressionOfConcernCount,
+      publisherConsistencyPendingSourceIds: integrityAudit.records
+        .filter((record: any) => record.reasonCodes.includes("publisher_consistency_mismatch"))
+        .map((record: any) => record.sourceId).sort(),
+      authorityUnavailableSourceIds: integrityAudit.records
+        .filter((record: any) => Object.values(record.authorityCoverage).includes("unavailable"))
+        .map((record: any) => record.sourceId).sort(),
+    },
+    correctionResolutionAttestations: [{
+      sourceId: "tripod-ai-2024",
+      repositoryRelativePath: "docs/dna-intelligence/governance/v3/correction-resolution-attestations/tripod-ai-2024.json",
+      repositorySha256: sha256File(resolve(
+        repoRoot,
+        "docs/dna-intelligence/governance/v3/correction-resolution-attestations/tripod-ai-2024.json",
+      )),
+      attestationSha256: tripodIntegrity.correctionAttestation.attestationSha256,
+      decision: tripodIntegrity.state,
+      scope: tripodIntegrity.correctionAttestation.decision.affectedScope,
+      requiredChecks: tripodIntegrity.correctionAttestation.requiredCheckCount,
+      passedChecks: tripodIntegrity.correctionAttestation.passedCheckCount,
+      ssdArchiveVerified: tripodIntegrity.correctionAttestation.ssdArchiveVerified,
+    }],
+    acquisition: {
+      rawArtifactCount: acquisitionVerification.rawArtifactCount,
+      ledgerEntryCount: acquisitionLedger.entries.length,
+      acceptedCount: acquisitionVerification.acceptedCount,
+      rejectedCount: acquisitionVerification.rejectedCount,
+      bytes: acquisitionLedger.entries.reduce((sum: number, entry: any) => sum + Number(entry.bytes || 0), 0),
+      mediaTypeCounts: countBy(acquisitionLedger.entries, (entry: any) => String(entry.mediaType)),
+      acquisitionMethodCounts: countBy(acquisitionLedger.entries, (entry: any) => String(entry.acquisitionMethod)),
+      downloadUrlEvidenceCounts: countBy(acquisitionLedger.entries, (entry: any) => String(entry.downloadUrlEvidence)),
+      sourceAndDownloadUrlDifferCount: acquisitionLedger.entries.filter((entry: any) =>
+        entry.sourceUrl && entry.downloadUrl && entry.sourceUrl !== entry.downloadUrl).length,
+    },
+    history: {
+      immutableRunCount: historyRunCount,
+      currentRunId: historyCurrent.runId,
+      currentBundleSha256: historyCurrent.bundleSha256,
+      currentManifestRelativePath: relative(resolve(researchSsdRoot), historyManifestPath).replaceAll("\\", "/"),
+    },
+    ssdAuditFiles: auditPaths.map((absolute) => ({
+      relativePath: relative(resolve(researchSsdRoot), absolute).replaceAll("\\", "/"),
+      sha256: sha256File(absolute),
+    })),
+    interpretationBoundary: `${integritySummary.eligibleCount} records passed only the Phase 10 integrity gate. No source or answer is released to V3 runtime until every independent lifecycle, identity, method, passage, claim, licence and release gate also passes. Zero observed markers means no marker was returned by the checked authorities at the audit timestamp; it is not a permanent guarantee.`,
+  }
+  mkdirSync(dirname(repoSnapshotPath), { recursive: true })
+  writeFileSync(repoSnapshotPath, `${JSON.stringify(snapshot, null, 2)}\n`, "utf8")
+}
 const repoSnapshot = readJson(repoSnapshotPath)
 assert.ok(!JSON.stringify(repoSnapshot).includes(resolve(researchSsdRoot)))
+assert.equal(repoSnapshot.correctionResolutionAttestations.length, 1)
+assert.equal(
+  repoSnapshot.correctionResolutionAttestations[0].repositorySha256,
+  sha256File(resolve(
+    repoRoot,
+    repoSnapshot.correctionResolutionAttestations[0].repositoryRelativePath,
+  )),
+)
 for (const auditFile of repoSnapshot.ssdAuditFiles) {
   const absolute = join(researchSsdRoot, auditFile.relativePath)
   assert.equal(sha256File(absolute), auditFile.sha256, `snapshot hash: ${auditFile.relativePath}`)

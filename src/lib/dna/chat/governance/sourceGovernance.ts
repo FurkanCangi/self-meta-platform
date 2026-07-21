@@ -56,6 +56,7 @@ export const DNA_SOURCE_AGE_SCOPES = [
   "adult",
   "older_adult",
   "mixed",
+  "not_applicable",
   "not_reported",
 ] as const
 
@@ -496,10 +497,12 @@ export type DnaSourceIdentityRecord = {
     readonly venue: string | null
   }
   readonly verifiedBibliography: {
-    readonly title: string
+    readonly title: string | null
     readonly authors: readonly string[]
-    readonly year: number
+    readonly year: number | null
     readonly venue: string | null
+    readonly publisher?: string | null
+    readonly version?: string | null
   }
   readonly identifiers: DnaCanonicalSourceIdentifiers
   readonly verifiedIdentifiers: DnaCanonicalSourceIdentifiers
@@ -516,13 +519,28 @@ export type DnaSourceIdentityValidation = {
   readonly errors: readonly string[]
 }
 
-function canonicalBibliographicText(value: string): string {
-  return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+function canonicalBibliographicText(value: string | null | undefined): string {
+  return String(value || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase("en-US").replace(/[^a-z0-9]+/g, " ").trim().replace(/\s+/g, " ")
 }
 
 function canonicalAuthorFamily(value: string): string {
   return canonicalBibliographicText(value).split(" ").at(-1) ?? ""
+}
+
+function bibliographicTitleMatches(left: string, right: string | null): boolean {
+  const a = canonicalBibliographicText(left)
+  const b = canonicalBibliographicText(right)
+  if (!a || !b) return false
+  if (a === b) return true
+  const leftTokens = new Set(a.split(" "))
+  const rightTokens = new Set(b.split(" "))
+  const intersection = [...leftTokens].filter((token) => rightTokens.has(token)).length
+  const union = new Set([...leftTokens, ...rightTokens]).size
+  if (intersection / Math.max(1, union) >= 0.9) return true
+  const shorter = Math.min(leftTokens.size, rightTokens.size)
+  const longer = Math.max(leftTokens.size, rightTokens.size)
+  return intersection === shorter && shorter / Math.max(1, longer) >= 0.75
 }
 
 function requireCanonicalIdentifier(
@@ -553,6 +571,7 @@ export function validateSourceIdentityRecords(
   const versionOfRecordByWork = new Map<string, string>()
 
   for (const record of records) {
+    let detectedIdentityMismatch = false
     if (!STABLE_ID_PATTERN.test(record.sourceId)) errors.push(`${record.sourceId}:invalid_source_id`)
     if (!STABLE_ID_PATTERN.test(record.workId)) errors.push(`${record.sourceId}:invalid_work_id`)
     if (!STABLE_ID_PATTERN.test(record.versionId)) errors.push(`${record.sourceId}:invalid_version_id`)
@@ -560,24 +579,47 @@ export function validateSourceIdentityRecords(
     if (!Number.isInteger(record.bibliography.year) || record.bibliography.year < 1800 || record.bibliography.year > 2200) {
       errors.push(`${record.sourceId}:invalid_year`)
     }
-    if (canonicalBibliographicText(record.bibliography.title)
-      !== canonicalBibliographicText(record.verifiedBibliography.title)) {
-      errors.push(`${record.sourceId}:bibliography_mismatch_title`)
+    const titleMismatch = Boolean(record.verifiedBibliography.title)
+      && !bibliographicTitleMatches(record.bibliography.title, record.verifiedBibliography.title)
+    if (titleMismatch) {
+      detectedIdentityMismatch = true
+      if (record.identityVerification.status !== "mismatch") {
+        errors.push(`${record.sourceId}:bibliography_mismatch_title`)
+      }
     }
-    if (record.bibliography.year !== record.verifiedBibliography.year) {
-      errors.push(`${record.sourceId}:bibliography_mismatch_year`)
+    const yearMismatch = record.verifiedBibliography.year !== null
+      && record.bibliography.year !== record.verifiedBibliography.year
+    if (yearMismatch) {
+      detectedIdentityMismatch = true
+      if (record.identityVerification.status !== "mismatch") {
+        errors.push(`${record.sourceId}:bibliography_mismatch_year`)
+      }
     }
     if (record.bibliography.venue && record.verifiedBibliography.venue
       && canonicalBibliographicText(record.bibliography.venue)
         !== canonicalBibliographicText(record.verifiedBibliography.venue)) {
-      errors.push(`${record.sourceId}:bibliography_mismatch_venue`)
+      detectedIdentityMismatch = true
+      if (record.identityVerification.status !== "mismatch") {
+        errors.push(`${record.sourceId}:bibliography_mismatch_venue`)
+      }
     }
     if (record.bibliography.authors.length > 0 && record.verifiedBibliography.authors.length > 0) {
       const verifiedFamilies = new Set(record.verifiedBibliography.authors.map(canonicalAuthorFamily))
       const localFamilies = record.bibliography.authors.map(canonicalAuthorFamily)
       const matched = localFamilies.filter((family) => verifiedFamilies.has(family)).length
-      if (matched / localFamilies.length < 0.8) errors.push(`${record.sourceId}:bibliography_mismatch_authors`)
+      if (matched / localFamilies.length < 0.8) {
+        detectedIdentityMismatch = true
+        if (record.identityVerification.status !== "mismatch") {
+          errors.push(`${record.sourceId}:bibliography_mismatch_authors`)
+        }
+      }
     }
+    if (record.identityVerification.status === "verified" && (
+      !record.verifiedBibliography.title
+      || record.verifiedBibliography.year === null
+      || (record.bibliography.authors.length > 0 && record.verifiedBibliography.authors.length === 0)
+      || (record.publicationRole === "article" && !record.verifiedBibliography.venue)
+    )) errors.push(`${record.sourceId}:verified_bibliography_incomplete`)
 
     if (record.versionStatus === "version_of_record") {
       const previous = versionOfRecordByWork.get(record.workId)
@@ -608,11 +650,17 @@ export function validateSourceIdentityRecords(
         else seen[kind].set(effectiveValue, record.sourceId)
       }
       if (verifiedValue !== null && value !== null && verifiedValue !== value) {
-        errors.push(`${record.sourceId}:identifier_mismatch_${kind}`)
+        detectedIdentityMismatch = true
+        if (record.identityVerification.status !== "mismatch") {
+          errors.push(`${record.sourceId}:identifier_mismatch_${kind}`)
+        }
       }
       if (record.identityVerification.status === "verified" && value !== null && verifiedValue === null) {
         errors.push(`${record.sourceId}:identifier_unverified_${kind}`)
       }
+    }
+    if (record.identityVerification.status === "mismatch" && !detectedIdentityMismatch) {
+      errors.push(`${record.sourceId}:mismatch_status_without_observed_mismatch`)
     }
 
     if (

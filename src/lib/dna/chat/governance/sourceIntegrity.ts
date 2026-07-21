@@ -2,7 +2,7 @@ import { createHash } from "node:crypto"
 import { existsSync, realpathSync, statSync } from "node:fs"
 import { resolve, sep } from "node:path"
 
-export const DNA_SOURCE_INTEGRITY_VERSION = "dna-source-integrity@1" as const
+export const DNA_SOURCE_INTEGRITY_VERSION = "dna-source-integrity@2" as const
 export const DNA_SOURCE_IMPACT_VERSION = "dna-source-integrity-impact@1" as const
 export const DNA_SOURCE_ACQUISITION_LEDGER_VERSION = "dna-source-acquisition-ledger@1" as const
 
@@ -91,16 +91,27 @@ export type DnaSourceIntegrityInput = Readonly<{
   expected: Readonly<{
     title: string
     doi: string | null
+    year: number | null
+    authors: readonly string[]
+    isbn: string | null
+    version: string | null
     venue: string | null
     publisher: string | null
   }>
   observed: Readonly<{
     title: string | null
     doi: string | null
+    year: number | null
+    authors: readonly string[]
+    isbn: string | null
+    version: string | null
     venue: string | null
     publisher: string | null
   }>
   authorityCoverage: Readonly<{
+    doiRegistrationAgency: DnaIntegrityAuthorityState
+    doiMetadata: DnaIntegrityAuthorityState
+    officialMetadata: DnaIntegrityAuthorityState
     crossref: DnaIntegrityAuthorityState
     retractionWatch: DnaIntegrityAuthorityState
     crossmark: DnaIntegrityAuthorityState
@@ -127,6 +138,10 @@ export type DnaSourceIntegrityRecord = Readonly<{
   identityChecks: Readonly<{
     title: DnaIntegrityCheckState
     doi: DnaIntegrityCheckState
+    year: DnaIntegrityCheckState
+    authors: DnaIntegrityCheckState
+    isbn: DnaIntegrityCheckState
+    version: DnaIntegrityCheckState
     venue: DnaIntegrityCheckState
     publisher: DnaIntegrityCheckState
   }>
@@ -170,7 +185,10 @@ function textMatches(expected: string, observed: string): boolean {
   const rightTokens = new Set(right.split(" "))
   const intersection = [...leftTokens].filter((token) => rightTokens.has(token)).length
   const union = new Set([...leftTokens, ...rightTokens]).size
-  return intersection / Math.max(1, union) >= 0.9
+  if (intersection / Math.max(1, union) >= 0.9) return true
+  const shorter = Math.min(leftTokens.size, rightTokens.size)
+  const longer = Math.max(leftTokens.size, rightTokens.size)
+  return intersection === shorter && shorter / Math.max(1, longer) >= 0.75
 }
 
 function compareText(expected: string | null, observed: string | null, notApplicable = false): DnaIntegrityCheckState {
@@ -191,6 +209,20 @@ function compareOrganization(expected: string | null, observed: string | null): 
   return intersection / Math.max(1, Math.min(left.length, right.length)) >= 0.9 ? "matched" : "mismatched"
 }
 
+function comparePublisher(
+  _publicationKind: DnaSourceIntegrityInput["publicationKind"],
+  expected: string | null,
+  observed: string | null,
+): DnaIntegrityCheckState {
+  // A publisher is an optional identity assertion for every publication kind.
+  // When the local manifest does assert one, the authority must still report
+  // and match it; an absent local assertion must not become a synthetic
+  // publisher requirement or be filled from the same remote response that is
+  // being checked.
+  if (!expected) return "not_applicable"
+  return compareOrganization(expected, observed)
+}
+
 function compareVenue(expected: string | null, observed: string | null): DnaIntegrityCheckState {
   if (!expected || !observed) return "not_reported"
   const left = canonicalText(expected).split(" ").filter(Boolean)
@@ -205,6 +237,42 @@ function compareDoi(expected: string | null, observed: string | null): DnaIntegr
   if (!expected) return "not_applicable"
   if (!observed) return "not_reported"
   return canonicalDoi(expected) === canonicalDoi(observed) ? "matched" : "mismatched"
+}
+
+function canonicalIsbn(value: string | null): string {
+  return String(value || "").toUpperCase().replace(/[^0-9X]/g, "")
+}
+
+function compareIsbn(expected: string | null, observed: string | null): DnaIntegrityCheckState {
+  if (!expected) return "not_applicable"
+  if (!observed) return "not_reported"
+  return canonicalIsbn(expected) === canonicalIsbn(observed) ? "matched" : "mismatched"
+}
+
+function compareYear(expected: number | null, observed: number | null): DnaIntegrityCheckState {
+  if (expected === null) return "not_applicable"
+  if (observed === null) return "not_reported"
+  return Number.isInteger(expected) && expected === observed ? "matched" : "mismatched"
+}
+
+function authorFamilyName(value: string): string {
+  const tokens = canonicalText(value).split(" ").filter(Boolean)
+  return tokens.at(-1) || ""
+}
+
+function compareAuthors(expected: readonly string[], observed: readonly string[]): DnaIntegrityCheckState {
+  if (expected.length === 0) return "not_applicable"
+  if (observed.length === 0) return "not_reported"
+  const left = new Set(expected.map(authorFamilyName).filter(Boolean))
+  const right = new Set(observed.map(authorFamilyName).filter(Boolean))
+  const matched = [...left].filter((name) => right.has(name)).length
+  return matched / Math.max(1, left.size) >= 0.8 ? "matched" : "mismatched"
+}
+
+function compareOptionalText(expected: string | null, observed: string | null): DnaIntegrityCheckState {
+  if (!expected) return "not_applicable"
+  if (!observed) return "not_reported"
+  return textMatches(expected, observed) ? "matched" : "mismatched"
 }
 
 function updateSortKey(update: DnaSourceIntegrityUpdate): string {
@@ -251,10 +319,14 @@ export function evaluateDnaSourceIntegrity(input: DnaSourceIntegrityInput): DnaS
   const identityChecks = Object.freeze({
     title: compareText(input.expected.title, input.observed.title),
     doi: compareDoi(input.expected.doi, input.observed.doi),
-    venue: input.publicationKind === "book" && !input.expected.venue
+    year: compareYear(input.expected.year, input.observed.year),
+    authors: compareAuthors(input.expected.authors, input.observed.authors),
+    isbn: compareIsbn(input.expected.isbn, input.observed.isbn),
+    version: compareOptionalText(input.expected.version, input.observed.version),
+    venue: !input.expected.venue
       ? "not_applicable" as const
       : compareVenue(input.expected.venue, input.observed.venue),
-    publisher: compareOrganization(input.expected.publisher, input.observed.publisher),
+    publisher: comparePublisher(input.publicationKind, input.expected.publisher, input.observed.publisher),
   })
   const updates = Object.freeze([...input.updates]
     .map((update) => Object.freeze({ ...update }))
@@ -294,7 +366,9 @@ export function evaluateDnaSourceIntegrity(input: DnaSourceIntegrityInput): DnaS
   // reactivate the source; only an explicit, evidence-bound reinstatement review can.
   const retracted = (retractionSignal || previousWithdrawal) && !verifiedReinstatement
   const criticalIdentityMismatch = identityChecks.title === "mismatched"
-    || identityChecks.doi === "mismatched" || identityChecks.venue === "mismatched"
+    || identityChecks.doi === "mismatched" || identityChecks.year === "mismatched"
+    || identityChecks.authors === "mismatched" || identityChecks.isbn === "mismatched"
+    || identityChecks.version === "mismatched" || identityChecks.venue === "mismatched"
   const publisherMismatch = identityChecks.publisher === "mismatched"
   const unverifiableIdentity = Object.entries(identityChecks)
     .some(([, value]) => value === "not_reported")
@@ -316,6 +390,9 @@ export function evaluateDnaSourceIntegrity(input: DnaSourceIntegrityInput): DnaS
   if (unverifiableIdentity) reasonCodes.push("bibliographic_identity_unverifiable")
 
   const requiredAuthorities: Array<[string, DnaIntegrityAuthorityState]> = [
+    ["doi_registration_agency", input.authorityCoverage.doiRegistrationAgency],
+    ["doi_metadata", input.authorityCoverage.doiMetadata],
+    ["official_metadata", input.authorityCoverage.officialMetadata],
     ["crossref", input.authorityCoverage.crossref],
     ["retraction_watch", input.authorityCoverage.retractionWatch],
     ["crossmark", input.authorityCoverage.crossmark],

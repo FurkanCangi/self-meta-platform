@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "dna-correction-resolution-contract@1",
+  "purpose": "Permit a correction signal to become applied only when the official notice, its target relation, its stated scope, and the current local artifacts are independently hash-bound.",
+  "executionBoundary": "audit_time_only_no_runtime_network",
+  "decisionStates": [
+    "verified_applied",
+    "pending"
+  ],
+  "requiredChecks": [
+    "notice_identity",
+    "notice_target_relation",
+    "notice_scope",
+    "notice_update_statement",
+    "source_manifest_binding",
+    "current_jats_binding",
+    "current_pdf_binding",
+    "post_notice_timing"
+  ],
+  "failClosedRules": [
+    "Any missing or failed required check forces pending.",
+    "A DOI relation alone cannot establish that a correction has been applied.",
+    "The correction notice must explicitly identify the affected field and confirm the updated formats.",
+    "The local JATS and PDF must match both their source manifest hashes and a freshly retrieved authority or bound official-repository copy.",
+    "A hash mismatch, target mismatch, scope ambiguity, missing authority artifact, or pre-notice artifact date forces pending.",
+    "Source governance and source integrity may map the result to applied only after validating the full attestation hash and every archived evidence hash."
+  ],
+  "tripodAi2024Profile": {
+    "sourceId": "tripod-ai-2024",
+    "sourceDoi": "10.1136/bmj-2023-078378",
+    "sourcePmcid": "PMC11019967",
+    "correctionDoi": "10.1136/bmj.q902",
+    "correctionPmcid": "PMC11025451",
+    "officialCorrectionAuthority": "Europe PMC publisher-supplied JATS",
+    "currentJatsAuthority": "Europe PMC current fullTextXML",
+    "pdfFallbackAuthority": "UCL Discovery official institutional repository publisher-version copy",
+    "expectedScope": "author_affiliations_only"
+  },
+  "claimBoundary": [
+    "A verified correction resolution is not a scientific-validity appraisal.",
+    "The notice-based scientific-claim-impact field reports only what the official notice indicates.",
+    "Without a pre-correction binary, the system must disclose that it did not independently diff every pre/post field.",
+    "The correction attestation does not override license, appraisal, passage, claim, or release gates."
+  ],
+  "storage": {
+    "largeAndRawEvidenceRoot": "${RESEARCH_SSD_ROOT}/Datasets/SelfMetaAI/dna-knowledge/source-library/correction-audit/v1",
+    "repositorySnapshot": "docs/dna-intelligence/governance/v3/correction-resolution-attestations/tripod-ai-2024.json",
+    "archiveMode": "append_only_hash_addressed_run_plus_mutable_current_pointer"
+  }
+}

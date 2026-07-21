@@ -11,6 +11,8 @@ import {
   applyDnaClaimRereview,
   commitDnaEvidenceSubject,
   createDnaBlindExtractionRun,
+  createDnaCandidateBlindExtractionRun,
+  createDnaCandidateSourcePassage,
   createDnaEvidenceTrustRegistry,
   createDnaSourcePassage,
   isDnaParsedArtifactCurrent,
@@ -47,6 +49,453 @@ function expectError(fn: () => unknown, code: string): void {
   assert.throws(fn, (error: unknown) =>
     error instanceof Error && error.message === code, `Beklenen hata: ${code}`)
 }
+
+const INTEGRITY_AUDIT_SNAPSHOT_PATH =
+  "Datasets/SelfMetaAI/dna-knowledge/source-library/integrity-audit/v1/source-integrity-audit.json"
+const COMPONENT_LICENSE_AUDIT_MANIFEST_PATH =
+  "governance-audit/v1/component-license-audit.json"
+
+type IntegrityAuditRecord = Readonly<{
+  sourceId: string
+  state: string
+  runtimeEligibility?: string
+  auditSha256?: string
+  [key: string]: unknown
+}>
+
+type ComponentLicense = Readonly<{
+  component: string
+  decision: string
+  evidence?: Readonly<{
+    sha256?: string
+    artifactRelativePath?: string | null
+    [key: string]: unknown
+  }>
+  [key: string]: unknown
+}>
+
+type ComponentLicenseAuditRecord = Readonly<{
+  sourceId: string
+  policy: string
+  obligations: Readonly<Record<string, unknown>>
+  components: readonly ComponentLicense[]
+  [key: string]: unknown
+}>
+
+type SnapshotLicenseRecord = Readonly<{
+  sourceId: string
+  policy: string
+  obligations: Readonly<Record<string, unknown>>
+  matrixSha256: string
+  decisions: Readonly<Record<string, string>>
+  evidenceBasis: Readonly<Record<string, string>>
+}>
+
+type CandidateSourceTrustDecision = Readonly<{
+  sourceId: string
+  integrityState: string
+  integrityAuditRecordSha256: string
+  integrityDecisionSha256: string
+  passageLicenseDecision: string
+  componentLicenseAuditRecordSha256: string
+  sourceGovernanceLicenseRecordSha256: string
+  passageLicenseDecisionSha256: string
+}>
+
+type CandidateGovernanceInputBindings = Readonly<{
+  sourceIntegritySnapshotSha256: string
+  sourceIntegritySnapshotExpectedAuditSha256: string
+  integrityAuditSha256: string
+  integrityAuditCheckedAt: string
+  sourceGovernanceSnapshotSha256: string
+  sourceGovernanceSnapshotExpectedComponentLicenseAuditSha256: string
+  componentLicenseAuditSha256: string
+  componentLicenseAuditAt: string
+  componentLicenseAuditorVersion: string
+  componentLicenseAuditorScriptSha256: string
+}>
+
+function parseJsonObject(bytes: Uint8Array, errorCode: string): Record<string, unknown> {
+  let value: unknown
+  try {
+    value = JSON.parse(Buffer.from(bytes).toString("utf8"))
+  } catch {
+    throw new Error(errorCode)
+  }
+  if (!value || typeof value !== "object" || Array.isArray(value)) throw new Error(errorCode)
+  return value as Record<string, unknown>
+}
+
+function uniqueSourceRecordMap<T extends { readonly sourceId: string }>(
+  records: readonly T[],
+  namespace: string,
+): ReadonlyMap<string, T> {
+  const result = new Map<string, T>()
+  for (const record of records) {
+    const sourceId = String(record.sourceId || "").trim()
+    if (!sourceId) throw new Error(`dna_candidate_${namespace}_source_id_missing`)
+    const previous = result.get(sourceId)
+    if (previous) {
+      const kind = JSON.stringify(previous) === JSON.stringify(record) ? "duplicate" : "conflicting"
+      throw new Error(`dna_candidate_${namespace}_${kind}_source_id`)
+    }
+    result.set(sourceId, record)
+  }
+  return result
+}
+
+function singleHashBinding(
+  records: readonly { readonly relativePath: string; readonly sha256: string }[],
+  relativePath: string,
+  errorPrefix: string,
+): string {
+  const matches = records.filter((record) => record.relativePath === relativePath)
+  if (matches.length !== 1) throw new Error(`${errorPrefix}_binding_missing_or_duplicate`)
+  const value = matches[0]!.sha256
+  if (!/^[a-f0-9]{64}$/.test(value)) throw new Error(`${errorPrefix}_binding_invalid`)
+  return value
+}
+
+function establishCandidateGovernanceTrustRoots(input: Readonly<{
+  integrityAuditBytes: Uint8Array
+  componentLicenseAuditBytes: Uint8Array
+  sourceIntegritySnapshotBytes: Uint8Array
+  sourceGovernanceSnapshotBytes: Uint8Array
+}>): Readonly<{
+  governanceInputBindings: CandidateGovernanceInputBindings
+  decisionsBySource: ReadonlyMap<string, CandidateSourceTrustDecision>
+}> {
+  const integrityAudit = parseJsonObject(
+    input.integrityAuditBytes,
+    "dna_candidate_integrity_audit_invalid",
+  ) as {
+    schemaVersion?: string
+    checkedAt?: string
+    records?: IntegrityAuditRecord[]
+  }
+  const componentLicenseAudit = parseJsonObject(
+    input.componentLicenseAuditBytes,
+    "dna_candidate_component_license_audit_invalid",
+  ) as {
+    schemaVersion?: string
+    auditedAt?: string
+    auditorImplementation?: { version?: string; scriptSha256?: string }
+    records?: ComponentLicenseAuditRecord[]
+  }
+  const sourceIntegritySnapshot = parseJsonObject(
+    input.sourceIntegritySnapshotBytes,
+    "dna_candidate_source_integrity_snapshot_invalid",
+  ) as {
+    schemaVersion?: string
+    auditedAt?: string
+    ssdAuditFiles?: Array<{ relativePath: string; sha256: string }>
+  }
+  const sourceGovernanceSnapshot = parseJsonObject(
+    input.sourceGovernanceSnapshotBytes,
+    "dna_candidate_source_governance_snapshot_invalid",
+  ) as {
+    schemaVersion?: string
+    manifests?: Array<{ relativePath: string; sha256: string }>
+    licenseRecords?: SnapshotLicenseRecord[]
+  }
+  if (integrityAudit.schemaVersion !== "dna-source-integrity-audit@2"
+    || !Array.isArray(integrityAudit.records)
+    || typeof integrityAudit.checkedAt !== "string") {
+    throw new Error("dna_candidate_integrity_audit_invalid")
+  }
+  if (componentLicenseAudit.schemaVersion !== "dna-component-license-audit@2"
+    || !Array.isArray(componentLicenseAudit.records)
+    || typeof componentLicenseAudit.auditedAt !== "string"
+    || typeof componentLicenseAudit.auditorImplementation?.version !== "string"
+    || !/^[a-f0-9]{64}$/.test(componentLicenseAudit.auditorImplementation.scriptSha256 || "")) {
+    throw new Error("dna_candidate_component_license_audit_invalid")
+  }
+  const componentLicenseAuditorVersion = componentLicenseAudit.auditorImplementation.version!
+  const componentLicenseAuditorScriptSha256 =
+    componentLicenseAudit.auditorImplementation.scriptSha256!
+  if (sourceIntegritySnapshot.schemaVersion !== "dna-source-integrity-archive-snapshot@1"
+    || !Array.isArray(sourceIntegritySnapshot.ssdAuditFiles)) {
+    throw new Error("dna_candidate_source_integrity_snapshot_invalid")
+  }
+  if (sourceGovernanceSnapshot.schemaVersion !== "dna-source-library-governance-snapshot@1"
+    || !Array.isArray(sourceGovernanceSnapshot.manifests)
+    || !Array.isArray(sourceGovernanceSnapshot.licenseRecords)) {
+    throw new Error("dna_candidate_source_governance_snapshot_invalid")
+  }
+
+  const integrityAuditSha256 = hash(input.integrityAuditBytes)
+  const expectedIntegrityAuditSha256 = singleHashBinding(
+    sourceIntegritySnapshot.ssdAuditFiles,
+    INTEGRITY_AUDIT_SNAPSHOT_PATH,
+    "dna_candidate_integrity_audit_snapshot",
+  )
+  if (integrityAuditSha256 !== expectedIntegrityAuditSha256) {
+    throw new Error("dna_candidate_integrity_audit_snapshot_hash_mismatch")
+  }
+  if (sourceIntegritySnapshot.auditedAt !== integrityAudit.checkedAt) {
+    throw new Error("dna_candidate_integrity_audit_snapshot_time_mismatch")
+  }
+
+  const componentLicenseAuditSha256 = hash(input.componentLicenseAuditBytes)
+  const expectedComponentLicenseAuditSha256 = singleHashBinding(
+    sourceGovernanceSnapshot.manifests,
+    COMPONENT_LICENSE_AUDIT_MANIFEST_PATH,
+    "dna_candidate_component_license_audit_snapshot",
+  )
+  if (componentLicenseAuditSha256 !== expectedComponentLicenseAuditSha256) {
+    throw new Error("dna_candidate_component_license_audit_snapshot_hash_mismatch")
+  }
+
+  const integrityRecords = uniqueSourceRecordMap(
+    integrityAudit.records,
+    "integrity_audit",
+  )
+  const componentLicenseRecords = uniqueSourceRecordMap(
+    componentLicenseAudit.records,
+    "component_license_audit",
+  )
+  const snapshotLicenseRecords = uniqueSourceRecordMap(
+    sourceGovernanceSnapshot.licenseRecords,
+    "source_governance_snapshot",
+  )
+  const integrityIds = [...integrityRecords.keys()].sort()
+  const componentIds = [...componentLicenseRecords.keys()].sort()
+  const snapshotIds = [...snapshotLicenseRecords.keys()].sort()
+  if (JSON.stringify(integrityIds) !== JSON.stringify(componentIds)
+    || JSON.stringify(componentIds) !== JSON.stringify(snapshotIds)) {
+    throw new Error("dna_candidate_governance_source_set_mismatch")
+  }
+
+  const decisionsBySource = new Map<string, CandidateSourceTrustDecision>()
+  for (const sourceId of integrityIds) {
+    const integrityRecord = integrityRecords.get(sourceId)!
+    const componentRecord = componentLicenseRecords.get(sourceId)!
+    const snapshotRecord = snapshotLicenseRecords.get(sourceId)!
+    const componentsByName = new Map<string, ComponentLicense>()
+    for (const component of componentRecord.components) {
+      if (componentsByName.has(component.component)) {
+        throw new Error("dna_candidate_component_license_duplicate_component")
+      }
+      componentsByName.set(component.component, component)
+    }
+    const passageComponent = componentsByName.get("passage")
+    if (!passageComponent) throw new Error("dna_candidate_passage_license_decision_missing")
+    const componentRecordCore = Object.fromEntries(
+      Object.entries(componentRecord).filter(([key]) => key !== "audit"),
+    )
+    const componentDecisions = Object.fromEntries(
+      componentRecord.components.map((component) => [component.component, component.decision]),
+    )
+    const componentEvidenceBasis = Object.fromEntries(
+      componentRecord.components.map((component) => [
+        component.component,
+        String((component.evidence as Record<string, unknown> | undefined)?.basis || ""),
+      ]),
+    )
+    const expectedMatrixSha256 = hash(JSON.stringify(componentRecordCore))
+    if (snapshotRecord.policy !== componentRecord.policy
+      || JSON.stringify(snapshotRecord.obligations) !== JSON.stringify(componentRecord.obligations)
+      || JSON.stringify(snapshotRecord.decisions) !== JSON.stringify(componentDecisions)
+      || JSON.stringify(snapshotRecord.evidenceBasis) !== JSON.stringify(componentEvidenceBasis)
+      || snapshotRecord.matrixSha256 !== expectedMatrixSha256) {
+      throw new Error("dna_candidate_component_license_snapshot_audit_mismatch")
+    }
+    const integrityDecisionSha256 = hash(JSON.stringify({
+      sourceId,
+      state: integrityRecord.state,
+      runtimeEligibility: integrityRecord.runtimeEligibility || null,
+      auditSha256: integrityRecord.auditSha256 || null,
+    }))
+    const passageLicenseDecisionSha256 = hash(JSON.stringify({
+      sourceId,
+      component: "passage",
+      decision: passageComponent.decision,
+      evidence: passageComponent.evidence || null,
+      snapshotMatrixSha256: snapshotRecord.matrixSha256,
+      auditorVersion: componentLicenseAuditorVersion,
+      auditorScriptSha256: componentLicenseAuditorScriptSha256,
+    }))
+    decisionsBySource.set(sourceId, Object.freeze({
+      sourceId,
+      integrityState: integrityRecord.state,
+      integrityAuditRecordSha256: hash(JSON.stringify(integrityRecord)),
+      integrityDecisionSha256,
+      passageLicenseDecision: passageComponent.decision,
+      componentLicenseAuditRecordSha256: hash(JSON.stringify(componentRecord)),
+      sourceGovernanceLicenseRecordSha256: hash(JSON.stringify(snapshotRecord)),
+      passageLicenseDecisionSha256,
+    }))
+  }
+
+  return Object.freeze({
+    governanceInputBindings: Object.freeze({
+      sourceIntegritySnapshotSha256: hash(input.sourceIntegritySnapshotBytes),
+      sourceIntegritySnapshotExpectedAuditSha256: expectedIntegrityAuditSha256,
+      integrityAuditSha256,
+      integrityAuditCheckedAt: integrityAudit.checkedAt,
+      sourceGovernanceSnapshotSha256: hash(input.sourceGovernanceSnapshotBytes),
+      sourceGovernanceSnapshotExpectedComponentLicenseAuditSha256:
+        expectedComponentLicenseAuditSha256,
+      componentLicenseAuditSha256,
+      componentLicenseAuditAt: componentLicenseAudit.auditedAt,
+      componentLicenseAuditorVersion,
+      componentLicenseAuditorScriptSha256,
+    }),
+    decisionsBySource,
+  })
+}
+
+function jsonBytes(value: unknown): Uint8Array {
+  return Buffer.from(JSON.stringify(value), "utf8")
+}
+
+const syntheticTrustSourceId = "synthetic.trust-root.source"
+const syntheticIntegrityRecord: IntegrityAuditRecord = {
+  schemaVersion: "dna-source-integrity@2",
+  sourceId: syntheticTrustSourceId,
+  state: "verified_clean",
+  runtimeEligibility: "eligible",
+  auditSha256: hash("synthetic-integrity-record"),
+}
+const syntheticComponentRecord: ComponentLicenseAuditRecord = {
+  sourceId: syntheticTrustSourceId,
+  policy: "cc_by",
+  obligations: { attributionRequired: true, shareAlikeRequired: false },
+  components: [{
+    component: "passage",
+    decision: "cleared",
+    evidence: {
+      basis: "verified_in_artifact",
+      sha256: hash("synthetic-license-evidence"),
+      artifactRelativePath: "evidence/synthetic/raw/article.jats.xml",
+    },
+  }],
+  audit: { sourceRecordPath: "evidence/synthetic/source.json" },
+}
+const syntheticComponentRecordCore = Object.fromEntries(
+  Object.entries(syntheticComponentRecord).filter(([key]) => key !== "audit"),
+)
+const syntheticSnapshotLicenseRecord: SnapshotLicenseRecord = {
+  sourceId: syntheticTrustSourceId,
+  policy: "cc_by",
+  obligations: { attributionRequired: true, shareAlikeRequired: false },
+  matrixSha256: hash(JSON.stringify(syntheticComponentRecordCore)),
+  decisions: { passage: "cleared" },
+  evidenceBasis: { passage: "verified_in_artifact" },
+}
+
+function syntheticTrustRootInputs(overrides: Partial<{
+  integrityRecords: IntegrityAuditRecord[]
+  componentRecords: ComponentLicenseAuditRecord[]
+  snapshotLicenseRecords: SnapshotLicenseRecord[]
+}> = {}) {
+  const integrityAudit = {
+      schemaVersion: "dna-source-integrity-audit@2",
+    checkedAt: "2026-07-20T00:00:00.000Z",
+    records: overrides.integrityRecords || [syntheticIntegrityRecord],
+  }
+  const componentLicenseAudit = {
+    schemaVersion: "dna-component-license-audit@2",
+    auditedAt: "2026-07-20T00:00:01.000Z",
+    auditorImplementation: {
+      version: "dna-source-governance-auditor@2",
+      scriptSha256: hash("synthetic-auditor-script"),
+    },
+    records: overrides.componentRecords || [syntheticComponentRecord],
+  }
+  const integrityAuditBytes = jsonBytes(integrityAudit)
+  const componentLicenseAuditBytes = jsonBytes(componentLicenseAudit)
+  return {
+    integrityAuditBytes,
+    componentLicenseAuditBytes,
+    sourceIntegritySnapshotBytes: jsonBytes({
+      schemaVersion: "dna-source-integrity-archive-snapshot@1",
+      auditedAt: integrityAudit.checkedAt,
+      ssdAuditFiles: [{
+        relativePath: INTEGRITY_AUDIT_SNAPSHOT_PATH,
+        sha256: hash(integrityAuditBytes),
+      }],
+    }),
+    sourceGovernanceSnapshotBytes: jsonBytes({
+      schemaVersion: "dna-source-library-governance-snapshot@1",
+      manifests: [{
+        relativePath: COMPONENT_LICENSE_AUDIT_MANIFEST_PATH,
+        sha256: hash(componentLicenseAuditBytes),
+      }],
+      licenseRecords: overrides.snapshotLicenseRecords || [syntheticSnapshotLicenseRecord],
+    }),
+  }
+}
+
+const syntheticTrustRoots = establishCandidateGovernanceTrustRoots(syntheticTrustRootInputs())
+assert.equal(
+  syntheticTrustRoots.decisionsBySource.get(syntheticTrustSourceId)?.integrityState,
+  "verified_clean",
+)
+assert.equal(
+  syntheticTrustRoots.decisionsBySource.get(syntheticTrustSourceId)?.passageLicenseDecision,
+  "cleared",
+)
+
+const tamperedIntegrityInputs = syntheticTrustRootInputs()
+const tamperedIntegrityAuditBytes = jsonBytes({
+  schemaVersion: "dna-source-integrity-audit@2",
+  checkedAt: "2026-07-20T00:00:00.000Z",
+  records: [{ ...syntheticIntegrityRecord, state: "quarantined", runtimeEligibility: "blocked" }],
+})
+expectError(() => establishCandidateGovernanceTrustRoots({
+  ...tamperedIntegrityInputs,
+  integrityAuditBytes: tamperedIntegrityAuditBytes,
+}), "dna_candidate_integrity_audit_snapshot_hash_mismatch")
+
+const tamperedLicenseInputs = syntheticTrustRootInputs()
+const tamperedLicenseAuditBytes = jsonBytes({
+  schemaVersion: "dna-component-license-audit@2",
+  auditedAt: "2026-07-20T00:00:01.000Z",
+  auditorImplementation: {
+    version: "dna-source-governance-auditor@2",
+    scriptSha256: hash("synthetic-auditor-script"),
+  },
+  records: [{
+    ...syntheticComponentRecord,
+    components: [{ ...syntheticComponentRecord.components[0]!, decision: "restricted" }],
+  }],
+})
+expectError(() => establishCandidateGovernanceTrustRoots({
+  ...tamperedLicenseInputs,
+  componentLicenseAuditBytes: tamperedLicenseAuditBytes,
+}), "dna_candidate_component_license_audit_snapshot_hash_mismatch")
+
+expectError(() => establishCandidateGovernanceTrustRoots(syntheticTrustRootInputs({
+  snapshotLicenseRecords: [{
+    ...syntheticSnapshotLicenseRecord,
+    decisions: { passage: "restricted" },
+  }],
+})), "dna_candidate_component_license_snapshot_audit_mismatch")
+
+expectError(() => establishCandidateGovernanceTrustRoots(syntheticTrustRootInputs({
+  integrityRecords: [syntheticIntegrityRecord, syntheticIntegrityRecord],
+})), "dna_candidate_integrity_audit_duplicate_source_id")
+
+expectError(() => establishCandidateGovernanceTrustRoots(syntheticTrustRootInputs({
+  componentRecords: [
+    syntheticComponentRecord,
+    {
+      ...syntheticComponentRecord,
+      components: [{ ...syntheticComponentRecord.components[0]!, decision: "restricted" }],
+    },
+  ],
+})), "dna_candidate_component_license_audit_conflicting_source_id")
+
+expectError(() => uniqueSourceRecordMap([
+  { sourceId: "synthetic.manifest", sourceRecordSha256: hash("same") },
+  { sourceId: "synthetic.manifest", sourceRecordSha256: hash("same") },
+], "source_manifest"), "dna_candidate_source_manifest_duplicate_source_id")
+
+expectError(() => uniqueSourceRecordMap([
+  { sourceId: "synthetic.manifest", sourceRecordSha256: hash("one") },
+  { sourceId: "synthetic.manifest", sourceRecordSha256: hash("two") },
+], "source_manifest"), "dna_candidate_source_manifest_conflicting_source_id")
 
 const BOUNDARY = "This synthetic group-level association does not support individual or causal inference."
 const PROPOSITION = "Higher vagally mediated heart rate variability was associated with better performance in this synthetic sample."
@@ -345,6 +794,11 @@ const approvalTrustRegistry = createDnaEvidenceTrustRegistry({
   authority: "test_fixture",
   records: approvalTrustRecords,
 })
+const candidateApprovalTrustRegistry = createDnaEvidenceTrustRegistry({
+  registryId: "trust.candidate.passage-approvals",
+  authority: "candidate_audit",
+  records: approvalTrustRecords,
+})
 
 function createPassage(id: string, ids: readonly string[]): DnaSourcePassage {
   return createDnaSourcePassage({
@@ -366,6 +820,29 @@ const passageP2 = createPassage("passage.synthetic.hrv.results.p2", [paragraphId
 const passageP4 = createPassage("passage.synthetic.hrv.results.p4", [paragraphId("P4")])
 const passageP5 = createPassage("passage.synthetic.hrv.results.p5", [paragraphId("P5")])
 const passageP7 = createPassage("passage.synthetic.hrv.results.p7", [paragraphId("P7")])
+expectError(() => createDnaSourcePassage({
+  id: "passage.synthetic.candidate.regular-path-rejected",
+  parsedArtifact: parsed,
+  paragraphIds: [paragraphId("P1")],
+  ageScope: "pediatric",
+  evidenceType: "observational",
+  claimBoundary: BOUNDARY,
+  licenseApproval,
+  metadataApproval,
+  trustRegistry: candidateApprovalTrustRegistry,
+}), "dna_evidence_trust_registry_not_authorized")
+const candidatePassage = createDnaCandidateSourcePassage({
+  id: "passage.synthetic.candidate.explicit-path",
+  parsedArtifact: parsed,
+  paragraphIds: [paragraphId("P1")],
+  ageScope: "pediatric",
+  evidenceType: "observational",
+  claimBoundary: BOUNDARY,
+  licenseApproval,
+  metadataApproval,
+  trustRegistry: candidateApprovalTrustRegistry,
+})
+assert.equal(candidatePassage.runtimeEligible, false)
 const trustedPassages = [passage, passageP1, passageP2, passageP4, passageP5, passageP7]
 const downstreamTrustRegistry = createDnaEvidenceTrustRegistry({
   registryId: "trust.synthetic.downstream",
@@ -382,6 +859,23 @@ const downstreamTrustRegistry = createDnaEvidenceTrustRegistry({
         return core
       })(),
     })),
+  ],
+})
+const candidateDownstreamTrustRegistry = createDnaEvidenceTrustRegistry({
+  registryId: "trust.candidate.downstream",
+  authority: "candidate_audit",
+  records: [
+    ...approvalTrustRecords,
+    trustRecord({
+      kind: "passage",
+      recordId: candidatePassage.id,
+      sourceId: candidatePassage.sourceId,
+      artifactSha256: candidatePassage.artifactSha256,
+      subject: (() => {
+        const { provenanceSha256: _provenanceSha256, ...core } = candidatePassage
+        return core
+      })(),
+    }),
   ],
 })
 assert.equal(passage.paragraphStart, 1)
@@ -483,6 +977,116 @@ function claimDraft(claimId: string, overrides: Partial<DnaAtomicClaimDraft> = {
     ...overrides,
   }
 }
+
+const candidateDraft = claimDraft("claim.synthetic.candidate.explicit", {
+  passageIds: [candidatePassage.id],
+})
+const candidateRationaleCore = {
+  claimId: candidateDraft.claimId,
+  passageIds: [candidatePassage.id],
+  rationale: "Candidate pipeline records an explicit source-bound rationale without runtime authority.",
+  uncertaintyEvidence: candidateDraft.uncertainty.text,
+}
+const candidatePassageManifestSha256 = commitDnaEvidenceSubject([{
+  id: candidatePassage.id,
+  provenanceSha256: candidatePassage.provenanceSha256,
+}])
+const candidateRunInput = {
+  lane: "A" as const,
+  protocolId: DNA_BLIND_EXTRACTION_PROTOCOLS.A.protocolId,
+  runId: "blind.run.candidate.a.001",
+  createdAt: "2026-07-19T12:59:59.000Z",
+  sourceId: parsed.sourceId,
+  artifactSha256: parsed.artifactSha256,
+  parsedArtifact: parsed,
+  passages: [candidatePassage],
+  trustRegistry: candidateDownstreamTrustRegistry,
+  contextCommitment: {
+    contextId: "context.synthetic.candidate.a.001",
+    instructionSha256: hash("candidate-a-instructions"),
+    governanceMetadataSha256: hash("candidate-governance-metadata"),
+    sourceArtifactSha256: parsed.artifactSha256,
+    passageManifestSha256: candidatePassageManifestSha256,
+    peerOutputExcluded: true as const,
+  },
+  claimDrafts: [candidateDraft],
+  rationales: [{
+    ...candidateRationaleCore,
+    rationaleSha256: commitDnaEvidenceSubject(candidateRationaleCore),
+  }],
+}
+expectError(() => createDnaBlindExtractionRun(candidateRunInput),
+  "dna_evidence_trust_registry_not_authorized")
+const candidateRun = createDnaCandidateBlindExtractionRun(candidateRunInput)
+assert.equal(candidateRun.runtimeEligible, false)
+assert.equal(candidateRun.claims[0]?.runtimeEligible, false)
+const candidateDraftB = claimDraft("claim.synthetic.candidate.explicit.b", {
+  passageIds: [candidatePassage.id],
+  outcome: "independently normalized task-performance outcome",
+})
+const candidateRationaleBCore = {
+  claimId: candidateDraftB.claimId,
+  passageIds: [candidatePassage.id],
+  rationale: "Candidate lane B independently records the same verbatim proposition with a different normalized outcome label.",
+  uncertaintyEvidence: candidateDraftB.uncertainty.text,
+}
+const candidateRunB = createDnaCandidateBlindExtractionRun({
+  ...candidateRunInput,
+  lane: "B",
+  protocolId: DNA_BLIND_EXTRACTION_PROTOCOLS.B.protocolId,
+  runId: "blind.run.candidate.b.001",
+  createdAt: "2026-07-19T13:00:00.000Z",
+  contextCommitment: {
+    ...candidateRunInput.contextCommitment,
+    contextId: "context.synthetic.candidate.b.001",
+    instructionSha256: hash("candidate-b-instructions"),
+  },
+  claimDrafts: [candidateDraftB],
+  rationales: [{
+    ...candidateRationaleBCore,
+    rationaleSha256: commitDnaEvidenceSubject(candidateRationaleBCore),
+  }],
+})
+const candidateStructuralQuarantine = reconcileDnaBlindClaims({
+  reconciliationId: "reconciliation.synthetic.candidate.structural-quarantine",
+  runA: candidateRun,
+  claimAId: candidateDraft.claimId,
+  runB: candidateRunB,
+  claimBId: candidateDraftB.claimId,
+})
+assert.equal(candidateStructuralQuarantine.status, "quarantined")
+const candidateRereviewCore = {
+  protocolId: "dna-claim-rereview@1" as const,
+  reviewId: "rereview.synthetic.candidate.001",
+  reviewedAt: "2026-07-19T14:01:00.000Z",
+  sourceId: parsed.sourceId,
+  artifactSha256: parsed.artifactSha256,
+  reconciliationSha256: candidateStructuralQuarantine.reconciliationSha256,
+  decision: "consensus" as const,
+  rereadPassageIds: [candidatePassage.id],
+  resolved: {
+    passageIds: [candidatePassage.id],
+    proposition: PROPOSITION,
+    ageScope: "pediatric" as const,
+    causalStatus: "associational" as const,
+    evidenceLevel: "moderate" as const,
+    evidenceLevelEvidence: moderateAppraisalEvidence,
+    claimBoundary: BOUNDARY,
+  },
+  rationaleCode: "source_reread_exact" as const,
+}
+const candidateRereviewed = applyDnaClaimRereview({
+  reconciliation: candidateStructuralQuarantine,
+  resolution: {
+    ...candidateRereviewCore,
+    evidenceSha256: commitDnaEvidenceSubject(candidateRereviewCore),
+  },
+  passages: [candidatePassage],
+  parsedArtifact: parsed,
+  trustRegistry: candidateDownstreamTrustRegistry,
+})
+assert.equal(candidateRereviewed.status, "rereview_consensus_candidate")
+assert.equal(candidateRereviewed.runtimeEligible, false)
 
 function blindRun(
   lane: "A" | "B",
@@ -738,10 +1342,60 @@ let actualJatsPilot: null | {
   runtimeEligible: false
 } = null
 
+type ActualJatsCorpusRecord = Readonly<{
+  sourceId: string
+  sourceRecordSha256: string
+  artifactId: string
+  artifactRelativePath: string
+  artifactSha256: string
+  parsedContentSha256: string
+  paragraphCount: number
+  exclusionCount: number
+  integrityState: string
+  integrityAuditRecordSha256: string
+  integrityDecisionSha256: string
+  passageLicenseDecision: string
+  componentLicenseAuditRecordSha256: string
+  sourceGovernanceLicenseRecordSha256: string
+  passageLicenseDecisionSha256: string
+  status: "candidate_only"
+  runtimeEligible: false
+  releaseEligible: false
+  blockerCodes: readonly string[]
+}>
+
+let actualJatsCorpus: null | {
+  schemaVersion: "dna-v3-candidate-jats-corpus@3"
+  sourceLibraryAuditAt: string
+  governanceInputBindings: CandidateGovernanceInputBindings
+  artifactCount: number
+  sourceCount: number
+  paragraphCount: number
+  exclusionCount: number
+  integrityClearedCount: number
+  passageLicenseClearedCount: number
+  crossGateEligibleCount: number
+  methodReviewWorkpackCount: number
+  methodReviewWorkpackSourceIds: readonly string[]
+  methodReviewWorkpackIndexSha256: string
+  excludedUncommittedArtifactCount: number
+  excludedUncommittedArtifacts: readonly string[]
+  releaseEligibleCount: 0
+  records: readonly ActualJatsCorpusRecord[]
+  manifestSha256: string
+  outputPath: string | null
+} = null
+
 if (process.env.DNA_EVIDENCE_EXTRACTION_SSD === "1") {
   const repoRoot = process.cwd()
   const snapshotPath = path.join(repoRoot, "docs/dna-intelligence/governance/v3/source-library-governance-snapshot.json")
-  const snapshot = JSON.parse(fs.readFileSync(snapshotPath, "utf8")) as {
+  const sourceIntegritySnapshotPath = path.join(
+    repoRoot,
+    "docs/dna-intelligence/governance/v3/source-integrity-archive-snapshot.json",
+  )
+  const snapshotBytes = fs.readFileSync(snapshotPath)
+  const sourceIntegritySnapshotBytes = fs.readFileSync(sourceIntegritySnapshotPath)
+  const snapshot = JSON.parse(snapshotBytes.toString("utf8")) as {
     licenseRecords: Array<{
       sourceId: string
       decisions: { passage: string }
@@ -788,7 +1442,7 @@ if (process.env.DNA_EVIDENCE_EXTRACTION_SSD === "1") {
   assert.ok(actualParsed.paragraphs.length > 0)
   assert.equal(actualParsed.status, "candidate_only")
   assert.equal(actualParsed.runtimeEligible, false)
-  const forbiddenSectionPattern = /\b(?:supplement(?:ary)?|supporting information|appendix|references?|bibliography|questionnaire|scale items|test items)\b/i
+  const forbiddenSectionPattern = /^(?:supplement(?:ary)?(?: information)?|supporting information|appendix|references|reference list|bibliography|questionnaire(?: items)?|scale items|test items)(?:\b|$)/i
   const forbiddenSectionCount = actualParsed.paragraphs.filter((paragraph) =>
     paragraph.sectionPath.some((section) => forbiddenSectionPattern.test(section))).length
   assert.equal(forbiddenSectionCount, 0,
@@ -803,6 +1457,375 @@ if (process.env.DNA_EVIDENCE_EXTRACTION_SSD === "1") {
     status: actualParsed.status,
     runtimeEligible: actualParsed.runtimeEligible,
   }
+
+  const integrityAuditPath = path.join(
+    sourceRoot,
+    "integrity-audit/v1/source-integrity-audit.json",
+  )
+  const componentLicenseAuditPath = path.join(
+    sourceRoot,
+    "governance-audit/v1/component-license-audit.json",
+  )
+  assert.equal(fs.existsSync(integrityAuditPath), true, "Kaynak bütünlük denetimi bulunamadı")
+  assert.equal(fs.existsSync(componentLicenseAuditPath), true, "Bileşen lisans denetimi bulunamadı")
+  const integrityAuditBytes = fs.readFileSync(integrityAuditPath)
+  const componentLicenseAuditBytes = fs.readFileSync(componentLicenseAuditPath)
+  const integrityAudit = JSON.parse(integrityAuditBytes.toString("utf8")) as {
+    schemaVersion: string
+    checkedAt: string
+  }
+  const componentLicenseAudit = JSON.parse(componentLicenseAuditBytes.toString("utf8")) as {
+    schemaVersion: string
+    auditedAt: string
+  }
+  assert.equal(integrityAudit.schemaVersion, "dna-source-integrity-audit@2")
+  assert.equal(componentLicenseAudit.schemaVersion, "dna-component-license-audit@2")
+  assert.match(integrityAudit.checkedAt, /^\d{4}-\d{2}-\d{2}T/)
+  assert.match(componentLicenseAudit.auditedAt, /^\d{4}-\d{2}-\d{2}T/)
+  const candidateTrustRoots = establishCandidateGovernanceTrustRoots({
+    integrityAuditBytes,
+    componentLicenseAuditBytes,
+    sourceIntegritySnapshotBytes,
+    sourceGovernanceSnapshotBytes: snapshotBytes,
+  })
+  const governanceInputBindings = candidateTrustRoots.governanceInputBindings
+  const sourceTrustDecisionBySource = candidateTrustRoots.decisionsBySource
+
+  const sourceManifestPaths: string[] = []
+  const visit = (directory: string): void => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const absolute = path.join(directory, entry.name)
+      if (entry.isDirectory()) visit(absolute)
+      else if (entry.isFile() && entry.name === "source.json") sourceManifestPaths.push(absolute)
+    }
+  }
+  visit(path.join(sourceRoot, "evidence"))
+  sourceManifestPaths.sort()
+
+  type ArtifactCandidate = Readonly<{
+    sourceId: string
+    recordPath: string
+    sourceRecordSha256: string
+    baseDirectory: string
+    relativePath: string
+    artifactSha256: string
+    declaredBytes: number
+  }>
+  const artifactCandidates: ArtifactCandidate[] = []
+  const sourceManifestIdentities: Array<{
+    sourceId: string
+    sourceRecordSha256: string
+    recordPath: string
+  }> = []
+  for (const recordPath of sourceManifestPaths) {
+    const sourceRecordBytes = fs.readFileSync(recordPath)
+    const record = JSON.parse(sourceRecordBytes.toString("utf8")) as {
+      id?: string
+      slug?: string
+      structuredTextArtifact?: {
+        path: string
+        bytes: number
+        sha256: string
+        format?: string
+        role?: string
+      }
+      artifacts?: Array<{
+        path?: string
+        relativePath?: string
+        bytes?: number
+        sha256?: string
+        format?: string
+        role?: string
+      }>
+      files?: Array<{
+        path?: string
+        bytes?: number
+        sha256?: string
+        format?: string
+        role?: string
+      }>
+    }
+    const sourceId = String(record.id || record.slug || "").trim()
+    assert.ok(sourceId, `Kaynak kimliği yok: ${recordPath}`)
+    const sourceRecordSha256 = hash(sourceRecordBytes)
+    sourceManifestIdentities.push({ sourceId, sourceRecordSha256, recordPath })
+    const recordDirectory = path.dirname(recordPath)
+    const sourceDirectory = path.basename(recordDirectory) === "audit"
+      ? path.dirname(recordDirectory)
+      : recordDirectory
+    const declaredArtifacts: Array<{
+      baseDirectory: string
+      path?: string
+      relativePath?: string
+      bytes?: number
+      sha256?: string
+      format?: string
+      role?: string
+    }> = [
+      ...(record.structuredTextArtifact
+        ? [{ ...record.structuredTextArtifact, baseDirectory: recordDirectory }] : []),
+      ...(record.artifacts || []).map((artifact) => ({
+        ...artifact,
+        baseDirectory: recordDirectory,
+      })),
+      ...(record.files || []).map((artifact) => ({
+        ...artifact,
+        baseDirectory: sourceDirectory,
+      })),
+    ]
+    for (const artifact of declaredArtifacts) {
+      const relativePath = String(artifact.path || artifact.relativePath || "")
+      const descriptor = `${relativePath} ${artifact.format || ""} ${artifact.role || ""}`
+      if (!/(?:jats|preferred_passage_rag_source_candidate)/i.test(descriptor)) continue
+      assert.match(relativePath, /\.xml$/i, `${sourceId}: JATS artefaktı XML olmalı`)
+      assert.match(String(artifact.sha256 || ""), /^[a-f0-9]{64}$/, `${sourceId}: JATS hash eksik`)
+      assert.ok(Number.isInteger(artifact.bytes) && Number(artifact.bytes) > 0,
+        `${sourceId}: JATS byte sayısı eksik`)
+      artifactCandidates.push({
+        sourceId,
+        recordPath,
+        sourceRecordSha256,
+        baseDirectory: artifact.baseDirectory,
+        relativePath,
+        artifactSha256: String(artifact.sha256),
+        declaredBytes: Number(artifact.bytes),
+      })
+    }
+  }
+  uniqueSourceRecordMap(sourceManifestIdentities, "source_manifest")
+  artifactCandidates.sort((left, right) => left.sourceId.localeCompare(right.sourceId))
+  assert.equal(artifactCandidates.length, 26,
+    "JATS korpus büyüklüğü değişti; yeni snapshot bilinçli olarak gözden geçirilmeli")
+  assert.equal(new Set(artifactCandidates.map((artifact) => artifact.sourceId)).size, 26,
+    "Her kaynak için tek tercih edilen JATS artefaktı olmalı")
+  const committedArtifactPaths = new Set(artifactCandidates.map((artifact) =>
+    path.resolve(artifact.baseDirectory, artifact.relativePath)))
+  const physicalJatsPaths: string[] = []
+  const visitJats = (directory: string): void => {
+    for (const entry of fs.readdirSync(directory, { withFileTypes: true })) {
+      const absolute = path.join(directory, entry.name)
+      if (entry.isDirectory()) visitJats(absolute)
+      else if (entry.isFile() && entry.name.endsWith(".jats.xml")) physicalJatsPaths.push(absolute)
+    }
+  }
+  visitJats(path.join(sourceRoot, "evidence"))
+  physicalJatsPaths.sort()
+  const excludedUncommittedArtifacts = physicalJatsPaths
+    .filter((absolute) => !committedArtifactPaths.has(path.resolve(absolute)))
+    .map((absolute) => path.relative(sourceRoot, absolute))
+  assert.equal(physicalJatsPaths.length, 26,
+    "Fiziksel JATS envanteri değişti; source manifest bağları yeniden gözden geçirilmeli")
+  assert.equal(excludedUncommittedArtifacts.length, 0,
+    "Manifest hash bağı olmayan JATS sayısı bilinçli olarak gözden geçirilmeli")
+
+  const parsedArtifactsForWorkpack = new Map<string, ReturnType<typeof parseDnaEvidenceArtifact>>()
+  const corpusRecords: ActualJatsCorpusRecord[] = artifactCandidates.map((artifact) => {
+    const absolutePath = path.resolve(artifact.baseDirectory, artifact.relativePath)
+    const containedPrefix = `${path.resolve(sourceRoot)}${path.sep}`
+    assert.ok(absolutePath.startsWith(containedPrefix), `${artifact.sourceId}: source root dışına çıkılamaz`)
+    assert.equal(fs.existsSync(absolutePath), true, `${artifact.sourceId}: JATS dosyası yok`)
+    const bytes = fs.readFileSync(absolutePath)
+    assert.equal(bytes.byteLength, artifact.declaredBytes, `${artifact.sourceId}: byte sayısı uyuşmuyor`)
+    assert.equal(hash(bytes), artifact.artifactSha256, `${artifact.sourceId}: artefakt hash'i uyuşmuyor`)
+    const parsedArtifact = parseDnaEvidenceArtifact({
+      sourceId: artifact.sourceId,
+      artifactId: `${artifact.sourceId}.jats`,
+      format: "jats_xml",
+      originalLanguage: "en",
+      bytes,
+      declaredSha256: artifact.artifactSha256,
+    })
+    assert.ok(parsedArtifact.paragraphs.length > 0, `${artifact.sourceId}: uygun paragraf yok`)
+    assert.equal(parsedArtifact.status, "candidate_only")
+    assert.equal(parsedArtifact.runtimeEligible, false)
+    parsedArtifactsForWorkpack.set(artifact.sourceId, parsedArtifact)
+    const forbiddenCount = parsedArtifact.paragraphs.filter((paragraph) =>
+      paragraph.sectionPath.some((section) => forbiddenSectionPattern.test(section))).length
+    assert.equal(forbiddenCount, 0, `${artifact.sourceId}: yasak bölüm paragrafı kaldı`)
+    const sourceTrustDecision = sourceTrustDecisionBySource.get(artifact.sourceId)
+    assert.ok(sourceTrustDecision, `${artifact.sourceId}: kaynak yönetişim kararı bulunamadı`)
+    const integrityState = sourceTrustDecision.integrityState
+    const passageLicenseDecision = sourceTrustDecision.passageLicenseDecision
+    const blockerCodes = [
+      ...(["verified_clean", "corrected"].includes(integrityState)
+        ? [] : ["source_integrity_not_cleared"]),
+      ...(passageLicenseDecision === "cleared" ? [] : ["passage_license_not_cleared"]),
+      "method_appraisal_missing",
+      "passage_metadata_approval_missing",
+      "production_trust_registration_missing",
+    ].sort()
+    return Object.freeze({
+      sourceId: artifact.sourceId,
+      sourceRecordSha256: artifact.sourceRecordSha256,
+      artifactId: parsedArtifact.artifactId,
+      artifactRelativePath: path.relative(sourceRoot, absolutePath),
+      artifactSha256: parsedArtifact.artifactSha256,
+      parsedContentSha256: parsedArtifact.parsedContentSha256,
+      paragraphCount: parsedArtifact.paragraphs.length,
+      exclusionCount: parsedArtifact.exclusions.reduce((sum, entry) => sum + entry.count, 0),
+      integrityState,
+      integrityAuditRecordSha256: sourceTrustDecision.integrityAuditRecordSha256,
+      integrityDecisionSha256: sourceTrustDecision.integrityDecisionSha256,
+      passageLicenseDecision,
+      componentLicenseAuditRecordSha256:
+        sourceTrustDecision.componentLicenseAuditRecordSha256,
+      sourceGovernanceLicenseRecordSha256:
+        sourceTrustDecision.sourceGovernanceLicenseRecordSha256,
+      passageLicenseDecisionSha256: sourceTrustDecision.passageLicenseDecisionSha256,
+      status: "candidate_only" as const,
+      runtimeEligible: false as const,
+      releaseEligible: false as const,
+      blockerCodes: Object.freeze(blockerCodes),
+    })
+  })
+  const crossGateEligibleCount = corpusRecords.filter((record) =>
+    ["verified_clean", "corrected"].includes(record.integrityState)
+      && record.passageLicenseDecision === "cleared").length
+  const methodReviewWorkpacks = corpusRecords.filter((record) =>
+    ["verified_clean", "corrected"].includes(record.integrityState)
+      && record.passageLicenseDecision === "cleared").map((record) => {
+    const artifact = artifactCandidates.find((candidate) => candidate.sourceId === record.sourceId)
+    const parsedArtifact = parsedArtifactsForWorkpack.get(record.sourceId)
+    assert.ok(artifact && parsedArtifact, `${record.sourceId}: review workpack girdisi eksik`)
+    const sourceRecord = JSON.parse(fs.readFileSync(artifact.recordPath, "utf8")) as {
+      title?: string
+      studyDesign?: string
+      evidenceType?: string
+      sourceRole?: string
+      scopeBoundary?: string
+      claimBoundary?: string
+      bibliography?: {
+        title?: string
+        evidenceType?: string
+      }
+      dnaUse?: {
+        claimBoundary?: string
+      }
+    }
+    const declaredTitle = sourceRecord.title || sourceRecord.bibliography?.title || ""
+    const declaredStudyDesign = sourceRecord.studyDesign || sourceRecord.evidenceType
+      || sourceRecord.bibliography?.evidenceType || sourceRecord.sourceRole || "not_assessed"
+    const declaredScopeBoundary = sourceRecord.scopeBoundary || sourceRecord.claimBoundary
+      || sourceRecord.dnaUse?.claimBoundary || "not_assessed"
+    assert.ok(declaredTitle.trim(), `${record.sourceId}: source manifest title workpack'e taşınamadı`)
+    const workpackCore = {
+      schemaVersion: "dna-v3-method-review-workpack@2" as const,
+      status: "candidate_only" as const,
+      runtimeEligible: false as const,
+      releaseEligible: false as const,
+      sourceId: record.sourceId,
+      sourceRecordRelativePath: path.relative(sourceRoot, artifact.recordPath),
+      sourceRecordSha256: record.sourceRecordSha256,
+      title: String(declaredTitle),
+      declaredStudyDesign: String(declaredStudyDesign),
+      declaredScopeBoundary: String(declaredScopeBoundary),
+      artifactId: record.artifactId,
+      artifactRelativePath: record.artifactRelativePath,
+      artifactSha256: record.artifactSha256,
+      parsedContentSha256: record.parsedContentSha256,
+      integrityState: record.integrityState,
+      integrityAuditRecordSha256: record.integrityAuditRecordSha256,
+      integrityDecisionSha256: record.integrityDecisionSha256,
+      passageLicenseDecision: record.passageLicenseDecision,
+      componentLicenseAuditRecordSha256: record.componentLicenseAuditRecordSha256,
+      sourceGovernanceLicenseRecordSha256: record.sourceGovernanceLicenseRecordSha256,
+      passageLicenseDecisionSha256: record.passageLicenseDecisionSha256,
+      paragraphCount: parsedArtifact.paragraphs.length,
+      exclusionCount: record.exclusionCount,
+      paragraphs: parsedArtifact.paragraphs,
+      exclusions: parsedArtifact.exclusions,
+      reviewBoundary: Object.freeze([
+        "This is reviewer input, not an appraisal or released evidence record.",
+        "Every asserted method field must cite one or more paragraphId values from this workpack.",
+        "Missing information must remain not_reported or not_assessed.",
+        "DNA product validity and individual clinical inference are outside this workpack.",
+      ]),
+    }
+    return Object.freeze({
+      sourceId: record.sourceId,
+      workpackSha256: hash(JSON.stringify(workpackCore)),
+      workpack: Object.freeze(workpackCore),
+    })
+  }).sort((left, right) => left.sourceId.localeCompare(right.sourceId))
+  assert.equal(methodReviewWorkpacks.length, crossGateEligibleCount)
+  const methodReviewWorkpackSourceIds = Object.freeze(methodReviewWorkpacks.map((entry) =>
+    entry.sourceId))
+  const methodReviewWorkpackIndexRecords = methodReviewWorkpacks.map((entry) => ({
+    sourceId: entry.sourceId,
+    relativePath: `method-review-workpacks/${entry.sourceId}.json`,
+    workpackSha256: entry.workpackSha256,
+    sourceRecordSha256: entry.workpack.sourceRecordSha256,
+    integrityState: entry.workpack.integrityState,
+    integrityAuditRecordSha256: entry.workpack.integrityAuditRecordSha256,
+    integrityDecisionSha256: entry.workpack.integrityDecisionSha256,
+    passageLicenseDecision: entry.workpack.passageLicenseDecision,
+    componentLicenseAuditRecordSha256: entry.workpack.componentLicenseAuditRecordSha256,
+    sourceGovernanceLicenseRecordSha256:
+      entry.workpack.sourceGovernanceLicenseRecordSha256,
+    passageLicenseDecisionSha256: entry.workpack.passageLicenseDecisionSha256,
+  }))
+  const methodReviewWorkpackIndexCore = {
+    schemaVersion: "dna-v3-method-review-workpack-index@3" as const,
+    sourceLibraryAuditAt: integrityAudit.checkedAt,
+    governanceInputBindings,
+    records: methodReviewWorkpackIndexRecords,
+  }
+  const methodReviewWorkpackIndexSha256 = hash(JSON.stringify(methodReviewWorkpackIndexCore))
+  const manifestCore = {
+    schemaVersion: "dna-v3-candidate-jats-corpus@3" as const,
+    sourceLibraryAuditAt: integrityAudit.checkedAt,
+    governanceInputBindings,
+    artifactCount: corpusRecords.length,
+    sourceCount: new Set(corpusRecords.map((record) => record.sourceId)).size,
+    paragraphCount: corpusRecords.reduce((sum, record) => sum + record.paragraphCount, 0),
+    exclusionCount: corpusRecords.reduce((sum, record) => sum + record.exclusionCount, 0),
+    integrityClearedCount: corpusRecords.filter((record) =>
+      ["verified_clean", "corrected"].includes(record.integrityState)).length,
+    passageLicenseClearedCount: corpusRecords.filter((record) =>
+      record.passageLicenseDecision === "cleared").length,
+    crossGateEligibleCount,
+    methodReviewWorkpackCount: methodReviewWorkpacks.length,
+    methodReviewWorkpackSourceIds,
+    methodReviewWorkpackIndexSha256,
+    excludedUncommittedArtifactCount: excludedUncommittedArtifacts.length,
+    excludedUncommittedArtifacts: Object.freeze(excludedUncommittedArtifacts),
+    releaseEligibleCount: 0 as const,
+    records: Object.freeze(corpusRecords),
+  }
+  const manifestSha256 = hash(JSON.stringify(manifestCore))
+  let outputPath: string | null = null
+  if (process.env.DNA_WRITE_EVIDENCE_CANDIDATE_MANIFEST === "1") {
+    const outputRoot = path.join(
+      researchSsdRoot,
+      "Datasets/DNA-Intelligence/work/v3/candidate-corpus",
+    )
+    fs.mkdirSync(outputRoot, { recursive: true })
+    outputPath = path.join(outputRoot, "candidate-jats-corpus.json")
+    fs.writeFileSync(outputPath, `${JSON.stringify({ ...manifestCore, manifestSha256 }, null, 2)}\n`, "utf8")
+    const workpackRoot = path.join(outputRoot, "method-review-workpacks")
+    fs.mkdirSync(workpackRoot, { recursive: true })
+    for (const entry of methodReviewWorkpacks) {
+      fs.writeFileSync(
+        path.join(workpackRoot, `${entry.sourceId}.json`),
+        `${JSON.stringify({ ...entry.workpack, workpackSha256: entry.workpackSha256 }, null, 2)}\n`,
+        "utf8",
+      )
+    }
+    const workpackIndex = {
+      ...methodReviewWorkpackIndexCore,
+      indexSha256: methodReviewWorkpackIndexSha256,
+    }
+    fs.writeFileSync(
+      path.join(outputRoot, "method-review-workpack-index.json"),
+      `${JSON.stringify(workpackIndex, null, 2)}\n`,
+      "utf8",
+    )
+  }
+  actualJatsCorpus = {
+    ...manifestCore,
+    manifestSha256,
+    outputPath,
+  }
 }
 
 console.log(JSON.stringify({
@@ -814,6 +1837,7 @@ console.log(JSON.stringify({
     artifactInvalidationVerified: true,
     callerAssertedTrustAndProductionTestFixtureRejected: true,
     approvalTrustAndManualTextBindingVerified: true,
+    explicitCandidateAuditPathVerifiedWithoutRuntimeAuthority: true,
     passageAdjacencyIdentityOverlapAndTrustVerified: true,
     atomicCompoundCausalEffectAndAppraisalGuardsVerified: true,
     blindRunsImmutableContextCommittedAndDistinct: true,
@@ -821,7 +1845,12 @@ console.log(JSON.stringify({
     exactConsensusCandidateOnly: true,
     disagreementContested: true,
     rereviewSourceBoundAndConsensusCandidateOnly: true,
+    committedAuditTrustRootsVerified: true,
+    auditDecisionRehashTamperingRejected: true,
+    snapshotAuditDivergenceRejected: true,
+    duplicateAndConflictingSourceIdsRejected: true,
     acceptedRegistryCount: 0,
   },
   actualJatsPilot,
+  actualJatsCorpus,
 }, null, 2))
