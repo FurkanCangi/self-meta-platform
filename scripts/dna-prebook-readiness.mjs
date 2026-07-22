@@ -4,8 +4,8 @@ import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, writeFi
 import { dirname, join, relative, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 
-export const PREBOOK_READINESS_VERSION = "dna-intelligence-prebook-readiness@6"
-export const PROGRAM_STATE_VERSION = "dna-intelligence-program-state@6"
+export const PREBOOK_READINESS_VERSION = "dna-intelligence-prebook-readiness@7"
+export const PROGRAM_STATE_VERSION = "dna-intelligence-program-state@7"
 export const PROGRAM_VERSION = "dna-intelligence-v3-program@1"
 
 const MODULE_PATH = fileURLToPath(import.meta.url)
@@ -556,7 +556,15 @@ export function collectPrebookFacts(options = {}) {
     && prebookHumanEvaluation.status === "protocol_locked_execution_deferred",
   "prebook_readiness_human_evaluation_boundary_invalid")
 
-  const head = runGit(repoRoot, ["rev-parse", "HEAD"], "unknown")
+  const sourceGitSha = runGit(repoRoot, [
+    "log",
+    "-1",
+    "--format=%H",
+    "--",
+    ".",
+    `:(exclude)${CURRENT_EVIDENCE_RELATIVE_PATH}`,
+    `:(exclude)${PROGRAM_STATE_RELATIVE_PATH}`,
+  ], "unknown")
   const branch = runGit(repoRoot, ["branch", "--show-current"], "unknown")
   const status = runGit(repoRoot, [
     "status",
@@ -573,7 +581,7 @@ export function collectPrebookFacts(options = {}) {
     generatedAt: options.generatedAt ?? new Date().toISOString(),
     repository: {
       branch,
-      headGitSha: head,
+      sourceGitSha,
       workingTreeClean: status === "",
     },
     ownerBook: {
@@ -913,7 +921,7 @@ export function buildPrebookReadiness(facts) {
     evidenceClass: "current_generated_readiness_not_phase_completion_or_release_evidence",
     repository: {
       ...facts.repository,
-      identityBoundary: "HEAD and exact artifact hashes identify the measured in-progress state. workingTreeClean excludes only the two self-generated readiness outputs so write-then-verify remains stable; every other tracked or untracked change makes it false.",
+      identityBoundary: "sourceGitSha is the newest commit that changes anything except the two self-generated readiness outputs. Exact artifact hashes identify the measured state. workingTreeClean excludes only those outputs; every other tracked or untracked change makes it false.",
     },
     readinessProjectionSha256: canonicalSha256(projection),
     projection,
