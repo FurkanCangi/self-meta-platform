@@ -21,6 +21,7 @@
     "scripts/login-device-identity-contract-tests.ts",
     "scripts/google-oauth-signup-contract-tests.ts",
     "scripts/google-oauth-live-readiness.ts",
+    "scripts/auth-branding-contract-tests.ts",
     "scripts/live-security-hardening.ts",
     "scripts/live-security-hardening-contract-tests.ts",
     "src/lib/owner/ownerSecurityCore.ts",

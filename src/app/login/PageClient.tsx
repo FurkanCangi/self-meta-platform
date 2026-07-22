@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { flushSync } from "react-dom";
 import { useSearchParams } from "next/navigation";
+import { FcGoogle } from "react-icons/fc";
 import AuthLayout from "../components/auth/AuthLayout";
 import {
   createBrowserDeviceProof,
@@ -335,7 +336,9 @@ export default function LoginPage({ forcedSurface }: LoginPageProps = {}) {
             disabled={loading || googleLoading || !identityReadiness || identityBlocked}
             className="inline-flex w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-4 py-4 text-sm font-bold text-slate-800 shadow-sm shadow-slate-200/60 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-blue-100/70 disabled:translate-y-0 disabled:opacity-60"
           >
-            <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-base shadow-sm">G</span>
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-white shadow-sm ring-1 ring-slate-100">
+              <FcGoogle aria-hidden="true" className="h-5 w-5" />
+            </span>
             {googleLoading ? "Google’a yönlendiriliyor..." : "Google ile giriş yap"}
           </button>
         </form>

@@ -140,8 +140,10 @@ check(
     signupClient.includes("flushSync(() =>") &&
     signupClient.indexOf("flushSync(() =>") < signupClient.indexOf("form.requestSubmit()") &&
     !signupClient.includes("requestAnimationFrame") &&
-    (signupClient.match(/\n\s+disabled=\{loading \|\| googleLoading \|\| !legalAccepted\}/g) || []).length === 1 &&
-    signupClient.includes('disabled={loading || googleLoading}') &&
+    !signupClient.includes('disabled={loading || googleLoading || !legalAccepted}') &&
+    (signupClient.match(/\n\s+disabled=\{loading \|\| googleLoading\}/g) || []).length === 2 &&
+    signupClient.includes('aria-describedby={!legalAccepted ? "email-button-guidance" : undefined}') &&
+    signupClient.includes('aria-describedby={!legalAccepted ? "google-button-guidance" : undefined}') &&
     signupClient.includes("focusLegalApprovals()")
 )
 

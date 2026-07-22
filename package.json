@@ -38,6 +38,7 @@
     "security:login-device-identity": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/login-device-identity-contract-tests.js",
     "auth:google-contract": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/google-oauth-signup-contract-tests.js",
     "auth:google-live": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/google-oauth-live-readiness.js",
+    "auth:branding-contract": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/auth-branding-contract-tests.js",
     "security:live-hardening-contract": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/live-security-hardening-contract-tests.js",
     "security:live-hardening": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/live-security-hardening.js",
     "security:network-policy": "tsc -p tsconfig.education-network-policy-tests.json && node .tmp/education-network-policy-tests/scripts/education-network-policy-tests.js",

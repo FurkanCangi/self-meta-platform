@@ -295,7 +295,7 @@ export default function DnaSignupForm() {
                 type="checkbox"
                 checked={legalChecks.terms}
                 onChange={(e) => updateLegalCheck("terms", e.target.checked)}
-                required
+                aria-required="true"
                 className="mt-1 h-4 w-4 accent-blue-600"
               />
               <span>
@@ -319,7 +319,7 @@ export default function DnaSignupForm() {
                 type="checkbox"
                 checked={legalChecks.kvkk}
                 onChange={(e) => updateLegalCheck("kvkk", e.target.checked)}
-                required
+                aria-required="true"
                 className="mt-1 h-4 w-4 accent-blue-600"
               />
               <span>
@@ -339,7 +339,7 @@ export default function DnaSignupForm() {
                 type="checkbox"
                 checked={legalChecks.consent}
                 onChange={(e) => updateLegalCheck("consent", e.target.checked)}
-                required
+                aria-required="true"
                 className="mt-1 h-4 w-4 accent-blue-600"
               />
               <span>
@@ -359,7 +359,7 @@ export default function DnaSignupForm() {
                 type="checkbox"
                 checked={legalChecks.authority}
                 onChange={(e) => updateLegalCheck("authority", e.target.checked)}
-                required
+                aria-required="true"
                 className="mt-1 h-4 w-4 accent-blue-600"
               />
               <span>Danışan/çocuk verisi girmeye yetkili olduğumu ve gerekli veli/danışan izinlerini aldığımı beyan ederim.</span>
@@ -379,13 +379,19 @@ export default function DnaSignupForm() {
 
           <button
             type="submit"
-            disabled={loading || googleLoading || !legalAccepted}
-            aria-disabled={loading || googleLoading || !legalAccepted}
+            disabled={loading || googleLoading}
+            aria-disabled={loading || googleLoading}
+            aria-describedby={!legalAccepted ? "email-button-guidance" : undefined}
             title={!legalAccepted ? "Kayıt için tüm hukuki onayları tamamlayın." : undefined}
             className="inline-flex h-11 w-full items-center justify-center rounded-xl bg-gradient-to-r from-cyan-400 via-blue-600 to-violet-600 px-5 font-bold text-white shadow-lg shadow-blue-600/20 transition hover:-translate-y-0.5 hover:shadow-blue-600/30 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45"
           >
             {loading ? "Doğrulama e-postası hazırlanıyor..." : "Kayıt Ol"}
           </button>
+          {!legalAccepted ? (
+            <p id="email-button-guidance" className="text-center text-xs font-medium text-slate-500">
+              Düğmeye bastığınızda eksik onayları size göstereceğiz.
+            </p>
+          ) : null}
         </form>
 
         <div className="my-3 flex items-center gap-3 text-xs font-bold uppercase tracking-[0.18em] text-slate-400">
@@ -409,16 +415,26 @@ export default function DnaSignupForm() {
             aria-disabled={loading || googleLoading}
             aria-describedby={!legalAccepted ? "google-button-guidance" : undefined}
             title={!legalAccepted ? "Google ile kayıt için tüm hukuki onayları tamamlayın." : undefined}
-            className="group inline-flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-blue-200 bg-white px-5 font-bold text-slate-800 shadow-md shadow-blue-100/60 transition hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-lg hover:shadow-violet-100/80 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-55"
+            className="group relative inline-flex min-h-12 w-full items-center justify-center gap-3 rounded-xl border border-blue-200 bg-gradient-to-r from-white via-blue-50/40 to-violet-50/50 px-5 py-2 font-bold text-slate-900 shadow-md shadow-blue-100/70 transition hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-lg hover:shadow-violet-100/80 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-55"
           >
             <span className="grid h-7 w-7 place-items-center rounded-full bg-white shadow-sm ring-1 ring-slate-100 transition-transform group-hover:scale-105">
               <FcGoogle aria-hidden="true" className="h-5 w-5" />
             </span>
             {googleLoading ? "Google’a yönlendiriliyor..." : "Google ile kayıt ol"}
+            {!googleLoading ? (
+              <span className="absolute right-3 hidden rounded-full bg-blue-600 px-2 py-1 text-[10px] font-extrabold uppercase tracking-wide text-white shadow-sm sm:inline-flex">
+                Önerilen
+              </span>
+            ) : null}
           </button>
           {!legalAccepted ? (
             <p id="google-button-guidance" className="mt-2 text-center text-xs font-medium text-slate-500">
               Düğmeye basın; gerekli onayları size göstereceğiz.
+            </p>
+          ) : null}
+          {legalAccepted ? (
+            <p className="mt-2 text-center text-xs font-medium text-slate-500">
+              Şifre oluşturmazsınız; Google e-posta adresinizi doğrular.
             </p>
           ) : null}
         </form>

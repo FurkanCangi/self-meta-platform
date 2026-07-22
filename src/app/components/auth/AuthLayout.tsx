@@ -14,6 +14,7 @@ export default function AuthLayout({
 }) {
   const isLogin = mode === "login";
   const isApp = surface === "app";
+  const currentYear = new Date().getFullYear();
 
   return (
     <div className={`${styles.page} ${isApp ? styles.appPage : ""}`}>
@@ -72,10 +73,11 @@ export default function AuthLayout({
             {children}
 
             <div className={`${styles.bottom} ${!isLogin ? styles.signupBottom : ""}`}>
-              <div>Telif Hakkı © 2024 DNA Intelligence. Tüm Hakları Saklıdır.</div>
-              <Link href="#" className={styles.termsLink}>
-                Şartlar &amp; Koşullar
-              </Link>
+              <div>© {currentYear} DNA Intelligence. Tüm hakları saklıdır.</div>
+              <div className={styles.legalLinks}>
+                <Link href="/privacy" className={styles.termsLink}>Gizlilik</Link>
+                <Link href="/terms" className={styles.termsLink}>Şartlar &amp; Koşullar</Link>
+              </div>
             </div>
           </div>
         </div>
