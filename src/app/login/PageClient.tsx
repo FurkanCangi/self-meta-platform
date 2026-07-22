@@ -42,6 +42,7 @@ function formatLoginErrorCode(code?: string | null) {
   if (code === "origin") return "Giriş isteği güvenlik kontrolünden geçemedi. Sayfayı yenileyip tekrar deneyin.";
   if (code === "network") return "Giriş servisine ulaşılamadı. Bağlantıyı kontrol edip tekrar deneyin.";
   if (code === "google_failed") return "Google ile giriş tamamlanamadı. Lütfen tekrar deneyin.";
+  if (code === "google_cancelled") return "Google ile giriş işlemi iptal edildi. Hazır olduğunuzda yeniden deneyebilirsiniz.";
   if (code === "google_unavailable") return "Google ile giriş şu anda yapılandırılmamış.";
   if (code === "google_legal_required") {
     return "Google hesabınız için kayıt onayları tamamlanmamış. Lütfen kayıt ekranından onayları tamamlayın.";

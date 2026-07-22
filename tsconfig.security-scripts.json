@@ -19,6 +19,8 @@
     "scripts/education-playback-contract-tests.ts",
     "scripts/device-trust-contract-tests.ts",
     "scripts/login-device-identity-contract-tests.ts",
+    "scripts/google-oauth-signup-contract-tests.ts",
+    "scripts/google-oauth-live-readiness.ts",
     "scripts/live-security-hardening.ts",
     "scripts/live-security-hardening-contract-tests.ts",
     "src/lib/owner/ownerSecurityCore.ts",

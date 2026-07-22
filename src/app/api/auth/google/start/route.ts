@@ -137,6 +137,9 @@ export async function POST(request: NextRequest) {
     options: {
       redirectTo,
       scopes: "openid email profile",
+      queryParams: {
+        prompt: "select_account",
+      },
     },
   })
 

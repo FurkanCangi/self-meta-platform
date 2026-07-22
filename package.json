@@ -36,6 +36,8 @@
     "security:video-playback": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/education-playback-contract-tests.js",
     "security:device-trust": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/device-trust-contract-tests.js",
     "security:login-device-identity": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/login-device-identity-contract-tests.js",
+    "auth:google-contract": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/google-oauth-signup-contract-tests.js",
+    "auth:google-live": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/google-oauth-live-readiness.js",
     "security:live-hardening-contract": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/live-security-hardening-contract-tests.js",
     "security:live-hardening": "tsc -p tsconfig.security-scripts.json && node .tmp/security-runner/scripts/live-security-hardening.js",
     "security:network-policy": "tsc -p tsconfig.education-network-policy-tests.json && node .tmp/education-network-policy-tests/scripts/education-network-policy-tests.js",
@@ -90,6 +92,7 @@
     "lodash": "^4.18.1",
     "lodash-es": "^4.18.1",
     "postcss": "^8.5.15",
+    "sharp": "^0.35.3",
     "ws": "^8.21.0"
   }
 }

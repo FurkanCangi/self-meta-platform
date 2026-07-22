@@ -32,6 +32,7 @@ function formatSignupErrorCode(code?: string | null) {
   if (code === "already_registered") return "Bu e-posta ile zaten bir hesap bulunuyor. Giriş yapmayı deneyin."
   if (code === "network") return "Kayıt servisine ulaşılamadı. Bağlantıyı kontrol edip tekrar deneyin."
   if (code === "google_failed") return "Google ile kayıt tamamlanamadı. Lütfen tekrar deneyin."
+  if (code === "google_cancelled") return "Google ile kayıt işlemi iptal edildi. Hazır olduğunuzda yeniden deneyebilirsiniz."
   if (code === "google_unavailable") return "Google ile kayıt şu anda yapılandırılmamış."
   if (code === "google_legal_required") return "Google ile devam etmek için kayıt onaylarını tamamlamanız gerekir."
   if (code === "email_failed") return "Doğrulama e-postası gönderilemedi. Lütfen biraz sonra tekrar deneyin."

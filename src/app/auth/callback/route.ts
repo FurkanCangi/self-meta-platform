@@ -1,8 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server"
 import { createServerClient } from "@supabase/ssr"
+import type { User } from "@supabase/supabase-js"
 import {
   decodeGoogleOAuthState,
   GOOGLE_OAUTH_STATE_COOKIE,
+  type GoogleOAuthState,
 } from "@/lib/auth/googleOAuthState"
 import { getAcceptedDocumentsSnapshot, hasAcceptedActiveDocuments } from "@/lib/legal/documents"
 import {
@@ -39,6 +41,12 @@ type LegalAcceptanceRow = {
   accepted_documents: unknown
 }
 
+type ProfileRow = {
+  plan: string | null
+  role: string | null
+  full_name: string | null
+}
+
 export const runtime = "nodejs"
 
 function requestOrigin(request: NextRequest) {
@@ -55,6 +63,21 @@ function authUrl(request: NextRequest, path: "/login" | "/signup", params?: Reco
     if (value && !(appSurface && key === "surface" && targetPath === "/app-login")) url.searchParams.set(key, value)
   }
   return url
+}
+
+function authEntryPath(state: GoogleOAuthState | null): "/login" | "/signup" {
+  return state?.mode === "signup" ? "/signup" : "/login"
+}
+
+function hasGoogleIdentity(user: User) {
+  const identities = Array.isArray(user.identities) ? user.identities : []
+  const providers = Array.isArray(user.app_metadata?.providers)
+    ? user.app_metadata.providers
+    : []
+  return (
+    identities.some((identity) => identity.provider === "google") ||
+    providers.some((provider) => provider === "google")
+  )
 }
 
 function sanitizeNextPath(value?: string | null) {
@@ -148,6 +171,7 @@ async function redirectWithSignOut({
 export async function GET(request: NextRequest) {
   const code = request.nextUrl.searchParams.get("code")
   const state = decodeGoogleOAuthState(request.cookies.get(GOOGLE_OAUTH_STATE_COOKIE)?.value)
+  const entryPath = authEntryPath(state)
   const nextPath = sanitizeNextPath(state?.nextPath)
   const appSurface = state?.surface === "app" || nextPath.includes("surface=app")
   const fallbackParams = {
@@ -155,12 +179,30 @@ export async function GET(request: NextRequest) {
     ...(nextPath !== "/starter" ? { next: nextPath } : {}),
   }
 
-  if (!code || !state) {
-    return NextResponse.redirect(authUrl(request, "/login", { ...fallbackParams, error: "google_failed" }), 303)
+  if (!state) {
+    return NextResponse.redirect(authUrl(request, "/login", { error: "google_failed" }), 303)
+  }
+
+  if (!code) {
+    const oauthError = request.nextUrl.searchParams.get("error")
+    const response = NextResponse.redirect(
+      authUrl(request, entryPath, {
+        ...fallbackParams,
+        error: oauthError === "access_denied" ? "google_cancelled" : "google_failed",
+      }),
+      303
+    )
+    clearGoogleState(response)
+    return response
   }
 
   if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-    return NextResponse.redirect(authUrl(request, "/login", { ...fallbackParams, error: "google_unavailable" }), 303)
+    const response = NextResponse.redirect(
+      authUrl(request, entryPath, { ...fallbackParams, error: "google_unavailable" }),
+      303
+    )
+    clearGoogleState(response)
+    return response
   }
 
   const authCookies: CookieToSet[] = []
@@ -188,7 +230,16 @@ export async function GET(request: NextRequest) {
       request,
       supabase,
       authCookies,
-      target: authUrl(request, "/login", { ...fallbackParams, error: "google_failed" }),
+      target: authUrl(request, entryPath, { ...fallbackParams, error: "google_failed" }),
+    })
+  }
+
+  if (!hasGoogleIdentity(user)) {
+    return redirectWithSignOut({
+      request,
+      supabase,
+      authCookies,
+      target: authUrl(request, entryPath, { ...fallbackParams, error: "google_failed" }),
     })
   }
 
@@ -197,7 +248,7 @@ export async function GET(request: NextRequest) {
       request,
       supabase,
       authCookies,
-      target: authUrl(request, "/login", { ...fallbackParams, error: "email_not_confirmed" }),
+      target: authUrl(request, entryPath, { ...fallbackParams, error: "email_not_confirmed" }),
     })
   }
 
@@ -206,12 +257,32 @@ export async function GET(request: NextRequest) {
       request,
       supabase,
       authCookies,
-      target: authUrl(request, "/login", { ...fallbackParams, error: "google_unavailable" }),
+      target: authUrl(request, entryPath, { ...fallbackParams, error: "google_unavailable" }),
     })
   }
 
   const admin = createSupabaseAdminClient()
   const now = new Date().toISOString()
+  const [{ data: initialProfile, error: profileLookupError }, acceptedLegal] = await Promise.all([
+    admin
+      .from("profiles")
+      .select("plan, role, full_name")
+      .eq("user_id", user.id)
+      .maybeSingle(),
+    hasCurrentLegalAcceptance(admin, user.id),
+  ])
+  if (profileLookupError) {
+    return redirectWithSignOut({
+      request,
+      supabase,
+      authCookies,
+      target: authUrl(request, entryPath, {
+        ...fallbackParams,
+        error: state.mode === "signup" ? "profile_failed" : "google_failed",
+      }),
+    })
+  }
+  let profile = initialProfile as ProfileRow | null
 
   if (state.mode === "signup") {
     if (!state.legalAccepted) {
@@ -223,58 +294,68 @@ export async function GET(request: NextRequest) {
       })
     }
 
-    const { error: profileError } = await admin.from("profiles").upsert(
-      {
+    if (!profile) {
+      const newProfile: ProfileRow & { user_id: string; updated_at: string } = {
         user_id: user.id,
         role: "expert",
         plan: "none",
         full_name: userDisplayName(user.user_metadata, user.email),
         updated_at: now,
-      },
-      { onConflict: "user_id" }
-    )
-
-    if (profileError) {
-      return redirectWithSignOut({
-        request,
-        supabase,
-        authCookies,
-        target: authUrl(request, "/signup", { ...fallbackParams, error: "profile_failed" }),
-      })
+      }
+      const { error: profileError } = await admin.from("profiles").insert(newProfile)
+      if (profileError) {
+        return redirectWithSignOut({
+          request,
+          supabase,
+          authCookies,
+          target: authUrl(request, "/signup", { ...fallbackParams, error: "profile_failed" }),
+        })
+      }
+      profile = newProfile
+    } else if (!profile.full_name) {
+      const fullName = userDisplayName(user.user_metadata, user.email)
+      const { error: nameError } = await admin
+        .from("profiles")
+        .update({ full_name: fullName, updated_at: now })
+        .eq("user_id", user.id)
+      if (nameError) {
+        return redirectWithSignOut({
+          request,
+          supabase,
+          authCookies,
+          target: authUrl(request, "/signup", { ...fallbackParams, error: "profile_failed" }),
+        })
+      }
+      profile = { ...profile, full_name: fullName }
     }
 
-    const { error: legalError } = await admin.from("legal_acceptances").insert({
-      user_id: user.id,
-      email: user.email,
-      plan_code: "none",
-      accepted_documents: getAcceptedDocumentsSnapshot(),
-      ip_address: getClientIp(request),
-      user_agent: request.headers.get("user-agent"),
-      source_path: "/signup-google",
-    })
-
-    if (legalError) {
-      return redirectWithSignOut({
-        request,
-        supabase,
-        authCookies,
-        target: authUrl(request, "/signup", { ...fallbackParams, error: "legal_failed" }),
+    if (!acceptedLegal) {
+      const { error: legalError } = await admin.from("legal_acceptances").insert({
+        user_id: user.id,
+        email: user.email,
+        plan_code: profile.plan || "none",
+        accepted_documents: getAcceptedDocumentsSnapshot(),
+        ip_address: getClientIp(request),
+        user_agent: request.headers.get("user-agent"),
+        source_path: "/signup-google",
       })
-    }
-  } else {
-    const [{ data: profile, error: profileError }, acceptedLegal] = await Promise.all([
-      admin.from("profiles").select("plan").eq("user_id", user.id).maybeSingle(),
-      hasCurrentLegalAcceptance(admin, user.id),
-    ])
 
-    if (profileError || !profile || !acceptedLegal) {
+      if (legalError) {
+        return redirectWithSignOut({
+          request,
+          supabase,
+          authCookies,
+          target: authUrl(request, "/signup", { ...fallbackParams, error: "legal_failed" }),
+        })
+      }
+    }
+  } else if (!profile || !acceptedLegal) {
       return redirectWithSignOut({
         request,
         supabase,
         authCookies,
         target: authUrl(request, "/signup", { ...fallbackParams, error: "google_legal_required" }),
       })
-    }
   }
 
   const previousAppSession = state.legacyDeviceId
@@ -347,12 +428,6 @@ export async function GET(request: NextRequest) {
     clearGoogleState(response)
     return response
   }
-
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("plan")
-    .eq("user_id", user.id)
-    .maybeSingle()
 
   const exemption = await ensurePaymentExemptAccess({ admin, userId: user.id, email: user.email })
   if (!exemption.ok) {
