@@ -1,13 +1,13 @@
 {
-  "schemaVersion": "dna-intelligence-prebook-readiness@5",
+  "schemaVersion": "dna-intelligence-prebook-readiness@6",
   "programVersion": "dna-intelligence-v3-program@1",
-  "generatedAt": "2026-07-22T07:20:29.197Z",
+  "generatedAt": "2026-07-22T07:47:02.830Z",
   "evidenceClass": "current_generated_readiness_not_phase_completion_or_release_evidence",
   "repository": {
     "branch": "codex/dna-intelligence-v3",
-    "headGitSha": "2012e42e6aef4c7fd50fb60e58216c90fdb534f9",
-    "workingTreeClean": false,
-    "identityBoundary": "HEAD and exact artifact hashes identify the measured in-progress state. A dirty worktree is not immutable release evidence."
+    "headGitSha": "9ab11d8875f1868837c1f8f0121167a17fd07fc8",
+    "workingTreeClean": true,
+    "identityBoundary": "HEAD and exact artifact hashes identify the measured in-progress state. workingTreeClean excludes only the two self-generated readiness outputs so write-then-verify remains stable; every other tracked or untracked change makes it false."
   },
   "readinessProjectionSha256": "4668867d5bf2222e6e10dc29d11f4a49c2fb05bf15056bd0a2cfb5f0d9c8fc4d",
   "projection": {
