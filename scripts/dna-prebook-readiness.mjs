@@ -799,8 +799,8 @@ export function collectPrebookFacts(options = {}) {
     runtime: {
       safeDefaultGeneration: "v2_legacy",
       activeGenerationLastVerified: phase32To44Evidence.phaseDisposition.currentRuntimeGeneration,
-      liveObservationRecordedAt: phase45To60Evidence.generatedAt,
-      liveObservationBoundary: "point_in_time_historical_observation_not_continuous_monitoring",
+      liveObservationRecordedAt: prebookProductionVerification.testedAt,
+      liveObservationBoundary: "point_in_time_safe_v2_production_observation_not_continuous_monitoring_or_v3_release_evidence",
       v3ReleaseDecision: "no_go",
       v3DeploymentPerformed: false,
       v3PromotionPerformed: false,
