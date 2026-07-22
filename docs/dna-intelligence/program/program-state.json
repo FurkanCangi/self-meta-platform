@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "dna-intelligence-program-state@7",
+  "schemaVersion": "dna-intelligence-program-state@8",
   "programVersion": "dna-intelligence-v3-program@1",
   "objective": "DNA Intelligence V3 planını Faz 0'dan Faz 60'a kanıt kapılı biçimde tamamlamak",
   "truthModel": {
@@ -489,9 +489,9 @@
   },
   "currentEvidence": {
     "path": "docs/dna-intelligence/program/evidence/prebook-readiness-current.json",
-    "schemaVersion": "dna-intelligence-prebook-readiness@7",
-    "generatedAt": "2026-07-22T07:48:03.458Z",
-    "readinessProjectionSha256": "4668867d5bf2222e6e10dc29d11f4a49c2fb05bf15056bd0a2cfb5f0d9c8fc4d",
+    "schemaVersion": "dna-intelligence-prebook-readiness@8",
+    "generatedAt": "2026-07-22T07:55:35.628Z",
+    "readinessProjectionSha256": "250a703b42cf505b36e99cee60897adc4a4fcf0358e2c1a12d5a204355f89b8f",
     "authority": "current_generated_readiness"
   },
   "historicalEvidence": [
@@ -550,8 +550,15 @@
       "schemaVersion": "dna-intelligence-prebook-readiness@1",
       "rawBytesSha256": "d0a524e0db0a8bc3d772b5e9395c226cef4289a47f574f9e2c29d7c6663e5603",
       "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/prebook-v2-production-verification-current.json",
+      "recordedAt": "2026-07-22T07:54:32Z",
+      "schemaVersion": "dna-prebook-v2-production-verification@1",
+      "rawBytesSha256": "87fbe52f2e4c23cd76b9a7df8daff14da0ead704b6c34afdda253154113afb00",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
     }
   ],
-  "updatedAt": "2026-07-22T07:48:03.458Z",
-  "readinessProjectionSha256": "4668867d5bf2222e6e10dc29d11f4a49c2fb05bf15056bd0a2cfb5f0d9c8fc4d"
+  "updatedAt": "2026-07-22T07:55:35.628Z",
+  "readinessProjectionSha256": "250a703b42cf505b36e99cee60897adc4a4fcf0358e2c1a12d5a204355f89b8f"
 }
