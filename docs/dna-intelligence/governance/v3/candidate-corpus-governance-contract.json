@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "dna-v3-candidate-corpus-governance-contract@5",
+  "schemaVersion": "dna-v3-candidate-corpus-governance-contract@6",
   "candidateManifestVersion": "dna-v3-candidate-jats-corpus@3",
   "workpackVersion": "dna-v3-method-review-workpack@2",
   "workpackIndexVersion": "dna-v3-method-review-workpack-index@3",
@@ -132,5 +132,28 @@
     "currentRereviewConsensusCandidates": 220,
     "currentRuntimeEligibleClaims": 0,
     "currentReleaseEligibleClaims": 0
+  },
+  "prebookClosureGate": {
+    "schemaVersion": "dna-intelligence-prebook-closure@1",
+    "command": "npm run chat:prebook-close:ssd",
+    "researchSsdRelativeRoot": "Datasets/DNA-Intelligence/work/v3/prebook-closure/v1",
+    "fullTextTerminalVocabulary": [
+      "included",
+      "excluded",
+      "duplicate",
+      "full_text_unavailable",
+      "license_blocked",
+      "out_of_scope"
+    ],
+    "fullTextUnavailableMayBePresentedAsScientificallyReviewed": false,
+    "terminalDecisionReasonRequired": true,
+    "hashBoundCheckpointPerStageRequired": true,
+    "resumeMayRewriteCompletedStage": false,
+    "externalScienceCandidateRuntimeEligible": false,
+    "externalScienceCandidateReleaseEligible": false,
+    "ownerBookClaimsAllowed": false,
+    "officialEvaluationSealAllowedBeforeExactBookCandidate": false,
+    "codexMultiPassIsIndependentHumanValidation": false,
+    "activeRuntimeGeneration": "v2_legacy"
   }
 }

@@ -1,15 +1,15 @@
 {
-  "schemaVersion": "dna-intelligence-prebook-readiness@4",
+  "schemaVersion": "dna-intelligence-prebook-readiness@5",
   "programVersion": "dna-intelligence-v3-program@1",
-  "generatedAt": "2026-07-21T11:02:49.160Z",
+  "generatedAt": "2026-07-22T07:20:29.197Z",
   "evidenceClass": "current_generated_readiness_not_phase_completion_or_release_evidence",
   "repository": {
     "branch": "codex/dna-intelligence-v3",
-    "headGitSha": "06a3e7f64a31e15f1dbed9d2093da46848e4cc80",
+    "headGitSha": "2012e42e6aef4c7fd50fb60e58216c90fdb534f9",
     "workingTreeClean": false,
     "identityBoundary": "HEAD and exact artifact hashes identify the measured in-progress state. A dirty worktree is not immutable release evidence."
   },
-  "readinessProjectionSha256": "8c1f867ef97e18a20f574d16c66c6a8b3d9e826fdaac08bc5d3bf2041fd8c02f",
+  "readinessProjectionSha256": "4668867d5bf2222e6e10dc29d11f4a49c2fb05bf15056bd0a2cfb5f0d9c8fc4d",
   "projection": {
     "ownerBook": {
       "status": "deferred_owner_book",
@@ -135,6 +135,65 @@
       "runtimeEligible": 0,
       "releaseEligible": 0
     },
+    "prebookClosure": {
+      "status": "prebook_actionable_work_closed",
+      "indexSha256": "5308009a466f2ca969bf67d6584377b027c829e6b2eca5d6852213163828cf6a",
+      "indexRawBytesSha256": "663ac3eec6b4cbfd6d1b6d819ca7d90e41fae9d115b356336c6e2babc4f03ab0",
+      "rootInputSha256": "54172ad535d08d5d3000c3af072fb945c2bd610e18e28f49eeb58a184e57a99f",
+      "fullTextRecords": 1645,
+      "fullTextTerminal": 1645,
+      "fullTextOpen": 0,
+      "fullTextStatusCounts": {
+        "included": 0,
+        "excluded": 0,
+        "duplicate": 0,
+        "full_text_unavailable": 1643,
+        "license_blocked": 2,
+        "out_of_scope": 0
+      },
+      "workpacks": 24,
+      "workpacksTerminal": 24,
+      "workpacksOpen": 0,
+      "workpackStatusCounts": {
+        "included": 14,
+        "excluded": 6,
+        "quarantined": 4
+      },
+      "blindClaimsCovered": 746,
+      "claimDecisionUnits": 503,
+      "claimsOpen": 0,
+      "claimStatusCounts": {
+        "bounded_candidate": 220,
+        "contested_excluded": 23,
+        "single_lane_excluded": 260
+      },
+      "candidateTopics": 14,
+      "candidateSources": 14,
+      "candidatePassages": 166,
+      "candidateClaims": 220,
+      "candidateAnswerUnits": 220,
+      "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+      "draftBenchmarkItems": 2400,
+      "draftBenchmarkApprovals": 2400,
+      "draftVariations": 10000,
+      "draftVariationApprovals": 10000,
+      "humanProtocolStatus": "protocol_locked_execution_deferred",
+      "prebookActionableBlockers": 0,
+      "ownerBookDependent": [
+        "owner_book_lock_and_owner_approval",
+        "dna_product_claim_bindings",
+        "dna_specific_benchmark_families"
+      ],
+      "exactCandidateOrExternalHumanDependent": [
+        "strict_scientific_claim_release_review",
+        "official_benchmark_and_variation_seal",
+        "exact_candidate_performance_and_safety_run",
+        "independent_human_and_real_therapist_evaluation",
+        "canary_and_v3_runtime_promotion"
+      ],
+      "runtimeEligible": false,
+      "releaseEligible": false
+    },
     "publicationPipeline": {
       "acceptedRealPassages": 0,
       "releasedClaims": 0,
@@ -168,32 +227,41 @@
     }
   },
   "corpusExecutionTruth": {
-    "state": "in_progress",
-    "firstIncompleteScientificReviewPhase": 12,
-    "phase12": "14_registered_15_candidate_complete_6_queued_workpacks",
+    "state": "prebook_candidate_closed_not_released",
+    "firstIncompleteScientificReviewPhase": null,
+    "phase12": "24_of_24_prebook_workpacks_terminal_14_registered_preserved",
     "phase14": "candidate_jats_extraction_executed_not_released",
-    "phases15To27": "245_candidate_passages_28_blind_runs_746_candidate_claims_0_exact_consensus_220_rereview_consensus_candidates_publication_chain_not_completed",
-    "phases29To31": "engineering_ready_real_graph_and_runtime_package_empty"
+    "phases15To27": "746_blind_claims_terminally_covered_220_bounded_external_candidates_not_published",
+    "phases29To31": "220_single_claim_passage_answer_units_external_candidate_runtime_ineligible"
   },
   "orderedProgramTruth": {
     "programComplete": false,
     "ownerBookPhase3": "deferred_release_blocking",
     "engineeringSequenceCursor": 38,
-    "scientificCorpusExecutionCursor": 12,
+    "scientificCorpusExecutionCursor": 27,
     "releaseDecision": "no_go"
   },
   "blockerScope": {
+    "prebookActionable": [],
     "ownerBook": [
       "owner_book_not_supplied",
       "owner_approved_product_claim_bindings_missing"
     ],
-    "sourceLocal": [
-      "source_method_appraisals_pending_47",
-      "method_appraisal_workpacks_queued_6",
-      "method_appraisal_candidate_chains_1_registered_14",
-      "accepted_real_passages_0",
-      "released_real_claims_0",
-      "released_real_relations_0"
+    "sourceLocal": [],
+    "terminalizedPrebookCohort": [
+      "full_text_1645_of_1645_terminal",
+      "workpacks_24_of_24_terminal",
+      "blind_claims_746_covered",
+      "bounded_external_claims_220_candidate_only",
+      "benchmark_2400_draft_unsealed",
+      "variations_10000_draft_unsealed"
+    ],
+    "exactCandidateOrExternalHuman": [
+      "strict_scientific_claim_release_review",
+      "official_benchmark_and_variation_seal",
+      "exact_candidate_performance_and_safety_run",
+      "independent_human_and_real_therapist_evaluation",
+      "canary_and_v3_runtime_promotion"
     ],
     "evaluationAndExternalHuman": [
       "locked_benchmark_0_of_2400",
@@ -274,5 +342,5 @@
       "authority": "historical_snapshot_non_authoritative_for_current_counts"
     }
   ],
-  "interpretationBoundary": "Engineering contracts, candidate extraction, method-pipeline registration, and ongoing multi-pass appraisal are not equivalent to released knowledge, independent validation, or a V3 deployment."
+  "interpretationBoundary": "The frozen prebook cohort is terminally decided and the external-science candidate is compiled. This is not released knowledge, an official sealed evaluation, independent validation, or a V3 runtime deployment."
 }

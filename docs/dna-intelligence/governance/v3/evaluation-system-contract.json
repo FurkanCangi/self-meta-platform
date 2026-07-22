@@ -227,6 +227,25 @@
     "callerAuthoredAllClearSignalsAccepted": false,
     "releaseCheckCommand": "npm run chat:evaluation-release-check"
   },
+  "prebookDraftPreparation": {
+    "schemaVersion": "dna-prebook-evaluation-draft@1",
+    "researchSsdRelativeRoot": "Datasets/DNA-Intelligence/work/v3/prebook-closure/v1/evaluation-draft",
+    "baseQuestionTarget": 2400,
+    "variationTarget": 10000,
+    "perRowHashBoundApprovalRequired": true,
+    "authorityClass": "codex_multi_pass_not_independent",
+    "officialLockedBenchmark": false,
+    "officialVariationBank": false,
+    "mayBeOpenedForFormalEvaluation": false,
+    "mayAuthorizeRuntimeOrRelease": false,
+    "sealingPrerequisites": [
+      "owner_book_locked_and_owner_approved",
+      "exact_book_bound_v3_candidate_built",
+      "development_text_and_semantic_provenance_overlap_rechecked",
+      "release_evaluation_authority_approved"
+    ],
+    "humanStudyExecutionDeferredUntilExactCandidate": true
+  },
   "sourceIntegrationMaximumIssueCounts": {
     "unknownSchema": 0,
     "duplicateDoiOrPmid": 0,

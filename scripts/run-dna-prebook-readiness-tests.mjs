@@ -27,6 +27,15 @@ assert.equal(current.readiness.projection.candidateClaims.runtimeEligible, 0)
 assert.equal(current.readiness.projection.candidateClaims.releaseEligible, 0)
 assert.equal(current.readiness.projection.candidateClaimReconciliations.runtimeEligible, 0)
 assert.equal(current.readiness.projection.candidateClaimReconciliations.releaseEligible, 0)
+assert.equal(current.readiness.projection.prebookClosure.prebookActionableBlockers, 0)
+assert.equal(current.readiness.projection.prebookClosure.fullTextTerminal, 1645)
+assert.equal(current.readiness.projection.prebookClosure.workpacksTerminal, 24)
+assert.equal(current.readiness.projection.prebookClosure.blindClaimsCovered, 746)
+assert.equal(current.readiness.projection.prebookClosure.candidateClaims, 220)
+assert.equal(current.readiness.projection.prebookClosure.draftBenchmarkItems, 2400)
+assert.equal(current.readiness.projection.prebookClosure.draftVariations, 10000)
+assert.equal(current.readiness.projection.prebookClosure.runtimeEligible, false)
+assert.equal(current.readiness.projection.prebookClosure.releaseEligible, false)
 
 const freshFacts = collectPrebookFacts({ generatedAt: "2026-07-20T00:00:00.000Z" })
 const generatedReadiness = buildPrebookReadiness(freshFacts)
@@ -57,6 +66,13 @@ assert.throws(
   /prebook_readiness_current_artifact_drift/,
 )
 
+const forgedPrebookClosure = clone(generatedReadiness)
+forgedPrebookClosure.projection.prebookClosure.prebookActionableBlockers = 1
+assert.throws(
+  () => validatePrebookReadiness(forgedPrebookClosure, freshFacts),
+  /prebook_readiness_projection_hash_mismatch/,
+)
+
 const mislabeledHistory = clone(generatedReadiness)
 mislabeledHistory.historicalEvidence[0].authority = "current_generated_readiness"
 assert.throws(
@@ -82,13 +98,16 @@ console.log(JSON.stringify({
   ok: true,
   productionSnapshotVerified: true,
   deterministicGeneratorVerified: true,
-  negativeTamperTests: 6,
+  negativeTamperTests: 7,
   sourceIntegrity: `${freshFacts.sourceIntegrity.verified_clean}_clean_${freshFacts.sourceIntegrity.pending}_pending`,
   candidateWorkpacks: freshFacts.candidateCorpus.methodReviewWorkpacks,
   registeredMethodAppraisals: freshFacts.methodAppraisal.registered,
   candidatePassages: freshFacts.candidatePassages.candidatePassages,
   candidateClaims: freshFacts.candidateClaims.candidateClaims,
   exactConsensusCandidates: freshFacts.candidateClaimReconciliations.exactConsensus,
+  prebookActionableBlockers: freshFacts.prebookClosure.prebookActionableBlockers,
+  prebookDraftBenchmark: freshFacts.prebookClosure.draftBenchmarkItems,
+  prebookDraftVariations: freshFacts.prebookClosure.draftVariations,
   runtime: "v2_legacy",
   v3: "no_go",
 }, null, 2))

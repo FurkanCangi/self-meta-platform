@@ -4,8 +4,8 @@ import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, writeFi
 import { dirname, join, relative, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 
-export const PREBOOK_READINESS_VERSION = "dna-intelligence-prebook-readiness@4"
-export const PROGRAM_STATE_VERSION = "dna-intelligence-program-state@4"
+export const PREBOOK_READINESS_VERSION = "dna-intelligence-prebook-readiness@5"
+export const PROGRAM_STATE_VERSION = "dna-intelligence-program-state@5"
 export const PROGRAM_VERSION = "dna-intelligence-v3-program@1"
 
 const MODULE_PATH = fileURLToPath(import.meta.url)
@@ -243,6 +243,10 @@ export function collectPrebookFacts(options = {}) {
       researchRoot,
       "Datasets/DNA-Intelligence/work/v3/candidate-claim-rereviews/v1",
     )),
+    prebookClosureRoot: assertContained(researchRoot, join(
+      researchRoot,
+      "Datasets/DNA-Intelligence/work/v3/prebook-closure/v1",
+    )),
     lockedQuestions: assertContained(researchRoot, join(
       researchRoot,
       "Datasets/DNA-Intelligence/evaluation/v3/locked-benchmark/questions.json",
@@ -342,6 +346,27 @@ export function collectPrebookFacts(options = {}) {
         },
         canonicalPayloadSha256: null,
       }
+  const prebookClosureIndexPath = join(paths.prebookClosureRoot, "index.json")
+  const prebookClosureIndex = readJson(prebookClosureIndexPath)
+  const prebookFullText = readJson(join(paths.prebookClosureRoot, "full-text-decisions.json"))
+  const prebookWorkpacks = readJson(join(paths.prebookClosureRoot, "workpack-decisions.json"))
+  const prebookClaims = readJson(join(paths.prebookClosureRoot, "claim-decisions.json"))
+  const prebookCandidatePackage = readJson(join(
+    paths.prebookClosureRoot,
+    "external-science-candidate-package.json",
+  ))
+  const prebookBenchmark = readJson(join(
+    paths.prebookClosureRoot,
+    "evaluation-draft/questions-and-approvals.json",
+  ))
+  const prebookVariations = readJson(join(
+    paths.prebookClosureRoot,
+    "evaluation-draft/variations-and-approvals.json",
+  ))
+  const prebookHumanEvaluation = readJson(join(
+    paths.prebookClosureRoot,
+    "human-evaluation/study-pack.json",
+  ))
 
   assert(ownerBook.currentStatus === "deferred_owner_book" && ownerBook.currentOwnerApprovals === 0,
     "prebook_readiness_owner_book_state_unexpected")
@@ -487,6 +512,49 @@ export function collectPrebookFacts(options = {}) {
   assert(candidateClaimRereviewIndex.records.every((record) =>
     reconciledSourceIds.has(record.sourceId)),
   "prebook_readiness_rereviewed_source_without_reconciliation")
+
+  const { indexSha256: prebookIndexDeclaredSha256, ...prebookIndexPayload } = prebookClosureIndex
+  assert(prebookClosureIndex.schemaVersion === "dna-intelligence-prebook-closure@1"
+    && canonicalSha256(prebookIndexPayload) === prebookIndexDeclaredSha256,
+  "prebook_readiness_closure_index_invalid")
+  for (const artifact of prebookClosureIndex.artifacts) {
+    const artifactPath = assertContained(paths.prebookClosureRoot, join(
+      paths.prebookClosureRoot,
+      artifact.relativePath,
+    ))
+    assert(rawFileSha256(artifactPath) === artifact.sha256,
+      `prebook_readiness_closure_artifact_hash_mismatch:${artifact.relativePath}`)
+  }
+  assert(prebookClosureIndex.status === "prebook_actionable_work_closed"
+    && prebookClosureIndex.readiness?.prebook_actionable_blockers === 0
+    && prebookClosureIndex.runtime?.activeGeneration === "v2_legacy"
+    && prebookClosureIndex.runtime?.v3CandidateActivated === false,
+  "prebook_readiness_closure_state_invalid")
+  assert(prebookFullText.counts?.total === 1645 && prebookFullText.counts?.open === 0
+    && prebookFullText.decisions.every((decision) => decision.reasonCode),
+  "prebook_readiness_full_text_terminal_coverage_invalid")
+  assert(prebookWorkpacks.counts?.total === 24 && prebookWorkpacks.counts?.open === 0,
+    "prebook_readiness_workpack_terminal_coverage_invalid")
+  assert(prebookClaims.counts?.coveredBlindClaims === 746 && prebookClaims.counts?.open === 0
+    && prebookClaims.counts?.byStatus?.bounded_candidate === 220
+    && prebookClaims.counts?.byStatus?.contested_excluded === 23,
+  "prebook_readiness_claim_terminal_coverage_invalid")
+  assert(prebookCandidatePackage.runtimeEligible === false
+    && prebookCandidatePackage.releaseEligible === false
+    && prebookCandidatePackage.activationAllowed === false
+    && prebookCandidatePackage.counts?.claims === 220
+    && prebookCandidatePackage.counts?.dnaProductClaims === 0,
+  "prebook_readiness_external_candidate_boundary_invalid")
+  assert(prebookBenchmark.status === "draft_unsealed"
+    && prebookBenchmark.counts?.total === 2400
+    && prebookBenchmark.counts?.approvals === 2400
+    && prebookVariations.status === "draft_unsealed"
+    && prebookVariations.counts?.total === 10000
+    && prebookVariations.counts?.approvals === 10000,
+  "prebook_readiness_evaluation_draft_invalid")
+  assert(prebookHumanEvaluation.executionAllowedNow === false
+    && prebookHumanEvaluation.status === "protocol_locked_execution_deferred",
+  "prebook_readiness_human_evaluation_boundary_invalid")
 
   const head = runGit(repoRoot, ["rev-parse", "HEAD"], "unknown")
   const branch = runGit(repoRoot, ["branch", "--show-current"], "unknown")
@@ -642,6 +710,41 @@ export function collectPrebookFacts(options = {}) {
       runtimeEligible: candidateClaimRereviewIndex.counts.runtimeEligible,
       releaseEligible: candidateClaimRereviewIndex.counts.releaseEligible,
     },
+    prebookClosure: {
+      status: prebookClosureIndex.status,
+      indexSha256: prebookClosureIndex.indexSha256,
+      indexRawBytesSha256: rawFileSha256(prebookClosureIndexPath),
+      rootInputSha256: prebookClosureIndex.rootInputSha256,
+      fullTextRecords: prebookFullText.counts.total,
+      fullTextTerminal: prebookFullText.counts.terminal,
+      fullTextOpen: prebookFullText.counts.open,
+      fullTextStatusCounts: prebookFullText.counts.byStatus,
+      workpacks: prebookWorkpacks.counts.total,
+      workpacksTerminal: prebookWorkpacks.counts.terminal,
+      workpacksOpen: prebookWorkpacks.counts.open,
+      workpackStatusCounts: prebookWorkpacks.counts.byStatus,
+      blindClaimsCovered: prebookClaims.counts.coveredBlindClaims,
+      claimDecisionUnits: prebookClaims.counts.terminalDecisionUnits,
+      claimsOpen: prebookClaims.counts.open,
+      claimStatusCounts: prebookClaims.counts.byStatus,
+      candidateTopics: prebookCandidatePackage.counts.topics,
+      candidateSources: prebookCandidatePackage.counts.sources,
+      candidatePassages: prebookCandidatePackage.counts.passages,
+      candidateClaims: prebookCandidatePackage.counts.claims,
+      candidateAnswerUnits: prebookCandidatePackage.counts.answerUnits,
+      candidatePackageSha256: prebookCandidatePackage.packageSha256,
+      draftBenchmarkItems: prebookBenchmark.counts.total,
+      draftBenchmarkApprovals: prebookBenchmark.counts.approvals,
+      draftVariations: prebookVariations.counts.total,
+      draftVariationApprovals: prebookVariations.counts.approvals,
+      humanProtocolStatus: prebookHumanEvaluation.status,
+      prebookActionableBlockers: prebookClosureIndex.readiness.prebook_actionable_blockers,
+      ownerBookDependent: prebookClosureIndex.readiness.owner_book_dependent,
+      exactCandidateOrExternalHumanDependent:
+        prebookClosureIndex.readiness.exact_candidate_or_external_human_dependent,
+      runtimeEligible: prebookCandidatePackage.runtimeEligible,
+      releaseEligible: prebookCandidatePackage.releaseEligible,
+    },
     publicationPipeline: {
       acceptedRealPassages: v3Package.counts.included.passages,
       releasedClaims: v3Package.counts.included.claims,
@@ -688,6 +791,7 @@ export function buildReadinessProjection(facts) {
     candidateClaims: facts.candidateClaims,
     candidateClaimReconciliations: facts.candidateClaimReconciliations,
     candidateClaimRereviews: facts.candidateClaimRereviews,
+    prebookClosure: facts.prebookClosure,
     publicationPipeline: facts.publicationPipeline,
     evaluation: facts.evaluation,
     runtime: facts.runtime,
@@ -752,11 +856,24 @@ function blockerScope(facts) {
   }
 
   return {
+    prebookActionable: facts.prebookClosure.prebookActionableBlockers === 0
+      ? []
+      : sourceLocal,
     ownerBook: [
       "owner_book_not_supplied",
       "owner_approved_product_claim_bindings_missing",
     ],
-    sourceLocal,
+    sourceLocal: facts.prebookClosure.prebookActionableBlockers === 0 ? [] : sourceLocal,
+    terminalizedPrebookCohort: [
+      `full_text_${facts.prebookClosure.fullTextTerminal}_of_${facts.prebookClosure.fullTextRecords}_terminal`,
+      `workpacks_${facts.prebookClosure.workpacksTerminal}_of_${facts.prebookClosure.workpacks}_terminal`,
+      `blind_claims_${facts.prebookClosure.blindClaimsCovered}_covered`,
+      `bounded_external_claims_${facts.prebookClosure.candidateClaims}_candidate_only`,
+      `benchmark_${facts.prebookClosure.draftBenchmarkItems}_draft_unsealed`,
+      `variations_${facts.prebookClosure.draftVariations}_draft_unsealed`,
+    ],
+    exactCandidateOrExternalHuman:
+      facts.prebookClosure.exactCandidateOrExternalHumanDependent,
     evaluationAndExternalHuman: [
       `locked_benchmark_${facts.evaluation.lockedBenchmarkItems}_of_${facts.evaluation.lockedBenchmarkTarget}`,
       `variation_bank_${facts.evaluation.variationItems}_of_${facts.evaluation.variationMinimum}`,
@@ -794,23 +911,23 @@ export function buildPrebookReadiness(facts) {
     readinessProjectionSha256: canonicalSha256(projection),
     projection,
     corpusExecutionTruth: {
-      state: "in_progress",
-      firstIncompleteScientificReviewPhase: 12,
-      phase12: `${facts.methodAppraisal.registered}_registered_${facts.methodAppraisal.batchCandidateCompleteUnregistered}_candidate_complete_${facts.methodAppraisal.queuedWorkpacks}_queued_workpacks`,
+      state: "prebook_candidate_closed_not_released",
+      firstIncompleteScientificReviewPhase: null,
+      phase12: `${facts.prebookClosure.workpacksTerminal}_of_${facts.prebookClosure.workpacks}_prebook_workpacks_terminal_${facts.methodAppraisal.registered}_registered_preserved`,
       phase14: "candidate_jats_extraction_executed_not_released",
-      phases15To27: `${facts.candidatePassages.candidatePassages}_candidate_passages_${facts.candidateClaims.candidateRuns}_blind_runs_${facts.candidateClaims.candidateClaims}_candidate_claims_${facts.candidateClaimReconciliations.exactConsensus}_exact_consensus_${facts.candidateClaimRereviews.consensus}_rereview_consensus_candidates_publication_chain_not_completed`,
-      phases29To31: "engineering_ready_real_graph_and_runtime_package_empty",
+      phases15To27: `${facts.prebookClosure.blindClaimsCovered}_blind_claims_terminally_covered_${facts.prebookClosure.candidateClaims}_bounded_external_candidates_not_published`,
+      phases29To31: `${facts.prebookClosure.candidateAnswerUnits}_single_claim_passage_answer_units_external_candidate_runtime_ineligible`,
     },
     orderedProgramTruth: {
       programComplete: false,
       ownerBookPhase3: "deferred_release_blocking",
       engineeringSequenceCursor: 38,
-      scientificCorpusExecutionCursor: 12,
+      scientificCorpusExecutionCursor: 27,
       releaseDecision: "no_go",
     },
     blockerScope: blockerScope(facts),
     historicalEvidence: facts.history,
-    interpretationBoundary: "Engineering contracts, candidate extraction, method-pipeline registration, and ongoing multi-pass appraisal are not equivalent to released knowledge, independent validation, or a V3 deployment.",
+    interpretationBoundary: "The frozen prebook cohort is terminally decided and the external-science candidate is compiled. This is not released knowledge, an official sealed evaluation, independent validation, or a V3 runtime deployment.",
   }
 }
 
@@ -830,10 +947,8 @@ export function buildProgramState(facts, readiness) {
       contractInfrastructureImplementedPhases: ALL_PROGRAM_PHASES,
       legacyCompletedCheckpointLabels: CHECKPOINT_COMPLETED_PHASES,
       realOutputInfrastructureOrGovernancePhases: REAL_OUTPUT_INFRASTRUCTURE_PHASES,
-      scientificCorpusExecutionIncompletePhases: [
-        ...SCIENTIFIC_REVIEW_PHASES,
-        29, 30, 31,
-      ],
+      scientificCorpusExecutionIncompletePhases: [],
+      scientificReleaseIncompletePhases: [20, 21, 22, 23, 24, 25, 26, 27, 29, 30, 31],
       implementedAgainstEmptyOrCandidateOnlyV3PackagePhases: [
         ...Array.from({ length: 9 }, (_, index) => index + 29),
       ],
@@ -844,8 +959,8 @@ export function buildProgramState(facts, readiness) {
       warning: "legacyCompletedCheckpointLabels yalnız checkpoint dosyalarındaki eski mühendislik etiketlerini kaydeder; bilimsel veya sıralı program tamamlanması değildir.",
     },
     corpusExecutionStatus: {
-      state: "in_progress",
-      firstIncompleteScientificReviewPhase: 12,
+      state: "prebook_candidate_closed_not_released",
+      firstIncompleteScientificReviewPhase: null,
       sourceInventory: {
         total: facts.sourceIntegrity.sourceCount,
         integrityEligible: facts.sourceIntegrity.integrityGateEligible,
@@ -861,6 +976,7 @@ export function buildProgramState(facts, readiness) {
       candidateClaims: facts.candidateClaims,
       candidateClaimReconciliations: facts.candidateClaimReconciliations,
       candidateClaimRereviews: facts.candidateClaimRereviews,
+      prebookClosure: facts.prebookClosure,
       publicationPipeline: facts.publicationPipeline,
       phaseDisposition: [
         {
@@ -869,7 +985,7 @@ export function buildProgramState(facts, readiness) {
         },
         {
           phases: [12],
-        status: "controlled_method_appraisal_batch_in_progress_no_runtime_release",
+          status: "prebook_workpack_cohort_terminal_registered_sources_preserved",
         },
         {
           phases: [14],
@@ -877,11 +993,11 @@ export function buildProgramState(facts, readiness) {
         },
         {
           phases: [...Array.from({ length: 13 }, (_, index) => index + 15)],
-          status: "contracts_ready_real_corpus_review_and_publication_not_completed",
+          status: "prebook_claim_cohort_terminal_bounded_candidates_not_published",
         },
         {
           phases: [29, 30, 31],
-          status: "contracts_ready_real_graph_and_runtime_package_empty",
+          status: "external_science_candidate_compiled_runtime_and_release_ineligible",
         },
       ],
     },
@@ -896,9 +1012,9 @@ export function buildProgramState(facts, readiness) {
     orderedProgramStatus: {
       complete: false,
       engineeringSequenceCursor: 38,
-      scientificCorpusExecutionCursor: 12,
+      scientificCorpusExecutionCursor: 27,
       firstReleaseBlockingDeferredPhase: 3,
-      phase38: `blocked_${facts.evaluation.lockedBenchmarkItems}_of_${facts.evaluation.lockedBenchmarkTarget}`,
+      phase38: `official_locked_0_of_${facts.evaluation.lockedBenchmarkTarget}_draft_${facts.prebookClosure.draftBenchmarkItems}_prepared_unsealed`,
       phases39To60: "engineering_contracts_exist_ordered_release_execution_not_complete",
     },
     releaseStatus: {
@@ -968,9 +1084,10 @@ export function validateProgramState(programState, readiness, facts) {
     "prebook_program_state_legacy_completed_phases_forbidden")
   assert(programState.engineeringStatus?.state === "contracts_implemented_not_product_complete",
     "prebook_program_state_engineering_truth_invalid")
-  assert(programState.corpusExecutionStatus?.state === "in_progress",
+  assert(programState.corpusExecutionStatus?.state === "prebook_candidate_closed_not_released",
     "prebook_program_state_corpus_execution_truth_invalid")
-  assert(programState.corpusExecutionStatus?.firstIncompleteScientificReviewPhase === 12,
+  assert(programState.corpusExecutionStatus?.firstIncompleteScientificReviewPhase === null
+    && programState.corpusExecutionStatus?.prebookClosure?.prebookActionableBlockers === 0,
     "prebook_program_state_scientific_cursor_invalid")
   assert(programState.ownerBookStatus?.phase === 3
     && programState.ownerBookStatus.status === "deferred_owner_book"
@@ -1049,6 +1166,14 @@ if (isDirectExecution()) {
     registeredMethodAppraisals: result.facts.methodAppraisal.registered,
     candidatePassages: result.facts.candidatePassages.candidatePassages,
     candidateClaims: result.facts.candidateClaims.candidateClaims,
+    prebookActionableBlockers: result.facts.prebookClosure.prebookActionableBlockers,
+    prebookFullTextTerminal:
+      `${result.facts.prebookClosure.fullTextTerminal}/${result.facts.prebookClosure.fullTextRecords}`,
+    prebookWorkpacksTerminal:
+      `${result.facts.prebookClosure.workpacksTerminal}/${result.facts.prebookClosure.workpacks}`,
+    externalScienceCandidateClaims: result.facts.prebookClosure.candidateClaims,
+    draftBenchmark: result.facts.prebookClosure.draftBenchmarkItems,
+    draftVariations: result.facts.prebookClosure.draftVariations,
     releasedClaims: result.facts.publicationPipeline.releasedClaims,
     lockedBenchmark: `${result.facts.evaluation.lockedBenchmarkItems}/${result.facts.evaluation.lockedBenchmarkTarget}`,
     variationBank: `${result.facts.evaluation.variationItems}/${result.facts.evaluation.variationMinimum}`,

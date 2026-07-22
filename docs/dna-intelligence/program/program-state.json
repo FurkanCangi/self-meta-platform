@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "dna-intelligence-program-state@4",
+  "schemaVersion": "dna-intelligence-program-state@5",
   "programVersion": "dna-intelligence-v3-program@1",
   "objective": "DNA Intelligence V3 planını Faz 0'dan Faz 60'a kanıt kapılı biçimde tamamlamak",
   "truthModel": {
@@ -132,14 +132,8 @@
       36,
       37
     ],
-    "scientificCorpusExecutionIncompletePhases": [
-      12,
-      14,
-      15,
-      16,
-      17,
-      18,
-      19,
+    "scientificCorpusExecutionIncompletePhases": [],
+    "scientificReleaseIncompletePhases": [
       20,
       21,
       22,
@@ -192,8 +186,8 @@
     "warning": "legacyCompletedCheckpointLabels yalnız checkpoint dosyalarındaki eski mühendislik etiketlerini kaydeder; bilimsel veya sıralı program tamamlanması değildir."
   },
   "corpusExecutionStatus": {
-    "state": "in_progress",
-    "firstIncompleteScientificReviewPhase": 12,
+    "state": "prebook_candidate_closed_not_released",
+    "firstIncompleteScientificReviewPhase": null,
     "sourceInventory": {
       "total": 47,
       "integrityEligible": 47,
@@ -290,6 +284,65 @@
       "runtimeEligible": 0,
       "releaseEligible": 0
     },
+    "prebookClosure": {
+      "status": "prebook_actionable_work_closed",
+      "indexSha256": "5308009a466f2ca969bf67d6584377b027c829e6b2eca5d6852213163828cf6a",
+      "indexRawBytesSha256": "663ac3eec6b4cbfd6d1b6d819ca7d90e41fae9d115b356336c6e2babc4f03ab0",
+      "rootInputSha256": "54172ad535d08d5d3000c3af072fb945c2bd610e18e28f49eeb58a184e57a99f",
+      "fullTextRecords": 1645,
+      "fullTextTerminal": 1645,
+      "fullTextOpen": 0,
+      "fullTextStatusCounts": {
+        "included": 0,
+        "excluded": 0,
+        "duplicate": 0,
+        "full_text_unavailable": 1643,
+        "license_blocked": 2,
+        "out_of_scope": 0
+      },
+      "workpacks": 24,
+      "workpacksTerminal": 24,
+      "workpacksOpen": 0,
+      "workpackStatusCounts": {
+        "included": 14,
+        "excluded": 6,
+        "quarantined": 4
+      },
+      "blindClaimsCovered": 746,
+      "claimDecisionUnits": 503,
+      "claimsOpen": 0,
+      "claimStatusCounts": {
+        "bounded_candidate": 220,
+        "contested_excluded": 23,
+        "single_lane_excluded": 260
+      },
+      "candidateTopics": 14,
+      "candidateSources": 14,
+      "candidatePassages": 166,
+      "candidateClaims": 220,
+      "candidateAnswerUnits": 220,
+      "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+      "draftBenchmarkItems": 2400,
+      "draftBenchmarkApprovals": 2400,
+      "draftVariations": 10000,
+      "draftVariationApprovals": 10000,
+      "humanProtocolStatus": "protocol_locked_execution_deferred",
+      "prebookActionableBlockers": 0,
+      "ownerBookDependent": [
+        "owner_book_lock_and_owner_approval",
+        "dna_product_claim_bindings",
+        "dna_specific_benchmark_families"
+      ],
+      "exactCandidateOrExternalHumanDependent": [
+        "strict_scientific_claim_release_review",
+        "official_benchmark_and_variation_seal",
+        "exact_candidate_performance_and_safety_run",
+        "independent_human_and_real_therapist_evaluation",
+        "canary_and_v3_runtime_promotion"
+      ],
+      "runtimeEligible": false,
+      "releaseEligible": false
+    },
     "publicationPipeline": {
       "acceptedRealPassages": 0,
       "releasedClaims": 0,
@@ -329,7 +382,7 @@
         "phases": [
           12
         ],
-        "status": "controlled_method_appraisal_batch_in_progress_no_runtime_release"
+        "status": "prebook_workpack_cohort_terminal_registered_sources_preserved"
       },
       {
         "phases": [
@@ -353,7 +406,7 @@
           26,
           27
         ],
-        "status": "contracts_ready_real_corpus_review_and_publication_not_completed"
+        "status": "prebook_claim_cohort_terminal_bounded_candidates_not_published"
       },
       {
         "phases": [
@@ -361,7 +414,7 @@
           30,
           31
         ],
-        "status": "contracts_ready_real_graph_and_runtime_package_empty"
+        "status": "external_science_candidate_compiled_runtime_and_release_ineligible"
       }
     ]
   },
@@ -376,9 +429,9 @@
   "orderedProgramStatus": {
     "complete": false,
     "engineeringSequenceCursor": 38,
-    "scientificCorpusExecutionCursor": 12,
+    "scientificCorpusExecutionCursor": 27,
     "firstReleaseBlockingDeferredPhase": 3,
-    "phase38": "blocked_0_of_2400",
+    "phase38": "official_locked_0_of_2400_draft_2400_prepared_unsealed",
     "phases39To60": "engineering_contracts_exist_ordered_release_execution_not_complete"
   },
   "releaseStatus": {
@@ -392,17 +445,26 @@
     "boundary": "V2 güvenli varsayılan olarak kalır; V3 kitap, korpus, değerlendirme ve deployment kapıları geçmeden etkinleştirilemez."
   },
   "blockerScope": {
+    "prebookActionable": [],
     "ownerBook": [
       "owner_book_not_supplied",
       "owner_approved_product_claim_bindings_missing"
     ],
-    "sourceLocal": [
-      "source_method_appraisals_pending_47",
-      "method_appraisal_workpacks_queued_6",
-      "method_appraisal_candidate_chains_1_registered_14",
-      "accepted_real_passages_0",
-      "released_real_claims_0",
-      "released_real_relations_0"
+    "sourceLocal": [],
+    "terminalizedPrebookCohort": [
+      "full_text_1645_of_1645_terminal",
+      "workpacks_24_of_24_terminal",
+      "blind_claims_746_covered",
+      "bounded_external_claims_220_candidate_only",
+      "benchmark_2400_draft_unsealed",
+      "variations_10000_draft_unsealed"
+    ],
+    "exactCandidateOrExternalHuman": [
+      "strict_scientific_claim_release_review",
+      "official_benchmark_and_variation_seal",
+      "exact_candidate_performance_and_safety_run",
+      "independent_human_and_real_therapist_evaluation",
+      "canary_and_v3_runtime_promotion"
     ],
     "evaluationAndExternalHuman": [
       "locked_benchmark_0_of_2400",
@@ -427,9 +489,9 @@
   },
   "currentEvidence": {
     "path": "docs/dna-intelligence/program/evidence/prebook-readiness-current.json",
-    "schemaVersion": "dna-intelligence-prebook-readiness@4",
-    "generatedAt": "2026-07-21T11:02:49.160Z",
-    "readinessProjectionSha256": "8c1f867ef97e18a20f574d16c66c6a8b3d9e826fdaac08bc5d3bf2041fd8c02f",
+    "schemaVersion": "dna-intelligence-prebook-readiness@5",
+    "generatedAt": "2026-07-22T07:20:29.197Z",
+    "readinessProjectionSha256": "4668867d5bf2222e6e10dc29d11f4a49c2fb05bf15056bd0a2cfb5f0d9c8fc4d",
     "authority": "current_generated_readiness"
   },
   "historicalEvidence": [
@@ -490,6 +552,6 @@
       "authority": "historical_snapshot_non_authoritative_for_current_counts"
     }
   ],
-  "updatedAt": "2026-07-21T11:02:49.160Z",
-  "readinessProjectionSha256": "8c1f867ef97e18a20f574d16c66c6a8b3d9e826fdaac08bc5d3bf2041fd8c02f"
+  "updatedAt": "2026-07-22T07:20:29.197Z",
+  "readinessProjectionSha256": "4668867d5bf2222e6e10dc29d11f4a49c2fb05bf15056bd0a2cfb5f0d9c8fc4d"
 }
