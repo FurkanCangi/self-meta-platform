@@ -3,6 +3,8 @@
 import Link from "next/link"
 import { useEffect, useRef, useState, type FormEvent } from "react"
 import { flushSync } from "react-dom"
+import { ShieldCheck } from "lucide-react"
+import { FcGoogle } from "react-icons/fc"
 import AuthLayout from "./AuthLayout"
 import {
   createBrowserDeviceProof,
@@ -13,6 +15,8 @@ const LEGAL_ACCEPTANCE_ERROR =
   "Devam etmek için hizmet sözleşmesi, KVKK aydınlatması, açık rıza ve veri giriş yetkisi beyanlarını onaylayın."
 
 const REQUIRED_MARK = <span className="text-slate-500">*</span>
+
+type LegalCheckKey = "terms" | "kvkk" | "consent" | "authority"
 
 function formatSignupErrorCode(code?: string | null) {
   if (!code) return ""
@@ -66,11 +70,13 @@ export default function DnaSignupForm() {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState("")
+  const [legalAttention, setLegalAttention] = useState(false)
   const [deviceProof, setDeviceProof] = useState<BrowserDeviceProofFields>(EMPTY_DEVICE_PROOF)
   const [nextPath, setNextPath] = useState("")
   const [surface, setSurface] = useState("web")
   const googleReady = useRef(false)
   const submissionPreparing = useRef(false)
+  const legalSectionRef = useRef<HTMLDivElement>(null)
   const legalAccepted =
     legalChecks.terms && legalChecks.kvkk && legalChecks.consent && legalChecks.authority
 
@@ -79,6 +85,18 @@ export default function DnaSignupForm() {
     setNextPath(getSignupSearchParam("next"))
     setSurface(getSignupSearchParam("surface") === "app" ? "app" : "web")
   }, [])
+
+  function updateLegalCheck(key: LegalCheckKey, checked: boolean) {
+    const nextChecks = { ...legalChecks, [key]: checked }
+    setLegalChecks(nextChecks)
+    if (Object.values(nextChecks).every(Boolean)) setLegalAttention(false)
+  }
+
+  function focusLegalApprovals() {
+    setLegalAttention(true)
+    legalSectionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+    legalSectionRef.current?.focus({ preventScroll: true })
+  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     if (submissionPreparing.current) {
@@ -113,7 +131,7 @@ export default function DnaSignupForm() {
 
     if (!legalAccepted) {
       event.preventDefault()
-      setError(LEGAL_ACCEPTANCE_ERROR)
+      focusLegalApprovals()
       return
     }
 
@@ -134,7 +152,7 @@ export default function DnaSignupForm() {
 
     if (!legalAccepted) {
       event.preventDefault()
-      setError(LEGAL_ACCEPTANCE_ERROR)
+      focusLegalApprovals()
       return
     }
 
@@ -231,19 +249,52 @@ export default function DnaSignupForm() {
             Kayıt sonrası doğrulama e-postası gönderilir. E-posta doğrulanmadan terapist paneline giriş açılamaz.
           </div>
 
-          <div className="space-y-2 rounded-2xl border border-slate-200 bg-white/80 p-3 shadow-sm shadow-slate-200/40">
+          <div
+            ref={legalSectionRef}
+            tabIndex={-1}
+            className={`space-y-2 rounded-2xl border p-3 outline-none transition-all duration-300 ${
+              legalAttention && !legalAccepted
+                ? "border-violet-300 bg-gradient-to-br from-blue-50 via-white to-violet-50 shadow-lg shadow-violet-200/50 ring-4 ring-violet-100/80"
+                : "border-slate-200 bg-white/80 shadow-sm shadow-slate-200/40"
+            }`}
+          >
             <div className="flex items-center justify-between gap-3">
               <div className="text-sm font-semibold text-slate-800">Hukuki onaylar {REQUIRED_MARK}</div>
-              <div className="rounded-full bg-slate-100 px-2.5 py-1 text-[11px] font-bold text-slate-700">
-                Tümü zorunlu
+              <div
+                className={`rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors ${
+                  legalAttention && !legalAccepted
+                    ? "bg-violet-600 text-white shadow-sm shadow-violet-300"
+                    : "bg-slate-100 text-slate-700"
+                }`}
+              >
+                {legalAttention && !legalAccepted ? "Onay gerekli" : "Tümü zorunlu"}
               </div>
             </div>
-            <label className="flex gap-3 text-sm leading-[1.35] text-slate-700">
+            {legalAttention && !legalAccepted ? (
+              <div
+                id="google-legal-guidance"
+                role="alert"
+                className="flex gap-3 rounded-xl border border-violet-200 bg-white/90 p-3 shadow-sm shadow-violet-100"
+              >
+                <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-gradient-to-br from-blue-100 to-violet-100 text-violet-700">
+                  <ShieldCheck aria-hidden="true" className="h-5 w-5" />
+                </span>
+                <span className="text-xs leading-5 text-slate-700">
+                  <strong className="block text-sm text-slate-900">Google ile devam etmek için dört onay gerekli</strong>
+                  Ad, e-posta ve şifre alanlarını doldurmanız gerekmez. Yalnızca aşağıdaki kutuları işaretleyin.
+                </span>
+              </div>
+            ) : null}
+            <label
+              className={`flex gap-3 rounded-lg p-1.5 text-sm leading-[1.35] text-slate-700 transition-colors ${
+                legalAttention && !legalChecks.terms ? "bg-violet-50/90" : ""
+              }`}
+            >
               <input
                 name="terms"
                 type="checkbox"
                 checked={legalChecks.terms}
-                onChange={(e) => setLegalChecks((current) => ({ ...current, terms: e.target.checked }))}
+                onChange={(e) => updateLegalCheck("terms", e.target.checked)}
                 required
                 className="mt-1 h-4 w-4 accent-blue-600"
               />
@@ -258,12 +309,16 @@ export default function DnaSignupForm() {
                 kabul ediyorum.
               </span>
             </label>
-            <label className="flex gap-3 text-sm leading-[1.35] text-slate-700">
+            <label
+              className={`flex gap-3 rounded-lg p-1.5 text-sm leading-[1.35] text-slate-700 transition-colors ${
+                legalAttention && !legalChecks.kvkk ? "bg-violet-50/90" : ""
+              }`}
+            >
               <input
                 name="kvkk"
                 type="checkbox"
                 checked={legalChecks.kvkk}
-                onChange={(e) => setLegalChecks((current) => ({ ...current, kvkk: e.target.checked }))}
+                onChange={(e) => updateLegalCheck("kvkk", e.target.checked)}
                 required
                 className="mt-1 h-4 w-4 accent-blue-600"
               />
@@ -274,12 +329,16 @@ export default function DnaSignupForm() {
                 okudum.
               </span>
             </label>
-            <label className="flex gap-3 text-sm leading-[1.35] text-slate-700">
+            <label
+              className={`flex gap-3 rounded-lg p-1.5 text-sm leading-[1.35] text-slate-700 transition-colors ${
+                legalAttention && !legalChecks.consent ? "bg-violet-50/90" : ""
+              }`}
+            >
               <input
                 name="consent"
                 type="checkbox"
                 checked={legalChecks.consent}
-                onChange={(e) => setLegalChecks((current) => ({ ...current, consent: e.target.checked }))}
+                onChange={(e) => updateLegalCheck("consent", e.target.checked)}
                 required
                 className="mt-1 h-4 w-4 accent-blue-600"
               />
@@ -290,20 +349,24 @@ export default function DnaSignupForm() {
                 veriyorum.
               </span>
             </label>
-            <label className="flex gap-3 text-sm leading-[1.35] text-slate-700">
+            <label
+              className={`flex gap-3 rounded-lg p-1.5 text-sm leading-[1.35] text-slate-700 transition-colors ${
+                legalAttention && !legalChecks.authority ? "bg-violet-50/90" : ""
+              }`}
+            >
               <input
                 name="authority"
                 type="checkbox"
                 checked={legalChecks.authority}
-                onChange={(e) => setLegalChecks((current) => ({ ...current, authority: e.target.checked }))}
+                onChange={(e) => updateLegalCheck("authority", e.target.checked)}
                 required
                 className="mt-1 h-4 w-4 accent-blue-600"
               />
               <span>Danışan/çocuk verisi girmeye yetkili olduğumu ve gerekli veli/danışan izinlerini aldığımı beyan ederim.</span>
             </label>
-            {!legalAccepted ? (
+            {!legalAccepted && !legalAttention ? (
               <div className="rounded-xl bg-violet-50 px-3 py-2 text-xs font-semibold leading-5 text-violet-800">
-                Kayıt olabilmek için yukarıdaki dört onayın tamamını vermeniz gerekir.
+                Google veya e-posta ile kayıt için yukarıdaki dört onayın tamamını vermeniz gerekir.
               </div>
             ) : null}
           </div>
@@ -342,14 +405,22 @@ export default function DnaSignupForm() {
           <input type="hidden" name="authority" value={legalChecks.authority ? "on" : ""} />
           <button
             type="submit"
-            disabled={loading || googleLoading || !legalAccepted}
-            aria-disabled={loading || googleLoading || !legalAccepted}
+            disabled={loading || googleLoading}
+            aria-disabled={loading || googleLoading}
+            aria-describedby={!legalAccepted ? "google-button-guidance" : undefined}
             title={!legalAccepted ? "Google ile kayıt için tüm hukuki onayları tamamlayın." : undefined}
-            className="inline-flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-slate-200 bg-white px-5 font-bold text-slate-800 shadow-sm shadow-slate-200/60 transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-blue-100/70 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-45"
+            className="group inline-flex h-11 w-full items-center justify-center gap-3 rounded-xl border border-blue-200 bg-white px-5 font-bold text-slate-800 shadow-md shadow-blue-100/60 transition hover:-translate-y-0.5 hover:border-violet-300 hover:shadow-lg hover:shadow-violet-100/80 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-blue-100 disabled:translate-y-0 disabled:cursor-not-allowed disabled:opacity-55"
           >
-            <span className="grid h-6 w-6 place-items-center rounded-full bg-white text-base shadow-sm">G</span>
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-white shadow-sm ring-1 ring-slate-100 transition-transform group-hover:scale-105">
+              <FcGoogle aria-hidden="true" className="h-5 w-5" />
+            </span>
             {googleLoading ? "Google’a yönlendiriliyor..." : "Google ile kayıt ol"}
           </button>
+          {!legalAccepted ? (
+            <p id="google-button-guidance" className="mt-2 text-center text-xs font-medium text-slate-500">
+              Düğmeye basın; gerekli onayları size göstereceğiz.
+            </p>
+          ) : null}
         </form>
 
         <div className="mt-3 text-sm font-medium text-slate-600">

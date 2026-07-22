@@ -36,6 +36,14 @@ check(
     startRoute.includes('mode === "signup" && !legalAccepted')
 )
 check(
+  "Google signup button stays visible and explains missing legal approvals on click",
+  signup.includes("function focusLegalApprovals()") &&
+    signup.includes('disabled={loading || googleLoading}') &&
+    signup.includes("Google ile devam etmek için dört onay gerekli") &&
+    signup.includes("Ad, e-posta ve şifre alanlarını doldurmanız gerekmez") &&
+    signup.includes('<FcGoogle aria-hidden="true"')
+)
+check(
   "OAuth state is signed, short lived, HttpOnly, and same-site",
   state.includes('createHmac("sha256"') &&
     state.includes("timingSafeEqual") &&

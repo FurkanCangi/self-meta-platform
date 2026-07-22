@@ -62,6 +62,60 @@ final result: passed
 
 ---
 
+# Google Signup Legal-Guidance Design QA
+
+## Scope
+
+- Route: `/signup`
+- Source visual truth: `/var/folders/7j/kgq_1qrj27n39d0yjmkfh1_40000gn/T/TemporaryItems/NSIRD_screencaptureui_FngsoL/Ekran Resmi 2026-07-22 11.58.00.png`
+- Implementation screenshot: `.tmp/design-qa/google-signup-warning-final.png`
+- Source pixels: `3024 x 1964`, including macOS and Chrome chrome
+- Implementation pixels and CSS viewport: `1968 x 1120`, device scale factor `1`
+- Normalization: the source browser chrome was excluded from layout judgment; the visible signup content was compared against the implementation at the same wide desktop state.
+- Interaction state: all legal checks empty, then `Google ile kayıt ol` clicked once.
+
+## Full-view Comparison Evidence
+
+- The source and implementation were opened together in one comparison input.
+- The existing two-column DNA layout, form width, typography, spacing, brand imagery, colors, and field hierarchy remain unchanged.
+- The former low-opacity disabled Google control is now a full-contrast white button with the official multicolor Google icon from the existing icon library.
+- Clicking without approvals keeps the user on the page, scrolls and focuses the legal section, changes the status badge to `Onay gerekli`, and renders a blue-violet guidance panel.
+- A separate focused crop was not required because the legal card, Google button, alert copy, and all checkbox rows are readable at original implementation resolution.
+
+## Required Fidelity Surfaces
+
+- **Fonts and typography:** Existing DNA interface family, weights, sizes, and hierarchy are preserved. The new alert uses the same compact semibold/body rhythm.
+- **Spacing and layout rhythm:** Existing form geometry remains intact. The alert is contained inside the legal card and does not overlap the primary or Google actions.
+- **Colors and tokens:** White, slate, blue, and violet production tokens are reused. The active warning adds a restrained violet ring and badge without changing the rest of the page.
+- **Image quality and icons:** Existing DNA brand imagery is untouched. The Google mark uses `FcGoogle`; the guidance uses the installed Lucide shield icon. No placeholder or handcrafted SVG was added.
+- **Copy and content:** The warning explicitly explains that Google signup needs the four legal approvals but does not require name, email, or password fields.
+
+## Interaction And Accessibility Checks
+
+- The Google button remains keyboard-focusable and clickable before legal approval.
+- The guidance panel uses `role="alert"`; the legal section receives programmatic focus and remains semantically grouped.
+- Completing all four legal checks closes the warning and helper copy automatically while keeping Google signup enabled.
+- Google OAuth device-proof preparation and cross-form submission lock remain unchanged.
+- Browser console errors and warnings: none.
+- Google OAuth contract test: passed.
+- Login/device identity contract test: passed.
+- TypeScript lint: passed.
+- Production Webpack build: passed.
+
+## Comparison History
+
+### Iteration 1
+
+- **P1 - Google signup looked unavailable:** The source showed a very low-opacity disabled button with a blocked cursor and no click feedback.
+- **Fix:** Kept the Google action visually active, replaced the text glyph with the real Google icon, and added click-triggered legal guidance with focused checkbox-row highlighting.
+- **Post-fix evidence:** `.tmp/design-qa/google-signup-warning-final.png`.
+
+No unresolved P0, P1, or P2 findings remain.
+
+final result: passed
+
+---
+
 # DNA Assistant Chat Workspace Design QA
 
 ## Scope

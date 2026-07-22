@@ -140,7 +140,9 @@ check(
     signupClient.includes("flushSync(() =>") &&
     signupClient.indexOf("flushSync(() =>") < signupClient.indexOf("form.requestSubmit()") &&
     !signupClient.includes("requestAnimationFrame") &&
-    (signupClient.match(/disabled=\{loading \|\| googleLoading \|\| !legalAccepted\}/g) || []).length >= 2
+    (signupClient.match(/\n\s+disabled=\{loading \|\| googleLoading \|\| !legalAccepted\}/g) || []).length === 1 &&
+    signupClient.includes('disabled={loading || googleLoading}') &&
+    signupClient.includes("focusLegalApprovals()")
 )
 
 check(
