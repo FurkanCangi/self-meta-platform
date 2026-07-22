@@ -14,11 +14,6 @@ const LEGAL_ACCEPTANCE_ERROR =
 
 const REQUIRED_MARK = <span className="text-slate-500">*</span>
 
-function initialSignupError() {
-  if (typeof window === "undefined") return ""
-  return formatSignupErrorCode(new URLSearchParams(window.location.search).get("error"))
-}
-
 function formatSignupErrorCode(code?: string | null) {
   if (!code) return ""
   if (code === "missing_name") return "Ad soyad alanını doldurun."
@@ -70,7 +65,7 @@ export default function DnaSignupForm() {
   })
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
-  const [error, setError] = useState(initialSignupError)
+  const [error, setError] = useState("")
   const [deviceProof, setDeviceProof] = useState<BrowserDeviceProofFields>(EMPTY_DEVICE_PROOF)
   const [nextPath, setNextPath] = useState("")
   const [surface, setSurface] = useState("web")
@@ -80,6 +75,7 @@ export default function DnaSignupForm() {
     legalChecks.terms && legalChecks.kvkk && legalChecks.consent && legalChecks.authority
 
   useEffect(() => {
+    setError(formatSignupErrorCode(getSignupSearchParam("error")))
     setNextPath(getSignupSearchParam("next"))
     setSurface(getSignupSearchParam("surface") === "app" ? "app" : "web")
   }, [])

@@ -56,6 +56,9 @@ check(
   callbackRoute.includes('oauthError === "access_denied" ? "google_cancelled"') &&
     callbackRoute.includes("authEntryPath(state)") &&
     signup.includes('code === "google_cancelled"') &&
+    signup.includes('const [error, setError] = useState("")') &&
+    signup.includes('setError(formatSignupErrorCode(getSignupSearchParam("error")))') &&
+    !signup.includes("function initialSignupError()") &&
     login.includes('code === "google_cancelled"')
 )
 check(
