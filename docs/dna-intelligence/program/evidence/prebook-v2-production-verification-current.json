@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "dna-prebook-v2-production-verification@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "testedAt": "2026-07-22T07:54:32Z",
+  "evidenceClass": "safe_v2_production_deployment_and_live_matrix_not_v3_release_evidence",
+  "deployment": {
+    "id": "dpl_7T9oPMnpLGVADvBA62EKRxmg4wxN",
+    "deployedGitSha": "803b4a35437865de1bb7d7595b386cd2bcfd7720",
+    "target": "production",
+    "readyState": "READY",
+    "deploymentUrl": "https://self-meta-platform-8kai6l7fb-ergfurkancangi-6322s-projects.vercel.app",
+    "productionAlias": "https://self-meta-platform.vercel.app"
+  },
+  "httpSmoke": {
+    "dnaAssistantUnauthenticatedStatus": 307,
+    "dnaAssistantRedirect": "/login?next=%2Fdna-asistani",
+    "dnaChatUnauthenticatedStatus": 401,
+    "dnaChatUnauthenticatedError": "unauthorized",
+    "cacheControlNoStore": true
+  },
+  "liveMatrix": {
+    "runId": "dna-chat-cross-account-1784706672846-2d120de9",
+    "syntheticProfiles": 4,
+    "questions": 60,
+    "classifications": {
+      "dna_concept": 38,
+      "literature": 2,
+      "refusal": 20
+    },
+    "p95Ms": 3727,
+    "privilegedForeignAccessAttempts": 12,
+    "uuidEnumerationAttempts": 8,
+    "leaksObserved": 0,
+    "foreignAndMissingContract": "404_indistinguishable",
+    "expiredSessionContract": "401_session_expired",
+    "auditWritePath": "open_minimized_metadata_14_keys",
+    "auditFailureBoundary": "fail_closed_503_verified_by_local_contract_not_fault_injected_into_production",
+    "cleanupOk": true,
+    "cleanupErrors": 0
+  },
+  "runtime": {
+    "activeGeneration": "v2_legacy",
+    "v3Activated": false,
+    "v3ReleaseDecision": "no_go"
+  },
+  "limitations": [
+    "This receipt verifies the safe V2 production deployment and a bounded black-box live matrix; it is not V3 release evidence.",
+    "Production audit failure was not deliberately induced. The 503 fail-closed branch is covered by deterministic API and privacy contract tests.",
+    "The 60-question p95 is an operational observation, not the exact-candidate Phase 46 p95/p99 performance artifact.",
+    "No independent human or therapist validation is claimed."
+  ]
+}

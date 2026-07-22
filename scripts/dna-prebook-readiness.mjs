@@ -4,8 +4,8 @@ import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, writeFi
 import { dirname, join, relative, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 
-export const PREBOOK_READINESS_VERSION = "dna-intelligence-prebook-readiness@7"
-export const PROGRAM_STATE_VERSION = "dna-intelligence-program-state@7"
+export const PREBOOK_READINESS_VERSION = "dna-intelligence-prebook-readiness@8"
+export const PROGRAM_STATE_VERSION = "dna-intelligence-program-state@8"
 export const PROGRAM_VERSION = "dna-intelligence-v3-program@1"
 
 const MODULE_PATH = fileURLToPath(import.meta.url)
@@ -205,6 +205,10 @@ export function collectPrebookFacts(options = {}) {
       repoRoot,
       "docs/dna-intelligence/program/evidence/phase-45-60-engineering-and-readiness.json",
     ),
+    prebookProductionVerification: join(
+      repoRoot,
+      "docs/dna-intelligence/program/evidence/prebook-v2-production-verification-current.json",
+    ),
     runtimeModeSource: join(repoRoot, "src/lib/dna/chat/release/runtimeReleaseMode.ts"),
     v3Package: join(repoRoot, "src/lib/dna/chat/catalog/generated/v3/manifest.json"),
     candidateCorpus: assertContained(researchRoot, join(
@@ -265,6 +269,7 @@ export function collectPrebookFacts(options = {}) {
   const marketing = readJson(paths.marketingEvidence)
   const phase32To44Evidence = readJson(paths.phase32To44Evidence)
   const phase45To60Evidence = readJson(paths.phase45To60Evidence)
+  const prebookProductionVerification = readJson(paths.prebookProductionVerification)
   const runtimeModeSource = readFileSync(paths.runtimeModeSource, "utf8")
   const v3Package = readJson(paths.v3Package)
   const candidate = readJson(paths.candidateCorpus)
@@ -379,6 +384,16 @@ export function collectPrebookFacts(options = {}) {
     "prebook_readiness_last_verified_live_generation_not_v2")
   assert(phase45To60Evidence.releaseEngineering.currentV3Activation === "no_go",
     "prebook_readiness_release_engineering_v3_not_no_go")
+  assert(prebookProductionVerification.schemaVersion
+    === "dna-prebook-v2-production-verification@1"
+    && prebookProductionVerification.deployment?.target === "production"
+    && prebookProductionVerification.deployment?.readyState === "READY"
+    && prebookProductionVerification.runtime?.activeGeneration === "v2_legacy"
+    && prebookProductionVerification.runtime?.v3Activated === false
+    && prebookProductionVerification.liveMatrix?.questions === 60
+    && prebookProductionVerification.liveMatrix?.leaksObserved === 0
+    && prebookProductionVerification.liveMatrix?.cleanupOk === true,
+  "prebook_readiness_v2_production_verification_invalid")
   assert(v3Package.runtimeEligible === false,
     "prebook_readiness_v3_package_unexpectedly_runtime_eligible")
   assert(candidate.methodReviewWorkpackCount === workpackIndex.records.length,
@@ -562,6 +577,7 @@ export function collectPrebookFacts(options = {}) {
     "--format=%H",
     "--",
     ".",
+    ":(exclude)docs/dna-intelligence/program/evidence/**",
     `:(exclude)${CURRENT_EVIDENCE_RELATIVE_PATH}`,
     `:(exclude)${PROGRAM_STATE_RELATIVE_PATH}`,
   ], "unknown")
@@ -788,6 +804,19 @@ export function collectPrebookFacts(options = {}) {
       v3ReleaseDecision: "no_go",
       v3DeploymentPerformed: false,
       v3PromotionPerformed: false,
+      safeV2ProductionVerification: {
+        testedAt: prebookProductionVerification.testedAt,
+        deployedGitSha: prebookProductionVerification.deployment.deployedGitSha,
+        deploymentId: prebookProductionVerification.deployment.id,
+        readyState: prebookProductionVerification.deployment.readyState,
+        questions: prebookProductionVerification.liveMatrix.questions,
+        p95Ms: prebookProductionVerification.liveMatrix.p95Ms,
+        leaksObserved: prebookProductionVerification.liveMatrix.leaksObserved,
+        cleanupOk: prebookProductionVerification.liveMatrix.cleanupOk,
+        auditWritePath: prebookProductionVerification.liveMatrix.auditWritePath,
+        auditFailureBoundary: prebookProductionVerification.liveMatrix.auditFailureBoundary,
+        receiptRawBytesSha256: rawFileSha256(paths.prebookProductionVerification),
+      },
       marketingReleaseStatus: marketing.releaseStatus,
       marketingEvidenceRawBytesSha256: rawFileSha256(paths.marketingEvidence),
     },
@@ -921,7 +950,7 @@ export function buildPrebookReadiness(facts) {
     evidenceClass: "current_generated_readiness_not_phase_completion_or_release_evidence",
     repository: {
       ...facts.repository,
-      identityBoundary: "sourceGitSha is the newest commit that changes anything except the two self-generated readiness outputs. Exact artifact hashes identify the measured state. workingTreeClean excludes only those outputs; every other tracked or untracked change makes it false.",
+      identityBoundary: "sourceGitSha is the newest commit that changes code, contracts, or non-evidence inputs; generated program evidence is excluded from that source identity. Exact artifact hashes bind every measured evidence file. workingTreeClean excludes only the two self-generated readiness outputs; every other tracked or untracked change makes it false.",
     },
     readinessProjectionSha256: canonicalSha256(projection),
     projection,
