@@ -4,8 +4,8 @@ import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, writeFi
 import { dirname, join, relative, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 
-export const PREBOOK_READINESS_VERSION = "dna-intelligence-prebook-readiness@5"
-export const PROGRAM_STATE_VERSION = "dna-intelligence-program-state@5"
+export const PREBOOK_READINESS_VERSION = "dna-intelligence-prebook-readiness@6"
+export const PROGRAM_STATE_VERSION = "dna-intelligence-program-state@6"
 export const PROGRAM_VERSION = "dna-intelligence-v3-program@1"
 
 const MODULE_PATH = fileURLToPath(import.meta.url)
@@ -558,7 +558,14 @@ export function collectPrebookFacts(options = {}) {
 
   const head = runGit(repoRoot, ["rev-parse", "HEAD"], "unknown")
   const branch = runGit(repoRoot, ["branch", "--show-current"], "unknown")
-  const status = runGit(repoRoot, ["status", "--porcelain"], "unknown")
+  const status = runGit(repoRoot, [
+    "status",
+    "--porcelain",
+    "--",
+    ".",
+    `:(exclude)${CURRENT_EVIDENCE_RELATIVE_PATH}`,
+    `:(exclude)${PROGRAM_STATE_RELATIVE_PATH}`,
+  ], "unknown")
 
   return {
     repoRoot,
@@ -906,7 +913,7 @@ export function buildPrebookReadiness(facts) {
     evidenceClass: "current_generated_readiness_not_phase_completion_or_release_evidence",
     repository: {
       ...facts.repository,
-      identityBoundary: "HEAD and exact artifact hashes identify the measured in-progress state. A dirty worktree is not immutable release evidence.",
+      identityBoundary: "HEAD and exact artifact hashes identify the measured in-progress state. workingTreeClean excludes only the two self-generated readiness outputs so write-then-verify remains stable; every other tracked or untracked change makes it false.",
     },
     readinessProjectionSha256: canonicalSha256(projection),
     projection,
