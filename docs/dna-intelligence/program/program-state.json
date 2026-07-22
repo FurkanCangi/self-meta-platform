@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "dna-intelligence-program-state@6",
+  "schemaVersion": "dna-intelligence-program-state@7",
   "programVersion": "dna-intelligence-v3-program@1",
   "objective": "DNA Intelligence V3 planını Faz 0'dan Faz 60'a kanıt kapılı biçimde tamamlamak",
   "truthModel": {
@@ -489,8 +489,8 @@
   },
   "currentEvidence": {
     "path": "docs/dna-intelligence/program/evidence/prebook-readiness-current.json",
-    "schemaVersion": "dna-intelligence-prebook-readiness@6",
-    "generatedAt": "2026-07-22T07:47:02.830Z",
+    "schemaVersion": "dna-intelligence-prebook-readiness@7",
+    "generatedAt": "2026-07-22T07:48:03.458Z",
     "readinessProjectionSha256": "4668867d5bf2222e6e10dc29d11f4a49c2fb05bf15056bd0a2cfb5f0d9c8fc4d",
     "authority": "current_generated_readiness"
   },
@@ -552,6 +552,6 @@
       "authority": "historical_snapshot_non_authoritative_for_current_counts"
     }
   ],
-  "updatedAt": "2026-07-22T07:47:02.830Z",
+  "updatedAt": "2026-07-22T07:48:03.458Z",
   "readinessProjectionSha256": "4668867d5bf2222e6e10dc29d11f4a49c2fb05bf15056bd0a2cfb5f0d9c8fc4d"
 }
