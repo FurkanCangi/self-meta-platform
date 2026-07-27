@@ -5,8 +5,8 @@
     "runtimeInternet": false,
     "vectorDatabase": false
   },
-  "baselineVersion": "dna-intelligence-v2-baseline@1",
-  "capturedOn": "2026-07-19",
+  "baselineVersion": "dna-intelligence-v2-baseline@2",
+  "capturedOn": "2026-07-27",
   "catalogVersion": "dna-chat-catalog@2",
   "engineVersion": "dna-chat-engine@2",
   "implementationBranch": "codex/dna-intelligence-v3",
@@ -178,25 +178,25 @@
   ],
   "regression": {
     "artifact": "regression-fixtures.json",
-    "artifactSha256": "97b303c3846693d0e991ed56bd1521e6356a1b3a889c645786fe233c8f7eb374",
+    "artifactSha256": "d0b9a6752f38b6fc76205a3418626bb557aeff393663f54b15be50e495a00573",
     "sampleCount": 16
   },
   "rollback": {
     "catalogVersion": "dna-chat-catalog@2",
     "databaseBoundary": "Kod rollback'i Supabase migration rollback'i değildir; şema uyumluluğu release aşamasında ayrıca doğrulanır.",
     "engineVersion": "dna-chat-engine@2",
-    "gitSha": "5ed87217280a40e4566a04289d4c98b1f3883494",
-    "reconstructionCommand": "git worktree add <temporary-path> dna-chat-v2-baseline-20260719",
+    "gitSha": "d45ea5eba923b9d4b03e1952a616bb4d5544283d",
+    "reconstructionCommand": "git worktree add <temporary-path> dna-chat-v2-prebook-flex-20260727",
     "remote": "origin",
-    "remoteRef": "refs/tags/dna-chat-v2-baseline-20260719",
-    "requiredTag": "dna-chat-v2-baseline-20260719",
+    "remoteRef": "refs/tags/dna-chat-v2-prebook-flex-20260727",
+    "requiredTag": "dna-chat-v2-prebook-flex-20260727",
     "runtimeBoundary": "V2 kaynak anı immutable Git commit ve regression fixture ile korunur; V3 feature flag'i sonraki fazlarda eklenir."
   },
   "schemaVersion": "dna-intelligence-baseline-manifest@1",
   "sourceBranchAtCapture": "main",
-  "sourceCommitTimestamp": "2026-07-17T18:51:09+03:00",
+  "sourceCommitTimestamp": "2026-07-27T11:13:54+03:00",
   "sourceSnapshot": {
-    "gitSha": "5ed87217280a40e4566a04289d4c98b1f3883494",
+    "gitSha": "d45ea5eba923b9d4b03e1952a616bb4d5544283d",
     "hashGroups": {
       "caseApiBoundary": {
         "algorithm": "sha256(sorted path + NUL + bytes + NUL)",
@@ -204,9 +204,9 @@
         "fileCount": 7,
         "files": [
           {
-            "bytes": 17531,
+            "bytes": 12502,
             "path": "src/app/api/app/dna-chat/route.ts",
-            "sha256": "399934784b9b82b6801552abc4625ef6f840a27f0a11de694fcb52744d8e6b51"
+            "sha256": "ab928b2eff727af7431e0a90347b2215f2c45ae1ccf9976f22c7d51a62caab34"
           },
           {
             "bytes": 177016,
@@ -224,9 +224,9 @@
             "sha256": "108344bc1db61b668578ef8b780e031df703a1602c1cdbad103df1beb6e2eadf"
           },
           {
-            "bytes": 2370,
+            "bytes": 1471,
             "path": "src/lib/security/rateLimit.ts",
-            "sha256": "2be3f09cd682626844da30ceaf57936d43dab15fc2b35474d2705266bba42411"
+            "sha256": "40dabb302993acec6ef34ba9cb0196f27ec2838983c3752010957dfcab29a9dd"
           },
           {
             "bytes": 623,
@@ -239,12 +239,12 @@
             "sha256": "484a281f79e317f50433498ff07406760777b6bcbfaf34e87c3fb85e02bb4263"
           }
         ],
-        "sha256": "012f708354fb40963e7032f544fd470ff430f7f1b744075d5d1f0545f7e89165"
+        "sha256": "e3e42df558d19127fbe6be6c5f047b61a8f607896814e7284d6bcaf6e551318b"
       },
       "catalogEvidence": {
         "algorithm": "sha256(sorted path + NUL + bytes + NUL)",
         "description": "Katalog, kanonik araştırma paketleri ve provenance girdileri",
-        "fileCount": 47,
+        "fileCount": 56,
         "files": [
           {
             "bytes": 62358,
@@ -412,6 +412,51 @@
             "sha256": "6a25367add049b1fa768f81f47273f3edf338888d3a3353c9448b821620bc1eb"
           },
           {
+            "bytes": 3,
+            "path": "src/lib/dna/chat/catalog/generated/v3/claim-passage-links.json",
+            "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+          },
+          {
+            "bytes": 3,
+            "path": "src/lib/dna/chat/catalog/generated/v3/claims.json",
+            "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+          },
+          {
+            "bytes": 65,
+            "path": "src/lib/dna/chat/catalog/generated/v3/lexical-index.json",
+            "sha256": "13ab068388722de485d18642b66c0f9ec52613bc06a21913fc493700b58b4f93"
+          },
+          {
+            "bytes": 1651,
+            "path": "src/lib/dna/chat/catalog/generated/v3/manifest.json",
+            "sha256": "8bd969ae1be457058e1bc9f984baa15579f23aea77602bc0436a938ccca46035"
+          },
+          {
+            "bytes": 3,
+            "path": "src/lib/dna/chat/catalog/generated/v3/passages.json",
+            "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+          },
+          {
+            "bytes": 3,
+            "path": "src/lib/dna/chat/catalog/generated/v3/relations.json",
+            "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+          },
+          {
+            "bytes": 1143,
+            "path": "src/lib/dna/chat/catalog/generated/v3/server.ts",
+            "sha256": "b55fb42b8bda3e112da2905641cb7c29e586e1f3503b46a97bfa152c7a79b2f8"
+          },
+          {
+            "bytes": 3,
+            "path": "src/lib/dna/chat/catalog/generated/v3/sources.json",
+            "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+          },
+          {
+            "bytes": 5032,
+            "path": "src/lib/dna/chat/catalog/generated/v3/types.ts",
+            "sha256": "3ef652a42af2b8175dba4d766347f8948cb252f694006ce6d5498f87531ab77a"
+          },
+          {
             "bytes": 1988,
             "path": "src/lib/dna/chat/catalog/index.ts",
             "sha256": "453bc9498d9b2f81048503f285261dde214044c7ea436bd45a5596d0341f070e"
@@ -437,9 +482,9 @@
             "sha256": "4eff7204b4b9e5bf212ad36c79a6a1271d34cd97467b23d73f5debeef36d430a"
           },
           {
-            "bytes": 35003,
+            "bytes": 37956,
             "path": "src/lib/dna/chat/catalog/search.ts",
-            "sha256": "d63f1723d1adff873a152c08b9d6e2f15f3875257cd8a38f4ed7f0c613b750bf"
+            "sha256": "100b86f372139efa97d7f4dc5f9c847893acbe3eca7f27e1d30c4b8cae26f74f"
           },
           {
             "bytes": 77945,
@@ -477,17 +522,17 @@
             "sha256": "3e3f63e863ae6d3969a5436e5c26383647f3d45332849491509781b4ecb692a0"
           },
           {
-            "bytes": 68649,
+            "bytes": 68729,
             "path": "src/lib/dna/chat/catalog/v5SixDomainsCatalog.ts",
-            "sha256": "d3cd4c0c7ce92b943b0643e157850b193923ca02b78ee977f402ddcfb47d392d"
+            "sha256": "b690297bec8a45f1eef356dfce9c3ce4befb5f38ed499c6f67e37f06cade40d4"
           }
         ],
-        "sha256": "50f4d999c87b4f8365b91a972a760ce8aa30ccc27c66803c20243a7aa2d4809f"
+        "sha256": "9336e84b959985821a94d49bd75bceb586e0635107803db3bc4f347f256babf2"
       },
       "engineRuntime": {
         "algorithm": "sha256(sorted path + NUL + bytes + NUL)",
         "description": "V2 deterministik sohbet motoru ile tüm DNA ve assessment kaynak kapanışı",
-        "fileCount": 58,
+        "fileCount": 134,
         "files": [
           {
             "bytes": 1136,
@@ -510,14 +555,19 @@
             "sha256": "04decaf12952e7c58e928e27d9dbf6830fc906bd62c5f05bb807cec49e5667b6"
           },
           {
-            "bytes": 4842,
+            "bytes": 27858,
             "path": "src/lib/dna/chat/apiResolver.ts",
-            "sha256": "829c1d27e9ac6a91630719f72820807fa1ddfdf3441231a600395aa3831c206d"
+            "sha256": "8543bde1e9f66b89ba7d51cb796a6489a40a44b474d6f52d7c303626b31e37b6"
           },
           {
-            "bytes": 7743,
+            "bytes": 5483,
+            "path": "src/lib/dna/chat/authorityRegistry.ts",
+            "sha256": "8c6327381f1ec7388f796c5fe7d056c255cad7bfd016bcc230f304150b869aa2"
+          },
+          {
+            "bytes": 12316,
             "path": "src/lib/dna/chat/caseContext.ts",
-            "sha256": "3c5b86d0c81ed99628034001bf7f08dfc4719c98fedd69aa4633c146339c5ae4"
+            "sha256": "83a54ca3b79491f8fcf1ebdc01b58fd3dd5f2492cae629190028dd2fd8c3ad35"
           },
           {
             "bytes": 55803,
@@ -533,6 +583,51 @@
             "bytes": 81818,
             "path": "src/lib/dna/chat/catalog/claims.ts",
             "sha256": "6a25367add049b1fa768f81f47273f3edf338888d3a3353c9448b821620bc1eb"
+          },
+          {
+            "bytes": 3,
+            "path": "src/lib/dna/chat/catalog/generated/v3/claim-passage-links.json",
+            "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+          },
+          {
+            "bytes": 3,
+            "path": "src/lib/dna/chat/catalog/generated/v3/claims.json",
+            "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+          },
+          {
+            "bytes": 65,
+            "path": "src/lib/dna/chat/catalog/generated/v3/lexical-index.json",
+            "sha256": "13ab068388722de485d18642b66c0f9ec52613bc06a21913fc493700b58b4f93"
+          },
+          {
+            "bytes": 1651,
+            "path": "src/lib/dna/chat/catalog/generated/v3/manifest.json",
+            "sha256": "8bd969ae1be457058e1bc9f984baa15579f23aea77602bc0436a938ccca46035"
+          },
+          {
+            "bytes": 3,
+            "path": "src/lib/dna/chat/catalog/generated/v3/passages.json",
+            "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+          },
+          {
+            "bytes": 3,
+            "path": "src/lib/dna/chat/catalog/generated/v3/relations.json",
+            "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+          },
+          {
+            "bytes": 1143,
+            "path": "src/lib/dna/chat/catalog/generated/v3/server.ts",
+            "sha256": "b55fb42b8bda3e112da2905641cb7c29e586e1f3503b46a97bfa152c7a79b2f8"
+          },
+          {
+            "bytes": 3,
+            "path": "src/lib/dna/chat/catalog/generated/v3/sources.json",
+            "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+          },
+          {
+            "bytes": 5032,
+            "path": "src/lib/dna/chat/catalog/generated/v3/types.ts",
+            "sha256": "3ef652a42af2b8175dba4d766347f8948cb252f694006ce6d5498f87531ab77a"
           },
           {
             "bytes": 1988,
@@ -560,9 +655,9 @@
             "sha256": "4eff7204b4b9e5bf212ad36c79a6a1271d34cd97467b23d73f5debeef36d430a"
           },
           {
-            "bytes": 35003,
+            "bytes": 37956,
             "path": "src/lib/dna/chat/catalog/search.ts",
-            "sha256": "d63f1723d1adff873a152c08b9d6e2f15f3875257cd8a38f4ed7f0c613b750bf"
+            "sha256": "100b86f372139efa97d7f4dc5f9c847893acbe3eca7f27e1d30c4b8cae26f74f"
           },
           {
             "bytes": 77945,
@@ -600,24 +695,204 @@
             "sha256": "3e3f63e863ae6d3969a5436e5c26383647f3d45332849491509781b4ecb692a0"
           },
           {
-            "bytes": 68649,
+            "bytes": 68729,
             "path": "src/lib/dna/chat/catalog/v5SixDomainsCatalog.ts",
-            "sha256": "d3cd4c0c7ce92b943b0643e157850b193923ca02b78ee977f402ddcfb47d392d"
+            "sha256": "b690297bec8a45f1eef356dfce9c3ce4befb5f38ed499c6f67e37f06cade40d4"
           },
           {
-            "bytes": 31447,
+            "bytes": 42618,
             "path": "src/lib/dna/chat/catalogReasoning.ts",
-            "sha256": "341632471b6409dcfecc68c30cb54b77e36d981c150701be7efcac7fb279c1ed"
+            "sha256": "de4c17138fa41f7285b7b13a3681e7e9ac38f5be5d67d83916c7b3bc2d0c23cf"
           },
           {
-            "bytes": 44656,
+            "bytes": 7549,
+            "path": "src/lib/dna/chat/conversationPolicy.ts",
+            "sha256": "d57d49adc823d61181acbd852edc63c8d0159bc0c8da05c9be298b7a94a62b62"
+          },
+          {
+            "bytes": 65881,
             "path": "src/lib/dna/chat/engine.ts",
-            "sha256": "26b2af2d98c323fafb75519e7990574ec8b8419278b973475d82d68e0b505e4f"
+            "sha256": "2dc904c86ae577abc42b68a3bc00268d6b84eac073d660a870e626972e12fb4a"
           },
           {
-            "bytes": 1201,
+            "bytes": 5236,
+            "path": "src/lib/dna/chat/evaluation/developmentHistoryStore.ts",
+            "sha256": "7d960ab4ce947670335605194eabc87470909736240050207fa1e3beff93df99"
+          },
+          {
+            "bytes": 4462,
+            "path": "src/lib/dna/chat/evaluation/engineSourceClosure.ts",
+            "sha256": "2b0fa14bb02c6e620edb114f61d1cb30b2c179e365a2385b1c2114f653c61c42"
+          },
+          {
+            "bytes": 50488,
+            "path": "src/lib/dna/chat/evaluation/evaluationDatasetIntegrity.ts",
+            "sha256": "1adbd8dd732bb34f59e1a42658cac75b92a50ac0cabce185050b29b10ac56c3a"
+          },
+          {
+            "bytes": 59674,
+            "path": "src/lib/dna/chat/evaluation/evaluationGates.ts",
+            "sha256": "6042b56410fad9d8378ad752b7eaebde319f43f231470804aea74f1a1c297c43"
+          },
+          {
+            "bytes": 67114,
+            "path": "src/lib/dna/chat/evaluation/evaluationGovernance.ts",
+            "sha256": "55c3991d284de92539e6b55bf4e99b478f16802366d488ad97b1d0b8025b912c"
+          },
+          {
+            "bytes": 20425,
+            "path": "src/lib/dna/chat/evaluation/evaluationPreOpenAuthority.ts",
+            "sha256": "84fdafc1d092a7410494fc86dd7eab58c7e52e9f75d26e7bd30e1232af897928"
+          },
+          {
+            "bytes": 5176,
+            "path": "src/lib/dna/chat/evaluation/evaluationReleaseAttestation.ts",
+            "sha256": "8cc7832cc2f480c6ab6863fc11c0982cb1ea648446f0e764be99f93ad2d2fb54"
+          },
+          {
+            "bytes": 683,
+            "path": "src/lib/dna/chat/evaluation/generated/currentDevelopmentHistoryAuthority.json",
+            "sha256": "c2faba18098409f494d0b2560381c377fc9a8d6adbaec5df4852ac24600eb697"
+          },
+          {
+            "bytes": 597,
+            "path": "src/lib/dna/chat/evaluation/generated/currentEngineCodeAuthority.ts",
+            "sha256": "a6f6aa4c0c902871ff1d371732ab3711ae967fc3b0f697186ba208bf6c7228df"
+          },
+          {
+            "bytes": 17837,
+            "path": "src/lib/dna/chat/evaluation/phase45to47Validation.ts",
+            "sha256": "6cbee31c91323630f4ad91e1822c3ba0a7fbbaf3a357877ddf4894cff554195a"
+          },
+          {
+            "bytes": 19711,
+            "path": "src/lib/dna/chat/governance/bookLock.ts",
+            "sha256": "425f6599508f8ffd97400b743e72c8032a1b66f801c982030761bb62303d1d2a"
+          },
+          {
+            "bytes": 16644,
+            "path": "src/lib/dna/chat/governance/candidateClaimExtraction.ts",
+            "sha256": "499982eed52ec45af1ac488f24a90ed7df87ed51b9f138ce7d6d4ce39da341bd"
+          },
+          {
+            "bytes": 12716,
+            "path": "src/lib/dna/chat/governance/candidateClaimReconciliation.ts",
+            "sha256": "03074e6450bada6f9441091043b4a0d8046f5e259734dd92779f837f0a904b07"
+          },
+          {
+            "bytes": 12223,
+            "path": "src/lib/dna/chat/governance/candidateClaimRereview.ts",
+            "sha256": "af1688d10689050e7e9aa1b3a2fdbe421631034f5614fde11dc9d5a8465e0acb"
+          },
+          {
+            "bytes": 19269,
+            "path": "src/lib/dna/chat/governance/candidatePassageRegistration.ts",
+            "sha256": "da175a2f3330c75b59306c895d37a3f1f93292cb81a7167c72a62567a84d17db"
+          },
+          {
+            "bytes": 43697,
+            "path": "src/lib/dna/chat/governance/claimReviewGates.ts",
+            "sha256": "64b0de148d055a8fc1fae7ce6c3735c1cac0ad66c29f9249ae6da5840074a4bb"
+          },
+          {
+            "bytes": 11022,
+            "path": "src/lib/dna/chat/governance/coverageMap.ts",
+            "sha256": "5955fe25d6fa5738f35dab1551589841c3b50267a6ff024dd3e93af1c124cf43"
+          },
+          {
+            "bytes": 89687,
+            "path": "src/lib/dna/chat/governance/evidenceExtraction.ts",
+            "sha256": "22355791e9c60e753c8f5b90a22392b03f4f9181803f0046a79e498241249141"
+          },
+          {
+            "bytes": 19439,
+            "path": "src/lib/dna/chat/governance/gapProtocols.ts",
+            "sha256": "e6b3ba8883a7ed5892c18586a43925b43a7692e4254496aaf562476b4aa44daa"
+          },
+          {
+            "bytes": 765,
+            "path": "src/lib/dna/chat/governance/index.ts",
+            "sha256": "106c5518520e0bc6b9262bbf7f9837001b82c90b9165e432bf9a2b9e6ef902ce"
+          },
+          {
+            "bytes": 13385,
+            "path": "src/lib/dna/chat/governance/lifecycle.ts",
+            "sha256": "97bf52ff27f248e75b1e8205f72dfe3faadd7febb8cdf2dbed3dca08f67d0a66"
+          },
+          {
+            "bytes": 30939,
+            "path": "src/lib/dna/chat/governance/methodAppraisal.ts",
+            "sha256": "eb81d22b040f1707bb872960e69c5b290c384e93728bfc04546367a02f4db3e2"
+          },
+          {
+            "bytes": 36466,
+            "path": "src/lib/dna/chat/governance/methodAppraisalBatch.ts",
+            "sha256": "5ea010b9b97af72700445dd3b7e312210ab6b46d9563a4b44349ad11785abbb6"
+          },
+          {
+            "bytes": 60848,
+            "path": "src/lib/dna/chat/governance/methodAppraisalBatchWorker.ts",
+            "sha256": "e44a974ebadded14f020d1088cb3d72b2c88bc9dc4adec96bddd0d8c1b8bdd12"
+          },
+          {
+            "bytes": 24926,
+            "path": "src/lib/dna/chat/governance/methodAppraisalRegistration.ts",
+            "sha256": "68c265b0afc314d61b8db84c0d9e7d8c40ce9112b4967e3febb4261e82188afb"
+          },
+          {
+            "bytes": 35960,
+            "path": "src/lib/dna/chat/governance/normalizedSource.ts",
+            "sha256": "65bd5f399e21793c8f56675ed0b3d90ce4dcb406872ddcca73bf2f9fa36d0dc1"
+          },
+          {
+            "bytes": 45233,
+            "path": "src/lib/dna/chat/governance/publicationEligibility.ts",
+            "sha256": "9839a14a62332566ec740ae41dd39c43584e62594d1687e2c194f78dcc4165cf"
+          },
+          {
+            "bytes": 34413,
+            "path": "src/lib/dna/chat/governance/releaseCompiler.ts",
+            "sha256": "62a65cb4a223c4a51b45832224646b2812a9a73697d7602b33583b9c09dd2ff4"
+          },
+          {
+            "bytes": 8472,
+            "path": "src/lib/dna/chat/governance/runtimeReleaseGate.ts",
+            "sha256": "2c18b22625ba31df16bb9cbbae9f1c08972494c2138bbb189974e54e0e299a40"
+          },
+          {
+            "bytes": 39817,
+            "path": "src/lib/dna/chat/governance/sourceGovernance.ts",
+            "sha256": "f39e38b7ae66a4615e053ebb723c6d09e33c8f1b5588c0dcd4de51bbc48600f8"
+          },
+          {
+            "bytes": 34555,
+            "path": "src/lib/dna/chat/governance/sourceIntegrity.ts",
+            "sha256": "623d6a806fccac2fb0517813aedf7868390962afb5ac6d47aeadd55bf2fc2aca"
+          },
+          {
+            "bytes": 12415,
+            "path": "src/lib/dna/chat/governance/v2CatalogReaudit.ts",
+            "sha256": "91484a7883187c0d73a8ffb60cdbece421afe44a8793cc6be75db0d6eef1a224"
+          },
+          {
+            "bytes": 24929,
+            "path": "src/lib/dna/chat/governance/v3EvidenceGraph.ts",
+            "sha256": "d104d5d3ca4c3a7a116ad414085756d0520d3e8d19b30d28cd8ea0088cc8a945"
+          },
+          {
+            "bytes": 26877,
+            "path": "src/lib/dna/chat/governance/v3StaticPackage.ts",
+            "sha256": "41965535e441214e5c45fd635f972055895800f32c6f7536048c8363ac5f61cc"
+          },
+          {
+            "bytes": 2722,
             "path": "src/lib/dna/chat/index.ts",
-            "sha256": "fe4e9e8ee597824c60b743e8cdd64137b623be2131a9ac1d15790360763f2ecb"
+            "sha256": "3c2e00327d17d84997b9b404a651bde44a665e4fce0eea93c3a8f9df5b749009"
+          },
+          {
+            "bytes": 10095,
+            "path": "src/lib/dna/chat/intendedUse.ts",
+            "sha256": "fa41edf8261b86fd817df50e6b0a6b81e80f2b72c82605b0ef9f0db38966f145"
           },
           {
             "bytes": 17891,
@@ -625,14 +900,114 @@
             "sha256": "f17c9d9774bb773a9469be645a81ec16d5679e7a011a6f89ab1a12d6ee02791a"
           },
           {
-            "bytes": 16816,
+            "bytes": 17331,
             "path": "src/lib/dna/chat/knowledge.ts",
-            "sha256": "8688d14ab7ba749ccc385ba9fc52af3baa0030d2239001029cdd7bf9aacf4d14"
+            "sha256": "f96502429b125de7ba29ace01c3d4c0555d186a41407bd84f065488fac4127e1"
           },
           {
-            "bytes": 4377,
+            "bytes": 21062,
+            "path": "src/lib/dna/chat/knowledgeAuthority.ts",
+            "sha256": "943a0e6c2398459a3caa4a54bb5e8d6600fd17b7fe729a0e5e8cce2d11bb3ecd"
+          },
+          {
+            "bytes": 2345,
+            "path": "src/lib/dna/chat/operations/countableUnits.ts",
+            "sha256": "700ac170f759dbc5ac4b4fbfb3cee75350ecbe45567bbef47e79fcddcb00d719"
+          },
+          {
+            "bytes": 9180,
+            "path": "src/lib/dna/chat/operations/incidentResponse.ts",
+            "sha256": "0df82c4b4b7e142814de14ad9f73db6d1c13caede80a111f040b868dcbac4ff1"
+          },
+          {
+            "bytes": 264,
+            "path": "src/lib/dna/chat/operations/index.ts",
+            "sha256": "f9f1c998b70b8c248a20ac897110a2c5f01face7668ff951a021b2d65a4ed9a0"
+          },
+          {
+            "bytes": 37005,
+            "path": "src/lib/dna/chat/operations/marketingEvidence.ts",
+            "sha256": "1838cc71988b5af327d6f033e4b4700a713463a017b190f3742f45377695ad1a"
+          },
+          {
+            "bytes": 6268,
+            "path": "src/lib/dna/chat/operations/productLanguage.ts",
+            "sha256": "1ded3710dccde76b3f9cfc7f48b5dce12187d59bdd03a4c89ee07a88029833aa"
+          },
+          {
+            "bytes": 3287,
+            "path": "src/lib/dna/chat/operations/requestTiming.ts",
+            "sha256": "b17ca302e1532557e64edf754964928206933baa2c8081331a832b66dae8facd"
+          },
+          {
+            "bytes": 6690,
+            "path": "src/lib/dna/chat/operations/sourceMonitoring.ts",
+            "sha256": "c71cb71b1f5f23c49a7fe8e07a21f90a25f22274fee1f3b856cf887814f1a1bf"
+          },
+          {
+            "bytes": 7621,
+            "path": "src/lib/dna/chat/operations/telemetry.ts",
+            "sha256": "7277136b2e9656c35b54476e818c376c539b99ade9c2ad33f3b2f1579110d8cc"
+          },
+          {
+            "bytes": 3770,
+            "path": "src/lib/dna/chat/operations/userFeedback.ts",
+            "sha256": "eb6a017c687dcdc2be0539e1090493a2fa556e2ad583be5db356b148b5418568"
+          },
+          {
+            "bytes": 4604,
+            "path": "src/lib/dna/chat/ownedCaseAnswer.ts",
+            "sha256": "033357a91172b1b4ea2e6d18ba45c5f374bf0b1e0983d2d192a2f6b7478d844d"
+          },
+          {
+            "bytes": 10393,
+            "path": "src/lib/dna/chat/ownedCaseContextCore.ts",
+            "sha256": "96d00b2e6570473a1b62622115384690e0eaa17301984f0030285318c6f26b6d"
+          },
+          {
+            "bytes": 10410,
+            "path": "src/lib/dna/chat/release/currentPreviewPromotionGuard.ts",
+            "sha256": "a6871bc87e03eab411c8e72a3977ce6143072721efdc6727de2ad4d0a8387913"
+          },
+          {
+            "bytes": 11958,
+            "path": "src/lib/dna/chat/release/hardNoGo.ts",
+            "sha256": "a7bb65ed53acfd8532d54b4dbdc98fb423ff0b50d531f666804a031ea6df69fd"
+          },
+          {
+            "bytes": 45644,
+            "path": "src/lib/dna/chat/release/previewPromotion.ts",
+            "sha256": "897b89d7f37052c21d1fd281d99f4ead0c311213c5a500aa3c443693b64c312d"
+          },
+          {
+            "bytes": 26346,
+            "path": "src/lib/dna/chat/release/productionRuntimeAuthority.ts",
+            "sha256": "ed06bcf6e30a8e187a8d381c513599ce1cfc815aedb5968664c037ad89e91613"
+          },
+          {
+            "bytes": 52028,
+            "path": "src/lib/dna/chat/release/releaseEvidenceBundle.ts",
+            "sha256": "7b305e6e42b8667f345d9a2705c19f62656da8ddc296d62e5438ea955430168f"
+          },
+          {
+            "bytes": 12240,
+            "path": "src/lib/dna/chat/release/runtimeDeploymentAuthorization.ts",
+            "sha256": "ad34ef37e6d447274178c89e9568d2e9232a830f3cc5b41ece490ed1c5ae6d64"
+          },
+          {
+            "bytes": 6265,
+            "path": "src/lib/dna/chat/release/runtimeReleaseMode.ts",
+            "sha256": "3ef5def4a1ee46ae6b9d733f4ff7601dbe2cfec71f1dba918193cfcc55909b25"
+          },
+          {
+            "bytes": 34057,
+            "path": "src/lib/dna/chat/release/stagedRollout.ts",
+            "sha256": "9d90a33c3ae42f1cb10487b6cd354e905605599aa20dba528841d61ed1a017c6"
+          },
+          {
+            "bytes": 4057,
             "path": "src/lib/dna/chat/reportSnapshot.ts",
-            "sha256": "a86991425eaa1157ea51ca7307a7357a36bc4dd97d887c3b01966ff20d76c03b"
+            "sha256": "bbf74cb55b39a50484919160bd352a1a166bbe7e0de880eb475d1f7a8f67b25a"
           },
           {
             "bytes": 8563,
@@ -640,9 +1015,24 @@
             "sha256": "f5f3f59b058b3b5b733cd2964fb8eb29301b40b60c967acdbb0d2865ecaf4255"
           },
           {
-            "bytes": 34961,
+            "bytes": 2892,
+            "path": "src/lib/dna/chat/runtimeAnswer.ts",
+            "sha256": "9317b1459682ae490a992021a14c634e6bcbc412f3f0dfae721936e5572063a9"
+          },
+          {
+            "bytes": 2543,
+            "path": "src/lib/dna/chat/runtimeSelection.ts",
+            "sha256": "939213d4ba7bb5451670dc211ae99a39b7bbc87942ad4d30f4bd3d0fd21273f5"
+          },
+          {
+            "bytes": 38922,
             "path": "src/lib/dna/chat/safety.ts",
-            "sha256": "00bbb461545887de1bb38d0694541937342ef0124681467278c5549fd50996cb"
+            "sha256": "c3504a2fed8be4edf6807cb572cc60fba5783062aae2bbf7560bd7b7bf55c5d1"
+          },
+          {
+            "bytes": 2728,
+            "path": "src/lib/dna/chat/socialConversation.ts",
+            "sha256": "bc95f4894b8eee4218e3eea34b1b9909cddb88e7a94fd06a1b35ab3b14c46107"
           },
           {
             "bytes": 775,
@@ -650,14 +1040,49 @@
             "sha256": "9b92bcf2000b8224319f5ba3440f2052aad165a3bd24ce1ad79042b5c36c077b"
           },
           {
-            "bytes": 6357,
+            "bytes": 6917,
             "path": "src/lib/dna/chat/text.ts",
-            "sha256": "65a51f7283913f6f1bc1dc987c2661412c57b763a2e7bad7080c429c470bcdec"
+            "sha256": "f09cc06b0cbb5d0dd6fbca5f28ba487118e8fd5e000fc923ca41549004f41f31"
           },
           {
-            "bytes": 5744,
+            "bytes": 7191,
             "path": "src/lib/dna/chat/types.ts",
-            "sha256": "73705ba917a8a5c7cbd98fd840066cb8418a07a0d4b7d68f1b9a11a9f4a3d50f"
+            "sha256": "3985a6fc3741497de225262bb26e73d110cfcd72d16d5a508117c3e6c69a9c68"
+          },
+          {
+            "bytes": 3862,
+            "path": "src/lib/dna/chat/v3AgePolicy.ts",
+            "sha256": "f2f7fcb8fa63f9b15e0a06274deb73d0ecc422327db6bfe1a77c42f3a504af01"
+          },
+          {
+            "bytes": 12788,
+            "path": "src/lib/dna/chat/v3AnswerEvidence.ts",
+            "sha256": "859d52d550e062a9afcfdedf3bd070719a55069402d3df457491c07b3915d869"
+          },
+          {
+            "bytes": 16954,
+            "path": "src/lib/dna/chat/v3CaseTheoryAssembler.ts",
+            "sha256": "f8f6cba07e4bde8752f0ade7c07e63c7f7cabfae7bd2bb82e53acc061138d14e"
+          },
+          {
+            "bytes": 2305,
+            "path": "src/lib/dna/chat/v3ResponseProfiles.ts",
+            "sha256": "067fe67138570a297fd466d44b8fe033be9cae4d0a95d21a8c7984ac1a7f81d4"
+          },
+          {
+            "bytes": 51619,
+            "path": "src/lib/dna/chat/v3RetrievalCore.ts",
+            "sha256": "a53b0c34cbe0103e393eadaa6862aa7b65dc652993ec563fe6b941d0befb7353"
+          },
+          {
+            "bytes": 10612,
+            "path": "src/lib/dna/chat/v3RetrievalPackageAdapter.ts",
+            "sha256": "dfdcb552aa930de98cc606826e8d4021b0e7541be92b7266965276d927512b7b"
+          },
+          {
+            "bytes": 8493,
+            "path": "src/lib/dna/chat/v3RetrievalServer.ts",
+            "sha256": "d7983acf850e00bb435740e45d67f351cf17ea21af644dac6198a69236eca254"
           },
           {
             "bytes": 12731,
@@ -780,7 +1205,7 @@
             "sha256": "ca81f247017d4b3a2db4b33d4814a1bfeaa106d2eabe6e73b62570fabba8bf2c"
           }
         ],
-        "sha256": "1f3525e7eeb5a780949c6c6b33f8d111257336e14061ea94391156cfefb333d6"
+        "sha256": "d32dc3d2b7b60438601ec5283cc58a3e997fff31ee6b0f5b0c09d0b8a7d8e409"
       },
       "verificationToolchain": {
         "algorithm": "sha256(sorted path + NUL + bytes + NUL)",
@@ -793,19 +1218,19 @@
             "sha256": "7cdb754b000597295bc62ac40ea4968f725172cb14b24c2b833cd0115afd1609"
           },
           {
-            "bytes": 143424,
+            "bytes": 144432,
             "path": "package-lock.json",
-            "sha256": "82a80360f1d107e9e72113254c98929e519f992276dbb125fd86c7b21df7de42"
+            "sha256": "f85471921821f8752e9ed8ad08d5c737d7146ede6629777779584b49bf212d19"
           },
           {
-            "bytes": 7184,
+            "bytes": 46167,
             "path": "package.json",
-            "sha256": "ba4f6459d02aa62d0880db3c030ff6741e1b8162e135543a9d241fbf7aef522b"
+            "sha256": "c4ee9db64475b9c13ffef72b95203215ae47703b4a4b6939160e4554e69904a7"
           },
           {
-            "bytes": 7310,
+            "bytes": 27887,
             "path": "scripts/run-dna-chat-api-contract-tests.ts",
-            "sha256": "eecd20c48a5d2331819d9c6ff4e238f9bd2ea8dd7db5afb289e3f5603c833983"
+            "sha256": "0040745a4a64a8c7dcb0df44654b5e93b80427c0e1c312017115b375cf7d9144"
           },
           {
             "bytes": 23384,
@@ -813,19 +1238,19 @@
             "sha256": "095d2b25a59d84caaba630455b152a8d750023c956bc9a1218117d89117523a3"
           },
           {
-            "bytes": 39651,
+            "bytes": 51235,
             "path": "scripts/run-dna-chat-cross-account-live.ts",
-            "sha256": "baaf949fb2fa577712642dcd6f28a39f5e8928e460f719edccaa1c76938dbb54"
+            "sha256": "64c881ad04591fcb03ac500e7988d8c8ffa023adb03fd58afddc07fe2f1ba106"
           },
           {
-            "bytes": 3235,
+            "bytes": 3112,
             "path": "scripts/run-dna-chat-determinism-tests.ts",
-            "sha256": "a43a7a1b0cb31fd540beef11f3faac78430da15e23dc55809d6d4cdc8c87dac6"
+            "sha256": "21e23467dd472aa8346f5d5143aad844cf5a90a862f5f4e259bf93f4a1728acb"
           },
           {
-            "bytes": 17722,
+            "bytes": 19584,
             "path": "scripts/run-dna-chat-quality-tests.ts",
-            "sha256": "4f3a84c39a2e377ba1067d790154e71f4952261c3bf28b7d2e8118928acdda03"
+            "sha256": "1eba4c8c0387ce72b309ee13a0d6957e70f17edf9ac606949b26e1ba0210f0a6"
           },
           {
             "bytes": 16136,
@@ -833,14 +1258,14 @@
             "sha256": "d1dab6886c5eb46dcf5f4f7f7e1a347428c78ffc32d9cda89fd0414218d7b3f1"
           },
           {
-            "bytes": 20661,
+            "bytes": 29990,
             "path": "scripts/run-dna-chat-reasoning-tests.ts",
-            "sha256": "b19e159bc17545333badb2a312e536057a705578cf6d64c0dac5522056b0b195"
+            "sha256": "af77efc274a7bf6853e18726d3b52bc2d518ca3d9583903952bad413e1b73f73"
           },
           {
-            "bytes": 34662,
+            "bytes": 48073,
             "path": "scripts/run-dna-chat-security-tests.ts",
-            "sha256": "2d29733834580532531597b04e26d0a839af3fd5c2d5000c729f3ba89f3505cd"
+            "sha256": "3e39cd276ba813cd3185818804488158c9f9f28612e034639cb6a0bb822f5e6c"
           },
           {
             "bytes": 6349,
@@ -853,12 +1278,12 @@
             "sha256": "1eeb35e575e937358b9f4048e2ac2f05c4ddd6d2e47477cc38e65a6de9b5ff54"
           },
           {
-            "bytes": 1358,
+            "bytes": 4097,
             "path": "tsconfig.report-runner.json",
-            "sha256": "fbc27140f9b2a148afa1831cc6d6df6818d1197f417788cf866ad718a1a9cb3f"
+            "sha256": "6de72a7a05cc642aa57f00ae0c3b2b7517510273f5a2742cc71ebafad65cc254"
           }
         ],
-        "sha256": "9abd5b9c82294e22a5c6da214e3f0c49ea6721af30bc942147baab92b87a90c6"
+        "sha256": "6a16b94a6958437108ed6f60cae79abe6b1f6864f2ea628e039a06ce1a26a58d"
       }
     }
   },

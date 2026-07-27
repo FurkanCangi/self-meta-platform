@@ -13,8 +13,8 @@ const EVIDENCE_PATH = path.join(BASELINE_DIR, "gate-evidence.json")
 const SHA_SUMS_PATH = path.join(BASELINE_DIR, "SHA256SUMS")
 const TMP_RESULTS_PATH = path.join(ROOT, ".tmp/dna-chat-baseline/latest-gate-results.json")
 const ROOT_HARNESS_OUT = path.join(ROOT, ".tmp/dna-chat-baseline-harness")
-const ROLLBACK_GIT_SHA = "5ed87217280a40e4566a04289d4c98b1f3883494"
-const ROLLBACK_TAG = "dna-chat-v2-baseline-20260719"
+const ROLLBACK_GIT_SHA = "d45ea5eba923b9d4b03e1952a616bb4d5544283d"
+const ROLLBACK_TAG = "dna-chat-v2-prebook-flex-20260727"
 const WORKTREE = path.join(os.tmpdir(), `selfmeta-dna-chat-v2-${process.pid}`)
 const WRITE = process.argv.includes("--write")
 
@@ -264,8 +264,8 @@ const remoteRollback = WRITE
   : JSON.parse(fs.readFileSync(EVIDENCE_PATH, "utf8")).remoteRollback
 const evidence = {
   schemaVersion: "dna-intelligence-baseline-gate-evidence@1",
-  baselineVersion: "dna-intelligence-v2-baseline@1",
-  capturedOn: "2026-07-19",
+  baselineVersion: "dna-intelligence-v2-baseline@2",
+  capturedOn: "2026-07-27",
   rollbackGitSha: ROLLBACK_GIT_SHA,
   verificationGitSha: ROLLBACK_GIT_SHA,
   testedSourceGitSha: ROLLBACK_GIT_SHA,
@@ -315,7 +315,7 @@ if (WRITE) {
 
 console.log(JSON.stringify({
   ok: true,
-  baselineVersion: "dna-intelligence-v2-baseline@1",
+  baselineVersion: "dna-intelligence-v2-baseline@2",
   rollbackGitSha: ROLLBACK_GIT_SHA,
   testedSourceTreeSha,
   sourceExecution: "clean_detached_git_worktree_at_rollback_commit",

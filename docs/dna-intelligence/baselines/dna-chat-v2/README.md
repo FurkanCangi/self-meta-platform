@@ -4,10 +4,10 @@ Bu dizin, DNA Intelligence V3 çalışması başlamadan önceki deterministik V2
 motorunu ve katalog yüzeyini yeniden üretilebilir bir geri dönüş noktası olarak
 kilitler.
 
-- Kaynak commit: `5ed87217280a40e4566a04289d4c98b1f3883494`
+- Kaynak commit: `d45ea5eba923b9d4b03e1952a616bb4d5544283d`
 - Motor: `dna-chat-engine@2`
 - Katalog: `dna-chat-catalog@2`
-- Kalıcı ref: `dna-chat-v2-baseline-20260719`
+- Kalıcı ref: `dna-chat-v2-prebook-flex-20260727`
 
 `baseline-manifest.json`, rollback commitindeki ilgili dosyaların tekil ve grup
 SHA-256 kayıtlarını taşır. `regression-fixtures.json`, yalnız sentetik bağlamla

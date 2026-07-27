@@ -33,10 +33,10 @@ const REGRESSION_PATH = path.join(BASELINE_DIR, "regression-fixtures.json")
 const GATE_EVIDENCE_PATH = path.join(BASELINE_DIR, "gate-evidence.json")
 const SHA_SUMS_PATH = path.join(BASELINE_DIR, "SHA256SUMS")
 
-const ROLLBACK_GIT_SHA = "5ed87217280a40e4566a04289d4c98b1f3883494"
-const ROLLBACK_TAG = "dna-chat-v2-baseline-20260719"
-const BASELINE_VERSION = "dna-intelligence-v2-baseline@1"
-const BASELINE_CAPTURE_DATE = "2026-07-19"
+const ROLLBACK_GIT_SHA = "d45ea5eba923b9d4b03e1952a616bb4d5544283d"
+const ROLLBACK_TAG = "dna-chat-v2-prebook-flex-20260727"
+const BASELINE_VERSION = "dna-intelligence-v2-baseline@2"
+const BASELINE_CAPTURE_DATE = "2026-07-27"
 
 type JsonValue =
   | null

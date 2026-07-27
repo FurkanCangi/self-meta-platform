@@ -4,14 +4,14 @@
   "phase": 0,
   "title": "Mevcut sistemi dondurma",
   "status": "completed",
-  "completedOn": "2026-07-19",
+  "completedOn": "2026-07-27",
   "source": {
-    "gitSha": "5ed87217280a40e4566a04289d4c98b1f3883494",
-    "gitTreeSha": "c7138af491a7b2892f521cfef69117991b2460d6",
+    "gitSha": "d45ea5eba923b9d4b03e1952a616bb4d5544283d",
+    "gitTreeSha": "45caa014e8e98a97819fc5c017aed67dcfb154f1",
     "engineVersion": "dna-chat-engine@2",
     "catalogVersion": "dna-chat-catalog@2",
-    "rollbackTag": "dna-chat-v2-baseline-20260719",
-    "remoteRollbackRef": "origin/refs/tags/dna-chat-v2-baseline-20260719"
+    "rollbackTag": "dna-chat-v2-prebook-flex-20260727",
+    "remoteRollbackRef": "origin/refs/tags/dna-chat-v2-prebook-flex-20260727"
   },
   "inventory": {
     "topics": 118,
