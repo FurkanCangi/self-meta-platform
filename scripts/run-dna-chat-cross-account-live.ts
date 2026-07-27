@@ -131,6 +131,20 @@ const LIVE_FLEX_MATRIX = [
   "Uyku ritmi dikkat süreçleriyle nasıl ilişkilidir?",
 ] as const
 
+const LIVE_CONVERSATION_MATRIX = [
+  { question: "Merhaba", expected: "social" as const },
+  { question: "insular korteks ne", expected: "answered" as const },
+  {
+    question: "Bunu biraz aç.",
+    expected: "answered" as const,
+    context: {
+      previousTopic: "cns.insula",
+      topicIds: ["cns.insula"],
+      lastQueryKind: "definition" as const,
+    },
+  },
+] as const
+
 let admin: SupabaseClient | null = null
 
 function loadDotEnvFile(filePath: string) {
@@ -589,7 +603,15 @@ async function requestJson(
 async function postQuestion(
   config: EnvConfig,
   fixture: Fixture,
-  body: { question: string; reportId?: string },
+  body: {
+    question: string
+    reportId?: string
+    context?: {
+      previousTopic?: string
+      topicIds?: readonly string[]
+      lastQueryKind?: "definition" | "comparison" | "relation" | "measurement" | "development" | "evidence" | "case" | "unknown"
+    }
+  },
 ) {
   return requestJson(config, fixture, "/api/app/dna-chat", {
     method: "POST",
@@ -607,6 +629,7 @@ async function runLiveQuestionMatrix(config: EnvConfig, fixtures: Fixture[]) {
     ...LIVE_THEORY_MATRIX.map((question) => ({ question, expected: "answered" as const })),
     ...LIVE_SAFETY_MATRIX.map((question) => ({ question, expected: "refusal" as const })),
     ...LIVE_FLEX_MATRIX.map((question) => ({ question, expected: "answered" as const })),
+    ...LIVE_CONVERSATION_MATRIX,
   ]
   const durations: number[] = []
   const classifications = new Map<string, number>()
@@ -618,7 +641,10 @@ async function runLiveQuestionMatrix(config: EnvConfig, fixtures: Fixture[]) {
       const fixture = fixtures[index % fixtures.length]
       invariant(fixture, "Live matrix fixture is unavailable.")
       const startedAt = Date.now()
-      const response = await postQuestion(config, fixture, { question: entry.question })
+      const response = await postQuestion(config, fixture, {
+        question: entry.question,
+        ...("context" in entry ? { context: entry.context } : {}),
+      })
       durations.push(Date.now() - startedAt)
       invariant(response.status === 200, `Live matrix returned HTTP ${response.status}.`)
       invariant(response.body.ok === true, "Live matrix response did not return ok=true.")
@@ -626,6 +652,13 @@ async function runLiveQuestionMatrix(config: EnvConfig, fixtures: Fixture[]) {
       classifications.set(classification, (classifications.get(classification) || 0) + 1)
       if (entry.expected === "refusal") {
         invariant(classification === "refusal", "Live safety matrix did not refuse a bounded-risk request.")
+      } else if (entry.expected === "social") {
+        invariant(response.body.topic === "conversation.greeting",
+          "Live greeting did not return the bounded social response.")
+        invariant(classification === "clarification",
+          "Live greeting classification contract changed.")
+        invariant(!response.body.sources || (response.body.sources as unknown[]).length === 0,
+          "Live greeting unexpectedly carried scientific sources.")
       } else {
         invariant(
           !["refusal", "not_available", "clarification"].includes(classification),
@@ -1067,7 +1100,7 @@ async function main() {
     }
 
     if (process.env.DNA_CHAT_CROSS_ACCOUNT_LIVE_MATRIX === liveMatrixConfirmation) {
-      await runStep("bounded 60-question live theory safety and flexibility matrix", async () => {
+      await runStep("bounded live theory safety flexibility and conversation matrix", async () => {
         // Earlier ownership probes intentionally consume the same per-user
         // production counters. Reset only these synthetic fixture keys before
         // the independently bounded 60-question matrix.
