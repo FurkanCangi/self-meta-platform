@@ -926,10 +926,12 @@ try {
     const selectionCoordinator = createDnaChatReportSelectionCoordinator()
     const selectTransition = selectionCoordinator.claim({
       reportId: fixtureRecord.fixture.id,
+      currentReportId: null,
       pendingReportQuestion: pendingQuestion,
     })
     const duplicateSelectTransition = selectionCoordinator.claim({
       reportId: fixtureRecord.fixture.id,
+      currentReportId: null,
       pendingReportQuestion: pendingQuestion,
     })
     selectionCoordinator.release()
@@ -940,7 +942,7 @@ try {
       && changeTransition.pendingReportQuestion === null
       && changeTransition.resubmitQuestions.length === 0
     const pendingQuestionResubmittedExactlyOnce = Boolean(selectTransition
-      && selectTransition.clearConversation
+      && !selectTransition.clearConversation
       && selectTransition.selectedReportId === fixtureRecord.fixture.id
       && !selectTransition.reportPickerOpen
       && selectTransition.previousTopic === null

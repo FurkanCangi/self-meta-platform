@@ -9,6 +9,7 @@ import {
   readdirSync,
   realpathSync,
   renameSync,
+  statSync,
   unlinkSync,
   writeFileSync,
 } from "node:fs"
@@ -26,8 +27,14 @@ const GAP_SNAPSHOT_RELATIVE_PATH =
   "docs/dna-intelligence/governance/v3/gap-search-execution-2026-07-19.json"
 const SOURCE_SNAPSHOT_RELATIVE_PATH =
   "docs/dna-intelligence/governance/v3/source-library-governance-snapshot.json"
+const SOURCE_APPRAISAL_SNAPSHOT_RELATIVE_PATH =
+  "docs/dna-intelligence/governance/v3/source-appraisal-normalization-snapshot.json"
+const SOURCE_LIBRARY_RELATIVE_ROOT =
+  "Datasets/SelfMetaAI/dna-knowledge/source-library"
 const EXPECTED_FULL_TEXT_RECORDS = 1_645
 const EXPECTED_WORKPACKS = 24
+const EXPECTED_HISTORICAL_PENDING_SOURCES = 47
+const EXPECTED_HISTORICAL_SOURCE_DECISIONS = 21
 const EXPECTED_REREVIEW_CONSENSUS = 220
 const EXPECTED_REREVIEW_CONTESTED = 23
 const EXPECTED_UNMATCHED_A = 126
@@ -41,6 +48,15 @@ const TERMINAL_FULL_TEXT_STATUSES = new Set([
   "full_text_unavailable",
   "license_blocked",
   "out_of_scope",
+])
+const TERMINAL_HISTORICAL_SOURCE_STATUSES = new Set([
+  "included",
+  "excluded",
+  "duplicate",
+  "full_text_unavailable",
+  "license_blocked",
+  "out_of_scope",
+  "quarantined",
 ])
 
 const TOPIC_BY_SOURCE = Object.freeze({
@@ -407,6 +423,258 @@ function buildWorkpackDecisions({ workpackIndex, batchIndex, registrationIndex, 
     decisions,
     counts: { total: decisions.length, terminal: decisions.length, open: 0, byStatus: statusCounts },
     sourceCohortBoundary: "Terminal decisions close this frozen prebook cohort only; excluded or quarantined sources may enter a future cohort after a new audited appraisal.",
+    runtimeEligible: false,
+    releaseEligible: false,
+  })
+}
+
+function collectSourceInventoryManifests(sourceLibraryRoot) {
+  const manifestsBySourceId = new Map()
+  const add = (sourceId, path) => {
+    if (!sourceId) return
+    const current = manifestsBySourceId.get(sourceId) ?? []
+    if (!current.includes(path)) current.push(path)
+    manifestsBySourceId.set(sourceId, current)
+  }
+  const visit = (directory) => {
+    for (const entry of readdirSync(directory, { withFileTypes: true })
+      .sort((left, right) => left.name.localeCompare(right.name, "en"))) {
+      const path = assertContained(sourceLibraryRoot, join(directory, entry.name))
+      if (entry.isSymbolicLink()) {
+        throw new Error(`prebook_closure_source_inventory_symlink_rejected:${path}`)
+      }
+      if (entry.isDirectory()) {
+        if (entry.name !== "raw" && entry.name !== "audit-history") visit(path)
+        continue
+      }
+      if (!entry.isFile() || entry.name !== "source.json") continue
+      const value = readJson(path)
+      const sourceId = value.id ?? value.sourceId ?? value.slug
+      add(sourceId, path)
+    }
+  }
+  visit(sourceLibraryRoot)
+  const restrictedPath = assertContained(sourceLibraryRoot,
+    join(sourceLibraryRoot, "restricted-metadata/sources.json"))
+  const restricted = readJson(restrictedPath)
+  assert(Array.isArray(restricted.sources), "prebook_closure_restricted_inventory_invalid")
+  for (const source of restricted.sources) add(source.id, restrictedPath)
+  return manifestsBySourceId
+}
+
+function hasSubstantiveFullTextArtifact(entry) {
+  if (entry.acquisitionMethod === "official_metadata_retrieval") return false
+  const mediaType = String(entry.mediaType ?? "").toLocaleLowerCase("en")
+  const path = String(entry.relativePath ?? "").toLocaleLowerCase("en")
+  return mediaType.includes("pdf") || mediaType.includes("epub")
+    || mediaType.includes("xml") || path.endsWith(".pdf") || path.endsWith(".epub")
+    || path.endsWith(".xml")
+}
+
+function buildHistoricalSourceDecisions({
+  sourceAppraisalSnapshot,
+  sourceAppraisalSnapshotPath,
+  sourceSnapshot,
+  sourceSnapshotPath,
+  sourceLibraryRoot,
+  acquisitionLedger,
+  acquisitionLedgerPath,
+  acquisitionVerification,
+  acquisitionVerificationPath,
+  integrityAudit,
+  integrityAuditPath,
+  registrationIndex,
+  registrationIndexPath,
+  fullTextLedger,
+  fullTextLedgerPath,
+  workpackLedger,
+  workpackLedgerPath,
+  researchRoot,
+  repoRoot,
+  basisAt,
+}) {
+  assert(sourceAppraisalSnapshot.schemaVersion
+    === "dna-source-appraisal-normalization-snapshot@1"
+    && sourceAppraisalSnapshot.counts?.pendingMethodAppraisals
+      === EXPECTED_HISTORICAL_PENDING_SOURCES
+    && sourceAppraisalSnapshot.sources?.length === EXPECTED_HISTORICAL_PENDING_SOURCES,
+  "prebook_closure_historical_source_snapshot_invalid")
+  const historicalById = new Map(sourceAppraisalSnapshot.sources.map((entry) => [entry.id, entry]))
+  assert(historicalById.size === EXPECTED_HISTORICAL_PENDING_SOURCES,
+    "prebook_closure_historical_source_ids_not_unique")
+  const identityById = new Map(sourceSnapshot.identityRecords.map((entry) => [entry.sourceId, entry]))
+  const licenseById = new Map(sourceSnapshot.licenseRecords.map((entry) => [entry.sourceId, entry]))
+  const integrityById = new Map(integrityAudit.records.map((entry) => [entry.sourceId, entry]))
+  const registeredSourceIds = new Set(registrationIndex.records.map((entry) => entry.sourceId))
+  const inventoryById = collectSourceInventoryManifests(sourceLibraryRoot)
+  const acquisitionById = new Map()
+  for (const entry of acquisitionLedger.entries) {
+    const current = acquisitionById.get(entry.sourceId) ?? []
+    current.push(entry)
+    acquisitionById.set(entry.sourceId, current)
+  }
+  const observedByPath = new Map(acquisitionVerification.observedArtifacts
+    .map((entry) => [entry.relativePath, entry]))
+  const acquisitionDecisionByPath = new Map(acquisitionVerification.decisions
+    .map((entry) => [`${entry.sourceId}|${entry.relativePath}`, entry]))
+
+  const priorTerminalSourceIds = new Set(workpackLedger.decisions.map((entry) => entry.sourceId))
+  for (const decision of fullTextLedger.decisions) {
+    if (decision.matchedArchiveSourceId && historicalById.has(decision.matchedArchiveSourceId)) {
+      priorTerminalSourceIds.add(decision.matchedArchiveSourceId)
+    }
+  }
+  assert(priorTerminalSourceIds.size
+    === EXPECTED_HISTORICAL_PENDING_SOURCES - EXPECTED_HISTORICAL_SOURCE_DECISIONS,
+  "prebook_closure_prior_historical_terminal_count_invalid")
+  const unresolved = sourceAppraisalSnapshot.sources
+    .filter((entry) => !priorTerminalSourceIds.has(entry.id))
+    .sort((left, right) => left.id.localeCompare(right.id, "en"))
+  assert(unresolved.length === EXPECTED_HISTORICAL_SOURCE_DECISIONS,
+    "prebook_closure_historical_unresolved_count_invalid")
+
+  const decisions = unresolved.map((pendingSource) => {
+    const sourceId = pendingSource.id
+    const identity = identityById.get(sourceId)
+    const license = licenseById.get(sourceId)
+    const integrity = integrityById.get(sourceId)
+    const inventoryPaths = inventoryById.get(sourceId) ?? []
+    assert(identity && license && integrity,
+      `prebook_closure_historical_source_governance_missing:${sourceId}`)
+    assert(inventoryPaths.length === 1,
+      `prebook_closure_historical_source_inventory_ambiguous:${sourceId}:${inventoryPaths.length}`)
+    assert(!registeredSourceIds.has(sourceId),
+      `prebook_closure_historical_source_unexpected_registered_method:${sourceId}`)
+    assert(integrity.runtimeEligibility === "eligible"
+      && ["verified_clean", "corrected"].includes(integrity.state),
+    `prebook_closure_historical_source_integrity_not_terminal_clean:${sourceId}`)
+    const acquisitionEntries = [...(acquisitionById.get(sourceId) ?? [])]
+      .sort((left, right) => left.relativePath.localeCompare(right.relativePath, "en"))
+    const acceptedArtifacts = acquisitionEntries.map((entry) => {
+      const observed = observedByPath.get(entry.relativePath)
+      const verification = acquisitionDecisionByPath.get(`${sourceId}|${entry.relativePath}`)
+      const artifactPath = assertContained(sourceLibraryRoot,
+        join(sourceLibraryRoot, entry.relativePath))
+      assert(existsSync(artifactPath) && !lstatSync(artifactPath).isSymbolicLink()
+        && observed?.exists === true
+        && observed.sha256 === entry.sha256 && observed.bytes === entry.bytes
+        && verification?.accepted === true && verification.reasonCodes?.length === 0
+        && statSync(artifactPath).size === entry.bytes,
+      `prebook_closure_historical_acquisition_not_verified:${sourceId}:${entry.relativePath}`)
+      return {
+        researchSsdRelativePath: relative(researchRoot, artifactPath),
+        sha256: entry.sha256,
+        bytes: entry.bytes,
+        mediaType: entry.mediaType,
+        acquisitionMethod: entry.acquisitionMethod,
+        declaredLicense: entry.license,
+      }
+    })
+    const substantiveArtifacts = acquisitionEntries.filter(hasSubstantiveFullTextArtifact)
+    let terminalStatus
+    let reasonCode
+    if (license.decisions.full_text === "restricted"
+      || license.decisions.passage === "restricted") {
+      terminalStatus = "license_blocked"
+      reasonCode = ["all_rights_reserved", "blocked_nc"].includes(license.policy)
+        ? "component_license_policy_restricts_full_text_or_passage_reuse"
+        : "component_level_full_text_or_passage_reuse_not_cleared"
+    } else if (substantiveArtifacts.length === 0) {
+      terminalStatus = "full_text_unavailable"
+      reasonCode = "no_verified_substantive_full_text_artifact_only_metadata_available"
+    } else {
+      terminalStatus = "quarantined"
+      reasonCode = "substantive_artifact_present_but_no_audited_method_appraisal_or_passage_release_clearance"
+    }
+    const inventoryPath = inventoryPaths[0]
+    const payload = {
+      sourceId,
+      terminalStatus,
+      reasonCode,
+      fullTextReadInThisClosure: false,
+      registeredMethodChainPreserved: false,
+      evidence: {
+        historicalPendingSource: {
+          repoRelativePath: relative(repoRoot, sourceAppraisalSnapshotPath),
+          snapshotRawBytesSha256: fileSha256(sourceAppraisalSnapshotPath),
+          evidencePayloadSha256: pendingSource.evidencePayloadSha256,
+          sourcePayloadSha256: pendingSource.sourcePayloadSha256,
+          pendingAppraisalPayloadSha256: pendingSource.appraisalPayloadSha256,
+        },
+        sourceGovernance: {
+          repoRelativePath: relative(repoRoot, sourceSnapshotPath),
+          snapshotRawBytesSha256: fileSha256(sourceSnapshotPath),
+          identityEvidenceSha256: identity.identityVerification.evidenceSha256,
+          licenseMatrixSha256: license.matrixSha256,
+          licensePolicy: license.policy,
+          fullTextDecision: license.decisions.full_text,
+          passageDecision: license.decisions.passage,
+        },
+        sourceInventory: {
+          researchSsdRelativePath: relative(researchRoot, inventoryPath),
+          rawBytesSha256: fileSha256(inventoryPath),
+        },
+        integrity: {
+          researchSsdRelativePath: relative(researchRoot, integrityAuditPath),
+          auditFileRawBytesSha256: fileSha256(integrityAuditPath),
+          sourceAuditSha256: integrity.auditSha256,
+          sourceAuditInputSha256: integrity.inputSha256,
+          state: integrity.state,
+        },
+        acquisition: {
+          ledgerResearchSsdRelativePath: relative(researchRoot, acquisitionLedgerPath),
+          ledgerRawBytesSha256: fileSha256(acquisitionLedgerPath),
+          verificationResearchSsdRelativePath: relative(researchRoot, acquisitionVerificationPath),
+          verificationRawBytesSha256: fileSha256(acquisitionVerificationPath),
+          acceptedArtifacts,
+        },
+        methodAppraisal: {
+          registrationIndexResearchSsdRelativePath: relative(researchRoot, registrationIndexPath),
+          registrationIndexRawBytesSha256: fileSha256(registrationIndexPath),
+          registered: false,
+          historicalPendingAppraisalPayloadSha256: pendingSource.appraisalPayloadSha256,
+        },
+        priorClosure: {
+          fullTextLedgerResearchSsdRelativePath: relative(researchRoot, fullTextLedgerPath),
+          fullTextLedgerRawBytesSha256: fileSha256(fullTextLedgerPath),
+          workpackLedgerResearchSsdRelativePath: relative(researchRoot, workpackLedgerPath),
+          workpackLedgerRawBytesSha256: fileSha256(workpackLedgerPath),
+          priorTerminalDecisionPresent: false,
+        },
+      },
+      supersession: {
+        state: "supersedes_historical_method_appraisal_pending_for_prebook_closure_only",
+        historicalReviewStatus: pendingSource.reviewStatus,
+        historicalRuntimeEligibility: pendingSource.runtimeEligibility,
+        pendingAppraisalPayloadSha256: pendingSource.appraisalPayloadSha256,
+        createsAuditedMethodAppraisal: false,
+        createsScientificClaim: false,
+      },
+      runtimeEligible: false,
+      releaseEligible: false,
+    }
+    return withPayloadHash(payload, "decisionSha256")
+  })
+  const byStatus = Object.fromEntries([...TERMINAL_HISTORICAL_SOURCE_STATUSES]
+    .map((status) => [status, decisions.filter((entry) => entry.terminalStatus === status).length]))
+  assert(byStatus.license_blocked === 15 && byStatus.full_text_unavailable === 2
+    && byStatus.quarantined === 4,
+  "prebook_closure_historical_terminal_status_distribution_invalid")
+  return withPayloadHash({
+    schemaVersion: "dna-prebook-historical-source-terminal-ledger@1",
+    basisAt,
+    decisionClass: "prebook_closure_only_not_method_appraisal_or_release",
+    decisions,
+    counts: {
+      historicalPending: EXPECTED_HISTORICAL_PENDING_SOURCES,
+      previouslyTerminal: priorTerminalSourceIds.size,
+      newlyTerminal: decisions.length,
+      totalTerminal: priorTerminalSourceIds.size + decisions.length,
+      open: 0,
+      byStatus,
+    },
+    sourceIdsSha256: canonicalSha256(decisions.map((entry) => entry.sourceId).sort()),
+    boundary: "These terminal decisions close historical prebook pipeline states only. They do not create a method appraisal, scientific claim, passage permission, runtime authority, or release authority.",
     runtimeEligible: false,
     releaseEligible: false,
   })
@@ -975,13 +1243,24 @@ function buildHumanEvaluationPack({ candidatePackage, benchmark, variations, bas
 export function validatePrebookArtifacts(artifacts) {
   const issues = []
   const push = (condition, code) => { if (!condition) issues.push(code) }
-  const { fullText, workpacks, claims, candidatePackage, benchmark, variations, humanEvaluation } = artifacts
+  const {
+    fullText,
+    workpacks,
+    historicalSources,
+    claims,
+    candidatePackage,
+    benchmark,
+    variations,
+    humanEvaluation,
+  } = artifacts
   const payloadHashValid = (value, field) => {
     const { [field]: declared, ...payload } = value
     return declared === canonicalSha256(payload)
   }
   push(payloadHashValid(fullText, "canonicalPayloadSha256"), "full_text_payload_hash")
   push(payloadHashValid(workpacks, "canonicalPayloadSha256"), "workpack_payload_hash")
+  push(payloadHashValid(historicalSources, "canonicalPayloadSha256"),
+    "historical_source_payload_hash")
   push(payloadHashValid(claims, "canonicalPayloadSha256"), "claim_payload_hash")
   push(payloadHashValid(candidatePackage, "packageSha256"), "candidate_package_hash")
   push(payloadHashValid(benchmark, "canonicalPayloadSha256"), "benchmark_payload_hash")
@@ -994,6 +1273,43 @@ export function validatePrebookArtifacts(artifacts) {
   "full_text_terminal_or_reason")
   push(workpacks.decisions.length === EXPECTED_WORKPACKS, "workpack_count")
   push(workpacks.counts.open === 0, "workpack_open")
+  push(historicalSources.decisions.length === EXPECTED_HISTORICAL_SOURCE_DECISIONS,
+    "historical_source_count")
+  push(historicalSources.counts.historicalPending === EXPECTED_HISTORICAL_PENDING_SOURCES
+    && historicalSources.counts.previouslyTerminal
+      === EXPECTED_HISTORICAL_PENDING_SOURCES - EXPECTED_HISTORICAL_SOURCE_DECISIONS
+    && historicalSources.counts.newlyTerminal === EXPECTED_HISTORICAL_SOURCE_DECISIONS
+    && historicalSources.counts.totalTerminal === EXPECTED_HISTORICAL_PENDING_SOURCES
+    && historicalSources.counts.open === 0,
+  "historical_source_coverage")
+  push(historicalSources.counts.byStatus.license_blocked === 15
+    && historicalSources.counts.byStatus.full_text_unavailable === 2
+    && historicalSources.counts.byStatus.quarantined === 4,
+  "historical_source_status_distribution")
+  push(new Set(historicalSources.decisions.map((entry) => entry.sourceId)).size
+    === EXPECTED_HISTORICAL_SOURCE_DECISIONS,
+  "historical_source_duplicate")
+  const priorHistoricalIds = new Set([
+    ...workpacks.decisions.map((entry) => entry.sourceId),
+    ...fullText.decisions.map((entry) => entry.matchedArchiveSourceId).filter(Boolean),
+  ])
+  push(historicalSources.decisions.every((entry) =>
+    TERMINAL_HISTORICAL_SOURCE_STATUSES.has(entry.terminalStatus)
+      && entry.reasonCode && payloadHashValid(entry, "decisionSha256")
+      && !priorHistoricalIds.has(entry.sourceId)
+      && entry.fullTextReadInThisClosure === false
+      && entry.registeredMethodChainPreserved === false
+      && entry.evidence?.methodAppraisal?.registered === false
+      && entry.evidence?.priorClosure?.priorTerminalDecisionPresent === false
+      && entry.supersession?.state
+        === "supersedes_historical_method_appraisal_pending_for_prebook_closure_only"
+      && entry.supersession?.createsAuditedMethodAppraisal === false
+      && entry.supersession?.createsScientificClaim === false
+      && entry.runtimeEligible === false && entry.releaseEligible === false),
+  "historical_source_terminal_evidence_or_boundary")
+  push(historicalSources.runtimeEligible === false
+    && historicalSources.releaseEligible === false,
+  "historical_source_release_boundary")
   push(claims.counts.byStatus.bounded_candidate === EXPECTED_REREVIEW_CONSENSUS,
     "claim_consensus_count")
   push(claims.counts.byStatus.contested_excluded === EXPECTED_REREVIEW_CONTESTED,
@@ -1050,6 +1366,7 @@ export function validatePrebookArtifacts(artifacts) {
     counts: {
       fullText: fullText.decisions.length,
       workpacks: workpacks.decisions.length,
+      historicalSources: historicalSources.decisions.length,
       boundedClaims: candidatePackage.claims.length,
       benchmark: benchmark.questions.length,
       variations: variations.variations.length,
@@ -1066,10 +1383,22 @@ export function runPrebookClosure(options = {}) {
   const resume = options.resume !== false
   const gapSnapshotPath = join(repoRoot, GAP_SNAPSHOT_RELATIVE_PATH)
   const sourceSnapshotPath = join(repoRoot, SOURCE_SNAPSHOT_RELATIVE_PATH)
+  const sourceAppraisalSnapshotPath = join(repoRoot, SOURCE_APPRAISAL_SNAPSHOT_RELATIVE_PATH)
   const gapSnapshot = readJson(gapSnapshotPath)
   const sourceSnapshot = readJson(sourceSnapshotPath)
+  const sourceAppraisalSnapshot = readJson(sourceAppraisalSnapshotPath)
   const basisAt = gapSnapshot.executedAt
   const workRoot = join(researchRoot, "Datasets/DNA-Intelligence/work/v3")
+  const sourceLibraryRoot = assertContained(researchRoot,
+    join(researchRoot, SOURCE_LIBRARY_RELATIVE_ROOT))
+  assert(existsSync(sourceLibraryRoot) && !lstatSync(sourceLibraryRoot).isSymbolicLink(),
+    "prebook_closure_source_library_root_invalid")
+  const acquisitionLedgerPath = assertContained(sourceLibraryRoot,
+    join(sourceLibraryRoot, "acquisition-audit/v1/acquisition-ledger.json"))
+  const acquisitionVerificationPath = assertContained(sourceLibraryRoot,
+    join(sourceLibraryRoot, "acquisition-audit/v1/acquisition-verification.json"))
+  const integrityAuditPath = assertContained(sourceLibraryRoot,
+    join(sourceLibraryRoot, "integrity-audit/v1/source-integrity-audit.json"))
   const candidateCorpusPath = join(workRoot, "candidate-corpus/candidate-jats-corpus.json")
   const workpackIndexPath = join(workRoot, "candidate-corpus/method-review-workpack-index.json")
   const batchIndexPath = join(workRoot, "method-appraisals/batch-v1/run-index.json")
@@ -1103,6 +1432,9 @@ export function runPrebookClosure(options = {}) {
   const reconciliationIndex = readJson(reconciliationIndexPath)
   const candidatePassages = readJson(passagesPath)
   const developmentLedger = readJson(developmentLedgerPath)
+  const acquisitionLedger = readJson(acquisitionLedgerPath)
+  const acquisitionVerification = readJson(acquisitionVerificationPath)
+  const integrityAudit = readJson(integrityAuditPath)
   const advancedRecords = readAdvancedScreeningRecords(researchRoot, gapSnapshot)
   const stages = []
 
@@ -1127,6 +1459,46 @@ export function runPrebookClosure(options = {}) {
     }),
   })
   stages.push(workpackStage)
+  const historicalSourceStage = runStage({
+    outputRoot,
+    stageId: "08-historical-source-reconciliation",
+    relativePath: "historical-source-decisions.json",
+    inputSha256: canonicalSha256({
+      sourceAppraisalSnapshot: fileSha256(sourceAppraisalSnapshotPath),
+      sourceGovernanceSnapshot: fileSha256(sourceSnapshotPath),
+      acquisitionLedger: fileSha256(acquisitionLedgerPath),
+      acquisitionVerification: fileSha256(acquisitionVerificationPath),
+      integrityAudit: fileSha256(integrityAuditPath),
+      registrationIndex: fileSha256(registrationIndexPath),
+      fullTextLedger: fullTextStage.sha256,
+      workpackLedger: workpackStage.sha256,
+    }),
+    basisAt,
+    resume,
+    build: () => buildHistoricalSourceDecisions({
+      sourceAppraisalSnapshot,
+      sourceAppraisalSnapshotPath,
+      sourceSnapshot,
+      sourceSnapshotPath,
+      sourceLibraryRoot,
+      acquisitionLedger,
+      acquisitionLedgerPath,
+      acquisitionVerification,
+      acquisitionVerificationPath,
+      integrityAudit,
+      integrityAuditPath,
+      registrationIndex,
+      registrationIndexPath,
+      fullTextLedger: fullTextStage.value,
+      fullTextLedgerPath: fullTextStage.outputPath,
+      workpackLedger: workpackStage.value,
+      workpackLedgerPath: workpackStage.outputPath,
+      researchRoot,
+      repoRoot,
+      basisAt,
+    }),
+  })
+  stages.push(historicalSourceStage)
   const claimStage = runStage({
     outputRoot, stageId: "03-claims", relativePath: "claim-decisions.json",
     inputSha256: canonicalSha256({
@@ -1201,6 +1573,7 @@ export function runPrebookClosure(options = {}) {
   const artifacts = {
     fullText: fullTextStage.value,
     workpacks: workpackStage.value,
+    historicalSources: historicalSourceStage.value,
     claims: claimStage.value,
     candidatePackage: packageStage.value,
     benchmark: benchmarkStage.value,
@@ -1263,6 +1636,7 @@ export function runPrebookClosure(options = {}) {
 }
 
 export function verifyPrebookClosure(options = {}) {
+  const repoRoot = resolve(options.repoRoot ?? DEFAULT_REPO_ROOT)
   const researchRoot = resolveResearchRoot(options.researchRoot
     ?? process.env.RESEARCH_SSD_ROOT ?? "/Volumes/ResearchSSD")
   const outputRoot = assertContained(researchRoot, join(researchRoot, OUTPUT_RELATIVE_ROOT))
@@ -1278,6 +1652,7 @@ export function verifyPrebookClosure(options = {}) {
   const artifacts = {
     fullText: readJson(join(outputRoot, "full-text-decisions.json")),
     workpacks: readJson(join(outputRoot, "workpack-decisions.json")),
+    historicalSources: readJson(join(outputRoot, "historical-source-decisions.json")),
     claims: readJson(join(outputRoot, "claim-decisions.json")),
     candidatePackage: readJson(join(outputRoot, "external-science-candidate-package.json")),
     benchmark: readJson(join(outputRoot, "evaluation-draft/questions-and-approvals.json")),
@@ -1286,6 +1661,45 @@ export function verifyPrebookClosure(options = {}) {
   }
   const validation = validatePrebookArtifacts(artifacts)
   assert(validation.ok, `prebook_closure_verify_failed:${validation.issues.join(",")}`)
+  const sourceAppraisalSnapshotPath = join(repoRoot, SOURCE_APPRAISAL_SNAPSHOT_RELATIVE_PATH)
+  const sourceSnapshotPath = join(repoRoot, SOURCE_SNAPSHOT_RELATIVE_PATH)
+  const sourceLibraryRoot = assertContained(researchRoot,
+    join(researchRoot, SOURCE_LIBRARY_RELATIVE_ROOT))
+  const acquisitionLedgerPath = assertContained(sourceLibraryRoot,
+    join(sourceLibraryRoot, "acquisition-audit/v1/acquisition-ledger.json"))
+  const acquisitionVerificationPath = assertContained(sourceLibraryRoot,
+    join(sourceLibraryRoot, "acquisition-audit/v1/acquisition-verification.json"))
+  const integrityAuditPath = assertContained(sourceLibraryRoot,
+    join(sourceLibraryRoot, "integrity-audit/v1/source-integrity-audit.json"))
+  const registrationIndexPath = assertContained(researchRoot, join(researchRoot,
+    "Datasets/DNA-Intelligence/work/v3/method-appraisal-registrations/v1/index.json"))
+  const expectedHistoricalSources = buildHistoricalSourceDecisions({
+    sourceAppraisalSnapshot: readJson(sourceAppraisalSnapshotPath),
+    sourceAppraisalSnapshotPath,
+    sourceSnapshot: readJson(sourceSnapshotPath),
+    sourceSnapshotPath,
+    sourceLibraryRoot,
+    acquisitionLedger: readJson(acquisitionLedgerPath),
+    acquisitionLedgerPath,
+    acquisitionVerification: readJson(acquisitionVerificationPath),
+    acquisitionVerificationPath,
+    integrityAudit: readJson(integrityAuditPath),
+    integrityAuditPath,
+    registrationIndex: readJson(registrationIndexPath),
+    registrationIndexPath,
+    fullTextLedger: artifacts.fullText,
+    fullTextLedgerPath: join(outputRoot, "full-text-decisions.json"),
+    workpackLedger: artifacts.workpacks,
+    workpackLedgerPath: join(outputRoot, "workpack-decisions.json"),
+    researchRoot,
+    repoRoot,
+    basisAt: artifacts.historicalSources.basisAt,
+  })
+  assert(expectedHistoricalSources.canonicalPayloadSha256
+    === artifacts.historicalSources.canonicalPayloadSha256,
+  "prebook_closure_historical_source_evidence_drift")
+  assert((statSync(join(outputRoot, "historical-source-decisions.json")).mode & 0o777) === 0o600,
+    "prebook_closure_historical_source_permissions_invalid")
   return { outputRoot, index, validation }
 }
 

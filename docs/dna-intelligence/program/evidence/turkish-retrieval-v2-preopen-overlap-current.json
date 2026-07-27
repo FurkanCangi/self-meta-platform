@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "dna-turkish-retrieval-v2-preopen-overlap-manifest@1",
+  "recordedAt": "2026-07-24T10:27:21.489Z",
+  "status": "pass_zero_cross_set_overlap",
+  "receipt": {
+    "researchSsdRelativePath": "Datasets/DNA-Intelligence/evaluation/preopen-integrity/turkish-retrieval-v2/overlap-receipt.json",
+    "rawSha256": "da800f13e63b1dd61eaa06735afe2a7f9516c11b6243c031e00119f4060d9787",
+    "receiptSha256": "a37ce7c2a109e294ed6b1987aa4916816b13b0673762b9aee29c4c4dfedef279",
+    "fileMode": "0600"
+  },
+  "inputBindings": {
+    "holdoutArtifactSha256": "dd61668c794213509ad0cbcd38df05005308ec621acb8bb78e5b9a847038def0",
+    "holdoutFileSha256": "2100c7f84c479a0feff22a9342d9900b015b43438084acca03010c39b058dceb",
+    "holdoutManifestFileSha256": "03ed5f92be1d6cb40b8e987575f51242b2847ef488c06f6136d6ae6aff091258",
+    "developmentBankSha256": "aea4ca29d609e5f0fb295978c620a0aa2d62bc75300c57fa7ef352977b784b3c",
+    "developmentBankFileSha256": "72093efba0cacd9abe770592536517c381ce3615d48266d357211dc3a5864d00",
+    "developmentManifestFileSha256": "59d8e417e80cf8311dce738f98a2f82b24381679d0f9a2a9808d541c5459be39",
+    "allowedLegacyQaFileSha256": "6b01ae69875b93e5fb309bdc246e26abd481913cba9a821ed93ca50fd984e22f",
+    "integrityScriptFileSha256": "23ede06ac1d2353b0f30419b98f44a2b7d8c1280669aad305b3b0114f7d3bc49",
+    "integrityCoreFileSha256": "ac1eb26aa9588ff73ebd5f97e258c21f9c1a95a1c0c82698596860bed02dc1c6"
+  },
+  "counts": {
+    "holdoutQuestions": 196,
+    "developmentQuestions": 708,
+    "newDevelopmentQuestions": 560,
+    "allowedLegacyQuestions": 148
+  },
+  "overlap": {
+    "exactOverlap": 0,
+    "normalizedOverlap": 0,
+    "nearDuplicateOverlap": 0,
+    "semanticFamilyOverlap": 0
+  },
+  "methods": {
+    "exact": "trimmed_utf8_exact@1",
+    "normalized": "turkish_nfkd_ascii_prompt_normalization@1",
+    "nearDuplicate": "token_edit_distance_at_most_one_90_percent@1",
+    "semanticFamily": "sorted_meaningful_light_stem_fingerprint@1"
+  },
+  "validation": {
+    "deterministicRepeats": 20,
+    "uniqueAggregateHashes": 1
+  },
+  "boundaries": {
+    "aggregateOnly": true,
+    "payloadReadByIntegrityRole": true,
+    "questionTextStored": false,
+    "questionIdsStored": false,
+    "failureExamplesStored": false,
+    "visibleToAdapterTuning": false,
+    "adapterTuningUseAllowed": false,
+    "independentHumanValidation": false,
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "activationAllowed": false
+  },
+  "manifestSha256": "2fdda6a76549db9083ccfa95d3c8e7009525f23c3499005fe5c379690c5a02cf"
+}

@@ -3,7 +3,6 @@
 import {
   ArrowUp,
   ChevronDown,
-  CircleAlert,
   FileSearch,
   LoaderCircle,
   RefreshCw,
@@ -13,22 +12,28 @@ import {
 } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useAppSurface } from "@/app/components/app-shell/useAppSurface"
 import {
   canBeginDnaChatReportSelection,
+  createDnaChatRequestCoordinator,
   createDnaChatReportSelectionCoordinator,
+  isDnaChatRetryableError,
+  planDnaChatNewConversation,
   planDnaChatReportTransition,
+  planDnaChatRetry,
+  shouldReuseDnaChatUserMessage,
+  type DnaChatRequestSnapshot,
+  type DnaChatResponseDepth,
 } from "@/lib/dna/chat/conversationPolicy"
 import {
   DNA_INTELLIGENCE_AUDIT_NOTICE_TR,
-  DNA_INTELLIGENCE_COMPOSER_NOTICE_TR,
   DNA_INTELLIGENCE_PUBLIC_INTENDED_USE,
   DNA_INTELLIGENCE_REPORT_OWNERSHIP_NOTICE_TR,
   DNA_INTELLIGENCE_TAGLINE_TR,
   type DnaIntelligencePublicIntendedUse,
 } from "@/lib/dna/chat/intendedUse"
-import { DNA_CHAT_STARTER_QUESTIONS } from "@/lib/dna/chat/suggestions"
 import DnaIssueFeedback from "./DnaIssueFeedback"
 
 type DnaChatClassification =
@@ -40,7 +45,7 @@ type DnaChatClassification =
   | "not_available"
   | "refusal"
 
-type ResponseDepth = "short" | "standard" | "deep"
+type ResponseDepth = DnaChatResponseDepth
 
 type ReportOption = {
   id: string
@@ -154,6 +159,7 @@ type DnaAnswer = {
   responseDepth: ResponseDepth
   runtimeGeneration: "v2_legacy" | "v3"
   classification: DnaChatClassification
+  availabilityScope?: "knowledge" | "report"
   summary: string
   details: string[]
   sources: SourceRef[]
@@ -176,15 +182,6 @@ type DnaAnswer = {
 type ChatMessage =
   | { id: string; role: "user"; text: string }
   | { id: string; role: "assistant"; answer: DnaAnswer }
-
-const STARTER_QUESTIONS = [
-  DNA_CHAT_STARTER_QUESTIONS.theory[0],
-  DNA_CHAT_STARTER_QUESTIONS.dna[0],
-  DNA_CHAT_STARTER_QUESTIONS.theory[1],
-  DNA_CHAT_STARTER_QUESTIONS.dna[1],
-  DNA_CHAT_STARTER_QUESTIONS.case[0],
-  DNA_CHAT_STARTER_QUESTIONS.case[1],
-].filter((question): question is string => Boolean(question))
 
 const RESPONSE_DEPTH_OPTIONS: ReadonlyArray<{
   value: ResponseDepth
@@ -213,6 +210,7 @@ const CLASSIFICATION_META: Record<DnaChatClassification, { label: string; classN
 }
 
 const ERROR_MESSAGES: Record<string, string> = {
+  request_cancelled: "Yanıt oluşturma durduruldu. Sorunuz korunuyor; hazır olduğunuzda yeniden deneyebilirsiniz.",
   invalid_payload: "Soru biçimi doğrulanamadı. Lütfen daha kısa ve açık biçimde yeniden yazın.",
   mode_report_mismatch: "Rapor sorusu için bir rapor seçilmelidir.",
   unauthorized: "Oturum doğrulanamadı. Yeniden giriş yapmanız gerekiyor.",
@@ -509,6 +507,9 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
     responseDepth,
     runtimeGeneration,
     classification,
+    ...(row.availabilityScope === "knowledge" || row.availabilityScope === "report"
+      ? { availabilityScope: row.availabilityScope }
+      : {}),
     summary: String(row.summary || "Yanıt oluşturuldu.").trim(),
     details: normalizeStringList(row.details),
     sources,
@@ -552,6 +553,7 @@ function sourceAnchor(requestId: string, index: number) {
 
 export default function DnaAssistantClient({ initialReportId }: { initialReportId: string }) {
   const isAppSurface = useAppSurface(false)
+  const router = useRouter()
   const [reports, setReports] = useState<ReportOption[]>([])
   const [selectedReportId, setSelectedReportId] = useState("")
   const [reportPickerOpen, setReportPickerOpen] = useState(false)
@@ -568,6 +570,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState("")
   const [sendErrorCode, setSendErrorCode] = useState("")
+  const [failedRequest, setFailedRequest] = useState<DnaChatRequestSnapshot | null>(null)
   const [composerHeight, setComposerHeight] = useState(224)
   const messageEndRef = useRef<HTMLDivElement>(null)
   const composerFooterRef = useRef<HTMLElement>(null)
@@ -575,8 +578,8 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
   const reportPickerRef = useRef<HTMLElement>(null)
   const firstReportButtonRef = useRef<HTMLButtonElement>(null)
   const reportPickerFocusPendingRef = useRef(false)
-  const requestSequenceRef = useRef(0)
-  const activeRequestRef = useRef<AbortController | null>(null)
+  const reportRequestSequenceRef = useRef(0)
+  const requestCoordinatorRef = useRef(createDnaChatRequestCoordinator())
   const reportSelectionCoordinatorRef = useRef(createDnaChatReportSelectionCoordinator())
 
   const selectedReport = reports.find((report) => report.id === selectedReportId) || null
@@ -587,6 +590,8 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
   })
 
   const loadReports = useCallback(async (signal?: AbortSignal, linkedReportId = "") => {
+    const reportRequestId = reportRequestSequenceRef.current + 1
+    reportRequestSequenceRef.current = reportRequestId
     setReportsLoading(true)
     setReportsError("")
     setReportsErrorCode("")
@@ -601,6 +606,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
         | { ok?: boolean; reports?: ReportOption[]; error?: string }
         | null
       if (!response.ok || !payload?.ok) throw new Error(payload?.error || "dna_chat_failed")
+      if (reportRequestSequenceRef.current !== reportRequestId) return null
 
       const nextReports = Array.isArray(payload.reports) ? payload.reports.slice(0, 10) : []
       setReports(nextReports)
@@ -623,13 +629,16 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
       }
       return nextReports
     } catch (error) {
-      if ((error as Error)?.name === "AbortError") return null
+      if (
+        (error as Error)?.name === "AbortError"
+        || reportRequestSequenceRef.current !== reportRequestId
+      ) return null
       const code = error instanceof Error ? error.message : "dna_chat_failed"
       setReportsErrorCode(code)
       setReportsError(ERROR_MESSAGES[code] || ERROR_MESSAGES.dna_chat_failed)
       return null
     } finally {
-      setReportsLoading(false)
+      if (reportRequestSequenceRef.current === reportRequestId) setReportsLoading(false)
     }
   }, [])
 
@@ -638,9 +647,8 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
     if (initialReportId) void loadReports(controller.signal, initialReportId)
     return () => {
       controller.abort()
-      requestSequenceRef.current += 1
-      activeRequestRef.current?.abort()
-      activeRequestRef.current = null
+      reportRequestSequenceRef.current += 1
+      requestCoordinatorRef.current.cancel()
     }
   }, [initialReportId, loadReports])
 
@@ -665,10 +673,20 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
   }
 
   function cancelPendingResponse() {
-    requestSequenceRef.current += 1
-    activeRequestRef.current?.abort()
-    activeRequestRef.current = null
+    requestCoordinatorRef.current.cancel()
     setSending(false)
+  }
+
+  function stopPendingResponse() {
+    const interruptedRequest = requestCoordinatorRef.current.cancel()
+    setSending(false)
+    if (!interruptedRequest) return
+    const retryRequest = planDnaChatRetry(interruptedRequest)
+    setFailedRequest(retryRequest)
+    setQuestion(retryRequest.question)
+    setSendErrorCode("request_cancelled")
+    setSendError(ERROR_MESSAGES.request_cancelled)
+    moveQuestionFocus(retryRequest.question)
   }
 
   function clearConversation() {
@@ -679,6 +697,25 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
     setQuestion("")
     setSendError("")
     setSendErrorCode("")
+    setFailedRequest(null)
+  }
+
+  function startNewConversation() {
+    if (reportSelectionCoordinatorRef.current.isInFlight()) return
+    const plan = planDnaChatNewConversation()
+    clearConversation()
+    setSelectedReportId(plan.selectedReportId ?? "")
+    setReportPickerOpen(plan.reportPickerOpen)
+    setReportSelectionNotice("")
+    if (plan.clearReportOptions) {
+      reportRequestSequenceRef.current += 1
+      setReports([])
+      setReportsLoading(false)
+      setReportsError("")
+      setReportsErrorCode("")
+    }
+    router.replace("/dna-asistani", { scroll: false })
+    moveQuestionFocus(plan.draftQuestion)
   }
 
   function removeReportContext() {
@@ -687,6 +724,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
     setSelectedReportId("")
     setReportPickerOpen(false)
     setReportSelectionNotice("")
+    router.replace("/dna-asistani", { scroll: false })
     moveQuestionFocus()
   }
 
@@ -706,25 +744,37 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
 
   async function sendQuestion(
     cleanQuestion: string,
-    options: { reportId?: string; appendUser?: boolean; previousTopic?: string | null } = {},
+    options: {
+      reportId?: string | null
+      appendUser?: boolean
+      previousTopic?: string | null
+      responseDepth?: ResponseDepth
+    } = {},
   ) {
     if (sending || cleanQuestion.length < 2) return
 
+    const requestReportId = options.reportId === undefined
+      ? selectedReportId
+      : options.reportId ?? ""
+    const requestPreviousTopic = options.previousTopic === undefined ? previousTopic : options.previousTopic
+    const request = requestCoordinatorRef.current.begin({
+      question: cleanQuestion,
+      reportId: requestReportId || null,
+      previousTopic: requestPreviousTopic,
+      responseDepth: options.responseDepth ?? responseDepth,
+      appendUserMessage: options.appendUser !== false,
+    })
     setSending(true)
     setSendError("")
     setSendErrorCode("")
+    setFailedRequest(null)
     setQuestion("")
-    if (options.appendUser !== false) {
-      setMessages((current) => [...current, { id: messageId("user"), role: "user", text: cleanQuestion }])
+    if (request.snapshot.appendUserMessage) {
+      setMessages((current) => [
+        ...current,
+        { id: messageId("user"), role: "user", text: request.snapshot.question },
+      ])
     }
-
-    const requestId = requestSequenceRef.current + 1
-    requestSequenceRef.current = requestId
-    const controller = new AbortController()
-    activeRequestRef.current?.abort()
-    activeRequestRef.current = controller
-    const requestReportId = options.reportId ?? selectedReportId
-    const requestPreviousTopic = options.previousTopic === undefined ? previousTopic : options.previousTopic
 
     try {
       const response = await fetch("/api/app/dna-chat", {
@@ -735,36 +785,44 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
           "content-type": "application/json",
           "x-dna-request": "same-origin",
         },
-        signal: controller.signal,
+        signal: request.controller.signal,
         body: JSON.stringify({
-          question: cleanQuestion,
-          responseDepth,
-          ...(requestReportId ? { reportId: requestReportId } : {}),
-          ...(requestPreviousTopic ? { context: { previousTopic: requestPreviousTopic } } : {}),
+          question: request.snapshot.question,
+          responseDepth: request.snapshot.responseDepth,
+          ...(request.snapshot.reportId ? { reportId: request.snapshot.reportId } : {}),
+          ...(request.snapshot.previousTopic
+            ? { context: { previousTopic: request.snapshot.previousTopic } }
+            : {}),
         }),
       })
       const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null
       if (!response.ok || !payload?.ok) throw new Error(String(payload?.error || "dna_chat_failed"))
       const answer = normalizeAnswer(payload)
       if (!answer) throw new Error("dna_chat_failed")
-      if (requestSequenceRef.current !== requestId) return
+      if (!requestCoordinatorRef.current.isCurrent(request.requestId)) return
 
       setMessages((current) => [...current, { id: messageId("assistant"), role: "assistant", answer }])
       setPreviousTopic(answer.topic)
-      if (answer.contextRequest?.type === "report" && !requestReportId) {
-        setPendingReportQuestion(cleanQuestion)
+      if (answer.contextRequest?.type === "report" && !request.snapshot.reportId) {
+        setPendingReportQuestion(request.snapshot.question)
         reportPickerFocusPendingRef.current = true
         setReportPickerOpen(true)
-        await loadReports(controller.signal)
+        await loadReports(request.controller.signal)
       }
     } catch (error) {
-      if ((error as Error)?.name === "AbortError" || requestSequenceRef.current !== requestId) return
-      const code = error instanceof Error ? error.message : "dna_chat_failed"
+      if (
+        (error as Error)?.name === "AbortError"
+        || !requestCoordinatorRef.current.isCurrent(request.requestId)
+      ) return
+      const rawCode = error instanceof Error ? error.message : "dna_chat_failed"
+      const code = ERROR_MESSAGES[rawCode] ? rawCode : "dna_chat_failed"
+      const retryRequest = planDnaChatRetry(request.snapshot)
+      setFailedRequest(retryRequest)
+      setQuestion(retryRequest.question)
       setSendErrorCode(code)
       setSendError(ERROR_MESSAGES[code] || ERROR_MESSAGES.dna_chat_failed)
     } finally {
-      if (requestSequenceRef.current === requestId) {
-        activeRequestRef.current = null
+      if (requestCoordinatorRef.current.complete(request.requestId)) {
         setSending(false)
         if (!reportPickerFocusPendingRef.current) moveQuestionFocus()
       }
@@ -776,6 +834,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
     const coordinator = reportSelectionCoordinatorRef.current
     const transition = coordinator.claim({
       reportId,
+      currentReportId: selectedReportId || null,
       pendingReportQuestion,
     })
     if (!transition) return
@@ -793,7 +852,8 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
       if (waitingQuestion && transition.selectedReportId) {
         await sendQuestion(waitingQuestion, {
           reportId: transition.selectedReportId,
-          previousTopic: transition.previousTopic,
+          previousTopic: transition.clearConversation ? transition.previousTopic : previousTopic,
+          appendUser: transition.clearConversation,
         })
       } else {
         moveQuestionFocus()
@@ -813,7 +873,25 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
       reportPickerFocusPendingRef.current = false
       setReportPickerOpen(false)
     }
-    void sendQuestion(cleanQuestion)
+    const reuseFailedMessage = shouldReuseDnaChatUserMessage(failedRequest, cleanQuestion)
+    void sendQuestion(cleanQuestion, reuseFailedMessage && failedRequest
+      ? {
+          reportId: failedRequest.reportId,
+          previousTopic: failedRequest.previousTopic,
+          responseDepth,
+          appendUser: false,
+        }
+      : {})
+  }
+
+  function retryLastQuestion() {
+    if (!failedRequest || sending || !isDnaChatRetryableError(sendErrorCode)) return
+    void sendQuestion(failedRequest.question, {
+      reportId: failedRequest.reportId,
+      previousTopic: failedRequest.previousTopic,
+      responseDepth: failedRequest.responseDepth,
+      appendUser: false,
+    })
   }
 
   const hasConversation = messages.length > 0 || reportPickerOpen || sending
@@ -852,12 +930,21 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
     return (
       <form onSubmit={submitQuestion} className="w-full">
         {sendError ? (
-          <div role="alert" className="mb-3 rounded-2xl border border-rose-200 bg-[var(--sm-surface)] px-4 py-3 text-xs font-bold leading-5 text-[var(--sm-text)] shadow-sm">
-            {sendError}
+          <div id="dna-chat-send-error" role="alert" className="mb-3 rounded-2xl border border-rose-200 bg-[var(--sm-surface)] px-4 py-3 text-xs font-bold leading-5 text-[var(--sm-text)] shadow-sm">
+            <p>{sendError}</p>
             {sendErrorCode === "unauthorized" || sendErrorCode === "session_expired" ? (
-              <Link href="/app-login" className="ml-2 inline-flex min-h-11 items-center font-black text-blue-700 underline-offset-4 hover:underline">
+              <Link href="/app-login" className="mt-1 inline-flex min-h-11 items-center font-black text-blue-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
                 Yeniden giriş yap
               </Link>
+            ) : failedRequest && isDnaChatRetryableError(sendErrorCode) ? (
+              <button
+                type="button"
+                onClick={retryLastQuestion}
+                disabled={sending}
+                className="mt-1 inline-flex min-h-11 items-center gap-2 rounded-xl px-2 font-black text-blue-700 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <RefreshCw size={15} aria-hidden="true" /> Soruyu yeniden dene
+              </button>
             ) : null}
           </div>
         ) : null}
@@ -919,6 +1006,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
               rows={1}
               maxLength={600}
               disabled={sending}
+              aria-describedby={sendError ? "dna-chat-send-error" : undefined}
               placeholder={selectedReport ? "Bu raporun güvenli bulgularını veya genel bilgiyi sorun…" : "DNA Asistanına sorun…"}
               className={[
                 "max-h-40 min-w-0 flex-1 resize-none border-0 bg-transparent px-2 text-sm font-semibold leading-6 text-[var(--sm-text)] outline-none placeholder:font-medium placeholder:text-[var(--sm-text-muted)] disabled:opacity-60 sm:text-[15px]",
@@ -929,37 +1017,30 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
               {question.length > 500 ? (
                 <span className="hidden text-[10px] font-bold text-[var(--sm-text-muted)] sm:inline">{question.length}/600</span>
               ) : null}
-              <button
-                type="submit"
-                disabled={sending || question.trim().length < 2}
-                aria-label="Soruyu gönder"
-                className="grid min-h-12 min-w-12 place-items-center rounded-full border border-blue-600 bg-blue-600 text-white shadow-[0_12px_26px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-[0_16px_30px_rgba(37,99,235,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300 disabled:shadow-none disabled:hover:translate-y-0"
-              >
-                {sending ? <LoaderCircle className="animate-spin" size={19} aria-hidden="true" /> : <ArrowUp size={20} strokeWidth={2.6} aria-hidden="true" />}
-              </button>
+              {sending ? (
+                <button
+                  type="button"
+                  onClick={stopPendingResponse}
+                  aria-label="Yanıt oluşturmayı durdur"
+                  className="inline-flex min-h-12 min-w-12 items-center justify-center gap-1.5 rounded-full border border-rose-300 bg-rose-50 px-3 text-xs font-black text-rose-800 shadow-sm transition hover:bg-rose-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2"
+                >
+                  <X size={18} strokeWidth={2.6} aria-hidden="true" />
+                  <span>Durdur</span>
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={question.trim().length < 2}
+                  aria-label="Soruyu gönder"
+                  className="grid min-h-12 min-w-12 place-items-center rounded-full border border-blue-600 bg-blue-600 text-white shadow-[0_12px_26px_rgba(37,99,235,0.28)] transition hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-[0_16px_30px_rgba(37,99,235,0.32)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:border-slate-300 disabled:bg-slate-300 disabled:shadow-none disabled:hover:translate-y-0"
+                >
+                  <ArrowUp size={20} strokeWidth={2.6} aria-hidden="true" />
+                </button>
+              )}
             </div>
           </div>
         </div>
 
-        <div className="mt-3 flex flex-col items-center justify-center gap-1.5 px-2 text-center text-[10px] font-semibold leading-4 text-[var(--sm-text-muted)] sm:flex-row sm:gap-3 sm:text-[11px]">
-          <span className="hidden sm:inline">Enter gönderir · Shift + Enter yeni satır</span>
-          <span className="inline-flex items-center justify-center gap-1.5">
-            <CircleAlert className="shrink-0 text-blue-600" size={13} aria-hidden="true" />
-            {DNA_INTELLIGENCE_COMPOSER_NOTICE_TR}
-          </span>
-        </div>
-        <details className="group mx-auto mt-2 max-w-3xl text-left text-[10px] font-semibold leading-4 text-[var(--sm-text-muted)] sm:text-[11px]">
-          <summary className="mx-auto flex min-h-11 w-fit cursor-pointer list-none items-center gap-1.5 rounded-xl px-3 text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
-            Kullanım ve veri sınırları
-            <ChevronDown className="transition group-open:rotate-180" size={14} aria-hidden="true" />
-          </summary>
-          <div className="mt-1 space-y-2 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-3">
-            <p>{DNA_INTELLIGENCE_PUBLIC_INTENDED_USE.boundaryTr}</p>
-            <p>{DNA_INTELLIGENCE_PUBLIC_INTENDED_USE.privacyTr}</p>
-            <p>{DNA_INTELLIGENCE_PUBLIC_INTENDED_USE.evidenceTr}</p>
-            <p>{DNA_INTELLIGENCE_PUBLIC_INTENDED_USE.runtimeTr}</p>
-          </div>
-        </details>
       </form>
     )
   }
@@ -984,11 +1065,21 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
             </div>
           </div>
 
-          <div className="flex min-w-0 items-center gap-2 sm:justify-end">
+          <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
             <div className="hidden min-h-10 items-center gap-2 rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface)] px-3 text-[11px] font-bold text-[var(--sm-text-muted)] shadow-sm md:flex">
               <ShieldCheck size={16} className="text-blue-600" aria-hidden="true" />
               <span title={DNA_INTELLIGENCE_AUDIT_NOTICE_TR}>Sohbet geçmişi tutulmaz · Sınırlı audit</span>
             </div>
+
+            <button
+              type="button"
+              onClick={startNewConversation}
+              disabled={reportSelectionInFlight || (!hasConversation && !selectedReport && !question.trim())}
+              aria-label="Yeni sohbet başlat; mevcut sohbeti ve rapor bağlamını temizle"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface)] px-3 text-xs font-black text-[var(--sm-text-soft)] shadow-sm transition hover:border-blue-200 hover:bg-[var(--sm-surface-soft)] hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <RefreshCw size={15} aria-hidden="true" /> Yeni sohbet
+            </button>
 
             {selectedReport ? (
               <div role="status" className="flex min-h-11 min-w-0 items-center gap-2 rounded-full border border-cyan-200 bg-cyan-50 px-2.5 text-xs font-bold text-[var(--sm-text)] shadow-sm">
@@ -1051,21 +1142,6 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
 
               <div className="mx-auto mt-8 max-w-[840px] text-left">{renderComposer(true)}</div>
 
-              <div className="mx-auto mt-6 grid max-w-[760px] gap-2 sm:grid-cols-2">
-                {STARTER_QUESTIONS.slice(0, 4).map((suggestion, index) => (
-                  <button
-                    key={suggestion}
-                    type="button"
-                    onClick={() => moveQuestionFocus(suggestion)}
-                    className={[
-                      "min-h-12 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface)] px-4 py-2.5 text-left text-xs font-bold leading-5 text-[var(--sm-text-soft)] shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-[var(--sm-surface-soft)] hover:text-[var(--sm-text)] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500",
-                      index > 1 ? "hidden sm:block" : "",
-                    ].join(" ")}
-                  >
-                    {suggestion}
-                  </button>
-                ))}
-              </div>
             </div>
           </div>
         ) : (
@@ -1091,7 +1167,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
                       {message.text}
                     </div>
                   ) : (
-                    <AssistantAnswer key={message.id} answer={message.answer} onSuggestion={moveQuestionFocus} />
+                    <AssistantAnswer key={message.id} answer={message.answer} />
                   ),
                 )}
 
@@ -1200,17 +1276,58 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
   )
 }
 
-function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSuggestion: (value: string) => void }) {
+function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
+  const isSocialConversation = answer.topic?.startsWith("conversation.") === true
+
+  if (isSocialConversation) {
+    return (
+      <article className="w-full" aria-label="DNA Intelligence yanıtı">
+        <div className="flex items-start gap-3 sm:gap-4">
+          <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-blue-100 bg-[var(--sm-surface)] text-blue-700 shadow-sm">
+            <Sparkles size={17} aria-hidden="true" />
+          </span>
+          <p className="min-w-0 flex-1 pt-1 text-sm font-medium leading-6 text-[var(--sm-text)]">
+            {answer.summary}
+          </p>
+        </div>
+      </article>
+    )
+  }
+
+  if (answer.classification === "not_available") {
+    const isReportUnavailable = answer.availabilityScope === "report"
+    return (
+      <article className="w-full" aria-label="DNA Intelligence yanıtı">
+        <div className="flex items-start gap-3 sm:gap-4">
+          <span className="mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-slate-200 bg-[var(--sm-surface)] text-slate-600 shadow-sm">
+            {isReportUnavailable
+              ? <FileSearch size={17} aria-hidden="true" />
+              : <Sparkles size={17} aria-hidden="true" />}
+          </span>
+          <div className="min-w-0 flex-1 pt-0.5">
+            <h3 className="text-sm font-black leading-6 text-[var(--sm-text)]">
+              {isReportUnavailable ? "Seçili raporda bulunamadı" : "Henüz yanıtlayamıyorum"}
+            </h3>
+            <p className="mt-1 text-sm font-medium leading-6 text-[var(--sm-text-soft)]">
+              {answer.summary}
+            </p>
+            {answer.details[0] ? (
+              <p className="mt-2 text-xs font-medium leading-5 text-[var(--sm-text-muted)]">
+                {answer.details[0]}
+              </p>
+            ) : null}
+          </div>
+        </div>
+      </article>
+    )
+  }
+
   const baseMeta = CLASSIFICATION_META[answer.classification]
-  const reportScopedNotAvailable =
-    answer.classification === "not_available" &&
-    (answer.caseEvidence.length > 0 || answer.limitations.some((item) => /\b(?:rapor|vaka)\b/i.test(item)))
-  const meta = reportScopedNotAvailable ? { ...baseMeta, label: "Raporda Yok" } : baseMeta
-  const hasStructuredUnits = answer.answerUnits.length > 0
-  const hasSafetyBoundaryUnit = Boolean(
-    answer.safetyBoundary
-      && answer.answerUnits.some((unit) => unit.text.trim() === answer.safetyBoundary.trim()),
-  )
+  const meta = baseMeta
+  const visibleAnswerUnits = answer.answerUnits.filter((unit) =>
+    unit.kind !== "limitation"
+      && (unit.kind !== "safety_boundary" || unit.section === "case_non_inference"))
+  const hasStructuredUnits = visibleAnswerUnits.length > 0
   const sourceNumberById = new Map<string, number>()
   answer.sources.forEach((source, index) => {
     if (!sourceNumberById.has(source.id)) sourceNumberById.set(source.id, index + 1)
@@ -1300,10 +1417,10 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
           ) : null}
           {hasStructuredUnits ? (
             <ul className="mt-3 space-y-2" aria-label="Otoritesine göre ayrılmış yanıt">
-              {answer.answerUnits.map((unit, index) => {
+              {visibleAnswerUnits.map((unit, index) => {
                 const sectionHeading = answer.runtimeGeneration === "v3"
                   && unit.section
-                  && answer.answerUnits[index - 1]?.section !== unit.section
+                  && visibleAnswerUnits[index - 1]?.section !== unit.section
                     ? V3_ANSWER_SECTION_LABEL[unit.section]
                     : null
                 return (
@@ -1356,17 +1473,6 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
                   <p className={`mt-2 text-sm leading-6 text-[var(--sm-text)] ${unit.kind === "summary" ? "font-bold" : "font-medium"}`}>
                     {unit.text}
                   </p>
-                  {unit.authority.boundaryTr ? (
-                    <p
-                      className={`mt-2 rounded-lg border p-2 text-[11px] font-semibold leading-5 ${
-                        unit.authority.releaseEligible
-                          ? "border-emerald-200 bg-emerald-50 text-emerald-900"
-                          : "border-amber-200 bg-amber-50 text-amber-900"
-                      }`}
-                    >
-                      <strong>Bilgi sınırı:</strong> {unit.authority.boundaryTr}
-                    </p>
-                  ) : null}
                   </li>
                 )
               })}
@@ -1381,29 +1487,6 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
               ) : null}
             </>
           )}
-
-      {answer.evidenceSummary ? (
-        <div className="mt-4 grid gap-2 rounded-2xl border border-violet-200 bg-[var(--sm-surface-soft)] p-3 text-xs leading-5 sm:grid-cols-2">
-          {answer.evidenceSummary.level ? (
-            <div><span className="font-black text-[var(--sm-text)]">Kanıt düzeyi:</span> <span className="font-semibold text-[var(--sm-text-soft)]">{answer.evidenceSummary.level}</span></div>
-          ) : null}
-          {answer.evidenceSummary.scientificEvidenceLevel && answer.evidenceSummary.scientificEvidenceLevel !== answer.evidenceSummary.level ? (
-            <div><span className="font-black text-[var(--sm-text)]">Genel literatür:</span> <span className="font-semibold text-[var(--sm-text-soft)]">{answer.evidenceSummary.scientificEvidenceLevel}</span></div>
-          ) : null}
-          {answer.evidenceSummary.dnaValidationStatus === "not_established" ? (
-            <div><span className="font-black text-[var(--sm-text)]">DNA ilişkisi:</span> <span className="font-semibold text-[var(--sm-text-soft)]">Doğrudan ilişki kurulmamıştır</span></div>
-          ) : null}
-          {answer.evidenceSummary.ageScope ? (
-            <div><span className="font-black text-[var(--sm-text)]">Yaş kapsamı:</span> <span className="font-semibold text-[var(--sm-text-soft)]">{answer.evidenceSummary.ageScope}</span></div>
-          ) : null}
-          {answer.evidenceSummary.sampleScope ? (
-            <div className="sm:col-span-2"><span className="font-black text-[var(--sm-text)]">Örneklem sınırı:</span> <span className="font-semibold text-[var(--sm-text-soft)]">{answer.evidenceSummary.sampleScope}</span></div>
-          ) : null}
-          {answer.evidenceSummary.boundary ? (
-            <div className="sm:col-span-2"><span className="font-black text-[var(--sm-text)]">İddia sınırı:</span> <span className="font-semibold text-[var(--sm-text-soft)]">{answer.evidenceSummary.boundary}</span></div>
-          ) : null}
-        </div>
-      ) : null}
 
       {!hasStructuredUnits && answer.caseEvidence.length ? (
         <div className="mt-4 rounded-2xl border border-cyan-200 bg-[var(--sm-surface-soft)] p-3">
@@ -1449,8 +1532,6 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
                 <dl className="mt-2 grid gap-1.5 rounded-xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)] sm:grid-cols-2">
                   <div><dt className="inline font-black text-[var(--sm-text)]">Kaynak türü: </dt><dd className="inline">{source.sourceType || source.studyType || source.type || "Belirtilmemiş"}</dd></div>
                   <div><dt className="inline font-black text-[var(--sm-text)]">Bölüm/sayfa: </dt><dd className="inline">{source.locator || "Katalog kaydında belirtilmemiş"}</dd></div>
-                  <div><dt className="inline font-black text-[var(--sm-text)]">Kanıt düzeyi: </dt><dd className="inline">{source.evidenceLevel || "Kaynak kartında belirtilmemiş"}</dd></div>
-                  <div><dt className="inline font-black text-[var(--sm-text)]">Yaş kapsamı: </dt><dd className="inline">{source.ageScope || "Kaynak kartında belirtilmemiş"}</dd></div>
                 </dl>
                 {!source.supportedClaim && (source.excerptTr || source.excerpt) ? (
                   <div className="mt-2 rounded-xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-2 text-xs font-medium leading-5 text-[var(--sm-text-soft)]">
@@ -1463,12 +1544,6 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
                 ) : null}
                 {source.supportedClaim ? (
                   <p className="mt-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)]"><strong>Desteklediği sınırlı iddia:</strong> {source.supportedClaim}</p>
-                ) : null}
-                <p className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2 text-[11px] font-semibold leading-5 text-amber-900">
-                  <strong>Bilinen sınır:</strong> {source.knownBoundary || source.supportedBoundary || source.claimBoundary || source.authority?.boundaryTr || "Kaynak kartında ayrıca belirtilmemiş"}
-                </p>
-                {source.sampleScope ? (
-                  <p className="mt-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)]"><strong>Örneklem sınırı:</strong> {source.sampleScope}</p>
                 ) : null}
                 <div className="mt-2 flex flex-wrap items-center gap-2">
                   {source.url ? (
@@ -1489,34 +1564,6 @@ function AssistantAnswer({ answer, onSuggestion }: { answer: DnaAnswer; onSugges
         </details>
       ) : null}
 
-      {!hasStructuredUnits && answer.limitations.length ? (
-        <div className="mt-3 rounded-2xl border border-amber-200 bg-[var(--sm-surface-soft)] p-3 text-xs font-semibold leading-5 text-[var(--sm-text-soft)]">
-          <div className="font-black">Sınırlılıklar</div>
-          {answer.limitations.map((limitation) => <p key={limitation} className="mt-1">{limitation}</p>)}
-        </div>
-      ) : null}
-
-      {answer.safetyBoundary && !hasSafetyBoundaryUnit ? (
-        <div className="mt-3 flex items-start gap-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)]">
-          <ShieldCheck className="mt-0.5 shrink-0 text-blue-600" size={15} aria-hidden="true" />
-          <span>{answer.safetyBoundary}</span>
-        </div>
-      ) : null}
-
-      {answer.suggestedQuestions.length ? (
-        <div className="mt-4 flex flex-wrap gap-2">
-          {answer.suggestedQuestions.slice(0, 3).map((suggestion) => (
-            <button
-              key={suggestion}
-              type="button"
-              onClick={() => onSuggestion(suggestion)}
-              className="min-h-11 rounded-xl border border-blue-100 bg-blue-50 px-3 py-2 text-left text-[11px] font-black leading-4 text-blue-700 transition hover:border-blue-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-            >
-              {suggestion}
-            </button>
-          ))}
-        </div>
-      ) : null}
       <div className="mt-3 flex justify-end">
         <DnaIssueFeedback scope="answer" requestId={answer.requestId} />
       </div>

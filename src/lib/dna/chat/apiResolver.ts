@@ -307,6 +307,9 @@ function publicAnswer(
     requestId,
     responseDepth,
     classification: answer.classification,
+    ...(answer.classification === "not_available"
+      ? { availabilityScope: answer.route === "case" ? "report" as const : "knowledge" as const }
+      : {}),
     summary: answer.summary,
     details: answer.details.slice(0, detailsLimit),
     sources: sources.map((source) => ({
@@ -527,6 +530,9 @@ function publicV3Answer(
     requestId,
     responseDepth: answer.responseDepth,
     classification: answer.classification,
+    ...(answer.classification === "not_available"
+      ? { availabilityScope: answer.intent === "theory" ? "knowledge" as const : "report" as const }
+      : {}),
     summary: answer.summary,
     details: [...answer.details],
     sources: answer.sources.map((source) => ({

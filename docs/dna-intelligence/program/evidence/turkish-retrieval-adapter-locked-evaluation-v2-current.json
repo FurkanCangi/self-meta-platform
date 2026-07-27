@@ -1,0 +1,214 @@
+{
+  "schemaVersion": "dna-turkish-retrieval-locked-evaluation-v2-manifest@1",
+  "recordedAt": "2026-07-24T10:32:06.519Z",
+  "evaluationClass": "internal_locked_holdout_v2_not_independent_human_validation",
+  "runId": "locked-eval-v2:f65c16f1ce50e4eb487512b2ae7f980f",
+  "authority": {
+    "adapterSha256": "abfe1496240c7297ebc82b8b78d7782136e14a8437a7ee4dfa36a1f6a0f4797b",
+    "adapterFileSha256": "78c519b0083f6db9620af0b3b4c1d1c4fad096c4930f75296851e2b9a5f8cc24",
+    "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "candidateFileSha256": "45c779a88b668f26b9a79c29715ca8709cb3a52afa07c8d4dbae37bc01ee7b3c",
+    "developmentBankSha256": "aea4ca29d609e5f0fb295978c620a0aa2d62bc75300c57fa7ef352977b784b3c",
+    "developmentBankFileSha256": "72093efba0cacd9abe770592536517c381ce3615d48266d357211dc3a5864d00",
+    "developmentResultFileSha256": "4f0162a22fd4f8f722565191d612847bccba4ef6f1fb420738cf016b290549fb",
+    "developmentResultSha256": "de935766bd4101e66a4fb61eb603cd1ed01b9c81d38912e3a57047d89c4b6ce8",
+    "configFileSha256": "067d5fc3acac6ccc0e17e0e461e3f9cb8963a4ffdb7738e6ecea5d2c1d516810",
+    "evaluatorCodeSha256": "490e50d1ab14eca2c219d60e4827238e63766a487d3b0f8036a5ace7fba6f33a",
+    "compilerCodeSha256": "4b0c3d53b13bb40ec37a4e943ccd23dfd3c10d1ec898492cae57472cc7735d4a",
+    "developmentManifestSha256": "59d8e417e80cf8311dce738f98a2f82b24381679d0f9a2a9808d541c5459be39",
+    "frozenManifestSha256": "4544b52562e10ca726cd03b803681e5eb58d38b5bb863b725010045088ee15cc",
+    "holdoutManifestSha256": "03ed5f92be1d6cb40b8e987575f51242b2847ef488c06f6136d6ae6aff091258",
+    "preopenManifestSha256": "74ba6f6d42ece392f4534acec7fd75edc2e17b9f24a1f93a0a4fc3a0428344fe",
+    "preopenReceiptFileSha256": "da800f13e63b1dd61eaa06735afe2a7f9516c11b6243c031e00119f4060d9787",
+    "preopenReceiptSha256": "a37ce7c2a109e294ed6b1987aa4916816b13b0673762b9aee29c4c4dfedef279",
+    "holdoutSha256": "2100c7f84c479a0feff22a9342d9900b015b43438084acca03010c39b058dceb",
+    "evaluationCodeSha256": "2ab919ba29ffaee7361c8cb25013355034eb1351ac05738baa4782eb11c2f5d2",
+    "authoritySha256": "3f66d17790ba71f26d4820559aa0a90612a5a964f649197407cf6509e87d43e5"
+  },
+  "result": {
+    "researchSsdRelativePath": "Datasets/DNA-Intelligence/evaluation/internal-locked-turkish-holdout/v2/official-first-run-result.json",
+    "fileSha256": "491d0ae47c3c4cee9a9f2b5690b0e1386b8515b500a93fe42527928674745899",
+    "resultSha256": "7a255f44d4b50055f787fa527348ca5a7f9e0b106ff8364c1a14ec4ce5be439a",
+    "fileMode": "0600"
+  },
+  "claim": {
+    "researchSsdRelativePath": "Datasets/DNA-Intelligence/evaluation/internal-locked-turkish-holdout/v2/official-first-run.claim.json",
+    "fileSha256": "905273f4e8f6a2a84608ef5f56372a16b09c51bde54b545215fd8787eebd4684",
+    "claimSha256": "0dff33a4157dfc49a49b450fde1ab898b49957efcd20ad118a7fcec202dac31f",
+    "fileMode": "0600",
+    "noRerun": true,
+    "failureStateIfResultAbsent": "claimed_failed_no_rerun"
+  },
+  "counts": {
+    "total": 196,
+    "answerable": 140,
+    "abstentionControls": 56,
+    "safetyControls": 14
+  },
+  "metrics": {
+    "overallAccuracy": 0.346939,
+    "splitAccuracy": [
+      {
+        "split": "ambiguous",
+        "count": 28,
+        "correct": 4,
+        "accuracy": 0.142857
+      },
+      {
+        "split": "hard_neighbor",
+        "count": 28,
+        "correct": 12,
+        "accuracy": 0.428571
+      },
+      {
+        "split": "natural_supported",
+        "count": 98,
+        "correct": 41,
+        "accuracy": 0.418367
+      },
+      {
+        "split": "safe_theory_control",
+        "count": 14,
+        "correct": 8,
+        "accuracy": 0.571429
+      },
+      {
+        "split": "unsupported",
+        "count": 28,
+        "correct": 3,
+        "accuracy": 0.107143
+      }
+    ],
+    "topicAccuracy": [
+      {
+        "topicId": "external.autonomic_testing",
+        "count": 10,
+        "correct": 8,
+        "accuracy": 0.8
+      },
+      {
+        "topicId": "external.circadian_light",
+        "count": 10,
+        "correct": 10,
+        "accuracy": 1
+      },
+      {
+        "topicId": "external.executive_function_development",
+        "count": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "topicId": "external.hrv_biofeedback_methods",
+        "count": 10,
+        "correct": 5,
+        "accuracy": 0.5
+      },
+      {
+        "topicId": "external.hrv_context",
+        "count": 10,
+        "correct": 2,
+        "accuracy": 0.2
+      },
+      {
+        "topicId": "external.hrv_measurement",
+        "count": 10,
+        "correct": 2,
+        "accuracy": 0.2
+      },
+      {
+        "topicId": "external.insula_interoception",
+        "count": 10,
+        "correct": 8,
+        "accuracy": 0.8
+      },
+      {
+        "topicId": "external.measurement_cosmin",
+        "count": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "topicId": "external.parent_emotion_regulation",
+        "count": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "topicId": "external.pfc_cognitive_control",
+        "count": 10,
+        "correct": 10,
+        "accuracy": 1
+      },
+      {
+        "topicId": "external.polyvagal_theory",
+        "count": 10,
+        "correct": 8,
+        "accuracy": 0.8
+      },
+      {
+        "topicId": "external.prisma_cosmin_reporting",
+        "count": 10,
+        "correct": 3,
+        "accuracy": 0.3
+      },
+      {
+        "topicId": "external.selfreg_measurement",
+        "count": 10,
+        "correct": 0,
+        "accuracy": 0
+      },
+      {
+        "topicId": "external.sleep_emotional_reactivity",
+        "count": 10,
+        "correct": 5,
+        "accuracy": 0.5
+      }
+    ],
+    "abstentionAccuracy": 0.125,
+    "safeTheoryRoutingAccuracy": 0.571429,
+    "safetyNonRefusalAccuracy": 1,
+    "determinism": {
+      "repeats": 20,
+      "uniqueHashes": 1,
+      "predictionSha256": "f222ea635b3fa6ecd35233677b7b0acd5eaa8e90a5b4a8fd226d7d96a4eb20c9"
+    },
+    "p95Milliseconds": 0.56075
+  },
+  "qualityGate": {
+    "targets": {
+      "overallAccuracy": 0.95,
+      "naturalSupportedAccuracy": 0.95,
+      "hardNeighborAccuracy": 0.95,
+      "ambiguousAccuracy": 0.95,
+      "unsupportedAccuracy": 1,
+      "safeTheoryRoutingAccuracy": 0.95,
+      "safetyNonRefusalAccuracy": 0.98,
+      "p95MillisecondsMaximum": 25
+    },
+    "checks": {
+      "overallAccuracy": false,
+      "naturalSupportedAccuracy": false,
+      "hardNeighborAccuracy": false,
+      "ambiguousAccuracy": false,
+      "unsupportedAccuracy": false,
+      "safeTheoryRoutingAccuracy": false,
+      "safetyNonRefusalAccuracy": true,
+      "determinism": true,
+      "performance": true
+    },
+    "status": "fail"
+  },
+  "boundaries": {
+    "questionPayloadReadByVerifier": false,
+    "questionPayloadStoredInRepository": false,
+    "failureQuestionOrItemIdsStored": false,
+    "aggregateOnly": true,
+    "independentHumanValidation": false,
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "activationAllowed": false,
+    "v3ReleaseDecision": "no_go_unchanged"
+  },
+  "manifestSha256": "ef0a9d28dc2e906d5c6868579125c3f1c9916fb346e240f35bb76a52f3d07dc3"
+}

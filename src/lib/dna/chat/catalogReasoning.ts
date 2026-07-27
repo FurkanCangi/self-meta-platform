@@ -109,6 +109,16 @@ function hasSafeDefinitionCue(normalizedQuestion: string): boolean {
 export function classifyDnaChatQueryKind(question: string): DnaChatQueryKind {
   const normalized = normalizeDnaChatText(question)
   if (hasExplicitComparisonCue(normalized)) return "comparison"
+  if (/^(?:(?:peki|ya|ayrica)\s+)?(?:olcum\w*(?: nasil)?|nasil olcul\w*|nasil degerlendir\w*)$/.test(normalized)) return "measurement"
+  if (/^(?:(?:peki|ya|ayrica)\s+)?(?:kaynak\w*(?: goster\w*(?: misin)?)?|kanit\w*(?: ne| nasil| guclu mu)?|kanit duzeyi(?: ne| nasil)?|orneklem\w*|ne kadar guclu|guvenilir mi)$/.test(normalized)) {
+    return "evidence"
+  }
+  if (/^(?:(?:peki|ya|ayrica)\s+)?(?:cocuk\w*(?: nasil)?|ergen\w*(?: nasil)?|gelisim\w*(?: nasil)?|hangi yas\w*|yas kapsami(?: ne)?)$/.test(normalized)) {
+    return "development"
+  }
+  if (/^(?:(?:peki|ya)\s+)?(?:dna baglanti\w*|dna ile iliski\w*)$/.test(normalized)) {
+    return "dna_relation"
+  }
 
   const catalogKind = classifyCatalogQueryKind(question) as CatalogQueryKind
   if (
@@ -135,7 +145,10 @@ export function classifyEmbeddedCatalogQueryKind(question: string): DnaChatQuery
   if (/\b(?:iliski|iliskili|iliskisini|iliskisiyle|baglanti|baglantisi|etkilesim)\b/.test(normalized)) {
     return "relation"
   }
-  if (/\b(?:neyi olcer|nasil olculur|olcum|sensor|biyobelirtec|degeri)\b/.test(normalized)) {
+  if (
+    /\b(?:neyi olc\w*|nasil olc\w*|olcum|sensor|biyobelirtec|degeri)\b/.test(normalized) ||
+    /\bhangi (?:yontem|arac|olcum)\w*.{0,32}\bolc\w*/.test(normalized)
+  ) {
     return "measurement"
   }
   if (/\b(?:kanit|kaynak|bilimsel|guvenilir|literatur)\b/.test(normalized)) return "evidence"
@@ -255,6 +268,51 @@ function rankedRelations(
     )
     .filter((entry) => entry.mentioned)
     .map((entry) => entry.relation)
+}
+
+function relationAuthorityAllowed(relation: DnaChatCatalogRelation): boolean {
+  const from = getCatalogTopicById(relation.fromTopicId)
+  const to = getCatalogTopicById(relation.toTopicId)
+  if (!from || !to) return false
+  return isAuthorityGraphEdgeAllowed({
+    from: authorityForCatalogTopic(from).layer,
+    to: authorityForCatalogTopic(to).layer,
+    predicate: relation.predicate,
+  })
+}
+
+function hasBoundedEvidenceBridgeCue(normalizedQuestion: string): boolean {
+  return /\b(?:ara baglanti\w*|baglanti harita\w*|kanit harita\w*|ortak ara kavram\w*|dogrudan (?:baglanti|iliski|kanit) yoksa|iki adimli baglanti\w*)\b/.test(
+    normalizedQuestion,
+  )
+}
+
+function findBoundedEvidenceBridge(
+  topic: DnaChatCatalogTopic,
+  target: DnaChatCatalogTopic,
+): { middle: DnaChatCatalogTopic; relations: [DnaChatCatalogRelation, DnaChatCatalogRelation] } | null {
+  const candidates = getRelationsForTopic(topic.id)
+    .filter((relation) => relation.maxHops === 1 && relationAuthorityAllowed(relation))
+    .flatMap((first) => {
+      const middle = otherTopicForRelation(first, topic.id)
+      if (!middle || topicsShareFamily(middle.id, target.id)) return []
+      return getRelationsForTopic(target.id)
+        .filter((second) => second.id !== first.id && second.maxHops === 1)
+        .filter((second) => relationAuthorityAllowed(second))
+        .filter((second) => {
+          const secondMiddle = otherTopicForRelation(second, target.id)
+          return Boolean(secondMiddle && topicsShareFamily(secondMiddle.id, middle.id))
+        })
+        .map((second) => ({
+          middle,
+          relations: [first, second] as [DnaChatCatalogRelation, DnaChatCatalogRelation],
+        }))
+    })
+    .sort((left, right) =>
+      left.middle.title.localeCompare(right.middle.title, "tr") ||
+      left.relations[0].id.localeCompare(right.relations[0].id) ||
+      left.relations[1].id.localeCompare(right.relations[1].id))
+  return candidates[0] ?? null
 }
 
 function supportsInternalComparison(
@@ -653,16 +711,7 @@ export function resolveDnaCatalogReasoning(input: {
             ))
             .slice(0, 2)
       : []
-  const authoritySafeRelations = selectedRelations.filter((relation) => {
-    const from = getCatalogTopicById(relation.fromTopicId)
-    const to = getCatalogTopicById(relation.toTopicId)
-    if (!from || !to) return false
-    return isAuthorityGraphEdgeAllowed({
-      from: authorityForCatalogTopic(from).layer,
-      to: authorityForCatalogTopic(to).layer,
-      predicate: relation.predicate,
-    })
-  })
+  const authoritySafeRelations = selectedRelations.filter(relationAuthorityAllowed)
   const relationAgeGuards = authoritySafeRelations.map((relation) => ({
     relation,
     guard: ageScopeGuard(relation, input.ageMonths),
@@ -754,6 +803,69 @@ export function resolveDnaCatalogReasoning(input: {
       limitations: ["Sistem genel konu bilgisini sorulan özgül ilişki veya grup farkının kanıtı gibi sunmadı."],
       suggestedQuestions: [`${topic.title} nedir?`, `${topic.title} için kanıt düzeyi nedir?`],
       evidenceSummary: evidenceSummary(topic),
+    }
+  }
+
+  const bridgeCandidate =
+    relations.length === 0 &&
+    explicitRelationTargets.length === 1 &&
+    hasBoundedEvidenceBridgeCue(normalizedQuestion)
+      ? findBoundedEvidenceBridge(topic, explicitRelationTargets[0])
+      : null
+  const bridgeAgeGuards = bridgeCandidate?.relations.map((relation) => ({
+    relation,
+    guard: ageScopeGuard(relation, input.ageMonths),
+  })) ?? []
+  const bridgeRelations = bridgeAgeGuards
+    .filter((entry) => !entry.guard.blocked)
+    .map((entry) => entry.relation)
+  const bridgeAgeLimitations = stableUnique(
+    bridgeAgeGuards.flatMap((entry) => entry.guard.limitation ? [entry.guard.limitation] : []),
+    3,
+  )
+  if (bridgeCandidate && bridgeRelations.length === 2) {
+    const target = explicitRelationTargets[0]
+    const relationEntries = bridgeRelations.map((relation) => {
+      const from = getCatalogTopicById(relation.fromTopicId)
+      const to = getCatalogTopicById(relation.toTopicId)
+      return {
+        text: `${from?.title ?? relation.fromTopicId} ↔ ${to?.title ?? relation.toTopicId}: ${relation.summary}`,
+        authority: authorityForCatalogRelation(relation),
+        sourceIds: [...relation.sourceIds],
+      }
+    })
+    const summary = `Doğrudan bir ${topic.title}–${target.title} ilişki kaydı yok; katalog ${bridgeCandidate.middle.title} üzerinden iki ayrı, kaynaklı tek-adımlı bağlantıyı gösterebiliyor.`
+    const sources = collectSources(topic, [], bridgeRelations)
+    const summarySourceIds = stableUnique(bridgeRelations.flatMap((relation) => relation.sourceIds))
+    return {
+      queryKind,
+      route: "theory",
+      classification: queryKind === "evidence" ? "literature" : "dna_concept",
+      topicId: topic.id,
+      topicTitle: `${topic.title} · ${target.title} kanıt haritası`,
+      summary,
+      details: relationEntries.map((entry) => entry.text),
+      sources,
+      limitations: stableUnique([
+        `Bu iki ayrı bağlantı, ${topic.title} ile ${target.title} arasında doğrudan veya nedensel ilişki kanıtlamaz; zincirleme biyolojik mekanizma üretilmedi.`,
+        ...bridgeRelations.map((relation) => relation.claimBoundary),
+        ...bridgeAgeLimitations,
+        "Kanıt haritası yalnız katalogda açıkça kayıtlı iki tek-adımlı kenarı yan yana gösterir.",
+      ], 6),
+      suggestedQuestions: [
+        `${topic.title} nedir?`,
+        `${bridgeCandidate.middle.title} nedir?`,
+        `${target.title} nedir?`,
+      ],
+      evidenceSummary: evidenceSummary(topic, [], bridgeRelations, sources),
+      outputAuthorities: {
+        summary: authorityForCatalogTopic(topic),
+        details: relationEntries.map((entry) => entry.authority),
+      },
+      outputSourceIds: {
+        summary: summarySourceIds,
+        details: relationEntries.map((entry) => entry.sourceIds),
+      },
     }
   }
 
@@ -850,7 +962,9 @@ export function resolveDnaCatalogReasoning(input: {
     seenDetails.add(entry.text)
     return true
   }).slice(0, 5)
-  const summary = summaryEntry.text
+  const summary = queryKind === "misconception"
+    ? `Öncül kontrolü: ${summaryEntry.text}`
+    : summaryEntry.text
   const details = detailEntries.map((entry) => entry.text)
   const sources = collectSources(topic, claims, relations)
   const limitations = stableUnique([
@@ -859,6 +973,9 @@ export function resolveDnaCatalogReasoning(input: {
     ...(ageGuard.limitation ? [ageGuard.limitation] : []),
     ...claimAgeLimitations,
     ...relationAgeLimitations,
+    ...(queryKind === "misconception"
+      ? ["Öncül yalnız kaynakla bağlı düzeltme veya sınır iddialarıyla değerlendirildi; genel konu bilgisinden yeni sonuç üretilmedi."]
+      : []),
     topic.reviewStatus === "source_verified_expert_pending"
       ? "Kaynak doğrulaması tamamlandı; uzman içerik incelemesi henüz bekliyor."
       : "İçerik uzman incelemesinden geçmiştir.",

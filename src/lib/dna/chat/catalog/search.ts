@@ -193,6 +193,62 @@ function topicFromPreviousContext(previousTopic?: string | null): DnaChatCatalog
   ) ?? null
 }
 
+function contextualTopicFromPreviousContext(
+  previousTopic: string | null | undefined,
+  normalizedQuestion: string,
+): DnaChatCatalogTopic | null {
+  const topic = topicFromPreviousContext(previousTopic)
+  if (!topic) return null
+  const desiredSuffix = /\b(?:cocuk\w*|ergen\w*|gelisim\w*|olgunlas\w*|hangi yas\w*|yas kapsami)\b/.test(
+    normalizedQuestion,
+  )
+    ? "development"
+    : /\b(?:olcum\w*|olcul\w*|degerlendir\w*)\b/.test(normalizedQuestion)
+      ? "measurement"
+      : /\bstrateji\w*\b/.test(normalizedQuestion)
+        ? "strategies"
+        : null
+  if (!desiredSuffix) return topic
+
+  const roots = [
+    topic.id,
+    topic.id.replace(/_(?:control|models|overview|regulation|health|measurement|development|strategies)$/, ""),
+  ]
+  for (const root of roots) {
+    const candidate = DNA_CHAT_CATALOG_TOPIC_BY_ID.get(`${root}_${desiredSuffix}`)
+    if (candidate) return candidate
+  }
+
+  const desiredClaimType = desiredSuffix === "development"
+    ? "development"
+    : desiredSuffix === "measurement"
+      ? "measurement_boundary"
+      : null
+  if (desiredClaimType) {
+    const lastUnderscore = topic.id.lastIndexOf("_")
+    const semanticFamilyPrefix = lastUnderscore > topic.id.indexOf(".")
+      ? topic.id.slice(0, lastUnderscore)
+      : null
+    const relatedWithRequestedFacet = DNA_CHAT_CATALOG_RELATIONS
+      .filter((relation) => relation.maxHops === 1 &&
+        (relation.fromTopicId === topic.id || relation.toTopicId === topic.id))
+      .flatMap((relation) => {
+        const otherId = relation.fromTopicId === topic.id
+          ? relation.toTopicId
+          : relation.fromTopicId
+        const candidate = DNA_CHAT_CATALOG_TOPIC_BY_ID.get(otherId)
+        if (!candidate) return []
+        if (!semanticFamilyPrefix || !candidate.id.startsWith(`${semanticFamilyPrefix}_`)) return []
+        const hasRequestedClaim = DNA_CHAT_CATALOG_CLAIMS.some((claim) =>
+          claim.topicId === candidate.id && claim.claimType === desiredClaimType)
+        return hasRequestedClaim ? [candidate] : []
+      })
+      .sort((left, right) => left.id.localeCompare(right.id))
+    if (relatedWithRequestedFacet[0]) return relatedWithRequestedFacet[0]
+  }
+  return topic
+}
+
 export function classifyCatalogQueryKind(question: string): DnaChatQueryKind {
   const strippedQuestion = stripCatalogInstructionPrefix(question)
   const normalized = normalizeCatalogText(strippedQuestion)
@@ -478,7 +534,8 @@ export function classifyCatalogQueryKind(question: string): DnaChatQueryKind {
   // broad age word. Reliability/validity questions remain evidence questions.
   if (
     !hasExplicitEvidenceCue &&
-    (/\b(?:nasil olcul\w*|neyi (?:olcer|olcu\w*)|ne olcer|olcmek mumkun\w*|sensor\w*|test bataryasi|hangi islevler degerlendirilir|neyi ifade eder|olcum\w* neden zor\w*|hangi olcum\w* gosterir|dogrudan\w* olcum\w*)\b/.test(normalized) ||
+    (/\b(?:nasil olc\w*|neyi olc\w*|ne olc\w*|olcmek mumkun\w*|sensor\w*|test bataryasi|hangi islevler degerlendirilir|neyi ifade eder|olcum\w* neden zor\w*|hangi olcum\w* gosterir|dogrudan\w* olcum\w*)\b/.test(normalized) ||
+      /\bhangi (?:yontem|arac|olcum)\w*.{0,32}\bolc\w*/.test(normalized) ||
       /\bhangi tek olcum\b/.test(normalized) ||
       /\b(?:pep|rmssd|hf hrv|lf hrv|lf hf|pupillometri)\b/.test(normalized))
   ) {
@@ -624,7 +681,7 @@ export function findCatalogTopic(
   const normalized = normalizeCatalogText(stripCatalogInstructionPrefix(question))
   if (!normalized) return null
   if (/^(?:peki\s+)?erken cocuklukta (?:nasil|nasil degisir|ne degisir)$/.test(normalized)) {
-    return topicFromPreviousContext(previousTopic)
+    return contextualTopicFromPreviousContext(previousTopic, normalized)
   }
   const explicitTopic = explicitTopicForQuestion(normalized)
   if (explicitTopic) return explicitTopic
@@ -649,11 +706,16 @@ export function findCatalogTopic(
 
   if ((ranked[0]?.score ?? 0) >= 5) return ranked[0].topic
 
+  const shortContextualFollowUp = normalized.split(" ").length <= 12 &&
+    /^(?:(?:peki|ya|ayrica)\s+)?(?:olcum\w*(?: nasil)?|nasil olcul\w*|nasil degerlendir\w*|kaynak\w*(?: goster\w*(?: misin)?)?|kanit\w*(?: ne| nasil| guclu mu)?|kanit duzeyi(?: ne| nasil)?|orneklem\w*|cocuk\w*(?: nasil)?|ergen\w*(?: nasil)?|gelisim\w*(?: nasil)?|hangi yas\w*|yas kapsami(?: ne)?|dna(?: ile)? baglanti\w*|dna ile iliski\w*|sinir\w*|ne kadar guclu|guvenilir mi|bir ornek daha)$/.test(
+      normalized,
+    )
   if (
     previousTopic &&
-    containsAny(normalized, ["bu", "bunun", "peki", "biraz daha", "ilişkisi", "iliskisi"])
+    (shortContextualFollowUp ||
+      containsAny(normalized, ["bu", "bunun", "peki", "biraz daha", "ilişkisi", "iliskisi"]))
   ) {
-    return topicFromPreviousContext(previousTopic)
+    return contextualTopicFromPreviousContext(previousTopic, normalized)
   }
 
   return null

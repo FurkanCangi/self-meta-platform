@@ -1,0 +1,271 @@
+{
+  "activationAllowed": false,
+  "boundaries": {
+    "activationAuthority": false,
+    "activeRuntimeGeneration": "v2_legacy",
+    "candidateOnly": true,
+    "existing42Modified": false,
+    "independentHumanReview": false,
+    "liveCatalogActivated": false,
+    "liveCatalogBuilt": false,
+    "ownerAuthority": false,
+    "releaseAuthority": false,
+    "runtimeAuthority": false
+  },
+  "counts": {
+    "claims": 178,
+    "finalized": 178,
+    "quarantined": 0,
+    "records": 178,
+    "sources": 14,
+    "terminal": 178,
+    "topics": 14
+  },
+  "decisionCounts": {
+    "exact_match": 15,
+    "prefer_a": 8,
+    "prefer_b": 29,
+    "quarantine": 0,
+    "reconciled_revision": 1,
+    "semantically_equivalent": 125
+  },
+  "independentHumanReview": false,
+  "inputHashes": {
+    "candidate_artifact": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "candidate_file": "45c779a88b668f26b9a79c29715ca8709cb3a52afa07c8d4dbae37bc01ee7b3c",
+    "directivesFileSha256": "983ffe6636fc5a3d86aaf822d5acffbba200070b4e39dd3d1cf6ad8585a8689c",
+    "directivesSha256": "39a33d9df26d3b58520a5270d5673066926e38d363f6e6a30ebc06d7762d10f5",
+    "existing_artifact": "f0230a06c46fee5de353fb460abbfaadc49b486cea7dca9aea1315c91efa9427",
+    "existing_file": "8a0eaf400ba0c42036fd87b177a2a4a347d9993088b3a01972d10b60bd1efe3e",
+    "pass_a_artifact": "9c439505b32b93bfeec8b709a2e76934f9867e7391e228edd260b7da44688f41",
+    "pass_a_audit_artifact": "ff389ed60232aa0c19e6474c4cb6ee7d457a25b3f279938926ad2f9917b63a20",
+    "pass_a_audit_file": "642c142189bd2111245530133d9adce1bc66ab530fab9f299a609f29d0dc2008",
+    "pass_a_file": "7281fa7cc1285567dad66902034f102a304933cacf19a08e9367c837403ed356",
+    "pass_b_artifact": "ca25e123d6d93a9ae4eb3f27a87f6c0d84aa285b631cb4062c0efe6b14eb194e",
+    "pass_b_audit_artifact": "4e403fc3e933cf8a5d7df679937eeb25cb681b13fc1bc40421932deed6003437",
+    "pass_b_audit_file": "b16b152e302bdab2f68edf11293feecf981477acc55d34f2db751d713004a84b",
+    "pass_b_file": "4fca1e6e809fdaa62c9984bf5b2c64c38ef5429946b4019c26174285154a3630"
+  },
+  "manifestSha256": "12a631d76b4630155e78713285dcc9132bb9ad631265d1f1e3355add2f83f370",
+  "outputHashes": {
+    "artifactFileSha256": "f790baa2a7510dced6b94f1d992ae21febed22dae751378fcdbfce2d2bd3e381",
+    "artifactSha256": "1ef24b076b757198041e4c7c285edb4154eb096725cc41bac978c9bb1f912c1b",
+    "byteCount": 1244870,
+    "fileMode": "0600",
+    "recordsSha256": "b334d4a659ee2d5d5e67d6cf131fe8ea2b4208ac4bfa638c2e261612d35906da"
+  },
+  "ownerAuthority": false,
+  "reasonCounts": {
+    "both_lanes_need_psychometric_terminology_revision": 1,
+    "exact_text_source_and_hash_match": 15,
+    "pass_a_preserves_reported_or_associational_boundary": 4,
+    "pass_b_audit_needs_revision_pass_a_source_faithful": 4,
+    "pass_b_clearer_turkish_numeric_or_term_rendering": 29,
+    "source_faithful_semantically_equivalent_pass_a_audit_tiebreak": 125
+  },
+  "recordedAt": "2026-07-24T11:20:00.000Z",
+  "releaseEligible": false,
+  "runtimeEligible": false,
+  "schemaVersion": "dna-external-science-turkish-remaining-neutral-reconciliation-manifest@1",
+  "selectedSideCounts": {
+    "a": 133,
+    "b": 29,
+    "both": 15,
+    "revision": 1
+  },
+  "status": "remaining_178_terminal_candidate_only",
+  "topicDecisionCounts": [
+    {
+      "decisions": {
+        "exact_match": 2,
+        "prefer_a": 1,
+        "prefer_b": 0,
+        "quarantine": 0,
+        "reconciled_revision": 0,
+        "semantically_equivalent": 8
+      },
+      "quarantined": 0,
+      "records": 11,
+      "topicSha256": "3ad0b3f98fcd3febf376394cb6196e482ac93a9a7a8b331d03d2b227fccaf544"
+    },
+    {
+      "decisions": {
+        "exact_match": 0,
+        "prefer_a": 0,
+        "prefer_b": 1,
+        "quarantine": 0,
+        "reconciled_revision": 0,
+        "semantically_equivalent": 13
+      },
+      "quarantined": 0,
+      "records": 14,
+      "topicSha256": "48bb7c45ceff32fd8e781c5bb5b606d340357d3096deb2d890af6b433d7fd79a"
+    },
+    {
+      "decisions": {
+        "exact_match": 1,
+        "prefer_a": 0,
+        "prefer_b": 0,
+        "quarantine": 0,
+        "reconciled_revision": 0,
+        "semantically_equivalent": 10
+      },
+      "quarantined": 0,
+      "records": 11,
+      "topicSha256": "4a0ee510b53ac51d9b67fe45a368d85a9b7d6b05a51e8dd67519298298350441"
+    },
+    {
+      "decisions": {
+        "exact_match": 4,
+        "prefer_a": 0,
+        "prefer_b": 1,
+        "quarantine": 0,
+        "reconciled_revision": 0,
+        "semantically_equivalent": 12
+      },
+      "quarantined": 0,
+      "records": 17,
+      "topicSha256": "6569dbf28dd9e64fbfe34cc91a6ac085d322a3ee0ed9c817b5a4f3ea64895a2f"
+    },
+    {
+      "decisions": {
+        "exact_match": 0,
+        "prefer_a": 1,
+        "prefer_b": 5,
+        "quarantine": 0,
+        "reconciled_revision": 0,
+        "semantically_equivalent": 9
+      },
+      "quarantined": 0,
+      "records": 15,
+      "topicSha256": "821e21a50ad524cab08bc4877bed1795be34f04e7a639ab399d48e43c8180a31"
+    },
+    {
+      "decisions": {
+        "exact_match": 4,
+        "prefer_a": 0,
+        "prefer_b": 0,
+        "quarantine": 0,
+        "reconciled_revision": 0,
+        "semantically_equivalent": 17
+      },
+      "quarantined": 0,
+      "records": 21,
+      "topicSha256": "837f4332e457cd86d36d3e849dc26c95f49d45ada55f27cfdcbb6b9cabe7d534"
+    },
+    {
+      "decisions": {
+        "exact_match": 0,
+        "prefer_a": 0,
+        "prefer_b": 1,
+        "quarantine": 0,
+        "reconciled_revision": 0,
+        "semantically_equivalent": 3
+      },
+      "quarantined": 0,
+      "records": 4,
+      "topicSha256": "8b702244cf76cbae84cf3797f0739ae285bab8aaac1b5bd4f97b4f13bfbef12b"
+    },
+    {
+      "decisions": {
+        "exact_match": 2,
+        "prefer_a": 1,
+        "prefer_b": 3,
+        "quarantine": 0,
+        "reconciled_revision": 0,
+        "semantically_equivalent": 5
+      },
+      "quarantined": 0,
+      "records": 11,
+      "topicSha256": "914f7d1d4772f9811203e20001fd85482274e466035eff11c376d42b66e70bc5"
+    },
+    {
+      "decisions": {
+        "exact_match": 0,
+        "prefer_a": 0,
+        "prefer_b": 0,
+        "quarantine": 0,
+        "reconciled_revision": 0,
+        "semantically_equivalent": 3
+      },
+      "quarantined": 0,
+      "records": 3,
+      "topicSha256": "a829b0711d0ee25c6505d68f602a11870800752070890d7240038f72264a8d73"
+    },
+    {
+      "decisions": {
+        "exact_match": 2,
+        "prefer_a": 0,
+        "prefer_b": 3,
+        "quarantine": 0,
+        "reconciled_revision": 0,
+        "semantically_equivalent": 8
+      },
+      "quarantined": 0,
+      "records": 13,
+      "topicSha256": "c325d49d71605fdae6beee6b5798028203d01430eaa479f7e0250135f7fac6ba"
+    },
+    {
+      "decisions": {
+        "exact_match": 0,
+        "prefer_a": 0,
+        "prefer_b": 9,
+        "quarantine": 0,
+        "reconciled_revision": 0,
+        "semantically_equivalent": 8
+      },
+      "quarantined": 0,
+      "records": 17,
+      "topicSha256": "c9eb396c1da399e8142e3b60ec890e3d17062304f6b0459dab70d1dc6a017a42"
+    },
+    {
+      "decisions": {
+        "exact_match": 0,
+        "prefer_a": 3,
+        "prefer_b": 0,
+        "quarantine": 0,
+        "reconciled_revision": 0,
+        "semantically_equivalent": 6
+      },
+      "quarantined": 0,
+      "records": 9,
+      "topicSha256": "cd229334c194573bc512749a1be4aef66a2cfb7c1d93b32314eb9b780bdb839b"
+    },
+    {
+      "decisions": {
+        "exact_match": 0,
+        "prefer_a": 0,
+        "prefer_b": 4,
+        "quarantine": 0,
+        "reconciled_revision": 1,
+        "semantically_equivalent": 12
+      },
+      "quarantined": 0,
+      "records": 17,
+      "topicSha256": "e9e57c619a7077ed1419560704793d66a63897d930211d6079f817266dba1137"
+    },
+    {
+      "decisions": {
+        "exact_match": 0,
+        "prefer_a": 2,
+        "prefer_b": 2,
+        "quarantine": 0,
+        "reconciled_revision": 0,
+        "semantically_equivalent": 11
+      },
+      "quarantined": 0,
+      "records": 15,
+      "topicSha256": "f9c13a05c92fb05e96ef6a9ed4f772c41be92d24f2bb0cd49884312cd9950ae6"
+    }
+  ],
+  "verification": {
+    "fullTextStoredOnResearchSsdOnly": true,
+    "passAAuditIsIndependentHuman": false,
+    "passBAuditIsIndependentHuman": false,
+    "quarantineHidden": true,
+    "repositoryIdentityFields": 0,
+    "repositoryTextFields": 0,
+    "terminal178": true
+  },
+  "version": "dna-external-science-turkish-remaining-neutral-reconciliation@1"
+}

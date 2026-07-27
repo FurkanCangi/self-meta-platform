@@ -1,0 +1,65 @@
+{
+  "schemaVersion": "dna-external-science-turkish-rendering-reconciliation-manifest@1",
+  "recordedAt": "2026-07-24T10:02:29.194Z",
+  "artifact": {
+    "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/turkish-rendering-reconciliation/feasibility-v1/reconciliation-artifact.json",
+    "rawSha256": "8a0eaf400ba0c42036fd87b177a2a4a347d9993088b3a01972d10b60bd1efe3e",
+    "artifactSha256": "f0230a06c46fee5de353fb460abbfaadc49b486cea7dca9aea1315c91efa9427",
+    "fileMode": "0600"
+  },
+  "inputHashes": {
+    "neutralSelectionArtifactSha256": "b0b543dbbdf8c1cbd1f3896ec0f93dcb5436e2f3c27bdaeb5eadc75404bbea28",
+    "neutralSelectionSetSha256": "19dbb3434f72d023c79fb321781c1be8be43d7376033320d99a36f7f25f910a3",
+    "passAFileSha256": "3543f7d004d138a09075de29a55c71456665e42c31ef9bdce4aba91f1ef504ee",
+    "passAArtifactSha256": "60d85f4be59a99bedeade1718146bb8b57a58b485010dd2850c6582177b50988",
+    "alignedPassBFileSha256": "51a34817651983910c67482af7ebdfd2ecd057455edcdd1ebfd78d062d1fff06",
+    "alignedPassBArtifactSha256": "372167730f13acc6fd05420f7f5650dcf678c0f91a23c1718f0230c9911ff86a",
+    "candidateFileSha256": "45c779a88b668f26b9a79c29715ca8709cb3a52afa07c8d4dbae37bc01ee7b3c",
+    "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "decisionsFileSha256": "09c332f86b4a35c5c8cf137a8708052b0980e09b35a76ffb88b8fda43faa1cb0",
+    "decisionsSha256": "9d277e2b174fd36de466dd5fc7850af36c674e8411be022d08f330d97ce4fa1f"
+  },
+  "counts": {
+    "topics": 14,
+    "records": 42,
+    "finalized": 42,
+    "quarantined": 0
+  },
+  "decisionDistribution": {
+    "exact": 2,
+    "semantically_equivalent": 22,
+    "pass_a_preferred": 13,
+    "pass_b_preferred": 5,
+    "contested_quarantined": 0
+  },
+  "recordsSha256": "60686cb6d311fe0df8cd5b3c73eb8e71513619dc5943b3041fb8ed1ef289c4d2",
+  "verification": {
+    "aggregateOnly": true,
+    "recordIdsIncluded": false,
+    "sourceTextFields": 0,
+    "renderingTextFields": 0,
+    "deterministicRepeats": 20,
+    "deterministicUniqueHashes": 1
+  },
+  "provenance": {
+    "reviewClass": "codex_multi_pass_independent_reconciliation",
+    "independentHumanReview": false,
+    "externalModelUsed": false,
+    "networkUsed": false
+  },
+  "boundaries": {
+    "candidateOnly": true,
+    "runtimeAuthority": false,
+    "releaseAuthority": false,
+    "activationAuthority": false,
+    "adapterAuthority": false,
+    "ownerBookAuthority": false,
+    "independentHumanReview": false
+  },
+  "runtimeEligible": false,
+  "releaseEligible": false,
+  "activationAllowed": false,
+  "adapterAuthority": false,
+  "ownerBookAuthority": false,
+  "manifestSha256": "9c1a2b9d77d774908d5024da08cadd9e4286b5dbcd8e28c29155db7dd9598c2b"
+}

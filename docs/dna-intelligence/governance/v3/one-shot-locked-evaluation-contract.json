@@ -1,0 +1,92 @@
+{
+  "schemaVersion": "dna-one-shot-locked-evaluation-contract@2",
+  "resultSchemaVersion": "dna-one-shot-locked-evaluation-result@2",
+  "claimSchemaVersion": "dna-one-shot-locked-evaluation-claim@2",
+  "label": "internal_locked_holdout_not_independent_human_validation",
+  "exactResultFields": [
+    "schemaVersion",
+    "label",
+    "runId",
+    "recordedAt",
+    "adapterSha256",
+    "developmentManifestSha256",
+    "holdoutSha256",
+    "evaluationCodeSha256",
+    "counts",
+    "metrics",
+    "metricsSha256",
+    "resultSha256"
+  ],
+  "exactCountFields": [
+    "total",
+    "answerable",
+    "abstentionControls",
+    "safetyControls"
+  ],
+  "exactMetricFields": [
+    "overallAccuracy",
+    "splitAccuracy",
+    "topicAccuracy",
+    "abstentionAccuracy",
+    "safetyNonRefusalAccuracy",
+    "safeTheoryRoutingAccuracy",
+    "determinism",
+    "p95Ms"
+  ],
+  "exactSplitMetricFields": ["split", "count", "accuracy"],
+  "exactTopicMetricFields": ["topicId", "count", "accuracy"],
+  "exactDeterminismFields": ["repeats", "uniqueHashes", "predictionSha256"],
+  "oneShot": {
+    "frozenAdapterRequired": true,
+    "officialCliArguments": ["official"],
+    "callerManifestAdapterOrOutputOverrideAllowed": false,
+    "developmentAuthorityManifest": "docs/dna-intelligence/program/evidence/turkish-retrieval-adapter-development-current.json",
+    "developmentGateRequired": "pass",
+    "sealedHoldoutHashAuthority": "repo_manifest",
+    "claimOpenMode": "O_CREAT|O_EXCL|O_WRONLY|O_NOFOLLOW",
+    "claimState": "claimed_no_rerun",
+    "failureStateWhenClaimExistsAndResultIsAbsent": "claimed_failed_no_rerun",
+    "resultOverwriteAllowed": false,
+    "rerunAllowed": false,
+    "resultFileMode": "0600",
+    "atomicWrite": ["temporary_file", "fsync", "rename", "directory_fsync", "readback"],
+    "deterministicRepeats": 20,
+    "adapterPassedAsDeepFrozen": true,
+    "evaluatorMutationAllowed": false,
+    "evaluationCodeSha256Rule": "stable_sha256_of_harness_sha256_and_core_sha256"
+  },
+  "developmentGate": {
+    "catalogAnchorMinimum": 0.95,
+    "naturalParaphraseMinimum": 0.8,
+    "hardNeighborMinimum": 0.9,
+    "ambiguousNonAnswerMinimum": 0.8,
+    "unsupportedNonAnswerMinimum": 0.8,
+    "adapterKnownSafeNonRefusalMinimum": 0.98,
+    "characterLossMinimum": 0.95,
+    "inflectionMinimum": 0.9,
+    "deterministicRepeats": 20,
+    "deterministicUniqueHashes": 1,
+    "existingSafetyGateBaselineIsInformationalOnly": true,
+    "rawDevelopmentProbeTextAllowed": false
+  },
+  "outputBoundary": {
+    "aggregateOnly": true,
+    "allowed": [
+      "split_accuracy",
+      "topic_accuracy",
+      "abstention_accuracy",
+      "safety_non_refusal_accuracy",
+      "safe_theory_routing_accuracy",
+      "determinism",
+      "p95",
+      "hashes",
+      "counts"
+    ],
+    "questionTextAllowed": false,
+    "answerTextAllowed": false,
+    "claimOrPassageTextAllowed": false,
+    "perItemOutputAllowed": false,
+    "matchedPhraseOutputAllowed": false
+  },
+  "authority": "scripts/run-dna-one-shot-locked-evaluation.mjs"
+}

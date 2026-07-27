@@ -243,7 +243,15 @@ check(
 )
 check("DNA chat has burst and hourly rate limits", dnaChatRoute.includes("limit: 12") && dnaChatRoute.includes("windowMs: 10_000") && dnaChatRoute.includes("limit: 120"), "DNA chat dual rate limit missing")
 check("DNA chat responses are no-store", dnaChatRoute.includes('"Cache-Control": "private, no-store'), "DNA chat no-store header missing")
-check("DNA chat ownership chain has no role bypass", dnaChatRoute.includes('.eq("owner_id", userId)') && dnaChatRoute.includes('.from("assessments_v2")') && dnaChatRoute.includes('.from("reports")') && !dnaChatRoute.includes("isAdminRole"), "DNA chat strict ownership chain missing")
+check(
+  "DNA chat ownership chain has no role bypass",
+  dnaChatRoute.includes('.from("reports")')
+    && dnaChatRoute.includes("assessments_v2!reports_assessment_id_fkey!inner")
+    && dnaChatRoute.includes("clients!assessments_v2_client_id_fkey!inner")
+    && dnaChatRoute.includes('.eq("assessment.client.owner_id", userId)')
+    && !dnaChatRoute.includes("isAdminRole"),
+  "DNA chat strict ownership chain missing",
+)
 check("DNA chat uses authenticated RLS client for report reads", dnaChatRoute.includes("createSupabaseServerClient") && !dnaChatRoute.includes('.from("profiles")'), "DNA chat RLS read path missing")
 check(
   "DNA chat case answers fail closed when audit is unavailable",

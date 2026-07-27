@@ -1,0 +1,179 @@
+{
+  "schemaVersion": "dna-external-science-turkish-rendering-pass-a-manifest@1",
+  "recordedAt": "2026-07-24T09:00:00.000Z",
+  "passVersion": "dna-external-science-turkish-rendering-pass-a@1",
+  "artifactSha256": "60d85f4be59a99bedeade1718146bb8b57a58b485010dd2850c6582177b50988",
+  "rawArtifactFileSha256": "3543f7d004d138a09075de29a55c71456665e42c31ef9bdce4aba91f1ef504ee",
+  "rawArtifactBytes": 127492,
+  "rawArtifactMode": "600",
+  "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+  "candidateFileSha256": "45c779a88b668f26b9a79c29715ca8709cb3a52afa07c8d4dbae37bc01ee7b3c",
+  "decisionsSha256": "68dbb20c2e5d77aaf276b78faa8714b5e7e73aa5385689d94ef03c0298eec901",
+  "decisionsFileSha256": "aa4eaa7c4e4ed301c50ae5631881178e0efd554b7dc12377f8efc96c7e6b49d3",
+  "counts": {
+    "topics": 14,
+    "records": 42,
+    "recordsPerTopic": 3,
+    "distinctPassages": 42
+  },
+  "topicCoverage": [
+    {
+      "topicId": "external.autonomic_testing",
+      "selectedCount": 3,
+      "distinctPassageCount": 3,
+      "startCount": 1,
+      "middleCount": 1,
+      "endCount": 1,
+      "selectionSha256": "832705eaffdb8ea7a11ded55a9f3a98532f2ed7fce6bf9a2569fba7161dc8454"
+    },
+    {
+      "topicId": "external.circadian_light",
+      "selectedCount": 3,
+      "distinctPassageCount": 3,
+      "startCount": 1,
+      "middleCount": 1,
+      "endCount": 1,
+      "selectionSha256": "c7af2570e1415eb0e3375d1d16113bb7ba410e3ecc341200d61082b8088c05eb"
+    },
+    {
+      "topicId": "external.executive_function_development",
+      "selectedCount": 3,
+      "distinctPassageCount": 3,
+      "startCount": 1,
+      "middleCount": 1,
+      "endCount": 1,
+      "selectionSha256": "10e88ab974191178ca9af2b4d813599c43582e001b5aa4a5715d845164a40f9d"
+    },
+    {
+      "topicId": "external.hrv_biofeedback_methods",
+      "selectedCount": 3,
+      "distinctPassageCount": 3,
+      "startCount": 1,
+      "middleCount": 1,
+      "endCount": 1,
+      "selectionSha256": "2714d511cdb13390e927232ee6f448bcbab71b91a0d7f87eabf2f84285e4389e"
+    },
+    {
+      "topicId": "external.hrv_context",
+      "selectedCount": 3,
+      "distinctPassageCount": 3,
+      "startCount": 1,
+      "middleCount": 1,
+      "endCount": 1,
+      "selectionSha256": "926b961cc47b8762de4bd209f536d0673dfb984fa2d13d0fe68964d164ded9b3"
+    },
+    {
+      "topicId": "external.hrv_measurement",
+      "selectedCount": 3,
+      "distinctPassageCount": 3,
+      "startCount": 1,
+      "middleCount": 1,
+      "endCount": 1,
+      "selectionSha256": "ddb93abfc3f2f7932ac031bfb20c3f22b996d701ea9c49a74da1775ea8049ec7"
+    },
+    {
+      "topicId": "external.insula_interoception",
+      "selectedCount": 3,
+      "distinctPassageCount": 3,
+      "startCount": 1,
+      "middleCount": 1,
+      "endCount": 1,
+      "selectionSha256": "af471cbb45f76df138b8812ecc84fdaf77d304cc88f2d9fafc63b324caae85d0"
+    },
+    {
+      "topicId": "external.measurement_cosmin",
+      "selectedCount": 3,
+      "distinctPassageCount": 3,
+      "startCount": 1,
+      "middleCount": 1,
+      "endCount": 1,
+      "selectionSha256": "f0644cfadad768caeb9b2791d7e99582276632089eedc7a26f910bafe5720d9e"
+    },
+    {
+      "topicId": "external.parent_emotion_regulation",
+      "selectedCount": 3,
+      "distinctPassageCount": 3,
+      "startCount": 1,
+      "middleCount": 1,
+      "endCount": 1,
+      "selectionSha256": "9e8cc8773ed5eb805d45c09c7bc8e081704892818cfe042d3ed627b5b2dd6cba"
+    },
+    {
+      "topicId": "external.pfc_cognitive_control",
+      "selectedCount": 3,
+      "distinctPassageCount": 3,
+      "startCount": 1,
+      "middleCount": 1,
+      "endCount": 1,
+      "selectionSha256": "d4d1ad8aa6a02f339190f029fe069a93e976ab5b939305571fc5b1160c87b426"
+    },
+    {
+      "topicId": "external.polyvagal_theory",
+      "selectedCount": 3,
+      "distinctPassageCount": 3,
+      "startCount": 1,
+      "middleCount": 1,
+      "endCount": 1,
+      "selectionSha256": "8d6a4bb8d6eec8f81b77e55da69da05c20563913513e6bdfcaa5d78291d91ffc"
+    },
+    {
+      "topicId": "external.prisma_cosmin_reporting",
+      "selectedCount": 3,
+      "distinctPassageCount": 3,
+      "startCount": 1,
+      "middleCount": 1,
+      "endCount": 1,
+      "selectionSha256": "948b3639f6d52f6241824f77026681c324a83997a73a86f40a2f77dd924467fc"
+    },
+    {
+      "topicId": "external.selfreg_measurement",
+      "selectedCount": 3,
+      "distinctPassageCount": 3,
+      "startCount": 1,
+      "middleCount": 1,
+      "endCount": 1,
+      "selectionSha256": "d684c87e4509319cb17fe9ab99f511330df9c98e32e7052c349ddee2eb8a7908"
+    },
+    {
+      "topicId": "external.sleep_emotional_reactivity",
+      "selectedCount": 3,
+      "distinctPassageCount": 3,
+      "startCount": 1,
+      "middleCount": 1,
+      "endCount": 1,
+      "selectionSha256": "c3f6a6d9b43a1239be5fa98da39d61a7049aae36074e47fd6ed6bcc06ad85bff"
+    }
+  ],
+  "qaFailureCounts": {
+    "numbersPreserved": 0,
+    "negationPreserved": 0,
+    "hedgePreserved": 0,
+    "causalStrengthPreserved": 0,
+    "scientificFidelity": 0,
+    "naturalTurkish": 0,
+    "singleAtomicClaim": 0,
+    "noSourceExternalMechanismAdded": 0,
+    "noSourceExternalExampleAdded": 0,
+    "noSourceExternalClinicalOutcomeAdded": 0,
+    "englishTermFirstUsePreservedWhenNeeded": 0,
+    "recordsWithAnyFailure": 0,
+    "totalFailures": 0
+  },
+  "limitations": [
+    "This is a bounded feasibility and fidelity pilot, not an independent human translation review.",
+    "Pass B and reconciliation were not performed.",
+    "The artifact is candidate-only and cannot activate a runtime, adapter, release, or owner authority."
+  ],
+  "boundary": {
+    "status": "feasibility_fidelity_pilot",
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "activationAllowed": false,
+    "adapterEligible": false,
+    "ownerAuthorityChanged": false,
+    "passBPerformed": false,
+    "reconciliationPerformed": false,
+    "provenance": "codex_translation_pass_a_not_independent_human_review"
+  },
+  "manifestSha256": "962808c1cc72655581cce10a875cda1a5d9d21564819069b457823c6fbccf301"
+}

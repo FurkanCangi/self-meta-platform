@@ -249,6 +249,7 @@ assert.equal(exact.sources[0].knownBoundary, CLAIMS[0].claimBoundary)
 assert.ok(Boolean(exact.sources[0].doi || exact.sources[0].officialUrl))
 
 assert.equal(resolveDnaV3ResponseDepth("Kısaca söyle", "deep"), "short")
+assert.equal(resolveDnaV3ResponseDepth("Daha basit anlat", "deep"), "short")
 assert.equal(resolveDnaV3ResponseDepth("Kanıtlarıyla detaylı anlat", "short"), "deep")
 assert.equal(resolveDnaV3ResponseDepth("Kısaca ama ayrıntılı anlat", "deep"), "standard")
 assert.equal(resolveDnaV3ResponseDepth("Normal biçimde açıkla", "short"), "short")

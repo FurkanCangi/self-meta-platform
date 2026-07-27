@@ -160,7 +160,9 @@ async function main() {
 
   assert.match(routeSource, /Cache-Control["']:\s*["']private, no-store/)
   assert.match(routeSource, /Vary:\s*["']Cookie["']/)
-  assert.match(routeSource, /\.eq\(["']owner_id["'],\s*userId\)/)
+  assert.match(routeSource, /assessments_v2!reports_assessment_id_fkey!inner/)
+  assert.match(routeSource, /clients!assessments_v2_client_id_fkey!inner/)
+  assert.match(routeSource, /\.eq\(["']assessment\.client\.owner_id["'],\s*userId\)/)
   assert.match(ownedCaseSource, /\.eq\(["']owner_id["'],\s*input\.userId\)/)
   assert.doesNotMatch(ownedCaseSource, /isAdminRole|adminScope|ownerAuditEmail/)
   assert.doesNotMatch(routeSource, /console\.(?:log|warn|error)\([^\n]*(?:question|reportId|clientCode)/)

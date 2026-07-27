@@ -1,0 +1,261 @@
+{
+  "schemaVersion": "dna-turkish-retrieval-locked-evaluation-v3-manifest@1",
+  "recordedAt": "2026-07-24T11:15:25.620Z",
+  "evaluationClass": "internal_blind_source_derived_v3_not_independent_human_validation",
+  "runId": "locked-eval-v3:26154fd31cd8aab388d6c13b73c07ca5",
+  "authority": {
+    "adapterSha256": "a005b5aa96383f4ac753a01ee11fa923406513b23b2d6cb90e0090f8b8830168",
+    "adapterFileSha256": "cdc2dc9c7ba8926f9e51ab7d06dfbe4953b40609d2b21294532178e019005645",
+    "workingAdapterFileSha256": "cdc2dc9c7ba8926f9e51ab7d06dfbe4953b40609d2b21294532178e019005645",
+    "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "candidateFileSha256": "45c779a88b668f26b9a79c29715ca8709cb3a52afa07c8d4dbae37bc01ee7b3c",
+    "developmentBankFileSha256": "33e42d7e37e6e606958fed765efdf25357f21ce75fe8f1c317fd89d47ad5d202",
+    "developmentResultFileSha256": "29ff1042f8c186386a27ef324410d8729cb5a9257c3a1e4b42c3b973150d08a7",
+    "freezeManifestFileSha256": "187cebefc6d74980c55d275eee345eb1666a0fd304abce084befbea7f288b12c",
+    "evaluatorCodeSha256": "3bb16e6d78078014b8111a625d6b91e008e7a633f2c726c2e8f16173a863cb19",
+    "developmentGeneratorFileSha256": "8e42dd728039772429d4afc8a07e5b4c3734c7dcac6f6d494556ade55d216a6c",
+    "artifactBuilderFileSha256": "586ebc8f75628d61b2c1c9178dde942f67df69a451cc1ace38ac20fc03cf6dd4",
+    "developmentManifestSha256": "200f1b09589adffa2c8f1bd35e421723aa98e964c24bdd2163880d95fd01be1b",
+    "frozenManifestSha256": "187cebefc6d74980c55d275eee345eb1666a0fd304abce084befbea7f288b12c",
+    "holdoutManifestSha256": "5c31d4ead1861f5c9841b3eba82d71dc49f54971b6cff32867ed6a5b24ccffc4",
+    "preopenManifestSha256": "2f51918e66b0b4f5aecd167db8023b135629763e2096813fc67d87ae036683fd",
+    "preopenReceiptFileSha256": "165e0592d1aeb16d5f4e4dad8df7d6d24307b90238a9dfda88b552cb7452369c",
+    "preopenReceiptSha256": "46e2c7cfbb6f97b4d40fde7a69710923d00711d031fe8edcb8a3c47ea06e3dbf",
+    "holdoutSha256": "a7322f7b76453cb0cda2d0bd2d82265bd32238aa7c66e160aa0d8fa3e17369d3",
+    "holdoutSealedPayloadSha256": "7a2744994ee4759a04ac156c2bea554279317632b0d7f56614bd93826cca3bee",
+    "evaluationCodeSha256": "667251aaf6f6b2c2ba2bfc816324be90c098251de011d1e182ee8c1c2065201f",
+    "authoritySha256": "5f1043ca0ec85bc57ac98f683c01081d9545353b30414b4c53a6f5b304b77a69"
+  },
+  "result": {
+    "researchSsdRelativePath": "Datasets/DNA-Intelligence/evaluations/turkish-retrieval-v3/blind-source-derived-v3/official-source-derived-v3-first-run.result.json",
+    "fileSha256": "1fe7c07ac2d6f703bd00a9a706b72fcddd6450fa55e3652208cf3ad7f56e42ab",
+    "resultSha256": "0be515cec97cd2ee12da4833d0a680d9b6152e46bb78318442f36716c2fa777a",
+    "fileMode": "0600"
+  },
+  "claim": {
+    "researchSsdRelativePath": "Datasets/DNA-Intelligence/evaluations/turkish-retrieval-v3/blind-source-derived-v3/official-source-derived-v3-first-run.claim.json",
+    "fileSha256": "227ad785f09e9f9bab580743caa0786174ab8c476f5bd3118e3b3d4705c790fa",
+    "claimSha256": "4fb9547b4cc60bccd4046ecc470c87dcdddb5bf704cee13616b21a1f49ef7b2d",
+    "fileMode": "0600",
+    "noRerun": true,
+    "failureStateIfResultAbsent": "claimed_failed_no_rerun"
+  },
+  "counts": {
+    "total": 196,
+    "answerControls": 126,
+    "clarificationControls": 42,
+    "abstentionControls": 28,
+    "safetyControls": 28
+  },
+  "metrics": {
+    "overallAccuracy": 0.346939,
+    "splitAccuracy": [
+      {
+        "split": "ambiguous",
+        "count": 42,
+        "correct": 11,
+        "accuracy": 0.261905
+      },
+      {
+        "split": "hard_neighbor",
+        "count": 42,
+        "correct": 12,
+        "accuracy": 0.285714
+      },
+      {
+        "split": "natural_supported",
+        "count": 56,
+        "correct": 23,
+        "accuracy": 0.410714
+      },
+      {
+        "split": "safe_theory_control",
+        "count": 28,
+        "correct": 7,
+        "accuracy": 0.25
+      },
+      {
+        "split": "unsupported",
+        "count": 28,
+        "correct": 15,
+        "accuracy": 0.535714
+      }
+    ],
+    "intentAccuracy": [
+      {
+        "intent": "age_development",
+        "count": 28,
+        "correct": 11,
+        "accuracy": 0.392857
+      },
+      {
+        "intent": "comparison",
+        "count": 28,
+        "correct": 8,
+        "accuracy": 0.285714
+      },
+      {
+        "intent": "definition",
+        "count": 28,
+        "correct": 16,
+        "accuracy": 0.571429
+      },
+      {
+        "intent": "evidence",
+        "count": 28,
+        "correct": 5,
+        "accuracy": 0.178571
+      },
+      {
+        "intent": "measurement",
+        "count": 28,
+        "correct": 12,
+        "accuracy": 0.428571
+      },
+      {
+        "intent": "misconception",
+        "count": 28,
+        "correct": 9,
+        "accuracy": 0.321429
+      },
+      {
+        "intent": "relationship",
+        "count": 28,
+        "correct": 7,
+        "accuracy": 0.25
+      }
+    ],
+    "topicAccuracy": [
+      {
+        "topicId": "external.autonomic_testing",
+        "count": 9,
+        "correct": 3,
+        "accuracy": 0.333333
+      },
+      {
+        "topicId": "external.circadian_light",
+        "count": 9,
+        "correct": 4,
+        "accuracy": 0.444444
+      },
+      {
+        "topicId": "external.executive_function_development",
+        "count": 9,
+        "correct": 5,
+        "accuracy": 0.555556
+      },
+      {
+        "topicId": "external.hrv_biofeedback_methods",
+        "count": 9,
+        "correct": 1,
+        "accuracy": 0.111111
+      },
+      {
+        "topicId": "external.hrv_context",
+        "count": 9,
+        "correct": 2,
+        "accuracy": 0.222222
+      },
+      {
+        "topicId": "external.hrv_measurement",
+        "count": 9,
+        "correct": 1,
+        "accuracy": 0.111111
+      },
+      {
+        "topicId": "external.insula_interoception",
+        "count": 9,
+        "correct": 3,
+        "accuracy": 0.333333
+      },
+      {
+        "topicId": "external.measurement_cosmin",
+        "count": 9,
+        "correct": 3,
+        "accuracy": 0.333333
+      },
+      {
+        "topicId": "external.parent_emotion_regulation",
+        "count": 9,
+        "correct": 3,
+        "accuracy": 0.333333
+      },
+      {
+        "topicId": "external.pfc_cognitive_control",
+        "count": 9,
+        "correct": 3,
+        "accuracy": 0.333333
+      },
+      {
+        "topicId": "external.polyvagal_theory",
+        "count": 9,
+        "correct": 3,
+        "accuracy": 0.333333
+      },
+      {
+        "topicId": "external.prisma_cosmin_reporting",
+        "count": 9,
+        "correct": 4,
+        "accuracy": 0.444444
+      },
+      {
+        "topicId": "external.selfreg_measurement",
+        "count": 9,
+        "correct": 3,
+        "accuracy": 0.333333
+      },
+      {
+        "topicId": "external.sleep_emotional_reactivity",
+        "count": 9,
+        "correct": 4,
+        "accuracy": 0.444444
+      }
+    ],
+    "clarificationAccuracy": 0.261905,
+    "abstentionAccuracy": 0.535714,
+    "safeTheoryRoutingAccuracy": 0.25,
+    "safetyNonRefusalAccuracy": 0.642857,
+    "determinism": {
+      "repeats": 20,
+      "uniqueHashes": 1,
+      "predictionSha256": "b3a2495cd96d6986b72fbc8244e872684cb1b9d61dedffceffcd8b79bd631dc9"
+    },
+    "p95Milliseconds": 9.432667
+  },
+  "qualityGate": {
+    "targets": {
+      "overallAccuracy": 0.95,
+      "naturalSupportedAccuracy": 0.95,
+      "hardNeighborAccuracy": 0.95,
+      "ambiguousAccuracy": 0.95,
+      "unsupportedAccuracy": 1,
+      "safeTheoryRoutingAccuracy": 0.95,
+      "safetyNonRefusalAccuracy": 0.98,
+      "p95MillisecondsMaximum": 25
+    },
+    "checks": {
+      "overallAccuracy": false,
+      "naturalSupportedAccuracy": false,
+      "hardNeighborAccuracy": false,
+      "ambiguousAccuracy": false,
+      "unsupportedAccuracy": false,
+      "safeTheoryRoutingAccuracy": false,
+      "safetyNonRefusalAccuracy": false,
+      "determinism": true,
+      "performance": true
+    },
+    "status": "fail"
+  },
+  "boundaries": {
+    "questionPayloadReadByVerifier": false,
+    "questionPayloadStoredInRepository": false,
+    "failureQuestionOrItemIdsStored": false,
+    "aggregateOnly": true,
+    "independentHumanValidation": false,
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "activationAllowed": false,
+    "v3ReleaseDecision": "no_go_unchanged"
+  },
+  "manifestSha256": "14bbbc57b5e283c9cb5a8c338d3dbc63049deb9bc513697e4860bc076d701a17"
+}

@@ -50,6 +50,7 @@ export const DNA_V3_RESPONSE_DEPTH_SPEC: Readonly<
 
 const SHORT_CUES = [
   /\b(?:kisaca|kisa anlat|kisa acikla|tek cumle|ozetle|cok uzatma|uzatmadan)\b/,
+  /\b(?:daha basit anlat|basitce anlat|sade anlat|onceki cevabi kisalt)\b/,
 ] as const
 
 const DEEP_CUES = [

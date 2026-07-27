@@ -1,0 +1,22 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp/dna-turkish-rendering-pass-a",
+    "rootDir": ".",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2020",
+    "incremental": false,
+    "isolatedModules": false
+  },
+  "include": [
+    "scripts/dna-secure-artifact.ts",
+    "scripts/dna-external-science-turkish-rendering-pass-a.ts",
+    "scripts/run-dna-external-science-turkish-rendering-pass-a-tests.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
+}

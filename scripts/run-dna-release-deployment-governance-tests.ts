@@ -1,5 +1,5 @@
 import assert from "node:assert/strict"
-import { createHash, generateKeyPairSync, sign } from "node:crypto"
+import { createHash, generateKeyPairSync, sign, type KeyObject } from "node:crypto"
 import { execFileSync } from "node:child_process"
 import { mkdtempSync, readFileSync, rmSync, unlinkSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
@@ -42,6 +42,25 @@ import {
   verifyDnaRuntimeDeploymentAuthorization,
   verifyDnaRuntimePromotionReceipt,
 } from "../src/lib/dna/chat/release/runtimeDeploymentAuthorization"
+import {
+  DNA_CURRENT_PRODUCTION_AUTHORITY_CONSUMED_NONCE_SHA256,
+  DNA_CURRENT_PRODUCTION_CANARY_BOOTSTRAP_TRUST_ROOTS,
+  DNA_CURRENT_PRODUCTION_NONCE_REPLAY_AUTHORITY_PROVISIONED,
+  DNA_CURRENT_PRODUCTION_RUNTIME_ACTIVATION_TRUST_ROOTS,
+  DNA_CURRENT_PRODUCTION_STAGED_ROLLOUT_TRUST_ROOTS,
+  DNA_PRODUCTION_ACTION_TRUST_ROOT_VERSION,
+  DNA_PRODUCTION_CANARY_BOOTSTRAP_AUTHORIZATION_VERSION,
+  DNA_PRODUCTION_RUNTIME_ACTIVATION_VERSION,
+  DNA_PRODUCTION_STAGED_ROLLOUT_AUTHORITY_VERSION,
+  dnaProductionActionSigningBytes,
+  dnaProductionAuthorityArtifactSha256,
+  dnaProductionAuthorityNonceSha256,
+  verifyDnaProductionRuntimeAuthority,
+  type DnaProductionActionTrustRoot,
+  type DnaProductionCanaryBootstrapAuthorizationPayload,
+  type DnaProductionRuntimeActivationPayload,
+  type DnaProductionStagedRolloutAuthorityPayload,
+} from "../src/lib/dna/chat/release/productionRuntimeAuthority"
 import {
   DNA_CURRENT_V3_PREVIEW_VERIFICATION_MANIFEST,
   DNA_CURRENT_V3_PRODUCTION_VERIFICATION_MANIFEST,
@@ -1012,7 +1031,7 @@ assert.equal(verifyDnaRuntimePromotionReceipt({
   trustRoots: [liveObservationTrustRoot],
   now: "2026-07-20T02:30:00.000Z",
 }).allowed, true,
-"Yalnız production gözlemine ait imzalı exact receipt runtime yetkisi olabilmeli")
+"Production gözlemine ait imzalı exact receipt runtime zincirinin önkoşulu olabilmeli")
 assert.equal(verifyDnaRuntimePromotionReceipt({
   receipt: productionExternalAttestation,
   expectedGitSha: productionManifest.gitSha,
@@ -1140,6 +1159,351 @@ assert.equal(validateDnaStagedRolloutEvidenceVerification(
 ), true)
 assert.deepEqual(internalAuthorization.priorStageEvidence.map((row) => row.stageId), ["preview"])
 assert.equal(internalAuthorization.authorizedPercent, 5)
+
+const createProductionActionTrustRoot = (
+  keyId: string,
+  role: DnaProductionActionTrustRoot["role"],
+  publicKey: KeyObject,
+): DnaProductionActionTrustRoot => ({
+  schemaVersion: DNA_PRODUCTION_ACTION_TRUST_ROOT_VERSION,
+  keyId,
+  algorithm: "Ed25519",
+  role,
+  environment: "production",
+  publicKeySpkiBase64: publicKey.export({ format: "der", type: "spki" }).toString("base64"),
+  validFrom: "2026-07-19T00:00:00.000Z",
+  validUntil: "2026-07-21T00:00:00.000Z",
+})
+const { publicKey: bootstrapPublicKey, privateKey: bootstrapPrivateKey } =
+  generateKeyPairSync("ed25519")
+const { publicKey: stagedPublicKey, privateKey: stagedPrivateKey } =
+  generateKeyPairSync("ed25519")
+const { publicKey: activationPublicKey, privateKey: activationPrivateKey } =
+  generateKeyPairSync("ed25519")
+const bootstrapTrustRoot = createProductionActionTrustRoot(
+  "canary-bootstrap.synthetic.001",
+  "canary_bootstrap_authorizer",
+  bootstrapPublicKey,
+)
+const stagedTrustRoot = createProductionActionTrustRoot(
+  "staged-rollout.synthetic.001",
+  "staged_rollout_authorizer",
+  stagedPublicKey,
+)
+const activationTrustRoot = createProductionActionTrustRoot(
+  "runtime-activation.synthetic.001",
+  "runtime_activation_authorizer",
+  activationPublicKey,
+)
+const observationAttestationSha256 = dnaProductionAuthorityArtifactSha256(
+  productionExternalAttestation,
+)
+const bootstrapPayload: DnaProductionCanaryBootstrapAuthorizationPayload = {
+  schemaVersion: DNA_PRODUCTION_CANARY_BOOTSTRAP_AUTHORIZATION_VERSION,
+  purpose: "production_canary_bootstrap",
+  environment: "production",
+  keyId: bootstrapTrustRoot.keyId,
+  releaseId: rolloutPolicy.releaseId,
+  deploymentId: productionManifest.productionDeploymentId,
+  origin: productionOrigin,
+  gitSha: productionManifest.gitSha,
+  packageSha256: productionManifest.packageSha256,
+  policySha256: rolloutPolicy.policySha256,
+  rolloutAuthorizationSha256: internalAuthorization.authorizationSha256,
+  stageId: "internal",
+  rolloutPercent: 5,
+  previousStageId: "preview",
+  previousStageHealthSha256: internalAuthorization.priorStageEvidence[0]!.evidenceSha256,
+  observationAttestationSha256,
+  nonce: "bootstrap-nonce.synthetic.001",
+  issuedAt: "2026-07-20T02:31:00.000Z",
+  expiresAt: "2026-07-20T02:41:00.000Z",
+}
+const bootstrapAuthority = {
+  ...bootstrapPayload,
+  signatureBase64: sign(
+    null,
+    dnaProductionActionSigningBytes(bootstrapPayload),
+    bootstrapPrivateKey,
+  ).toString("base64"),
+}
+const activationPayload: DnaProductionRuntimeActivationPayload = {
+  schemaVersion: DNA_PRODUCTION_RUNTIME_ACTIVATION_VERSION,
+  purpose: "production_runtime_activation",
+  environment: "production",
+  keyId: activationTrustRoot.keyId,
+  releaseId: rolloutPolicy.releaseId,
+  deploymentId: productionManifest.productionDeploymentId,
+  origin: productionOrigin,
+  gitSha: productionManifest.gitSha,
+  packageSha256: productionManifest.packageSha256,
+  policySha256: rolloutPolicy.policySha256,
+  rolloutAuthorizationSha256: internalAuthorization.authorizationSha256,
+  stageAuthoritySha256: dnaProductionAuthorityArtifactSha256(bootstrapAuthority),
+  stageId: "internal",
+  rolloutPercent: 5,
+  previousStageId: "preview",
+  previousStageHealthSha256: internalAuthorization.priorStageEvidence[0]!.evidenceSha256,
+  observationAttestationSha256,
+  nonce: "activation-nonce.synthetic.001",
+  issuedAt: "2026-07-20T02:32:00.000Z",
+  expiresAt: "2026-07-20T02:41:00.000Z",
+}
+const runtimeActivation = {
+  ...activationPayload,
+  signatureBase64: sign(
+    null,
+    dnaProductionActionSigningBytes(activationPayload),
+    activationPrivateKey,
+  ).toString("base64"),
+}
+const bootstrapVerificationInput = {
+  observationAttestation: productionExternalAttestation,
+  observationTrustRoots: [liveObservationTrustRoot],
+  stageAuthority: bootstrapAuthority,
+  runtimeActivation,
+  bootstrapTrustRoots: [bootstrapTrustRoot],
+  stagedRolloutTrustRoots: [stagedTrustRoot],
+  runtimeActivationTrustRoots: [activationTrustRoot],
+  policy: rolloutPolicy,
+  rolloutAuthorization: internalAuthorization,
+  evidenceVerification: internalEvidenceVerification,
+  expected: {
+    releaseId: rolloutPolicy.releaseId,
+    deploymentId: productionManifest.productionDeploymentId,
+    origin: productionOrigin,
+    gitSha: productionManifest.gitSha,
+    packageSha256: productionManifest.packageSha256,
+    stageId: "internal" as const,
+    rolloutPercent: 5 as const,
+  },
+  now: "2026-07-20T02:35:00.000Z",
+}
+assert.equal(verifyDnaProductionRuntimeAuthority(bootstrapVerificationInput).allowed, true,
+  "İlk production canary observation + bootstrap + ayrı runtime activation zinciriyle açılmalı")
+
+const forgedBootstrapAuthority = {
+  ...bootstrapAuthority,
+  nonce: "bootstrap-nonce.synthetic.002",
+}
+assert.equal(verifyDnaProductionRuntimeAuthority({
+  ...bootstrapVerificationInput,
+  stageAuthority: forgedBootstrapAuthority,
+}).blockCode, "production_stage_authority_signature_invalid",
+"İmzadan sonra değiştirilen bootstrap yetkisi forgery olarak reddedilmeli")
+assert.equal(verifyDnaProductionRuntimeAuthority({
+  ...bootstrapVerificationInput,
+  runtimeActivation: {
+    ...runtimeActivation,
+    signatureBase64: sign(
+      null,
+      dnaProductionActionSigningBytes(bootstrapPayload),
+      activationPrivateKey,
+    ).toString("base64"),
+  },
+}).blockCode, "production_runtime_activation_signature_invalid",
+"Bootstrap amacıyla imzalanan byte'lar runtime-activation amacı olarak kullanılamamalı")
+
+const sameKeyActivationRoot = createProductionActionTrustRoot(
+  "runtime-activation.same-key.synthetic.001",
+  "runtime_activation_authorizer",
+  bootstrapPublicKey,
+)
+const sameKeyActivationPayload: DnaProductionRuntimeActivationPayload = {
+  ...activationPayload,
+  keyId: sameKeyActivationRoot.keyId,
+  nonce: "same-key-activation.synthetic.001",
+}
+const sameKeyActivation = {
+  ...sameKeyActivationPayload,
+  signatureBase64: sign(
+    null,
+    dnaProductionActionSigningBytes(sameKeyActivationPayload),
+    bootstrapPrivateKey,
+  ).toString("base64"),
+}
+assert.equal(verifyDnaProductionRuntimeAuthority({
+  ...bootstrapVerificationInput,
+  runtimeActivation: sameKeyActivation,
+  runtimeActivationTrustRoots: [sameKeyActivationRoot],
+}).blockCode, "production_authority_role_separation_invalid",
+"Bootstrap ve runtime activation aynı fiziksel Ed25519 anahtarını paylaşamamalı")
+
+assert.equal(verifyDnaProductionRuntimeAuthority({
+  ...bootstrapVerificationInput,
+  consumedNonceSha256: [dnaProductionAuthorityNonceSha256(
+    bootstrapAuthority.purpose,
+    bootstrapAuthority.nonce,
+  )],
+}).blockCode, "production_authority_nonce_replayed",
+"Tüketilmiş nonce ile aynı action envelope replay edilememeli")
+assert.equal(verifyDnaProductionRuntimeAuthority({
+  ...bootstrapVerificationInput,
+  now: "2026-07-20T02:42:00.000Z",
+}).blockCode, "production_stage_authority_time_invalid",
+"15 dakikadan kısa yetki penceresi sona erince bootstrap geçersiz olmalı")
+const overlongActivationPayload: DnaProductionRuntimeActivationPayload = {
+  ...activationPayload,
+  nonce: "overlong-activation.synthetic.001",
+  expiresAt: "2026-07-20T02:45:00.000Z",
+}
+assert.equal(verifyDnaProductionRuntimeAuthority({
+  ...bootstrapVerificationInput,
+  runtimeActivation: {
+    ...overlongActivationPayload,
+    signatureBase64: sign(
+      null,
+      dnaProductionActionSigningBytes(overlongActivationPayload),
+      activationPrivateKey,
+    ).toString("base64"),
+  },
+}).blockCode, "production_runtime_activation_time_invalid",
+"Runtime activation bağlı stage authority'nin expiry sınırını aşamamalı")
+assert.equal(verifyDnaProductionRuntimeAuthority({
+  ...bootstrapVerificationInput,
+  bootstrapTrustRoots: [],
+}).blockCode, "production_stage_authority_trust_root_missing_or_invalid",
+"Boş committed trust-root listesi production canary'yi fail-closed tutmalı")
+assert.equal(verifyDnaProductionRuntimeAuthority({
+  ...bootstrapVerificationInput,
+  evidenceVerification: { ...internalEvidenceVerification, valid: false },
+}).blockCode, "production_stage_health_missing_or_invalid",
+"Önceki aşama sağlık kanıtı olmadan canary bootstrap açılamamalı")
+
+const wrongBindingActivationPayload: DnaProductionRuntimeActivationPayload = {
+  ...activationPayload,
+  origin: "https://wrong-production.example.test",
+  nonce: "wrong-binding-activation.synthetic.001",
+}
+assert.equal(verifyDnaProductionRuntimeAuthority({
+  ...bootstrapVerificationInput,
+  runtimeActivation: {
+    ...wrongBindingActivationPayload,
+    signatureBase64: sign(
+      null,
+      dnaProductionActionSigningBytes(wrongBindingActivationPayload),
+      activationPrivateKey,
+    ).toString("base64"),
+  },
+}).blockCode, "production_runtime_activation_binding_invalid",
+"Doğru imza yanlış origin/git/pack bağını yetkilendirememeli")
+
+const skippedStagePayload: DnaProductionStagedRolloutAuthorityPayload = {
+  ...bootstrapPayload,
+  schemaVersion: DNA_PRODUCTION_STAGED_ROLLOUT_AUTHORITY_VERSION,
+  purpose: "production_staged_rollout",
+  keyId: stagedTrustRoot.keyId,
+  stageId: "full",
+  rolloutPercent: 100,
+  previousStageId: "broad",
+  nonce: "stage-skip.synthetic.001",
+}
+assert.equal(verifyDnaProductionRuntimeAuthority({
+  ...bootstrapVerificationInput,
+  stageAuthority: {
+    ...skippedStagePayload,
+    signatureBase64: sign(
+      null,
+      dnaProductionActionSigningBytes(skippedStagePayload),
+      stagedPrivateKey,
+    ).toString("base64"),
+  },
+}).blockCode, "production_stage_authority_binding_or_sequence_invalid",
+"Aşama authority'si internal'dan full'e sıçrayamamalı")
+
+const limitedInternalEvidence = writeRolloutEvidence({
+  name: "limited-internal-health",
+  stageId: "internal",
+  observationCount: 100,
+  completedAt: "2026-07-20T02:45:00.000Z",
+  format: "jsonl",
+})
+const limitedAuthorization = createDnaStagedRolloutAuthorization({
+  policy: rolloutPolicy,
+  authorizedStageId: "limited",
+  priorStageEvidence: [
+    internalPreviewEvidence.authorizationEvidence,
+    limitedInternalEvidence.authorizationEvidence,
+  ],
+  authorizedAt: "2026-07-20T02:50:00.000Z",
+})
+const limitedEvidenceVerification = verifyDnaStagedRolloutHealthEvidence({
+  policy: rolloutPolicy,
+  authorization: limitedAuthorization,
+  evidenceRoot: rolloutEvidenceRoot,
+  files: [internalPreviewEvidence.file, limitedInternalEvidence.file],
+})
+const stagedPayload: DnaProductionStagedRolloutAuthorityPayload = {
+  schemaVersion: DNA_PRODUCTION_STAGED_ROLLOUT_AUTHORITY_VERSION,
+  purpose: "production_staged_rollout",
+  environment: "production",
+  keyId: stagedTrustRoot.keyId,
+  releaseId: rolloutPolicy.releaseId,
+  deploymentId: productionManifest.productionDeploymentId,
+  origin: productionOrigin,
+  gitSha: productionManifest.gitSha,
+  packageSha256: productionManifest.packageSha256,
+  policySha256: rolloutPolicy.policySha256,
+  rolloutAuthorizationSha256: limitedAuthorization.authorizationSha256,
+  stageId: "limited",
+  rolloutPercent: 25,
+  previousStageId: "internal",
+  previousStageHealthSha256: limitedAuthorization.priorStageEvidence.at(-1)!.evidenceSha256,
+  observationAttestationSha256,
+  nonce: "staged-rollout-nonce.synthetic.001",
+  issuedAt: "2026-07-20T02:51:00.000Z",
+  expiresAt: "2026-07-20T03:06:00.000Z",
+}
+const stagedAuthority = {
+  ...stagedPayload,
+  signatureBase64: sign(
+    null,
+    dnaProductionActionSigningBytes(stagedPayload),
+    stagedPrivateKey,
+  ).toString("base64"),
+}
+const stagedActivationPayload: DnaProductionRuntimeActivationPayload = {
+  ...activationPayload,
+  rolloutAuthorizationSha256: limitedAuthorization.authorizationSha256,
+  stageAuthoritySha256: dnaProductionAuthorityArtifactSha256(stagedAuthority),
+  stageId: "limited",
+  rolloutPercent: 25,
+  previousStageId: "internal",
+  previousStageHealthSha256: limitedAuthorization.priorStageEvidence.at(-1)!.evidenceSha256,
+  nonce: "staged-activation-nonce.synthetic.001",
+  issuedAt: "2026-07-20T02:52:00.000Z",
+  expiresAt: "2026-07-20T03:06:00.000Z",
+}
+const stagedActivation = {
+  ...stagedActivationPayload,
+  signatureBase64: sign(
+    null,
+    dnaProductionActionSigningBytes(stagedActivationPayload),
+    activationPrivateKey,
+  ).toString("base64"),
+}
+assert.equal(verifyDnaProductionRuntimeAuthority({
+  ...bootstrapVerificationInput,
+  stageAuthority: stagedAuthority,
+  runtimeActivation: stagedActivation,
+  rolloutAuthorization: limitedAuthorization,
+  evidenceVerification: limitedEvidenceVerification,
+  expected: {
+    ...bootstrapVerificationInput.expected,
+    stageId: "limited",
+    rolloutPercent: 25,
+  },
+  now: "2026-07-20T03:00:00.000Z",
+}).allowed, true, "Sağlıklı internal kanıtından sonra imzalı limited rollout açılabilmeli")
+
+assert.equal(DNA_CURRENT_PRODUCTION_CANARY_BOOTSTRAP_TRUST_ROOTS.length, 0)
+assert.equal(DNA_CURRENT_PRODUCTION_STAGED_ROLLOUT_TRUST_ROOTS.length, 0)
+assert.equal(DNA_CURRENT_PRODUCTION_RUNTIME_ACTIVATION_TRUST_ROOTS.length, 0)
+assert.equal(DNA_CURRENT_PRODUCTION_AUTHORITY_CONSUMED_NONCE_SHA256.length, 0)
+assert.equal(DNA_CURRENT_PRODUCTION_NONCE_REPLAY_AUTHORITY_PROVISIONED, false,
+  "Atomic nonce issuance/consumption authority provision edilmeden runtime açılamamalı")
+assert.equal(evaluateCurrentDnaRuntimeDeploymentAuthorization.length, 0,
+  "Action-facing runtime authority caller JSON'u kabul etmemeli")
 assert.equal(validateDnaStagedRolloutAuthorization({
   ...internalAuthorization,
   authorizedPercent: 100,

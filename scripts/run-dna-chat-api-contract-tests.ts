@@ -1,4 +1,6 @@
 import assert from "node:assert/strict"
+import { readFileSync } from "node:fs"
+import { join } from "node:path"
 import { performance } from "node:perf_hooks"
 
 import {
@@ -16,6 +18,12 @@ import {
 } from "./dna-chat-test-helpers"
 import { createDnaV3RuntimeAnswerInternal } from "../src/lib/dna/chat/runtimeAnswer"
 import type { DnaV3RetrievalAnswer } from "../src/lib/dna/chat/v3RetrievalCore"
+import {
+  createDnaChatRequestTimer,
+  DNA_CHAT_REQUEST_TIMING_STAGES,
+  shouldLogDnaChatRequestTiming,
+} from "../src/lib/dna/chat/operations/requestTiming"
+import { evaluateSharedRateLimit } from "../src/lib/security/rateLimitPolicy"
 
 function percentile(values: readonly number[], p: number) {
   const sorted = [...values].sort((left, right) => left - right)
@@ -81,6 +89,103 @@ function dependencies(options: {
 }
 
 async function main() {
+  let timingClock = 0
+  const timing = createDnaChatRequestTimer(() => timingClock)
+  await timing.measure("authentication", async () => {
+    timingClock += 12.25
+  })
+  await timing.measure("runtime_resolution", async () => {
+    timingClock += 1_010
+  })
+  const slowTiming = timing.complete({
+    status: 200,
+    requestId: "11111111-1111-4111-8111-111111111111",
+  })
+  assert.equal(slowTiming.totalMs, 1_022.25)
+  assert.equal(slowTiming.stagesMs.authentication, 12.25)
+  assert.equal(slowTiming.stagesMs.runtime_resolution, 1_010)
+  assert.equal(slowTiming.requestId, "11111111-1111-4111-8111-111111111111")
+  assert.equal(shouldLogDnaChatRequestTiming(slowTiming, false), true)
+  assert.deepEqual(
+    Object.keys(slowTiming.stagesMs),
+    DNA_CHAT_REQUEST_TIMING_STAGES.filter((stage) => stage === "authentication" || stage === "runtime_resolution"),
+  )
+  assert.doesNotMatch(
+    JSON.stringify(slowTiming),
+    /question|answer|reportId|clientCode|userId|anamnesis|caseEvidence/,
+  )
+
+  let invalidClock = 0
+  const invalidTiming = createDnaChatRequestTimer(() => invalidClock)
+  invalidClock = 5
+  const failedTiming = invalidTiming.complete({ status: 503, requestId: "çocuğumun-raporu" })
+  assert.equal(failedTiming.requestId, null)
+  assert.equal(failedTiming.result, "server_error")
+  assert.equal(shouldLogDnaChatRequestTiming(failedTiming, false), true)
+
+  const sharedResetAt = "2026-07-24T12:00:10.000Z"
+  assert.deepEqual(
+    await evaluateSharedRateLimit({ windowMs: 10_000, now: Date.parse("2026-07-24T12:00:00.000Z") }, async () => ({
+      data: [{ ok: true, remaining: 11, reset_at: sharedResetAt }],
+      error: null,
+    })),
+    {
+      ok: true,
+      remaining: 11,
+      resetAt: Date.parse(sharedResetAt),
+      backendAvailable: true,
+      reason: "allowed",
+    },
+    "Geçerli shared RPC yanıtı mevcut başarı sözleşmesini korumalı",
+  )
+  const sharedLimitExceeded = await evaluateSharedRateLimit({ windowMs: 10_000 }, async () => ({
+    data: { ok: false, remaining: 0, reset_at: sharedResetAt },
+    error: null,
+  }))
+  assert.equal(sharedLimitExceeded.ok, false)
+  assert.equal(sharedLimitExceeded.backendAvailable, true)
+  assert.equal(sharedLimitExceeded.reason, "limit_exceeded")
+
+  for (const unavailableRpc of [
+    async () => ({ data: null, error: { code: "503" } }),
+    async () => ({ data: { ok: true, remaining: "invalid", reset_at: sharedResetAt }, error: null }),
+    async () => { throw new Error("network_unavailable") },
+  ]) {
+    const denied = await evaluateSharedRateLimit({
+      windowMs: 10_000,
+      now: Date.parse("2026-07-24T12:00:00.000Z"),
+    }, unavailableRpc)
+    assert.equal(denied.ok, false, "Shared rate-limit arızası isteği reddetmeli")
+    assert.equal(denied.backendAvailable, false)
+    assert.equal(denied.reason, "backend_unavailable")
+    assert.equal(denied.remaining, 0)
+    assert.equal(denied.resetAt, Date.parse("2026-07-24T12:00:10.000Z"))
+  }
+
+  const routeSource = readFileSync(join(process.cwd(), "src/app/api/app/dna-chat/route.ts"), "utf8")
+  const listOwnReportsBlock = routeSource.slice(
+    routeSource.indexOf("async function listOwnReports"),
+    routeSource.indexOf("async function writeDnaChatAudit"),
+  )
+  assert.match(listOwnReportsBlock, /\.from\("reports"\)/)
+  assert.match(listOwnReportsBlock, /assessments_v2!reports_assessment_id_fkey!inner/)
+  assert.match(listOwnReportsBlock, /clients!assessments_v2_client_id_fkey!inner/)
+  assert.match(listOwnReportsBlock, /\.eq\("assessment\.client\.owner_id", userId\)/)
+  assert.match(listOwnReportsBlock, /\.is\("assessment\.deleted_at", null\)/)
+  assert.match(listOwnReportsBlock, /\.is\("assessment\.client\.deleted_at", null\)/)
+  assert.match(listOwnReportsBlock, /\.order\("created_at", \{ ascending: false \}\)/)
+  assert.match(listOwnReportsBlock, /\.order\("id", \{ ascending: false \}\)/)
+  assert.match(listOwnReportsBlock, /\.limit\(10\)/)
+  assert.match(listOwnReportsBlock, /snapshot_json->>age_band/)
+  assert.match(listOwnReportsBlock, /snapshot_json->>age_months/)
+  assert.doesNotMatch(listOwnReportsBlock, /^\s*snapshot_json,\s*$/m)
+  assert.doesNotMatch(listOwnReportsBlock, /\.from\("clients"\)|\.from\("assessments_v2"\)|\.range\(|for \(let offset/)
+  assert.doesNotMatch(
+    listOwnReportsBlock.slice(listOwnReportsBlock.indexOf(".select(`"), listOwnReportsBlock.indexOf("`)")),
+    /report_text|anamnez|answers/,
+    "Rapor listesi DB seçimi klinik metin veya ham yanıt taşımamalı",
+  )
+
 const auditMetadata = buildDnaChatAuditMetadata({
   requestId: "audit-contract-1",
   mode: "case",
@@ -249,6 +354,7 @@ assert.equal(v3Api.body.runtimeGeneration, "v3")
 assert.equal(v3Api.body.catalogVersion, "dna-v3-claim-passage-graph@1")
 assert.equal(v3Api.body.packageVersion, "dna-v3-static-package@1")
 assert.equal(v3Api.body.packageSha256, "a".repeat(64))
+assert.equal(v3Api.body.availabilityScope, "knowledge")
 const v3FallbackUnits = v3Api.body.answerUnits as Array<{
   kind: string
   section: string
@@ -435,6 +541,30 @@ assert.equal(clarification.status, 200)
 assert.equal(clarification.body.classification, "clarification")
 assert.deepEqual(clarification.body.contextRequest, { type: "report", preferNewest: true })
 assert.equal(clarificationDeps.state.loadCalls, 0)
+
+const unknownKnowledge = await resolveDnaChatApiRequest(
+  { question: "Hava bugün nasıl?" },
+  dependencies({ requestId: "unknown-knowledge" }).value,
+)
+assert.equal(unknownKnowledge.status, 200)
+assert.equal(unknownKnowledge.body.classification, "not_available")
+assert.equal(unknownKnowledge.body.availabilityScope, "knowledge")
+
+const emptyCaseAnswer = resolveDnaChat({
+  question: "Bu vakayı özetle.",
+  mode: "case",
+  caseContext: { dataStatus: "deidentified", chatContext: {} },
+})
+const reportUnavailable = await resolveDnaChatApiRequest({
+  question: "Bu vakayı özetle.",
+  reportId: TEST_REPORT_LINEAGE_IDS.reportId,
+}, dependencies({
+  requestId: "report-unavailable",
+  loadResult: { ok: true, answer: emptyCaseAnswer },
+}).value)
+assert.equal(reportUnavailable.status, 200)
+assert.equal(reportUnavailable.body.classification, "not_available")
+assert.equal(reportUnavailable.body.availabilityScope, "report")
 
 const caseDeps = dependencies({ requestId: "case-request" })
 const caseResult = await resolveDnaChatApiRequest({

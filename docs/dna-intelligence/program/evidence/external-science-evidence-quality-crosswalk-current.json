@@ -1,0 +1,250 @@
+{
+  "schemaVersion": "dna-external-science-evidence-quality-crosswalk-manifest@1",
+  "recordedAt": "2026-07-24T08:41:12.201Z",
+  "crosswalkVersion": "dna-external-science-evidence-quality-crosswalk@1",
+  "inputHashes": {
+    "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "candidateFileSha256": "45c779a88b668f26b9a79c29715ca8709cb3a52afa07c8d4dbae37bc01ee7b3c",
+    "trustedRegistryCanonicalSha256": "78ea3019970944e95a1e7c8ff2b452c5b3b1280adeb3dcc39e928914d81950ad",
+    "trustedRegistryFileSha256": "153e8efcb724b3be958cff2eee2299b1af34f7704b18afe0b3dd80c23789491a"
+  },
+  "rawOutput": {
+    "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/evidence-quality-crosswalk/candidate-only-v1/crosswalk.json",
+    "rawSha256": "f9ba163a4ef93bbc10e98617f00ee16e73fc88c1e0c4fd6491f66016ac8ebb8a",
+    "crosswalkSha256": "992a047a496bd896ac2857b214d8d1503109f6e45445847d599038697f7c2f64",
+    "fileMode": "0600"
+  },
+  "counts": {
+    "sources": 14,
+    "claims": 220,
+    "limitations": 217,
+    "registryEvidenceRefs": 442,
+    "registryPassEvidence": 42,
+    "registryAppraisals": 14,
+    "receiptRegistrySnapshotsMatchingCurrent": 1,
+    "historicalReceiptRegistrySnapshotsNotReproducibleFromAllowedInputs": 13
+  },
+  "statusCounts": {
+    "studyDesign": {
+      "consensus": 2,
+      "guideline": 3,
+      "narrative_review": 5,
+      "systematic_review_meta_analysis": 3,
+      "theory": 1
+    },
+    "population": {
+      "human": 7,
+      "mixed_human_animal": 3,
+      "not_applicable": 4
+    },
+    "ageScope": {
+      "adult": 1,
+      "mixed": 6,
+      "not_applicable": 4,
+      "pediatric": 3
+    },
+    "causalBoundary": {
+      "association_only": 4,
+      "descriptive_only": 8,
+      "theory_only": 2
+    },
+    "bodyOfEvidenceCertainty": {
+      "not_assessed": 14
+    },
+    "reviewStatus": {
+      "codex_multi_pass_audited": 14
+    },
+    "disposition": {
+      "eligible_for_body_synthesis_with_limits": 14
+    }
+  },
+  "sourceStatus": [
+    {
+      "sourceId": "chen-et-al-2024-self-regulation-measures",
+      "candidateSourceSha256": "c09885763336ef24ec61e8f607c4efd61a5d2af0a3312cfafc9fda9a486ff3a6",
+      "sourceCrosswalkSha256": "5ae1f8cdc3fd15b16cecaee56714c69b2309b56751bd2eaaabfab98a265d6d33",
+      "limitationCount": 15,
+      "limitationsSha256": "5d048ac800d46b64660ba6c9cfc951d936ae7ae6db885a8ef5e5716231c355a4",
+      "bodyOfEvidenceCertaintyStatus": "not_assessed",
+      "reviewStatus": "codex_multi_pass_audited",
+      "disposition": "eligible_for_body_synthesis_with_limits",
+      "runtimeEligible": false,
+      "releaseEligible": false
+    },
+    {
+      "sourceId": "circadian-light-consensus-2022",
+      "candidateSourceSha256": "a477c0412594151cf69f72cce2f095a9fa4684dcfca77bc09e4ecfcb8063d006",
+      "sourceCrosswalkSha256": "c9cd7c35db2ec1faf4acda4506b7abcc157855a39b49060daa2117ab8542383e",
+      "limitationCount": 16,
+      "limitationsSha256": "7a7cd933e800f24299cef1b6c92ef70ced4cb574405ac53afabbe2f089f55c61",
+      "bodyOfEvidenceCertaintyStatus": "not_assessed",
+      "reviewStatus": "codex_multi_pass_audited",
+      "disposition": "eligible_for_body_synthesis_with_limits",
+      "runtimeEligible": false,
+      "releaseEligible": false
+    },
+    {
+      "sourceId": "cosmin-prom-systematic-reviews-v2-2024",
+      "candidateSourceSha256": "447c09f5adc47ef7326d84abc26a6929c715ad659aaab9d29975be9d29d661c3",
+      "sourceCrosswalkSha256": "c978e7cddf7c5604d8d63594bfbd9c1453f4c998bf9f6aff3a2993e1970239cf",
+      "limitationCount": 14,
+      "limitationsSha256": "83d1d7b894162c93f2db0ab935d924f17140f4f09284b2fbcc48ad722e4f0815",
+      "bodyOfEvidenceCertaintyStatus": "not_assessed",
+      "reviewStatus": "codex_multi_pass_audited",
+      "disposition": "eligible_for_body_synthesis_with_limits",
+      "runtimeEligible": false,
+      "releaseEligible": false
+    },
+    {
+      "sourceId": "de-raeymaecker-dhar-2022",
+      "candidateSourceSha256": "f55d611ad63bdbf31b699d9e0434c6286f7978b1d56a7edde1021f5bdda26c23",
+      "sourceCrosswalkSha256": "fa6b1456d1ff8f53db62635a718f76effffee6c92500338e87cf712b4ee4eba4",
+      "limitationCount": 18,
+      "limitationsSha256": "dffe6a4c632c9913b3d7df85d2106e67fafde0bdb7cdfebd2fa5843e8743ede2",
+      "bodyOfEvidenceCertaintyStatus": "not_assessed",
+      "reviewStatus": "codex_multi_pass_audited",
+      "disposition": "eligible_for_body_synthesis_with_limits",
+      "runtimeEligible": false,
+      "releaseEligible": false
+    },
+    {
+      "sourceId": "efas-autonomic-testing-consensus-2021",
+      "candidateSourceSha256": "9d599a9cbb6dc65faf1d12a16ccb4ad3211aac86dd296b06c480c14a61a3ea22",
+      "sourceCrosswalkSha256": "355f6b43218aec45971f0e6a910daa9ea1a28d84ec415fa099c1bf9c4a1c5cc4",
+      "limitationCount": 18,
+      "limitationsSha256": "566120ce973f3f80e65c8120dc74f182c5480c0cdd63fe2a31ff9b21d8161ca8",
+      "bodyOfEvidenceCertaintyStatus": "not_assessed",
+      "reviewStatus": "codex_multi_pass_audited",
+      "disposition": "eligible_for_body_synthesis_with_limits",
+      "runtimeEligible": false,
+      "releaseEligible": false
+    },
+    {
+      "sourceId": "executive-function-ndc-meta-2024",
+      "candidateSourceSha256": "6cb5b0cebdf7b60cb5f35912eab74652557232bfa393e7c98bf4144d587b3e16",
+      "sourceCrosswalkSha256": "44693128862e4cf0c24fdab128e3c7fb1f01ea492f756f03bbad8d1f6a53a4e8",
+      "limitationCount": 12,
+      "limitationsSha256": "a34cb098019bae127b8355847a80c8c982c3a5822259b5172b65549190fa2969",
+      "bodyOfEvidenceCertaintyStatus": "not_assessed",
+      "reviewStatus": "codex_multi_pass_audited",
+      "disposition": "eligible_for_body_synthesis_with_limits",
+      "runtimeEligible": false,
+      "releaseEligible": false
+    },
+    {
+      "sourceId": "hrv-biofeedback-methods-2023",
+      "candidateSourceSha256": "7843dc8ea2c47bd0bf5e72e7aaf484e81c2f53f95725f89e736f0430a70df8e9",
+      "sourceCrosswalkSha256": "4712da78c2d8afaa6509a0bc6eeeea44724df4daed9794551758303cae8a28dd",
+      "limitationCount": 15,
+      "limitationsSha256": "89affa30ff0e330484e276c28f362d13cd2a6263bf4e5d0f66bcae7b0fe9f112",
+      "bodyOfEvidenceCertaintyStatus": "not_assessed",
+      "reviewStatus": "codex_multi_pass_audited",
+      "disposition": "eligible_for_body_synthesis_with_limits",
+      "runtimeEligible": false,
+      "releaseEligible": false
+    },
+    {
+      "sourceId": "hrv-influencing-factors-2024",
+      "candidateSourceSha256": "49cfdb34cc55589c44f520305c7f558d1a62036a9d2ec69233a5d0b04f53f975",
+      "sourceCrosswalkSha256": "9424100a6b4185d7a954c0d9f866fadddc982a1e6b0b2167e7f02f29a24a5355",
+      "limitationCount": 17,
+      "limitationsSha256": "dff776e82700198761670f8d7c1994268ffce2483cffedd3920d8c10e0493073",
+      "bodyOfEvidenceCertaintyStatus": "not_assessed",
+      "reviewStatus": "codex_multi_pass_audited",
+      "disposition": "eligible_for_body_synthesis_with_limits",
+      "runtimeEligible": false,
+      "releaseEligible": false
+    },
+    {
+      "sourceId": "hrv-publication-guidelines-2024",
+      "candidateSourceSha256": "e318968ab992c0476cf70ea65130cd0567933fd371659b6db7a96ab07e5e12c2",
+      "sourceCrosswalkSha256": "38ce019d1076115daeeb2ea4d72fa7b6b8601be4a6a26e4ddd4272a815a8d3f9",
+      "limitationCount": 13,
+      "limitationsSha256": "852bf91e6ff47aa5d20ca38b3c0afe2240228f86dbc21f97c936eb26bf02e6f5",
+      "bodyOfEvidenceCertaintyStatus": "not_assessed",
+      "reviewStatus": "codex_multi_pass_audited",
+      "disposition": "eligible_for_body_synthesis_with_limits",
+      "runtimeEligible": false,
+      "releaseEligible": false
+    },
+    {
+      "sourceId": "insula-direct-stimulation-review-2024",
+      "candidateSourceSha256": "125348235bd550457450bade6e4af73586527a92043472c4169567b5cc1a4065",
+      "sourceCrosswalkSha256": "a75f4ad6ccfba0fe5176fe4a86ca0e158c446a466f26eb9ae8b47cbc1458b70b",
+      "limitationCount": 13,
+      "limitationsSha256": "4639f23f6c5c6737185b49a42f5a99d46ab4694cdde0528a45f246db76075941",
+      "bodyOfEvidenceCertaintyStatus": "not_assessed",
+      "reviewStatus": "codex_multi_pass_audited",
+      "disposition": "eligible_for_body_synthesis_with_limits",
+      "runtimeEligible": false,
+      "releaseEligible": false
+    },
+    {
+      "sourceId": "pfc-cognitive-control-review-2022",
+      "candidateSourceSha256": "7ab3376aa25428d5f7e4807193e1b7697d3d3731bafa0caf01672282779594db",
+      "sourceCrosswalkSha256": "17e2b88cc40042207fae202390f29b43bcdcf6250621cfac56f157cc87405958",
+      "limitationCount": 12,
+      "limitationsSha256": "592df7d59f0e1111465c05268b41da06e8fe610a9f45b4216944edac0f076696",
+      "bodyOfEvidenceCertaintyStatus": "not_assessed",
+      "reviewStatus": "codex_multi_pass_audited",
+      "disposition": "eligible_for_body_synthesis_with_limits",
+      "runtimeEligible": false,
+      "releaseEligible": false
+    },
+    {
+      "sourceId": "prisma-cosmin-omis-2024",
+      "candidateSourceSha256": "9b7c7872b66776f454ae9d64183e440e556cf7cf62740c6f376813e591762237",
+      "sourceCrosswalkSha256": "4bd282efe78ebe325807d274d0435e9d0c876032bf30b52f6e04e4865f6f283d",
+      "limitationCount": 20,
+      "limitationsSha256": "4e4243b75848530cc898ed70d7eb9cfb60a8df2791718c8fff5ab9fa8c86e170",
+      "bodyOfEvidenceCertaintyStatus": "not_assessed",
+      "reviewStatus": "codex_multi_pass_audited",
+      "disposition": "eligible_for_body_synthesis_with_limits",
+      "runtimeEligible": false,
+      "releaseEligible": false
+    },
+    {
+      "sourceId": "review.porges-2021-polyvagal-theory",
+      "candidateSourceSha256": "e011dfcab39617e3e8424531ad6dcf74e89c1cf15722694b7bed637ff644180e",
+      "sourceCrosswalkSha256": "629e9007c10621f2817842b1e309061c0827976a1baeb434fd6acd32aa31ecbd",
+      "limitationCount": 19,
+      "limitationsSha256": "ef28d99f3373cd64de436a22acb23e7518ef1071d9cf2b6689bc023fe64a1c77",
+      "bodyOfEvidenceCertaintyStatus": "not_assessed",
+      "reviewStatus": "codex_multi_pass_audited",
+      "disposition": "eligible_for_body_synthesis_with_limits",
+      "runtimeEligible": false,
+      "releaseEligible": false
+    },
+    {
+      "sourceId": "sleep-emotional-reactivity-meta-2022",
+      "candidateSourceSha256": "4ecab70f3350402a4fd4bdc875ce9e1d5c3825ebbcde6d41404e30b87a514914",
+      "sourceCrosswalkSha256": "f96a989ffa183abccd14e06444be26aa0c93a8a5596100a02795140f11f3978e",
+      "limitationCount": 15,
+      "limitationsSha256": "e6048099147a392298d9695af1ef8d28d6aae4341984389cc10ea7ee839c1fa5",
+      "bodyOfEvidenceCertaintyStatus": "not_assessed",
+      "reviewStatus": "codex_multi_pass_audited",
+      "disposition": "eligible_for_body_synthesis_with_limits",
+      "runtimeEligible": false,
+      "releaseEligible": false
+    }
+  ],
+  "acceptance": {
+    "exactSourceCoverage": true,
+    "exactClaimCoverage": true,
+    "chainIntegrity": "pass",
+    "trustedRegistryBinding": "pass",
+    "claimCertaintyBoundary": "pass",
+    "candidateOnly": true,
+    "runtimeAuthority": "none",
+    "releaseAuthority": "none",
+    "v3ReleaseDecision": "no_go_unchanged"
+  },
+  "boundaryStatus": {
+    "sourceAppraisalIsClaimCertainty": false,
+    "claimCertaintyInheritance": "forbidden",
+    "bodyOfEvidenceCertainty": "preserved_source_level_only",
+    "rawLimitationsInRepo": false,
+    "ownerBookAuthorityUsed": false,
+    "candidateActivated": false
+  }
+}

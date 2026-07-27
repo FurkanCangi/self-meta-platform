@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "dna-turkish-retrieval-v3-preopen-overlap-manifest@1",
+  "recordedAt": "2026-07-24T11:11:12.824Z",
+  "status": "pass_zero_cross_set_overlap",
+  "receipt": {
+    "researchSsdRelativePath": "Datasets/DNA-Intelligence/evaluations/turkish-retrieval-v3/preopen-integrity/source-derived-v3-overlap-receipt.json",
+    "rawSha256": "165e0592d1aeb16d5f4e4dad8df7d6d24307b90238a9dfda88b552cb7452369c",
+    "receiptSha256": "46e2c7cfbb6f97b4d40fde7a69710923d00711d031fe8edcb8a3c47ea06e3dbf",
+    "fileMode": "0600"
+  },
+  "inputBindings": {
+    "holdoutSealedPayloadSha256": "7a2744994ee4759a04ac156c2bea554279317632b0d7f56614bd93826cca3bee",
+    "holdoutFileSha256": "a7322f7b76453cb0cda2d0bd2d82265bd32238aa7c66e160aa0d8fa3e17369d3",
+    "holdoutManifestFileSha256": "5c31d4ead1861f5c9841b3eba82d71dc49f54971b6cff32867ed6a5b24ccffc4",
+    "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "candidatePackageFileSha256": "45c779a88b668f26b9a79c29715ca8709cb3a52afa07c8d4dbae37bc01ee7b3c",
+    "frozenAdapterSha256": "a005b5aa96383f4ac753a01ee11fa923406513b23b2d6cb90e0090f8b8830168",
+    "frozenAdapterFileSha256": "cdc2dc9c7ba8926f9e51ab7d06dfbe4953b40609d2b21294532178e019005645",
+    "workingAdapterFileSha256": "cdc2dc9c7ba8926f9e51ab7d06dfbe4953b40609d2b21294532178e019005645",
+    "developmentFamilyBankFileSha256": "33e42d7e37e6e606958fed765efdf25357f21ce75fe8f1c317fd89d47ad5d202",
+    "developmentReportFileSha256": "29ff1042f8c186386a27ef324410d8729cb5a9257c3a1e4b42c3b973150d08a7",
+    "freezeManifestFileSha256": "187cebefc6d74980c55d275eee345eb1666a0fd304abce084befbea7f288b12c",
+    "developmentRepoManifestFileSha256": "200f1b09589adffa2c8f1bd35e421723aa98e964c24bdd2163880d95fd01be1b",
+    "routingCoreFileSha256": "3bb16e6d78078014b8111a625d6b91e008e7a633f2c726c2e8f16173a863cb19",
+    "developmentGeneratorFileSha256": "8e42dd728039772429d4afc8a07e5b4c3734c7dcac6f6d494556ade55d216a6c",
+    "artifactBuilderFileSha256": "586ebc8f75628d61b2c1c9178dde942f67df69a451cc1ace38ac20fc03cf6dd4",
+    "integrityScriptFileSha256": "d97d2d0f7c3ade8c840a19d0f79117caeb95c8c97338f99b15a41e5d60ad148b",
+    "integrityCoreFileSha256": "9baf79f3028f4a861cb7abcdbab664e9aa24a512e5330d483dc1700c41f1edf2"
+  },
+  "counts": {
+    "holdoutQuestions": 196,
+    "developmentQuestions": 177,
+    "tuningQuestions": 42,
+    "developmentFamilyHoldoutQuestions": 42,
+    "metamorphicQuestions": 93
+  },
+  "overlap": {
+    "exactOverlap": 0,
+    "normalizedOverlap": 0,
+    "nearDuplicateOverlap": 0,
+    "semanticFamilyOverlap": 0
+  },
+  "methods": {
+    "exact": "trimmed_utf8_exact@1",
+    "normalized": "turkish_nfkd_ascii_prompt_normalization@1",
+    "nearDuplicate": "token_edit_distance_at_most_one_90_percent@1",
+    "semanticFamily": "sorted_meaningful_light_stem_fingerprint@1"
+  },
+  "validation": {
+    "deterministicRepeats": 20,
+    "uniqueAggregateHashes": 1
+  },
+  "boundaries": {
+    "aggregateOnly": true,
+    "payloadReadByIntegrityRole": true,
+    "questionTextStored": false,
+    "questionIdsStored": false,
+    "failureExamplesStored": false,
+    "visibleToAdapterTuning": false,
+    "adapterTuningUseAllowed": false,
+    "independentHumanValidation": false,
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "activationAllowed": false
+  },
+  "manifestSha256": "49baf203ed01e7b0a61ea743d14edabb88f8fb3a8ac5bb97ad810cd669e74d05"
+}

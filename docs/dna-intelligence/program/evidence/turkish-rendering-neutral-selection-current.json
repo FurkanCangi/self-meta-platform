@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "dna-external-science-turkish-rendering-neutral-selection-manifest@1",
+  "recordedAt": "2026-07-24T09:00:00.000Z",
+  "artifact": {
+    "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/turkish-rendering-neutral-selection/feasibility-v1/selection-contract.json",
+    "rawSha256": "99d5e3add9a2ece3ad26c6f0f133337a5bafe82e0bf25b9ae717d6aab276e91e",
+    "artifactSha256": "b0b543dbbdf8c1cbd1f3896ec0f93dcb5436e2f3c27bdaeb5eadc75404bbea28",
+    "fileMode": "0600"
+  },
+  "inputs": {
+    "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "candidateFileSha256": "45c779a88b668f26b9a79c29715ca8709cb3a52afa07c8d4dbae37bc01ee7b3c",
+    "selectionBasisFileSha256": "3543f7d004d138a09075de29a55c71456665e42c31ef9bdce4aba91f1ef504ee"
+  },
+  "counts": {
+    "topics": 14,
+    "selections": 42,
+    "sources": 14,
+    "claims": 42,
+    "passages": 42,
+    "start": 14,
+    "middle": 14,
+    "end": 14
+  },
+  "selectionSetSha256": "19dbb3434f72d023c79fb321781c1be8be43d7376033320d99a36f7f25f910a3",
+  "verification": {
+    "aggregateOnly": true,
+    "sourceTextFields": 0,
+    "translationTextFields": 0,
+    "deterministicRepeats": 20,
+    "deterministicUniqueHashes": 1,
+    "candidateBindingsVerified": 42
+  },
+  "boundaries": {
+    "candidateOnly": true,
+    "sourceTextIncluded": false,
+    "propositionTextIncluded": false,
+    "translationTextIncluded": false,
+    "selectionIdentityOnly": true,
+    "lockedHoldoutAccessed": false,
+    "runtimeAuthority": false,
+    "releaseAuthority": false,
+    "activationAuthority": false,
+    "adapterAuthority": false,
+    "ownerBookAuthority": false,
+    "reconciliationAuthority": false
+  },
+  "runtimeEligible": false,
+  "releaseEligible": false,
+  "activationAllowed": false,
+  "adapterAuthority": false,
+  "ownerBookAuthority": false,
+  "manifestSha256": "69a059205a309d2383b30e2f1b97f0ec88adf370d3370411406a9dd2bbaf4f9a"
+}

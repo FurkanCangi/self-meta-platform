@@ -79,14 +79,26 @@ receipt'i olmadan V3 runtime seçilemez. Preview gözlem imzası production runt
 yetkisi değildir. Böylece environment flag tek başına production V3'ü açamaz.
 Receipt yoksa/sona ererse V3 blocked olur; kill-switch V2'ye döner. İlk
 production V3 canary'sini therapist trafiğine açmadan çalıştıracak ayrı bootstrap
-yetkisi bu sürümde bulunmadığından canlı V3 rollout current durumda ayrıca
-NO-GO'dur.
+yetkisinin mühendisliği tamamlanmıştır. Ancak kurumsal
+`canary_bootstrap_authorizer` trust root'u henüz provision edilmemiştir; current
+liste bilerek boştur ve canlı V3 rollout ayrıca NO-GO'dur.
 
 Runtime, production observation receipt'i doğrularken imzalayan bağımsız
 release-observer'ı production manifest/deployment/aggregate zincirinin dış
 otoritesi kabul eder; bu dosyaları runtime container içinde yeniden açmaz.
-İkinci, ayrı amaçlı runtime-activation imzası henüz yoktur ve canlı rollout
-blokörüdür.
+Bu gözlem yalnız bir önkoşuldur ve runtime açma yetkisi değildir. Ayrı domain ve
+amaçla imzalanan, en fazla 15 dakika geçerli `production_runtime_activation`
+yetkisi; exact environment, origin, Git, package, deployment, stage, yüzde,
+policy, rollout authorization, önceki aşama sağlık hash'i, observation hash'i,
+stage-authority hash'i ve nonce'a bağlanır. Gözlemci, stage authorizer ve runtime
+activator key ID'leri ile fiziksel Ed25519 public key'leri birbirinden farklı
+olmalıdır. Amaçlar arası signature replay'i, süre aşımı ve binding uyuşmazlığı
+fail-closed reddedilir. İmzalı nonce ile externally issued/revoked nonce denylist
+hook'u uygulanmıştır; bu hook atomik issuance/consumption store değildir. Atomik,
+kurum kontrollü nonce otoritesi provision edilmemiş ve current replay-authority
+bayrağı bilerek `false` bırakılmıştır. Ayrıca kurumsal
+`runtime_activation_authorizer` trust root'u provision edilmediğinden current
+liste boştur. Her iki eksik de canlı rollout blokörüdür.
 
 ## Faz 51 — Exact preview manifesti
 
@@ -161,6 +173,19 @@ aşama, gözlem sayısı, tamamlanma zamanı ve byte hash'i sealed yetkiyle bire
 eşleşmeden rollout yetkisi geçersizdir. Current action kararı önceden hesaplanmış
 rollout verification nesnesine güvenmez; committed root ve dosya descriptor'ları
 üzerinden sağlık artefaktlarını yeniden açar.
+
+Sağlık dosyalarının geçmesi tek başına aşama yetkisi değildir. İlk `%5` için
+ayrı amaçlı `production_canary_bootstrap`, `%25/%50/%100` için ayrı amaçlı
+`production_staged_rollout` Ed25519 envelope'u gerekir. Envelope exact release,
+deployment, production origin, Git, package, policy, authorization, aşama,
+yüzde, immediate previous-stage health hash'i, production observation hash'i,
+nonce ve 15 dakikalık süreye bağlıdır. Basamak atlama ve sağlık kanıtı eksikliği
+reddedilir; runtime-activation süresi bağlı stage authority'nin süresini aşamaz.
+Bu staged-rollout authority mühendisliği uygulanmıştır; fakat
+`canary_bootstrap_authorizer` ve `staged_rollout_authorizer` kurumsal trust
+root'ları provision edilmemiş, current listeler bilerek boş bırakılmıştır.
+Sonuç olarak deployment, promotion, runtime flag veya registry üzerinde hiçbir
+değişiklik yapılmamış ve current V3 durumu NO-GO kalmıştır.
 
 Citation ihlali, pending/restricted kaynak, güvenlik regresyonu, çapraz hesap,
 case audit fail-open, pack şema/hash hatası, desteklenmeyen klinik iddia veya

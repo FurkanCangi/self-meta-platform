@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "dna-external-science-turkish-rendering-pass-b-aligned-manifest@1",
+  "recordedAt": "2026-07-24T09:00:00.000Z",
+  "version": "dna-external-science-turkish-rendering-pass-b-aligned@1",
+  "provenance": "codex_translation_pass_b_aligned_not_independent_human_review",
+  "inputHashes": {
+    "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "candidateFileSha256": "45c779a88b668f26b9a79c29715ca8709cb3a52afa07c8d4dbae37bc01ee7b3c",
+    "neutralSelectionArtifactSha256": "b0b543dbbdf8c1cbd1f3896ec0f93dcb5436e2f3c27bdaeb5eadc75404bbea28",
+    "neutralSelectionFileSha256": "99d5e3add9a2ece3ad26c6f0f133337a5bafe82e0bf25b9ae717d6aab276e91e",
+    "selectionSetSha256": "19dbb3434f72d023c79fb321781c1be8be43d7376033320d99a36f7f25f910a3",
+    "authoringSha256": "c7610c88f1d19ddfe29db7b7691df4bbd935f771b3cef6010aeb1776e8690db4",
+    "authoringFileSha256": "22eea28f7f646a13f76fd001970d4696b64eafa95b2d82a6d5b7b6984ed38fe2"
+  },
+  "output": {
+    "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/turkish-rendering-pass-b-aligned/feasibility-v1/rendering-artifact.json",
+    "rawSha256": "51a34817651983910c67482af7ebdfd2ecd057455edcdd1ebfd78d062d1fff06",
+    "artifactSha256": "372167730f13acc6fd05420f7f5650dcf678c0f91a23c1718f0230c9911ff86a",
+    "byteCount": 112364,
+    "fileMode": "0600"
+  },
+  "counts": {
+    "topics": 14,
+    "sources": 14,
+    "renderings": 42,
+    "start": 14,
+    "middle": 14,
+    "end": 14,
+    "fidelityPassed": 42
+  },
+  "acceptance": {
+    "neutralSelectionBinding": "pass",
+    "exactCoverage": "pass",
+    "fidelityGate": "pass",
+    "deterministic": "pass",
+    "textLeakGate": "pass",
+    "candidateOnly": true
+  },
+  "boundaries": {
+    "candidateOnly": true,
+    "independentHumanReview": false,
+    "runtimeAuthority": "none",
+    "releaseAuthority": "none",
+    "activationAuthority": "none",
+    "adapterAuthority": "none",
+    "ownerBookAuthority": "none",
+    "v3ReleaseDecision": "no_go_unchanged"
+  },
+  "runtimeEligible": false,
+  "releaseEligible": false,
+  "activationAllowed": false
+}

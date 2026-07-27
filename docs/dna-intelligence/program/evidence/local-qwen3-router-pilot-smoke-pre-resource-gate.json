@@ -1,0 +1,117 @@
+{
+  "aggregate": {
+    "byBank": {
+      "tuning": {
+        "accuracy": 1.0,
+        "cases": 6,
+        "correct": 6
+      }
+    },
+    "bySemanticFamily": {
+      "alias_scope": {
+        "accuracy": 1.0,
+        "cases": 2,
+        "correct": 2
+      },
+      "canonical_definition": {
+        "accuracy": 1.0,
+        "cases": 2,
+        "correct": 2
+      },
+      "source_term_context": {
+        "accuracy": 1.0,
+        "cases": 2,
+        "correct": 2
+      }
+    },
+    "determinism": {
+      "nondeterministicCases": 0,
+      "repeatsPerCase": 3,
+      "stableParsedCases": 6,
+      "stableRawCases": 6
+    },
+    "failClosedCases": 0,
+    "highStakesGuard": {
+      "accuracy": 0.0,
+      "cases": 0,
+      "correct": 0
+    },
+    "latency": {
+      "coldFirstBatchMs": 14507.358,
+      "coldPerOutputMs": 4835.786,
+      "modelLoadMs": 881.297,
+      "warmMedianPerOutputMs": 4695.275,
+      "warmP95PerOutputMs": 4770.603
+    },
+    "memory": {
+      "mlxActiveAfterLoadBytes": 2264693768,
+      "mlxActiveFinalBytes": 2264693772,
+      "mlxPeakAfterLoadBytes": 2264693768,
+      "mlxPeakFinalBytes": 3563978756,
+      "processMaxRssBytes": 695451648,
+      "rssAfterLoadBytes": 564740096,
+      "rssBeforeLoadBytes": 89276416
+    },
+    "modelInvocations": 18,
+    "modelOutputSetSha256": "3ea317dbabde09b029d9b38da1dffc71763d3ba465793522001fbde28b56c7e5",
+    "overall": {
+      "accuracy": 1.0,
+      "cases": 6,
+      "correct": 6
+    },
+    "preModelGuardedCases": 0,
+    "safeTheory": {
+      "accuracy": 0.0,
+      "cases": 0,
+      "correct": 0
+    },
+    "strictJson": {
+      "invalidCases": 0,
+      "modelCases": 6,
+      "validCases": 6
+    },
+    "unsupportedDomain": {
+      "accuracy": 0.0,
+      "cases": 0,
+      "correct": 0
+    }
+  },
+  "boundaries": {
+    "activationAllowed": false,
+    "externalModelApiUsed": false,
+    "freeClinicalTextGenerated": false,
+    "independentHumanValidation": false,
+    "lockedHoldoutRead": false,
+    "officialAggregateUsedForTuning": false,
+    "officialClaimOrResultRead": false,
+    "ownerAuthority": false,
+    "rawPromptsStoredInRepository": false,
+    "releaseEligible": false,
+    "runtimeEligible": false
+  },
+  "evaluatedCases": 6,
+  "evaluationClass": "development_only_controlled_local_router_not_locked_not_official",
+  "inputCounts": {
+    "developmentFamilyHoldout": 42,
+    "metamorphic": 93,
+    "topics": 14,
+    "totalCases": 177,
+    "tuning": 42
+  },
+  "manifestSha256": "9ceff3b1aecb0f92972dd4d6d78abc095e777973b65afa0706b50c45bb3e0aa9",
+  "recordedAt": "2026-07-24T11:31:07Z",
+  "report": {
+    "fileMode": "0600",
+    "fileSha256": "707cc08a36a1b4f6716b4520e70eda6c42d749c13c28bed5eef6d8a1df21994b",
+    "reportSha256": "43d5202a369014932138f65d8745422e5a56f78744162f324059b7d786ce1530",
+    "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/local-router-pilot/qwen3-4b-instruct-2507-4bit/development-report.json"
+  },
+  "schemaVersion": "dna-local-qwen3-router-pilot-manifest@1",
+  "sourceHashes": {
+    "inputBuilderFileSha256": "c70f4c932763dd7a2a1b57d6382e8d5cb51e6a25b21797c4c4bd0d726fcb6d73",
+    "inputBundleFileSha256": "79df35f9fb7b81d14c000c38005778a2df06c81ff822730646f9e43d8e8039cb",
+    "modelConfigFileSha256": "574349e5a343236546fda55e4744a76e181f534182d7dc60ff1bad7e7a502849",
+    "modelWeightsSha256": "2a73c6c248601ab904e035548abd8e6abb65ea27dcb5f342fb0a8910eb44173f",
+    "runnerFileSha256": "e7033934b261055ded8bedc79d892baf899723621cf791e8877cc47290ad8a71"
+  }
+}

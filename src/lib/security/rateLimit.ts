@@ -1,38 +1,7 @@
 import "server-only"
 
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
-
-type Bucket = {
-  count: number
-  resetAt: number
-}
-
-const buckets = new Map<string, Bucket>()
-
-function memoryRateLimit(options: {
-  key: string
-  limit: number
-  windowMs: number
-  now?: number
-}) {
-  const now = options.now ?? Date.now()
-  const existing = buckets.get(options.key)
-
-  if (!existing || existing.resetAt <= now) {
-    buckets.set(options.key, {
-      count: 1,
-      resetAt: now + options.windowMs,
-    })
-    return { ok: true, remaining: Math.max(0, options.limit - 1), resetAt: now + options.windowMs }
-  }
-
-  if (existing.count >= options.limit) {
-    return { ok: false, remaining: 0, resetAt: existing.resetAt }
-  }
-
-  existing.count += 1
-  return { ok: true, remaining: Math.max(0, options.limit - existing.count), resetAt: existing.resetAt }
-}
+import { evaluateSharedRateLimit } from "@/lib/security/rateLimitPolicy"
 
 export async function checkRateLimit(options: {
   key: string
@@ -40,28 +9,21 @@ export async function checkRateLimit(options: {
   windowMs: number
   now?: number
 }) {
-  try {
-    const admin = createSupabaseAdminClient()
-    const { data, error } = await admin.rpc("check_api_rate_limit", {
-      p_key: options.key,
-      p_limit: options.limit,
-      p_window_ms: options.windowMs,
-    })
-
-    if (error) throw error
-
-    const row = Array.isArray(data) ? data[0] : data
-    if (!row || typeof row.ok !== "boolean") throw new Error("rate_limit_rpc_invalid")
-
-    return {
-      ok: Boolean(row.ok),
-      remaining: Math.max(0, Number(row.remaining || 0)),
-      resetAt: new Date(row.reset_at).getTime(),
-    }
-  } catch (error) {
-    console.warn("[rate-limit] Falling back to in-memory rate limit", error)
-    return memoryRateLimit(options)
+  const decision = await evaluateSharedRateLimit(
+    { windowMs: options.windowMs, now: options.now },
+    async () => {
+      const admin = createSupabaseAdminClient()
+      return admin.rpc("check_api_rate_limit", {
+        p_key: options.key,
+        p_limit: options.limit,
+        p_window_ms: options.windowMs,
+      })
+    },
+  )
+  if (!decision.backendAvailable) {
+    console.error("[rate-limit] Shared rate-limit backend unavailable; request denied")
   }
+  return decision
 }
 
 export function getClientRateLimitKey(request: Request, scope: string) {

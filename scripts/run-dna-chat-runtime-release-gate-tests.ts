@@ -46,7 +46,11 @@ import {
 
 async function main() {
 const exactEngineSourceClosure = assertCurrentDnaEvaluationEngineSourceClosure(process.cwd())
-assert.equal(exactEngineSourceClosure.length, 118)
+assert.equal(exactEngineSourceClosure.length, 122)
+assert.ok(
+  exactEngineSourceClosure.includes("src/lib/dna/chat/socialConversation.ts"),
+  "Sosyal konuşma katmanı exact runtime source closure içinde kalmalı",
+)
 assert.deepEqual(DNA_EVALUATION_ENGINE_CLOSURE_EXCLUSIONS, [
   "src/lib/dna/chat/evaluation/generated/currentEngineCodeAuthority.ts",
 ], "Yalnız self-referential generated authority closure dışında kalabilir")
@@ -73,12 +77,15 @@ for (const requiredEngineAuthoritySource of [
   "src/lib/dna/chat/evaluation/evaluationGovernance.ts",
   "src/lib/dna/chat/evaluation/generated/currentDevelopmentHistoryAuthority.json",
   "src/lib/dna/chat/index.ts",
+  "src/lib/dna/chat/operations/requestTiming.ts",
   "src/lib/dna/chat/release/previewPromotion.ts",
+  "src/lib/dna/chat/release/productionRuntimeAuthority.ts",
   "src/lib/dna/chat/release/runtimeDeploymentAuthorization.ts",
   "src/lib/dna/reportPrivacy.ts",
   "src/lib/security/apiGuards.ts",
   "src/lib/security/privacyOps.ts",
   "src/lib/security/rateLimit.ts",
+  "src/lib/security/rateLimitPolicy.ts",
   "src/lib/supabase/admin.ts",
   "src/lib/supabase/server.ts",
   "scripts/run-dna-evaluation-release-check.ts",
@@ -91,6 +98,8 @@ for (const requiredEngineAuthoritySource of [
 for (const removedCriticalDependency of [
   "src/lib/dna/reportPrivacy.ts",
   "src/lib/security/privacyOps.ts",
+  "src/lib/security/rateLimitPolicy.ts",
+  "src/lib/dna/chat/release/productionRuntimeAuthority.ts",
   "src/lib/dna/chat/release/runtimeDeploymentAuthorization.ts",
 ] as const) {
   assert.throws(
@@ -117,6 +126,8 @@ assert.equal(
 for (const mutatedCriticalDependency of [
   "src/lib/dna/reportPrivacy.ts",
   "src/lib/security/privacyOps.ts",
+  "src/lib/security/rateLimitPolicy.ts",
+  "src/lib/dna/chat/release/productionRuntimeAuthority.ts",
   "src/lib/dna/chat/release/runtimeDeploymentAuthorization.ts",
 ] as const) {
   assert.notEqual(

@@ -1,0 +1,52 @@
+{
+  "schemaVersion": "dna-intelligence-phase-checkpoint@1",
+  "programVersion": "dna-intelligence-v3-program@1",
+  "phase": 3,
+  "title": "DNA kitabı taslak bölümlerinin güvenli biçimde sahnelenmesi",
+  "status": "draft_staged_owner_approval_deferred",
+  "observedOn": "2026-07-24",
+  "sourceSetSha256": "13fdd1f95dafe8ea77d2f45e49c72f2d49453df17345c9ca46338cec48298367",
+  "packageSha256": "1bb0efb50acb6396781eecaa26aca8893da92b7641f0d6c962ea25b5c626b59c",
+  "canonicalArtifactSha256": "cb25df70e747b57eefcda200ee42f3357424b3f37a7048891a252ca1e966f8d2",
+  "counts": {
+    "draftChapters": 9,
+    "candidateRecords": 1502,
+    "bibliographyEntries": 238,
+    "deduplicatedSources": 210,
+    "uniqueDois": 185,
+    "draftBenchmarkCandidates": 252,
+    "v3IdentityCrosswalkMatches": 9,
+    "registeredExternalCandidateMatches": 3,
+    "ownerApprovals": 0,
+    "runtimeEligible": 0,
+    "releaseEligible": 0,
+    "answerEligible": 0
+  },
+  "verifiedProperties": {
+    "sourceFilesUnchangedDuringBuild": true,
+    "sameChapterBibliographicBindingCoverage": 1,
+    "unresolvedCitationMentions": 0,
+    "duplicateSourceIds": 0,
+    "allRecordsHaveProvenance": true,
+    "allRecordsRemainCandidateOnly": true,
+    "rawBookTextStoredInRepository": false,
+    "activeRuntimeChanged": false
+  },
+  "authorityBoundary": {
+    "ownerApproval": false,
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "answerEligible": false,
+    "externalScienceDoesNotValidateDnaProduct": true,
+    "bookSafetyTextDoesNotBecomePolicyEnforced": true
+  },
+  "remainingOwnerDependentGates": [
+    "final_book_artifact",
+    "owner_approved_chapters_and_passages",
+    "atomic_product_claim_bindings",
+    "sealed_dna_specific_benchmark",
+    "exact_candidate_validation_and_canary"
+  ],
+  "phaseCompletion": false,
+  "activeRuntime": "dna-chat-engine@2/v2_legacy"
+}

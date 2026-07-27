@@ -5,8 +5,13 @@ import { join } from "node:path"
 
 import {
   canBeginDnaChatReportSelection,
+  createDnaChatRequestCoordinator,
   createDnaChatReportSelectionCoordinator,
+  isDnaChatRetryableError,
+  planDnaChatNewConversation,
   planDnaChatReportTransition,
+  planDnaChatRetry,
+  shouldReuseDnaChatUserMessage,
 } from "../src/lib/dna/chat/conversationPolicy"
 import {
   DNA_PHASE_47_AUTOMATED_TASKS,
@@ -20,6 +25,10 @@ import { resolveDnaChat } from "../src/lib/dna/chat"
 const root = process.cwd()
 const clientPath = join(root, "src/app/dna-asistani/DnaAssistantClient.tsx")
 const clientSource = readFileSync(clientPath, "utf8")
+const issueFeedbackSource = readFileSync(
+  join(root, "src/app/dna-asistani/DnaIssueFeedback.tsx"),
+  "utf8",
+)
 const protocolSource = readFileSync(join(
   root,
   "docs/dna-intelligence/governance/v3/phase-45-47-validation.md",
@@ -57,34 +66,68 @@ const sourceCardMapsToClaim = includesAll(clientSource, [
 ])
 
 const reportAbsenceDiffersFromScienceUnknown = includesAll(clientSource, [
-  "reportScopedNotAvailable",
-  "label: \"Raporda Yok\"",
-  "not_available: { label: \"Bilgi Bulunamadı\"",
+  'answer.availabilityScope === "report"',
+  "Seçili raporda bulunamadı",
+  "Henüz yanıtlayamıyorum",
   "case_missing: \"Raporda bulunmayan veya eksik veri\"",
-])
+]) && !clientSource.includes("Raporda Yok")
 
 const unknown = resolveDnaChat({ question: "Kuantum dolanıklığı nedir?" })
 const notAvailableExplainsProductBoundary = unknown.classification === "not_available"
   && unknown.safetyBoundary.length > 0
   && [unknown.summary, ...unknown.limitations].join(" ").toLocaleLowerCase("tr-TR")
     .match(/(?:katalog|bulunmuyor|bulunamadı|sunamıyorum|sınır|kapsam)/) !== null
-  && includesAll(clientSource, ["answer.safetyBoundary", "Bilgi sınırı:"])
+  && !clientSource.includes("<span>{answer.safetyBoundary}</span>")
 
 const evidenceLevelCalibratesConfidence = includesAll(clientSource, [
-  "Kanıt düzeyi:",
   "Kanıt yetersiz",
   "Tartışmalı teori",
   "Bu ilişki kurulmamıştır",
-  "evidenceSummary.dnaValidationStatus",
-])
+  "answer.evidenceSummary?.dnaValidationStatus",
+]) && !includesAll(clientSource, ["Kanıt düzeyi:", "Yaş kapsamı:", "İddia sınırı:"])
 
 const criticalWarningRemainsVisible = includesAll(clientSource, [
   "answerStatusLabels",
   "Kanıt ve ilişki uyarıları",
-  "hasSafetyBoundaryUnit",
-  "answer.safetyBoundary && !hasSafetyBoundaryUnit",
-  "ShieldCheck",
+  "Kanıt yetersiz",
+  "Tartışmalı teori",
+  "Bu ilişki kurulmamıştır",
 ])
+
+for (const hiddenUiFragment of [
+  "Kanıt düzeyi:",
+  "Yaş kapsamı:",
+  "İddia sınırı:",
+  "Enter gönderir",
+  ">Sınırlılıklar<",
+  "<span>{answer.safetyBoundary}</span>",
+  "answer.suggestedQuestions.slice",
+  "DNA_INTELLIGENCE_COMPOSER_NOTICE_TR",
+  "DNA_CHAT_STARTER_QUESTIONS",
+  "STARTER_QUESTIONS.slice",
+]) {
+  assert.equal(
+    clientSource.includes(hiddenUiFragment),
+    false,
+    `Hidden chat metadata or suggestion UI resurfaced: ${hiddenUiFragment}`,
+  )
+}
+assert.equal(includesAll(clientSource, [
+  'answer.topic?.startsWith("conversation.")',
+  'aria-label="DNA Intelligence yanıtı"',
+  "{answer.summary}",
+]), true, "Social conversation answers must use the compact assistant rendering")
+assert.equal(
+  clientSource.indexOf('answer.topic?.startsWith("conversation.")') < clientSource.indexOf("const baseMeta"),
+  true,
+  "Social conversation rendering must exit before clinical metadata is assembled",
+)
+assert.equal(includesAll(clientSource, [
+  "const visibleAnswerUnits = answer.answerUnits.filter",
+  'unit.kind !== "limitation"',
+  'unit.kind !== "safety_boundary" || unit.section === "case_non_inference"',
+  "visibleAnswerUnits.map",
+]), true, "Auxiliary limitation and generic safety units must stay hidden without removing case non-inference")
 
 const mobileAndKeyboardCompletion = includesAll(clientSource, [
   "aria-live=\"polite\"",
@@ -96,6 +139,94 @@ const mobileAndKeyboardCompletion = includesAll(clientSource, [
   "requestAnimationFrame(() => target?.focus())",
   "<form onSubmit={submitQuestion}",
 ])
+
+const feedbackDialogKeyboardSafety = includesAll(issueFeedbackSource, [
+  "aria-haspopup=\"dialog\"",
+  "aria-controls={dialogId}",
+  "aria-labelledby={dialogTitleId}",
+  "closeButtonRef.current?.focus()",
+  "event.key === \"Escape\"",
+  "event.key !== \"Tab\"",
+  "triggerRef.current?.focus()",
+])
+assert.equal(feedbackDialogKeyboardSafety, true, "Feedback dialog keyboard/focus contract failed")
+
+const interruptionRecoveryMarkup = includesAll(clientSource, [
+  "aria-label=\"Yanıt oluşturmayı durdur\"",
+  ">Durdur</span>",
+  "Soruyu yeniden dene",
+  "aria-describedby={sendError ? \"dna-chat-send-error\" : undefined}",
+  "min-h-12",
+])
+assert.equal(interruptionRecoveryMarkup, true, "Stop/retry accessibility markup contract failed")
+
+const newConversationMarkup = includesAll(clientSource, [
+  "function startNewConversation()",
+  "planDnaChatNewConversation()",
+  "router.replace(\"/dna-asistani\", { scroll: false })",
+  "aria-label=\"Yeni sohbet başlat; mevcut sohbeti ve rapor bağlamını temizle\"",
+  "Yeni sohbet",
+  "min-h-11",
+  "flex-wrap",
+])
+assert.equal(newConversationMarkup, true, "New-chat responsive accessibility markup contract failed")
+
+// Unlike the legacy source-presence checks above, recovery and reset behavior
+// is exercised through the exact coordinator/policy used by the React client.
+const responseCoordinator = createDnaChatRequestCoordinator()
+const firstRequest = responseCoordinator.begin({
+  question: "  İnsular korteks nedir?  ",
+  reportId: null,
+  previousTopic: "cns.insula",
+  responseDepth: "deep",
+  appendUserMessage: true,
+})
+assert.equal(firstRequest.snapshot.question, "İnsular korteks nedir?")
+assert.equal(firstRequest.controller.signal.aborted, false)
+assert.equal(responseCoordinator.isCurrent(firstRequest.requestId), true)
+
+const interruptedSnapshot = responseCoordinator.cancel()
+assert.equal(firstRequest.controller.signal.aborted, true)
+assert.equal(responseCoordinator.isCurrent(firstRequest.requestId), false)
+assert.ok(interruptedSnapshot)
+const retrySnapshot = planDnaChatRetry(interruptedSnapshot)
+assert.equal(retrySnapshot.appendUserMessage, false, "Retry must not duplicate the user bubble")
+assert.equal(retrySnapshot.responseDepth, "deep", "Retry must preserve the selected response depth")
+assert.equal(retrySnapshot.previousTopic, "cns.insula", "Retry must preserve visible topic context")
+assert.equal(shouldReuseDnaChatUserMessage(retrySnapshot, "İnsular korteks nedir?"), true)
+assert.equal(shouldReuseDnaChatUserMessage(retrySnapshot, "HRV nedir?"), false)
+assert.equal(isDnaChatRetryableError("request_cancelled"), true)
+assert.equal(isDnaChatRetryableError("dna_chat_failed"), true)
+assert.equal(isDnaChatRetryableError("unauthorized"), false)
+
+const newerRequest = responseCoordinator.begin({
+  question: "HRV nedir?",
+  reportId: "11111111-1111-4111-8111-111111111111",
+  previousTopic: null,
+  responseDepth: "short",
+  appendUserMessage: false,
+})
+const supersedingRequest = responseCoordinator.begin({
+  question: "Allostaz nedir?",
+  reportId: null,
+  previousTopic: null,
+  responseDepth: "standard",
+  appendUserMessage: true,
+})
+assert.equal(newerRequest.controller.signal.aborted, true, "A superseded request must abort")
+assert.equal(responseCoordinator.complete(newerRequest.requestId), false, "A stale response must not commit")
+assert.equal(responseCoordinator.complete(supersedingRequest.requestId), true)
+
+const newConversationPlan = planDnaChatNewConversation()
+assert.equal(newConversationPlan.clearMessages, true)
+assert.equal(newConversationPlan.clearReportOptions, true)
+assert.equal(newConversationPlan.selectedReportId, null)
+assert.equal(newConversationPlan.reportPickerOpen, false)
+assert.equal(newConversationPlan.pendingReportQuestion, null)
+assert.equal(newConversationPlan.previousTopic, null)
+assert.equal(newConversationPlan.draftQuestion, "")
+assert.equal(newConversationPlan.clearErrors, true)
+assert.equal(newConversationPlan.preserveResponseDepth, true)
 
 const taskResults = {
   selected_report_is_visible: selectedReportIsVisible,
@@ -124,19 +255,34 @@ assert.deepEqual(changeTransition.resubmitQuestions, [])
 const selection = planDnaChatReportTransition({
   action: "select_report",
   reportId: "11111111-1111-4111-8111-111111111111",
+  currentReportId: null,
   pendingReportQuestion: "Bekleyen rapor sorusu",
 })
-assert.equal(selection.clearConversation, true)
+assert.equal(selection.clearConversation, false, "First report binding must preserve visible messages")
 assert.deepEqual(selection.resubmitQuestions, ["Bekleyen rapor sorusu"])
+const reportSwitch = planDnaChatReportTransition({
+  action: "select_report",
+  reportId: "22222222-2222-4222-8222-222222222222",
+  currentReportId: "11111111-1111-4111-8111-111111111111",
+  pendingReportQuestion: null,
+})
+assert.equal(reportSwitch.clearConversation, true, "Switching reports must isolate case conversations")
 const coordinator = createDnaChatReportSelectionCoordinator()
-assert.ok(coordinator.claim({
+const initialSelection = coordinator.claim({
   reportId: "11111111-1111-4111-8111-111111111111",
+  currentReportId: null,
   pendingReportQuestion: "Bekleyen rapor sorusu",
-}))
+})
+assert.equal(initialSelection?.clearConversation, false)
 assert.equal(coordinator.claim({
   reportId: "22222222-2222-4222-8222-222222222222",
+  currentReportId: null,
   pendingReportQuestion: "Bekleyen rapor sorusu",
 }), null, "Rapid second report selection must not resubmit the pending question")
+assert.equal(includesAll(clientSource, [
+  "currentReportId: selectedReportId || null",
+  "appendUser: transition.clearConversation",
+]), true, "Client must preserve the transcript and avoid duplicating the pending user message")
 assert.equal(canBeginDnaChatReportSelection({
   sending: false,
   reportsLoading: false,
@@ -202,6 +348,11 @@ console.log(JSON.stringify({
   ok: true,
   automatedTaskCount: DNA_PHASE_47_AUTOMATED_TASKS.length,
   automatedTasks: taskResults,
+  feedbackDialogKeyboardSafety,
+  interruptionRecoveryMarkup,
+  newConversationMarkup,
+  requestRecoveryBehavior: true,
+  newConversationBehavior: true,
   automationStatus: currentGate.automationStatus,
   humanStudyStatus: currentGate.humanStudyStatus,
   releaseStatus: currentGate.releaseStatus,

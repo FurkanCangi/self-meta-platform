@@ -34,6 +34,10 @@ import {
 } from "./knowledge"
 import { routeDnaChatQuestion } from "./router"
 import { inspectDnaChatSafety } from "./safety"
+import {
+  resolveDnaChatSocialConversation,
+  type DnaChatSocialMatch,
+} from "./socialConversation"
 import { normalizeDnaChatText, scoreDnaTextMatch, stableUnique } from "./text"
 import {
   DNA_CHAT_DOMAIN_KEYS,
@@ -49,6 +53,7 @@ import {
   type DnaChatRequest,
   type DnaChatResponse,
   type DnaChatSafeCaseContext,
+  type DnaChatSafetyCategory,
   type DnaChatSafetyResult,
   type DnaChatSourceRef,
 } from "./types"
@@ -364,13 +369,33 @@ function clarificationResponse(
   })
 }
 
+function socialConversationResponse(
+  safety: DnaChatSafetyResult,
+  match: DnaChatSocialMatch,
+): DnaChatResponse {
+  return makeResponse({
+    route: "unknown",
+    outcome: "answered",
+    classification: "clarification",
+    topic: match.topic,
+    intentId: match.intentId,
+    summary: match.summary,
+    details: [],
+    sources: [],
+    limitations: [],
+    safety,
+    suggestedQuestions: [],
+    answerAuthority: safety.authority,
+  })
+}
+
 function unmatchedResponse(safety: DnaChatSafetyResult): DnaChatResponse {
   return makeResponse({
     route: "unknown",
     outcome: "not_available",
     classification: "not_available",
-    summary: "Bu soru için onaylı DNA bilgi tabanında yeterli eşleşme bulunamadı.",
-    details: ["Sistem kaynakta olmayan klinik bilgiyi tamamlamadı veya tahmin etmedi."],
+    summary: "Bu konu için doğrulanmış bilgi tabanımda henüz yeterli içerik bulunmuyor.",
+    details: ["Güvenilir olmayan bir yanıt üretmek yerine bunu açıkça belirtiyorum."],
     sources: [],
     limitations: ["Yalnız tanımlı DNA kavramları, değerlendirme yapısı ve açık kimliksiz vaka bulguları yanıtlanabilir."],
     safety,
@@ -380,7 +405,70 @@ function unmatchedResponse(safety: DnaChatSafetyResult): DnaChatResponse {
 
 function isStandaloneFollowUp(question: string): boolean {
   const normalized = normalizeDnaChatText(question)
-  return /^(?:peki bu|biraz daha acikla|bununla iliskisi ne|bunun iliskisi ne|bunun fizyolojik regulasyonla iliskisi ne|buna ornek verir misin|cocuklarda da ayni mi|bu cocuklarda da gecerli mi|kaniti guclu mu|hangi yas icin gecerli|hangi olcumle gosterilmis|bireysel olarak ne anlama gelir|bunun tersi de olabilir mi|bunun tersi ne|erken cocukluk icin ne degisiyor|peki erken cocuklukta nasil|erken cocuklukta nasil degisir|bunu erken cocukluk icin anlatir misin|okul caginda nasil yorumlariz|dna ile nasil baglariz ama abartmadan|bunu neden soyleyemiyoruz|bu neden tani koydurmuyor|bundan ne sonuc cikarabiliriz|bu kavramin cocuklardaki gelisimi ne zaman hizlanir|cevresel talepler bu surecleri degistirir mi|bu nedensellik gosterir mi)$/.test(normalized)
+  return /^(?:peki bu|biraz daha acikla|daha basit anlat|bunu daha basit anlat|basitce anlat|sade anlat|bunu sade anlat|onceki cevabi acikla|baska turlu anlat|farkli anlat|yeniden anlat|tekrar acikla|tam olarak anlamadim|anlayamadim|ne demek istedin|bununla iliskisi ne|bunun iliskisi ne|bunun fizyolojik regulasyonla iliskisi ne|buna ornek verir misin|cocuklarda da ayni mi|bu cocuklarda da gecerli mi|kaniti guclu mu|hangi yas icin gecerli|hangi olcumle gosterilmis|bireysel olarak ne anlama gelir|bunun tersi de olabilir mi|bunun tersi ne|erken cocukluk icin ne degisiyor|peki erken cocuklukta nasil|erken cocuklukta nasil degisir|bunu erken cocukluk icin anlatir misin|okul caginda nasil yorumlariz|dna ile nasil baglariz ama abartmadan|bunu neden soyleyemiyoruz|bu neden tani koydurmuyor|bundan ne sonuc cikarabiliriz|bu kavramin cocuklardaki gelisimi ne zaman hizlanir|cevresel talepler bu surecleri degistirir mi|bu nedensellik gosterir mi|(?:(?:peki|ya|ayrica) )?(?:olcumu(?: nasil)?|nasil olculur|nasil degerlendirilir|kaynaklari(?: gosterir misin)?|kaniti(?: ne| nasil| guclu mu)?|kanit duzeyi(?: ne| nasil)?|orneklemi|cocuklarda(?: nasil)?|ergenlerde(?: nasil)?|gelisimi(?: nasil)?|yas kapsami(?: ne)?|dna baglantisi|dna ile iliskisi|siniri|ne kadar guclu|guvenilir mi|bir ornek daha))$/.test(normalized)
+}
+
+type DnaConversationRepairKind = "correction" | "explanation" | "retry"
+
+function detectDnaConversationRepairKind(question: string): DnaConversationRepairKind | null {
+  const normalized = normalizeDnaChatText(question)
+  if (
+    /^(?:hayir|yok)\b/.test(normalized) ||
+    /\b(?:yanlis anladin|onu sormadim|sorum o degildi|demek istedigim|kastettigim)\b/.test(normalized)
+  ) {
+    return "correction"
+  }
+  if (
+    /\b(?:daha basit anlat|basitce anlat|sade anlat|tam olarak anlamadim|anlayamadim|ne demek istedin|onceki cevabi acikla)\b/.test(normalized)
+  ) {
+    return "explanation"
+  }
+  if (/\b(?:baska turlu anlat|farkli anlat|yeniden anlat|tekrar acikla)\b/.test(normalized)) {
+    return "retry"
+  }
+  return null
+}
+
+function conversationRepairRoutingQuestion(
+  question: string,
+  previousTopic?: string | null,
+): string {
+  if (!previousTopic || previousTopic.includes("·")) return question
+  const repairKind = detectDnaConversationRepairKind(question)
+  if (!repairKind) return question
+  const topicLabel = getCatalogTopicById(previousTopic)?.title ?? previousTopic
+  if (repairKind === "explanation") return `Kısaca ${topicLabel} nedir?`
+  if (repairKind === "retry") return `${topicLabel} nedir?`
+
+  let corrected = question.trim()
+    .replace(/^(?:hayır|hayir|yok)\b[,:;]?\s*/iu, "")
+    .replace(/^(?:beni|sorumu)?\s*(?:yanlış anladın|yanlis anladin)\b[,:;]?\s*/iu, "")
+    .replace(/^(?:onu sormadım|onu sormadim|sorum o değildi|sorum o degildi|demek istediğim|demek istedigim|kastettiğim|kastettigim)\b[,:;]?\s*/iu, "")
+  const correctionBoundary = corrected.match(/\b(?:değil|degil)\b[,:;]?\s*(.+)$/iu)
+  if (correctionBoundary?.[1]) corrected = correctionBoundary[1]
+  corrected = corrected
+    .replace(/\b(?:sordum|soruyorum|demek istedim|kastettim)\b[.!?]*$/iu, "")
+    .trim()
+  return corrected.length >= 2 ? corrected : question
+}
+
+const WHOLE_MESSAGE_SAFETY_CATEGORIES = new Set<DnaChatSafetyCategory>([
+  "privacy",
+  "cross_case",
+  "crisis",
+  "manipulation",
+  "internal_data",
+  "internal_reasoning",
+  "self_learning",
+  "unsafe_case_context",
+])
+
+function mustRefuseWholeMessage(safety: DnaChatSafetyResult): boolean {
+  return safety.blocked && WHOLE_MESSAGE_SAFETY_CATEGORIES.has(safety.category)
+}
+
+function hasExplicitScopedSafetyBoundary(question: string): boolean {
+  return /\?\s*[A-Za-zÇĞİÖŞÜçğıöşü]/u.test(question)
 }
 
 function notAvailableResponse(
@@ -395,7 +483,9 @@ function notAvailableResponse(
     classification: "not_available",
     intent,
     summary,
-    details: ["Kaynakta bulunmayan ayrıntı tamamlanmadı veya tahmin edilmedi."],
+    details: [
+      "Bu, ilgili bulgunun kesin olarak olmadığı anlamına gelmez; yalnızca seçili raporda açık biçimde yer almadığını gösterir.",
+    ],
     sources,
     limitations: ["Yanıt yalnız açık ve kimliksiz vaka bağlamında bulunan verilerle sınırlıdır."],
     safety,
@@ -1297,23 +1387,32 @@ function splitDnaChatQuestion(question: string): { parts: string[]; overflow: bo
   const questionMarkParts = question
     .split(/\?+/)
     .map((part) => part.trim())
-    .filter(Boolean)
-  const semicolonParts = question
-    .split(/\s*;\s*/)
+    .filter((part) => normalizeDnaChatText(part).replace(/\d/g, "").length >= 2)
+  const structuralParts = question
+    .split(/(?:\s*;\s*|\n+)/giu)
+    .map((part) => part.trim())
+    .filter((part) => normalizeDnaChatText(part).replace(/\d/g, "").length >= 2)
+  const additionalParts = question
+    .split(/\s+(?:ayrıca|ayrica)\s+/giu)
     .map((part) => part.trim())
     .filter(Boolean)
   const conjunctionParts = question
-    .split(/\s+ve\s+/giu)
+    .split(/\s+(?:ve|ayrıca|ayrica)\s+/giu)
     .map((part) => part.trim())
     .filter(Boolean)
-  const questionMarker = /\b(?:nedir|ne demek|nasil|neden|hangi|neyi|olur mu|midir|mudur|misin|gosterir mi|iliskili mi)\b/
+  const questionMarker = /\b(?:nedir|ne demek|nasil|neden|hangi|neyi|olur mu|midir|mudur|misin|gosterir mi|iliskili mi|olcumu|kaniti|kaynagi|kaynaklari|gelisimi|yas kapsami)\b/
   const hasIndependentQuestions = conjunctionParts.length > 1 && conjunctionParts.every((part) =>
+    questionMarker.test(normalizeDnaChatText(part)),
+  )
+  const hasIndependentAdditionalQuestions = additionalParts.length > 1 && additionalParts.every((part) =>
     questionMarker.test(normalizeDnaChatText(part)),
   )
   const parts = questionMarkParts.length > 1
     ? questionMarkParts
-    : semicolonParts.length > 1
-      ? semicolonParts
+    : structuralParts.length > 1
+      ? structuralParts
+      : hasIndependentAdditionalQuestions
+        ? additionalParts
       : hasIndependentQuestions
         ? conjunctionParts
         : [question]
@@ -1327,7 +1426,7 @@ function catalogTopicIdFromResponse(response: DnaChatResponse): string | null {
 
 function isEllipticalSecondQuestion(question: string): boolean {
   const normalized = normalizeDnaChatText(question)
-  return /^(?:cocuklukta\b|kanit\w*\b|kaynak\w*\b|nasil\b|hangi\b|alanlar\b|surecler\b|stratejiler\b|bunlar\b|bunun\b|bu\b|peki\b)/.test(
+  return /^(?:ya\b|ayrica\b|cocuk\w*\b|ergen\w*\b|gelisim\w*\b|olcum\w*\b|kanit\w*\b|kaynak\w*\b|nasil\b|hangi\b|alanlar\b|surecler\b|stratejiler\b|bunlar\b|bunun\b|bu\b|peki\b|dna\b)/.test(
     normalized,
   )
 }
@@ -1450,10 +1549,15 @@ function combineDnaChatResponses(
   const combinedLimitations = stableUnique([
     ...(mixedCaseTheory ? ["Bu vakada biyolojik mekanizma doğrudan ölçülmedi."] : []),
     ...(partiallyAnswered ? ["Yanıtlanamayan bölüm, yanıtlanan başlığın bilgisiyle tamamlanmadı."] : []),
+    ...(answered.length > 0 && responses.some((response) => response.outcome === "refused")
+      ? ["Kapsam dışı bölüm ayrı olarak reddedildi; güvenli bölüm bu reddi aşmak için kullanılmadı."]
+      : []),
     ...responses.flatMap((response) => response.limitations),
   ], 6)
   const combinedSummary = contextRequest
     ? "Sorunuzun vakaya özgü bölümünü yanıtlamak için bir DNA raporu seçin."
+    : answered.length > 0 && responses.some((response) => response.outcome === "refused")
+      ? "Sorunuzun güvenli kapsam içindeki bölümü yanıtlandı; kapsam dışı bölüm ayrı olarak reddedildi."
     : partiallyAnswered
       ? "Sorunuzun bir bölümü yanıtlandı; diğer bölüm için daha açık bir başlık veya doğrulanmış katalog bağlantısı gerekiyor."
       : "Sorunuzdaki iki başlık ayrı ayrı değerlendirildi."
@@ -1545,7 +1649,7 @@ function combineDnaChatResponses(
 export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
   const question = String(request?.question ?? "").trim()
   const safety = emptySafety(question)
-  if (safety.blocked) return refusalResponse(safety)
+  if (mustRefuseWholeMessage(safety)) return refusalResponse(safety)
   if (question.length < 2 || question.length > 600) {
     return clarificationResponse(
       safety,
@@ -1559,24 +1663,54 @@ export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
     )
   }
 
-  const split = splitDnaChatQuestion(question)
+  const socialConversation = resolveDnaChatSocialConversation(question)
+  if (socialConversation) {
+    return socialConversationResponse(safety, socialConversation)
+  }
+
+  const routingQuestion = safety.blocked
+    ? question
+    : conversationRepairRoutingQuestion(question, request.previousTopic)
+  const routingSafety = routingQuestion === question ? safety : emptySafety(routingQuestion)
+  if (routingSafety.blocked && !safety.blocked) return refusalResponse(routingSafety)
+
+  const split = splitDnaChatQuestion(routingQuestion)
   if (split.overflow) {
+    if (safety.blocked) return refusalResponse(safety)
     return clarificationResponse(
-      safety,
+      routingSafety,
       "Tek mesajda en fazla iki soru ele alınabilir. Lütfen soruları iki ayrı mesaja bölün.",
     )
   }
   if (split.parts.length === 2) {
-    const firstResponse = resolveSingleDnaChat(
-      { ...request, question: split.parts[0] },
-      split.parts[0],
-      emptySafety(split.parts[0]),
-    )
-    const secondResponse = resolveSecondDnaChatQuestion(request, split.parts[1], firstResponse)
+    if (safety.blocked && !hasExplicitScopedSafetyBoundary(question)) {
+      return refusalResponse(safety)
+    }
+    const partSafeties = split.parts.map(emptySafety)
+    const hasSafePart = partSafeties.some((partSafety) => !partSafety.blocked)
+    const hasBlockedPart = partSafeties.some((partSafety) => partSafety.blocked)
+    if (safety.blocked && (!hasSafePart || !hasBlockedPart)) return refusalResponse(safety)
+
+    const firstResponse = partSafeties[0].blocked
+      ? refusalResponse(partSafeties[0])
+      : resolveSingleDnaChat(
+          { ...request, question: split.parts[0] },
+          split.parts[0],
+          partSafeties[0],
+        )
+    const secondResponse = partSafeties[1].blocked
+      ? refusalResponse(partSafeties[1])
+      : resolveSecondDnaChatQuestion(request, split.parts[1], firstResponse)
+    const combinedSafety = partSafeties.find((partSafety) => !partSafety.blocked) ?? routingSafety
     return combineDnaChatResponses(
       [firstResponse, secondResponse],
-      safety,
+      combinedSafety,
     )
   }
-  return resolveSingleDnaChat(request, question, safety)
+  if (safety.blocked) return refusalResponse(safety)
+  return resolveSingleDnaChat(
+    { ...request, question: routingQuestion },
+    routingQuestion,
+    routingSafety,
+  )
 }

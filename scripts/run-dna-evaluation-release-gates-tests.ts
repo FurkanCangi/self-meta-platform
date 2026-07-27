@@ -925,18 +925,28 @@ assert.deepEqual(reportChange, {
 const reportSelection = planDnaChatReportTransition({
   action: "select_report",
   reportId: "report.contract.001",
+  currentReportId: null,
   pendingReportQuestion: pendingQuestion,
 })
 assert.deepEqual(reportSelection.resubmitQuestions, [pendingQuestion])
 assert.equal(reportSelection.selectedReportId, "report.contract.001")
-assert.equal(reportSelection.clearConversation, true)
+assert.equal(reportSelection.clearConversation, false)
+const reportSwitch = planDnaChatReportTransition({
+  action: "select_report",
+  reportId: "report.contract.002",
+  currentReportId: "report.contract.001",
+  pendingReportQuestion: null,
+})
+assert.equal(reportSwitch.clearConversation, true)
 const coordinator = createDnaChatReportSelectionCoordinator()
 const firstSelection = coordinator.claim({
   reportId: "report.contract.001",
+  currentReportId: null,
   pendingReportQuestion: pendingQuestion,
 })
 const duplicateSelection = coordinator.claim({
   reportId: "report.contract.001",
+  currentReportId: null,
   pendingReportQuestion: pendingQuestion,
 })
 assert.deepEqual(firstSelection?.resubmitQuestions, [pendingQuestion])

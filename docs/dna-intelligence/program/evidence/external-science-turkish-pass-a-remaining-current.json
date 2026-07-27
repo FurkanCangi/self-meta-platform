@@ -1,0 +1,78 @@
+{
+  "schemaVersion": "dna-external-science-turkish-pass-a-remaining-manifest@1",
+  "recordedAt": "2026-07-19T11:51:32.792Z",
+  "version": "dna-external-science-turkish-pass-a-remaining-authoring@1",
+  "status": "pass_a_remaining_178_candidate_only",
+  "inputHashes": {
+    "workpackSha256": "132e8dd16fd21cb4b230596ecc4267d53e7deacb46799e576799f187855eedec",
+    "workpackFileSha256": "d9e5aa310660f31b831ec9252b6897a9312a499e30e87bcd3c3801ee5c321469",
+    "authoringFileSha256": "f40579044b495a244d30f640a1bbf1a6ae6b7d717ff52109b4e30fb432eff23f",
+    "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "candidateFileSha256": "45c779a88b668f26b9a79c29715ca8709cb3a52afa07c8d4dbae37bc01ee7b3c",
+    "preservedSelectionSetSha256": "19dbb3434f72d023c79fb321781c1be8be43d7376033320d99a36f7f25f910a3"
+  },
+  "outputHashes": {
+    "rawSha256": "7281fa7cc1285567dad66902034f102a304933cacf19a08e9367c837403ed356",
+    "artifactSha256": "9c439505b32b93bfeec8b709a2e76934f9867e7391e228edd260b7da44688f41",
+    "recordsSha256": "7ab0285f0b2f075bf21fa310c14db9b11e63af8eb8718e647a4edf1ff20fb4a0",
+    "byteCount": 718067,
+    "fileMode": "0600"
+  },
+  "counts": {
+    "records": 178,
+    "complete": 178,
+    "topics": 14,
+    "sources": 14,
+    "passages": 140,
+    "claims": 178,
+    "answerUnits": 178
+  },
+  "qaFailureCounts": {
+    "exactShape": 0,
+    "workpackBinding": 0,
+    "candidateBinding": 0,
+    "numbersPreserved": 0,
+    "negationPreserved": 0,
+    "hedgePreserved": 0,
+    "causalStrengthPreserved": 0,
+    "associationalLanguagePreserved": 0,
+    "ageEvidenceBoundaryBound": 0,
+    "singleClaimPassageBound": 0,
+    "addedMechanism": 0,
+    "addedClinicalInference": 0,
+    "addedDnaProductValidity": 0,
+    "incompleteRecords": 0,
+    "duplicateClaims": 0,
+    "total": 0
+  },
+  "verification": {
+    "deterministicRepeats": 20,
+    "deterministicUniqueHashes": 1,
+    "sourceClaimPassageBindingsVerified": 178,
+    "fullTextStoredOnResearchSsdOnly": true,
+    "repositoryManifestAggregateAndHashOnly": true,
+    "crossPassMaterialAccessed": false,
+    "externalModelUsed": false,
+    "networkUsed": false,
+    "lockedEvaluationArtifactsAccessed": false
+  },
+  "boundaries": {
+    "candidateOnly": true,
+    "passAOnly": true,
+    "passBPerformed": false,
+    "reconciliationPerformed": false,
+    "independentHumanReview": false,
+    "runtimeAuthority": false,
+    "releaseAuthority": false,
+    "activationAuthority": false,
+    "ownerAuthority": false,
+    "activeRuntimeGeneration": "v2_legacy",
+    "v3ReleaseDecision": "no_go_unchanged"
+  },
+  "runtimeEligible": false,
+  "releaseEligible": false,
+  "activationAllowed": false,
+  "ownerAuthority": false,
+  "independentHumanReview": false,
+  "manifestSha256": "cf10095facad3eacc35579d35bb8fc82e011245f5d72ca93e59fd1c05c043a4c"
+}

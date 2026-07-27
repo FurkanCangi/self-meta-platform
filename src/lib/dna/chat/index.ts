@@ -16,6 +16,10 @@ export {
 } from "./reportSnapshot"
 export { DNA_CHAT_STARTER_QUESTIONS } from "./suggestions"
 export {
+  DNA_CHAT_SOCIAL_CONVERSATION_VERSION,
+  resolveDnaChatSocialConversation,
+} from "./socialConversation"
+export {
   DNA_INTELLIGENCE_AUDIT_NOTICE_TR,
   DNA_INTELLIGENCE_COMPOSER_NOTICE_TR,
   DNA_INTELLIGENCE_ENTRY_DESCRIPTION_TR,

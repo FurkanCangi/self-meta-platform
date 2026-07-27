@@ -4,7 +4,26 @@ import {
   type DnaExternalLiveObservationAttestation,
   type DnaExternalLiveObservationTrustRoot,
 } from "./previewPromotion"
+import {
+  DNA_CURRENT_PRODUCTION_AUTHORITY_CONSUMED_NONCE_SHA256,
+  DNA_CURRENT_PRODUCTION_CANARY_BOOTSTRAP_TRUST_ROOTS,
+  DNA_CURRENT_PRODUCTION_NONCE_REPLAY_AUTHORITY_PROVISIONED,
+  DNA_CURRENT_PRODUCTION_RUNTIME_ACTIVATION_TRUST_ROOTS,
+  DNA_CURRENT_PRODUCTION_STAGED_ROLLOUT_TRUST_ROOTS,
+  DNA_PRODUCTION_CANARY_BOOTSTRAP_AUTHORIZATION_ENV,
+  DNA_PRODUCTION_RUNTIME_ACTIVATION_ENV,
+  DNA_PRODUCTION_STAGED_ROLLOUT_AUTHORITY_ENV,
+  verifyDnaProductionRuntimeAuthority,
+} from "./productionRuntimeAuthority"
 import { DNA_CURRENT_V3_RELEASE_EVIDENCE_BUNDLE } from "./releaseEvidenceBundle"
+import { readDnaRuntimeReleaseConfiguration } from "./runtimeReleaseMode"
+import {
+  DNA_CURRENT_V3_STAGED_ROLLOUT_AUTHORIZATION,
+  DNA_CURRENT_V3_STAGED_ROLLOUT_EVIDENCE_FILES,
+  DNA_CURRENT_V3_STAGED_ROLLOUT_EVIDENCE_ROOT,
+  DNA_CURRENT_V3_STAGED_ROLLOUT_POLICY,
+  verifyDnaStagedRolloutHealthEvidence,
+} from "./stagedRollout"
 
 export const DNA_RUNTIME_DEPLOYMENT_AUTHORIZATION_VERSION =
   "dna-runtime-deployment-authorization@1" as const
@@ -20,13 +39,23 @@ export type DnaRuntimeDeploymentAuthorization = Readonly<{
   schemaVersion: typeof DNA_RUNTIME_DEPLOYMENT_AUTHORIZATION_VERSION
   allowed: boolean
   stage: "preview" | "production"
-  authority: "vercel_preview_candidate" | "signed_promotion_receipt" | null
+  authority:
+    | "vercel_preview_candidate"
+    | "signed_promotion_receipt"
+    | "signed_production_runtime_authority"
+    | null
   keyId: string | null
   blockCode:
     | null
     | "production_promotion_receipt_missing_or_invalid"
     | "production_promotion_receipt_binding_mismatch"
     | "production_promotion_receipt_signature_or_time_invalid"
+    | "production_stage_configuration_missing_or_invalid"
+    | "production_stage_health_missing_or_invalid"
+    | "production_stage_authority_missing_or_invalid"
+    | "production_runtime_activation_missing_or_invalid"
+    | "production_nonce_replay_authority_not_provisioned"
+    | "production_runtime_authority_invalid"
     | "preview_candidate_environment_binding_invalid"
 }>
 
@@ -152,17 +181,149 @@ export function verifyDnaRuntimeDeploymentAuthorization(input: Readonly<{
   })
 }
 
-/** Action-facing runtime decision; all release and environment inputs are current authorities. */
+/**
+ * Action-facing runtime decision; all release and environment inputs are
+ * current authorities. Production observation is only a prerequisite: a
+ * separate signed bootstrap/stage authority and runtime-activation authority
+ * are mandatory before this function can authorize V3 traffic.
+ */
 export function evaluateCurrentDnaRuntimeDeploymentAuthorization():
   DnaRuntimeDeploymentAuthorization {
   const bundle = DNA_CURRENT_V3_RELEASE_EVIDENCE_BUNDLE
   if (!bundle) {
     return decision("production", null, null, "production_promotion_receipt_missing_or_invalid")
   }
-  return verifyDnaRuntimeDeploymentAuthorization({
+  const observationPrerequisite = verifyDnaRuntimeDeploymentAuthorization({
     expectedGitSha: bundle.gitSha,
     expectedPackageSha256: bundle.catalog.packageSha256,
     environment: process.env,
     trustRoots: DNA_CURRENT_EXTERNAL_LIVE_OBSERVATION_TRUST_ROOTS,
   })
+  if (observationPrerequisite.stage === "preview" || !observationPrerequisite.allowed) {
+    return observationPrerequisite
+  }
+
+  const configuration = readDnaRuntimeReleaseConfiguration()
+  const stageByPercent = new Map<number, "internal" | "limited" | "broad" | "full">([
+    [5, "internal"], [25, "limited"], [50, "broad"], [100, "full"],
+  ])
+  const stageId = stageByPercent.get(configuration.rolloutPercent)
+  if (!configuration.valid
+    || (configuration.mode !== "hybrid-v3" && configuration.mode !== "v3")
+    || !stageId) {
+    return decision(
+      "production",
+      null,
+      null,
+      "production_stage_configuration_missing_or_invalid",
+    )
+  }
+  if (!DNA_CURRENT_PRODUCTION_NONCE_REPLAY_AUTHORITY_PROVISIONED) {
+    return decision(
+      "production",
+      null,
+      null,
+      "production_nonce_replay_authority_not_provisioned",
+    )
+  }
+
+  const policy = DNA_CURRENT_V3_STAGED_ROLLOUT_POLICY
+  const rolloutAuthorization = DNA_CURRENT_V3_STAGED_ROLLOUT_AUTHORIZATION
+  const evidenceRoot = DNA_CURRENT_V3_STAGED_ROLLOUT_EVIDENCE_ROOT
+  const evidenceFiles = DNA_CURRENT_V3_STAGED_ROLLOUT_EVIDENCE_FILES
+  if (!policy || !rolloutAuthorization || !evidenceRoot || !evidenceFiles) {
+    return decision(
+      "production",
+      null,
+      null,
+      "production_stage_health_missing_or_invalid",
+    )
+  }
+  let evidenceVerification
+  try {
+    evidenceVerification = verifyDnaStagedRolloutHealthEvidence({
+      policy,
+      authorization: rolloutAuthorization,
+      evidenceRoot,
+      files: evidenceFiles,
+    })
+  } catch {
+    return decision(
+      "production",
+      null,
+      null,
+      "production_stage_health_missing_or_invalid",
+    )
+  }
+
+  const receipt = decodeCanonicalReceipt(
+    process.env[DNA_CHAT_PRODUCTION_PROMOTION_RECEIPT_ENV],
+  )
+  const stageAuthority = decodeCanonicalReceipt(process.env[
+    stageId === "internal"
+      ? DNA_PRODUCTION_CANARY_BOOTSTRAP_AUTHORIZATION_ENV
+      : DNA_PRODUCTION_STAGED_ROLLOUT_AUTHORITY_ENV
+  ])
+  if (!stageAuthority) {
+    return decision(
+      "production",
+      null,
+      null,
+      "production_stage_authority_missing_or_invalid",
+    )
+  }
+  const runtimeActivation = decodeCanonicalReceipt(
+    process.env[DNA_PRODUCTION_RUNTIME_ACTIVATION_ENV],
+  )
+  if (!runtimeActivation) {
+    return decision(
+      "production",
+      null,
+      null,
+      "production_runtime_activation_missing_or_invalid",
+    )
+  }
+  const productionHost = process.env[DNA_VERCEL_URL_ENV]
+  if (!receipt || typeof productionHost !== "string") {
+    return decision(
+      "production",
+      null,
+      null,
+      "production_runtime_authority_invalid",
+    )
+  }
+  const receiptDeploymentId = receipt && typeof receipt === "object"
+    && "deploymentId" in receipt && typeof receipt.deploymentId === "string"
+    ? receipt.deploymentId
+    : ""
+  const runtimeAuthority = verifyDnaProductionRuntimeAuthority({
+    observationAttestation: receipt,
+    observationTrustRoots: DNA_CURRENT_EXTERNAL_LIVE_OBSERVATION_TRUST_ROOTS,
+    stageAuthority,
+    runtimeActivation,
+    bootstrapTrustRoots: DNA_CURRENT_PRODUCTION_CANARY_BOOTSTRAP_TRUST_ROOTS,
+    stagedRolloutTrustRoots: DNA_CURRENT_PRODUCTION_STAGED_ROLLOUT_TRUST_ROOTS,
+    runtimeActivationTrustRoots: DNA_CURRENT_PRODUCTION_RUNTIME_ACTIVATION_TRUST_ROOTS,
+    policy,
+    rolloutAuthorization,
+    evidenceVerification,
+    expected: {
+      releaseId: bundle.releaseId,
+      deploymentId: receiptDeploymentId,
+      origin: `https://${productionHost}`,
+      gitSha: bundle.gitSha,
+      packageSha256: bundle.catalog.packageSha256,
+      stageId,
+      rolloutPercent: configuration.rolloutPercent as 5 | 25 | 50 | 100,
+    },
+    consumedNonceSha256: DNA_CURRENT_PRODUCTION_AUTHORITY_CONSUMED_NONCE_SHA256,
+  })
+  return runtimeAuthority.allowed
+    ? decision(
+        "production",
+        "signed_production_runtime_authority",
+        runtimeAuthority.activationKeyId,
+        null,
+      )
+    : decision("production", null, null, "production_runtime_authority_invalid")
 }

@@ -12,6 +12,14 @@ kategorisi, HTTP sonucu, audit durumu ve kategorik kullanıcı sorununu kabul
 eder. Soru, cevap, rapor, danışan kodu, passage, vaka bulgusu, önceki sohbet,
 kimlik ve ağ bilgileri strict allowlist dışında kalır.
 
+`dna-chat-request-timing@1` başarılı veya yavaş/hatalı isteklerde yalnız sabit
+sunucu aşamalarının sürelerini ölçer: operasyon kapısı, güvenilir mutation,
+oturum, rate-limit, payload, runtime çözümü, rapor listesi, vaka cevabı ve audit yazımı. Soru,
+cevap, kullanıcı/rapor kimliği veya klinik içerik kabul etmez. Normal hızlı
+istekler varsayılan olarak loglanmaz; `>=1000 ms` veya `5xx` istekler
+yapılandırılmış kayıt üretir. Bu ölçüm performans tanısı içindir; bilimsel ya da
+klinik değerlendirme kanıtı değildir.
+
 ## Kaynak bütünlüğü olayı
 
 Geri çekme, düzeltme, endişe bildirimi, lisans değişikliği, yeni konsensüs veya

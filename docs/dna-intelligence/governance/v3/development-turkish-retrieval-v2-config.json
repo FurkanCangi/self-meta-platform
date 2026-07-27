@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "dna-turkish-retrieval-v2-config@1",
+  "authorityClass": "development_only_external_science_candidate",
+  "scoring": {
+    "minimumRouteScore": 3.4,
+    "minimumClarifyScore": 2.25,
+    "ambiguityMargin": 1.15,
+    "dualAnchorMargin": 1.85,
+    "unsupportedPenaltyThreshold": 2.5,
+    "unsupportedDominanceRatio": 0.55,
+    "unsupportedWeakAnchorRatio": 0.45,
+    "ambiguityPatternCoverage": 0.75,
+    "exactTokenFactor": 1,
+    "fuzzyTokenFactor": 0.78,
+    "anchorContextBonus": 1.4,
+    "trainingCoverageBonus": 4,
+    "rareTokenBonus": 1.1,
+    "negativeTokenPenalty": 1.65
+  },
+  "normalization": {
+    "orderIndependent": true,
+    "turkishCharacterFold": true,
+    "suffixFold": true,
+    "maxTypoDistance": 1,
+    "minimumFuzzyTokenLength": 5
+  },
+  "boundaries": {
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "activationAllowed": false,
+    "ownerBookAuthority": false,
+    "lockedHoldoutAccessed": false,
+    "multiStepMechanismAllowed": false
+  },
+  "topics": [
+    {
+      "id": "external.selfreg_measurement",
+      "anchors": ["öz düzenleme ölçümü", "self regülasyon ölçümü", "self regulation measurement", "çocuk öz düzenleme ölçeği", "davranış duygu yönetimi ölçümü"],
+      "contexts": ["psikometrik özellik", "çocuk ölçeği", "geçerlik", "güvenirlik", "ölçüm kalitesi"],
+      "negativeTerms": ["prisma cosmin", "raporlama kontrol listesi", "hrv ölçümü"]
+    },
+    {
+      "id": "external.circadian_light",
+      "anchors": ["sirkadiyen ışık", "circadian light", "biyolojik saat ve ışık", "günlük ritim aydınlatma", "ışık maruziyeti"],
+      "contexts": ["gündüz ışığı", "akşam ışığı", "gece aydınlatması", "uyku ritmi", "ışık önerisi"],
+      "negativeTerms": ["duygusal reaktivite", "uyku yoksunluğu", "uyku iğciği"]
+    },
+    {
+      "id": "external.measurement_cosmin",
+      "anchors": ["cosmin ölçüm niteliği", "measurement properties", "ölçüm aracı değerlendirmesi", "ölçek kalitesi", "cosmin metodolojisi"],
+      "contexts": ["geçerlik", "güvenirlik", "duyarlılık", "psikometrik özellik", "ölçüm aracı seçimi"],
+      "negativeTerms": ["prisma cosmin raporlama", "omi reporting", "hrv raporlama"]
+    },
+    {
+      "id": "external.parent_emotion_regulation",
+      "anchors": ["ebeveyn duygu düzenleme", "parent emotion regulation", "bakım veren duygu yönetimi", "anne baba düzenleme örüntüsü", "ebeveyn etkisi"],
+      "contexts": ["çocuk duygu düzenleme", "öfke örüntüsü", "sakinleşme örüntüsü", "bakım veren", "ebeveyn çocuk"],
+      "negativeTerms": ["uyku duygusal reaktivite", "öz düzenleme ölçeği", "hrv"]
+    },
+    {
+      "id": "external.autonomic_testing",
+      "anchors": ["otonom test", "tilt table", "head up tilt", "kardiyovasküler otonom refleks", "otonom işlev testi"],
+      "contexts": ["ayağa kalkma", "kalp hızı ve tansiyon", "kardiyak refleks", "laboratuvar değerlendirmesi", "valsava"],
+      "negativeTerms": ["polyvagal teori", "hrv biofeedback", "hrv raporlama"]
+    },
+    {
+      "id": "external.executive_function_development",
+      "anchors": ["yürütücü işlev gelişimi", "executive function development", "gelişimsel yürütücü işlev", "çocuklukta yürütücü işlev", "nörogelişimsel yürütücü işlev"],
+      "contexts": ["planlama", "ketleme", "çalışma belleği", "bilişsel esneklik", "çocuk gelişimi"],
+      "negativeTerms": ["prefrontal korteks", "executive control", "insula"]
+    },
+    {
+      "id": "external.hrv_biofeedback_methods",
+      "anchors": ["hrv biofeedback", "hrvb", "kalp hızı değişkenliği geri bildirim", "rezonans frekanslı geri bildirim", "heart rate variability biofeedback"],
+      "contexts": ["solunum protokolü", "rezonans frekansı", "geri bildirim yöntemi", "araştırma protokolü", "biofeedback raporlama"],
+      "negativeTerms": ["hrv kayıt ölçütü", "hrv bağlamsal etken", "genel biofeedback etkinliği"]
+    },
+    {
+      "id": "external.hrv_context",
+      "anchors": ["hrv bağlamsal etken", "hrv etkenleri", "heart rate variability factors", "kalp hızı değişkenliği bağlamı", "kardiyak değişkenlik bağlamı"],
+      "contexts": ["yaş ve cinsiyet", "solunum", "beden pozisyonu", "günün koşulları", "yorum sınırı"],
+      "negativeTerms": ["hrv teknik raporlama", "hrv biofeedback", "sirkadiyen ışık"]
+    },
+    {
+      "id": "external.hrv_measurement",
+      "anchors": ["hrv ölçümü", "hrv raporlama", "heart rate variability measurement", "r r aralıkları", "kalp ritmi değişkenliği kaydı"],
+      "contexts": ["zaman alanı", "frekans alanı", "artefakt", "kayıt standardı", "psychophysiology"],
+      "negativeTerms": ["hrv bağlamsal etken", "hrv biofeedback", "prisma cosmin"]
+    },
+    {
+      "id": "external.insula_interoception",
+      "anchors": ["insula ve interosepsiyon", "insular korteks", "ada korteksi", "beden içi sinyal", "insula stimulation"],
+      "contexts": ["kortikal temsil", "iç organ duyumu", "interoseptif farkındalık", "insula uyarımı", "bedensel sinyal"],
+      "negativeTerms": ["prefrontal korteks", "yürütücü işlev", "hipokampus"]
+    },
+    {
+      "id": "external.pfc_cognitive_control",
+      "anchors": ["prefrontal bilişsel kontrol", "prefrontal korteks", "pfc cognitive control", "executive control", "ön beyin kontrolü"],
+      "contexts": ["hedefe yönelik davranış", "ketleme", "çalışma belleği", "frontal süreç", "bilişsel esneklik"],
+      "negativeTerms": ["insula", "gelişimsel yürütücü işlev", "çocuklukta yürütücü işlev"]
+    },
+    {
+      "id": "external.prisma_cosmin_reporting",
+      "anchors": ["prisma cosmin raporlama", "prisma-cosmin", "omi reporting", "ölçüm aracı sistematik derleme raporlaması", "raporlama kontrol listesi"],
+      "contexts": ["sistematik derleme", "arama ve seçim", "şeffaf raporlama", "kontrol listesi", "ölçüm aracı derlemesi"],
+      "negativeTerms": ["cosmin ölçüm niteliği", "hrv raporlama", "ölçek seçimi"]
+    },
+    {
+      "id": "external.polyvagal_theory",
+      "anchors": ["polyvagal teori", "polivagal teori", "ventral vagal", "dorsal vagal", "otonom hiyerarşi"],
+      "contexts": ["kanıt sınırı", "bilimsel eleştiri", "evrimsel iddia", "teori sınırı", "ampirik destek"],
+      "negativeTerms": ["otonom test", "vagus stimülasyonu", "hrv ölçümü"]
+    },
+    {
+      "id": "external.sleep_emotional_reactivity",
+      "anchors": ["uyku duygusal reaktivite", "sleep emotional reactivity", "uykusuzluk ve duygusal yanıt", "uyku yoksunluğu duygusu", "uyku süresi duygu tepkisi"],
+      "contexts": ["olumsuz uyaran", "duygusal yanıt", "uyku süresi", "reaktivite", "meta analiz"],
+      "negativeTerms": ["sirkadiyen ışık", "uyku iğciği", "aktigrafi uyku evresi"]
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "dna-intelligence-program-state@8",
+  "schemaVersion": "dna-intelligence-program-state@11",
   "programVersion": "dna-intelligence-v3-program@1",
   "objective": "DNA Intelligence V3 planını Faz 0'dan Faz 60'a kanıt kapılı biçimde tamamlamak",
   "truthModel": {
@@ -214,6 +214,9 @@
     "methodAppraisal": {
       "sourceCount": 47,
       "pending": 47,
+      "pendingStateAuthority": "historical_snapshot_all_records_terminally_reconciled_against_prebook_ledgers",
+      "effectiveOpenHistoricalStates": 0,
+      "historicalTerminalizedStates": 47,
       "registered": 14,
       "normalizedSnapshotRegistered": 0,
       "candidateChainsOnDisk": 1,
@@ -230,7 +233,51 @@
       "registeredAppraisalCollectionSha256": "4ca4bc8eca341a44dc54f13ad1ec333515d2d86937cd39c9b1dc2c9fff6b82e1",
       "runtimeEligible": 0,
       "releaseEligible": 0,
-      "snapshotRawBytesSha256": "3a2632dabb1f09bd458f2c8d87eb51f94528fc2ab67877d98cb77be995e74051"
+      "snapshotRawBytesSha256": "3a2632dabb1f09bd458f2c8d87eb51f94528fc2ab67877d98cb77be995e74051",
+      "reconciliation": {
+        "state": "superseded_historical_pipeline_state",
+        "historicalPendingRecords": 47,
+        "superseded_historical_pipeline_state": {
+          "total": 47,
+          "terminalWorkpackRecords": 24,
+          "terminalFullTextIdentityMatches": 2,
+          "terminalHistoricalSourceRecords": 21,
+          "terminalHistoricalSourceStatusCounts": {
+            "included": 0,
+            "excluded": 0,
+            "duplicate": 0,
+            "full_text_unavailable": 2,
+            "license_blocked": 15,
+            "out_of_scope": 0,
+            "quarantined": 4
+          },
+          "queuedWorkpacksTerminalized": 6,
+          "inProgressWorkpacksTerminalized": 3,
+          "candidateCompleteWorkpacksTerminalized": 15,
+          "sourceIdsSha256": "cfa7279d17d2a3d2014042541183042c24b14daca2ad8f7741dfa9089b4e8f25"
+        },
+        "actionableUnresolvedRecords": 0,
+        "unresolvedSourceIdsSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "unresolvedSources": [],
+        "provenance": {
+          "historicalSnapshotRawBytesSha256": "3a2632dabb1f09bd458f2c8d87eb51f94528fc2ab67877d98cb77be995e74051",
+          "historicalPendingCollectionSha256": "2a92de54cdb8ded2b179a7026e7ac8e706ed1f036e8c1f549c8153c51d3c3f3c",
+          "workpackIndexRawBytesSha256": "eba8f96229a3eb4a24a1598b69f19828d453afda684d1793b1955340588f1512",
+          "workpackIndexPayloadSha256": "53e3ffffd6da23b3924d37b1096e10a2328b5cd26d2b9d4f1619925ce25cbd47",
+          "batchRunIndexRawBytesSha256": "8ee7c063c5b5849f1ca9640c8ae633e0c5928bc488443f6fe8949b796d4f187a",
+          "batchRunIndexPayloadSha256": "a149c8ebcde0744636401310369de4d7af3cd8d02d7439e0fe6cad99156e3af2",
+          "terminalWorkpackLedgerRawBytesSha256": "d07ad43c43512d3782e302002d6c1528f7f4e861f9b203d5e462cf5b2facff73",
+          "terminalWorkpackLedgerPayloadSha256": "5c8fd7e2b3f238286b2ab72c6250b11f21339268adbe7f93da2ce7e45564c7a1",
+          "terminalFullTextLedgerRawBytesSha256": "0d4926d2b03a2d769f6c4893f48ad7a653ec7fc643ba1280ff82cef76de63c2c",
+          "terminalFullTextLedgerPayloadSha256": "21cb2764ddd4e2251f10f0a875fc24df662a1f3a4acc67aa3691f863fa864733",
+          "terminalHistoricalSourceLedgerRawBytesSha256": "09ee737b145a88cbb41e19be40c0469816cd46d81857d0f37710c9801abc76d0",
+          "terminalHistoricalSourceLedgerPayloadSha256": "a4d9301ff4f836ccbc3387e2d448d2465aa08a1308a10addfaf2dd9c11afb536",
+          "terminalHistoricalSourceIdsSha256": "eef332abbde61f637433b7ae8f7614b50fc1b350c00076bb0cbbd04dc636994d",
+          "closureIndexSha256": "14ae903c95240d87ca65bda2f8b1d817bdfbe02888ac0b1818e2f303a9718161"
+        },
+        "runtimeEligible": false,
+        "releaseEligible": false
+      }
     },
     "candidatePassages": {
       "preparedReviewPackets": 14,
@@ -286,8 +333,9 @@
     },
     "prebookClosure": {
       "status": "prebook_actionable_work_closed",
-      "indexSha256": "5308009a466f2ca969bf67d6584377b027c829e6b2eca5d6852213163828cf6a",
-      "indexRawBytesSha256": "663ac3eec6b4cbfd6d1b6d819ca7d90e41fae9d115b356336c6e2babc4f03ab0",
+      "effectiveStatus": "prebook_actionable_work_closed",
+      "indexSha256": "14ae903c95240d87ca65bda2f8b1d817bdfbe02888ac0b1818e2f303a9718161",
+      "indexRawBytesSha256": "6ddab3f2afa4ec959cd6cac712a197d955179052fce64c190971f206c3548bfb",
       "rootInputSha256": "54172ad535d08d5d3000c3af072fb945c2bd610e18e28f49eeb58a184e57a99f",
       "fullTextRecords": 1645,
       "fullTextTerminal": 1645,
@@ -308,6 +356,20 @@
         "excluded": 6,
         "quarantined": 4
       },
+      "historicalSourceDecisions": 21,
+      "historicalSourcesOpen": 0,
+      "historicalSourceStatusCounts": {
+        "included": 0,
+        "excluded": 0,
+        "duplicate": 0,
+        "full_text_unavailable": 2,
+        "license_blocked": 15,
+        "out_of_scope": 0,
+        "quarantined": 4
+      },
+      "historicalSourceLedgerSha256": "a4d9301ff4f836ccbc3387e2d448d2465aa08a1308a10addfaf2dd9c11afb536",
+      "historicalSourceIdsSha256": "eef332abbde61f637433b7ae8f7614b50fc1b350c00076bb0cbbd04dc636994d",
+      "historicalSourceLedgerRawBytesSha256": "09ee737b145a88cbb41e19be40c0469816cd46d81857d0f37710c9801abc76d0",
       "blindClaimsCovered": 746,
       "claimDecisionUnits": 503,
       "claimsOpen": 0,
@@ -327,6 +389,7 @@
       "draftVariations": 10000,
       "draftVariationApprovals": 10000,
       "humanProtocolStatus": "protocol_locked_execution_deferred",
+      "closureDeclaredPrebookActionableBlockers": 0,
       "prebookActionableBlockers": 0,
       "ownerBookDependent": [
         "owner_book_lock_and_owner_approval",
@@ -342,6 +405,215 @@
       ],
       "runtimeEligible": false,
       "releaseEligible": false
+    },
+    "prebookEngineeringEvidence": {
+      "lockedEvaluationV3OfficialFirstRun": {
+        "state": "official_v3_holdout_consumed_fail_no_tuning_or_rerun",
+        "manifestPath": "docs/dna-intelligence/program/evidence/turkish-retrieval-adapter-locked-evaluation-v3-current.json",
+        "manifestRawBytesSha256": "4af58a4b4b20f9087b45988526e5fdb3deb5930771adfbca0500bd412de22ca3",
+        "manifestSha256": "14bbbc57b5e283c9cb5a8c338d3dbc63049deb9bc513697e4860bc076d701a17",
+        "runId": "locked-eval-v3:26154fd31cd8aab388d6c13b73c07ca5",
+        "authoritySha256": "5f1043ca0ec85bc57ac98f683c01081d9545353b30414b4c53a6f5b304b77a69",
+        "resultFileSha256": "1fe7c07ac2d6f703bd00a9a706b72fcddd6450fa55e3652208cf3ad7f56e42ab",
+        "resultSha256": "0be515cec97cd2ee12da4833d0a680d9b6152e46bb78318442f36716c2fa777a",
+        "claimFileSha256": "227ad785f09e9f9bab580743caa0786174ab8c476f5bd3118e3b3d4705c790fa",
+        "claimSha256": "4fb9547b4cc60bccd4046ecc470c87dcdddb5bf704cee13616b21a1f49ef7b2d",
+        "counts": {
+          "total": 196,
+          "answerControls": 126,
+          "clarificationControls": 42,
+          "abstentionControls": 28,
+          "safetyControls": 28
+        },
+        "overallAccuracy": 0.346939,
+        "qualityGate": "fail",
+        "determinism": {
+          "repeats": 20,
+          "uniqueHashes": 1,
+          "predictionSha256": "b3a2495cd96d6986b72fbc8244e872684cb1b9d61dedffceffcd8b79bd631dc9"
+        },
+        "p95Milliseconds": 9.432667,
+        "holdoutConsumed": true,
+        "noTuningOrRerun": true,
+        "questionPayloadReadByReadinessGenerator": false,
+        "resultPayloadReadByReadinessGenerator": false,
+        "independentHumanValidation": false,
+        "runtimeEligible": false,
+        "releaseEligible": false,
+        "activationAllowed": false,
+        "v3ReleaseDecision": "no_go"
+      },
+      "turkishFullCoverage": {
+        "candidateClaims": 220,
+        "remainingClaims": 178,
+        "turkish_full_coverage_reconciled": true,
+        "workpacks": {
+          "manifestPath": "docs/dna-intelligence/program/evidence/external-science-turkish-full-coverage-workpacks-current.json",
+          "manifestRawBytesSha256": "e1ae073ee36e2a886f009673f94d07ac7c442238f430d000f55136a2cb9dd42d",
+          "manifestSha256": "3edb6e7850eb04eebd2041b92b7e345af96e12bc1295ccd1bf52202c7f93b14a",
+          "indexArtifactSha256": "c690c6cfb9a4b684b136c89e48140f9f92368efe326aa135ac576014590462ad",
+          "counts": {
+            "candidateClaims": 220,
+            "preservedReconciledClaims": 42,
+            "remainingClaims": 178,
+            "passAWorkItems": 178,
+            "passBWorkItems": 178,
+            "topics": 14,
+            "exactUnionClaims": 220,
+            "duplicateClaimsPerPass": 0,
+            "overlapWithPreserved": 0
+          }
+        },
+        "passA": {
+          "manifestPath": "docs/dna-intelligence/program/evidence/external-science-turkish-pass-a-remaining-current.json",
+          "manifestRawBytesSha256": "260a697d224cf971f4156d8d8ed1a2868e576fdb07149cd658a2c890a2391208",
+          "manifestSha256": "cf10095facad3eacc35579d35bb8fc82e011245f5d72ca93e59fd1c05c043a4c",
+          "artifactSha256": "9c439505b32b93bfeec8b709a2e76934f9867e7391e228edd260b7da44688f41",
+          "artifactFileSha256": "7281fa7cc1285567dad66902034f102a304933cacf19a08e9367c837403ed356",
+          "counts": {
+            "records": 178,
+            "complete": 178,
+            "topics": 14,
+            "sources": 14,
+            "passages": 140,
+            "claims": 178,
+            "answerUnits": 178
+          }
+        },
+        "passAAudit": {
+          "manifestPath": "docs/dna-intelligence/program/evidence/external-science-turkish-pass-a-remaining-fidelity-audit-current.json",
+          "manifestRawBytesSha256": "ea557be5979078007f5480d44f8088257327bdf6115025692c99030df24373df",
+          "manifestSha256": "82a66b3ce36f5bf5a894b33a8f524908fd21b2875332ad3732e87ba96c9285e1",
+          "artifactSha256": "ff389ed60232aa0c19e6474c4cb6ee7d457a25b3f279938926ad2f9917b63a20",
+          "artifactFileSha256": "642c142189bd2111245530133d9adce1bc66ab530fab9f299a609f29d0dc2008",
+          "counts": {
+            "records": 178,
+            "terminal": 178,
+            "statusCounts": {
+              "pass": 178,
+              "needs_revision": 0,
+              "quarantine": 0
+            },
+            "reasonCounts": {
+              "source_faithful_no_material_issue": 178
+            },
+            "topics": 14,
+            "sources": 14,
+            "passages": 140,
+            "claims": 178,
+            "answerUnits": 178
+          }
+        },
+        "passB": {
+          "manifestPath": "docs/dna-intelligence/program/evidence/external-science-turkish-pass-b-remaining-current.json",
+          "manifestRawBytesSha256": "3c70d4f4d092e85885e418288cbd748c05f9bc04051f1438b0d3714102df6369",
+          "manifestSha256": "c716db95c106b82426b0acc43c8340f9c0144966c0b9c68e545c31ccb722ef09",
+          "artifactSha256": "ca25e123d6d93a9ae4eb3f27a87f6c0d84aa285b631cb4062c0efe6b14eb194e",
+          "artifactFileSha256": "4fca1e6e809fdaa62c9984bf5b2c64c38ef5429946b4019c26174285154a3630",
+          "counts": {
+            "workItems": 178,
+            "renderings": 178,
+            "fidelityPassed": 178,
+            "uniqueWorkItems": 178,
+            "uniqueClaims": 178,
+            "topics": 14,
+            "sources": 14,
+            "passages": 140,
+            "duplicateWorkItems": 0,
+            "missingWorkItems": 0,
+            "extraWorkItems": 0
+          }
+        },
+        "passBAudit": {
+          "manifestPath": "docs/dna-intelligence/program/evidence/external-science-turkish-pass-b-remaining-fidelity-audit-current.json",
+          "manifestRawBytesSha256": "06f0309a51309d0dea7b315fa103262304fd9460246ec3bd0193b6a449886871",
+          "manifestSha256": "437e8c09c37369c5730ddf93f77dc143d011e7ec433ec82ea748602202afb241",
+          "artifactSha256": "4e403fc3e933cf8a5d7df679937eeb25cb681b13fc1bc40421932deed6003437",
+          "artifactFileSha256": "b16b152e302bdab2f68edf11293feecf981477acc55d34f2db751d713004a84b",
+          "counts": {
+            "records": 178,
+            "terminal": 178,
+            "statusCounts": {
+              "pass": 173,
+              "needs_revision": 5,
+              "quarantine": 0
+            },
+            "reasonCounts": {
+              "ambiguous_or_unnatural_turkish": 3,
+              "source_faithful_no_material_issue": 173,
+              "terminology_mistranslated": 2
+            },
+            "topics": 14,
+            "sources": 14,
+            "passages": 140,
+            "claims": 178,
+            "answerUnits": 178
+          },
+          "needsRevisionBeforeReconciliation": 5
+        },
+        "remainingReconciliation": {
+          "manifestPath": "docs/dna-intelligence/program/evidence/external-science-turkish-remaining-reconciliation-current.json",
+          "manifestRawBytesSha256": "72baf783b44679102c476fe7559402b871cda23a0417a98b32aee9fe4f3f98f2",
+          "manifestSha256": "12a631d76b4630155e78713285dcc9132bb9ad631265d1f1e3355add2f83f370",
+          "artifactSha256": "1ef24b076b757198041e4c7c285edb4154eb096725cc41bac978c9bb1f912c1b",
+          "artifactFileSha256": "f790baa2a7510dced6b94f1d992ae21febed22dae751378fcdbfce2d2bd3e381",
+          "counts": {
+            "claims": 178,
+            "finalized": 178,
+            "quarantined": 0,
+            "records": 178,
+            "sources": 14,
+            "terminal": 178,
+            "topics": 14
+          },
+          "decisionCounts": {
+            "exact_match": 15,
+            "prefer_a": 8,
+            "prefer_b": 29,
+            "quarantine": 0,
+            "reconciled_revision": 1,
+            "semantically_equivalent": 125
+          }
+        },
+        "fullReconciliationCoverage": {
+          "manifestPath": "docs/dna-intelligence/program/evidence/external-science-turkish-full-reconciliation-coverage-current.json",
+          "manifestRawBytesSha256": "cb400382c76f0cc07b5604613e6b6d51f59e1d14ddf64ad2283ba4ab2defb10c",
+          "manifestSha256": "441ad9af267956422b6791d2d89da630144b1afb200cd5ae508bfda81391b057",
+          "coverageSha256": "9c6c36972a6de704f6b84ad7ed2c27085caa052878e873a36da8e27ef1557d00",
+          "coverageFileSha256": "cd75f1a8fe3bd6e11057b9a8ec5daa1f10a2c228aaeb177504f9ebca53f0af83",
+          "counts": {
+            "candidateClaims": 220,
+            "duplicateClaims": 0,
+            "exactUnion": 220,
+            "existingImmutable": 42,
+            "extraClaims": 0,
+            "missingClaims": 0,
+            "newlyReconciled": 178,
+            "quarantined": 0
+          },
+          "exactCandidateCoverage": true
+        },
+        "aggregateManifestsOnly": true,
+        "independentHumanValidation": false,
+        "ownerAuthority": false,
+        "runtimeEligible": false,
+        "releaseEligible": false,
+        "activationAllowed": false
+      },
+      "ownerBookReviewBundle": {
+        "manifestRawBytesSha256": "03b2cdc1c3f2d71f5ca4d1ec85cd2bf46bfc45f0bde68bcfe2db5183522736ba",
+        "workbenchSha256": "5b4de5ebfc8d2618045f196308510bd06fb357cd7f59f42a2b9b014741e79150",
+        "sourcePackageSha256": "1bb0efb50acb6396781eecaa26aca8893da92b7641f0d6c962ea25b5c626b59c",
+        "finalArtifactSha256": "cb25df70e747b57eefcda200ee42f3357424b3f37a7048891a252ca1e966f8d2",
+        "htmlSha256": "c31dd0e20bfb16b2a46e8647a96c7186563c051e85f159d02e2f2dbe0720b07e",
+        "counts": {
+          "chapters": 9,
+          "reviewRows": 114
+        },
+        "ownerApproval": false,
+        "runtimeEligible": false,
+        "releaseEligible": false
+      }
     },
     "publicationPipeline": {
       "acceptedRealPassages": 0,
@@ -382,7 +654,7 @@
         "phases": [
           12
         ],
-        "status": "prebook_workpack_cohort_terminal_registered_sources_preserved"
+        "status": "prebook_workpack_and_historical_source_cohorts_terminal"
       },
       {
         "phases": [
@@ -454,6 +726,7 @@
     "terminalizedPrebookCohort": [
       "full_text_1645_of_1645_terminal",
       "workpacks_24_of_24_terminal",
+      "historical_sources_21_terminal_0_open",
       "blind_claims_746_covered",
       "bounded_external_claims_220_candidate_only",
       "benchmark_2400_draft_unsealed",
@@ -467,7 +740,8 @@
       "canary_and_v3_runtime_promotion"
     ],
     "evaluationAndExternalHuman": [
-      "locked_benchmark_0_of_2400",
+      "official_v3_holdout_consumed_fail_no_tuning_or_rerun",
+      "locked_benchmark_196_of_2400",
       "variation_bank_0_of_10000",
       "phase41_44_release_observations_absent",
       "independent_human_evaluation_not_commissioned",
@@ -482,6 +756,7 @@
       "staged_rollout_authority_absent"
     ],
     "globalRelease": [
+      "official_v3_locked_quality_gate_failed",
       "v3_static_package_empty",
       "v3_release_attestation_absent",
       "v3_release_no_go"
@@ -489,12 +764,117 @@
   },
   "currentEvidence": {
     "path": "docs/dna-intelligence/program/evidence/prebook-readiness-current.json",
-    "schemaVersion": "dna-intelligence-prebook-readiness@8",
-    "generatedAt": "2026-07-22T07:55:35.628Z",
-    "readinessProjectionSha256": "250a703b42cf505b36e99cee60897adc4a4fcf0358e2c1a12d5a204355f89b8f",
+    "schemaVersion": "dna-intelligence-prebook-readiness@11",
+    "generatedAt": "2026-07-27T08:05:43.184Z",
+    "readinessProjectionSha256": "4dd23a2777a63da9a1c7a4f826614beb8d2099608cbcd3640bcd52a4d33db33c",
     "authority": "current_generated_readiness"
   },
   "historicalEvidence": [
+    {
+      "path": "docs/dna-intelligence/program/evidence/external-science-evidence-quality-crosswalk-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-external-science-evidence-quality-crosswalk-manifest@1",
+      "rawBytesSha256": "2d43d00c7906c281bf0ff77d4dd868c06695b8fee29d6f3d879daaa5d3aa6fa5",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/external-science-qa-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-external-science-offline-qa-manifest@1",
+      "rawBytesSha256": "df9c6311f9d488cbc4d61c14f80f52f778d404467b2f622f029e598899a36662",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/external-science-turkish-full-coverage-workpacks-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-external-science-turkish-full-coverage-manifest@1",
+      "rawBytesSha256": "e1ae073ee36e2a886f009673f94d07ac7c442238f430d000f55136a2cb9dd42d",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/external-science-turkish-full-reconciliation-coverage-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-external-science-turkish-full-reconciliation-coverage-manifest@1",
+      "rawBytesSha256": "cb400382c76f0cc07b5604613e6b6d51f59e1d14ddf64ad2283ba4ab2defb10c",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/external-science-turkish-pass-a-remaining-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-external-science-turkish-pass-a-remaining-manifest@1",
+      "rawBytesSha256": "260a697d224cf971f4156d8d8ed1a2868e576fdb07149cd658a2c890a2391208",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/external-science-turkish-pass-a-remaining-fidelity-audit-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-external-science-turkish-independent-fidelity-audit-manifest@1",
+      "rawBytesSha256": "ea557be5979078007f5480d44f8088257327bdf6115025692c99030df24373df",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/external-science-turkish-pass-b-remaining-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-external-science-turkish-pass-b-remaining-manifest@1",
+      "rawBytesSha256": "3c70d4f4d092e85885e418288cbd748c05f9bc04051f1438b0d3714102df6369",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/external-science-turkish-pass-b-remaining-fidelity-audit-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-external-science-turkish-source-fidelity-audit-manifest@1",
+      "rawBytesSha256": "06f0309a51309d0dea7b315fa103262304fd9460246ec3bd0193b6a449886871",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/external-science-turkish-remaining-reconciliation-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-external-science-turkish-remaining-neutral-reconciliation-manifest@1",
+      "rawBytesSha256": "72baf783b44679102c476fe7559402b871cda23a0417a98b32aee9fe4f3f98f2",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/external-science-turkish-rendering-pass-a-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-external-science-turkish-rendering-pass-a-manifest@1",
+      "rawBytesSha256": "c774852b05f9be77fa16d7732dadeffd55dc2dc84e1e81432d10254133bb43b8",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/external-science-turkish-rendering-pass-b-aligned-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-external-science-turkish-rendering-pass-b-aligned-manifest@1",
+      "rawBytesSha256": "777069fa1dd46f1408f1595b7c1a2b10d5f9afeb2d65f4a70cea3bb1b7b8742d",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/external-science-turkish-rendering-pass-b-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-external-science-turkish-rendering-pass-b-manifest@1",
+      "rawBytesSha256": "ceb9f1cc70b1f868ad589192b30cab77802a01eadf5b665078c741b475afe95c",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/local-qwen3-router-pilot-smoke-pre-resource-gate.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-local-qwen3-router-pilot-manifest@1",
+      "rawBytesSha256": "f41d36f4be8a9423930c5783f956458bb5da98dd80a877449fd2b35617f97450",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/open-development-adversarial-router-bank-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna.open-development-adversarial-router-bank-manifest.v1",
+      "rawBytesSha256": "727e51d7a2cbb2e0b01687d7b5d0911ca68ff497c43ae60b32518b200b2169fd",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/owner-book-review-bundle-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-owner-book-review-bundle-manifest@1",
+      "rawBytesSha256": "03b2cdc1c3f2d71f5ca4d1ec85cd2bf46bfc45f0bde68bcfe2db5183522736ba",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
     {
       "path": "docs/dna-intelligence/program/evidence/phase-01-intended-use-gates.json",
       "recordedAt": "2026-07-19T03:09:13+03:00",
@@ -557,8 +937,50 @@
       "schemaVersion": "dna-prebook-v2-production-verification@1",
       "rawBytesSha256": "87fbe52f2e4c23cd76b9a7df8daff14da0ead704b6c34afdda253154113afb00",
       "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/turkish-rendering-neutral-selection-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-external-science-turkish-rendering-neutral-selection-manifest@1",
+      "rawBytesSha256": "f90889e27e0c396b68cb6fc3b9622ade151646dc846b376fc1574007463ceb61",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/turkish-rendering-reconciliation-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-external-science-turkish-rendering-reconciliation-manifest@1",
+      "rawBytesSha256": "b6150cb16684b93e9f555187dcf6c8229085ed7827d25a0cec01d4b9919b4f92",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/turkish-retrieval-adapter-locked-evaluation-v3-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-turkish-retrieval-locked-evaluation-v3-manifest@1",
+      "rawBytesSha256": "4af58a4b4b20f9087b45988526e5fdb3deb5930771adfbca0500bd412de22ca3",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/turkish-retrieval-v3-blind-holdout-manifest.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-turkish-retrieval-v3-blind-holdout-manifest@1",
+      "rawBytesSha256": "5c31d4ead1861f5c9841b3eba82d71dc49f54971b6cff32867ed6a5b24ccffc4",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/turkish-retrieval-v3-preopen-overlap-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna-turkish-retrieval-v3-preopen-overlap-manifest@1",
+      "rawBytesSha256": "2f51918e66b0b4f5aecd167db8023b135629763e2096813fc67d87ae036683fd",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
+    },
+    {
+      "path": "docs/dna-intelligence/program/evidence/turkish-retrieval-v3-source-derived-current.json",
+      "recordedAt": null,
+      "schemaVersion": "dna.turkish-retrieval-v3-source-derived.repo-aggregate.v1",
+      "rawBytesSha256": "200f1b09589adffa2c8f1bd35e421723aa98e964c24bdd2163880d95fd01be1b",
+      "authority": "historical_snapshot_non_authoritative_for_current_counts"
     }
   ],
-  "updatedAt": "2026-07-22T07:55:35.628Z",
-  "readinessProjectionSha256": "250a703b42cf505b36e99cee60897adc4a4fcf0358e2c1a12d5a204355f89b8f"
+  "updatedAt": "2026-07-27T08:05:43.184Z",
+  "readinessProjectionSha256": "4dd23a2777a63da9a1c7a4f826614beb8d2099608cbcd3640bcd52a4d33db33c"
 }

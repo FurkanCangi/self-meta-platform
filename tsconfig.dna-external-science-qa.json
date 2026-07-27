@@ -1,0 +1,21 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp/dna-external-science-qa",
+    "rootDir": ".",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2020",
+    "incremental": false,
+    "isolatedModules": false
+  },
+  "include": [
+    "scripts/run-dna-external-science-qa.ts",
+    "scripts/run-dna-external-science-qa-hardening-tests.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "dna-external-science-turkish-rendering-pass-b-manifest@1",
+  "recordedAt": "2026-07-19T11:51:32.792Z",
+  "version": "dna-external-science-turkish-rendering-pass-b@1",
+  "provenance": "codex_translation_pass_b_not_independent_human_review",
+  "inputHashes": {
+    "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "candidateFileSha256": "45c779a88b668f26b9a79c29715ca8709cb3a52afa07c8d4dbae37bc01ee7b3c",
+    "authoringFileSha256": "e3be521b15a5c5a44269a30deb456c818ce36e7b77df2648d46405722191d9ca",
+    "authoringSha256": "6e4e8fe4b123db29697528c711bd2880789a84437ea20acccf2d07f986d1cf2c"
+  },
+  "output": {
+    "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/turkish-rendering-pass-b/feasibility-v1/rendering-artifact.json",
+    "rawSha256": "6b9c842ae7903c25f9550681f8f282dfa634848dd0d6b18760bf96fd0f66969f",
+    "artifactSha256": "0185f241b17027a13a3ddc722acd638701087d26aed17506e3cab9c5c722f178",
+    "fileMode": "0600"
+  },
+  "counts": {
+    "topics": 14,
+    "renderings": 42,
+    "first": 14,
+    "middle": 14,
+    "last": 14,
+    "fidelityPassed": 42
+  },
+  "distributions": {
+    "ageScope": {
+      "adult": 3,
+      "mixed": 18,
+      "not_applicable": 12,
+      "pediatric": 9
+    },
+    "evidenceLevel": {
+      "not_assessed": 42
+    },
+    "causalStatus": {
+      "associational": 4,
+      "descriptive": 38
+    },
+    "publicationStatus": {
+      "bounded_candidate_not_published": 42
+    }
+  },
+  "acceptance": {
+    "deterministicSelection": true,
+    "exactTopicCoverage": true,
+    "exactRenderingCoverage": true,
+    "fidelityGate": "pass",
+    "textLeakGate": "pass",
+    "candidateOnly": true
+  },
+  "boundaries": {
+    "independentHumanReview": false,
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "activationAllowed": false,
+    "adapterAuthority": false,
+    "ownerBookAuthority": false,
+    "runtimeAuthority": "none",
+    "releaseAuthority": "none",
+    "v3ReleaseDecision": "no_go_unchanged"
+  }
+}

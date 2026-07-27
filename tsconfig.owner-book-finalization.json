@@ -1,0 +1,25 @@
+{
+  "extends": "./tsconfig.report-runner.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp/dna-owner-book-finalization",
+    "rootDir": ".",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2022",
+    "incremental": false,
+    "isolatedModules": false
+  },
+  "include": [
+    "scripts/dna-owner-book-finalization-workbench.ts",
+    "scripts/dna-owner-book-review-bundle.ts",
+    "scripts/dna-secure-artifact.ts",
+    "scripts/run-dna-owner-book-finalization-workbench-tests.ts",
+    "src/lib/dna/chat/governance/bookLock.ts",
+    "src/lib/dna/chat/knowledgeAuthority.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
+}

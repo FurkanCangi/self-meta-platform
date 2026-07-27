@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "dna-turkish-retrieval-v2-frozen-manifest@1",
+  "recordedAt": "2026-07-19T11:51:32.792Z",
+  "version": "turkish-retrieval-v2",
+  "adapter": {
+    "researchSsdRelativePath": "Datasets/DNA-Intelligence/evaluation/frozen-adapters/turkish-retrieval-v2/adapter.json",
+    "adapterSha256": "abfe1496240c7297ebc82b8b78d7782136e14a8437a7ee4dfa36a1f6a0f4797b",
+    "adapterFileSha256": "78c519b0083f6db9620af0b3b4c1d1c4fad096c4930f75296851e2b9a5f8cc24",
+    "fileMode": "0600",
+    "topics": 14,
+    "trainingQuestions": 428,
+    "familyHoldoutQuestions": 280,
+    "tuningQuestionIdsSha256": "92b43abda5e761670e8c2a6380aa7042b59d6e02004b583cc24d3fa15109a37b",
+    "familyHoldoutQuestionIdsSha256": "b204fbf312a375762aecffaf85290e8ec9d8069ca7843a4de81d3bb678c9c1d1",
+    "tuningAllowlistSha256": "c25887749841488d712d517bfe8922070fb0a44c05ce41df2819c4d8ab0334a2",
+    "evaluatorCodeSha256": "490e50d1ab14eca2c219d60e4827238e63766a487d3b0f8036a5ace7fba6f33a",
+    "compilerCodeSha256": "4b0c3d53b13bb40ec37a4e943ccd23dfd3c10d1ec898492cae57472cc7735d4a",
+    "configFileSha256": "067d5fc3acac6ccc0e17e0e461e3f9cb8963a4ffdb7738e6ecea5d2c1d516810",
+    "developmentBankSha256": "aea4ca29d609e5f0fb295978c620a0aa2d62bc75300c57fa7ef352977b784b3c",
+    "developmentBankFileSha256": "72093efba0cacd9abe770592536517c381ce3615d48266d357211dc3a5864d00"
+  },
+  "developmentGate": {
+    "status": "pass",
+    "questions": 708,
+    "correct": 708,
+    "incorrect": 0,
+    "familyHoldout": {
+      "natural": {
+        "total": 112,
+        "correct": 112,
+        "accuracy": 1
+      },
+      "hardNeighbor": {
+        "total": 56,
+        "correct": 56,
+        "accuracy": 1
+      },
+      "ambiguous": {
+        "total": 28,
+        "correct": 28,
+        "accuracy": 1
+      },
+      "unsupported": {
+        "total": 28,
+        "correct": 28,
+        "accuracy": 1
+      },
+      "safeTheory": {
+        "total": 56,
+        "correct": 56,
+        "accuracy": 1
+      }
+    },
+    "metamorphic": {
+      "groups": 252,
+      "passing": 252,
+      "accuracy": 1
+    },
+    "p95Milliseconds": 0.431125,
+    "deterministicRepeats": 20,
+    "uniqueAdapterHashes": 1,
+    "uniqueResultHashes": 1
+  },
+  "boundaries": {
+    "developmentOnly": true,
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "activationAllowed": false,
+    "ownerBookAuthority": false,
+    "lockedHoldoutAccessed": false,
+    "officialEvaluationAuthority": false
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "dna-internal-locked-turkish-holdout-manifest@2",
+  "label": "internal_validation_v2",
+  "artifact": {
+    "researchSsdRelativePath": "Datasets/DNA-Intelligence/evaluation/internal-locked-turkish-holdout/v2/questions-and-answers.json",
+    "sha256": "2100c7f84c479a0feff22a9342d9900b015b43438084acca03010c39b058dceb",
+    "byteCount": 228715
+  },
+  "counts": {
+    "total": 196,
+    "topics": 14,
+    "answerable": 140,
+    "clarification": 28,
+    "unsupported": 28
+  },
+  "splits": {
+    "natural_supported": 98,
+    "hard_neighbor": 28,
+    "ambiguous": 28,
+    "unsupported": 28,
+    "safe_theory_control": 14
+  },
+  "authorities": {
+    "candidatePackageResearchSsdRelativePath": "Datasets/DNA-Intelligence/work/v3/prebook-closure/v1/external-science-candidate-package.json",
+    "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "developmentLedgerResearchSsdRelativePath": null,
+    "developmentLedgerSha256": null,
+    "prebookDraftResearchSsdRelativePath": null,
+    "prebookDraftSha256": null
+  },
+  "validation": {
+    "artifactMode": "0600",
+    "atomicWriteFsyncRenameReadback": true,
+    "deterministicRepeats": 20,
+    "uniqueGenerationHashes": 196,
+    "exactOverlap": null,
+    "normalizedOverlap": null,
+    "nearDuplicateOverlap": null,
+    "semanticFamilyOverlap": null,
+    "tamperFailClosed": true,
+    "hashTamperFailClosed": true,
+    "byteTamperFailClosed": true,
+    "modeTamperFailClosed": true,
+    "leafSymlinkFailClosed": true,
+    "parentSymlinkEscapeFailClosed": true,
+    "manifestDriftFailClosed": true,
+    "ssdFallbackAllowed": false
+  },
+  "privacyBoundary": {
+    "visibleToAdapterTuning": false,
+    "fullPayloadStoredOnlyOnResearchSsd": true,
+    "fullQuestionAnswerPayloadInRepository": false,
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "independentHumanValidation": false
+  }
+}

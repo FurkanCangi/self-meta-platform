@@ -1,7 +1,7 @@
 "use client"
 
 import { Flag, LoaderCircle, MessageSquareWarning, X } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react"
 
 import {
   DNA_CHAT_ISSUE_CATEGORY_LABELS_TR,
@@ -38,7 +38,46 @@ export default function DnaIssueFeedback({
   const [open, setOpen] = useState(false)
   const [sending, setSending] = useState<DnaChatIssueCategory | null>(null)
   const [status, setStatus] = useState<"idle" | "saved" | "error">("idle")
+  const triggerRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const closeButtonRef = useRef<HTMLButtonElement>(null)
+  const dialogId = useId()
+  const dialogTitleId = useId()
   const categories = scope === "source" ? SOURCE_CATEGORIES : ANSWER_CATEGORIES
+
+  useEffect(() => {
+    if (!open) return
+    const frame = requestAnimationFrame(() => closeButtonRef.current?.focus())
+    return () => cancelAnimationFrame(frame)
+  }, [open])
+
+  function closeDialog() {
+    setOpen(false)
+    requestAnimationFrame(() => triggerRef.current?.focus())
+  }
+
+  function handleDialogKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key === "Escape") {
+      event.preventDefault()
+      closeDialog()
+      return
+    }
+    if (event.key !== "Tab") return
+
+    const focusable = Array.from(
+      dialogRef.current?.querySelectorAll<HTMLElement>("button:not([disabled])") || [],
+    )
+    if (focusable.length === 0) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault()
+      last.focus()
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault()
+      first.focus()
+    }
+  }
 
   async function submit(category: DnaChatIssueCategory) {
     setSending(category)
@@ -59,7 +98,7 @@ export default function DnaIssueFeedback({
       })
       if (!response.ok) throw new Error("feedback_not_saved")
       setStatus("saved")
-      setOpen(false)
+      closeDialog()
     } catch {
       setStatus("error")
     } finally {
@@ -73,13 +112,17 @@ export default function DnaIssueFeedback({
   return (
     <div className="relative">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => {
-          setOpen((value) => !value)
+          if (open) closeDialog()
+          else setOpen(true)
           setStatus("idle")
         }}
         className="inline-flex min-h-11 items-center gap-1.5 rounded-xl px-3 text-[11px] font-black text-[var(--sm-text-muted)] hover:bg-[var(--sm-surface-soft)] hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
         aria-expanded={open}
+        aria-haspopup="dialog"
+        aria-controls={dialogId}
         aria-label={scope === "source" && sourceIndex
           ? `Kaynak ${sourceIndex} için kategorik hata bildir`
           : label}
@@ -89,20 +132,24 @@ export default function DnaIssueFeedback({
 
       {open ? (
         <div
+          ref={dialogRef}
+          id={dialogId}
           className="absolute bottom-full right-0 z-30 mb-2 w-[min(20rem,calc(100vw-2rem))] rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface)] p-3 shadow-xl"
           role="dialog"
-          aria-label="Sorun kategorisi seçin"
+          aria-labelledby={dialogTitleId}
+          onKeyDown={handleDialogKeyDown}
         >
           <div className="flex items-start justify-between gap-2">
             <div>
-              <p className="text-xs font-black text-[var(--sm-text)]">Sorun kategorisi</p>
+              <p id={dialogTitleId} className="text-xs font-black text-[var(--sm-text)]">Sorun kategorisi</p>
               <p className="mt-1 text-[10px] font-semibold leading-4 text-[var(--sm-text-muted)]">
                 Soru, cevap, rapor veya danışan metni gönderilmez. Bildirim otomatik eğitim verisi olmaz.
               </p>
             </div>
             <button
+              ref={closeButtonRef}
               type="button"
-              onClick={() => setOpen(false)}
+              onClick={closeDialog}
               className="inline-flex size-11 shrink-0 items-center justify-center rounded-xl text-[var(--sm-text-muted)] hover:bg-[var(--sm-surface-soft)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
               aria-label="Bildirim menüsünü kapat"
             >

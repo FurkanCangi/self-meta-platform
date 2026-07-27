@@ -12,6 +12,10 @@ import {
   type DnaChatApiAuditInput,
 } from "@/lib/dna/chat"
 import { evaluateDnaChatOperationalEnvironment } from "@/lib/dna/chat/operations/incidentResponse"
+import {
+  createDnaChatRequestTimer,
+  shouldLogDnaChatRequestTiming,
+} from "@/lib/dna/chat/operations/requestTiming"
 import { resolveOwnedDnaCaseAnswer } from "@/lib/dna/chat/ownedCaseAnswer"
 import {
   getCommittedDnaChatRuntimeStatus,
@@ -22,9 +26,6 @@ export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
 
 const MAX_BODY_BYTES = 8 * 1024
-const CLIENT_PAGE_SIZE = 500
-const ASSESSMENT_PAGE_SIZE = 1_000
-const OWNERSHIP_QUERY_CHUNK = 100
 const NO_STORE_HEADERS = {
   "Cache-Control": "private, no-store, max-age=0, must-revalidate",
   Pragma: "no-cache",
@@ -46,23 +47,22 @@ const dnaChatPostSchema = z
   })
   .strict()
 
-type JsonRecord = Record<string, unknown>
 type ReportRow = {
   id: string
-  assessment_id: string | null
   version: number | null
   created_at: string | null
-  snapshot_json: unknown
-}
-
-type AssessmentRow = {
-  id: string
-  client_id: string | null
-}
-
-type ClientRow = {
-  id: string
-  child_code: string | null
+  age_band: string | null
+  age_band_camel: string | null
+  age_months: string | null
+  age_months_camel: string | null
+  assessment:
+    | {
+        client: { child_code: string | null } | Array<{ child_code: string | null }> | null
+      }
+    | Array<{
+        client: { child_code: string | null } | Array<{ child_code: string | null }> | null
+      }>
+    | null
 }
 
 function noStore<T extends Response>(response: T): T {
@@ -136,10 +136,6 @@ async function readPayload(request: Request) {
   return { ok: true as const, data: parsed.data }
 }
 
-function asRecord(value: unknown): JsonRecord {
-  return value && typeof value === "object" && !Array.isArray(value) ? (value as JsonRecord) : {}
-}
-
 function finiteNumber(value: unknown): number | null {
   if (value === null || value === undefined || value === "") return null
   const number = Number(value)
@@ -151,12 +147,11 @@ function stringValue(value: unknown): string | null {
   return string || null
 }
 
-function ageBandFromSnapshot(snapshotValue: unknown): string | null {
-  const snapshot = asRecord(snapshotValue)
-  const direct = stringValue(snapshot.age_band) || stringValue(snapshot.ageBand)
+function ageBandFromReport(report: ReportRow): string | null {
+  const direct = stringValue(report.age_band) || stringValue(report.age_band_camel)
   if (direct) return direct
 
-  const months = finiteNumber(snapshot.age_months ?? snapshot.ageMonths)
+  const months = finiteNumber(report.age_months) ?? finiteNumber(report.age_months_camel)
   if (months === null) return null
   if (months >= 24 && months <= 35) return "24-35 ay"
   if (months >= 36 && months <= 47) return "36-47 ay"
@@ -179,97 +174,57 @@ async function enforceQuestionRateLimits(userId: string) {
     }),
   ])
 
+  if (!burst.backendAvailable || !hourly.backendAvailable) {
+    return { ok: false as const, backendAvailable: false as const }
+  }
   if (!burst.ok || !hourly.ok) {
     return {
       ok: false as const,
+      backendAvailable: true as const,
       resetAt: Math.max(!burst.ok ? burst.resetAt : 0, !hourly.ok ? hourly.resetAt : 0),
     }
   }
 
-  return { ok: true as const }
+  return { ok: true as const, backendAvailable: true as const }
 }
 
 async function listOwnReports(userId: string) {
   const supabase = await createSupabaseServerClient()
-  const clients: ClientRow[] = []
-  for (let offset = 0; ; offset += CLIENT_PAGE_SIZE) {
-    const { data, error } = await supabase
-      .from("clients")
-      .select("id, child_code")
-      .eq("owner_id", userId)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: true })
-      .range(offset, offset + CLIENT_PAGE_SIZE - 1)
+  const { data, error } = await supabase
+    .from("reports")
+    .select(`
+      id,
+      version,
+      created_at,
+      age_band:snapshot_json->>age_band,
+      age_band_camel:snapshot_json->>ageBand,
+      age_months:snapshot_json->>age_months,
+      age_months_camel:snapshot_json->>ageMonths,
+      assessment:assessments_v2!reports_assessment_id_fkey!inner(
+        client:clients!assessments_v2_client_id_fkey!inner(child_code)
+      )
+    `)
+    .eq("assessment.client.owner_id", userId)
+    .is("assessment.deleted_at", null)
+    .is("assessment.client.deleted_at", null)
+    .not("report_text", "is", null)
+    .order("created_at", { ascending: false })
+    .order("id", { ascending: false })
+    .limit(10)
 
-    if (error) return { ok: false as const }
-    const page = (data || []) as ClientRow[]
-    clients.push(...page.filter((row) => row.id))
-    if (page.length < CLIENT_PAGE_SIZE) break
-  }
-
-  if (clients.length === 0) return { ok: true as const, reports: [] }
-
-  const assessments: AssessmentRow[] = []
-  const clientIds = clients.map((row) => row.id)
-  for (let chunkStart = 0; chunkStart < clientIds.length; chunkStart += OWNERSHIP_QUERY_CHUNK) {
-    const clientChunk = clientIds.slice(chunkStart, chunkStart + OWNERSHIP_QUERY_CHUNK)
-    for (let offset = 0; ; offset += ASSESSMENT_PAGE_SIZE) {
-      const { data, error } = await supabase
-        .from("assessments_v2")
-        .select("id, client_id")
-        .in("client_id", clientChunk)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false })
-        .order("id", { ascending: true })
-        .range(offset, offset + ASSESSMENT_PAGE_SIZE - 1)
-
-      if (error) return { ok: false as const }
-      const page = (data || []) as AssessmentRow[]
-      assessments.push(...page.filter((row) => row.id && row.client_id))
-      if (page.length < ASSESSMENT_PAGE_SIZE) break
-    }
-  }
-
-  if (assessments.length === 0) return { ok: true as const, reports: [] }
-
-  const reportCandidates: ReportRow[] = []
-  const assessmentIds = assessments.map((row) => row.id)
-  for (let chunkStart = 0; chunkStart < assessmentIds.length; chunkStart += OWNERSHIP_QUERY_CHUNK) {
-    const assessmentChunk = assessmentIds.slice(chunkStart, chunkStart + OWNERSHIP_QUERY_CHUNK)
-    const { data, error } = await supabase
-      .from("reports")
-      .select("id, assessment_id, version, created_at, snapshot_json")
-      .in("assessment_id", assessmentChunk)
-      .not("report_text", "is", null)
-      .order("created_at", { ascending: false })
-      .order("id", { ascending: false })
-      .limit(10)
-
-    if (error) return { ok: false as const }
-    reportCandidates.push(...(((data || []) as ReportRow[]).filter((row) => row.id && row.assessment_id)))
-  }
-
-  const assessmentsById = new Map(assessments.map((row) => [row.id, row]))
-  const clientsById = new Map(clients.map((row) => [row.id, row]))
-  const newestReports = reportCandidates
-    .sort((left, right) => {
-      const dateDifference = Date.parse(right.created_at || "") - Date.parse(left.created_at || "")
-      if (Number.isFinite(dateDifference) && dateDifference !== 0) return dateDifference
-      return right.id.localeCompare(left.id)
-    })
-    .slice(0, 10)
+  if (error) return { ok: false as const }
+  const newestReports = ((data || []) as unknown as ReportRow[])
     .flatMap((report) => {
-      const assessment = assessmentsById.get(String(report.assessment_id || ""))
-      const client = assessment?.client_id ? clientsById.get(assessment.client_id) : null
-      if (!assessment || !client) return []
+      const assessment = Array.isArray(report.assessment) ? report.assessment[0] : report.assessment
+      const client = Array.isArray(assessment?.client) ? assessment.client[0] : assessment?.client
+      if (!report.id || !client) return []
       return [
         {
           id: report.id,
           clientCode: String(client.child_code || ""),
           createdAt: report.created_at || null,
           version: finiteNumber(report.version),
-          ageBand: ageBandFromSnapshot(report.snapshot_json),
+          ageBand: ageBandFromReport(report),
         },
       ]
     })
@@ -311,6 +266,7 @@ export async function GET() {
       limit: 120,
       windowMs: 60 * 60 * 1_000,
     })
+    if (!limit.backendAvailable) return errorResponse("dna_chat_unavailable", 503)
     if (!limit.ok) return tooManyRequestsResponse(limit.resetAt)
 
     const result = await listOwnReports(auth.user.id)
@@ -324,30 +280,41 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const timing = createDnaChatRequestTimer()
+  const finish = <T extends Response>(response: T, requestId?: string | null): T => {
+    const record = timing.complete({ status: response.status, requestId })
+    if (shouldLogDnaChatRequestTiming(record)) {
+      console.info("[dna-chat] request timing", JSON.stringify(record))
+    }
+    return response
+  }
+
   try {
-    if (!operationalAvailability("dna-chat").allowed) {
-      return errorResponse("dna_chat_unavailable", 503)
+    const availability = await timing.measure("operational_gate", () => operationalAvailability("dna-chat"))
+    if (!availability.allowed) {
+      return finish(errorResponse("dna_chat_unavailable", 503))
     }
     // Reject an explicitly oversized body before authentication or rate-limit
     // work. Streaming requests without Content-Length are still bounded by
     // readDnaChatRequestBody below.
     if (hasDeclaredOversizeBody(request)) {
-      return errorResponse("payload_too_large", 413)
+      return finish(errorResponse("payload_too_large", 413))
     }
 
-    const trusted = await requireTrustedMutation(request)
-    if (trusted) return errorResponse("unauthorized", 401)
+    const trusted = await timing.measure("trusted_mutation", () => requireTrustedMutation(request))
+    if (trusted) return finish(errorResponse("unauthorized", 401))
 
-    const auth = await requireConfirmedUser()
-    if (!auth.ok) return normalizeAuthFailure(auth.response)
+    const auth = await timing.measure("authentication", () => requireConfirmedUser())
+    if (!auth.ok) return finish(await normalizeAuthFailure(auth.response))
 
-    const limit = await enforceQuestionRateLimits(auth.user.id)
-    if (!limit.ok) return tooManyRequestsResponse(limit.resetAt)
+    const limit = await timing.measure("rate_limit", () => enforceQuestionRateLimits(auth.user.id))
+    if (!limit.backendAvailable) return finish(errorResponse("dna_chat_unavailable", 503))
+    if (!limit.ok) return finish(tooManyRequestsResponse(limit.resetAt))
 
-    const parsed = await readPayload(request)
-    if (!parsed.ok) return parsed.response
+    const parsed = await timing.measure("payload", () => readPayload(request))
+    if (!parsed.ok) return finish(parsed.response)
     const payload = parsed.data
-    const resolution = await resolveDnaChatApiRequest(payload, {
+    const resolution = await timing.measure("runtime_resolution", () => resolveDnaChatApiRequest(payload, {
       createRequestId: () => crypto.randomUUID(),
       // The authenticated owner ID is used only as the deterministic rollout
       // bucket input. It is never exposed in the answer or audit metadata.
@@ -356,26 +323,30 @@ export async function POST(request: Request) {
         rolloutSubjectKey: auth.user.id,
       }),
       loadCaseAnswer: async ({ reportId, question, mode, previousTopic, responseDepth }) => {
-        const recentReports = await listOwnReports(auth.user.id)
+        const recentReports = await timing.measure("report_list", () => listOwnReports(auth.user.id))
         if (!recentReports.ok) return { ok: false, status: 500, error: "dna_chat_failed" }
         if (!recentReports.reports.some((report) => report.id === reportId)) {
           return { ok: false, status: 404, error: "report_not_found" }
         }
-        return resolveOwnedDnaCaseAnswer({
+        return timing.measure("case_answer", () => resolveOwnedDnaCaseAnswer({
           userId: auth.user.id,
           reportId,
           question,
           mode,
           previousTopic,
           responseDepth,
-        })
+        }))
       },
-      writeAudit: (auditInput) => writeDnaChatAudit({ userId: auth.user.id, ...auditInput }),
-    })
+      writeAudit: (auditInput) => timing.measure(
+        "audit_write",
+        () => writeDnaChatAudit({ userId: auth.user.id, ...auditInput }),
+      ),
+    }))
 
-    return json(resolution.body, { status: resolution.status })
+    const requestId = typeof resolution.body.requestId === "string" ? resolution.body.requestId : null
+    return finish(json(resolution.body, { status: resolution.status }), requestId)
   } catch (error) {
     console.error("[dna-chat] request failed", error instanceof Error ? error.message : "unknown")
-    return errorResponse("dna_chat_failed", 500)
+    return finish(errorResponse("dna_chat_failed", 500))
   }
 }

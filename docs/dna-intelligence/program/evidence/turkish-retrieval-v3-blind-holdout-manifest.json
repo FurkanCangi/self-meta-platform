@@ -1,0 +1,62 @@
+{
+  "activationAllowed": false,
+  "authorityClass": "external_science_candidate_only",
+  "counts": {
+    "byCategory": {
+      "ambiguous": 42,
+      "hard_neighbor": 42,
+      "natural_supported": 56,
+      "safe_theory_control": 28,
+      "unsupported": 28
+    },
+    "byDisposition": {
+      "abstain": 28,
+      "answer": 126,
+      "clarify": 42
+    },
+    "byIntent": {
+      "age_development": 28,
+      "comparison": 28,
+      "definition": 28,
+      "evidence": 28,
+      "measurement": 28,
+      "misconception": 28,
+      "relationship": 28
+    },
+    "perAuthorityTopic": {
+      "external.autonomic_testing": 14,
+      "external.circadian_light": 14,
+      "external.executive_function_development": 14,
+      "external.hrv_biofeedback_methods": 14,
+      "external.hrv_context": 14,
+      "external.hrv_measurement": 14,
+      "external.insula_interoception": 14,
+      "external.measurement_cosmin": 14,
+      "external.parent_emotion_regulation": 14,
+      "external.pfc_cognitive_control": 14,
+      "external.polyvagal_theory": 14,
+      "external.prisma_cosmin_reporting": 14,
+      "external.selfreg_measurement": 14,
+      "external.sleep_emotional_reactivity": 14
+    },
+    "topics": 14,
+    "total": 196
+  },
+  "evaluationId": "turkish-retrieval-v3-source-derived-blind-holdout-v3",
+  "hashes": {
+    "authoredPayloadSha256": "41fb1e724bb4bc72df2bebf76ff144d98539e4799847ddb87086828b68151522",
+    "candidatePackageFileSha256": "45c779a88b668f26b9a79c29715ca8709cb3a52afa07c8d4dbae37bc01ee7b3c",
+    "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "sealedFileSha256": "a7322f7b76453cb0cda2d0bd2d82265bd32238aa7c66e160aa0d8fa3e17369d3",
+    "sealedPayloadSha256": "7a2744994ee4759a04ac156c2bea554279317632b0d7f56614bd93826cca3bee"
+  },
+  "independentHumanValidation": false,
+  "manifestPayloadSha256": "50f603c96e705e2a9c6eb3f1d4721ab3afdd3a95b50a7cbb52f0cb099024e671",
+  "officialRunPerformed": false,
+  "rawPayloadInRepo": false,
+  "releaseEligible": false,
+  "runtimeEligible": false,
+  "schemaVersion": "dna-turkish-retrieval-v3-blind-holdout-manifest@1",
+  "scoringPerformed": false,
+  "storage": "researchssd_only_0600"
+}

@@ -1,0 +1,32 @@
+{
+  "activationAllowed": false,
+  "activationBlockers": [
+    "owner_action_missing",
+    "claim_review_missing",
+    "owner_approval_registry_empty",
+    "official_benchmark_not_sealed",
+    "runtime_integration_forbidden"
+  ],
+  "answerEligible": false,
+  "bookId": "dna.owner.book",
+  "bookVersion": "dna-owner-book-candidate@1bb0efb50acb6396",
+  "chapterCount": 9,
+  "claimReviewSlotCount": 114,
+  "claimTextIncluded": false,
+  "finalArtifactByteLength": 550321,
+  "finalArtifactSha256": "cb25df70e747b57eefcda200ee42f3357424b3f37a7048891a252ca1e966f8d2",
+  "fullArtifactStoredOnlyOnResearchSsd": true,
+  "outputRelativePath": "Outputs/SelfMetaAI/dna-intelligence/owner-book-finalization-workbench/5b4de5ebfc8d2618045f196308510bd06fb357cd7f59f42a2b9b014741e79150",
+  "ownerApproval": false,
+  "ownerDeclarationStatus": "pending_owner_action",
+  "passageCount": 114,
+  "pendingClaimReviewSlotCount": 114,
+  "rawTextStoredInRepository": false,
+  "releaseEligible": false,
+  "runtimeEligible": false,
+  "schemaVersion": "dna-owner-book-finalization-repo-manifest@1",
+  "sourcePackageSha256": "1bb0efb50acb6396781eecaa26aca8893da92b7641f0d6c962ea25b5c626b59c",
+  "status": "candidate_only_pending_owner_action",
+  "workbenchSha256": "5b4de5ebfc8d2618045f196308510bd06fb357cd7f59f42a2b9b014741e79150",
+  "workbenchVersion": "dna-owner-book-finalization-workbench@1"
+}

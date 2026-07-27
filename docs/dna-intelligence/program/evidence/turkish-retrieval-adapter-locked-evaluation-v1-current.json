@@ -1,0 +1,152 @@
+{
+  "schemaVersion": "dna-turkish-retrieval-locked-evaluation-manifest@1",
+  "recordedAt": "2026-07-24T09:19:09.211Z",
+  "evaluationClass": "internal_locked_holdout_not_independent_human_validation",
+  "runId": "locked-eval:b075ae8a0f85cea91cc5e3933ac5717c",
+  "adapterSha256": "8692046a84f061e63173de896d7496bcda02804161468dcb826ce9f7e7399257",
+  "developmentManifestSha256": "fbf59784fa34dc53a0ad3e2bce7297dfb9bfc31ed5134cda4bab2fc44aa596bc",
+  "holdoutSha256": "340f021cd3418054f31a6b7f2d4657a16cf2e7485242369fb9d75c8dc9149c45",
+  "evaluationCodeSha256": "b821aaf5bd49e0d04b361bc7a1778ed1c92a0e12d3c025cfe9e63cb7ea626882",
+  "result": {
+    "researchSsdRelativePath": "Datasets/DNA-Intelligence/evaluation/internal-locked-turkish-holdout/v1/official-first-run-result.json",
+    "fileSha256": "f7d2747e51b0bb2e8a1cf82c1ac66bb4cfc2538515909d7e34fc481971f1c6b2",
+    "resultSha256": "a65ed0035e4d00cbbe52365485b38d0ded53e702fb3b61bff6c9fca050f890d5",
+    "fileMode": "0600"
+  },
+  "claim": {
+    "researchSsdRelativePath": "Datasets/DNA-Intelligence/evaluation/internal-locked-turkish-holdout/v1/official-first-run.claim.json",
+    "fileSha256": "6d7bb00531afe561302209ae4755e18ccc771ba92c4f77ea328ada1549d31648",
+    "claimSha256": "6cda67f59519190504e0dbc0fc83dc5ffca31a41a9c5db2ff18987ff6d202992",
+    "fileMode": "0600",
+    "noRerun": true
+  },
+  "counts": {
+    "total": 126,
+    "answerable": 98,
+    "abstentionControls": 28,
+    "safetyControls": 14
+  },
+  "metrics": {
+    "overallAccuracy": 0.373016,
+    "naturalSupportedAccuracy": 0.271429,
+    "hardNeighborAccuracy": 0.357143,
+    "ambiguousAccuracy": 0,
+    "unsupportedAccuracy": 1,
+    "safeTheoryControlAccuracy": 0.642857,
+    "abstentionAccuracy": 0.5,
+    "safetyNonRefusalAccuracy": 1,
+    "safeTheoryRoutingAccuracy": 0.642857,
+    "topicAccuracy": [
+      {
+        "topicId": "external.autonomic_testing",
+        "count": 7,
+        "accuracy": 0.571429
+      },
+      {
+        "topicId": "external.circadian_light",
+        "count": 7,
+        "accuracy": 0.142857
+      },
+      {
+        "topicId": "external.executive_function_development",
+        "count": 7,
+        "accuracy": 0.285714
+      },
+      {
+        "topicId": "external.hrv_biofeedback_methods",
+        "count": 7,
+        "accuracy": 0.714286
+      },
+      {
+        "topicId": "external.hrv_context",
+        "count": 7,
+        "accuracy": 0.142857
+      },
+      {
+        "topicId": "external.hrv_measurement",
+        "count": 7,
+        "accuracy": 0
+      },
+      {
+        "topicId": "external.insula_interoception",
+        "count": 7,
+        "accuracy": 0.142857
+      },
+      {
+        "topicId": "external.measurement_cosmin",
+        "count": 7,
+        "accuracy": 0
+      },
+      {
+        "topicId": "external.parent_emotion_regulation",
+        "count": 7,
+        "accuracy": 0.428571
+      },
+      {
+        "topicId": "external.pfc_cognitive_control",
+        "count": 7,
+        "accuracy": 0.857143
+      },
+      {
+        "topicId": "external.polyvagal_theory",
+        "count": 7,
+        "accuracy": 0.571429
+      },
+      {
+        "topicId": "external.prisma_cosmin_reporting",
+        "count": 7,
+        "accuracy": 0.285714
+      },
+      {
+        "topicId": "external.selfreg_measurement",
+        "count": 7,
+        "accuracy": 0
+      },
+      {
+        "topicId": "external.sleep_emotional_reactivity",
+        "count": 7,
+        "accuracy": 0.571429
+      }
+    ],
+    "determinism": {
+      "repeats": 20,
+      "uniqueHashes": 1,
+      "predictionSha256": "2040ae5f87e11337d91aae4b7675234dc9a479cf0ae26f9542ed0d51a10e2f22"
+    },
+    "p95Ms": 1.364792
+  },
+  "qualityGate": {
+    "targets": {
+      "overallAccuracy": 0.95,
+      "naturalSupportedAccuracy": 0.95,
+      "hardNeighborAccuracy": 0.95,
+      "ambiguousAccuracy": 0.95,
+      "unsupportedAccuracy": 1,
+      "safeTheoryRoutingAccuracy": 0.95,
+      "safetyNonRefusalAccuracy": 0.98,
+      "p95MillisecondsMaximum": 25
+    },
+    "checks": {
+      "overallAccuracy": false,
+      "naturalSupportedAccuracy": false,
+      "hardNeighborAccuracy": false,
+      "ambiguousAccuracy": false,
+      "unsupportedAccuracy": true,
+      "safeTheoryRoutingAccuracy": false,
+      "safetyNonRefusalAccuracy": true,
+      "determinism": true,
+      "performance": true
+    },
+    "status": "fail"
+  },
+  "boundaries": {
+    "questionPayloadReadByVerifier": false,
+    "questionPayloadStoredInRepository": false,
+    "aggregateOnly": true,
+    "independentHumanValidation": false,
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "v3ReleaseDecision": "no_go_unchanged"
+  },
+  "manifestSha256": "86d5675f51be75621afe2829c41546c80a514611d97a8cf7577482d1b1c2bb3a"
+}

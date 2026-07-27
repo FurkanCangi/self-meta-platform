@@ -49,6 +49,9 @@ export async function POST(request: Request) {
     limit: 30,
     windowMs: 60 * 60 * 1_000,
   })
+  if (!limit.backendAvailable) {
+    return json({ ok: false, error: "feedback_unavailable" }, { status: 503 })
+  }
   if (!limit.ok) {
     const retryAfter = Math.max(1, Math.ceil((limit.resetAt - Date.now()) / 1_000))
     const response = json({ ok: false, error: "too_many_requests" }, { status: 429 })

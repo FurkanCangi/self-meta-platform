@@ -1,0 +1,105 @@
+{
+  "schemaVersion": "dna-turkish-retrieval-adapter-development-manifest@1",
+  "recordedAt": "2026-07-24T09:00:00.000Z",
+  "adapter": {
+    "researchSsdRelativePath": "Datasets/DNA-Intelligence/evaluation/frozen-adapters/turkish-retrieval-v1/adapter.json",
+    "adapterSha256": "8692046a84f061e63173de896d7496bcda02804161468dcb826ce9f7e7399257",
+    "fileSha256": "18f4ea9884b60ab2b5e24815f976075a57eada83fcece116a1ab86d0b1bb5e4f",
+    "evaluatorModule": "scripts/generated/dna-retrieval-evaluators/turkish-development-v1.mjs",
+    "codeSha256": "5d97dcb6b21b3b3c46173393a50d3430447f5e1b2d341a1f66a242de74963186",
+    "configSha256": "81da581fb1818fe968846f982837c3c144155dd60f3c976e159667d047480e51",
+    "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "candidateFileSha256": "45c779a88b668f26b9a79c29715ca8709cb3a52afa07c8d4dbae37bc01ee7b3c",
+    "developmentQaEvaluationSha256": "c2ca39b2489e491c5cfa3535e0a56607a47c0e6c00314eea31066b5e1e3545f7",
+    "developmentQaFileSha256": "6b01ae69875b93e5fb309bdc246e26abd481913cba9a821ed93ca50fd984e22f",
+    "fileMode": "0600"
+  },
+  "developmentResult": {
+    "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/turkish-retrieval-adapter/development-v1/result.json",
+    "rawSha256": "8e4b52f5e1f080d8411698a15f5ce5d025656a4a2e3a61416e24678fb9ee7d9c",
+    "stableEvaluationSha256": "97704e07f4286f46b5f304ea13075d7934bdc638e4de4a2be63c64f72249965b",
+    "fileMode": "0600"
+  },
+  "counts": {
+    "topics": 14,
+    "developmentProbes": 148,
+    "inflectionVariants": 14,
+    "deterministicRepeats": 20,
+    "deterministicUniqueHashes": 1
+  },
+  "metrics": {
+    "catalogAnchor": {
+      "total": 56,
+      "correct": 56,
+      "accuracy": 1,
+      "failureIds": []
+    },
+    "naturalParaphrase": {
+      "total": 28,
+      "correct": 28,
+      "accuracy": 1,
+      "failureIds": []
+    },
+    "hardNeighbor": {
+      "total": 24,
+      "correct": 24,
+      "accuracy": 1,
+      "failureIds": []
+    },
+    "ambiguousNonAnswer": {
+      "total": 10,
+      "correct": 10,
+      "accuracy": 1,
+      "failureIds": []
+    },
+    "unsupportedNonAnswer": {
+      "total": 30,
+      "correct": 30,
+      "accuracy": 1,
+      "failureIds": []
+    },
+    "adapterKnownSafeNonRefusal": {
+      "total": 108,
+      "nonRefused": 108,
+      "rate": 1
+    },
+    "existingSafetyGateBaselineNonRefusal": 0.993243,
+    "characterLoss": {
+      "total": 108,
+      "correct": 108,
+      "accuracy": 1,
+      "failureIds": []
+    },
+    "inflection": {
+      "total": 14,
+      "correct": 14,
+      "accuracy": 1,
+      "failureIds": []
+    }
+  },
+  "acceptance": {
+    "catalogAnchor": true,
+    "naturalParaphrase": true,
+    "hardNeighbor": true,
+    "ambiguousNonAnswer": true,
+    "unsupportedNonAnswer": true,
+    "adapterKnownSafeNonRefusal": true,
+    "characterLoss": true,
+    "inflection": true,
+    "deterministic": true,
+    "runtimeAuthority": "none",
+    "releaseAuthority": "none",
+    "v3ReleaseDecision": "no_go_unchanged"
+  },
+  "developmentGate": "pass",
+  "boundaries": {
+    "developmentOnly": true,
+    "builtWithoutLockedHoldout": true,
+    "lockedHoldoutAccessed": false,
+    "externalModelUsed": false,
+    "networkUsed": false,
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "ownerBookAuthorityUsed": false
+  }
+}

@@ -1,0 +1,35 @@
+{
+  "acceptance": {
+    "deterministic": true,
+    "offlineOnly": true,
+    "passageHashBindingsVerified": true,
+    "repoTextLeakCount": 0,
+    "sourceWorkbenchVerified": true
+  },
+  "boundaries": {
+    "activationAllowed": false,
+    "answerEligible": false,
+    "automaticApprovalForbidden": true,
+    "decisionDraftOnly": true,
+    "independentScientificReview": false,
+    "ownerActionRequired": true,
+    "ownerApproval": false,
+    "releaseEligible": false,
+    "runtimeEligible": false
+  },
+  "counts": {
+    "chapters": 9,
+    "reviewRows": 114
+  },
+  "finalArtifactSha256": "cb25df70e747b57eefcda200ee42f3357424b3f37a7048891a252ca1e966f8d2",
+  "output": {
+    "fileMode": "0600",
+    "htmlByteLength": 76804,
+    "htmlSha256": "c31dd0e20bfb16b2a46e8647a96c7186563c051e85f159d02e2f2dbe0720b07e",
+    "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/owner-book-review-bundle/5b4de5ebfc8d2618045f196308510bd06fb357cd7f59f42a2b9b014741e79150/owner-review.html"
+  },
+  "schemaVersion": "dna-owner-book-review-bundle-manifest@1",
+  "sourcePackageSha256": "1bb0efb50acb6396781eecaa26aca8893da92b7641f0d6c962ea25b5c626b59c",
+  "version": "dna-owner-book-review-bundle@1",
+  "workbenchSha256": "5b4de5ebfc8d2618045f196308510bd06fb357cd7f59f42a2b9b014741e79150"
+}

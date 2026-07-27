@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "dna-external-science-turkish-pass-b-remaining-manifest@1",
+  "recordedAt": "2026-07-19T11:51:32.792Z",
+  "version": "dna-external-science-turkish-pass-b-remaining-authoring@1",
+  "status": "pass_b_remaining_178_candidate_only",
+  "passId": "B",
+  "inputHashes": {
+    "workpackRawSha256": "7ae8e2ecc11eea343cc0ceaa0055d89fee4cd8773809ccae1fd3e970cd76f5e1",
+    "workpackSha256": "23df3848e80c1ae998c0286476e72df83a0679fd348b56b2aa694d8a80d8173a",
+    "authoringInputRawSha256": "d9d8ca73a39cf4e19ad33638fd508a172ea11b7c4974dd56ba8f4bdcf20daf9a",
+    "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "candidateFileSha256": "45c779a88b668f26b9a79c29715ca8709cb3a52afa07c8d4dbae37bc01ee7b3c"
+  },
+  "outputHashes": {
+    "artifactRawSha256": "4fca1e6e809fdaa62c9984bf5b2c64c38ef5429946b4019c26174285154a3630",
+    "artifactSha256": "ca25e123d6d93a9ae4eb3f27a87f6c0d84aa285b631cb4062c0efe6b14eb194e",
+    "recordsSha256": "f82a2679846394538f5aab6dc642b0ca6c43d0f5b9dd27db32f64476861ca176",
+    "byteCount": 514572,
+    "fileMode": "0600"
+  },
+  "counts": {
+    "workItems": 178,
+    "renderings": 178,
+    "fidelityPassed": 178,
+    "uniqueWorkItems": 178,
+    "uniqueClaims": 178,
+    "topics": 14,
+    "sources": 14,
+    "passages": 140,
+    "duplicateWorkItems": 0,
+    "missingWorkItems": 0,
+    "extraWorkItems": 0
+  },
+  "verification": {
+    "exactShapeVerified": 178,
+    "claimSourcePassageCandidateBindingsVerified": 178,
+    "numberNegationHedgeAgeSampleCausalityEvidenceBoundariesChecked": 178,
+    "maximumGraphHops": 1,
+    "multiStepMechanismAllowed": false,
+    "fullTextStoredOnResearchSsdOnly": true,
+    "repositoryManifestAggregateAndHashOnly": true,
+    "independentHumanReviewPerformed": false
+  },
+  "blindContract": {
+    "passBWorkpackOnly": true,
+    "sourceMaterialOnly": true,
+    "passAAccessed": false,
+    "alignedPassBAccessed": false,
+    "reconciliationAccessed": false,
+    "lockedHoldoutOrResultAccessed": false,
+    "externalModelUsed": false,
+    "networkUsed": false
+  },
+  "boundaries": {
+    "candidateOnly": true,
+    "translationPerformed": true,
+    "reconciliationPerformed": false,
+    "runtimeAuthority": false,
+    "releaseAuthority": false,
+    "activationAuthority": false,
+    "ownerAuthority": false,
+    "independentHuman": false,
+    "independentHumanReview": false,
+    "activeRuntimeGeneration": "v2_legacy",
+    "v3ReleaseDecision": "no_go_unchanged"
+  },
+  "runtimeEligible": false,
+  "releaseEligible": false,
+  "activationAllowed": false,
+  "ownerAuthority": false,
+  "independentHuman": false,
+  "independentHumanReview": false,
+  "manifestSha256": "c716db95c106b82426b0acc43c8340f9c0144966c0b9c68e545c31ccb722ef09"
+}

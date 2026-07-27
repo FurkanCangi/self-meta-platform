@@ -1,0 +1,97 @@
+{
+  "schemaVersion": "dna-turkish-retrieval-adapter-config@1",
+  "topics": [
+    {
+      "topicId": "external.autonomic_testing",
+      "positivePhrases": ["otonom test", "tilt table", "kardiyovasküler otonom", "ayağa kalkma", "kardiyak refleks", "tansiyon yanıtı", "laboratuvar değerlendirme"],
+      "negativePhrases": ["polyvagal teori", "vagal açıklama", "hrv biofeedback", "hrv ölçümü", "biyolojik saat"],
+      "contextPhrases": ["otonom işlev", "kalp hızı", "kan basıncı", "refleks değerlendirme", "test yöntemi"]
+    },
+    {
+      "topicId": "external.circadian_light",
+      "positivePhrases": ["sirkadiyen ışık", "circadian light", "günlük ritim", "biyolojik saat", "gündüz akşam", "gece aydınlatma", "ışık maruziyeti", "ortamındaki aydınlatma"],
+      "negativePhrases": ["duygusal reaktivite", "uykusuzluk sonrası", "duygu tepkisi", "uyku süresi", "hrv bağlam"],
+      "contextPhrases": ["uyku ritmi", "gündüz ışık", "gece ışık", "aydınlatma önerisi", "biyolojik süreç"]
+    },
+    {
+      "topicId": "external.executive_function_development",
+      "positivePhrases": ["yürütücü işlev", "executive function", "nörogelişimsel durum", "çocuklukta planlama", "ketleme bilişsel esneklik", "çalışma belleği inhibisyon", "gelişimsel örneklem"],
+      "negativePhrases": ["prefrontal korteks", "bilişsel kontrol", "executive control", "frontal süreç", "üst düzey kontrol"],
+      "contextPhrases": ["çocukluk gelişim", "planlama ketleme", "bilişsel esneklik", "çalışma belleği", "inhibisyon"]
+    },
+    {
+      "topicId": "external.hrv_biofeedback_methods",
+      "positivePhrases": ["hrv biofeedback", "hrvb", "kalp hızı değişkenliği biofeedback", "geri bildirim çalışması", "rezonans frekanslı solunum", "geri bildirim protokol"],
+      "negativePhrases": ["hrv ölçümü", "teknik raporlama", "bağlamsal etken", "beden pozisyonu", "prisma cosmin"],
+      "contextPhrases": ["hrv yöntemi", "kalp atım aralığı", "standartlaştırma", "protokol raporlama", "solunum geri bildirim"]
+    },
+    {
+      "topicId": "external.hrv_context",
+      "positivePhrases": ["hrv etkenleri", "kalp atım aralığı değişkenliği", "kardiyak değişkenlik", "beden pozisyonu", "bağlamsal yorum", "kalp hızı değişkenliği", "heart rate variability", "bağlamsal etken"],
+      "negativePhrases": ["hrv ölçümü", "hrv raporlama", "biofeedback", "zaman frekans alanı", "artefakt", "teknik standart"],
+      "contextPhrases": ["heart rate variability", "kalp hızı değişkenliği", "solunum", "yaş etkisi", "kişide değişkenlik"]
+    },
+    {
+      "topicId": "external.hrv_measurement",
+      "positivePhrases": ["hrv ölçümü", "hrv raporlama", "psychophysiology hrv", "r r aralıkları", "zaman frekans alanı", "artefakt", "teknik raporlama", "ölçüm standardı"],
+      "negativePhrases": ["bağlamsal etken", "beden pozisyonu", "hrv biofeedback", "geri bildirim", "prisma cosmin", "sistematik derleme"],
+      "contextPhrases": ["hrv", "raporlama standardı", "kayıt ölçütü", "kısa süreli kayıt", "kalp ritmi"]
+    },
+    {
+      "topicId": "external.insula_interoception",
+      "positivePhrases": ["insula interosepsiyon", "insular korteks", "interosepsiyon", "insula stimulation", "beden içi sinyal", "iç organ duyumu", "ada bölgesi", "kortikal temsil"],
+      "negativePhrases": ["prefrontal korteks", "bilişsel kontrol", "executive control", "frontal süreç", "amigdala", "hipokampus"],
+      "contextPhrases": ["beyin alanı", "bedensel farkındalık", "duyum fark etme", "içsel sinyal"]
+    },
+    {
+      "topicId": "external.measurement_cosmin",
+      "positivePhrases": ["ölçüm niteliği", "ölçüm aracı değerlendirmesi", "measurement properties", "geçerlik güvenirlik", "yapı geçerliği", "test tekrar test", "sağlık ölçeği", "cosmin tanım"],
+      "negativePhrases": ["prisma cosmin", "sistematik derleme", "omi reporting", "öz düzenleme", "çocuk ölçeği", "self regulation"],
+      "contextPhrases": ["cosmin", "ölçek seçimi", "ölçüm kalitesi", "psikometrik değerlendirme", "geçerlik", "güvenirlik"]
+    },
+    {
+      "topicId": "external.parent_emotion_regulation",
+      "positivePhrases": ["ebeveyn etkisi", "parent emotion regulation", "bakım veren", "anne baba", "öfke sakinleşme", "ebeveyn duygu düzenleme", "çocuğun düzenleme süreci", "duygu düzenleme yöntemi"],
+      "negativePhrases": ["öz düzenleme ölçümü", "self regulation measurement", "çocuk ölçeği", "uyku süresi", "duygusal reaktivite", "ölçüm aracı"],
+      "contextPhrases": ["duygu düzenleme", "çocuk düzenleme", "sakinleşme örüntüsü", "ebeveyn davranışı", "araştırma ilişkisi"]
+    },
+    {
+      "topicId": "external.pfc_cognitive_control",
+      "positivePhrases": ["prefrontal korteks", "bilişsel kontrol", "executive control", "üst düzey kontrol", "frontal süreç", "ön beyin süreci", "hedefe yönelik davranış", "prefrontal süreç"],
+      "negativePhrases": ["yürütücü işlev gelişimi", "çocuklukta planlama", "nörogelişimsel", "insula", "interosepsiyon", "gelişimsel örneklem"],
+      "contextPhrases": ["ketleme", "çalışma belleği", "bilişsel esneklik", "kontrol süreci", "davranış kontrolü"]
+    },
+    {
+      "topicId": "external.polyvagal_theory",
+      "positivePhrases": ["polyvagal teori", "polyvagal theory", "ventral dorsal vagal", "otonom hiyerarşi", "evrimsel otonom", "vagal açıklama", "teori sınırı", "bilimsel eleştiri"],
+      "negativePhrases": ["otonom test", "tilt table", "kardiyovasküler test", "hrv ölçümü", "vagus stimülasyonu"],
+      "contextPhrases": ["ampirik sınır", "kanıt sınırı", "otonom teori", "vagal", "hiyerarşi iddiası"]
+    },
+    {
+      "topicId": "external.prisma_cosmin_reporting",
+      "positivePhrases": ["prisma cosmin", "omi reporting", "sistematik derleme raporlama", "ölçüm aracı derlemesi", "raporlama kontrol listesi", "arama seçim raporlama", "derleme raporlama", "ölçüm aracı sistematik derleme"],
+      "negativePhrases": ["measurement properties", "ölçüm aracı değerlendirme", "yapı geçerliği", "test tekrar test", "hrv raporlama", "psikometrik özellik"],
+      "contextPhrases": ["cosmin", "sistematik derleme", "ölçüm araçları", "raporlama", "kontrol listesi"]
+    },
+    {
+      "topicId": "external.selfreg_measurement",
+      "positivePhrases": ["öz düzenleme ölçümü", "self regulation measurement", "psikometrik özellik", "çocuk ölçeği", "ölçüm kalitesi", "yönetme becerisi", "çocukların kendi davranış", "self regülasyon ölçümü"],
+      "negativePhrases": ["cosmin", "measurement properties", "prisma cosmin", "sistematik derleme", "ebeveyn etkisi", "parent emotion"],
+      "contextPhrases": ["öz düzenleme", "self regulation", "çocuk", "ölçek", "geçerlik", "tutarlılık"]
+    },
+    {
+      "topicId": "external.sleep_emotional_reactivity",
+      "positivePhrases": ["duygusal reaktivite", "sleep emotional reactivity", "uykusuzluk sonrası", "duygusal yanıt", "uyku süresi kısalması", "duygu tepkisi", "olumsuz uyaran", "uyku tanım"],
+      "negativePhrases": ["sirkadiyen ışık", "circadian light", "günlük ritim", "biyolojik saat", "ebeveyn etkisi", "duygu düzenleme"],
+      "contextPhrases": ["uyku", "uykusuzluk", "duygu", "reaktivite", "tepki şiddeti"]
+    }
+  ],
+  "thresholds": {
+    "positivePhraseWeight": 2,
+    "contextPhraseWeight": 0.35,
+    "negativePhrasePenalty": 1.5,
+    "answerMinimum": 2,
+    "marginMinimum": 0.6
+  },
+  "configSha256": "81da581fb1818fe968846f982837c3c144155dd60f3c976e159667d047480e51"
+}

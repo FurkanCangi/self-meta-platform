@@ -4,8 +4,8 @@ import { existsSync, lstatSync, readFileSync, readdirSync, realpathSync, writeFi
 import { dirname, join, relative, resolve, sep } from "node:path"
 import { fileURLToPath } from "node:url"
 
-export const PREBOOK_READINESS_VERSION = "dna-intelligence-prebook-readiness@8"
-export const PROGRAM_STATE_VERSION = "dna-intelligence-program-state@8"
+export const PREBOOK_READINESS_VERSION = "dna-intelligence-prebook-readiness@11"
+export const PROGRAM_STATE_VERSION = "dna-intelligence-program-state@11"
 export const PROGRAM_VERSION = "dna-intelligence-v3-program@1"
 
 const MODULE_PATH = fileURLToPath(import.meta.url)
@@ -14,6 +14,34 @@ const CURRENT_EVIDENCE_RELATIVE_PATH =
   "docs/dna-intelligence/program/evidence/prebook-readiness-current.json"
 const PROGRAM_STATE_RELATIVE_PATH = "docs/dna-intelligence/program/program-state.json"
 const SHA256_PATTERN = /^[a-f0-9]{64}$/
+const NONCURRENT_RETRIEVAL_EVIDENCE = new Set([
+  "internal-locked-turkish-holdout-current.json",
+  "internal-locked-turkish-holdout-v2-current.json",
+  "turkish-retrieval-adapter-development-current.json",
+  "turkish-retrieval-adapter-development-v2-current.json",
+  "turkish-retrieval-adapter-locked-evaluation-v1-current.json",
+  "turkish-retrieval-adapter-locked-evaluation-v2-current.json",
+  "turkish-retrieval-adapter-v2-frozen-current.json",
+  "turkish-retrieval-v2-preopen-overlap-current.json",
+])
+const CURRENT_AGGREGATE_MANIFEST_RAW_SHA256 = Object.freeze({
+  lockedEvaluationV3Manifest:
+    "4af58a4b4b20f9087b45988526e5fdb3deb5930771adfbca0500bd412de22ca3",
+  turkishFullCoverageWorkpacks:
+    "e1ae073ee36e2a886f009673f94d07ac7c442238f430d000f55136a2cb9dd42d",
+  turkishPassARemaining:
+    "260a697d224cf971f4156d8d8ed1a2868e576fdb07149cd658a2c890a2391208",
+  turkishPassAAudit:
+    "ea557be5979078007f5480d44f8088257327bdf6115025692c99030df24373df",
+  turkishPassBRemaining:
+    "3c70d4f4d092e85885e418288cbd748c05f9bc04051f1438b0d3714102df6369",
+  turkishPassBAudit:
+    "06f0309a51309d0dea7b315fa103262304fd9460246ec3bd0193b6a449886871",
+  turkishRemainingReconciliation:
+    "72baf783b44679102c476fe7559402b871cda23a0417a98b32aee9fe4f3f98f2",
+  turkishFullReconciliationCoverage:
+    "cb400382c76f0cc07b5604613e6b6d51f59e1d14ddf64ad2283ba4ab2defb10c",
+})
 
 const CHECKPOINT_COMPLETED_PHASES = Object.freeze([
   0, 1, 2,
@@ -64,6 +92,17 @@ function canonicalSha256(value) {
   return sha256Bytes(Buffer.from(JSON.stringify(canonicalize(value)), "utf8"))
 }
 
+function assertCanonicalSeal(value, field, code) {
+  assert(value && typeof value === "object" && SHA256_PATTERN.test(value[field]), code)
+  const payload = { ...value }
+  delete payload[field]
+  assert(canonicalSha256(payload) === value[field], code)
+}
+
+function sha256SortedStrings(values) {
+  return canonicalSha256([...values].sort((left, right) => left.localeCompare(right, "en")))
+}
+
 function runGit(repoRoot, args, fallback) {
   try {
     return execFileSync("git", args, {
@@ -104,6 +143,7 @@ function evidenceHistory(repoRoot) {
   const evidenceRoot = join(repoRoot, "docs/dna-intelligence/program/evidence")
   return readdirSync(evidenceRoot)
     .filter((name) => name.endsWith(".json") && name !== "prebook-readiness-current.json")
+    .filter((name) => !NONCURRENT_RETRIEVAL_EVIDENCE.has(name))
     .sort()
     .map((name) => {
       const path = join(evidenceRoot, name)
@@ -209,6 +249,42 @@ export function collectPrebookFacts(options = {}) {
       repoRoot,
       "docs/dna-intelligence/program/evidence/prebook-v2-production-verification-current.json",
     ),
+    lockedEvaluationV3Manifest: join(
+      repoRoot,
+      "docs/dna-intelligence/program/evidence/turkish-retrieval-adapter-locked-evaluation-v3-current.json",
+    ),
+    turkishFullCoverageWorkpacks: join(
+      repoRoot,
+      "docs/dna-intelligence/program/evidence/external-science-turkish-full-coverage-workpacks-current.json",
+    ),
+    turkishPassARemaining: join(
+      repoRoot,
+      "docs/dna-intelligence/program/evidence/external-science-turkish-pass-a-remaining-current.json",
+    ),
+    turkishPassAAudit: join(
+      repoRoot,
+      "docs/dna-intelligence/program/evidence/external-science-turkish-pass-a-remaining-fidelity-audit-current.json",
+    ),
+    turkishPassBRemaining: join(
+      repoRoot,
+      "docs/dna-intelligence/program/evidence/external-science-turkish-pass-b-remaining-current.json",
+    ),
+    turkishPassBAudit: join(
+      repoRoot,
+      "docs/dna-intelligence/program/evidence/external-science-turkish-pass-b-remaining-fidelity-audit-current.json",
+    ),
+    turkishRemainingReconciliation: join(
+      repoRoot,
+      "docs/dna-intelligence/program/evidence/external-science-turkish-remaining-reconciliation-current.json",
+    ),
+    turkishFullReconciliationCoverage: join(
+      repoRoot,
+      "docs/dna-intelligence/program/evidence/external-science-turkish-full-reconciliation-coverage-current.json",
+    ),
+    ownerBookReviewBundle: join(
+      repoRoot,
+      "docs/dna-intelligence/program/evidence/owner-book-review-bundle-current.json",
+    ),
     runtimeModeSource: join(repoRoot, "src/lib/dna/chat/release/runtimeReleaseMode.ts"),
     v3Package: join(repoRoot, "src/lib/dna/chat/catalog/generated/v3/manifest.json"),
     candidateCorpus: assertContained(researchRoot, join(
@@ -251,10 +327,6 @@ export function collectPrebookFacts(options = {}) {
       researchRoot,
       "Datasets/DNA-Intelligence/work/v3/prebook-closure/v1",
     )),
-    lockedQuestions: assertContained(researchRoot, join(
-      researchRoot,
-      "Datasets/DNA-Intelligence/evaluation/v3/locked-benchmark/questions.json",
-    )),
     variations: assertContained(researchRoot, join(
       researchRoot,
       "Datasets/DNA-Intelligence/evaluation/v3/variation-bank/variations.json",
@@ -270,6 +342,21 @@ export function collectPrebookFacts(options = {}) {
   const phase32To44Evidence = readJson(paths.phase32To44Evidence)
   const phase45To60Evidence = readJson(paths.phase45To60Evidence)
   const prebookProductionVerification = readJson(paths.prebookProductionVerification)
+  const lockedEvaluationV3Manifest = readJson(paths.lockedEvaluationV3Manifest)
+  const turkishFullCoverageWorkpacks = readJson(paths.turkishFullCoverageWorkpacks)
+  const turkishPassARemaining = readJson(paths.turkishPassARemaining)
+  const turkishPassAAudit = readJson(paths.turkishPassAAudit)
+  const turkishPassBRemaining = readJson(paths.turkishPassBRemaining)
+  const turkishPassBAudit = readJson(paths.turkishPassBAudit)
+  const turkishRemainingReconciliation = readJson(paths.turkishRemainingReconciliation)
+  const turkishFullReconciliationCoverage = readJson(paths.turkishFullReconciliationCoverage)
+  for (const [pathKey, expectedSha256] of Object.entries(
+    CURRENT_AGGREGATE_MANIFEST_RAW_SHA256,
+  )) {
+    assert(rawFileSha256(paths[pathKey]) === expectedSha256,
+      `prebook_readiness_current_aggregate_manifest_raw_hash_invalid:${pathKey}`)
+  }
+  const ownerBookReviewBundle = readJson(paths.ownerBookReviewBundle)
   const runtimeModeSource = readFileSync(paths.runtimeModeSource, "utf8")
   const v3Package = readJson(paths.v3Package)
   const candidate = readJson(paths.candidateCorpus)
@@ -355,6 +442,10 @@ export function collectPrebookFacts(options = {}) {
   const prebookClosureIndex = readJson(prebookClosureIndexPath)
   const prebookFullText = readJson(join(paths.prebookClosureRoot, "full-text-decisions.json"))
   const prebookWorkpacks = readJson(join(paths.prebookClosureRoot, "workpack-decisions.json"))
+  const prebookHistoricalSources = readJson(join(
+    paths.prebookClosureRoot,
+    "historical-source-decisions.json",
+  ))
   const prebookClaims = readJson(join(paths.prebookClosureRoot, "claim-decisions.json"))
   const prebookCandidatePackage = readJson(join(
     paths.prebookClosureRoot,
@@ -400,6 +491,12 @@ export function collectPrebookFacts(options = {}) {
     "prebook_readiness_workpack_count_drift")
   assert(candidate.methodReviewWorkpackIndexSha256 === workpackIndex.indexSha256,
     "prebook_readiness_workpack_index_hash_drift")
+  const { indexSha256: workpackIndexDeclaredSha256, ...workpackIndexPayload } = workpackIndex
+  assert(sha256Bytes(Buffer.from(JSON.stringify(workpackIndexPayload), "utf8"))
+    === workpackIndexDeclaredSha256,
+  "prebook_readiness_workpack_index_payload_hash_invalid")
+  assertCanonicalSeal(methodAppraisalBatchIndex, "canonicalPayloadSha256",
+    "prebook_readiness_method_appraisal_batch_payload_hash_invalid")
   assert(methodAppraisalBatchIndex.inputBindings?.workpackIndexFileSha256
     === rawFileSha256(paths.workpackIndex),
   "prebook_readiness_method_appraisal_batch_workpack_file_hash_drift")
@@ -545,11 +642,40 @@ export function collectPrebookFacts(options = {}) {
     && prebookClosureIndex.runtime?.activeGeneration === "v2_legacy"
     && prebookClosureIndex.runtime?.v3CandidateActivated === false,
   "prebook_readiness_closure_state_invalid")
+  assertCanonicalSeal(prebookFullText, "canonicalPayloadSha256",
+    "prebook_readiness_full_text_ledger_hash_invalid")
+  assertCanonicalSeal(prebookWorkpacks, "canonicalPayloadSha256",
+    "prebook_readiness_workpack_ledger_hash_invalid")
+  assertCanonicalSeal(prebookHistoricalSources, "canonicalPayloadSha256",
+    "prebook_readiness_historical_source_ledger_hash_invalid")
+  for (const decision of [
+    ...prebookFullText.decisions,
+    ...prebookWorkpacks.decisions,
+    ...prebookHistoricalSources.decisions,
+  ]) {
+    assertCanonicalSeal(decision, "decisionSha256",
+      "prebook_readiness_terminal_decision_hash_invalid")
+    assert(decision.runtimeEligible === false && decision.releaseEligible === false,
+      "prebook_readiness_terminal_decision_authority_invalid")
+  }
   assert(prebookFullText.counts?.total === 1645 && prebookFullText.counts?.open === 0
     && prebookFullText.decisions.every((decision) => decision.reasonCode),
   "prebook_readiness_full_text_terminal_coverage_invalid")
   assert(prebookWorkpacks.counts?.total === 24 && prebookWorkpacks.counts?.open === 0,
     "prebook_readiness_workpack_terminal_coverage_invalid")
+  assert(prebookHistoricalSources.schemaVersion
+    === "dna-prebook-historical-source-terminal-ledger@1"
+    && prebookHistoricalSources.counts?.historicalPending === 47
+    && prebookHistoricalSources.counts?.previouslyTerminal === 26
+    && prebookHistoricalSources.counts?.newlyTerminal === 21
+    && prebookHistoricalSources.counts?.totalTerminal === 47
+    && prebookHistoricalSources.counts?.open === 0
+    && prebookHistoricalSources.counts?.byStatus?.license_blocked === 15
+    && prebookHistoricalSources.counts?.byStatus?.full_text_unavailable === 2
+    && prebookHistoricalSources.counts?.byStatus?.quarantined === 4
+    && prebookHistoricalSources.runtimeEligible === false
+    && prebookHistoricalSources.releaseEligible === false,
+  "prebook_readiness_historical_source_terminal_coverage_invalid")
   assert(prebookClaims.counts?.coveredBlindClaims === 746 && prebookClaims.counts?.open === 0
     && prebookClaims.counts?.byStatus?.bounded_candidate === 220
     && prebookClaims.counts?.byStatus?.contested_excluded === 23,
@@ -570,6 +696,450 @@ export function collectPrebookFacts(options = {}) {
   assert(prebookHumanEvaluation.executionAllowedNow === false
     && prebookHumanEvaluation.status === "protocol_locked_execution_deferred",
   "prebook_readiness_human_evaluation_boundary_invalid")
+
+  const pendingHistoricalSources = appraisal.sources
+  assert(appraisal.counts?.pendingMethodAppraisals === pendingHistoricalSources.length
+    && pendingHistoricalSources.length === 47
+    && new Set(pendingHistoricalSources.map((source) => source.id)).size === 47
+    && pendingHistoricalSources.every((source) => source.reviewStatus === "method_appraisal_pending"
+      && SHA256_PATTERN.test(source.sourcePayloadSha256)
+      && SHA256_PATTERN.test(source.appraisalPayloadSha256)),
+  "prebook_readiness_historical_method_appraisal_snapshot_invalid")
+  const historicalById = new Map(pendingHistoricalSources.map((source) => [source.id, source]))
+  const batchById = new Map(methodAppraisalBatchIndex.records.map((record) => [record.sourceId, record]))
+  const workpackById = new Map(workpackIndex.records.map((record) => [record.sourceId, record]))
+  assert(batchById.size === methodAppraisalBatchIndex.records.length
+    && workpackById.size === workpackIndex.records.length,
+  "prebook_readiness_method_appraisal_duplicate_source")
+  const terminalWorkpackSourceIds = new Set()
+  for (const decision of prebookWorkpacks.decisions) {
+    const batchRecord = batchById.get(decision.sourceId)
+    const workpackRecord = workpackById.get(decision.sourceId)
+    assert(historicalById.has(decision.sourceId) && batchRecord && workpackRecord
+      && decision.inputStatus === batchRecord.status
+      && decision.workpackFileSha256 === batchRecord.workpackFileSha256
+      && decision.workpackFileSha256 === rawFileSha256(join(
+        paths.candidateCorpus,
+        "..",
+        batchRecord.workpackRelativePath,
+      ))
+      && decision.workpackPayloadSha256 === batchRecord.workpackPayloadSha256
+      && decision.workpackPayloadSha256 === workpackRecord.workpackSha256,
+    `prebook_readiness_workpack_terminal_identity_hash_mismatch:${decision.sourceId}`)
+    terminalWorkpackSourceIds.add(decision.sourceId)
+  }
+  const queuedTerminalized = prebookWorkpacks.decisions.filter((decision) =>
+    decision.inputStatus === "queued").length
+  const inProgressTerminalized = prebookWorkpacks.decisions.filter((decision) =>
+    decision.inputStatus === "needs_revision").length
+  const candidateCompleteTerminalized = prebookWorkpacks.decisions.filter((decision) =>
+    decision.inputStatus === "candidate_complete_unregistered").length
+  assert(queuedTerminalized === methodAppraisalBatchIndex.counts.queued
+    && inProgressTerminalized === methodAppraisalBatchIndex.counts.inProgress
+    && candidateCompleteTerminalized
+      === methodAppraisalBatchIndex.counts.candidateCompleteUnregistered,
+  "prebook_readiness_historical_workpack_state_reconciliation_invalid")
+  const terminalFullTextMatches = prebookFullText.decisions.filter((decision) =>
+    decision.matchedArchiveSourceId
+      && historicalById.has(decision.matchedArchiveSourceId)
+      && !terminalWorkpackSourceIds.has(decision.matchedArchiveSourceId))
+  assert(new Set(terminalFullTextMatches.map((decision) => decision.matchedArchiveSourceId)).size
+    === terminalFullTextMatches.length
+    && terminalFullTextMatches.every((decision) => decision.terminalStatus === "license_blocked"
+      && decision.reasonCode.startsWith("exact_identity_matched")),
+  "prebook_readiness_full_text_terminal_identity_invalid")
+  const terminalFullTextSourceIds = new Set(
+    terminalFullTextMatches.map((decision) => decision.matchedArchiveSourceId),
+  )
+  const historicalSourcesWithoutPriorTerminal = pendingHistoricalSources
+    .filter((source) => !terminalWorkpackSourceIds.has(source.id)
+      && !terminalFullTextSourceIds.has(source.id))
+    .sort((left, right) => left.id.localeCompare(right.id, "en"))
+  const historicalSourceDecisionById = new Map(
+    prebookHistoricalSources.decisions.map((decision) => [decision.sourceId, decision]),
+  )
+  assert(historicalSourcesWithoutPriorTerminal.length === 21
+    && historicalSourceDecisionById.size === 21
+    && historicalSourcesWithoutPriorTerminal.every((source) =>
+      historicalSourceDecisionById.has(source.id))
+    && prebookHistoricalSources.sourceIdsSha256 === sha256SortedStrings(
+      historicalSourcesWithoutPriorTerminal.map((source) => source.id),
+    ),
+  "prebook_readiness_historical_source_terminal_identity_coverage_invalid")
+  const governanceIdentityById = new Map(
+    governance.identityRecords.map((entry) => [entry.sourceId, entry]),
+  )
+  const governanceLicenseById = new Map(
+    governance.licenseRecords.map((entry) => [entry.sourceId, entry]),
+  )
+  const firstHistoricalEvidence = prebookHistoricalSources.decisions[0].evidence
+  const acquisitionLedgerPath = assertContained(researchRoot, join(
+    researchRoot,
+    firstHistoricalEvidence.acquisition.ledgerResearchSsdRelativePath,
+  ))
+  const acquisitionVerificationPath = assertContained(researchRoot, join(
+    researchRoot,
+    firstHistoricalEvidence.acquisition.verificationResearchSsdRelativePath,
+  ))
+  const integrityAuditPath = assertContained(researchRoot, join(
+    researchRoot,
+    firstHistoricalEvidence.integrity.researchSsdRelativePath,
+  ))
+  const acquisitionLedger = readJson(acquisitionLedgerPath)
+  const acquisitionVerification = readJson(acquisitionVerificationPath)
+  const integrityAudit = readJson(integrityAuditPath)
+  const acquisitionBySource = new Map()
+  for (const entry of acquisitionLedger.entries) {
+    const current = acquisitionBySource.get(entry.sourceId) ?? []
+    current.push(entry)
+    acquisitionBySource.set(entry.sourceId, current)
+  }
+  const acquisitionDecisionByPath = new Map(acquisitionVerification.decisions
+    .map((entry) => [`${entry.sourceId}|${entry.relativePath}`, entry]))
+  const observedAcquisitionByPath = new Map(acquisitionVerification.observedArtifacts
+    .map((entry) => [entry.relativePath, entry]))
+  const integrityBySource = new Map(integrityAudit.records
+    .map((entry) => [entry.sourceId, entry]))
+  const historicalTerminalStatuses = new Set([
+    "license_blocked", "full_text_unavailable", "quarantined",
+  ])
+  for (const source of historicalSourcesWithoutPriorTerminal) {
+    const decision = historicalSourceDecisionById.get(source.id)
+    const identity = governanceIdentityById.get(source.id)
+    const license = governanceLicenseById.get(source.id)
+    const integrityRecord = integrityBySource.get(source.id)
+    assert(decision && identity && license && integrityRecord
+      && historicalTerminalStatuses.has(decision.terminalStatus)
+      && decision.fullTextReadInThisClosure === false
+      && decision.registeredMethodChainPreserved === false
+      && decision.runtimeEligible === false && decision.releaseEligible === false
+      && decision.supersession?.state
+        === "supersedes_historical_method_appraisal_pending_for_prebook_closure_only"
+      && decision.supersession?.pendingAppraisalPayloadSha256
+        === source.appraisalPayloadSha256
+      && decision.supersession?.createsAuditedMethodAppraisal === false
+      && decision.supersession?.createsScientificClaim === false,
+    `prebook_readiness_historical_source_boundary_invalid:${source.id}`)
+    const evidence = decision.evidence
+    assert(evidence.historicalPendingSource.repoRelativePath
+      === "docs/dna-intelligence/governance/v3/source-appraisal-normalization-snapshot.json"
+      && evidence.historicalPendingSource.snapshotRawBytesSha256
+        === rawFileSha256(paths.sourceAppraisal)
+      && evidence.historicalPendingSource.evidencePayloadSha256
+        === source.evidencePayloadSha256
+      && evidence.historicalPendingSource.sourcePayloadSha256
+        === source.sourcePayloadSha256
+      && evidence.historicalPendingSource.pendingAppraisalPayloadSha256
+        === source.appraisalPayloadSha256,
+    `prebook_readiness_historical_pending_binding_invalid:${source.id}`)
+    assert(evidence.sourceGovernance.repoRelativePath
+      === "docs/dna-intelligence/governance/v3/source-library-governance-snapshot.json"
+      && evidence.sourceGovernance.snapshotRawBytesSha256
+        === rawFileSha256(paths.sourceGovernance)
+      && evidence.sourceGovernance.identityEvidenceSha256
+        === identity.identityVerification.evidenceSha256
+      && evidence.sourceGovernance.licenseMatrixSha256 === license.matrixSha256
+      && evidence.sourceGovernance.licensePolicy === license.policy
+      && evidence.sourceGovernance.fullTextDecision === license.decisions.full_text
+      && evidence.sourceGovernance.passageDecision === license.decisions.passage,
+    `prebook_readiness_historical_source_governance_binding_invalid:${source.id}`)
+    const inventoryPath = assertContained(researchRoot, join(
+      researchRoot,
+      evidence.sourceInventory.researchSsdRelativePath,
+    ))
+    assert(rawFileSha256(inventoryPath) === evidence.sourceInventory.rawBytesSha256,
+      `prebook_readiness_historical_source_inventory_hash_invalid:${source.id}`)
+    const inventory = readJson(inventoryPath)
+    const inventoryContainsSource = Array.isArray(inventory.sources)
+      ? inventory.sources.some((entry) => entry.id === source.id)
+      : [inventory.id, inventory.sourceId, inventory.slug].includes(source.id)
+    assert(inventoryContainsSource,
+      `prebook_readiness_historical_source_inventory_identity_invalid:${source.id}`)
+    assert(evidence.integrity.researchSsdRelativePath
+      === firstHistoricalEvidence.integrity.researchSsdRelativePath
+      && evidence.integrity.auditFileRawBytesSha256 === rawFileSha256(integrityAuditPath)
+      && evidence.integrity.sourceAuditSha256 === integrityRecord.auditSha256
+      && evidence.integrity.sourceAuditInputSha256 === integrityRecord.inputSha256
+      && evidence.integrity.state === integrityRecord.state
+      && integrityRecord.runtimeEligibility === "eligible"
+      && ["verified_clean", "corrected"].includes(integrityRecord.state),
+    `prebook_readiness_historical_source_integrity_binding_invalid:${source.id}`)
+    assert(evidence.acquisition.ledgerResearchSsdRelativePath
+      === firstHistoricalEvidence.acquisition.ledgerResearchSsdRelativePath
+      && evidence.acquisition.ledgerRawBytesSha256 === rawFileSha256(acquisitionLedgerPath)
+      && evidence.acquisition.verificationResearchSsdRelativePath
+        === firstHistoricalEvidence.acquisition.verificationResearchSsdRelativePath
+      && evidence.acquisition.verificationRawBytesSha256
+        === rawFileSha256(acquisitionVerificationPath),
+    `prebook_readiness_historical_acquisition_binding_invalid:${source.id}`)
+    const sourceAcquisitions = [...(acquisitionBySource.get(source.id) ?? [])]
+      .sort((left, right) => left.relativePath.localeCompare(right.relativePath, "en"))
+    const expectedAcceptedArtifacts = sourceAcquisitions.map((entry) => {
+      const observed = observedAcquisitionByPath.get(entry.relativePath)
+      const verification = acquisitionDecisionByPath.get(`${source.id}|${entry.relativePath}`)
+      assert(observed?.exists === true && observed.sha256 === entry.sha256
+        && observed.bytes === entry.bytes && verification?.accepted === true
+        && verification.reasonCodes?.length === 0,
+      `prebook_readiness_historical_acquisition_verification_invalid:${source.id}`)
+      const artifactPath = assertContained(researchRoot, join(
+        researchRoot,
+        `Datasets/SelfMetaAI/dna-knowledge/source-library/${entry.relativePath}`,
+      ))
+      assert(existsSync(artifactPath) && !lstatSync(artifactPath).isSymbolicLink(),
+        `prebook_readiness_historical_acquisition_artifact_missing:${source.id}`)
+      return {
+        researchSsdRelativePath: relative(researchRoot, artifactPath),
+        sha256: entry.sha256,
+        bytes: entry.bytes,
+        mediaType: entry.mediaType,
+        acquisitionMethod: entry.acquisitionMethod,
+        declaredLicense: entry.license,
+      }
+    })
+    assert(JSON.stringify(evidence.acquisition.acceptedArtifacts)
+      === JSON.stringify(expectedAcceptedArtifacts),
+    `prebook_readiness_historical_acquisition_artifact_binding_invalid:${source.id}`)
+    const substantiveArtifacts = sourceAcquisitions.filter((entry) => {
+      if (entry.acquisitionMethod === "official_metadata_retrieval") return false
+      const mediaType = String(entry.mediaType ?? "").toLocaleLowerCase("en")
+      const path = String(entry.relativePath ?? "").toLocaleLowerCase("en")
+      return mediaType.includes("pdf") || mediaType.includes("epub")
+        || mediaType.includes("xml") || path.endsWith(".pdf") || path.endsWith(".epub")
+        || path.endsWith(".xml")
+    })
+    const expectedStatus = license.decisions.full_text === "restricted"
+      || license.decisions.passage === "restricted"
+      ? "license_blocked"
+      : substantiveArtifacts.length === 0 ? "full_text_unavailable" : "quarantined"
+    assert(decision.terminalStatus === expectedStatus,
+      `prebook_readiness_historical_terminal_status_not_evidence_derived:${source.id}`)
+    assert(evidence.methodAppraisal.registrationIndexResearchSsdRelativePath
+      === relative(researchRoot, paths.methodAppraisalRegistrationIndex)
+      && evidence.methodAppraisal.registrationIndexRawBytesSha256
+        === rawFileSha256(paths.methodAppraisalRegistrationIndex)
+      && evidence.methodAppraisal.registered === false
+      && evidence.methodAppraisal.historicalPendingAppraisalPayloadSha256
+        === source.appraisalPayloadSha256,
+    `prebook_readiness_historical_method_binding_invalid:${source.id}`)
+    assert(evidence.priorClosure.fullTextLedgerResearchSsdRelativePath
+      === relative(researchRoot, join(paths.prebookClosureRoot, "full-text-decisions.json"))
+      && evidence.priorClosure.fullTextLedgerRawBytesSha256
+        === rawFileSha256(join(paths.prebookClosureRoot, "full-text-decisions.json"))
+      && evidence.priorClosure.workpackLedgerResearchSsdRelativePath
+        === relative(researchRoot, join(paths.prebookClosureRoot, "workpack-decisions.json"))
+      && evidence.priorClosure.workpackLedgerRawBytesSha256
+        === rawFileSha256(join(paths.prebookClosureRoot, "workpack-decisions.json"))
+      && evidence.priorClosure.priorTerminalDecisionPresent === false,
+    `prebook_readiness_historical_prior_closure_binding_invalid:${source.id}`)
+  }
+  assert((lstatSync(join(paths.prebookClosureRoot, "historical-source-decisions.json")).mode
+    & 0o777) === 0o600,
+  "prebook_readiness_historical_source_ledger_permissions_invalid")
+  const historicalTerminalSourceIds = new Set(prebookHistoricalSources.decisions
+    .map((decision) => decision.sourceId))
+  const unresolvedHistoricalSources = historicalSourcesWithoutPriorTerminal
+    .filter((source) => !historicalTerminalSourceIds.has(source.id))
+  assert(unresolvedHistoricalSources.length === 0
+    && terminalWorkpackSourceIds.size + terminalFullTextSourceIds.size
+      + historicalTerminalSourceIds.size === 47,
+  "prebook_readiness_historical_source_terminal_reconciliation_incomplete")
+  const methodAppraisalReconciliation = {
+    state: "superseded_historical_pipeline_state",
+    historicalPendingRecords: pendingHistoricalSources.length,
+    superseded_historical_pipeline_state: {
+      total: terminalWorkpackSourceIds.size + terminalFullTextSourceIds.size
+        + historicalTerminalSourceIds.size,
+      terminalWorkpackRecords: terminalWorkpackSourceIds.size,
+      terminalFullTextIdentityMatches: terminalFullTextSourceIds.size,
+      terminalHistoricalSourceRecords: historicalTerminalSourceIds.size,
+      terminalHistoricalSourceStatusCounts: prebookHistoricalSources.counts.byStatus,
+      queuedWorkpacksTerminalized: queuedTerminalized,
+      inProgressWorkpacksTerminalized: inProgressTerminalized,
+      candidateCompleteWorkpacksTerminalized: candidateCompleteTerminalized,
+      sourceIdsSha256: sha256SortedStrings([
+        ...terminalWorkpackSourceIds,
+        ...terminalFullTextSourceIds,
+        ...historicalTerminalSourceIds,
+      ]),
+    },
+    actionableUnresolvedRecords: unresolvedHistoricalSources.length,
+    unresolvedSourceIdsSha256: sha256SortedStrings(
+      unresolvedHistoricalSources.map((source) => source.id),
+    ),
+    unresolvedSources: unresolvedHistoricalSources.map((source) => ({
+      sourceId: source.id,
+      reasonCode: "no_identity_and_hash_bound_terminal_decision_in_prebook_closure",
+      sourcePayloadSha256: source.sourcePayloadSha256,
+      appraisalPayloadSha256: source.appraisalPayloadSha256,
+    })),
+    provenance: {
+      historicalSnapshotRawBytesSha256: rawFileSha256(paths.sourceAppraisal),
+      historicalPendingCollectionSha256: appraisal.hashes.pendingAppraisalCollectionSha256,
+      workpackIndexRawBytesSha256: rawFileSha256(paths.workpackIndex),
+      workpackIndexPayloadSha256: workpackIndex.indexSha256,
+      batchRunIndexRawBytesSha256: rawFileSha256(paths.methodAppraisalBatchIndex),
+      batchRunIndexPayloadSha256: methodAppraisalBatchIndex.canonicalPayloadSha256,
+      terminalWorkpackLedgerRawBytesSha256: rawFileSha256(join(
+        paths.prebookClosureRoot,
+        "workpack-decisions.json",
+      )),
+      terminalWorkpackLedgerPayloadSha256: prebookWorkpacks.canonicalPayloadSha256,
+      terminalFullTextLedgerRawBytesSha256: rawFileSha256(join(
+        paths.prebookClosureRoot,
+        "full-text-decisions.json",
+      )),
+      terminalFullTextLedgerPayloadSha256: prebookFullText.canonicalPayloadSha256,
+      terminalHistoricalSourceLedgerRawBytesSha256: rawFileSha256(join(
+        paths.prebookClosureRoot,
+        "historical-source-decisions.json",
+      )),
+      terminalHistoricalSourceLedgerPayloadSha256:
+        prebookHistoricalSources.canonicalPayloadSha256,
+      terminalHistoricalSourceIdsSha256: prebookHistoricalSources.sourceIdsSha256,
+      closureIndexSha256: prebookClosureIndex.indexSha256,
+    },
+    runtimeEligible: false,
+    releaseEligible: false,
+  }
+
+  for (const [manifest, code] of [
+    [lockedEvaluationV3Manifest, "locked_evaluation_v3"],
+    [turkishFullCoverageWorkpacks, "turkish_full_coverage_workpacks"],
+    [turkishPassARemaining, "turkish_pass_a_remaining"],
+    [turkishPassAAudit, "turkish_pass_a_audit"],
+    [turkishPassBRemaining, "turkish_pass_b_remaining"],
+    [turkishPassBAudit, "turkish_pass_b_audit"],
+    [turkishRemainingReconciliation, "turkish_remaining_reconciliation"],
+    [turkishFullReconciliationCoverage, "turkish_full_reconciliation_coverage"],
+  ]) {
+    assertCanonicalSeal(manifest, "manifestSha256",
+      `prebook_readiness_${code}_manifest_hash_invalid`)
+  }
+  assert(lockedEvaluationV3Manifest.schemaVersion
+    === "dna-turkish-retrieval-locked-evaluation-v3-manifest@1"
+    && lockedEvaluationV3Manifest.evaluationClass
+      === "internal_blind_source_derived_v3_not_independent_human_validation"
+    && lockedEvaluationV3Manifest.authority?.candidatePackageSha256
+      === prebookCandidatePackage.packageSha256
+    && lockedEvaluationV3Manifest.counts?.total === 196
+    && lockedEvaluationV3Manifest.metrics?.overallAccuracy === 0.346939
+    && lockedEvaluationV3Manifest.qualityGate?.status === "fail"
+    && lockedEvaluationV3Manifest.claim?.noRerun === true
+    && lockedEvaluationV3Manifest.result?.fileMode === "0600"
+    && lockedEvaluationV3Manifest.claim?.fileMode === "0600"
+    && lockedEvaluationV3Manifest.boundaries?.questionPayloadReadByVerifier === false
+    && lockedEvaluationV3Manifest.boundaries?.questionPayloadStoredInRepository === false
+    && lockedEvaluationV3Manifest.boundaries?.aggregateOnly === true
+    && lockedEvaluationV3Manifest.boundaries?.runtimeEligible === false
+    && lockedEvaluationV3Manifest.boundaries?.releaseEligible === false
+    && lockedEvaluationV3Manifest.boundaries?.activationAllowed === false
+    && lockedEvaluationV3Manifest.boundaries?.v3ReleaseDecision === "no_go_unchanged",
+  "prebook_readiness_locked_evaluation_v3_boundary_invalid")
+  const candidatePackageSha256 = prebookCandidatePackage.packageSha256
+  assert(turkishFullCoverageWorkpacks.schemaVersion
+    === "dna-external-science-turkish-full-coverage-manifest@1"
+    && turkishFullCoverageWorkpacks.inputHashes?.candidatePackageSha256
+      === candidatePackageSha256
+    && turkishFullCoverageWorkpacks.counts?.candidateClaims === 220
+    && turkishFullCoverageWorkpacks.counts?.remainingClaims === 178
+    && turkishFullCoverageWorkpacks.counts?.passAWorkItems === 178
+    && turkishFullCoverageWorkpacks.counts?.passBWorkItems === 178
+    && turkishFullCoverageWorkpacks.runtimeEligible === false
+    && turkishFullCoverageWorkpacks.releaseEligible === false
+    && turkishFullCoverageWorkpacks.activationAllowed === false,
+  "prebook_readiness_turkish_full_coverage_workpacks_invalid")
+  assert(turkishPassARemaining.schemaVersion
+    === "dna-external-science-turkish-pass-a-remaining-manifest@1"
+    && turkishPassARemaining.inputHashes?.candidatePackageSha256 === candidatePackageSha256
+    && turkishPassARemaining.inputHashes?.workpackSha256
+      === turkishFullCoverageWorkpacks.outputHashes?.passA?.workpackSha256
+    && turkishPassARemaining.counts?.records === 178
+    && turkishPassARemaining.counts?.complete === 178
+    && turkishPassARemaining.runtimeEligible === false
+    && turkishPassARemaining.releaseEligible === false,
+  "prebook_readiness_turkish_pass_a_remaining_invalid")
+  assert(turkishPassAAudit.schemaVersion
+    === "dna-external-science-turkish-independent-fidelity-audit-manifest@1"
+    && turkishPassAAudit.inputHashes?.candidatePackageSha256 === candidatePackageSha256
+    && turkishPassAAudit.inputHashes?.passAArtifactSha256
+      === turkishPassARemaining.outputHashes?.artifactSha256
+    && turkishPassAAudit.counts?.terminal === 178
+    && turkishPassAAudit.counts?.statusCounts?.pass === 178
+    && turkishPassAAudit.counts?.statusCounts?.needs_revision === 0
+    && turkishPassAAudit.runtimeEligible === false
+    && turkishPassAAudit.releaseEligible === false,
+  "prebook_readiness_turkish_pass_a_audit_invalid")
+  assert(turkishPassBRemaining.schemaVersion
+    === "dna-external-science-turkish-pass-b-remaining-manifest@1"
+    && turkishPassBRemaining.inputHashes?.candidatePackageSha256 === candidatePackageSha256
+    && turkishPassBRemaining.inputHashes?.workpackSha256
+      === turkishFullCoverageWorkpacks.outputHashes?.passB?.workpackSha256
+    && turkishPassBRemaining.counts?.renderings === 178
+    && turkishPassBRemaining.runtimeEligible === false
+    && turkishPassBRemaining.releaseEligible === false,
+  "prebook_readiness_turkish_pass_b_remaining_invalid")
+  assert(turkishPassBAudit.schemaVersion
+    === "dna-external-science-turkish-source-fidelity-audit-manifest@1"
+    && turkishPassBAudit.inputHashes?.candidatePackageSha256 === candidatePackageSha256
+    && turkishPassBAudit.inputHashes?.passBArtifactSha256
+      === turkishPassBRemaining.outputHashes?.artifactSha256
+    && turkishPassBAudit.counts?.terminal === 178
+    && turkishPassBAudit.counts?.statusCounts?.pass === 173
+    && turkishPassBAudit.counts?.statusCounts?.needs_revision === 5
+    && turkishPassBAudit.counts?.statusCounts?.quarantine === 0
+    && turkishPassBAudit.runtimeEligible === false
+    && turkishPassBAudit.releaseEligible === false,
+  "prebook_readiness_turkish_pass_b_audit_invalid")
+  assert(turkishRemainingReconciliation.schemaVersion
+    === "dna-external-science-turkish-remaining-neutral-reconciliation-manifest@1"
+    && turkishRemainingReconciliation.inputHashes?.candidate_artifact
+      === candidatePackageSha256
+    && turkishRemainingReconciliation.inputHashes?.pass_a_artifact
+      === turkishPassARemaining.outputHashes?.artifactSha256
+    && turkishRemainingReconciliation.inputHashes?.pass_a_audit_artifact
+      === turkishPassAAudit.outputHashes?.artifactSha256
+    && turkishRemainingReconciliation.inputHashes?.pass_b_artifact
+      === turkishPassBRemaining.outputHashes?.artifactSha256
+    && turkishRemainingReconciliation.inputHashes?.pass_b_audit_artifact
+      === turkishPassBAudit.outputHashes?.artifactSha256
+    && turkishRemainingReconciliation.counts?.terminal === 178
+    && turkishRemainingReconciliation.counts?.finalized === 178
+    && turkishRemainingReconciliation.counts?.quarantined === 0
+    && turkishRemainingReconciliation.decisionCounts?.exact_match === 15
+    && turkishRemainingReconciliation.decisionCounts?.semantically_equivalent === 125
+    && turkishRemainingReconciliation.decisionCounts?.prefer_a === 8
+    && turkishRemainingReconciliation.decisionCounts?.prefer_b === 29
+    && turkishRemainingReconciliation.decisionCounts?.reconciled_revision === 1
+    && turkishRemainingReconciliation.runtimeEligible === false
+    && turkishRemainingReconciliation.releaseEligible === false,
+  "prebook_readiness_turkish_remaining_reconciliation_invalid")
+  assert(turkishFullReconciliationCoverage.schemaVersion
+    === "dna-external-science-turkish-full-reconciliation-coverage-manifest@1"
+    && turkishFullReconciliationCoverage.inputHashes?.candidatePackageSha256
+      === candidatePackageSha256
+    && turkishFullReconciliationCoverage.inputHashes?.remaining178ArtifactSha256
+      === turkishRemainingReconciliation.outputHashes?.artifactSha256
+    && turkishFullReconciliationCoverage.inputHashes?.remaining178ArtifactFileSha256
+      === turkishRemainingReconciliation.outputHashes?.artifactFileSha256
+    && turkishFullReconciliationCoverage.counts?.candidateClaims === 220
+    && turkishFullReconciliationCoverage.counts?.existingImmutable === 42
+    && turkishFullReconciliationCoverage.counts?.newlyReconciled === 178
+    && turkishFullReconciliationCoverage.counts?.exactUnion === 220
+    && turkishFullReconciliationCoverage.counts?.missingClaims === 0
+    && turkishFullReconciliationCoverage.counts?.extraClaims === 0
+    && turkishFullReconciliationCoverage.counts?.duplicateClaims === 0
+    && turkishFullReconciliationCoverage.counts?.quarantined === 0
+    && turkishFullReconciliationCoverage.verification?.exactCandidateCoverage === true
+    && turkishFullReconciliationCoverage.runtimeEligible === false
+    && turkishFullReconciliationCoverage.releaseEligible === false,
+  "prebook_readiness_turkish_full_reconciliation_coverage_invalid")
+  assert(ownerBookReviewBundle.schemaVersion === "dna-owner-book-review-bundle-manifest@1"
+    && ownerBookReviewBundle.boundaries?.ownerApproval === false
+    && ownerBookReviewBundle.boundaries?.runtimeEligible === false
+    && ownerBookReviewBundle.boundaries?.releaseEligible === false
+    && ownerBookReviewBundle.boundaries?.activationAllowed === false
+    && ownerBookReviewBundle.acceptance?.repoTextLeakCount === 0,
+  "prebook_readiness_owner_review_bundle_boundary_invalid")
 
   const sourceGitSha = runGit(repoRoot, [
     "log",
@@ -649,6 +1219,10 @@ export function collectPrebookFacts(options = {}) {
     methodAppraisal: {
       sourceCount: appraisal.counts.sourceRecords,
       pending: appraisal.counts.pendingMethodAppraisals,
+      pendingStateAuthority: "historical_snapshot_all_records_terminally_reconciled_against_prebook_ledgers",
+      effectiveOpenHistoricalStates: methodAppraisalReconciliation.actionableUnresolvedRecords,
+      historicalTerminalizedStates:
+        methodAppraisalReconciliation.superseded_historical_pipeline_state.total,
       registered: methodAppraisalRegistrationIndex.counts.registeredForMethodPipeline,
       normalizedSnapshotRegistered:
         appraisal.counts.sourceRecords - appraisal.counts.pendingMethodAppraisals,
@@ -670,6 +1244,7 @@ export function collectPrebookFacts(options = {}) {
       runtimeEligible: methodAppraisalRegistrationIndex.counts.runtimeEligible,
       releaseEligible: methodAppraisalRegistrationIndex.counts.releaseEligible,
       snapshotRawBytesSha256: rawFileSha256(paths.sourceAppraisal),
+      reconciliation: methodAppraisalReconciliation,
     },
     candidatePassages: {
       preparedReviewPackets: countPreparedPassagePackets(join(
@@ -743,6 +1318,9 @@ export function collectPrebookFacts(options = {}) {
     },
     prebookClosure: {
       status: prebookClosureIndex.status,
+      effectiveStatus: methodAppraisalReconciliation.actionableUnresolvedRecords === 0
+        ? "prebook_actionable_work_closed"
+        : "historical_method_appraisal_reconciliation_actionable",
       indexSha256: prebookClosureIndex.indexSha256,
       indexRawBytesSha256: rawFileSha256(prebookClosureIndexPath),
       rootInputSha256: prebookClosureIndex.rootInputSha256,
@@ -754,6 +1332,15 @@ export function collectPrebookFacts(options = {}) {
       workpacksTerminal: prebookWorkpacks.counts.terminal,
       workpacksOpen: prebookWorkpacks.counts.open,
       workpackStatusCounts: prebookWorkpacks.counts.byStatus,
+      historicalSourceDecisions: prebookHistoricalSources.counts.newlyTerminal,
+      historicalSourcesOpen: prebookHistoricalSources.counts.open,
+      historicalSourceStatusCounts: prebookHistoricalSources.counts.byStatus,
+      historicalSourceLedgerSha256: prebookHistoricalSources.canonicalPayloadSha256,
+      historicalSourceIdsSha256: prebookHistoricalSources.sourceIdsSha256,
+      historicalSourceLedgerRawBytesSha256: rawFileSha256(join(
+        paths.prebookClosureRoot,
+        "historical-source-decisions.json",
+      )),
       blindClaimsCovered: prebookClaims.counts.coveredBlindClaims,
       claimDecisionUnits: prebookClaims.counts.terminalDecisionUnits,
       claimsOpen: prebookClaims.counts.open,
@@ -769,12 +1356,132 @@ export function collectPrebookFacts(options = {}) {
       draftVariations: prebookVariations.counts.total,
       draftVariationApprovals: prebookVariations.counts.approvals,
       humanProtocolStatus: prebookHumanEvaluation.status,
-      prebookActionableBlockers: prebookClosureIndex.readiness.prebook_actionable_blockers,
+      closureDeclaredPrebookActionableBlockers:
+        prebookClosureIndex.readiness.prebook_actionable_blockers,
+      prebookActionableBlockers: methodAppraisalReconciliation.actionableUnresolvedRecords,
       ownerBookDependent: prebookClosureIndex.readiness.owner_book_dependent,
       exactCandidateOrExternalHumanDependent:
         prebookClosureIndex.readiness.exact_candidate_or_external_human_dependent,
       runtimeEligible: prebookCandidatePackage.runtimeEligible,
       releaseEligible: prebookCandidatePackage.releaseEligible,
+    },
+    prebookEngineeringEvidence: {
+      lockedEvaluationV3OfficialFirstRun: {
+        state: "official_v3_holdout_consumed_fail_no_tuning_or_rerun",
+        manifestPath:
+          "docs/dna-intelligence/program/evidence/turkish-retrieval-adapter-locked-evaluation-v3-current.json",
+        manifestRawBytesSha256: rawFileSha256(paths.lockedEvaluationV3Manifest),
+        manifestSha256: lockedEvaluationV3Manifest.manifestSha256,
+        runId: lockedEvaluationV3Manifest.runId,
+        authoritySha256: lockedEvaluationV3Manifest.authority.authoritySha256,
+        resultFileSha256: lockedEvaluationV3Manifest.result.fileSha256,
+        resultSha256: lockedEvaluationV3Manifest.result.resultSha256,
+        claimFileSha256: lockedEvaluationV3Manifest.claim.fileSha256,
+        claimSha256: lockedEvaluationV3Manifest.claim.claimSha256,
+        counts: lockedEvaluationV3Manifest.counts,
+        overallAccuracy: lockedEvaluationV3Manifest.metrics.overallAccuracy,
+        qualityGate: lockedEvaluationV3Manifest.qualityGate.status,
+        determinism: lockedEvaluationV3Manifest.metrics.determinism,
+        p95Milliseconds: lockedEvaluationV3Manifest.metrics.p95Milliseconds,
+        holdoutConsumed: true,
+        noTuningOrRerun: true,
+        questionPayloadReadByReadinessGenerator: false,
+        resultPayloadReadByReadinessGenerator: false,
+        independentHumanValidation: false,
+        runtimeEligible: false,
+        releaseEligible: false,
+        activationAllowed: false,
+        v3ReleaseDecision: "no_go",
+      },
+      turkishFullCoverage: {
+        candidateClaims: 220,
+        remainingClaims: 178,
+        turkish_full_coverage_reconciled: true,
+        workpacks: {
+          manifestPath:
+            "docs/dna-intelligence/program/evidence/external-science-turkish-full-coverage-workpacks-current.json",
+          manifestRawBytesSha256: rawFileSha256(paths.turkishFullCoverageWorkpacks),
+          manifestSha256: turkishFullCoverageWorkpacks.manifestSha256,
+          indexArtifactSha256: turkishFullCoverageWorkpacks.outputHashes.index.indexSha256,
+          counts: turkishFullCoverageWorkpacks.counts,
+        },
+        passA: {
+          manifestPath:
+            "docs/dna-intelligence/program/evidence/external-science-turkish-pass-a-remaining-current.json",
+          manifestRawBytesSha256: rawFileSha256(paths.turkishPassARemaining),
+          manifestSha256: turkishPassARemaining.manifestSha256,
+          artifactSha256: turkishPassARemaining.outputHashes.artifactSha256,
+          artifactFileSha256: turkishPassARemaining.outputHashes.rawSha256,
+          counts: turkishPassARemaining.counts,
+        },
+        passAAudit: {
+          manifestPath:
+            "docs/dna-intelligence/program/evidence/external-science-turkish-pass-a-remaining-fidelity-audit-current.json",
+          manifestRawBytesSha256: rawFileSha256(paths.turkishPassAAudit),
+          manifestSha256: turkishPassAAudit.manifestSha256,
+          artifactSha256: turkishPassAAudit.outputHashes.artifactSha256,
+          artifactFileSha256: turkishPassAAudit.outputHashes.rawSha256,
+          counts: turkishPassAAudit.counts,
+        },
+        passB: {
+          manifestPath:
+            "docs/dna-intelligence/program/evidence/external-science-turkish-pass-b-remaining-current.json",
+          manifestRawBytesSha256: rawFileSha256(paths.turkishPassBRemaining),
+          manifestSha256: turkishPassBRemaining.manifestSha256,
+          artifactSha256: turkishPassBRemaining.outputHashes.artifactSha256,
+          artifactFileSha256: turkishPassBRemaining.outputHashes.artifactRawSha256,
+          counts: turkishPassBRemaining.counts,
+        },
+        passBAudit: {
+          manifestPath:
+            "docs/dna-intelligence/program/evidence/external-science-turkish-pass-b-remaining-fidelity-audit-current.json",
+          manifestRawBytesSha256: rawFileSha256(paths.turkishPassBAudit),
+          manifestSha256: turkishPassBAudit.manifestSha256,
+          artifactSha256: turkishPassBAudit.outputHashes.artifactSha256,
+          artifactFileSha256: turkishPassBAudit.outputHashes.rawSha256,
+          counts: turkishPassBAudit.counts,
+          needsRevisionBeforeReconciliation: 5,
+        },
+        remainingReconciliation: {
+          manifestPath:
+            "docs/dna-intelligence/program/evidence/external-science-turkish-remaining-reconciliation-current.json",
+          manifestRawBytesSha256: rawFileSha256(paths.turkishRemainingReconciliation),
+          manifestSha256: turkishRemainingReconciliation.manifestSha256,
+          artifactSha256: turkishRemainingReconciliation.outputHashes.artifactSha256,
+          artifactFileSha256:
+            turkishRemainingReconciliation.outputHashes.artifactFileSha256,
+          counts: turkishRemainingReconciliation.counts,
+          decisionCounts: turkishRemainingReconciliation.decisionCounts,
+        },
+        fullReconciliationCoverage: {
+          manifestPath:
+            "docs/dna-intelligence/program/evidence/external-science-turkish-full-reconciliation-coverage-current.json",
+          manifestRawBytesSha256: rawFileSha256(paths.turkishFullReconciliationCoverage),
+          manifestSha256: turkishFullReconciliationCoverage.manifestSha256,
+          coverageSha256: turkishFullReconciliationCoverage.outputHashes.coverageSha256,
+          coverageFileSha256:
+            turkishFullReconciliationCoverage.outputHashes.coverageFileSha256,
+          counts: turkishFullReconciliationCoverage.counts,
+          exactCandidateCoverage: true,
+        },
+        aggregateManifestsOnly: true,
+        independentHumanValidation: false,
+        ownerAuthority: false,
+        runtimeEligible: false,
+        releaseEligible: false,
+        activationAllowed: false,
+      },
+      ownerBookReviewBundle: {
+        manifestRawBytesSha256: rawFileSha256(paths.ownerBookReviewBundle),
+        workbenchSha256: ownerBookReviewBundle.workbenchSha256,
+        sourcePackageSha256: ownerBookReviewBundle.sourcePackageSha256,
+        finalArtifactSha256: ownerBookReviewBundle.finalArtifactSha256,
+        htmlSha256: ownerBookReviewBundle.output.htmlSha256,
+        counts: ownerBookReviewBundle.counts,
+        ownerApproval: false,
+        runtimeEligible: false,
+        releaseEligible: false,
+      },
     },
     publicationPipeline: {
       acceptedRealPassages: v3Package.counts.included.passages,
@@ -789,7 +1496,7 @@ export function collectPrebookFacts(options = {}) {
     evaluation: {
       developmentItems: evaluation.developmentRegression.itemCount,
       developmentFamilies: evaluation.developmentRegression.familyCount,
-      lockedBenchmarkItems: countJsonArray(paths.lockedQuestions),
+      lockedBenchmarkItems: lockedEvaluationV3Manifest.counts.total,
       lockedBenchmarkTarget: evaluation.lockedInternalBenchmark.targetItemCount,
       variationItems: countJsonArray(paths.variations),
       variationMinimum: evaluation.variationBank.minimumItemCount,
@@ -836,6 +1543,7 @@ export function buildReadinessProjection(facts) {
     candidateClaimReconciliations: facts.candidateClaimReconciliations,
     candidateClaimRereviews: facts.candidateClaimRereviews,
     prebookClosure: facts.prebookClosure,
+    prebookEngineeringEvidence: facts.prebookEngineeringEvidence,
     publicationPipeline: facts.publicationPipeline,
     evaluation: facts.evaluation,
     runtime: facts.runtime,
@@ -856,15 +1564,21 @@ function blockerScope(facts) {
   if (facts.sourceGovernance.identityMismatch > 0) {
     sourceLocal.push(`source_identity_mismatch_${facts.sourceGovernance.identityMismatch}`)
   }
-  if (facts.methodAppraisal.pending > 0) {
-    sourceLocal.push(`source_method_appraisals_pending_${facts.methodAppraisal.pending}`)
-  }
-  if (facts.methodAppraisal.queuedWorkpacks > 0) {
-    sourceLocal.push(`method_appraisal_workpacks_queued_${facts.methodAppraisal.queuedWorkpacks}`)
-  }
-  if (facts.methodAppraisal.registered < facts.methodAppraisal.sourceCount) {
+  if (facts.methodAppraisal.reconciliation.actionableUnresolvedRecords > 0) {
     sourceLocal.push(
-      `method_appraisal_candidate_chains_${facts.methodAppraisal.candidateChainsOnDisk}_registered_${facts.methodAppraisal.registered}`,
+      `historical_method_appraisal_records_without_terminal_closure_decision_${facts.methodAppraisal.reconciliation.actionableUnresolvedRecords}`,
+    )
+  }
+  const unreconciledQueued = facts.methodAppraisal.queuedWorkpacks
+    - facts.methodAppraisal.reconciliation
+      .superseded_historical_pipeline_state.queuedWorkpacksTerminalized
+  if (unreconciledQueued > 0) {
+    sourceLocal.push(`method_appraisal_workpacks_queued_unreconciled_${unreconciledQueued}`)
+  }
+  if (facts.methodAppraisal.registered
+    < facts.prebookClosure.workpackStatusCounts.included) {
+    sourceLocal.push(
+      `method_appraisal_registered_${facts.methodAppraisal.registered}_of_${facts.prebookClosure.workpackStatusCounts.included}_included_workpacks`,
     )
   }
   if (facts.candidatePassages.registeredSources < facts.methodAppraisal.registered) {
@@ -889,28 +1603,17 @@ function blockerScope(facts) {
     && facts.candidateClaimRereviews.sources === 0) {
     sourceLocal.push("candidate_claim_rereviews_0")
   }
-  if (facts.publicationPipeline.acceptedRealPassages === 0) {
-    sourceLocal.push("accepted_real_passages_0")
-  }
-  if (facts.publicationPipeline.releasedClaims === 0) {
-    sourceLocal.push("released_real_claims_0")
-  }
-  if (facts.publicationPipeline.releasedRelations === 0) {
-    sourceLocal.push("released_real_relations_0")
-  }
-
   return {
-    prebookActionable: facts.prebookClosure.prebookActionableBlockers === 0
-      ? []
-      : sourceLocal,
+    prebookActionable: sourceLocal,
     ownerBook: [
       "owner_book_not_supplied",
       "owner_approved_product_claim_bindings_missing",
     ],
-    sourceLocal: facts.prebookClosure.prebookActionableBlockers === 0 ? [] : sourceLocal,
+    sourceLocal,
     terminalizedPrebookCohort: [
       `full_text_${facts.prebookClosure.fullTextTerminal}_of_${facts.prebookClosure.fullTextRecords}_terminal`,
       `workpacks_${facts.prebookClosure.workpacksTerminal}_of_${facts.prebookClosure.workpacks}_terminal`,
+      `historical_sources_${facts.prebookClosure.historicalSourceDecisions}_terminal_${facts.prebookClosure.historicalSourcesOpen}_open`,
       `blind_claims_${facts.prebookClosure.blindClaimsCovered}_covered`,
       `bounded_external_claims_${facts.prebookClosure.candidateClaims}_candidate_only`,
       `benchmark_${facts.prebookClosure.draftBenchmarkItems}_draft_unsealed`,
@@ -919,6 +1622,7 @@ function blockerScope(facts) {
     exactCandidateOrExternalHuman:
       facts.prebookClosure.exactCandidateOrExternalHumanDependent,
     evaluationAndExternalHuman: [
+      "official_v3_holdout_consumed_fail_no_tuning_or_rerun",
       `locked_benchmark_${facts.evaluation.lockedBenchmarkItems}_of_${facts.evaluation.lockedBenchmarkTarget}`,
       `variation_bank_${facts.evaluation.variationItems}_of_${facts.evaluation.variationMinimum}`,
       "phase41_44_release_observations_absent",
@@ -934,6 +1638,7 @@ function blockerScope(facts) {
       "staged_rollout_authority_absent",
     ],
     globalRelease: [
+      "official_v3_locked_quality_gate_failed",
       "v3_static_package_empty",
       "v3_release_attestation_absent",
       "v3_release_no_go",
@@ -957,7 +1662,7 @@ export function buildPrebookReadiness(facts) {
     corpusExecutionTruth: {
       state: "prebook_candidate_closed_not_released",
       firstIncompleteScientificReviewPhase: null,
-      phase12: `${facts.prebookClosure.workpacksTerminal}_of_${facts.prebookClosure.workpacks}_prebook_workpacks_terminal_${facts.methodAppraisal.registered}_registered_preserved`,
+      phase12: `${facts.prebookClosure.workpacksTerminal}_of_${facts.prebookClosure.workpacks}_prebook_workpacks_terminal_${facts.methodAppraisal.reconciliation.superseded_historical_pipeline_state.total}_historical_states_terminally_reconciled_0_unresolved`,
       phase14: "candidate_jats_extraction_executed_not_released",
       phases15To27: `${facts.prebookClosure.blindClaimsCovered}_blind_claims_terminally_covered_${facts.prebookClosure.candidateClaims}_bounded_external_candidates_not_published`,
       phases29To31: `${facts.prebookClosure.candidateAnswerUnits}_single_claim_passage_answer_units_external_candidate_runtime_ineligible`,
@@ -971,7 +1676,7 @@ export function buildPrebookReadiness(facts) {
     },
     blockerScope: blockerScope(facts),
     historicalEvidence: facts.history,
-    interpretationBoundary: "The frozen prebook cohort is terminally decided and the external-science candidate is compiled. This is not released knowledge, an official sealed evaluation, independent validation, or a V3 runtime deployment.",
+    interpretationBoundary: "The frozen 24-workpack cohort and all 47 historical method-appraisal pipeline states are terminally reconciled, the external-science candidate is compiled, and exact Turkish reconciliation coverage is aggregate-manifest verified for all 220 candidate claims. The official V3 locked holdout was consumed once and failed its quality gate, so no tuning or rerun is allowed on that holdout and V3 remains no_go. This is not released knowledge, independent validation, or a V3 runtime deployment.",
   }
 }
 
@@ -1021,6 +1726,7 @@ export function buildProgramState(facts, readiness) {
       candidateClaimReconciliations: facts.candidateClaimReconciliations,
       candidateClaimRereviews: facts.candidateClaimRereviews,
       prebookClosure: facts.prebookClosure,
+      prebookEngineeringEvidence: facts.prebookEngineeringEvidence,
       publicationPipeline: facts.publicationPipeline,
       phaseDisposition: [
         {
@@ -1029,7 +1735,7 @@ export function buildProgramState(facts, readiness) {
         },
         {
           phases: [12],
-          status: "prebook_workpack_cohort_terminal_registered_sources_preserved",
+          status: "prebook_workpack_and_historical_source_cohorts_terminal",
         },
         {
           phases: [14],
@@ -1128,10 +1834,14 @@ export function validateProgramState(programState, readiness, facts) {
     "prebook_program_state_legacy_completed_phases_forbidden")
   assert(programState.engineeringStatus?.state === "contracts_implemented_not_product_complete",
     "prebook_program_state_engineering_truth_invalid")
-  assert(programState.corpusExecutionStatus?.state === "prebook_candidate_closed_not_released",
+  assert(programState.corpusExecutionStatus?.state
+    === "prebook_candidate_closed_not_released",
     "prebook_program_state_corpus_execution_truth_invalid")
   assert(programState.corpusExecutionStatus?.firstIncompleteScientificReviewPhase === null
-    && programState.corpusExecutionStatus?.prebookClosure?.prebookActionableBlockers === 0,
+    && programState.corpusExecutionStatus?.prebookClosure?.prebookActionableBlockers
+      === facts.methodAppraisal.reconciliation.actionableUnresolvedRecords
+    && facts.methodAppraisal.reconciliation.actionableUnresolvedRecords === 0
+    && programState.orderedProgramStatus?.scientificCorpusExecutionCursor === 27,
     "prebook_program_state_scientific_cursor_invalid")
   assert(programState.ownerBookStatus?.phase === 3
     && programState.ownerBookStatus.status === "deferred_owner_book"

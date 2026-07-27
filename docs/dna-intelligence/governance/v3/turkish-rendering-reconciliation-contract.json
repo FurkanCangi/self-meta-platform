@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "dna-external-science-turkish-rendering-reconciliation-contract@1",
+  "status": "sealed_candidate_only",
+  "scope": {
+    "topics": 14,
+    "records": 42,
+    "neutralSelectionSetSha256": "19dbb3434f72d023c79fb321781c1be8be43d7376033320d99a36f7f25f910a3"
+  },
+  "inputs": {
+    "candidatePackage": "Datasets/DNA-Intelligence/work/v3/prebook-closure/v1/external-science-candidate-package.json",
+    "neutralSelection": "Outputs/SelfMetaAI/dna-intelligence/turkish-rendering-neutral-selection/feasibility-v1/selection-contract.json",
+    "passA": "Outputs/SelfMetaAI/dna-intelligence/turkish-rendering-pass-a/feasibility-v1/pass-a-artifact.json",
+    "alignedPassB": "Outputs/SelfMetaAI/dna-intelligence/turkish-rendering-pass-b-aligned/feasibility-v1/rendering-artifact.json",
+    "adjudicationDecisions": "Outputs/SelfMetaAI/dna-intelligence/turkish-rendering-reconciliation/feasibility-v1/adjudication-decisions.json"
+  },
+  "output": {
+    "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/turkish-rendering-reconciliation/feasibility-v1/reconciliation-artifact.json",
+    "repoManifest": "docs/dna-intelligence/program/evidence/turkish-rendering-reconciliation-current.json",
+    "fullTextAllowedOnlyOnResearchSsd": true,
+    "requiredFileMode": "0600",
+    "repoManifestAggregateOnly": true
+  },
+  "terminalDecisions": [
+    "exact",
+    "semantically_equivalent",
+    "pass_a_preferred",
+    "pass_b_preferred",
+    "contested_quarantined"
+  ],
+  "failClosedRules": {
+    "identityAndHashBindingRequired": true,
+    "sourceRereadRequired": true,
+    "selectedRenderingMustBeSourceFaithful": true,
+    "thirdRenderingForbidden": true,
+    "unresolvedRecordMustBeQuarantined": true,
+    "unknownFieldsForbidden": true,
+    "symlinkAndPathEscapeForbidden": true,
+    "lockedHoldoutAccessForbidden": true
+  },
+  "provenance": {
+    "reviewClass": "codex_multi_pass_source_reread_reconciliation",
+    "independentHumanReview": false,
+    "externalModelUsed": false,
+    "networkUsed": false
+  },
+  "boundaries": {
+    "candidateOnly": true,
+    "runtimeAuthority": false,
+    "releaseAuthority": false,
+    "activationAuthority": false,
+    "adapterAuthority": false,
+    "ownerBookAuthority": false
+  }
+}

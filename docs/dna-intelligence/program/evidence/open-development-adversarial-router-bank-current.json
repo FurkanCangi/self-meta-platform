@@ -1,0 +1,103 @@
+{
+  "aggregate": {
+    "byExpectedAction": {
+      "abstain": 24,
+      "clarify": 7,
+      "retrieve": 46
+    },
+    "byRiskClass": {
+      "clinical_safety": 8,
+      "compound_query_ambiguity": 12,
+      "context_resolution": 5,
+      "domain_boundary": 8,
+      "epistemic_boundary": 13,
+      "prompt_injection_safety": 8,
+      "retrieval_robustness": 23
+    },
+    "bySemanticFamily": {
+      "adversarial_character_loss": 4,
+      "adversarial_clinical_safety": 8,
+      "adversarial_daily_therapist_language": 5,
+      "adversarial_false_premise": 4,
+      "adversarial_identity_anaphora": 5,
+      "adversarial_long_query": 4,
+      "adversarial_mixed_language": 5,
+      "adversarial_negation": 5,
+      "adversarial_prompt_injection": 8,
+      "adversarial_safe_theory_boundary": 4,
+      "adversarial_two_subquestions_cross_topic": 7,
+      "adversarial_two_subquestions_same_topic": 5,
+      "adversarial_typo_inflection": 5,
+      "adversarial_unsupported_domain": 8
+    },
+    "caseCount": 77,
+    "identityContextCaseCount": 5,
+    "qualityControls": {
+      "allPassed": true,
+      "exactDuplicateInteractions": 0,
+      "exactSourceOverlap": 0,
+      "identityContextViolations": 0,
+      "missingRequiredFamilies": 0,
+      "nearDuplicatePairs": 0,
+      "nearSourceOverlapPairs": 0,
+      "semanticFamilyOverlap": 0,
+      "transformationFamilyConflicts": 0
+    },
+    "topicCardCount": 14
+  },
+  "authorityClass": "open_development_only_not_official",
+  "bank": {
+    "bankSha256": "360ebcdf14a17f24159bda0f16385a5ca006ad2cd6e58a3e506d18ffa4012f36",
+    "fileMode": "0600",
+    "fileSha256": "e4b7ba5b33ee71d0fb965f8055bda6672a4566248209564fcce6812a31581dd9",
+    "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/open-development-adversarial-router-bank/v1/bank.json"
+  },
+  "boundaries": {
+    "activationAllowed": false,
+    "bookIndependent": true,
+    "developmentOnly": true,
+    "directBookContentRead": false,
+    "independentHumanValidation": false,
+    "lockedHoldoutRead": false,
+    "modelEvaluationPerformed": false,
+    "modelInvoked": false,
+    "officialClaimRead": false,
+    "officialEvaluation": false,
+    "officialResultRead": false,
+    "ownerAuthority": false,
+    "rawContentStoredOnResearchSsdOnly": true,
+    "releaseEligible": false,
+    "runtimeEligible": false
+  },
+  "manifestSha256": "62d301b1b990c2cbef731f1964eabf07dafbd54d4639e4e625a2da90a133170c",
+  "schemaVersion": "dna.open-development-adversarial-router-bank-manifest.v1",
+  "sourceBindings": {
+    "adapterDeclaredSha256": "a005b5aa96383f4ac753a01ee11fa923406513b23b2d6cb90e0090f8b8830168",
+    "adapterFileSha256": "cdc2dc9c7ba8926f9e51ab7d06dfbe4953b40609d2b21294532178e019005645",
+    "adapterLogicalSha256": "a704019ee6fa46a4814dacaf828887995a5d44b38f5c8fd220c060e89daa96d1",
+    "allowedReferenceBanksSha256": "9f0afd83c00af90596dd5a47f91ddb05919e01da35e873ffe7d6fdf9bd34b6eb",
+    "allowedReferenceCounts": {
+      "metamorphic": 93,
+      "tuning": 42
+    },
+    "bankGeneratorFileSha256": "e03776d26d84002a78444f017e169ea47090bbab13caff6517dc4439eb0162f7",
+    "candidatePackageDeclaredSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "developmentGeneratorFileSha256": "8e42dd728039772429d4afc8a07e5b4c3734c7dcac6f6d494556ade55d216a6c",
+    "topicCardsSha256": "2784681de0a0e8902ad1ca788d7a9609f642d3b5787eb097d5c7f584443a693e"
+  },
+  "sourcePolicy": {
+    "allowedDevelopmentMetamorphicBank": true,
+    "allowedDevelopmentTuningBank": true,
+    "candidateTopicCards": true,
+    "claimOrPassageTextUsed": false,
+    "developmentFamilyHoldoutUsed": false,
+    "lockedOrOfficialPayloadUsed": false,
+    "priorEvaluationResultUsed": false
+  },
+  "verification": {
+    "deterministicBuildHashStable": true,
+    "deterministicBuildsCompared": 3,
+    "rawPayloadPresentInRepositoryManifest": false,
+    "tamperDetectionStrategy": "canonical_hash_plus_current_source_rebuild"
+  }
+}

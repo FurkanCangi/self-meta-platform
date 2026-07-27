@@ -1,0 +1,93 @@
+{
+  "schemaVersion": "dna-external-science-turkish-full-coverage-manifest@1",
+  "recordedAt": "2026-07-19T11:51:32.792Z",
+  "version": "dna-external-science-turkish-full-coverage-workpacks@1",
+  "status": "blind_authoring_workpacks_prepared",
+  "inputHashes": {
+    "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "candidateFileSha256": "45c779a88b668f26b9a79c29715ca8709cb3a52afa07c8d4dbae37bc01ee7b3c",
+    "neutralSelectionArtifactSha256": "b0b543dbbdf8c1cbd1f3896ec0f93dcb5436e2f3c27bdaeb5eadc75404bbea28",
+    "neutralSelectionFileSha256": "99d5e3add9a2ece3ad26c6f0f133337a5bafe82e0bf25b9ae717d6aab276e91e",
+    "preservedSelectionSetSha256": "19dbb3434f72d023c79fb321781c1be8be43d7376033320d99a36f7f25f910a3",
+    "alignedPassBManifestFileSha256": "777069fa1dd46f1408f1595b7c1a2b10d5f9afeb2d65f4a70cea3bb1b7b8742d",
+    "reconciliationManifestFileSha256": "b6150cb16684b93e9f555187dcf6c8229085ed7827d25a0cec01d4b9919b4f92",
+    "reconciledRecordsSha256": "60686cb6d311fe0df8cd5b3c73eb8e71513619dc5943b3041fb8ed1ef289c4d2"
+  },
+  "outputHashes": {
+    "passA": {
+      "rawSha256": "d9e5aa310660f31b831ec9252b6897a9312a499e30e87bcd3c3801ee5c321469",
+      "workpackSha256": "132e8dd16fd21cb4b230596ecc4267d53e7deacb46799e576799f187855eedec",
+      "scheduleSha256": "e6fa1ec4f08cc8db135a1443cdc3e9ff378b06fc397563532b7d52329d8fb826",
+      "byteCount": 902025,
+      "fileMode": "0600"
+    },
+    "passB": {
+      "rawSha256": "7ae8e2ecc11eea343cc0ceaa0055d89fee4cd8773809ccae1fd3e970cd76f5e1",
+      "workpackSha256": "23df3848e80c1ae998c0286476e72df83a0679fd348b56b2aa694d8a80d8173a",
+      "scheduleSha256": "7b1c83a6d8a65cd82d13f3b047061e102dde7713243cb848eaf6b4b6105d453b",
+      "byteCount": 902025,
+      "fileMode": "0600"
+    },
+    "index": {
+      "rawSha256": "25ed68a4cdaf78ab536e0f44d11c68b546709502c86cb878d67bf64b3668cdda",
+      "indexSha256": "c690c6cfb9a4b684b136c89e48140f9f92368efe326aa135ac576014590462ad",
+      "byteCount": 5679,
+      "fileMode": "0600"
+    }
+  },
+  "counts": {
+    "candidateClaims": 220,
+    "preservedReconciledClaims": 42,
+    "remainingClaims": 178,
+    "passAWorkItems": 178,
+    "passBWorkItems": 178,
+    "topics": 14,
+    "exactUnionClaims": 220,
+    "duplicateClaimsPerPass": 0,
+    "overlapWithPreserved": 0
+  },
+  "topicCoverage": [
+    { "topicIdSha256": "11a9f2fc137d07f199d149da225e81c1e86a05686e3870bfba4f116ce4965b21", "remainingClaimCount": 3, "preservedClaimCount": 3 },
+    { "topicIdSha256": "13d7b7e537ed4f2543155cec2181d53424ed4e8b2d6055682e269e0f3bbda9cb", "remainingClaimCount": 17, "preservedClaimCount": 3 },
+    { "topicIdSha256": "20a9459b5052ffdfdfefc93e51467e744755317538b3f43d0561a758c95e27da", "remainingClaimCount": 11, "preservedClaimCount": 3 },
+    { "topicIdSha256": "2b3c49392bf14587fea13dd3c2365c9c2c0b2c13febc7057ceb954690bacba2d", "remainingClaimCount": 17, "preservedClaimCount": 3 },
+    { "topicIdSha256": "63854c4c32dd307fc3ad312c6295201f89b1d09c89eb5dbdd7b18b0e0bca3fbf", "remainingClaimCount": 9, "preservedClaimCount": 3 },
+    { "topicIdSha256": "73add9a1ea38d67f90ba90bfa70ccd2598fd788a36793805587a892658f9654c", "remainingClaimCount": 15, "preservedClaimCount": 3 },
+    { "topicIdSha256": "9654e9317695e1fda16e662e41ecd47b37638c15d29445de0f071b7905e0a801", "remainingClaimCount": 14, "preservedClaimCount": 3 },
+    { "topicIdSha256": "a47cac6d0302e484b957c754b5bea92b542c85b6bfe79d156fbc5a5001f9e5d2", "remainingClaimCount": 17, "preservedClaimCount": 3 },
+    { "topicIdSha256": "b72a9f3ad245ada46bbb7ece08c0a4f6692802ede4dcf09f4ce858bfc15e2bcd", "remainingClaimCount": 13, "preservedClaimCount": 3 },
+    { "topicIdSha256": "b8f322600961361e7db583a866b0089aa8d764756026e785ec9b5cbaf8df7063", "remainingClaimCount": 11, "preservedClaimCount": 3 },
+    { "topicIdSha256": "d101fca4d6e1e82a0dbdb3108704e1e0571f57b5b6736638da95c2349387dc22", "remainingClaimCount": 21, "preservedClaimCount": 3 },
+    { "topicIdSha256": "e3cf4867383ea5b1253dd5a40ba148f80e482aa03bc4b7d30f2039e02d54d299", "remainingClaimCount": 15, "preservedClaimCount": 3 },
+    { "topicIdSha256": "e4187b1d0345d953668b6f3e4cfb13b25bc5135b69cea4ded8e71b5630bdad9c", "remainingClaimCount": 11, "preservedClaimCount": 3 },
+    { "topicIdSha256": "f4540b4aa7ef5e74b177c122c05cd6eb074122edc0618d6e84de78935a695d80", "remainingClaimCount": 4, "preservedClaimCount": 3 }
+  ],
+  "verification": {
+    "passCoverageIdentical": true,
+    "passWorkItemIdsDisjoint": true,
+    "topicBalancedRoundRobin": true,
+    "sourceAndCandidateHashesBound": true,
+    "fullTextOnlyOnResearchSsd": true,
+    "repositoryManifestAggregateAndHashOnly": true,
+    "existingFortyTwoArtifactsModified": false,
+    "externalModelUsed": false,
+    "networkUsed": false,
+    "lockedEvaluationArtifactsAccessed": false
+  },
+  "boundaries": {
+    "candidateOnly": true,
+    "translationPerformed": false,
+    "reconciliationPerformed": false,
+    "runtimeAuthority": false,
+    "releaseAuthority": false,
+    "activationAuthority": false,
+    "ownerAuthority": false,
+    "activeRuntimeGeneration": "v2_legacy",
+    "v3ReleaseDecision": "no_go_unchanged"
+  },
+  "runtimeEligible": false,
+  "releaseEligible": false,
+  "activationAllowed": false,
+  "ownerAuthority": false,
+  "manifestSha256": "3edb6e7850eb04eebd2041b92b7e345af96e12bc1295ccd1bf52202c7f93b14a"
+}

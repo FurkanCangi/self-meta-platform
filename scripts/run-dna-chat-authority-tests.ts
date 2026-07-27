@@ -595,34 +595,31 @@ async function main() {
     "utf8",
   )
   for (const requiredUiContract of [
-    "answer.answerUnits.map",
+    "visibleAnswerUnits.map",
     "Otoritesine göre ayrılmış yanıt",
     'case_evidence: "Rapor dayanağı"',
     'limitation: "Sınırlılık"',
     'safety_boundary: "Güvenlik sınırı"',
     "Denetim bekliyor",
-    "unit.authority.boundaryTr",
-    "source.authority?.boundaryTr",
     "!hasStructuredUnits && answer.caseEvidence.length",
-    "!hasStructuredUnits && answer.limitations.length",
     "Yanıtta kullanılan bilgi otoriteleri",
   ]) {
     assert.ok(assistantUi.includes(requiredUiContract), `UI authority contract: ${requiredUiContract}`)
   }
-  assert.match(
+  assert.doesNotMatch(
     assistantUi,
-    /const hasSafetyBoundaryUnit = Boolean\([\s\S]*?answer\.safetyBoundary[\s\S]*?answer\.answerUnits\.some\([\s\S]*?unit\.text\.trim\(\) === answer\.safetyBoundary\.trim\(\)/,
-    "UI, yapılandırılmış yanıtta birebir bulunan güvenlik sınırını güvenli biçimde tekilleştirmeli",
-  )
-  assert.match(
-    assistantUi,
-    /\{answer\.safetyBoundary && !hasSafetyBoundaryUnit \? \(/,
-    "UI, yapılandırılmış birimde bulunmayan güvenlik sınırını yanıt biçiminden bağımsız göstermeli",
+    /unit\.authority\.boundaryTr|source\.authority\?\.boundaryTr/,
+    "İçerik otoritesi sınır metni kullanıcı arayüzünde meta veri olarak gösterilmemeli",
   )
   assert.doesNotMatch(
     assistantUi,
-    /!hasStructuredUnits && answer\.safetyBoundary/,
-    "Güvenlik sınırı yalnız legacy yanıtlara bağlanmamalı",
+    /<span>\{answer\.safetyBoundary\}<\/span>|!hasStructuredUnits && answer\.limitations\.length/,
+    "Genel sınır ve sınırlılık dipnotları sohbet yanıtında gösterilmemeli",
+  )
+  assert.match(
+    assistantUi,
+    /unit\.kind !== "limitation"[\s\S]*?unit\.kind !== "safety_boundary" \|\| unit\.section === "case_non_inference"/,
+    "UI, yardımcı sınır birimlerini gizlerken vakaya özgü biyolojik çıkarım uyarısını korumalı",
   )
 
   const deterministicHashes = Array.from({ length: 20 }, () => stableAnswerHash(

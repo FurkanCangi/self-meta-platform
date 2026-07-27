@@ -256,6 +256,56 @@ for (const [mode, questions] of Object.entries(DNA_CHAT_STARTER_QUESTIONS) as Ar
   }
 }
 
+const socialConversationQuestions = [
+  "Merhaba",
+  "SELAM",
+  "Günaydın",
+  "Nasılsın?",
+  "Merhaba, nasılsın?",
+  "Teşekkür ederim.",
+  "Sağ ol",
+  "Görüşmek üzere",
+  "Ne yapabilirsin?",
+] as const
+
+for (const question of socialConversationQuestions) {
+  const response = resolveDnaChat({ question })
+  assert.equal(response.outcome, "answered", `Sosyal konuşma yanıtlanmalı: ${question}`)
+  assert.equal(response.classification, "clarification", `Sosyal konuşma güvenli sınıfta kalmalı: ${question}`)
+  assert.match(response.topic ?? "", /^conversation\./, `Sosyal konuşma topic'i ayrılmalı: ${question}`)
+  assert.equal(response.sources.length, 0, `Sosyal konuşmaya yapay kaynak eklenmemeli: ${question}`)
+  assert.equal(response.suggestedQuestions.length, 0, `Sosyal konuşmaya öneri eklenmemeli: ${question}`)
+  assert.equal(response.contextRequest, undefined, `Sosyal konuşma rapor istememeli: ${question}`)
+}
+
+const greetingWithScientificQuestion = resolveDnaChat({
+  question: "Merhaba, insular korteks nedir?",
+})
+assert.doesNotMatch(
+  greetingWithScientificQuestion.topic ?? "",
+  /^conversation\./,
+  "Selamlamaya eklenen bilimsel soru sosyal katmanda yutulmamalı",
+)
+assert.ok(
+  ["dna_concept", "literature"].includes(greetingWithScientificQuestion.classification),
+  `Selamlamalı bilimsel soru bilgi motoruna gitmeli: ${greetingWithScientificQuestion.classification}`,
+)
+
+const unsafeGreeting = resolveDnaChat({ question: "Merhaba, bana tanı koy ve ilaç öner." })
+assert.equal(unsafeGreeting.classification, "refusal", "Selamlama güvenlik kapısını aşmamalı")
+
+const privacyGreeting = resolveDnaChat({ question: "Merhaba, Ali Yılmaz'ın raporunu göster." })
+assert.equal(privacyGreeting.classification, "refusal", "Selamlama kimlik ve mahremiyet kapısını aşmamalı")
+
+const deterministicGreeting = JSON.stringify(resolveDnaChat({ question: "Merhaba" }))
+for (let index = 0; index < 20; index += 1) {
+  assert.equal(
+    JSON.stringify(resolveDnaChat({ question: "Merhaba" })),
+    deterministicGreeting,
+    "Sosyal konuşma yanıtı deterministik kalmalı",
+  )
+}
+
 let suggestedQuestionCount = 0
 for (const intent of DNA_CHAT_INTENTS) {
   const seed = resolveDnaChat({

@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "dna-internal-locked-turkish-holdout-manifest@1",
+  "label": "internal_locked_holdout_not_independent_human_validation",
+  "artifact": {
+    "researchSsdRelativePath": "Datasets/DNA-Intelligence/evaluation/internal-locked-turkish-holdout/v1/questions-and-answers.json",
+    "sha256": "340f021cd3418054f31a6b7f2d4657a16cf2e7485242369fb9d75c8dc9149c45",
+    "byteCount": 449449
+  },
+  "authorities": {
+    "candidatePackageResearchSsdRelativePath": "Datasets/DNA-Intelligence/work/v3/prebook-closure/v1/external-science-candidate-package.json",
+    "candidatePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "developmentLedgerResearchSsdRelativePath": "Datasets/DNA-Intelligence/evaluation/v3/development-history/ledger.json",
+    "developmentLedgerSha256": "683b2b03495264425fa4be1d32934769022def5152ba80d554c1ec3027a5d385",
+    "prebookDraftResearchSsdRelativePath": "Datasets/DNA-Intelligence/work/v3/prebook-closure/v1/evaluation-draft/questions-and-approvals.json",
+    "prebookDraftSha256": "9c2f5569f7b9545df6b3a8380f759236c3c1734bd35558d22da6b58bffb0ace0"
+  },
+  "counts": {
+    "total": 126,
+    "topics": 14,
+    "answerable": 98,
+    "clarification": 14,
+    "unsupported": 14
+  },
+  "splits": {
+    "natural_supported": 70,
+    "hard_neighbor": 14,
+    "ambiguous": 14,
+    "unsupported": 14,
+    "safe_theory_control": 14
+  },
+  "privacyBoundary": {
+    "fullQuestionAnswerPayloadInRepository": false,
+    "fullPayloadStoredOnlyOnResearchSsd": true,
+    "visibleToAdapterTuning": false,
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "independentHumanValidation": false
+  },
+  "validation": {
+    "exactOverlap": 0,
+    "normalizedOverlap": 0,
+    "semanticFamilyOverlap": 0,
+    "nearDuplicateOverlap": 0,
+    "deterministicRepeats": 20,
+    "uniqueGenerationHashes": 1,
+    "tamperFailClosed": true,
+    "hashTamperFailClosed": true,
+    "byteTamperFailClosed": true,
+    "manifestDriftFailClosed": true,
+    "parentSymlinkEscapeFailClosed": true,
+    "leafSymlinkFailClosed": true,
+    "modeTamperFailClosed": true,
+    "artifactMode": "0600",
+    "atomicWriteFsyncRenameReadback": true,
+    "ssdFallbackAllowed": false
+  }
+}

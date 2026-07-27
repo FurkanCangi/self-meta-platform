@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "dna.turkish-retrieval-v3-source-derived.repo-aggregate.v1",
+  "authorityClass": "development_only_source_derived",
+  "runtimeEligible": false,
+  "releaseEligible": false,
+  "activationAllowed": false,
+  "ownerAuthority": false,
+  "sourcePackageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+  "adapterSha256": "a005b5aa96383f4ac753a01ee11fa923406513b23b2d6cb90e0090f8b8830168",
+  "freezeManifestSha256": "187cebefc6d74980c55d275eee345eb1666a0fd304abce084befbea7f288b12c",
+  "aggregate": {
+    "topics": 14,
+    "answerUnits": 220,
+    "tuningCases": 42,
+    "holdoutCases": 42,
+    "metamorphicCases": 93,
+    "determinismRuns": 20,
+    "p95LatencyMs": 6.55237,
+    "gates": {
+      "tuningAccuracy": true,
+      "holdoutAccuracy": true,
+      "metamorphicAccuracy": true,
+      "allMetamorphicFamilies": true,
+      "semanticFamilySeparation": true,
+      "fullTopicCoverage": true,
+      "deterministic20x": true,
+      "p95Under25ms": true
+    },
+    "allGatesPassed": true
+  }
+}

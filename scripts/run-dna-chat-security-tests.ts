@@ -586,6 +586,8 @@ for (const sentinel of maliciousSnapshotSentinels) {
 
 const route = read("src/app/api/app/dna-chat/route.ts")
 const apiResolver = read("src/lib/dna/chat/apiResolver.ts")
+const rateLimitRuntime = read("src/lib/security/rateLimit.ts")
+const rateLimitPolicy = read("src/lib/security/rateLimitPolicy.ts")
 const ownedCaseAnswer = read("src/lib/dna/chat/ownedCaseAnswer.ts")
 const ownedCaseCore = read("src/lib/dna/chat/ownedCaseContextCore.ts")
 const client = read("src/app/dna-asistani/DnaAssistantClient.tsx")
@@ -617,6 +619,11 @@ assert.match(route, /MAX_BODY_BYTES = 8 \* 1024/)
 assert.match(route, /readDnaChatRequestBody\(request, MAX_BODY_BYTES\)/)
 assert.match(apiResolver, /request\.body\.getReader\(\)/)
 assert.match(apiResolver, /totalBytes > maxBytes/)
+assert.doesNotMatch(rateLimitRuntime, /new Map|memoryRateLimit|Falling back to in-memory/)
+assert.match(rateLimitRuntime, /evaluateSharedRateLimit/)
+assert.match(rateLimitPolicy, /backendAvailable:\s*false/)
+assert.match(rateLimitPolicy, /reason:\s*["']backend_unavailable["']/)
+assert.match(route, /!limit\.backendAvailable[\s\S]*?errorResponse\(["']dna_chat_unavailable["'],\s*503\)/)
 assert.match(route, /dnaChatPostSchema[\s\S]*?\.strict\(\)/)
 assert.match(route, /mode: z\.enum\(\["theory", "dna", "case"\]\)\.optional\(\)/)
 assert.match(route, /limit: 12[\s\S]*?windowMs: 10_000/)
@@ -678,13 +685,13 @@ assert.ok(
   resolverBlock.indexOf("resolveDnaChat({") < resolverBlock.indexOf("dependencies.loadCaseAnswer"),
   "POST soruyu rapor depolamasına erişmeden önce sınıflandırmalı",
 )
-assert.match(client, /requestSequenceRef/)
-assert.match(client, /activeRequestRef\.current\?\.abort\(\)/)
-assert.match(client, /signal: controller\.signal/)
+assert.match(client, /requestCoordinatorRef/)
+assert.match(client, /requestCoordinatorRef\.current\.cancel\(\)/)
+assert.match(client, /signal: request\.controller\.signal/)
 assert.match(client, /useState\(""\)/)
 assert.match(client, /answer\.contextRequest\?\.type === "report"/)
-assert.match(client, /setPendingReportQuestion\(cleanQuestion\)/)
-assert.match(client, /await loadReports\(controller\.signal\)/)
+assert.match(client, /setPendingReportQuestion\(request\.snapshot\.question\)/)
+assert.match(client, /await loadReports\(request\.controller\.signal\)/)
 const chooseReportBlock = client.slice(
   client.indexOf("async function chooseReport"),
   client.indexOf("function submitQuestion"),
@@ -693,6 +700,8 @@ assert.match(chooseReportBlock, /reportSelectionCoordinatorRef\.current/)
 assert.match(chooseReportBlock, /if \(reportSelectionBlocked\) return/)
 assert.match(chooseReportBlock, /coordinator\.claim\(/)
 assert.match(chooseReportBlock, /if \(!transition\) return/)
+assert.match(chooseReportBlock, /currentReportId: selectedReportId \|\| null/)
+assert.match(chooseReportBlock, /appendUser: transition\.clearConversation/)
 assert.ok(
   chooseReportBlock.indexOf("setPendingReportQuestion(null)")
     < chooseReportBlock.indexOf("await sendQuestion"),
@@ -716,10 +725,20 @@ assert.match(client, /RESPONSE_DEPTH_OPTIONS/)
 assert.match(client, /name="dna-response-depth"/)
 assert.match(client, /responseDepth,/)
 assert.match(client, /Bölüm\/sayfa:/)
-assert.match(client, /Kanıt düzeyi:/)
-assert.match(client, /Yaş kapsamı:/)
+assert.doesNotMatch(client, /Kanıt düzeyi:/)
+assert.doesNotMatch(client, /Yaş kapsamı:/)
+assert.doesNotMatch(client, /İddia sınırı:/)
+assert.doesNotMatch(client, /Enter gönderir/)
+assert.doesNotMatch(client, />Sınırlılıklar</)
+assert.doesNotMatch(client, /answer\.suggestedQuestions\.slice/)
+assert.match(client, /const visibleAnswerUnits = answer\.answerUnits\.filter/)
+assert.match(client, /unit\.kind !== "limitation"/)
+assert.match(client, /unit\.kind !== "safety_boundary" \|\| unit\.section === "case_non_inference"/)
 assert.match(client, /Tartışmalı teori/)
-assert.match(client, /Raporda Yok/)
+assert.doesNotMatch(client, /Raporda Yok/)
+assert.match(client, /Seçili raporda bulunamadı/)
+assert.match(client, /Henüz yanıtlayamıyorum/)
+assert.match(client, /answer\.availabilityScope === "report"/)
 assert.match(client, /Kanıt yetersiz/)
 assert.match(client, /Bu ilişki kurulmamıştır/)
 assert.match(client, /dnaValidationStatus === "not_established"/)
@@ -748,20 +767,10 @@ assert.match(client, /answer\.runtimeGeneration === "v3"\s*&&\s*unit\.section/)
 assert.match(client, /V3_ANSWER_SECTION_LABEL\[unit\.section\]/)
 assert.match(client, /\{ANSWER_UNIT_KIND_LABEL\[unit\.kind\]\}/,
   "V2 yanıtları genel birim başlığına geri düşebilmeli")
-assert.match(
-  client,
-  /const hasSafetyBoundaryUnit = Boolean\([\s\S]*?unit\.text\.trim\(\) === answer\.safetyBoundary\.trim\(\)/,
-  "Yapılandırılmış yanıtta birebir bulunan güvenlik sınırı tekrar edilmemeli",
-)
-assert.match(
-  client,
-  /\{answer\.safetyBoundary && !hasSafetyBoundaryUnit \? \(/,
-  "Yapılandırılmış birimlerde yer almayan güvenlik sınırı ayrıca gösterilmeli",
-)
 assert.doesNotMatch(
   client,
-  /!hasStructuredUnits && answer\.safetyBoundary/,
-  "Güvenlik sınırı yalnız eski yapılandırılmamış yanıtlara bağlanmamalı",
+  /<span>\{answer\.safetyBoundary\}<\/span>/,
+  "Genel güvenlik dipnotu sohbet yanıtında gösterilmemeli",
 )
 assert.match(apiResolver, /citationCardIds/)
 const publicV3UnitBlock = apiResolver.slice(

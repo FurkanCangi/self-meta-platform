@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "dna-frozen-turkish-retrieval-adapter-contract@1",
+  "adapterSchemaVersion": "dna-frozen-turkish-retrieval-adapter@1",
+  "configSchemaVersion": "dna-turkish-retrieval-adapter-config@1",
+  "exactConfigFields": [
+    "schemaVersion",
+    "topics",
+    "thresholds",
+    "configSha256"
+  ],
+  "exactAdapterFields": [
+    "schemaVersion",
+    "status",
+    "adapterId",
+    "frozenAt",
+    "candidatePackageSha256",
+    "developmentQaEvaluationSha256",
+    "evaluatorModule",
+    "codeSha256",
+    "configSha256",
+    "builtWithoutLockedHoldout",
+    "tuningInputAllowlist",
+    "forbiddenInputPaths",
+    "topics",
+    "thresholds",
+    "runtimeEligible",
+    "releaseEligible",
+    "adapterSha256"
+  ],
+  "exactTopicFields": [
+    "topicId",
+    "positivePhrases",
+    "negativePhrases",
+    "contextPhrases"
+  ],
+  "exactTuningInputFields": [
+    "id",
+    "kind",
+    "location",
+    "relativePath",
+    "sha256"
+  ],
+  "exactThresholdFields": [
+    "positivePhraseWeight",
+    "contextPhraseWeight",
+    "negativePhrasePenalty",
+    "answerMinimum",
+    "marginMinimum"
+  ],
+  "constraints": {
+    "status": "frozen",
+    "topicCount": 14,
+    "phraseTokenMinimum": 1,
+    "phraseTokenMaximum": 4,
+    "phraseQuestionMarkAllowed": false,
+    "fullQuestionAllowed": false,
+    "builtWithoutLockedHoldout": true,
+    "lockedInputInAllowlistAllowed": false,
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "adapterSha256Rule": "stable_sha256_of_exact_adapter_payload_without_adapterSha256",
+    "configSha256Rule": "stable_sha256_of_config_schema_topics_and_thresholds",
+    "codeSha256Rule": "sha256_of_source_agent_authored_evaluator_module_at_freeze",
+    "evaluatorModulePrefix": "scripts/generated/dna-retrieval-evaluators/",
+    "evaluatorExport": "routeFrozenAdapter(adapter, question)",
+    "evaluatorExactReturnFields": ["decision", "topicId"],
+    "evaluatorAllowedDecisions": ["answer", "clarify", "abstain", "refuse"],
+    "evaluatorStaticClosure": {
+      "importsAllowed": false,
+      "dynamicImportAllowed": false,
+      "requireAllowed": false,
+      "filesystemAllowed": false,
+      "networkAllowed": false,
+      "processOrEnvAllowed": false,
+      "absolutePathsAllowed": false,
+      "lockedOrHoldoutStringsAllowed": false,
+      "writeOrLogSideEffectsAllowed": false,
+      "moduleSymlinkAllowed": false,
+      "codeByteDriftAllowed": false
+    },
+    "holdoutAuthorMayAuthorSemanticConfig": false,
+    "holdoutAuthorMayAuthorRoutingAlgorithm": false
+  },
+  "authority": "scripts/lib/dna-locked-retrieval-core.mjs"
+}

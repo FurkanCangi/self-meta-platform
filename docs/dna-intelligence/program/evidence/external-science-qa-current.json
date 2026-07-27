@@ -1,0 +1,76 @@
+{
+  "schemaVersion": "dna-external-science-offline-qa-manifest@1",
+  "recordedAt": "2026-07-24T08:24:16.044Z",
+  "qaVersion": "dna-external-science-offline-qa@1",
+  "candidatePackage": {
+    "relativePath": "Datasets/DNA-Intelligence/work/v3/prebook-closure/v1/external-science-candidate-package.json",
+    "schemaVersion": "dna-external-science-candidate@1",
+    "basisAt": "2026-07-19T11:51:32.792Z",
+    "packageSha256": "1efe414cd6fecad250a3bf9cdbb963a51e872f1d13f2041676b5abde1ede20bd",
+    "authorityClass": "external_science_candidate",
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "counts": {
+      "topics": 14,
+      "sources": 14,
+      "passages": 166,
+      "claims": 220,
+      "relations": 0,
+      "answerUnits": 220
+    }
+  },
+  "rawOutput": {
+    "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/external-science-qa/prebook-science-qa-v1/raw-result.json",
+    "rawSha256": "6b01ae69875b93e5fb309bdc246e26abd481913cba9a821ed93ca50fd984e22f",
+    "evaluationSha256": "c2ca39b2489e491c5cfa3535e0a56607a47c0e6c00314eea31066b5e1e3545f7"
+  },
+  "counts": {
+    "topics": 14,
+    "sources": 14,
+    "claimsGuarded": 220,
+    "queryProbes": 148,
+    "safeTheoryProbes": 148,
+    "deterministicRepeats": 20
+  },
+  "rawScores": {
+    "structuralIntegrity": 1,
+    "claimPassageBinding": 1,
+    "topicCoverage": 1,
+    "catalogAnchorAccuracy": 0.946429,
+    "naturalParaphraseAccuracy": 0.071429,
+    "hardNeighborAccuracy": 0.916667,
+    "unsupportedAbstention": 0.933333,
+    "ambiguousAbstention": 0.6,
+    "safeTheoryNonRefusal": 0.993243
+  },
+  "acceptance": {
+    "offlineIntegrityGate": true,
+    "developmentRetrievalGate": false,
+    "flexibilityDiagnosticGate": false,
+    "overallPrebookQa": "partial_development_only",
+    "runtimeReleaseAuthority": "none",
+    "v3ReleaseDecision": "no_go_unchanged"
+  },
+  "determinism": {
+    "repeats": 20,
+    "uniqueHashes": 1,
+    "deterministic": true,
+    "evaluationSha256": "c2ca39b2489e491c5cfa3535e0a56607a47c0e6c00314eea31066b5e1e3545f7"
+  },
+  "limitations": [
+    "The 14 topics each have exactly one source, so cross-source synthesis and contradiction handling are not evaluated.",
+    "All 220 claims have evidenceLevel=not_assessed; this QA cannot authorize evidence-strength language.",
+    "The candidate has zero graph relations and cannot evaluate multi-hop reasoning.",
+    "Claim propositions and passages are English; Turkish generated-answer quality is not evaluated.",
+    "Catalog-anchor and hard-neighbor probes are development diagnostics derived from public topic labels, not an independent blinded holdout.",
+    "Natural-paraphrase and abstention scores measure a lexical-only offline baseline, not the production engine or an LLM.",
+    "The same deterministic safety gate is observed read-only for safe-theory over-refusal; no unsafe-refusal claim is made here.",
+    "No local LLM, network lookup, runtime activation, release transition, or owner-book authority was used."
+  ],
+  "releaseBoundary": {
+    "runtimeGeneration": "v2_legacy",
+    "candidateRuntimeEligible": false,
+    "candidateReleaseEligible": false,
+    "v3ReleaseDecision": "no_go_unchanged"
+  }
+}
