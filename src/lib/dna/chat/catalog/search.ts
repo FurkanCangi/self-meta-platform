@@ -97,6 +97,7 @@ type ExplicitTopicRule = Readonly<{
 // başlığa yönlendirir; yeni bir klinik veya biyolojik çıkarım üretmez.
 const EXPLICIT_TOPIC_RULES: readonly ExplicitTopicRule[] = [
   { topicId: "cns.insula", pattern: /\binsula\s+ve\s+interosepsiyon\b/ },
+  { topicId: "ans.interoception_dimensions", pattern: /\binterosepsiyon\w*.+\b(?:temel\s+)?boyut\w*/ },
   { topicId: "selfreg.sleep_health", pattern: /\buyku\b.+\bdna\w*\b.+\bbilissel regulasyon alani\w*/ },
   { topicId: "case.ai_oversight", pattern: /\b(?:otomasyon yanlilig\w*|(?:ai|yapay zeka)\w*.+\b(?:rapor|ozet|kaynak|denetim|objektif|gecerlik)\w*)/ },
   { topicId: "case.change_interpretation", pattern: /\b(?:minimal saptanabilir degisim|guvenilir degisim indeksi|mdc|ortalamaya regresyon|uygulama etkisi|puan degisimi)\b/ },

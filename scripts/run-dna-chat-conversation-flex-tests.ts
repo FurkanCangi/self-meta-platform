@@ -18,6 +18,12 @@ assert.equal(insula.outcome, "answered")
 assert.deepEqual(insula.conversationContext?.topicIds, ["cns.insula"])
 assert.equal(insula.conversationContext?.lastQueryKind, "definition")
 
+const interoceptionDimensions = resolveDnaChat({
+  question: "İnterosepsiyondaki temel boyutları anlatır mısın?",
+})
+assert.equal(interoceptionDimensions.outcome, "answered")
+assert.deepEqual(interoceptionDimensions.conversationContext?.topicIds, ["ans.interoception_dimensions"])
+
 const followUps = [
   ["Bunu biraz aç.", "expand", "answered"],
   ["Biraz daha ayrıntı?", "expand", "answered"],

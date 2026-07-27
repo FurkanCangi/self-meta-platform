@@ -4,7 +4,7 @@
     "rawQuestionCountInRepository": 0,
     "rawResultsStoredOnResearchSsdOnly": true
   },
-  "engineClosureSha256": "966143ee4c007ed6a67cfa0cfb5058d5d56bac06b330a942ce79658da75c66c4",
+  "engineClosureSha256": "933d4288a830d389a9f23307ccf979bea13bcc2f183215836448124908966062",
   "holdout": {
     "firstOfficial": {
       "bankLogicalSha256": "96f843c2273822a0e307df9290edfb6dac19b361703c84e591d4267afa06a8b3",
@@ -107,15 +107,15 @@
         "passed": 200,
         "total": 200
       },
-      "engineClosureSha256": "966143ee4c007ed6a67cfa0cfb5058d5d56bac06b330a942ce79658da75c66c4",
+      "engineClosureSha256": "933d4288a830d389a9f23307ccf979bea13bcc2f183215836448124908966062",
       "firstRunPreserved": true,
       "gatesPassed": true,
-      "resultSha256": "3b3a1fbb08e5fd200698c68175ed0866c0933b0ba38201667a61654452951421"
+      "resultSha256": "312738281b4be8ef73adefaf61cf27869fd577904d3eb8e016676a5a101b4ad5"
     },
     "releaseGateUsesPostFixAfterPreservingFirstOfficial": true
   },
   "independentHumanValidation": false,
-  "manifestSha256": "b396814b1526c074da87dcf76926dce8c65cf45c3aa3c22d699d7f287ef24e9f",
+  "manifestSha256": "ec3633788a97fc36944a752d64672d117d671fbddf57a655a5a755bbcaea480d",
   "open": {
     "bankLogicalSha256": "8edefe9bf36ac296f80e17a2ac32db46e7fba7b33fc4676bb37051ea1f2a349b",
     "counts": {
@@ -235,7 +235,7 @@
       "total": 500
     },
     "gatesPassed": true,
-    "resultSha256": "13a23510a3993ff26c988864ee76f32db44e740672de0518b55a57868b353993",
+    "resultSha256": "64a798221f58fa7fd80c2f71ca0dba12eb1e8be89e54cfe1e2b5998c397b1407",
     "subsets": {
       "expansion": {
         "accuracyPercent": 100,
