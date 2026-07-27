@@ -233,7 +233,6 @@ function responseUnits(
   responseDepth: DnaV3ResponseDepth,
   visibleSourceIds: ReadonlySet<string>,
 ): DnaChatAnswerUnit[] {
-  const spec = DNA_V3_RESPONSE_DEPTH_SPEC[responseDepth]
   let candidates: DnaChatAnswerUnit[]
   if (responseDepth === "short") {
     const summary = answer.answerUnits.find((unit) => unit.kind === "summary") ?? answer.answerUnits[0]
@@ -241,15 +240,16 @@ function responseUnits(
       unit.kind === "safety_boundary" || unit.kind === "limitation")
     candidates = [summary, boundary].filter((unit): unit is DnaChatAnswerUnit => Boolean(unit))
   } else {
+    const maxScientificUnits = responseDepth === "standard" ? 4 : 6
     candidates = answer.answerUnits.filter((unit, index, all) => {
       if (unit.role !== "scientific_evidence" && unit.role !== "dna_specific_validation") return true
       const scientificIndex = all.slice(0, index + 1).filter((candidate) =>
         candidate.role === "scientific_evidence" || candidate.role === "dna_specific_validation").length
-      return scientificIndex <= spec.maxScientificUnits
+      return scientificIndex <= maxScientificUnits
     })
   }
 
-  const maxUnits = responseDepth === "short" ? 2 : responseDepth === "standard" ? 7 : 16
+  const maxUnits = responseDepth === "short" ? 2 : responseDepth === "standard" ? 7 : 9
   return [...new Map(candidates.map((unit) => [unit.id, {
     ...unit,
     sourceIds: unit.sourceIds.filter((sourceId) => visibleSourceIds.has(sourceId)),

@@ -276,13 +276,6 @@ const ANSWER_ROLE_LAYER: Record<AnswerUnit["role"], KnowledgeAuthority["layer"]>
   case_finding: "case_information",
   safety_boundary: "safety_and_product_boundaries",
 }
-const ANSWER_UNIT_KIND_LABEL: Record<AnswerUnit["kind"], string> = {
-  summary: "Özet",
-  detail: "Ayrıntı",
-  case_evidence: "Rapor dayanağı",
-  limitation: "Sınırlılık",
-  safety_boundary: "Güvenlik sınırı",
-}
 const V3_ANSWER_SECTIONS = new Set<V3AnswerSection>([
   "definition", "function_or_relation", "development", "measurement", "evidence_status",
   "counter_evidence", "dna_boundary", "case_context", "case_finding", "case_missing",
@@ -1403,18 +1396,6 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
       : "",
   ].filter(Boolean)
 
-  const authorityStateLabel = (authority: KnowledgeAuthority) =>
-    authority.releaseEligible
-      ? "Yayın uygun"
-      : authority.verificationStatus === "test_only"
-        ? "Yalnız test"
-        : "Denetim bekliyor"
-
-  const authorityStateClass = (authority: KnowledgeAuthority) =>
-    authority.releaseEligible
-      ? "border-emerald-200 bg-emerald-50 text-emerald-800"
-      : "border-amber-200 bg-amber-50 text-amber-800"
-
   return (
     <article className="w-full">
       <div className="flex items-start gap-3 sm:gap-4">
@@ -1425,12 +1406,6 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
           <div className="flex flex-wrap items-center gap-2">
             <span className={`inline-flex min-h-7 items-center rounded-full border px-2.5 text-[10px] font-black uppercase tracking-[0.08em] ${meta.className}`}>
               {meta.label}
-            </span>
-            <span
-              className="text-[10px] font-bold text-[var(--sm-text-muted)]"
-              title={`${answer.catalogVersion} · ${answer.packageVersion}${answer.packageSha256 ? ` · ${answer.packageSha256}` : ""}`}
-            >
-              {answer.engineVersion} · {answer.runtimeGeneration === "v3" ? "V3 yayın paketi" : "V2 güvenli geri dönüş"}
             </span>
             <span className="inline-flex min-h-7 items-center rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-2.5 text-[10px] font-black text-[var(--sm-text-muted)]">
               {RESPONSE_DEPTH_LABEL[answer.responseDepth]}
@@ -1445,22 +1420,8 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
               ))}
             </ul>
           ) : null}
-          {answer.authoritySummary.length ? (
-            <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Yanıtta kullanılan bilgi otoriteleri">
-              {answer.authoritySummary.map((authority) => (
-                <li
-                  key={authority.layer}
-                  className={`inline-flex min-h-7 items-center gap-1.5 rounded-full border px-2.5 text-[10px] font-bold ${authorityStateClass(authority)}`}
-                >
-                  {authority.labelTr}
-                  <span aria-hidden="true">·</span>
-                  <span>{authorityStateLabel(authority)}</span>
-                </li>
-              ))}
-            </ul>
-          ) : null}
           {hasStructuredUnits ? (
-            <ul className="mt-3 space-y-2" aria-label="Otoritesine göre ayrılmış yanıt">
+            <div className="mt-3 space-y-3" aria-label="Kaynak bağlı yanıt">
               {visibleAnswerUnits.map((unit, index) => {
                 const sectionHeading = answer.runtimeGeneration === "v3"
                   && unit.section
@@ -1468,29 +1429,21 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
                     ? V3_ANSWER_SECTION_LABEL[unit.section]
                     : null
                 return (
-                  <li
+                  <div
                     key={unit.id}
-                    className="rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-3"
+                    className={sectionHeading ? "pt-1" : ""}
                   >
                   {sectionHeading ? (
-                    <h3 className="mb-2 text-xs font-black tracking-[-0.01em] text-[var(--sm-text)]">
+                    <h3 className="mb-1 text-xs font-black tracking-[-0.01em] text-[var(--sm-text)]">
                       {sectionHeading}
                     </h3>
                   ) : null}
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <span className="rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface)] px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.08em] text-[var(--sm-text-muted)]">
-                      {ANSWER_UNIT_KIND_LABEL[unit.kind]}
-                    </span>
-                    <span className="text-[10px] font-black uppercase tracking-[0.08em] text-[var(--sm-text-muted)]">
-                      {unit.authority.labelTr}
-                    </span>
-                    <span className={`rounded-full border px-2 py-0.5 text-[9px] font-black ${authorityStateClass(unit.authority)}`}>
-                      {authorityStateLabel(unit.authority)}
-                    </span>
+                  <p className={`text-sm leading-6 text-[var(--sm-text)] ${unit.kind === "summary" ? "font-semibold" : "font-medium"}`}>
+                    {unit.text}
                     {(unit.citationCardIds.length ? unit.citationCardIds : unit.sourceIds)
                       .some((citationId) => sourceNumberById.has(citationId)) ? (
                       <span
-                        className="inline-flex flex-wrap items-center gap-1 text-[10px] font-black text-blue-700"
+                        className="ml-1 inline-flex flex-wrap items-center gap-1 align-middle text-[10px] font-black text-blue-700"
                         aria-label={unit.citationCardIds.length
                           ? "Bu cümlenin claim ve passage düzeyindeki kaynakları"
                           : "Bu cümleyle ilişkili geçiş kataloğu kaynakları"}
@@ -1502,7 +1455,7 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
                             <a
                               key={`${unit.id}:${citationId}`}
                               href={`#${sourceAnchor(answer.requestId, sourceNumber - 1)}`}
-                              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-full border border-blue-200 bg-blue-50 px-2 hover:bg-blue-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                              className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-full px-1.5 underline decoration-blue-300 underline-offset-2 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
                               aria-label={unit.citationCardIds.length
                                 ? `Claim ve passage eşleşmeli kaynak ${sourceNumber}'e git`
                                 : `İlişkili geçiş kataloğu kaynağı ${sourceNumber}'e git`}
@@ -1513,14 +1466,11 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
                         })}
                       </span>
                     ) : null}
-                  </div>
-                  <p className={`mt-2 text-sm leading-6 text-[var(--sm-text)] ${unit.kind === "summary" ? "font-bold" : "font-medium"}`}>
-                    {unit.text}
                   </p>
-                  </li>
+                  </div>
                 )
               })}
-            </ul>
+            </div>
           ) : (
             <>
               <p className="mt-3 text-sm font-bold leading-6 text-[var(--sm-text)]">{answer.summary}</p>
@@ -1554,13 +1504,6 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
                 id={sourceAnchor(answer.requestId, sourceIndex)}
                 className="scroll-mt-28 rounded-xl border border-[var(--sm-border)] bg-[var(--sm-surface)] p-3"
               >
-                {source.authority?.labelTr ? (
-                  <div className={`mb-2 inline-flex min-h-7 items-center gap-1.5 rounded-full border px-2.5 text-[10px] font-black ${authorityStateClass(source.authority)}`}>
-                    {source.authority.labelTr}
-                    <span aria-hidden="true">·</span>
-                    <span>{authorityStateLabel(source.authority)}</span>
-                  </div>
-                ) : null}
                 <div className="text-xs font-black leading-5 text-[var(--sm-text)]">
                   <span className="mr-1 text-blue-700">[{sourceIndex + 1}]</span>
                   {sourceTitle(source)}
@@ -1581,9 +1524,6 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
                   <div className="mt-2 rounded-xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-2 text-xs font-medium leading-5 text-[var(--sm-text-soft)]">
                     <strong className="text-[var(--sm-text)]">Geçiş kataloğu özeti:</strong>{" "}
                     {source.excerptTr || source.excerpt}
-                    <p className="mt-1 text-[10px] font-semibold text-[var(--sm-text-muted)]">
-                      Bu alan passage düzeyinde V3 destek iddiası değildir.
-                    </p>
                   </div>
                 ) : null}
                 {source.supportedClaim ? (

@@ -211,6 +211,7 @@
     "chat:flex-bank:test": "RESEARCH_SSD_ROOT=${RESEARCH_SSD_ROOT:-/Volumes/ResearchSSD} node scripts/run-dna-turkish-flexibility-bank-tests.mjs",
     "chat:conversation-flex": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-conversation-flex && node .tmp/dna-conversation-flex/scripts/run-dna-chat-conversation-flex-tests.js",
     "chat:case-e2e": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-case-e2e && node .tmp/dna-case-e2e/scripts/run-dna-chat-case-e2e-tests.js",
+    "chat:naturalness": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-naturalness && node .tmp/dna-naturalness/scripts/run-dna-chat-naturalness-tests.js",
     "chat:prebook-close:run": "RESEARCH_SSD_ROOT=${RESEARCH_SSD_ROOT:-/Volumes/ResearchSSD} node scripts/dna-prebook-closure.mjs run",
     "chat:prebook-close:verify": "RESEARCH_SSD_ROOT=${RESEARCH_SSD_ROOT:-/Volumes/ResearchSSD} node scripts/dna-prebook-closure.mjs verify",
     "chat:prebook-close:test": "RESEARCH_SSD_ROOT=${RESEARCH_SSD_ROOT:-/Volumes/ResearchSSD} node scripts/run-dna-prebook-closure-tests.mjs",
