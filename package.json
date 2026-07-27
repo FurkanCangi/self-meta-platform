@@ -209,6 +209,7 @@
     "chat:flex-bank:build:ssd": "RESEARCH_SSD_ROOT=${RESEARCH_SSD_ROOT:-/Volumes/ResearchSSD} node scripts/dna-turkish-flexibility-bank.mjs build",
     "chat:flex-bank:verify:ssd": "RESEARCH_SSD_ROOT=${RESEARCH_SSD_ROOT:-/Volumes/ResearchSSD} node scripts/dna-turkish-flexibility-bank.mjs verify",
     "chat:flex-bank:test": "RESEARCH_SSD_ROOT=${RESEARCH_SSD_ROOT:-/Volumes/ResearchSSD} node scripts/run-dna-turkish-flexibility-bank-tests.mjs",
+    "chat:conversation-flex": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-conversation-flex && node .tmp/dna-conversation-flex/scripts/run-dna-chat-conversation-flex-tests.js",
     "chat:prebook-close:run": "RESEARCH_SSD_ROOT=${RESEARCH_SSD_ROOT:-/Volumes/ResearchSSD} node scripts/dna-prebook-closure.mjs run",
     "chat:prebook-close:verify": "RESEARCH_SSD_ROOT=${RESEARCH_SSD_ROOT:-/Volumes/ResearchSSD} node scripts/dna-prebook-closure.mjs verify",
     "chat:prebook-close:test": "RESEARCH_SSD_ROOT=${RESEARCH_SSD_ROOT:-/Volumes/ResearchSSD} node scripts/run-dna-prebook-closure-tests.mjs",

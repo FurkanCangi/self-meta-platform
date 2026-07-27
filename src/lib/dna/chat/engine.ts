@@ -45,11 +45,14 @@ import {
   DNA_CHAT_SCHEMA_VERSION,
   type DnaChatClassification,
   type DnaChatAnswerUnit,
+  type DnaChatConversationContext,
+  type DnaChatConversationQueryKind,
   type DnaChatContextRequest,
   type DnaChatDomainKey,
   type DnaChatEvidenceSummary,
   type DnaChatIntentDefinition,
   type DnaChatOutcome,
+  type DnaChatQueryKind,
   type DnaChatRequest,
   type DnaChatResponse,
   type DnaChatSafeCaseContext,
@@ -145,6 +148,7 @@ function makeResponse(input: {
   intentId?: string | null
   contextRequest?: DnaChatContextRequest
   evidenceSummary?: DnaChatEvidenceSummary
+  conversationContext?: DnaChatConversationContext
   answerAuthority?: DnaKnowledgeAuthorityRef
   answerUnits?: readonly DnaChatAnswerUnitInput[]
   authorityGateChecked?: boolean
@@ -317,6 +321,7 @@ function makeResponse(input: {
     authoritySummary,
     ...(input.contextRequest ? { contextRequest: input.contextRequest } : {}),
     ...(input.evidenceSummary ? { evidenceSummary: input.evidenceSummary } : {}),
+    ...(input.conversationContext ? { conversationContext: input.conversationContext } : {}),
   })
 }
 
@@ -403,14 +408,19 @@ function unmatchedResponse(safety: DnaChatSafetyResult): DnaChatResponse {
   })
 }
 
-function isStandaloneFollowUp(question: string): boolean {
-  const normalized = normalizeDnaChatText(question)
-  return /^(?:peki bu|biraz daha acikla|daha basit anlat|bunu daha basit anlat|basitce anlat|sade anlat|bunu sade anlat|onceki cevabi acikla|baska turlu anlat|farkli anlat|yeniden anlat|tekrar acikla|tam olarak anlamadim|anlayamadim|ne demek istedin|bununla iliskisi ne|bunun iliskisi ne|bunun fizyolojik regulasyonla iliskisi ne|buna ornek verir misin|cocuklarda da ayni mi|bu cocuklarda da gecerli mi|kaniti guclu mu|hangi yas icin gecerli|hangi olcumle gosterilmis|bireysel olarak ne anlama gelir|bunun tersi de olabilir mi|bunun tersi ne|erken cocukluk icin ne degisiyor|peki erken cocuklukta nasil|erken cocuklukta nasil degisir|bunu erken cocukluk icin anlatir misin|okul caginda nasil yorumlariz|dna ile nasil baglariz ama abartmadan|bunu neden soyleyemiyoruz|bu neden tani koydurmuyor|bundan ne sonuc cikarabiliriz|bu kavramin cocuklardaki gelisimi ne zaman hizlanir|cevresel talepler bu surecleri degistirir mi|bu nedensellik gosterir mi|(?:(?:peki|ya|ayrica) )?(?:olcumu(?: nasil)?|nasil olculur|nasil degerlendirilir|kaynaklari(?: gosterir misin)?|kaniti(?: ne| nasil| guclu mu)?|kanit duzeyi(?: ne| nasil)?|orneklemi|cocuklarda(?: nasil)?|ergenlerde(?: nasil)?|gelisimi(?: nasil)?|yas kapsami(?: ne)?|dna baglantisi|dna ile iliskisi|siniri|ne kadar guclu|guvenilir mi|bir ornek daha))$/.test(normalized)
-}
+export type DnaConversationFollowUpKind =
+  | "expand"
+  | "simplify"
+  | "age_scope"
+  | "evidence"
+  | "measurement"
+  | "comparison"
+  | "correction"
+  | "retry"
 
-type DnaConversationRepairKind = "correction" | "explanation" | "retry"
-
-function detectDnaConversationRepairKind(question: string): DnaConversationRepairKind | null {
+export function detectDnaConversationFollowUpKind(
+  question: string,
+): DnaConversationFollowUpKind | null {
   const normalized = normalizeDnaChatText(question)
   if (
     /^(?:hayir|yok)\b/.test(normalized) ||
@@ -418,38 +428,76 @@ function detectDnaConversationRepairKind(question: string): DnaConversationRepai
   ) {
     return "correction"
   }
-  if (
-    /\b(?:daha basit anlat|basitce anlat|sade anlat|tam olarak anlamadim|anlayamadim|ne demek istedin|onceki cevabi acikla)\b/.test(normalized)
-  ) {
-    return "explanation"
-  }
+  if (/^(?:bunu\s+)?(?:biraz\s+)?(?:daha\s+)?(?:ac|acikla|ayrintilandir|detaylandir)(?:\s+misin)?$/.test(normalized)) return "expand"
+  if (/^(?:bunu\s+)?(?:daha\s+)?(?:basit|sade)(?:ce)?\s+(?:anlat|acikla)(?:\s+misin)?$/.test(normalized) || /^(?:en\s+)?sade\s+haliyle$/.test(normalized)) return "simplify"
+  if (/^(?:(?:peki|ya)\s+)?(?:cocuklarda|kucuk cocuklarda|ergenlerde|erken cocuklukta|yas grubuna gore)(?:\s+(?:nasil|ayni mi|ne degisir))?$/.test(normalized)) return "age_scope"
+  if (/^(?:bunun\s+)?(?:bilimsel\s+)?(?:kaniti|dayanagi|kaynaklari)(?:\s+(?:ne|nasil|guclu mu|peki|gosterir misin))?$/.test(normalized) || /^bilimsel dayanak peki$/.test(normalized)) return "evidence"
+  if (/^(?:bunun\s+)?(?:olcumu\s+nasil|nasil olculuyor|nasil olculur|hangi yolla incelenir)$/.test(normalized)) return "measurement"
+  if (/^(?:bu\s+)?(?:iki(?:si| baslik)?)(?:nin)?\s+(?:arasindaki\s+)?farki?\s+ne(?:ydi)?$/.test(normalized) || /^ikisini karsilastir$/.test(normalized)) return "comparison"
   if (/\b(?:baska turlu anlat|farkli anlat|yeniden anlat|tekrar acikla)\b/.test(normalized)) {
     return "retry"
   }
+  if (/^(?:peki bu|bununla iliskisi ne|bunun iliskisi ne|buna ornek verir misin|hangi yas icin gecerli|orneklemi|gelisimi nasil|dna baglantisi|dna ile iliskisi|siniri|ne kadar guclu|guvenilir mi|bir ornek daha)$/.test(normalized)) {
+    return "expand"
+  }
   return null
+}
+
+function validConversationTopics(
+  previousTopic?: string | null,
+  context?: DnaChatConversationContext | null,
+) {
+  const ids = stableUnique([
+    ...(context?.topicIds ?? []),
+    ...(previousTopic ? [previousTopic] : []),
+  ], 2)
+  return ids.flatMap((id) => {
+    const topic = getCatalogTopicById(id)
+    return topic ? [topic] : []
+  }).slice(0, 2)
+}
+
+function isStandaloneFollowUp(question: string): boolean {
+  return detectDnaConversationFollowUpKind(question) !== null
 }
 
 function conversationRepairRoutingQuestion(
   question: string,
   previousTopic?: string | null,
+  context?: DnaChatConversationContext | null,
 ): string {
-  if (!previousTopic || previousTopic.includes("·")) return question
-  const repairKind = detectDnaConversationRepairKind(question)
+  const repairKind = detectDnaConversationFollowUpKind(question)
   if (!repairKind) return question
-  const topicLabel = getCatalogTopicById(previousTopic)?.title ?? previousTopic
-  if (repairKind === "explanation") return `Kısaca ${topicLabel} nedir?`
-  if (repairKind === "retry") return `${topicLabel} nedir?`
 
-  let corrected = question.trim()
-    .replace(/^(?:hayır|hayir|yok)\b[,:;]?\s*/iu, "")
-    .replace(/^(?:beni|sorumu)?\s*(?:yanlış anladın|yanlis anladin)\b[,:;]?\s*/iu, "")
-    .replace(/^(?:onu sormadım|onu sormadim|sorum o değildi|sorum o degildi|demek istediğim|demek istedigim|kastettiğim|kastettigim)\b[,:;]?\s*/iu, "")
-  const correctionBoundary = corrected.match(/\b(?:değil|degil)\b[,:;]?\s*(.+)$/iu)
-  if (correctionBoundary?.[1]) corrected = correctionBoundary[1]
-  corrected = corrected
-    .replace(/\b(?:sordum|soruyorum|demek istedim|kastettim)\b[.!?]*$/iu, "")
-    .trim()
-  return corrected.length >= 2 ? corrected : question
+  if (repairKind === "correction") {
+    let corrected = question.trim()
+      .replace(/^(?:hayır|hayir|yok)\b[,:;]?\s*/iu, "")
+      .replace(/^(?:beni|sorumu)?\s*(?:yanlış anladın|yanlis anladin)\b[,:;]?\s*/iu, "")
+      .replace(/^(?:onu sormadım|onu sormadim|sorum o değildi|sorum o degildi|demek istediğim|demek istedigim|kastettiğim|kastettigim)\b[,:;]?\s*/iu, "")
+    const correctionBoundary = corrected.match(/\b(?:değil|degil)\b[,:;]?\s*(.+)$/iu)
+    if (correctionBoundary?.[1]) corrected = correctionBoundary[1]
+    corrected = corrected
+      .replace(/\b(?:sordum|soruyorum|demek istedim|kastettim)\b[.!?]*$/iu, "")
+      .trim()
+    if (corrected.length >= 2 && normalizeDnaChatText(corrected) !== normalizeDnaChatText(question)) {
+      return `${corrected} nedir?`
+    }
+  }
+
+  const topics = validConversationTopics(previousTopic, context)
+  if (!topics.length) return question
+  if (repairKind === "comparison") {
+    return topics.length === 2
+      ? `${topics[0].title} ile ${topics[1].title} arasındaki fark nedir?`
+      : question
+  }
+  const topicLabel = topics[0].title
+  if (repairKind === "expand") return `${topicLabel} konusunu ayrıntılı açıkla.`
+  if (repairKind === "simplify") return `${topicLabel} konusunu sade biçimde açıkla.`
+  if (repairKind === "age_scope") return `${topicLabel} çocuklarda nasıl ele alınır?`
+  if (repairKind === "evidence") return `${topicLabel} için kanıt durumu nedir?`
+  if (repairKind === "measurement") return `${topicLabel} nasıl ölçülür?`
+  return `${topicLabel} konusunu farklı biçimde açıkla.`
 }
 
 const WHOLE_MESSAGE_SAFETY_CATEGORIES = new Set<DnaChatSafetyCategory>([
@@ -469,6 +517,14 @@ function mustRefuseWholeMessage(safety: DnaChatSafetyResult): boolean {
 
 function hasExplicitScopedSafetyBoundary(question: string): boolean {
   return /\?\s*[A-Za-zÇĞİÖŞÜçğıöşü]/u.test(question)
+}
+
+function stripExplicitNonPrescriptivePreface(question: string): string {
+  const stripped = question.replace(
+    /^\s*(?:tanı|tani|tedavi|terapi|ilaç|ilac|seans|prognoz|kesin neden)(?:\s+(?:veya|ya da|ile)\s+(?:tanı|tani|tedavi|terapi|ilaç|ilac|seans|prognoz|kesin neden))*\s+istemiyorum\s*[;,:.-]*\s*(?:yalnız|yalniz|sadece)\s+/iu,
+    "",
+  ).trim()
+  return stripped.length >= 2 ? stripped : question
 }
 
 function notAvailableResponse(
@@ -581,6 +637,7 @@ function dnaResponse(
 function catalogResponse(
   draft: DnaCatalogReasoningDraft,
   safety: DnaChatSafetyResult,
+  conversationTopicIds?: readonly string[],
 ): DnaChatResponse {
   const hasSources = draft.sources.length > 0
   const answered = draft.classification !== "not_available" && hasSources
@@ -681,10 +738,24 @@ function catalogResponse(
     limitations: draft.limitations,
     safety,
     evidenceSummary: draft.evidenceSummary,
+    conversationContext: {
+      topicIds: stableUnique(conversationTopicIds?.length
+        ? conversationTopicIds
+        : [draft.topicId], 2),
+      lastQueryKind: conversationQueryKind(draft.queryKind),
+    },
     suggestedQuestions: draft.suggestedQuestions,
     answerAuthority: topicAuthority,
     answerUnits: catalogAnswerUnits,
   })
+}
+
+function conversationQueryKind(
+  queryKind: DnaChatQueryKind,
+): DnaChatConversationQueryKind {
+  if (queryKind === "case_finding" || queryKind === "case_theory") return "case"
+  if (queryKind === "dna_relation" || queryKind === "misconception") return "relation"
+  return queryKind
 }
 
 function stableSources(sources: readonly DnaChatSourceRef[], limit = 4): DnaChatSourceRef[] {
@@ -1294,7 +1365,12 @@ function resolveSingleDnaChat(
     }
   }
 
-  if (!request.previousTopic && isStandaloneFollowUp(question)) {
+  const conversationTopics = validConversationTopics(
+    request.previousTopic,
+    request.conversationContext,
+  )
+  const routingPreviousTopic = conversationTopics[0]?.id ?? request.previousTopic
+  if (!routingPreviousTopic && isStandaloneFollowUp(question)) {
     return clarificationResponse(
       safety,
       "Takip sorusunun hangi kavram veya önceki bulguya gönderme yaptığı açık değil.",
@@ -1305,7 +1381,7 @@ function resolveSingleDnaChat(
   const routed = routeDnaChatQuestion({
     question,
     mode: request.mode,
-    previousTopic: request.previousTopic,
+    previousTopic: routingPreviousTopic,
     hasCaseContext: Boolean(caseContext && hasUsableDnaCaseContext(caseContext)),
   })
 
@@ -1338,7 +1414,7 @@ function resolveSingleDnaChat(
       request.mode === "case" && routed.route === "case" && routed.intent,
     )
     return queryKind === "case_theory" && !preserveLegacyCaseAnswer
-      ? catalogCaseTheoryResponse(intent, question, request.previousTopic, caseContext, safety)
+      ? catalogCaseTheoryResponse(intent, question, routingPreviousTopic, caseContext, safety)
       : guardedCaseResponse(intent, question, caseContext, safety)
   }
 
@@ -1351,11 +1427,19 @@ function resolveSingleDnaChat(
   if (!preferLegacy) {
     const catalogDraft = resolveDnaCatalogReasoning({
       question,
-      previousTopic: request.previousTopic,
+      previousTopic: routingPreviousTopic,
       queryKind,
       ageMonths: caseContext?.ageMonths,
     })
-    if (catalogDraft) return catalogResponse(catalogDraft, safety)
+    if (catalogDraft) {
+      return catalogResponse(
+        catalogDraft,
+        safety,
+        queryKind === "comparison"
+          ? conversationTopics.map((topic) => topic.id)
+          : undefined,
+      )
+    }
   }
 
   if (!routed.intent || routed.route === "unknown") {
@@ -1545,6 +1629,10 @@ function combineDnaChatResponses(
       : "not_available"
 
   const combinedSources = balancedStableSources(responses.map((response) => response.sources), 4)
+  const combinedTopicIds = stableUnique(
+    responses.flatMap((response) => response.conversationContext?.topicIds ?? []),
+    2,
+  )
   const combinedSourceIds = new Set(combinedSources.map((source) => source.id))
   const combinedLimitations = stableUnique([
     ...(mixedCaseTheory ? ["Bu vakada biyolojik mekanizma doğrudan ölçülmedi."] : []),
@@ -1641,6 +1729,14 @@ function combineDnaChatResponses(
     safety,
     contextRequest,
     evidenceSummary: combinedEvidenceSummary(responses),
+    ...(combinedTopicIds.length ? {
+      conversationContext: {
+        topicIds: combinedTopicIds,
+        lastQueryKind: combinedTopicIds.length === 2
+          ? "comparison"
+          : responses.find((response) => response.conversationContext)?.conversationContext?.lastQueryKind ?? "unknown",
+      },
+    } : {}),
     suggestedQuestions: stableUnique(responses.flatMap((response) => response.suggestedQuestions), 4),
     answerUnits: combinedUnits,
   })
@@ -1668,9 +1764,16 @@ export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
     return socialConversationResponse(safety, socialConversation)
   }
 
+  const knowledgeQuestion = safety.blocked
+    ? question
+    : stripExplicitNonPrescriptivePreface(question)
   const routingQuestion = safety.blocked
     ? question
-    : conversationRepairRoutingQuestion(question, request.previousTopic)
+    : conversationRepairRoutingQuestion(
+        knowledgeQuestion,
+        request.previousTopic,
+        request.conversationContext,
+      )
   const routingSafety = routingQuestion === question ? safety : emptySafety(routingQuestion)
   if (routingSafety.blocked && !safety.blocked) return refusalResponse(routingSafety)
 

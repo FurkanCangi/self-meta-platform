@@ -275,6 +275,9 @@ const PROGNOSIS_PATTERNS = [
   "normale doner",
   "ileride okul basarisi",
   "ileride kaygili olacagini gosterir",
+  "predict prognosis",
+  "give a prognosis",
+  "predict clinical outcome",
 ] as const
 
 const CAUSALITY_PATTERNS = [
@@ -332,6 +335,10 @@ const DIAGNOSIS_PATTERNS = [
   "bu rapora gore hastaligi nedir",
   "bu profil hangi klinik tabloyu dusunduruyor",
   "bu rapordan tanisal sonuc cikar",
+  "diagnose my client",
+  "diagnose this child",
+  "give a diagnosis",
+  "make a diagnosis",
 ] as const
 
 const INDIVIDUAL_CLINICAL_CONTEXT_PATTERN =
@@ -373,6 +380,10 @@ const TREATMENT_PATTERNS = [
   "tedavide ne yap",
   "tedavi icin ne yap",
   "bu vakada ne yapmaliyim",
+  "treatment plan",
+  "therapy plan",
+  "session plan",
+  "recommend treatment",
 ] as const
 
 const TREATMENT_CONCEPT_PATTERN =
@@ -404,7 +415,19 @@ const MEDICATION_PATTERNS = [
   "ilac ver",
   "ilac kullansin",
   "ilac gerekir",
+  "prescribe medication",
+  "prescribe a drug",
+  "medication dose",
+  "choose a medication",
 ] as const
+
+function isExplicitNonPrescriptiveKnowledgeRequest(normalized: string): boolean {
+  const rejectsClinicalAction = /\b(?:tani|tedavi|terapi|ilac|seans|prognoz|kesin neden)(?:\s+(?:veya|ya da|ile)\s+(?:tani|tedavi|terapi|ilac|seans|prognoz|kesin neden))*\s+istemiyorum\b/.test(normalized)
+  const asksForKnowledge = /\b(?:yalniz|sadece)\b.{0,100}\b(?:nedir|ne demek|acikla|anlat|kanit|kaynak|literatur|kavramsal|genel bilgi)\b/.test(normalized)
+  const individualized = INDIVIDUAL_CLINICAL_CONTEXT_PATTERN.test(normalized)
+  const remainingUnsafeAction = /\b(?:tani koy|teshis et|ilac yaz|doz yaz|recete yaz|tedavi oner|terapi oner|seans planla|prognoz cikar)\b/.test(normalized)
+  return rejectsClinicalAction && asksForKnowledge && !individualized && !remainingUnsafeAction
+}
 
 const MEDICATION_CONCEPT_PATTERN =
   /\b(?:ilac\w*|tablet\w*|surup\w*|farmakolojik\w*|farmakoterapi\w*|medikasyon\w*|doz\w*|recete\w*|etken\s+madde\w*|preparat\w*|uyarici\s+ilac\w*|ritalin\w*|concerta\w*|medikinet\w*|strattera\w*|metilfenidat\w*|atomoksetin\w*|risperidon\w*|aripiprazol\w*|melatonin\w*|miktar\w*|miligram\w*|mg)\b/
@@ -763,6 +786,7 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
     )
   }
   const explicitBoundaryCritique = isExplicitBoundaryCritique(normalized)
+  const explicitNonPrescriptiveKnowledge = isExplicitNonPrescriptiveKnowledgeRequest(normalized)
   if (equalsAny(normalized, BOUNDARY_QUESTION_PATTERNS) || explicitBoundaryCritique) {
     return safetyResult(
       redactedQuestion,
@@ -803,7 +827,7 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
       "Vaka gizliliği nedeniyle başka danışanlar veya raporlarla çapraz karşılaştırma yapılmaz. Yalnız açık ve kimliksiz vaka bağlamı tartışılabilir.",
     )
   }
-  if (isCompositionalDiagnosisRequest(normalized)) {
+  if (!explicitNonPrescriptiveKnowledge && isCompositionalDiagnosisRequest(normalized)) {
     return safetyResult(
       redactedQuestion,
       "diagnosis",
@@ -811,7 +835,7 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
       "DNA bulgularından tanı veya kesin neden çıkarılamaz. Vaka verileri yalnız işlevsel örüntü ve veri sınırlılıkları düzeyinde tartışılabilir.",
     )
   }
-  if (isCompositionalMedicationRequest(normalized)) {
+  if (!explicitNonPrescriptiveKnowledge && isCompositionalMedicationRequest(normalized)) {
     return safetyResult(
       redactedQuestion,
       "medication",
@@ -819,7 +843,7 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
       "İlaç seçimi, doz veya reçete bu sistemin kapsamı dışındadır ve yetkili hekim değerlendirmesi gerektirir.",
     )
   }
-  if (isCompositionalTreatmentRequest(normalized)) {
+  if (!explicitNonPrescriptiveKnowledge && isCompositionalTreatmentRequest(normalized)) {
     return safetyResult(
       redactedQuestion,
       "treatment",
@@ -827,7 +851,7 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
       "DNA Asistanı terapi, müdahale, seans veya ev programı oluşturmaz. Bulguları klinik tartışma için betimleyici düzeyde tutar.",
     )
   }
-  if (isCompositionalPrognosisRequest(normalized)) {
+  if (!explicitNonPrescriptiveKnowledge && isCompositionalPrognosisRequest(normalized)) {
     return safetyResult(
       redactedQuestion,
       "prognosis",
@@ -895,7 +919,7 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
           "DNA profili veya davranış gözlemi belirli bir beyin bölgesinin işlevini, olgunluğunu, yeterliliğini ya da hasarını kanıtlamaz.",
         )
   }
-  if (includesAny(normalized, PROGNOSIS_PATTERNS)) {
+  if (!explicitNonPrescriptiveKnowledge && includesAny(normalized, PROGNOSIS_PATTERNS)) {
     return safetyResult(
       redactedQuestion,
       "prognosis",
@@ -911,7 +935,7 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
       "Tek bir değerlendirme veya vaka özeti kesin neden göstermez; yalnız birlikte görülen işlevsel örüntüler betimlenebilir.",
     )
   }
-  if (includesAny(normalized, MEDICATION_PATTERNS)) {
+  if (!explicitNonPrescriptiveKnowledge && includesAny(normalized, MEDICATION_PATTERNS)) {
     return safetyResult(
       redactedQuestion,
       "medication",
@@ -919,7 +943,7 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
       "İlaç seçimi, doz veya reçete bu sistemin kapsamı dışındadır ve yetkili hekim değerlendirmesi gerektirir.",
     )
   }
-  if (includesAny(normalized, TREATMENT_PATTERNS)) {
+  if (!explicitNonPrescriptiveKnowledge && includesAny(normalized, TREATMENT_PATTERNS)) {
     return safetyResult(
       redactedQuestion,
       "treatment",
@@ -927,7 +951,7 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
       "DNA Asistanı terapi, müdahale, seans veya ev programı oluşturmaz. Bulguları klinik tartışma için betimleyici düzeyde tutar.",
     )
   }
-  if (includesAny(normalized, DIAGNOSIS_PATTERNS)) {
+  if (!explicitNonPrescriptiveKnowledge && includesAny(normalized, DIAGNOSIS_PATTERNS)) {
     return safetyResult(
       redactedQuestion,
       "diagnosis",

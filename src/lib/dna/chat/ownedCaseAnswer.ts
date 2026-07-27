@@ -12,7 +12,7 @@ import {
   createCanonicalOwnedDnaCaseContext,
   DNA_OWNED_CASE_CONTEXT_VERSION,
 } from "./ownedCaseContextCore"
-import type { DnaChatMode } from "./types"
+import type { DnaChatConversationContext, DnaChatMode } from "./types"
 import type { DnaV3ResponseDepth } from "./v3ResponseProfiles"
 import { resolveCommittedDnaChatRuntime } from "./v3RetrievalServer"
 import type { DnaChatRuntimeAnswer } from "./runtimeAnswer"
@@ -52,6 +52,7 @@ export async function resolveOwnedDnaCaseAnswer(input: {
   question: string
   mode?: DnaChatMode
   previousTopic?: string | null
+  conversationContext?: DnaChatConversationContext | null
   responseDepth?: DnaV3ResponseDepth | null
 }): Promise<DnaOwnedCaseAnswerResult> {
   try {
@@ -127,6 +128,7 @@ export async function resolveOwnedDnaCaseAnswer(input: {
         mode: input.mode,
         question: input.question,
         previousTopic: input.previousTopic,
+        conversationContext: input.conversationContext,
         caseContext: canonical.context,
         responseDepth: input.responseDepth,
         rolloutSubjectKey: input.userId,

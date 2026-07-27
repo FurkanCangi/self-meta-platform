@@ -44,6 +44,25 @@ export type DnaChatQueryKind =
   | "case_theory"
   | "unknown"
 
+export const DNA_CHAT_CONVERSATION_QUERY_KINDS = [
+  "definition",
+  "comparison",
+  "relation",
+  "measurement",
+  "development",
+  "evidence",
+  "case",
+  "unknown",
+] as const
+
+export type DnaChatConversationQueryKind =
+  (typeof DNA_CHAT_CONVERSATION_QUERY_KINDS)[number]
+
+export type DnaChatConversationContext = {
+  readonly topicIds: readonly string[]
+  readonly lastQueryKind: DnaChatConversationQueryKind
+}
+
 export type DnaChatSourceType =
   | "clinical_kb"
   | "literature"
@@ -150,6 +169,7 @@ export type DnaChatRequest = {
   question: string
   mode?: DnaChatMode
   previousTopic?: string | null
+  conversationContext?: DnaChatConversationContext | null
   caseContext?: DnaChatCaseContextInput | DnaChatSafeCaseContext
 }
 
@@ -250,6 +270,7 @@ export type DnaChatResponse = {
   safety: DnaChatSafetyResult
   contextRequest?: DnaChatContextRequest
   evidenceSummary?: DnaChatEvidenceSummary
+  conversationContext?: DnaChatConversationContext
   answerUnits: DnaChatAnswerUnit[]
   authoritySummary: DnaChatAuthoritySummaryEntry[]
 }

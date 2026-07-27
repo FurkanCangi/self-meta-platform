@@ -34,6 +34,10 @@ import {
   DNA_INTELLIGENCE_TAGLINE_TR,
   type DnaIntelligencePublicIntendedUse,
 } from "@/lib/dna/chat/intendedUse"
+import type {
+  DnaChatConversationContext,
+  DnaChatConversationQueryKind,
+} from "@/lib/dna/chat/types"
 import DnaIssueFeedback from "./DnaIssueFeedback"
 
 type DnaChatClassification =
@@ -173,6 +177,7 @@ type DnaAnswer = {
   packageVersion: string
   packageSha256: string | null
   topic: string | null
+  conversationContext?: DnaChatConversationContext
   contextRequest?: ContextRequest
   evidenceSummary?: EvidenceSummary
   authoritySummary: KnowledgeAuthority[]
@@ -286,6 +291,9 @@ const V3_ANSWER_SECTIONS = new Set<V3AnswerSection>([
 const DNA_VALIDATION_STATUSES = new Set<DnaValidationStatus>([
   "product_definition", "supported_relation", "conceptual_proximity", "theory_only",
   "not_established", "contradicted", "not_applicable",
+])
+const CONVERSATION_QUERY_KINDS = new Set<DnaChatConversationQueryKind>([
+  "definition", "comparison", "relation", "measurement", "development", "evidence", "case", "unknown",
 ])
 const V3_ANSWER_SECTION_LABEL: Record<V3AnswerSection, string> = {
   definition: "Tanım",
@@ -448,6 +456,16 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
           boundary: String((rawEvidenceSummary as Record<string, unknown>).boundary || "").trim(),
         }
       : undefined
+  const rawConversationContext = row.conversationContext
+  const rawConversationTopicIds = rawConversationContext && typeof rawConversationContext === "object"
+    ? normalizeStringList((rawConversationContext as Record<string, unknown>).topicIds).slice(0, 2)
+    : []
+  const rawLastQueryKind = rawConversationContext && typeof rawConversationContext === "object"
+    ? String((rawConversationContext as Record<string, unknown>).lastQueryKind || "") as DnaChatConversationQueryKind
+    : null
+  const conversationContext = rawConversationTopicIds.length && rawLastQueryKind && CONVERSATION_QUERY_KINDS.has(rawLastQueryKind)
+    ? { topicIds: rawConversationTopicIds, lastQueryKind: rawLastQueryKind }
+    : undefined
 
   const sources = Array.isArray(row.sources)
     ? row.sources.map(normalizeSource).filter((entry): entry is SourceRef => Boolean(entry))
@@ -530,6 +548,7 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
       ? row.packageSha256
       : null,
     topic: typeof row.topic === "string" && row.topic.trim() ? row.topic.trim() : null,
+    ...(conversationContext ? { conversationContext } : {}),
     ...(contextRequest ? { contextRequest } : {}),
     ...(evidenceSummary && Object.values(evidenceSummary).some(Boolean) ? { evidenceSummary } : {}),
   }
@@ -567,6 +586,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
   const [responseDepth, setResponseDepth] = useState<ResponseDepth>("standard")
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [previousTopic, setPreviousTopic] = useState<string | null>(null)
+  const [conversationContext, setConversationContext] = useState<DnaChatConversationContext | null>(null)
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState("")
   const [sendErrorCode, setSendErrorCode] = useState("")
@@ -693,6 +713,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
     cancelPendingResponse()
     setMessages([])
     setPreviousTopic(null)
+    setConversationContext(null)
     setPendingReportQuestion(null)
     setQuestion("")
     setSendError("")
@@ -748,6 +769,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
       reportId?: string | null
       appendUser?: boolean
       previousTopic?: string | null
+      conversationContext?: DnaChatConversationContext | null
       responseDepth?: ResponseDepth
     } = {},
   ) {
@@ -757,10 +779,14 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
       ? selectedReportId
       : options.reportId ?? ""
     const requestPreviousTopic = options.previousTopic === undefined ? previousTopic : options.previousTopic
+    const requestConversationContext = options.conversationContext === undefined
+      ? conversationContext
+      : options.conversationContext
     const request = requestCoordinatorRef.current.begin({
       question: cleanQuestion,
       reportId: requestReportId || null,
       previousTopic: requestPreviousTopic,
+      conversationContext: requestConversationContext,
       responseDepth: options.responseDepth ?? responseDepth,
       appendUserMessage: options.appendUser !== false,
     })
@@ -790,8 +816,20 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
           question: request.snapshot.question,
           responseDepth: request.snapshot.responseDepth,
           ...(request.snapshot.reportId ? { reportId: request.snapshot.reportId } : {}),
-          ...(request.snapshot.previousTopic
-            ? { context: { previousTopic: request.snapshot.previousTopic } }
+          ...((request.snapshot.previousTopic || request.snapshot.conversationContext)
+            ? {
+                context: {
+                  ...(request.snapshot.previousTopic
+                    ? { previousTopic: request.snapshot.previousTopic }
+                    : {}),
+                  ...(request.snapshot.conversationContext
+                    ? {
+                        topicIds: [...request.snapshot.conversationContext.topicIds],
+                        lastQueryKind: request.snapshot.conversationContext.lastQueryKind,
+                      }
+                    : {}),
+                },
+              }
             : {}),
         }),
       })
@@ -803,6 +841,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
 
       setMessages((current) => [...current, { id: messageId("assistant"), role: "assistant", answer }])
       setPreviousTopic(answer.topic)
+      setConversationContext(answer.conversationContext ?? null)
       if (answer.contextRequest?.type === "report" && !request.snapshot.reportId) {
         setPendingReportQuestion(request.snapshot.question)
         reportPickerFocusPendingRef.current = true
@@ -853,6 +892,9 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
         await sendQuestion(waitingQuestion, {
           reportId: transition.selectedReportId,
           previousTopic: transition.clearConversation ? transition.previousTopic : previousTopic,
+          conversationContext: transition.clearConversation
+            ? transition.conversationContext
+            : conversationContext,
           appendUser: transition.clearConversation,
         })
       } else {
@@ -878,6 +920,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
       ? {
           reportId: failedRequest.reportId,
           previousTopic: failedRequest.previousTopic,
+          conversationContext: failedRequest.conversationContext,
           responseDepth,
           appendUser: false,
         }
@@ -889,6 +932,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
     void sendQuestion(failedRequest.question, {
       reportId: failedRequest.reportId,
       previousTopic: failedRequest.previousTopic,
+      conversationContext: failedRequest.conversationContext,
       responseDepth: failedRequest.responseDepth,
       appendUser: false,
     })

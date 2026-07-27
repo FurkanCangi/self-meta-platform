@@ -22,7 +22,11 @@ import { evaluateCurrentDnaStagedRolloutAuthorization } from "./release/stagedRo
 import { selectDnaChatRuntime } from "./runtimeSelection"
 import { resolveDnaV3Retrieval } from "./v3RetrievalCore"
 import { adaptDnaV3StaticPackageForRetrieval } from "./v3RetrievalPackageAdapter"
-import type { DnaChatMode, DnaChatSafeCaseContext } from "./types"
+import type {
+  DnaChatConversationContext,
+  DnaChatMode,
+  DnaChatSafeCaseContext,
+} from "./types"
 import type { DnaV3ResponseDepth } from "./v3ResponseProfiles"
 
 /**
@@ -163,6 +167,7 @@ export function resolveCommittedDnaChatRuntime(input: Readonly<{
   question: string
   mode?: DnaChatMode
   previousTopic?: string | null
+  conversationContext?: DnaChatConversationContext | null
   caseContext?: DnaChatSafeCaseContext | null
   responseDepth?: DnaV3ResponseDepth | null
   rolloutSubjectKey?: string | null
@@ -176,6 +181,7 @@ export function resolveCommittedDnaChatRuntime(input: Readonly<{
       question: input.question,
       mode: input.mode,
       previousTopic: input.previousTopic,
+      conversationContext: input.conversationContext,
       caseContext: input.caseContext ?? undefined,
     }))
   }

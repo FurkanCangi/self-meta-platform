@@ -1,5 +1,7 @@
+import type { DnaChatConversationContext } from "./types"
+
 export const DNA_CHAT_CONVERSATION_POLICY_VERSION =
-  "dna-chat-conversation-policy@1" as const
+  "dna-chat-conversation-policy@2" as const
 
 export type DnaChatResponseDepth = "short" | "standard" | "deep"
 
@@ -7,6 +9,7 @@ export type DnaChatRequestSnapshot = Readonly<{
   question: string
   reportId: string | null
   previousTopic: string | null
+  conversationContext?: DnaChatConversationContext | null
   responseDepth: DnaChatResponseDepth
   appendUserMessage: boolean
 }>
@@ -37,6 +40,18 @@ function normalizeOptionalContextValue(value: string | null) {
   return normalized || null
 }
 
+function normalizeConversationContext(
+  value: DnaChatConversationContext | null | undefined,
+): DnaChatConversationContext | null {
+  if (!value) return null
+  const topicIds = Array.from(new Set(value.topicIds
+    .map((topicId) => String(topicId || "").trim())
+    .filter(Boolean))).slice(0, 2)
+  return topicIds.length
+    ? Object.freeze({ topicIds: Object.freeze(topicIds), lastQueryKind: value.lastQueryKind })
+    : null
+}
+
 export function createDnaChatRequestSnapshot(
   input: DnaChatRequestSnapshot,
 ): DnaChatRequestSnapshot {
@@ -51,6 +66,7 @@ export function createDnaChatRequestSnapshot(
     question,
     reportId: normalizeOptionalContextValue(input.reportId),
     previousTopic: normalizeOptionalContextValue(input.previousTopic),
+    conversationContext: normalizeConversationContext(input.conversationContext),
     responseDepth: input.responseDepth,
     appendUserMessage: input.appendUserMessage === true,
   })
@@ -124,6 +140,7 @@ export type DnaChatNewConversationPlan = Readonly<{
   reportPickerOpen: false
   pendingReportQuestion: null
   previousTopic: null
+  conversationContext: null
   draftQuestion: ""
   clearMessages: true
   clearReportOptions: true
@@ -139,6 +156,7 @@ export function planDnaChatNewConversation(): DnaChatNewConversationPlan {
     reportPickerOpen: false,
     pendingReportQuestion: null,
     previousTopic: null,
+    conversationContext: null,
     draftQuestion: "",
     clearMessages: true,
     clearReportOptions: true,
@@ -152,6 +170,7 @@ export type DnaChatReportTransition = Readonly<{
   selectedReportId: string | null
   reportPickerOpen: boolean
   previousTopic: null
+  conversationContext: null
   pendingReportQuestion: null
   resubmitQuestions: readonly string[]
 }>
@@ -178,6 +197,7 @@ export function planDnaChatReportTransition(input: Readonly<
       selectedReportId: null,
       reportPickerOpen: true,
       previousTopic: null,
+      conversationContext: null,
       pendingReportQuestion: null,
       resubmitQuestions: Object.freeze([]),
     })
@@ -193,6 +213,7 @@ export function planDnaChatReportTransition(input: Readonly<
     selectedReportId: reportId,
     reportPickerOpen: false,
     previousTopic: null,
+    conversationContext: null,
     pendingReportQuestion: null,
     resubmitQuestions: Object.freeze(pending ? [pending] : []),
   })

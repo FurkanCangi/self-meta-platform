@@ -1,4 +1,4 @@
-import { resolveDnaChat } from "./engine"
+import { detectDnaConversationFollowUpKind, resolveDnaChat } from "./engine"
 import { evaluateDnaChatRuntimeRelease } from "./governance/runtimeReleaseGate"
 import { DNA_INTELLIGENCE_PUBLIC_INTENDED_USE } from "./intendedUse"
 import { DNA_KNOWLEDGE_AUTHORITY_CONTRACT_VERSION } from "./knowledgeAuthority"
@@ -11,6 +11,8 @@ import {
 } from "./runtimeAnswer"
 import type {
   DnaChatAnswerUnit,
+  DnaChatConversationContext,
+  DnaChatConversationQueryKind,
   DnaChatMode,
   DnaChatResponse,
   DnaChatRoute,
@@ -34,7 +36,11 @@ export type DnaChatApiPayload = {
   reportId?: string
   mode?: DnaChatMode
   responseDepth?: DnaV3ResponseDepth
-  context?: { previousTopic?: string }
+  context?: {
+    previousTopic?: string
+    topicIds?: string[]
+    lastQueryKind?: DnaChatConversationQueryKind
+  }
 }
 
 export type DnaChatLatencyCategory = "lt_100ms" | "100_to_999ms" | "gte_1000ms"
@@ -140,6 +146,7 @@ export type DnaChatApiResolverDependencies = {
     question: string
     mode?: DnaChatMode
     previousTopic?: string | null
+    conversationContext?: DnaChatConversationContext | null
     responseDepth: DnaV3ResponseDepth
   }>) => Promise<DnaChatRuntimeAnswer> | DnaChatRuntimeAnswer
   loadCaseAnswer: (input: {
@@ -147,6 +154,7 @@ export type DnaChatApiResolverDependencies = {
     question: string
     mode?: DnaChatMode
     previousTopic?: string | null
+    conversationContext?: DnaChatConversationContext | null
     responseDepth: DnaV3ResponseDepth
   }) => Promise<DnaChatCaseLoadResult>
   writeAudit: (input: DnaChatApiAuditInput) => Promise<{ ok: boolean }>
@@ -328,6 +336,12 @@ function publicAnswer(
     suggestedQuestions: answer.suggestedQuestions.slice(0, responseDepth === "short" ? 2 : 3),
     engineVersion: answer.engineVersion,
     topic: answer.topic,
+    ...(answer.conversationContext ? {
+      conversationContext: {
+        topicIds: [...answer.conversationContext.topicIds].slice(0, 2),
+        lastQueryKind: answer.conversationContext.lastQueryKind,
+      },
+    } : {}),
     ...(answer.contextRequest ? { contextRequest: answer.contextRequest } : {}),
     ...(answer.evidenceSummary ? { evidenceSummary: answer.evidenceSummary } : {}),
   }
@@ -605,24 +619,50 @@ function normalizeLoadedRuntimeAnswer(
   }
 }
 
+function conversationContextFromPayload(
+  payload: DnaChatApiPayload,
+): DnaChatConversationContext | null {
+  const topicIds = Array.from(new Set(
+    (payload.context?.topicIds ?? []).map((value) => String(value || "").trim()).filter(Boolean),
+  )).slice(0, 2)
+  const lastQueryKind = payload.context?.lastQueryKind
+  return topicIds.length && lastQueryKind
+    ? { topicIds, lastQueryKind }
+    : null
+}
+
+function responseDepthForConversation(
+  payload: DnaChatApiPayload,
+): DnaV3ResponseDepth {
+  const base = resolveDnaV3ResponseDepth(payload.question, payload.responseDepth)
+  const followUpKind = detectDnaConversationFollowUpKind(payload.question)
+  if (followUpKind === "simplify") return "short"
+  if (followUpKind !== "expand") return base
+  const requested = payload.responseDepth ?? "standard"
+  return requested === "short" ? "standard" : "deep"
+}
+
 export async function resolveDnaChatApiRequest(
   payload: DnaChatApiPayload,
   dependencies: DnaChatApiResolverDependencies,
 ): Promise<DnaChatApiResolution> {
   const startedAt = monotonicNow()
   const legacyCaseMode = payload.mode === "case"
-  const responseDepth = resolveDnaV3ResponseDepth(payload.question, payload.responseDepth)
+  const responseDepth = responseDepthForConversation(payload)
+  const conversationContext = conversationContextFromPayload(payload)
   let runtimeAnswer = dependencies.resolveRuntimeAnswer
     ? await dependencies.resolveRuntimeAnswer({
         mode: payload.mode,
         question: payload.question,
         previousTopic: payload.context?.previousTopic || null,
+        conversationContext,
         responseDepth,
       })
     : createDnaV2RuntimeAnswer(resolveDnaChat({
         mode: payload.mode,
         question: payload.question,
         previousTopic: payload.context?.previousTopic || null,
+        conversationContext,
       }))
 
   if (!isDnaChatRuntimeAnswerAuthentic(runtimeAnswer)) {
@@ -639,6 +679,7 @@ export async function resolveDnaChatApiRequest(
       question: payload.question,
       mode: payload.mode,
       previousTopic: payload.context?.previousTopic || null,
+      conversationContext,
       responseDepth,
     })
     if (!loaded.ok) {

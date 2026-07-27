@@ -41,6 +41,17 @@ const dnaChatPostSchema = z
     context: z
       .object({
         previousTopic: z.string().trim().min(1).max(120).optional(),
+        topicIds: z.array(z.string().trim().min(1).max(120)).min(1).max(2).optional(),
+        lastQueryKind: z.enum([
+          "definition",
+          "comparison",
+          "relation",
+          "measurement",
+          "development",
+          "evidence",
+          "case",
+          "unknown",
+        ]).optional(),
       })
       .strict()
       .optional(),
@@ -322,7 +333,7 @@ export async function POST(request: Request) {
         ...input,
         rolloutSubjectKey: auth.user.id,
       }),
-      loadCaseAnswer: async ({ reportId, question, mode, previousTopic, responseDepth }) => {
+      loadCaseAnswer: async ({ reportId, question, mode, previousTopic, conversationContext, responseDepth }) => {
         const recentReports = await timing.measure("report_list", () => listOwnReports(auth.user.id))
         if (!recentReports.ok) return { ok: false, status: 500, error: "dna_chat_failed" }
         if (!recentReports.reports.some((report) => report.id === reportId)) {
@@ -334,6 +345,7 @@ export async function POST(request: Request) {
           question,
           mode,
           previousTopic,
+          conversationContext,
           responseDepth,
         }))
       },

@@ -72,6 +72,8 @@ export type {
   DnaChatAnswerUnit,
   DnaChatAuthoritySummaryEntry,
   DnaChatClassification,
+  DnaChatConversationContext,
+  DnaChatConversationQueryKind,
   DnaChatContextRequest,
   DnaChatDomainKey,
   DnaChatDomainLevel,
