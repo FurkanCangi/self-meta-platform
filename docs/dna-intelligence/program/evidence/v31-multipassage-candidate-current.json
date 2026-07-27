@@ -1,0 +1,57 @@
+{
+  "activationAllowed": false,
+  "boundary": "Bu paket yayın dışı V3.1 denemesidir; DNA kitabı ve nihai yayın kapıları tamamlanmadan API veya kullanıcı arayüzüne bağlanamaz.",
+  "candidatePackageSha256": "373c25ab09da24e02535bc8269ce993520776a20d014cca928fb13cba82e9f50",
+  "candidateSchemaVersion": "dna-v3.1-multipassage-candidate@1",
+  "counts": {
+    "familyCount": 5,
+    "notAvailableFamilies": 2,
+    "sourceCount": 4,
+    "successfulFamilies": 3,
+    "unitCount": 6
+  },
+  "familyDecisions": {
+    "interoception": {
+      "independentSources": 1,
+      "status": "candidate_success",
+      "units": 2
+    },
+    "neuroanatomy": {
+      "independentSources": 2,
+      "status": "candidate_success",
+      "units": 3
+    },
+    "sensory_modulation": {
+      "independentSources": 0,
+      "status": "not_available",
+      "units": 0
+    },
+    "sleep": {
+      "independentSources": 2,
+      "status": "candidate_success",
+      "units": 3
+    },
+    "stress_reactivity_recovery": {
+      "independentSources": 0,
+      "status": "not_available",
+      "units": 0
+    }
+  },
+  "inputHashes": {
+    "externalScienceCandidate": "45c779a88b668f26b9a79c29715ca8709cb3a52afa07c8d4dbae37bc01ee7b3c",
+    "reconciliation178": "f790baa2a7510dced6b94f1d992ae21febed22dae751378fcdbfce2d2bd3e381",
+    "reconciliation42": "8a0eaf400ba0c42036fd87b177a2a4a347d9993088b3a01972d10b60bd1efe3e"
+  },
+  "liveRuntime": "dna-chat-engine@2",
+  "releaseEligible": false,
+  "runtimeEligible": false,
+  "schemaVersion": "dna-v3.1-multipassage-candidate-manifest@1",
+  "verification": {
+    "duplicateMeaningsWithinFamily": 0,
+    "duplicatePassagesWithinFamily": 0,
+    "multiStepMechanisms": 0,
+    "orphanUnits": 0,
+    "unlicensedPassages": 0,
+    "unsupportedCausalSynthesis": 0
+  }
+}
