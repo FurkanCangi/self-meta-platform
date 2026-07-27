@@ -34,6 +34,7 @@ type Fixture = {
   clientId: string | null
   assessmentId: string | null
   reportId: string | null
+  additionalReportIds: string[]
   cookies: CookieJar | null
 }
 
@@ -376,6 +377,7 @@ function createFixture(
     clientId: null,
     assessmentId: null,
     reportId: null,
+    additionalReportIds: [],
     cookies: null,
   }
 }
@@ -477,6 +479,40 @@ async function createSyntheticFixture(fixture: Fixture) {
   invariant(report.data?.id, "Created report ID is missing.")
   fixture.reportId = String(report.data.id)
   secrets.add(fixture.reportId)
+
+  if (fixture.label === "A") {
+    const variants = [
+      {
+        age_months: 52,
+        scores: { physiological: 28, sensory: 31, emotional: 40, cognitive: 42, executive: 38, interoception: 36 },
+        domain_levels: { physiological: "Riskli", sensory: "Riskli", emotional: "Tipik", cognitive: "Tipik", executive: "Tipik", interoception: "Tipik" },
+      },
+      {
+        ageMonths: 56,
+        scores: { fizyolojik: 28, duyusal: 31, duygusal: 40, bilissel: 42, yurutucu: 38, intero: 36 },
+        domainLevels: { fizyolojik: "Riskli", duyusal: "Riskli", duygusal: "Tipik", bilissel: "Tipik", yurutucu: "Tipik", intero: "Tipik" },
+      },
+      { age_months: 48, scores: { physiological: 28 } },
+      { age_months: 48 },
+    ]
+    for (const [index, snapshot] of variants.entries()) {
+      const variant = await admin
+        .from("reports")
+        .insert({
+          assessment_id: fixture.assessmentId,
+          version: index + 2,
+          immutable: true,
+          report_text: "TEST_AUTOMATION synthetic report variant",
+          snapshot_json: { ...snapshot, test_automation: runId },
+        })
+        .select("id")
+        .single()
+      failIfError("report variant create failed", variant.error)
+      invariant(variant.data?.id, "Created variant report ID is missing.")
+      fixture.additionalReportIds.push(String(variant.data.id))
+      secrets.add(String(variant.data.id))
+    }
+  }
 }
 
 async function loginThroughSite(config: EnvConfig, fixture: Fixture) {
@@ -646,6 +682,7 @@ function responseContainsFixture(response: JsonRecord, fixture: Fixture) {
     fixture.clientId,
     fixture.assessmentId,
     fixture.reportId,
+    ...fixture.additionalReportIds,
   ].some((value) => Boolean(value && haystack.includes(value)))
 }
 
@@ -813,9 +850,12 @@ async function cleanup(fixtures: Fixture[]) {
       )
     }
 
-    if (fixture.reportId) {
+    const reportIds = [fixture.reportId, ...fixture.additionalReportIds].filter(
+      (value): value is string => Boolean(value),
+    )
+    if (reportIds.length) {
       await safeCleanup(`reports:${fixture.label}`, () =>
-        deleteEq("reports", "id", fixture.reportId!),
+        deleteIn("reports", "id", reportIds),
       )
     }
     if (fixture.assessmentId) {
@@ -941,17 +981,21 @@ async function main() {
       assertNoStore(result, "Report list")
 
       const reports = Array.isArray(result.body.reports) ? result.body.reports : []
-      invariant(reports.length === 1, `User A report list returned ${reports.length} rows, expected 1.`)
-      const report = asRecord(reports[0])
-      invariant(report.id === fixtureA.reportId, "User A report list did not return the owned report.")
-      invariant(report.id !== fixtureB.reportId, "User A report list exposed the foreign report.")
+      const expectedIds = new Set([fixtureA.reportId, ...fixtureA.additionalReportIds])
+      invariant(reports.length === expectedIds.size,
+        `User A report list returned ${reports.length} rows, expected ${expectedIds.size}.`)
       const allowedKeys = new Set(["id", "clientCode", "createdAt", "version", "ageBand"])
-      invariant(
-        Object.keys(report).every((key) => allowedKeys.has(key)),
-        "Report list exposed fields outside the metadata contract.",
-      )
+      for (const item of reports) {
+        const report = asRecord(item)
+        invariant(expectedIds.has(String(report.id || "")), "User A report list returned a non-owned report.")
+        invariant(report.id !== fixtureB.reportId, "User A report list exposed the foreign report.")
+        invariant(
+          Object.keys(report).every((key) => allowedKeys.has(key)),
+          "Report list exposed fields outside the metadata contract.",
+        )
+      }
       invariant(!responseContainsFixture(result.body, fixtureB), "Report list leaked foreign fixture data.")
-      return "owned=1 foreign=0"
+      return `owned=${expectedIds.size} foreign=0 variants=4`
     })
 
     await runStep("query parameter cannot widen report-list scope", async () => {
@@ -1157,6 +1201,32 @@ async function main() {
       invariant(!responseContainsFixture(metadata, fixtureA),
         "Owned case audit metadata contains synthetic clinical fixture content.")
       return `case=answered audit_gate=open metadata_keys=${Object.keys(metadata).length}`
+    })
+
+    await runStep("modern basic legacy incomplete and empty report variants stay bounded", async () => {
+      await resetSyntheticQuestionRateLimits(fixtureA)
+      invariant(fixtureA.additionalReportIds.length === 4, "Fixture A report variants are incomplete.")
+      const classifications: string[] = []
+      for (const [index, reportId] of fixtureA.additionalReportIds.entries()) {
+        const response = await postQuestion(config!, fixtureA, {
+          question: "Son raporumu özetle.",
+          reportId,
+        })
+        invariant(response.status === 200, `Report variant ${index + 1} returned HTTP ${response.status}.`)
+        invariant(response.body.ok === true, `Report variant ${index + 1} did not return ok=true.`)
+        assertNoStore(response, `Report variant ${index + 1}`)
+        invariant(!responseContainsFixture(response.body, fixtureB), "Report variant leaked foreign data.")
+        invariant(!/"(?:anamnez|answers|snapshot|trace|rule[_ -]?id)"\s*:/i.test(JSON.stringify(response.body)),
+          "Report variant exposed a forbidden raw or internal field.")
+        classifications.push(String(response.body.classification || ""))
+        if (index === 3) {
+          invariant(response.body.classification === "not_available",
+            "Empty report did not return not_available.")
+          invariant(response.body.availabilityScope === "report",
+            "Empty report did not carry report availability scope.")
+        }
+      }
+      return `variants=4 classifications=${classifications.join(",")}`
     })
 
     await runStep("expired app session cannot list or request reports", async () => {
