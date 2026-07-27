@@ -1,0 +1,74 @@
+{
+  "artifacts": {
+    "holdout": {
+      "fileMode": "0600",
+      "fileSha256": "40937a6f48a6cb8511b4f5973430473406f595094f0cc16c738fd8545e6a0977",
+      "logicalSha256": "96f843c2273822a0e307df9290edfb6dac19b361703c84e591d4267afa06a8b3",
+      "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/turkish-flexibility-bank/v1/locked-holdout.json",
+      "seedStoredInRepository": false
+    },
+    "open": {
+      "fileMode": "0600",
+      "fileSha256": "acc1fc6d2b8bcb466e93fb4b45bc94b5316445809d6d6d919eac73dfa98e7d46",
+      "logicalSha256": "8edefe9bf36ac296f80e17a2ac32db46e7fba7b33fc4676bb37051ea1f2a349b",
+      "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/turkish-flexibility-bank/v1/open-bank.json"
+    }
+  },
+  "authorityClass": "development_and_locked_internal_evaluation",
+  "boundaries": {
+    "activationAllowed": false,
+    "bookIndependent": true,
+    "claimOrPassageTextUsed": false,
+    "developmentOnly": true,
+    "directBookContentRead": false,
+    "independentHumanValidation": false,
+    "officialHoldout": true,
+    "rawContentStoredOnResearchSsdOnly": true,
+    "releaseEligible": false,
+    "reviewStatus": "codex_dual_pass_audited_not_independent_human_validation",
+    "runtimeEligible": false
+  },
+  "counts": {
+    "lockedHoldout": 200,
+    "open": 500,
+    "openExpansion": 423,
+    "openFrozenRegression": 77,
+    "total": 700
+  },
+  "distributions": {
+    "lockedHoldout": {
+      "compound_cross_topic": 25,
+      "compound_same_topic": 25,
+      "daily_short_incomplete": 30,
+      "follow_up_repair": 45,
+      "mixed_turkish_english": 20,
+      "safety_unsupported_false_premise": 20,
+      "typo_character_token": 35
+    },
+    "openExpansion": {
+      "compound_cross_topic": 55,
+      "compound_same_topic": 55,
+      "daily_short_incomplete": 70,
+      "follow_up_repair": 90,
+      "mixed_turkish_english": 45,
+      "safety_unsupported_false_premise": 38,
+      "typo_character_token": 70
+    }
+  },
+  "firstOfficialHoldoutResult": "pending_until_engine_changes_complete",
+  "frozenRegression": {
+    "bankSha256": "360ebcdf14a17f24159bda0f16385a5ca006ad2cd6e58a3e506d18ffa4012f36",
+    "count": 77,
+    "unchanged": true
+  },
+  "manifestSha256": "16ffed7664c9916b6069ab62731546072d69d99234f933290df00dc457cf00b7",
+  "qualityControls": {
+    "allPassed": true,
+    "exactCrossOverlap": 0,
+    "exactHoldoutDuplicates": 0,
+    "exactOpenDuplicates": 0,
+    "nearCrossOverlap": 0
+  },
+  "schemaVersion": "dna.turkish-flexibility-manifest.v1",
+  "version": "dna-turkish-flexibility-bank@1"
+}
