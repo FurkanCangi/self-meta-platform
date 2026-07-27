@@ -108,6 +108,12 @@ function hasSafeDefinitionCue(normalizedQuestion: string): boolean {
 
 export function classifyDnaChatQueryKind(question: string): DnaChatQueryKind {
   const normalized = normalizeDnaChatText(question)
+  // This mixed-language phrase asks for the evidence/measurement boundary of
+  // one named topic; `scope ... boundary ... ayrılır` is not a comparison
+  // between two biological concepts.
+  if (/\bmeasurement scope\b/.test(normalized) && /\bevidence boundary\b/.test(normalized)) {
+    return "evidence"
+  }
   if (hasExplicitComparisonCue(normalized)) return "comparison"
   if (/^(?:(?:peki|ya|ayrica)\s+)?(?:olcum\w*(?: nasil)?|nasil olcul\w*|nasil degerlendir\w*)$/.test(normalized)) return "measurement"
   if (/^(?:(?:peki|ya|ayrica)\s+)?(?:kaynak\w*(?: goster\w*(?: misin)?)?|kanit\w*(?: ne| nasil| guclu mu)?|kanit duzeyi(?: ne| nasil)?|orneklem\w*|ne kadar guclu|guvenilir mi)$/.test(normalized)) {
@@ -625,7 +631,9 @@ export function resolveDnaCatalogReasoning(input: {
   const topic = findCatalogTopic(input.question, input.previousTopic)
   if (!topic) return null
   const normalizedQuestion = normalizeDnaChatText(input.question)
-  const explicitRelationTargets = ["comparison", "relation", "evidence", "dna_relation"].includes(queryKind)
+  const evidenceRelationQuestion = queryKind === "evidence" &&
+    /\b(?:arasindaki|ilisk\w*|baglanti\w*|ile\s+\S.{0,100}\b(?:kanit|bilimsel))\b/.test(normalizedQuestion)
+  const explicitRelationTargets = ["comparison", "relation", "dna_relation"].includes(queryKind) || evidenceRelationQuestion
     ? distinctMentionedTopics(input.question, topic)
     : []
   const crossTopicEvidence = queryKind === "evidence" && explicitRelationTargets.length > 0

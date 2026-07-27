@@ -12,6 +12,7 @@ import type {
   DnaChatCatalogTopic,
   DnaChatQueryKind,
 } from "./types"
+import { scoreDnaTextMatch } from "../text"
 
 function normalizeCatalogText(value: string): string {
   return value
@@ -39,17 +40,47 @@ function containsAny(haystack: string, needles: readonly string[]): boolean {
   return needles.some((needle) => haystack.includes(normalizeCatalogText(needle)))
 }
 
+// These are routing-only synonyms from the sealed external-science topic
+// cards. They add no scientific claim and deliberately map each external
+// label to an already released V2 topic.
+const FLEXIBILITY_ROUTING_ALIASES: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  "ans.measurement_limits": ["otonom test yöntemleri", "kardiyovasküler otonom test", "tilt table"],
+  "selfreg.circadian_rhythm": ["sirkadiyen ışık ve uyku", "sirkadiyen ışık", "circadian light"],
+  "cns.executive_development": ["gelişimsel örneklemlerde yürütücü işlev", "nörogelişimsel durumlar"],
+  "ans.hrv": [
+    "hrv biofeedback yöntemleri",
+    "hrv bağlamsal etkenleri",
+    "hrv ölçüm ve raporlama",
+    "psychophysiology hrv",
+  ],
+  "cns.insula": ["insula ve interosepsiyon", "insula stimulation"],
+  "case.validity_reliability": [
+    "cosmin ve ölçüm niteliği",
+    "ölçüm aracı değerlendirmesi",
+    "prisma cosmin raporlama",
+    "prsma cosmin raporlama",
+    "ölçüm aracı sistematik derlemesi",
+  ],
+  "selfreg.emotion_regulation": ["ebeveyn ve duygu düzenleme", "parent emotion regulation"],
+  "cns.prefrontal_control": ["prefrontal süreçler ve bilişsel kontrol", "executive control"],
+  "ans.polyvagal": ["polyvagal teori", "polyvagal theory", "teori sınırı"],
+  "selfreg.core": ["self regülasyon ölçümü", "self regulation measurement", "öz düzenleme ölçümü"],
+  "selfreg.sleep_health": ["uyku ve duygusal reaktivite", "sleep emotional reactivity"],
+})
+
 const TOPIC_SEARCH_INDEX = new Map(
   DNA_CHAT_CATALOG_TOPICS.map((topic) => {
     const title = normalizeCatalogText(topic.title)
+    const routingAliases = FLEXIBILITY_ROUTING_ALIASES[topic.id] ?? []
     return [
       topic.id,
       {
         title,
-        aliases: [...new Set(topic.aliases.map(normalizeCatalogText).filter(
+        aliases: [...new Set([...topic.aliases, ...routingAliases].map(normalizeCatalogText).filter(
           (alias) => Boolean(alias) && alias !== title,
         ))],
         keywords: [...new Set(topic.keywords.map(normalizeCatalogText).filter(Boolean))],
+        flexibilityAliases: routingAliases.map(normalizeCatalogText),
       },
     ] as const
   }),
@@ -65,6 +96,7 @@ type ExplicitTopicRule = Readonly<{
 // sıralı kurallar yalnız kaynak kataloğunda açıkça adlandırılmış tek bir
 // başlığa yönlendirir; yeni bir klinik veya biyolojik çıkarım üretmez.
 const EXPLICIT_TOPIC_RULES: readonly ExplicitTopicRule[] = [
+  { topicId: "cns.insula", pattern: /\binsula\s+ve\s+interosepsiyon\b/ },
   { topicId: "selfreg.sleep_health", pattern: /\buyku\b.+\bdna\w*\b.+\bbilissel regulasyon alani\w*/ },
   { topicId: "case.ai_oversight", pattern: /\b(?:otomasyon yanlilig\w*|(?:ai|yapay zeka)\w*.+\b(?:rapor|ozet|kaynak|denetim|objektif|gecerlik)\w*)/ },
   { topicId: "case.change_interpretation", pattern: /\b(?:minimal saptanabilir degisim|guvenilir degisim indeksi|mdc|ortalamaya regresyon|uygulama etkisi|puan degisimi)\b/ },
@@ -167,6 +199,7 @@ const EXPLICIT_TOPIC_RULES: readonly ExplicitTopicRule[] = [
   { topicId: "cns.executive_development", pattern: /\byurutucu islevler\w* 6 yasinda tamamlan\w*/ },
   { topicId: "cns.executive_development", pattern: /\b(?:0\s*2 yasta yurutucu islev|beynin olgunlasmasi\b.+\byurutucu islev)\b/ },
   { topicId: "selfreg.executive_functions", pattern: /\b(?:evde zorlan\w*.+terapide iyi|odevini baslat\w*|daginiklik organizasyon|destekle yapabiliyor|korunmus yurutucu|es regulasyon\b.+\byurutucu|duygusal regulasyon\b.+\bsicak ef|interosepsiyon\b.+\byurutucu islev)\b/ },
+  { topicId: "cns.executive_development", pattern: /\bgelisimsel orneklem\w*.+\byurutucu islev\w*/ },
   { topicId: "cns.executive_models", pattern: /\b(?:gorev safsizligi|latent yurutucu|yurutucu islev ne|yurutucu islevler nedir|cekirdek yurutucu islev\w*)\b/ },
 
   { topicId: "cns.attention_measurement", pattern: /\bdikkat\w*\b.+\b(?:olc\w*|olcek|test|gorev|degerlendirme)\b/ },
@@ -513,7 +546,7 @@ export function classifyCatalogQueryKind(question: string): DnaChatQueryKind {
     return "misconception"
   }
 
-  if (!hasExplicitEvidenceCue && /\b(?:iliski\w*|bag\w*|alaka\w*|katki\w*|rol oyn\w*|katil\w* mi|birlikte mi calis\w*|ilgili olabilir mi|dogrudan degistir\w* mi)\b/.test(normalized)) {
+  if (!hasExplicitEvidenceCue && /\b(?:iliski\w*|baglanti\w*|alaka\w*|katki\w*|rol oyn\w*|katil\w* mi|birlikte mi calis\w*|ilgili olabilir mi|dogrudan degistir\w* mi)\b/.test(normalized)) {
     if (/\bhangi islev\w*le iliskili\b/.test(normalized)) return "definition"
     return "relation"
   }
@@ -555,7 +588,7 @@ export function classifyCatalogQueryKind(question: string): DnaChatQueryKind {
   }
 
   if (
-    containsAny(normalized, ["ilişk", "ilisk", "bağ", "bag", "alaka", "etkiler", "etkileyebilir", "katkı", "katki", "bağlantı", "baglanti"]) ||
+    containsAny(normalized, ["ilişki", "iliski", "ilişkili", "iliskili", "alaka", "etkiler", "etkileyebilir", "katkı", "katki", "bağlantı", "baglanti"]) ||
     /\b(?:rol oyn\w*|katil\w* mi|birlikte mi calis\w*|ilgili olabilir mi)\b/.test(normalized)
   ) {
     return "relation"
@@ -626,7 +659,12 @@ function termIndex(normalizedQuestion: string, normalizedTerm: string): number {
     return paddedIndex < 0 ? -1 : Math.max(0, paddedIndex - 1)
   }
   const escaped = normalizedTerm.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-  const match = new RegExp(`(?:^|\\s)${escaped}`).exec(normalizedQuestion)
+  // A left boundary alone made short catalogue words such as `veri` match
+  // unrelated tokens such as `verir`. Allow only a complete token or a small,
+  // explicit set of Turkish case/plural suffixes after the term.
+  const match = new RegExp(
+    `(?:^|\\s)${escaped}(?=$|\\s|(?:la|le|yla|yle|da|de|dan|den|a|e|i|u|yi|yu|si|su|un|in|nin|nun|lar|ler)\\b)`,
+  ).exec(normalizedQuestion)
   if (!match) return -1
   return match.index + (match[0].startsWith(" ") ? 1 : 0)
 }
@@ -662,6 +700,20 @@ function scoreTopic(
     }
   }
   score = Math.max(score, bestAliasScore)
+
+  if (index.flexibilityAliases.length) {
+    const flexible = scoreDnaTextMatch(normalizedQuestion, index.flexibilityAliases)
+    const compactQuestion = normalizedQuestion.replace(/\s/g, "")
+    const compact = scoreDnaTextMatch(
+      compactQuestion,
+      index.flexibilityAliases.map((alias) => alias.replace(/\s/g, "")),
+    )
+    const bestFlexibleScore = Math.max(flexible.score, compact.score)
+    if (bestFlexibleScore >= 0.59) {
+      score = Math.max(score, 20 + bestFlexibleScore * 30)
+      if (firstIndex < 0) firstIndex = 0
+    }
+  }
 
   let keywordScore = 0
   for (const normalizedKeyword of index.keywords) {

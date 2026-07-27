@@ -9,8 +9,8 @@ export const DNA_V2_ROLLBACK_TARGET = Object.freeze({
   runtimeMode: "v2" as const,
   engineVersion: "dna-chat-engine@2" as const,
   catalogVersion: "dna-chat-catalog@2" as const,
-  gitTag: "dna-chat-v2-baseline-20260719",
-  gitSha: "5ed87217280a40e4566a04289d4c98b1f3883494",
+  gitTag: "dna-chat-v2-prebook-flex-20260727",
+  gitSha: "d45ea5eba923b9d4b03e1952a616bb4d5544283d",
   oneCommandEnvironment: "DNA_CHAT_RUNTIME_RELEASE=v2",
 })
 

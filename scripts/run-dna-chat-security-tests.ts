@@ -765,8 +765,12 @@ for (const heading of [
 }
 assert.match(client, /answer\.runtimeGeneration === "v3"\s*&&\s*unit\.section/)
 assert.match(client, /V3_ANSWER_SECTION_LABEL\[unit\.section\]/)
-assert.match(client, /\{ANSWER_UNIT_KIND_LABEL\[unit\.kind\]\}/,
-  "V2 yanıtları genel birim başlığına geri düşebilmeli")
+assert.match(client, /visibleAnswerUnits\.map\(\(unit, index\) =>/,
+  "Kaynak bağlı V2 ve V3 birimleri doğal paragraf akışında işlenmeli")
+assert.match(client, /\{unit\.text\}/,
+  "Doğal paragraf akışı doğrulanmış yanıt birimi metnini göstermeli")
+assert.doesNotMatch(client, /ANSWER_UNIT_KIND_LABEL/,
+  "V2 teknik birim başlıkları ana yanıt metnine geri dönmemeli")
 assert.doesNotMatch(
   client,
   /<span>\{answer\.safetyBoundary\}<\/span>/,

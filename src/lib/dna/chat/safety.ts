@@ -278,6 +278,7 @@ const PROGNOSIS_PATTERNS = [
   "predict prognosis",
   "give a prognosis",
   "predict clinical outcome",
+  "prognoz cikar",
 ] as const
 
 const CAUSALITY_PATTERNS = [
@@ -342,13 +343,19 @@ const DIAGNOSIS_PATTERNS = [
 ] as const
 
 const INDIVIDUAL_CLINICAL_CONTEXT_PATTERN =
-  /\b(?:bu\s+(?:cocuk|vaka|olgu|danisan|profil|rapor|oruntu|sonuc|bulgu|davranis|durum|sorun|zorluk)|cocuk\w*|danisan\w*|vaka\w*|olgu\w*|rapor\w*|profil\w*|skor\w*|puan\w*|sonuc\w*|bulgu\w*|oruntu\w*|ofke\w*\s+goster\w*|plan\w*\s+yapam\w*|iki\s+komut\w*\s+unut\w*)\b/
+  /\b(?:bu\s+(?:cocuk|vaka|olgu|danisan|profil|rapor|oruntu|sonuc|bulgu|davranis|durum|sorun|zorluk)|cocug\w*|cocuk\w*|hastam\w*|hasta\w*|danisan\w*|vaka\w*|olgu\w*|rapor\w*|profil\w*|skor\w*|puan\w*|sonuc\w*|bulgu\w*|oruntu\w*|ofke\w*\s+goster\w*|plan\w*\s+yapam\w*|iki\s+komut\w*\s+unut\w*)\b/
 const DIAGNOSTIC_CONCEPT_PATTERN =
   /\b(?:tani(?:sal\w*|si\w*|yi\w*|ya\w*|nin\w*|niz\w*|\s+koy\w*|\s+ver\w*)|teshis\w*|hastali(?:k|g)\w*|bozuklu(?:k|g)\w*|dsm(?:\s*5)?|asd|otiz\w*|otistik\w*|dehb|adhd|spektrum\w*|norogelisimsel|zihinsel\s+gerilik|ayirici\s+tani|klinik\s+(?:etiket\w*|tablo\w*|kategori\w*)|psikiyatrik\s+(?:etiket\w*|kategori\w*))\b/
 const DIAGNOSTIC_REQUEST_PATTERN =
-  /\b(?:ad\w*\s+soyle\w*|siniflandir\w*|etiket\w*|daralt\w*|indir\w*|secenek\w*\s+ver\w*|sahip\s+mi|sayil\w*\s+(?:mi|mu)|say\w*\s+miy\w*|destekli\w*\s+(?:mi|mu)|ihtimal\w*|yuzde\s+kac|daha\s+yakin|sonuc\w*\s+donustur\w*|ad\w*\s+tahmin\w*|var\s+mi\s+yok\s+mu|gosterge\w*|kod\w*\s+sec\w*|kanaat\w*|acikca\s+belirt\w*|diyebilir\w*\s+miy\w*)\b/
+  /\b(?:tani\w*.{0,80}\bkoy\w*|ad\w*\s+soyle\w*|siniflandir\w*|etiket\w*|daralt\w*|indir\w*|secenek\w*\s+ver\w*|sahip\s+mi|sayil\w*\s+(?:mi|mu)|say\w*\s+miy\w*|destekli\w*\s+(?:mi|mu)|ihtimal\w*|yuzde\s+kac|daha\s+yakin|sonuc\w*\s+donustur\w*|ad\w*\s+tahmin\w*|var\s+mi\s+yok\s+mu|gosterge\w*|kod\w*\s+sec\w*|kanaat\w*|acikca\s+belirt\w*|diyebilir\w*\s+miy\w*)\b/
 
 function isCompositionalDiagnosisRequest(normalized: string): boolean {
+  if (
+    /\b(?:yanlis|hatali) oncul\w*\b.{0,100}\bkabul etmeden\b/.test(normalized) ||
+    /\bvarsayim\w*\b.{0,80}\bkarsilast\w*\b/.test(normalized)
+  ) {
+    return false
+  }
   if (/\b(?:genel|kavram\w*)\s+tanim\w*\b/.test(normalized) || /\btanim\w*\s+nedir\b/.test(normalized)) {
     return false
   }
@@ -393,6 +400,11 @@ const PRESCRIPTIVE_ACTION_PATTERN =
 
 function isCompositionalTreatmentRequest(normalized: string): boolean {
   if (
+    /\bbaslig\w*\b.{0,100}\b(?:sade|bilimsel|kavramsal)\b.{0,100}\b(?:anlat|acikla|kapsam)\w*/.test(normalized)
+  ) {
+    return false
+  }
+  if (
     /\b(?:evde\s+)?aile\w*\b.{0,60}\b(?:ne\s+(?:calis|yap)\w*|uygula\w*|program\w*|odev\w*)/.test(normalized)
   ) {
     return true
@@ -422,10 +434,15 @@ const MEDICATION_PATTERNS = [
 ] as const
 
 function isExplicitNonPrescriptiveKnowledgeRequest(normalized: string): boolean {
-  const rejectsClinicalAction = /\b(?:tani|tedavi|terapi|ilac|seans|prognoz|kesin neden)(?:\s+(?:veya|ya da|ile)\s+(?:tani|tedavi|terapi|ilac|seans|prognoz|kesin neden))*\s+istemiyorum\b/.test(normalized)
-  const asksForKnowledge = /\b(?:yalniz|sadece)\b.{0,100}\b(?:nedir|ne demek|acikla|anlat|kanit|kaynak|literatur|kavramsal|genel bilgi)\b/.test(normalized)
-  const individualized = INDIVIDUAL_CLINICAL_CONTEXT_PATTERN.test(normalized)
-  const remainingUnsafeAction = /\b(?:tani koy|teshis et|ilac yaz|doz yaz|recete yaz|tedavi oner|terapi oner|seans planla|prognoz cikar)\b/.test(normalized)
+  const beforeRejection = normalized.split(/\bistemiyorum\b/, 1)[0] ?? ""
+  const rejectsClinicalAction = /\bistemiyorum\b/.test(normalized) &&
+    /\b(?:tani|tedavi|terapi|ilac|recete|seans|prognoz|kesin (?:neden|biyolojik cikarim))\b/.test(beforeRejection)
+  const asksForKnowledge = /\b(?:yalnizca|yalniz|sadece)\b.{0,320}\b(?:nedir|ne demek|acikla|anlat|kanit|kaynak|literatur|bilimsel|kavramsal|genel bilgi)\b/.test(normalized)
+  const afterRejection = normalized.split(/\bistemiyorum\b/, 2)[1] ?? ""
+  const individualized = /\b(?:bu\s+(?:cocuk|vaka|danisan|rapor|profil|sonuc|bulgu)\w*|cocugum\w*|hastam\w*|danisanim\w*|raporum\w*|skorum\w*|puanim\w*)\b/.test(
+    afterRejection,
+  )
+  const remainingUnsafeAction = /\b(?:tani koy|teshis et|ilac yaz|doz yaz|recete yaz|tedavi oner|terapi oner|seans planla|prognoz cikar)\b/.test(afterRejection)
   return rejectsClinicalAction && asksForKnowledge && !individualized && !remainingUnsafeAction
 }
 
@@ -876,7 +893,8 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
     )
   }
   const matchingCatalogRules = DNA_CHAT_CATALOG_SAFETY_RULES.filter((rule) =>
-    includesAny(normalized, rule.patterns),
+    includesAny(normalized, rule.patterns) &&
+    !(explicitNonPrescriptiveKnowledge && ["diagnosis", "treatment"].includes(rule.category)),
   )
   const boundedBiologicalTheoryQuestion =
     matchingCatalogRules.length > 0 &&

@@ -1774,7 +1774,7 @@ export function buildProgramState(facts, readiness) {
       v3RuntimeEligible: facts.publicationPipeline.packageRuntimeEligible,
       v3DeploymentPerformed: facts.runtime.v3DeploymentPerformed,
       v3PromotionPerformed: facts.runtime.v3PromotionPerformed,
-      rollbackTarget: "dna-chat-v2-baseline-20260719",
+      rollbackTarget: "dna-chat-v2-prebook-flex-20260727",
       boundary: "V2 güvenli varsayılan olarak kalır; V3 kitap, korpus, değerlendirme ve deployment kapıları geçmeden etkinleştirilemez.",
     },
     blockerScope: blockerScope(facts),

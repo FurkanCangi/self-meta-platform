@@ -20,6 +20,7 @@ assert.equal(insula.conversationContext?.lastQueryKind, "definition")
 
 const followUps = [
   ["Bunu biraz aç.", "expand", "answered"],
+  ["Biraz daha ayrıntı?", "expand", "answered"],
   ["Daha basit anlat.", "simplify", "answered"],
   ["Peki çocuklarda?", "age_scope", "not_available"],
   ["Bunun kanıtı ne?", "evidence", "answered"],
@@ -47,6 +48,26 @@ const comparison = resolveDnaChat({
 })
 assert.equal(comparison.outcome, "answered")
 assert.equal(comparison.conversationContext?.topicIds.length, 2)
+
+const comparisonRepair = resolveDnaChat({
+  question: "Bu iki başlığın farkı neydi?",
+  conversationContext: {
+    topicIds: ["cns.insula", "ans.hrv"],
+    lastQueryKind: "definition",
+  },
+})
+assert.equal(detectDnaConversationFollowUpKind("Bu iki başlığın farkı neydi?"), "comparison")
+assert.equal(comparisonRepair.outcome, "answered")
+assert.deepEqual([...(comparisonRepair.conversationContext?.topicIds ?? [])].sort(), ["ans.hrv", "cns.insula"])
+
+const separateTopicCompound = resolveDnaChat({
+  question: "İnsula ve interosepsiyon ne demek, bir de ayrı olarak Otonom test yöntemleri nedir?",
+})
+assert.equal(separateTopicCompound.outcome, "answered")
+assert.deepEqual(
+  [...(separateTopicCompound.conversationContext?.topicIds ?? [])].sort(),
+  ["ans.measurement_limits", "cns.insula"],
+)
 
 const comparisonWithoutPair = resolveDnaChat({
   question: "İkisi arasındaki fark ne?",

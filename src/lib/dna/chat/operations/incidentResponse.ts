@@ -49,9 +49,9 @@ export const DNA_CHAT_OPERATIONAL_DISABLED_PACKS_ENV = "DNA_CHAT_DISABLED_PACK_S
 
 /** Immutable Phase 0 V2 baseline evidence; this is a rollback target, not V3 approval. */
 export const DNA_V2_OPERATIONAL_ROLLBACK_EVIDENCE = Object.freeze({
-  target: "dna-chat-v2-baseline-20260719",
-  gitSha: "5ed87217280a40e4566a04289d4c98b1f3883494",
-  engineRuntimeSha256: "1f3525e7eeb5a780949c6c6b33f8d111257336e14061ea94391156cfefb333d6",
+  target: "dna-chat-v2-prebook-flex-20260727",
+  gitSha: "d45ea5eba923b9d4b03e1952a616bb4d5544283d",
+  engineRuntimeSha256: "2dc904c86ae577abc42b68a3bc00268d6b84eac073d660a870e626972e12fb4a",
 })
 
 export function evaluateDnaChatOperationalSwitch(

@@ -428,12 +428,18 @@ export function detectDnaConversationFollowUpKind(
   ) {
     return "correction"
   }
-  if (/^(?:bunu\s+)?(?:biraz\s+)?(?:daha\s+)?(?:ac|acikla|ayrintilandir|detaylandir)(?:\s+misin)?$/.test(normalized)) return "expand"
+  if (
+    /^(?:bunu\s+)?(?:biraz\s+)?(?:daha\s+)?(?:ac|acikla|ayrintilandir|detaylandir)(?:\s+misin)?$/.test(normalized) ||
+    /^(?:biraz\s+)?daha\s+(?:ayrinti|detay)(?:li)?$/.test(normalized)
+  ) return "expand"
   if (/^(?:bunu\s+)?(?:daha\s+)?(?:basit|sade)(?:ce)?\s+(?:anlat|acikla)(?:\s+misin)?$/.test(normalized) || /^(?:en\s+)?sade\s+haliyle$/.test(normalized)) return "simplify"
   if (/^(?:(?:peki|ya)\s+)?(?:cocuklarda|kucuk cocuklarda|ergenlerde|erken cocuklukta|yas grubuna gore)(?:\s+(?:nasil|ayni mi|ne degisir))?$/.test(normalized)) return "age_scope"
   if (/^(?:bunun\s+)?(?:bilimsel\s+)?(?:kaniti|dayanagi|kaynaklari)(?:\s+(?:ne|nasil|guclu mu|peki|gosterir misin))?$/.test(normalized) || /^bilimsel dayanak peki$/.test(normalized)) return "evidence"
   if (/^(?:bunun\s+)?(?:olcumu\s+nasil|nasil olculuyor|nasil olculur|hangi yolla incelenir)$/.test(normalized)) return "measurement"
-  if (/^(?:bu\s+)?(?:iki(?:si| baslik)?)(?:nin)?\s+(?:arasindaki\s+)?farki?\s+ne(?:ydi)?$/.test(normalized) || /^ikisini karsilastir$/.test(normalized)) return "comparison"
+  if (
+    /^(?:bu\s+)?iki(?:si(?:nin)?|\s+basligin)\s+(?:arasindaki\s+)?farki?\s+ne(?:ydi)?$/.test(normalized) ||
+    /^ikisini karsilastir$/.test(normalized)
+  ) return "comparison"
   if (/\b(?:baska turlu anlat|farkli anlat|yeniden anlat|tekrar acikla)\b/.test(normalized)) {
     return "retry"
   }
@@ -520,11 +526,30 @@ function hasExplicitScopedSafetyBoundary(question: string): boolean {
 }
 
 function stripExplicitNonPrescriptivePreface(question: string): string {
-  const stripped = question.replace(
+  const direct = question.replace(
     /^\s*(?:tanı|tani|tedavi|terapi|ilaç|ilac|seans|prognoz|kesin neden)(?:\s+(?:veya|ya da|ile)\s+(?:tanı|tani|tedavi|terapi|ilaç|ilac|seans|prognoz|kesin neden))*\s+istemiyorum\s*[;,:.-]*\s*(?:yalnız|yalniz|sadece)\s+/iu,
     "",
   ).trim()
+  const generic = direct === question.trim()
+    ? question.replace(
+        /^.{0,420}\bistemiyorum\b\s*[;,:.-]*\s*((?:yalnızca|yalnizca|yalnız|yalniz|sadece)\s+.+)$/iu,
+        "$1",
+      ).trim()
+    : direct
+  const stripped = /^(?:yalnızca|yalnizca|yalnız|yalniz|sadece)\s+bu\s+başlığ/iu.test(generic)
+    ? question.trim()
+    : generic
   return stripped.length >= 2 ? stripped : question
+}
+
+function extractDeclaredActualQuestion(question: string): string {
+  const match = /(?:asıl|asil)\s+soru\s*[“"']([^”"']{2,560})[”"']/iu.exec(question)
+  return match?.[1]?.trim() || question
+}
+
+function isClearlyOutOfDomainQuestion(question: string): boolean {
+  const normalized = normalizeDnaChatText(question)
+  return /\b(?:yemek tarifi|otomobil motoru|kuantum dolaniklik|futbol maci|roma imparatorlugu|web scraper|marsa yolculuk|kripto para|siir yaz)\b/.test(normalized)
 }
 
 function notAvailableResponse(
@@ -1377,6 +1402,23 @@ function resolveSingleDnaChat(
     )
   }
 
+  const followUpKind = detectDnaConversationFollowUpKind(question)
+  if (followUpKind === "comparison" && conversationTopics.length === 2) {
+    const responses = conversationTopics.map((topic) => {
+      const definitionQuestion = `${topic.title} nedir?`
+      const draft = resolveDnaCatalogReasoning({
+        question: definitionQuestion,
+        previousTopic: topic.id,
+        queryKind: "definition",
+        ageMonths: caseContext?.ageMonths,
+      })
+      return draft
+        ? catalogResponse(draft, safety)
+        : unmatchedResponse(safety)
+    })
+    return combineDnaChatResponses(responses, safety)
+  }
+
   const queryKind = classifyDnaChatQueryKind(question)
   const routed = routeDnaChatQuestion({
     question,
@@ -1468,33 +1510,61 @@ function resolveSingleDnaChat(
 }
 
 function splitDnaChatQuestion(question: string): { parts: string[]; overflow: boolean } {
-  const questionMarkParts = question
+  const questionMarker = /\b(?:ne|nedir|ne demek|ne diyor|nasil|neden|hangi|neyi|olur mu|midir|mudur|misin|anlat\w*|acikla\w*|degerlendiril\w*|kapsar\w*|gosterir mi|iliskili mi|olcumu|kaniti|kaynagi|kaynaklari|gelisimi|yas kapsami|tani\w*\s+koy\w*|teshis\w*\s+et\w*|ilac\w*\s+yaz\w*|tedavi\w*\s+oner\w*|seans\w*\s+planla\w*)\b/
+  const questionMarkCandidates = question
     .split(/\?+/)
     .map((part) => part.trim())
     .filter((part) => normalizeDnaChatText(part).replace(/\d/g, "").length >= 2)
-  const structuralParts = question
+  const questionMarkParts = questionMarkCandidates.length > 1 && questionMarkCandidates.every((part) =>
+    questionMarker.test(normalizeDnaChatText(part)))
+    ? questionMarkCandidates
+    : []
+  const structuralCandidates = question
     .split(/(?:\s*;\s*|\n+)/giu)
     .map((part) => part.trim())
     .filter((part) => normalizeDnaChatText(part).replace(/\d/g, "").length >= 2)
+  const structuralParts = structuralCandidates.length > 1 && (
+    structuralCandidates.every((part) => questionMarker.test(normalizeDnaChatText(part))) ||
+    (structuralCandidates.length === 2 && /\bikinci sorum\b/.test(normalizeDnaChatText(structuralCandidates[1])))
+  ) ? structuralCandidates : []
   const additionalParts = question
     .split(/\s+(?:ayrıca|ayrica)\s+/giu)
     .map((part) => part.trim())
     .filter(Boolean)
-  const conjunctionParts = question
-    .split(/\s+(?:ve|ayrıca|ayrica)\s+/giu)
+  const separateTopicParts = question
+    .split(/\s*,?\s*bir\s+de\s+ayr[ıi]\s+olarak\s+/giu)
     .map((part) => part.trim())
     .filter(Boolean)
-  const questionMarker = /\b(?:nedir|ne demek|nasil|neden|hangi|neyi|olur mu|midir|mudur|misin|gosterir mi|iliskili mi|olcumu|kaniti|kaynagi|kaynaklari|gelisimi|yas kapsami)\b/
-  const hasIndependentQuestions = conjunctionParts.length > 1 && conjunctionParts.every((part) =>
+  const allowConjunctionSplit = question.length <= 320 || /\b(?:iki sorum|ikinci sorum)\b/.test(
+    normalizeDnaChatText(question),
+  )
+  const conjunctionParts = (allowConjunctionSplit
+    ? Array.from(question.matchAll(/\s+(?:ve|ayrıca|ayrica)\s+/giu))
+    : [])
+    .map((match) => {
+      const start = match.index ?? -1
+      if (start < 0) return null
+      const left = question.slice(0, start).trim()
+      const right = question.slice(start + match[0].length).trim()
+      return questionMarker.test(normalizeDnaChatText(left)) &&
+        questionMarker.test(normalizeDnaChatText(right))
+        ? [left, right]
+        : null
+    })
+    .find((parts): parts is string[] => Boolean(parts)) ?? []
+  const hasIndependentQuestions = conjunctionParts.length === 2
+  const hasIndependentAdditionalQuestions = additionalParts.length > 1 && additionalParts.every((part) =>
     questionMarker.test(normalizeDnaChatText(part)),
   )
-  const hasIndependentAdditionalQuestions = additionalParts.length > 1 && additionalParts.every((part) =>
+  const hasIndependentSeparateTopicQuestions = separateTopicParts.length > 1 && separateTopicParts.every((part) =>
     questionMarker.test(normalizeDnaChatText(part)),
   )
   const parts = questionMarkParts.length > 1
     ? questionMarkParts
     : structuralParts.length > 1
       ? structuralParts
+      : hasIndependentSeparateTopicQuestions
+        ? separateTopicParts
       : hasIndependentAdditionalQuestions
         ? additionalParts
       : hasIndependentQuestions
@@ -1763,10 +1833,12 @@ export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
   if (socialConversation) {
     return socialConversationResponse(safety, socialConversation)
   }
+  if (isClearlyOutOfDomainQuestion(question)) return unmatchedResponse(safety)
 
+  const declaredQuestion = extractDeclaredActualQuestion(question)
   const knowledgeQuestion = safety.blocked
     ? question
-    : stripExplicitNonPrescriptivePreface(question)
+    : stripExplicitNonPrescriptivePreface(declaredQuestion)
   const routingQuestion = safety.blocked
     ? question
     : conversationRepairRoutingQuestion(
@@ -1774,7 +1846,11 @@ export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
         request.previousTopic,
         request.conversationContext,
       )
-  const routingSafety = routingQuestion === question ? safety : emptySafety(routingQuestion)
+  const routingSafety = knowledgeQuestion !== question && routingQuestion === knowledgeQuestion
+    ? safety
+    : routingQuestion === question
+      ? safety
+      : emptySafety(routingQuestion)
   if (routingSafety.blocked && !safety.blocked) return refusalResponse(routingSafety)
 
   const split = splitDnaChatQuestion(routingQuestion)
@@ -1804,6 +1880,11 @@ export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
     const secondResponse = partSafeties[1].blocked
       ? refusalResponse(partSafeties[1])
       : resolveSecondDnaChatQuestion(request, split.parts[1], firstResponse)
+    if (
+      safety.blocked &&
+      firstResponse.outcome !== "answered" &&
+      secondResponse.outcome !== "answered"
+    ) return refusalResponse(safety)
     const combinedSafety = partSafeties.find((partSafety) => !partSafety.blocked) ?? routingSafety
     return combineDnaChatResponses(
       [firstResponse, secondResponse],
