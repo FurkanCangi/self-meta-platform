@@ -16,7 +16,7 @@ import {
   AiOutlineUser,
 } from "react-icons/ai";
 import { logoutAppSession } from "@/lib/security/clientLogout";
-import { supabase } from "@/lib/supabase/client";
+import { useTherapistIdentity } from "./therapist-identity";
 import { useTheme } from "./theme-provider";
 
 const STORAGE_KEY = "dna_therapist_profile";
@@ -24,15 +24,6 @@ const STORAGE_KEY = "dna_therapist_profile";
 type TopnavProps = {
   toggle?: boolean;
   setToggle?: (value: boolean) => void;
-};
-
-type DirectoryProfilePayload = {
-  profile?: {
-    firstName?: string | null;
-    lastName?: string | null;
-    profession?: string | null;
-    title?: string | null;
-  } | null;
 };
 
 type PanelNotification = {
@@ -46,45 +37,18 @@ type PanelNotification = {
   read: boolean;
 };
 
-function cleanText(value?: unknown) {
-  return String(value || "").replace(/\s+/g, " ").trim();
-}
-
-function initialsFromName(value: string) {
-  const parts = value.split(" ").filter(Boolean);
-  return parts
-    .slice(0, 2)
-    .map((part) => part[0]?.toLocaleUpperCase("tr-TR") || "")
-    .join("");
-}
-
 export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
   const { theme, toggleTheme } = useTheme();
+  const { displayName, accountDetail, initials, resetIdentity } = useTherapistIdentity();
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationOpen, setNotificationOpen] = useState(false);
   const [notifications, setNotifications] = useState<PanelNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [notificationsSetupRequired, setNotificationsSetupRequired] = useState(false);
-  const [displayName, setDisplayName] = useState("DNA Intelligence");
-  const [accountDetail, setAccountDetail] = useState("Klinik çalışma alanı");
-  const [initials, setInitials] = useState("DNA");
   const [showOwnerAudit, setShowOwnerAudit] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
   const notificationRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
-
-  const applyAccountIdentity = (name?: string | null, detail?: string | null) => {
-    const nextName = cleanText(name);
-    const nextDetail = cleanText(detail);
-    if (nextName) {
-      setDisplayName(nextName);
-      const nextInitials = initialsFromName(nextName);
-      if (nextInitials) setInitials(nextInitials);
-    }
-    if (nextDetail) {
-      setAccountDetail(nextDetail);
-    }
-  };
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -97,53 +61,6 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
     };
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
-  }, []);
-
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      const fullName = [parsed?.firstName, parsed?.lastName].map(cleanText).filter(Boolean).join(" ");
-      applyAccountIdentity(fullName, cleanText(parsed?.profession || parsed?.title));
-    } catch {}
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const loadAccountIdentity = async () => {
-      let authName = "";
-      let authEmail = "";
-
-      try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-        authEmail = cleanText(user?.email);
-        authName = cleanText(user?.user_metadata?.full_name || user?.user_metadata?.name);
-      } catch {}
-
-      if (isMounted) {
-        applyAccountIdentity(authName || authEmail, authEmail || "Klinik çalışma alanı");
-      }
-
-      try {
-        const res = await fetch("/api/therapist-directory/profile", { cache: "no-store" });
-        if (!res.ok) return;
-        const data = (await res.json()) as DirectoryProfilePayload;
-        const profileName = [data.profile?.firstName, data.profile?.lastName].map(cleanText).filter(Boolean).join(" ");
-        const profileDetail = cleanText(data.profile?.profession || data.profile?.title || authEmail);
-        if (isMounted && profileName) {
-          applyAccountIdentity(profileName, profileDetail);
-        }
-      } catch {}
-    };
-
-    loadAccountIdentity();
-    return () => {
-      isMounted = false;
-    };
   }, []);
 
   useEffect(() => {
@@ -239,9 +156,7 @@ export default function Topnav({ toggle = false, setToggle }: TopnavProps) {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch {}
-    setDisplayName("DNA Intelligence");
-    setAccountDetail("Klinik çalışma alanı");
-    setInitials("DNA");
+    resetIdentity();
     setProfileOpen(false);
     router.replace("/login");
     router.refresh();

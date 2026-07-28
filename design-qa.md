@@ -62,6 +62,66 @@ final result: passed
 
 ---
 
+# Personalized Therapist Greeting Design QA
+
+## Scope
+
+- Routes: `/starter` and `/dna-asistani`
+- Source visual truth: `/var/folders/7j/kgq_1qrj27n39d0yjmkfh1_40000gn/T/TemporaryItems/NSIRD_screencaptureui_8q0AQd/Ekran Resmi 2026-07-28 15.10.49.png`
+- Desktop panel capture: `/tmp/dna-personalized-starter-desktop.png`
+- Desktop assistant capture: `/tmp/dna-personalized-chat-desktop.png`
+- Mobile panel capture after contrast fix: `/tmp/dna-personalized-starter-mobile-dark.png`
+- Mobile assistant capture after contrast fix: `/tmp/dna-personalized-chat-mobile-dark.png`
+- Combined source and implementation evidence: `/tmp/dna-greeting-reference-comparison.png`
+- Source pixels: `3024 x 1964`; normalized to `1440 x 1000` with a centered cover crop.
+- Desktop implementation pixels and CSS viewport: `1440 x 1000`, density `1x`.
+- Mobile implementation pixels and CSS viewport: `390 x 844`, density `1x`.
+- State: authenticated-shell design harness, personalized first name `Furkan`, empty assistant conversation, dark theme.
+
+## Full-view Comparison Evidence
+
+- The reference and desktop assistant capture were normalized into one `1440 x 2008` vertical comparison artifact.
+- Both place a short personalized question and one primary composer near the visual center of a quiet first viewport.
+- The implementation intentionally retains the DNA logo, response-depth control, therapist navigation, and privacy affordance instead of copying ChatGPT branding.
+- A separate focused desktop crop was unnecessary because the personalized heading, helper copy, response-depth control, composer, and send action remain readable at original resolution. Mobile was inspected separately because its shell and bottom navigation materially change the available space.
+
+## Required Fidelity Surfaces
+
+- **Fonts and typography:** The existing system font remains consistent with the panel. The first name receives restrained cyan-blue-violet emphasis on the panel; the assistant keeps a single high-contrast heading with responsive wrapping.
+- **Spacing and layout rhythm:** The panel greeting stays inside the established hero grid. The assistant keeps the centered logo-heading-composer rhythm from the reference without adding another card layer.
+- **Colors and tokens:** Existing `--sm-*` tokens and DNA accent colors are preserved. Light and dark surfaces maintain readable foreground contrast after the mobile frame correction.
+- **Image quality and assets:** The production DNA logo assets remain sharp at desktop and mobile sizes. No generated, placeholder, inline SVG, or CSS-drawn brand asset was introduced.
+- **Copy and content:** `Merhaba, Furkan` and `Nasıl yardımcı olabilirim, Furkan?` provide the requested warmth. Supporting copy remains capability-based and avoids clinical recommendations.
+
+## Interaction And Accessibility Checks
+
+- The user's first name is obtained from the shared display-profile layer and is never used for authorization.
+- E-mail fallback remains available for the profile menu but is not used as a conversational greeting.
+- The assistant textarea retains its explicit label, keyboard behavior, response-depth radios, and minimum touch targets.
+- Desktop and mobile DOM expose one level-one heading per page and the expected personalized assistant level-two heading.
+- Browser console errors: none.
+- TypeScript lint: passed.
+- Production build: passed.
+
+## Comparison History
+
+### Iteration 1
+
+- **P2 - Mobile dark-theme contrast:** The app frame retained a light hard-coded background while dark-theme text became light, and the DNA Assistant home card's white glow washed out its copy.
+- **Fix:** Moved the app frame to `--sm-app-bg` and added dark-theme treatments for the card glow and action surface.
+- **Post-fix evidence:** `/tmp/dna-personalized-chat-mobile-dark.png` and `/tmp/dna-personalized-starter-mobile-dark.png` show readable empty-state and card contrast at `390 x 844`.
+
+## Remaining Notes
+
+- **P3:** The local development indicator is development-only and does not appear in production.
+- The source is a composition and tone reference. Retaining DNA Intelligence navigation and clinical controls is an intentional product constraint.
+
+No unresolved P0, P1, or P2 findings remain.
+
+final result: passed
+
+---
+
 # DNA Assistant Chat Workspace Design QA
 
 ## Scope

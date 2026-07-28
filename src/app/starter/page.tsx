@@ -16,6 +16,7 @@ import {
   UsersRound,
 } from "lucide-react"
 import { DNA_INTELLIGENCE_ENTRY_DESCRIPTION_TR } from "@/lib/dna/chat/intendedUse"
+import TherapistWelcome from "./TherapistWelcome"
 
 const cards = [
   {
@@ -96,13 +97,7 @@ export default function StarterPage() {
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_14%_8%,rgba(0,200,215,0.13),transparent_32%),radial-gradient(circle_at_86%_14%,rgba(124,58,237,0.12),transparent_34%)]" />
       <div className="dna-app-only dna-app-page space-y-4">
         <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
-          <div className="dna-app-section-title">Bugünkü çalışma</div>
-          <h1 className="mt-2 text-[26px] font-black leading-tight tracking-tight text-[#071b3a]">
-            Klinik çalışma alanı
-          </h1>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            Danışanı seç, değerlendirmeyi tamamla, raporu tek akışta yönet.
-          </p>
+          <TherapistWelcome surface="app" />
           <Link
             href="/clients?surface=app"
             className="mt-4 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-500"
@@ -134,7 +129,7 @@ export default function StarterPage() {
           href="/dna-asistani?surface=app"
           className="relative block min-h-[154px] overflow-hidden rounded-[24px] border border-blue-100 bg-gradient-to-br from-cyan-50 via-blue-50 to-violet-50 p-5 shadow-[0_18px_44px_rgba(37,99,235,0.12)]"
         >
-          <div className="absolute -right-10 -top-12 h-40 w-40 rounded-full bg-white/65 blur-2xl" />
+          <div className="absolute -right-10 -top-12 h-40 w-40 rounded-full bg-white/65 blur-2xl dark:bg-slate-950/20" />
           <div className="relative flex items-start gap-4">
             <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-cyan-500 via-blue-600 to-violet-600 text-white shadow-[0_14px_28px_rgba(37,99,235,0.24)]">
               <MessagesSquare size={23} />
@@ -144,7 +139,7 @@ export default function StarterPage() {
               <p className="mt-1 text-sm font-semibold leading-6 text-slate-600">
                 {DNA_INTELLIGENCE_ENTRY_DESCRIPTION_TR}
               </p>
-              <div className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-xl bg-white/80 px-3 text-xs font-black text-blue-700 shadow-sm">
+              <div className="mt-3 inline-flex min-h-10 items-center gap-2 rounded-xl bg-white/80 px-3 text-xs font-black text-blue-700 shadow-sm dark:bg-slate-900/70 dark:text-cyan-200">
                 Asistanı aç <ChevronRight size={16} />
               </div>
             </div>
@@ -191,11 +186,7 @@ export default function StarterPage() {
                 <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-cyan-400 via-blue-600 to-violet-600 shadow-[0_0_0_5px_rgba(37,99,235,0.10)]" />
                 DNA Intelligence
               </div>
-              <h1 className="mt-4 text-4xl font-black tracking-tight text-[#071b3a] md:text-5xl">Klinik çalışma alanı</h1>
-              <p className="mt-4 max-w-3xl text-[15px] leading-7 text-slate-600 md:text-base">
-                Danışan yönetimi, değerlendirme, raporlama ve eğitim sonrası uygulama akışı için sadeleştirilmiş
-                panel. Önce danışanı seçin, değerlendirmeyi tamamlayın, raporu ve takip sürecini aynı yerden yönetin.
-              </p>
+              <TherapistWelcome surface="web" />
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">

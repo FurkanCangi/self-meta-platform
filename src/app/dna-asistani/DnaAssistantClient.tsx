@@ -15,6 +15,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { useAppSurface } from "@/app/components/app-shell/useAppSurface"
+import { useTherapistIdentity } from "@/app/components/therapist-identity"
 import {
   canBeginDnaChatReportSelection,
   createDnaChatRequestCoordinator,
@@ -565,6 +566,7 @@ function sourceAnchor(requestId: string, index: number) {
 
 export default function DnaAssistantClient({ initialReportId }: { initialReportId: string }) {
   const isAppSurface = useAppSurface(false)
+  const { greetingName } = useTherapistIdentity()
   const router = useRouter()
   const [reports, setReports] = useState<ReportOption[]>([])
   const [selectedReportId, setSelectedReportId] = useState("")
@@ -1044,7 +1046,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
               maxLength={600}
               disabled={sending}
               aria-describedby={sendError ? "dna-chat-send-error" : undefined}
-              placeholder={selectedReport ? "Bu raporun güvenli bulgularını veya genel bilgiyi sorun…" : "DNA Asistanına sorun…"}
+              placeholder={selectedReport ? "Bu raporla ilgili aklındaki soruyu yaz…" : "Aklındaki soruyu yaz…"}
               className={[
                 "max-h-40 min-w-0 flex-1 resize-none border-0 bg-transparent px-2 text-sm font-semibold leading-6 text-[var(--sm-text)] outline-none placeholder:font-medium placeholder:text-[var(--sm-text-muted)] disabled:opacity-60 sm:text-[15px]",
                 "min-h-[48px] py-3",
@@ -1171,13 +1173,18 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
               />
               <div className="mt-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-700">DNA Intelligence</div>
               <h2 className="mx-auto mt-4 max-w-3xl text-[28px] font-semibold leading-tight tracking-[-0.035em] text-[var(--sm-text)] sm:text-4xl lg:text-[42px]">
-                Bugün neyi birlikte inceleyelim?
+                Nasıl yardımcı olabilirim{greetingName ? `, ${greetingName}` : ""}?
               </h2>
               <p className="mx-auto mt-3 max-w-2xl text-sm font-medium leading-6 text-[var(--sm-text-muted)] sm:text-[15px]">
-                {DNA_INTELLIGENCE_PUBLIC_INTENDED_USE.descriptionTr}
+                Bir kavramı açıklayabilir, iki süreci karşılaştırabilir veya seçtiğin DNA raporundaki güvenli
+                bulguları birlikte inceleyebiliriz.
               </p>
 
               <div className="mx-auto mt-8 max-w-[840px] text-left">{renderComposer(true)}</div>
+
+              <p className="mt-3 text-xs font-medium text-[var(--sm-text-muted)]">
+                Aklındaki soruyu kendi cümlelerinle yazabilirsin.
+              </p>
 
             </div>
           </div>

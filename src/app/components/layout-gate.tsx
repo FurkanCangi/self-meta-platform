@@ -6,6 +6,7 @@ import PendingLegalAcceptanceSync from "./auth/PendingLegalAcceptanceSync";
 import AppShell from "./app-shell/AppShell";
 import { useAppSurface } from "./app-shell/useAppSurface";
 import Sidebar from "./sidebar";
+import { TherapistIdentityProvider } from "./therapist-identity";
 import Topnav from "./topnav";
 
 type LayoutGateProps = {
@@ -73,7 +74,11 @@ export default function LayoutGate({ children, initialAppSurface = false }: Layo
   }, [pathname]);
 
   if (isAppSurface && isAppShellRoute) {
-    return <AppShell>{children}</AppShell>;
+    return (
+      <TherapistIdentityProvider>
+        <AppShell>{children}</AppShell>
+      </TherapistIdentityProvider>
+    );
   }
 
   if (isPublicRoute) {
@@ -95,19 +100,21 @@ export default function LayoutGate({ children, initialAppSurface = false }: Layo
   }
 
   return (
-    <div className="dna-shell min-h-screen bg-[#f8fbff] text-slate-900">
-      <PendingLegalAcceptanceSync />
-      <div className="flex min-h-screen">
-        <Sidebar toggle={toggle} setToggle={setToggle} />
+    <TherapistIdentityProvider>
+      <div className="dna-shell min-h-screen bg-[#f8fbff] text-slate-900">
+        <PendingLegalAcceptanceSync />
+        <div className="flex min-h-screen">
+          <Sidebar toggle={toggle} setToggle={setToggle} />
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <Topnav toggle={toggle} setToggle={setToggle} />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <Topnav toggle={toggle} setToggle={setToggle} />
 
-          <main className="min-w-0 flex-1 px-6 py-6 md:px-8">
-            {children}
-          </main>
+            <main className="min-w-0 flex-1 px-6 py-6 md:px-8">
+              {children}
+            </main>
+          </div>
         </div>
       </div>
-    </div>
+    </TherapistIdentityProvider>
   );
 }

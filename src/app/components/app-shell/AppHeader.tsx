@@ -7,10 +7,12 @@ import { AiOutlineLogout, AiOutlineMoon, AiOutlineSun } from "react-icons/ai";
 import { useTheme } from "../theme-provider";
 import { logoutAppSession } from "@/lib/security/clientLogout";
 import AppNotifications from "./AppNotifications";
+import { useTherapistIdentity } from "../therapist-identity";
 
 export default function AppHeader() {
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();
+  const { resetIdentity } = useTherapistIdentity();
 
   const handleLogout = async () => {
     try {
@@ -19,6 +21,7 @@ export default function AppHeader() {
     try {
       localStorage.removeItem("dna_therapist_profile");
     } catch {}
+    resetIdentity();
     router.replace("/app-login");
     router.refresh();
   };
