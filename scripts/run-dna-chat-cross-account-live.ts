@@ -1218,6 +1218,8 @@ async function main() {
         "schema_version", "request_id", "engine_version", "pack_version", "topic",
         "classification", "outcome", "response_depth", "source_ids", "citation_count",
         "latency_category", "http_result", "audit_status", "user_issue_category",
+        "assurance_version", "assurance_status", "source_binding_coverage_percent",
+        "subquestion_count",
       ])
       const legacyMetadataKeys = new Set([
         "request_id", "mode", "intent", "classification", "outcome",
