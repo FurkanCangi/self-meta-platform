@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "DnaBookKnowledgeUnit@1",
+  "packageVersion": "dna-book-catalog-v32@1",
+  "authorityClass": "external_science_candidate",
+  "liveRuntime": "dna-chat-engine@2",
+  "runtimeEligible": false,
+  "releaseEligible": false,
+  "storage": {
+    "rawArtifacts": "ResearchSSD only",
+    "repositoryAllows": [
+      "contracts",
+      "commands",
+      "aggregate counts",
+      "source identities",
+      "SHA-256 manifests"
+    ],
+    "repositoryForbids": [
+      "raw PDF text",
+      "source passages",
+      "knowledge unit answer text",
+      "locked evaluation questions"
+    ]
+  },
+  "exactCoverage": {
+    "unitCount": 1000,
+    "unitsPerDomain": 100,
+    "questionFormsPerUnit": 5,
+    "questionFormCount": 5000,
+    "questionTypesPerDomain": {
+      "definition_foundation": 15,
+      "process_function": 20,
+      "relation_comparison": 15,
+      "development_age": 10,
+      "measurement_evidence": 15,
+      "misconception_boundary": 15,
+      "single_step_synthesis": 10
+    }
+  },
+  "reviewAuthority": {
+    "label": "codex_multi_pass_audited",
+    "independentHumanExpertApproval": false,
+    "positiveDnaProductClaimsAllowed": false
+  },
+  "activationBlockers": [
+    "owner DNA book is not integrated and owner-approved",
+    "final locked evaluation has not been run against the exact merged candidate",
+    "independent therapist evaluation is pending",
+    "release and canary authorization are pending"
+  ]
+}

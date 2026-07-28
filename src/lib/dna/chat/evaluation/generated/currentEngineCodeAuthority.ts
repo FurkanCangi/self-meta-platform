@@ -7,5 +7,5 @@ export const DNA_CURRENT_V3_ENGINE_CODE_AUTHORITY = Object.freeze({
   schemaVersion: "dna-v3-engine-code-authority@1" as const,
   engineVersion: "dna-chat-engine@3" as const,
   sourceListSha256: "205801da867632ae726542870f0374329463e914d91bfa24f0fa28705d14a1ca",
-  engineCodeHash: "17fbc7497a62690acd6bd6a193a36d47fd5368197b29622bcc9d9152289acf13",
+  engineCodeHash: "d90aa8bd35bcd7a97544307c76cf94d7abfc6b9fdd128721cb27d7baac4fefd4",
 })

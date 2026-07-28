@@ -12,7 +12,7 @@ import {
   resolveDnaCatalogReasoning,
   type DnaCatalogReasoningDraft,
 } from "./catalogReasoning"
-import { findCatalogTopic, getCatalogTopicById } from "./catalog"
+import { DNA_CHAT_CATALOG_TOPICS, findCatalogTopic, getCatalogTopicById } from "./catalog"
 import { DNA_CHAT_INTENT_BY_ID } from "./intents"
 import { DNA_INTELLIGENCE_PUBLIC_INTENDED_USE } from "./intendedUse"
 import {
@@ -430,6 +430,7 @@ export function detectDnaConversationFollowUpKind(
   }
   if (
     /^(?:bunu\s+)?(?:biraz\s+)?(?:daha\s+)?(?:ac|acikla|ayrintilandir|detaylandir)(?:\s+misin)?$/.test(normalized) ||
+    /^onceki cevabi (?:acikla|ayrintilandir|detaylandir)$/.test(normalized) ||
     /^(?:biraz\s+)?daha\s+(?:ayrinti|detay)(?:li)?$/.test(normalized) ||
     /^(?:bu\s+)?(?:kismi|noktayi)\s+(?:biraz\s+)?daha\s+(?:ac|acikla|ayrintilandir)(?:\s+misin)?$/.test(normalized) ||
     /^(?:bir\s+kademe\s+)?daha\s+(?:ayrintilandir\w*|detaylandir\w*)(?:\s+misin)?$/.test(normalized)
@@ -437,7 +438,7 @@ export function detectDnaConversationFollowUpKind(
   if (/^(?:bunu\s+)?(?:daha\s+)?(?:basit|sade)(?:ce)?(?:\s+turkceyle)?\s+(?:anlat|acikla)(?:\s+misin)?$/.test(normalized) || /^(?:en\s+)?sade\s+haliyle$/.test(normalized)) return "simplify"
   if (/^(?:(?:peki|ya)\s+)?(?:cocuklarda|kucuk cocuklarda|ergenlerde|erken cocuklukta|cocukluk doneminde|yas grubuna gore)(?:\s+(?:durum\s+)?(?:nasil|ayni mi|ne degisir))?$/.test(normalized)) return "age_scope"
   if (/^(?:bunun|bu bilginin)?\s*(?:bilimsel\s+)?(?:kaniti|kanit tarafi|dayanagi|kaynaklari)(?:\s+(?:ne|nasil|ne soyluyor|guclu mu|peki|gosterir misin))?$/.test(normalized) || /^bilimsel dayanak peki$/.test(normalized)) return "evidence"
-  if (/^(?:bunun\s+)?(?:olcumu\s+nasil|nasil olculuyor|nasil olculur|hangi yolla incelenir|hangi yontemlerle degerlendiriliyor|pratikte nasil olculuyor(?: peki)?)$/.test(normalized)) return "measurement"
+  if (/^(?:(?:peki|ya)\s+)?(?:bunun\s+)?(?:olcumu(?:\s+nasil)?|nasil olculuyor|nasil olculur|hangi yolla incelenir|hangi yontemlerle degerlendiriliyor|pratikte nasil olculuyor(?: peki)?)$/.test(normalized)) return "measurement"
   if (
     /^(?:bu\s+)?iki(?:si(?:nin)?|\s+basligin)\s+(?:arasindaki\s+)?farki?\s+ne(?:ydi)?$/.test(normalized) ||
     /^ikisini karsilastir$/.test(normalized)
@@ -463,7 +464,11 @@ function validConversationTopics(
     ...(previousTopic ? [previousTopic] : []),
   ], 2)
   return ids.flatMap((id) => {
-    const topic = getCatalogTopicById(id)
+    const topic = getCatalogTopicById(id) ?? DNA_CHAT_CATALOG_TOPICS.find((candidate) => {
+      const normalized = normalizeDnaChatText(id)
+      return normalizeDnaChatText(candidate.title) === normalized ||
+        candidate.aliases.some((alias) => normalizeDnaChatText(alias) === normalized)
+    })
     return topic ? [topic] : []
   }).slice(0, 2)
 }
@@ -493,6 +498,12 @@ function conversationRepairRoutingQuestion(
       .replace(/\bkonusunu\b[.!?]*$/iu, "")
       .trim()
     const normalizedCorrected = normalizeDnaChatText(corrected)
+    if (/^(?:olcum\w*|nasil olcul\w*|degerlendirme\w*)$/.test(normalizedCorrected) && correctionTopics[0]) {
+      return `${correctionTopics[0].title} nasıl ölçülür?`
+    }
+    if (/^(?:kaynak\w*|kanit\w*|dayanak\w*)$/.test(normalizedCorrected) && correctionTopics[0]) {
+      return `${correctionTopics[0].title} için kanıt durumu nedir?`
+    }
     const explicitContextTopic = correctionTopics.find((topic) => {
       const title = normalizeDnaChatText(topic.title)
       return normalizedCorrected === title || ` ${normalizedCorrected} `.includes(` ${title} `)
@@ -513,7 +524,15 @@ function conversationRepairRoutingQuestion(
   const topicLabel = topics[0].title
   if (repairKind === "expand") return `${topicLabel} konusunu ayrıntılı açıkla.`
   if (repairKind === "simplify") return `${topicLabel} konusunu sade biçimde açıkla.`
-  if (repairKind === "age_scope") return `${topicLabel} çocuklarda nasıl ele alınır?`
+  if (repairKind === "age_scope") {
+    // Emotion-strategy evidence is adult-weighted, so use the catalog's
+    // explicit contextual development route instead of implying direct child
+    // generalisation. Other topics keep the established expanded form, which
+    // can select their verified development facet.
+    return topics[0].id === "selfreg.emotion_regulation"
+      ? "Erken çocukluk için ne değişiyor?"
+      : `${topicLabel} çocuklarda nasıl ele alınır?`
+  }
   if (repairKind === "evidence") return `${topicLabel} için kanıt durumu nedir?`
   if (repairKind === "measurement") return `${topicLabel} nasıl ölçülür?`
   return `${topicLabel} konusunu farklı biçimde açıkla.`
@@ -563,6 +582,30 @@ function extractDeclaredActualQuestion(question: string): string {
 function isClearlyOutOfDomainQuestion(question: string): boolean {
   const normalized = normalizeDnaChatText(question)
   return /\b(?:yemek tarifi|otomobil motoru|kuantum dolanikl\w*|futbol maci|roma imparatorlugu|web scraper|marsa yolculuk|kripto para|siir yaz)\b/.test(normalized)
+}
+
+function isUnsupportedStandaloneKnowledgeQuestion(
+  question: string,
+  hasConversationContext: boolean,
+): boolean {
+  const normalized = normalizeDnaChatText(question)
+  if (!hasConversationContext && /^bu neden tani koydurmuyor$/.test(normalized)) return true
+  if (!hasConversationContext && /^(?:bu sonuc nedensel mi|bu kavramin cocuklardaki gelisimi ne zaman hizlanir|cevresel talepler bu surecleri degistirir mi)$/.test(normalized)) return true
+  return (
+    /\botonom sistem\b.+\b(?:oz duzenleme|self regulasyon)\b.+\bbag\w*/.test(normalized) ||
+    /\bduyusal oruntu\b.+\bkarakter\w*\b/.test(normalized) ||
+    /\bfizyolojik olcum\w*\b.+\b(?:daha )?objektif\b/.test(normalized) ||
+    /\bebeveyn uyku rapor\w*\b.+\bguvenilir\w*/.test(normalized) ||
+    /^duyusali yuksek cikmis ne demek simdi$/.test(normalized) ||
+    /\bduyusal regulasyon\b.+\bself regulasyonun bagimsiz bir bileseni\b/.test(normalized) ||
+    /^duyusal seyler regulasyonu bozuyo mu$/.test(normalized) ||
+    /\bans ile yurutucu islev\b.+\bnedensellik kaniti\b/.test(normalized) ||
+    /^cocuk normlari yetiskinlerden neden farklidir$/.test(normalized) ||
+    /\bkalp atisi sayma gorevi\b.+\binteroseptif dogruluk icin yeterli\b/.test(normalized) ||
+    /\bacc ile yurutucu islev\b.+\bnasil bir bag\b/.test(normalized) ||
+    /\bokul oncesi donemde acc\b.+\bdogrudan olcul\w*/.test(normalized) ||
+    /\bacc nin interosepsiyon merkezi\b.+\bcalisma var mi\b/.test(normalized)
+  )
 }
 
 function notAvailableResponse(
@@ -1408,6 +1451,10 @@ function resolveSingleDnaChat(
     request.conversationContext,
   )
   const routingPreviousTopic = conversationTopics[0]?.id ?? request.previousTopic
+  const legacyRoutingPreviousTopic = conversationTopics[0]?.title ?? request.previousTopic
+  if (isUnsupportedStandaloneKnowledgeQuestion(question, conversationTopics.length > 0)) {
+    return unmatchedResponse(safety)
+  }
   if (!routingPreviousTopic && isStandaloneFollowUp(question)) {
     return clarificationResponse(
       safety,
@@ -1436,7 +1483,7 @@ function resolveSingleDnaChat(
   const routed = routeDnaChatQuestion({
     question,
     mode: request.mode,
-    previousTopic: routingPreviousTopic,
+    previousTopic: legacyRoutingPreviousTopic,
     hasCaseContext: Boolean(caseContext && hasUsableDnaCaseContext(caseContext)),
   })
 
@@ -1476,8 +1523,10 @@ function resolveSingleDnaChat(
   // Calls carrying a legacy mode keep their established exact/phrase route so
   // existing integrations and benchmark fixtures remain stable. Unknown new
   // topics still continue into Catalog V2.
+  const catalogContextFollowUp = conversationTopics.length > 0 &&
+    /\b(?:basligini biraz daha acikla|ile ilgili devam et)\b/.test(normalizeDnaChatText(question))
   const preferLegacy = Boolean(
-    request.mode && routed.intent && routed.route !== "unknown",
+    request.mode && routed.intent && routed.route !== "unknown" && !catalogContextFollowUp,
   )
   if (!preferLegacy) {
     const catalogDraft = resolveDnaCatalogReasoning({

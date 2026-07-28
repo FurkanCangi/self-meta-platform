@@ -4,7 +4,7 @@
     "rawQuestionCountInRepository": 0,
     "rawResultsStoredOnResearchSsdOnly": true
   },
-  "engineClosureSha256": "166dfe24197c1dc7142399794a1cb4ffb1de50bb90403636685199b601773ab5",
+  "engineClosureSha256": "a0d966119e950466b3bf89842a30653e45815eb5929ec8a24625a98fb7758fb7",
   "holdout": {
     "firstOfficial": {
       "bankLogicalSha256": "57f936f18746bfe52b167bd69d22367df48492fd91b3a28d56bfa42e905b6c0a",
@@ -74,13 +74,13 @@
     "postFixInternalRegression": {
       "bankLogicalSha256": "57f936f18746bfe52b167bd69d22367df48492fd91b3a28d56bfa42e905b6c0a",
       "counts": {
-        "accuracyPercent": 98.67,
-        "answeredCoveragePercent": 68.22,
+        "accuracyPercent": 98.89,
+        "answeredCoveragePercent": 68.44,
         "boundaryPercent": 100,
         "byCategory": {
           "alias_inflection_typo": {
-            "accuracyPercent": 90.63,
-            "passed": 29,
+            "accuracyPercent": 93.75,
+            "passed": 30,
             "total": 32
           },
           "colloquial_elliptical": {
@@ -161,24 +161,24 @@
         },
         "compoundPercent": 98.67,
         "followUpPercent": 100,
-        "passed": 444,
+        "passed": 445,
         "total": 450
       },
-      "engineClosureSha256": "166dfe24197c1dc7142399794a1cb4ffb1de50bb90403636685199b601773ab5",
+      "engineClosureSha256": "a0d966119e950466b3bf89842a30653e45815eb5929ec8a24625a98fb7758fb7",
       "firstRunPreserved": true,
       "gatesPassed": true,
-      "resultSha256": "4b4fa59e40e2fe5831422824bd264c3c8981bfdd4a1e7704288c7cf8a14cbf4a"
+      "resultSha256": "b9aaeaad02eb0248ebd8e20864a61df6d0006d6b00d52d83ef026b9001bfc5e1"
     },
     "releaseGateUsesCombinedPostFixAfterPreservingNewExtensionFirstOfficial": true,
     "totalCombinedCount": 450
   },
   "independentHumanValidation": false,
-  "manifestSha256": "aab93ebb9c37631d5e2889580c054a58cec54016d3ba5e01db400756c61e131e",
+  "manifestSha256": "6a7cb253ab4e246b5908c39cddb479009b3be0b3deaa1e11d2ca39be6ae2a67b",
   "open": {
     "bankLogicalSha256": "6b58f72f5d134b5556c57c9bc1a1e20271ca69df501c13c0d150b617af386526",
     "counts": {
-      "accuracyPercent": 98.29,
-      "answeredCoveragePercent": 66.19,
+      "accuracyPercent": 98.1,
+      "answeredCoveragePercent": 66.29,
       "boundaryPercent": 100,
       "byCategory": {
         "adversarial_character_loss": {
@@ -252,8 +252,8 @@
           "total": 8
         },
         "alias_inflection_typo": {
-          "accuracyPercent": 93.06,
-          "passed": 67,
+          "accuracyPercent": 88.89,
+          "passed": 64,
           "total": 72
         },
         "colloquial_elliptical": {
@@ -282,8 +282,8 @@
           "total": 55
         },
         "correction_retry": {
-          "accuracyPercent": 97.5,
-          "passed": 39,
+          "accuracyPercent": 100,
+          "passed": 40,
           "total": 40
         },
         "daily_short_incomplete": {
@@ -333,12 +333,12 @@
         }
       },
       "compoundPercent": 96.61,
-      "followUpPercent": 99.02,
-      "passed": 1032,
+      "followUpPercent": 99.51,
+      "passed": 1030,
       "total": 1050
     },
     "gatesPassed": true,
-    "resultSha256": "9a5996ee8c01ce5fcc0650ec43056dc304e6d8753c203029baa537f54e076d36",
+    "resultSha256": "22ba4537d00c62bf74f02e38adce352ec6a09cc0341b8cced6b45eeadbac22b4",
     "subsets": {
       "frozenRegression": {
         "accuracyPercent": 100,
@@ -423,7 +423,7 @@
       },
       "legacyExpansion": {
         "accuracyPercent": 100,
-        "answeredCoveragePercent": 75.65,
+        "answeredCoveragePercent": 75.89,
         "boundaryPercent": 100,
         "byCategory": {
           "compound_cross_topic": {
@@ -468,13 +468,13 @@
         "total": 423
       },
       "newExtension": {
-        "accuracyPercent": 96.73,
+        "accuracyPercent": 96.36,
         "answeredCoveragePercent": 59.27,
         "boundaryPercent": 100,
         "byCategory": {
           "alias_inflection_typo": {
-            "accuracyPercent": 93.06,
-            "passed": 67,
+            "accuracyPercent": 88.89,
+            "passed": 64,
             "total": 72
           },
           "colloquial_elliptical": {
@@ -493,8 +493,8 @@
             "total": 55
           },
           "correction_retry": {
-            "accuracyPercent": 97.5,
-            "passed": 39,
+            "accuracyPercent": 100,
+            "passed": 40,
             "total": 40
           },
           "evidence_age_measurement": {
@@ -519,8 +519,8 @@
           }
         },
         "compoundPercent": 89.09,
-        "followUpPercent": 98.26,
-        "passed": 532,
+        "followUpPercent": 99.13,
+        "passed": 530,
         "total": 550
       }
     }

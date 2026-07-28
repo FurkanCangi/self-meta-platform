@@ -474,7 +474,17 @@ function claimsForKind(
     if (queryKind === "evidence") return claim.sourceIds.length > 0
     return true
   })
-  const ranked = [...selected].sort((left, right) => {
+  const developmentFallback = queryKind === "development" &&
+      selected.length === 0 &&
+      claims.some((claim) => claim.topicId === "selfreg.emotion_strategies")
+    ? claims.filter((claim) =>
+        claim.ageScope !== "all_ages" &&
+        /\b(?:gelisim\w*|yas\w*|cocuk\w*|ergen\w*|bebek\w*)\b/.test(
+          normalizeDnaChatText(`${claim.text} ${claim.detail}`),
+        )
+      )
+    : selected
+  const ranked = [...developmentFallback].sort((left, right) => {
     const questionTokens = normalizeDnaChatText(question)
       .split(" ")
       .filter((token) => token.length >= 4 && !isRelationStopToken(token))

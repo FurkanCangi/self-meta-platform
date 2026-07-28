@@ -1,0 +1,97 @@
+{
+  "authorityClass": "external_science_candidate",
+  "boundaries": {
+    "dnaProductClaims": 0,
+    "externalModelRuntime": false,
+    "independentHumanValidation": false,
+    "ownerBookIntegrated": false,
+    "rawBookTextInRepository": false
+  },
+  "liveRuntime": "dna-chat-engine@2",
+  "manifestSha256": "13ef4dfe4ab40ddd37d0348faab33377e03965dd9a37452e626826bb60345d3b",
+  "releaseEligible": false,
+  "researchSsdRelativeRoot": "Outputs/SelfMetaAI/dna-intelligence/book-catalog-v32/v1",
+  "runtimeEligible": false,
+  "schemaVersion": "dna-book-catalog-v32@1",
+  "status": "external_science_candidate_locked",
+  "summary": {
+    "answerAtomReferencesChecked": 6000,
+    "domainCounts": {
+      "attention_working_memory_executive": 100,
+      "autonomic_hrv": 100,
+      "cellular_neurophysiology": 100,
+      "cns_networks": 100,
+      "development_neurodiversity": 100,
+      "emotion_self_coregulation": 100,
+      "interoception_sensory": 100,
+      "measurement_case_boundaries": 100,
+      "sleep_circadian": 100,
+      "stress_arousal_recovery": 100
+    },
+    "evaluationSha256": "b155d19578c7151cd266efde3ae9229661275b9ef1384288689a42b3cdf8cb63",
+    "evaluationSummary": {
+      "deterministicRuns": 20,
+      "deterministicUniqueHashes": 1,
+      "familyScores": {
+        "hard_near_topic": {
+          "accuracy": 1.0,
+          "correct": 100,
+          "total": 100
+        },
+        "safety": {
+          "accuracy": 1.0,
+          "correct": 50,
+          "total": 50
+        },
+        "supported_natural": {
+          "accuracy": 0.996667,
+          "correct": 299,
+          "total": 300
+        },
+        "unknown": {
+          "accuracy": 1.0,
+          "correct": 50,
+          "total": 50
+        }
+      },
+      "holdoutCount": 500,
+      "p95Milliseconds": 1.986958
+    },
+    "flexBankOverlapCount": 0,
+    "invalidAtomReferenceCount": 0,
+    "invalidProfileCount": 0,
+    "normalizedNoisyVariantCollisions": 439,
+    "ok": true,
+    "questionFormCount": 5000,
+    "releaseEligible": false,
+    "reviewSummary": {
+      "acceptedCandidateCount": 1333,
+      "candidateCount": 1600,
+      "contestedExcluded": 267,
+      "independentHumanValidation": false,
+      "reconciledAB": 1236,
+      "rereviewCCandidate": 97
+    },
+    "runtimeEligible": false,
+    "sourceInventory": {
+      "artifactCount": 26,
+      "licensedRuntimeCandidateCount": 5,
+      "licensedRuntimeCandidatePages": 1286,
+      "terminalCounts": {
+        "duplicate": 3,
+        "fragment": 2,
+        "licensed_runtime_candidate": 5,
+        "reference_only": 1,
+        "restricted_discovery_only": 14,
+        "unreadable": 1
+      },
+      "uniquePdfArtifactCount": 23
+    },
+    "ssdManifestSha256": "9e2eace05b3fed753f34bfaf1bf458cb66d18b7cc1607fcceb0123e3c8550515",
+    "uniquePrimaryClaimCount": 1000,
+    "uniquePrimaryPassageCount": 901,
+    "uniqueQuestionFormCount": 5000,
+    "unitCount": 1000,
+    "unitsSha256": "3f21434ced955ac25e1f28b078b65de8bc9876c977d67b9ff34937bb120860d0"
+  }
+}

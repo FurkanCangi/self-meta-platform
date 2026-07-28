@@ -96,6 +96,23 @@ type ExplicitTopicRule = Readonly<{
 // sıralı kurallar yalnız kaynak kataloğunda açıkça adlandırılmış tek bir
 // başlığa yönlendirir; yeni bir klinik veya biyolojik çıkarım üretmez.
 const EXPLICIT_TOPIC_RULES: readonly ExplicitTopicRule[] = [
+  { topicId: "ans.interoception", pattern: /^interosepsiyon nedir$/ },
+  { topicId: "ans.overview", pattern: /^otonom sistem(?: ifadesini duydum dogru cercevesi ne)?$/ },
+  { topicId: "ans.overview", pattern: /^otonom sinir sistemi (?:nedir|cns nin icinde midir|tam olarak ne ise yariyo)$/ },
+  { topicId: "ans.overview", pattern: /^otonom sinir sistemi dna fizyolojik regulasyon alaniyla nasil iliskilendirilebilir$/ },
+  { topicId: "selfreg.reactivity_recovery", pattern: /^otonom (?:reaktivite ne demek|toparlanma nedir)$/ },
+  { topicId: "selfreg.core", pattern: /^otonom regulasyon ile self regulasyon ayni sey mi$/ },
+  { topicId: "cns.executive_development", pattern: /^yurutucu islev hangi yasta yetiskin duzeyine yaklasir$/ },
+  { topicId: "selfreg.emotion_regulation", pattern: /^duygusal tepkisellik ile duygu duzenleme nasil ayrilir$/ },
+  { topicId: "ans.overview", pattern: /^otonom sistem uyku uyaniklik gecislerine nasil katilir$/ },
+  { topicId: "ans.interoception_modalities", pattern: /^tuvalet rutinlerinde interoseptif sureclerin olasi rolu nedir$/ },
+  { topicId: "ans.interoception", pattern: /^interosepsiyonun cok boyutlu olduguna dair kanit ne kadar guclu$/ },
+  { topicId: "selfreg.sensory_modulation", pattern: /^duyusal reaktivite (?:nedir|ne demektir)$/ },
+  { topicId: "selfreg.reactivity_recovery", pattern: /^yuksek duygusal reaktivite her zaman sorun mudur$/ },
+  { topicId: "selfreg.coregulation", pattern: /^es duzenleme okul caginda da onemli midir$/ },
+  { topicId: "selfreg.emotion_measurement", pattern: /^duygu dinamiklerini gunluk yasamda olcmek mumkun mu$/ },
+  { topicId: "selfreg.sleep_health", pattern: /^uykusuzken daha cok patliyo duygu duzenlemeyle alakali mi$/ },
+  { topicId: "ans.overview", pattern: /^otonom sinir sistemi stres yanitinda ne yapar$/ },
   { topicId: "ans.autonomic_space", pattern: /\botonom uzam\b/ },
   { topicId: "development.age_equivalent_limits", pattern: /\bgelisimsel yas ve yas esdegeri siniri\b/ },
   { topicId: "development.informant_context", pattern: /\bebeveyn ogretmen ve ortam bilgisi\b/ },
@@ -250,6 +267,9 @@ function contextualTopicFromPreviousContext(
         ? "strategies"
         : null
   if (!desiredSuffix) return topic
+  if (desiredSuffix === "development" && topic.id === "selfreg.emotion_regulation") {
+    return DNA_CHAT_CATALOG_TOPIC_BY_ID.get("selfreg.emotion_strategies") ?? topic
+  }
 
   const roots = [
     topic.id,
@@ -740,11 +760,19 @@ export function findCatalogTopic(
 ): DnaChatCatalogTopic | null {
   const normalized = normalizeCatalogText(stripCatalogInstructionPrefix(question))
   if (!normalized) return null
-  if (/^(?:peki\s+)?erken cocuklukta (?:nasil|nasil degisir|ne degisir)$/.test(normalized)) {
+  if (
+    previousTopic &&
+    /^(?:(?:peki|ya|ayrica)\s+)?(?:cocuk\w*(?: nasil)?|ergen\w*(?: nasil)?|gelisim\w*(?: nasil)?|hangi yas\w*|yas kapsami(?: ne)?)$/.test(normalized)
+  ) {
+    return contextualTopicFromPreviousContext(previousTopic, normalized)
+  }
+  if (/^(?:(?:peki\s+)?erken cocuklukta (?:nasil|nasil degisir|ne degisir)|erken cocukluk icin ne degisiyor)$/.test(normalized)) {
     return contextualTopicFromPreviousContext(previousTopic, normalized)
   }
   const explicitTopic = explicitTopicForQuestion(normalized)
   if (explicitTopic) return explicitTopic
+  if (!previousTopic && /^(?:bu )?cocuklarda da gecerli mi$/.test(normalized)) return null
+  if (/^duyusal modalite nedir$/.test(normalized)) return null
   const queryKind = classifyCatalogQueryKind(question)
   const hasMeasurementCue = /\b(?:olcum\w*|olcul\w*|gorev\w*|test\w*|anket\w*|olcek\w*|fmri|mri|bold|hep|maia y|baglantisallik|uyarim)\b/.test(normalized)
   const hasDevelopmentCue = /\b(?:gelisim\w*|olgunlas\w*|bebek\w*|erken cocukluk|okul cagi|hangi yas\w*|kac yas\w*|yasla)\b/.test(normalized)
@@ -770,7 +798,10 @@ export function findCatalogTopic(
   // This repairs character loss and accidental word splitting without making
   // every ordinary question scan all aliases with n-grams.
   const compactQuestion = normalized.replace(/\s/g, "")
-  const fuzzyRanked = DNA_CHAT_CATALOG_TOPICS.map((topic) => {
+  const fuzzyEligible = normalized.split(" ").length <= 6 ||
+    /\b(?:tam olarak nedir ve neyi kapsar|ifadesini duydum dogru cercevesi ne)\b/.test(normalized)
+  const fuzzyRanked = fuzzyEligible
+    ? DNA_CHAT_CATALOG_TOPICS.map((topic) => {
     const index = TOPIC_SEARCH_INDEX.get(topic.id)
     const terms = index ? [index.title, ...index.aliases] : []
     const regular = scoreDnaTextMatch(normalized, terms).score
@@ -779,7 +810,8 @@ export function findCatalogTopic(
       terms.map((term) => term.replace(/\s/g, "")),
     ).score
     return { topic, score: Math.max(regular, compact) }
-  }).sort((left, right) => right.score - left.score || left.topic.id.localeCompare(right.topic.id))
+      }).sort((left, right) => right.score - left.score || left.topic.id.localeCompare(right.topic.id))
+    : []
   const fuzzyBest = fuzzyRanked[0]
   const fuzzyGap = (fuzzyBest?.score ?? 0) - (fuzzyRanked[1]?.score ?? 0)
   if (fuzzyBest && fuzzyBest.score >= 0.59 && (fuzzyGap >= 0.03 || fuzzyBest.score >= 0.78)) {
