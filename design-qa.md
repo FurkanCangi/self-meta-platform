@@ -1,3 +1,48 @@
+# Landing Clinical Journey Viewport-Fit Design QA
+
+## Scope
+
+- Route: `/`
+- Source visual truth: `/var/folders/7j/kgq_1qrj27n39d0yjmkfh1_40000gn/T/TemporaryItems/NSIRD_screencaptureui_Wt3NZn/Ekran Resmi 2026-07-28 15.50.51.png`
+- Before-state capture: `.tmp/landing-qa/clinical-journey-before-1512x862.png`
+- Final desktop capture: `.tmp/landing-qa/clinical-journey-fit-1512x862.png`
+- Mobile regression capture: `.tmp/landing-qa/clinical-journey-mobile-390x844.png`
+- Combined comparison: `.tmp/landing-qa/clinical-journey-before-after.png`
+- Source pixels: `3024 x 1964`; browser chrome removed and the `3024 x 1724` page viewport normalized to `1512 x 862`.
+- Desktop implementation: `1512 x 862`, density `1x`.
+- Mobile implementation: `390 x 844`, density `1x`.
+- State: clinical journey aligned directly below the sticky marketing header.
+
+## Findings And Iteration
+
+- **P2 - The journey exceeded one desktop viewport:** The original section measured `1079.5px` high in an `862px` viewport. Its preview panels and action required additional scrolling.
+- **Fix:** Reduced only the desktop vertical rhythm: section padding, heading scale, marker diameter, copy height, preview height, and action spacing. The four-column structure, copy, icons, connector, previews, and action remain intact.
+- **Post-fix evidence:** The section measures `666.6px`. With the `125px` sticky header, it occupies `y=125–792` in the `862px` viewport; the action ends at `y=753`. The complete layer is visible without scrolling.
+
+## Required Fidelity Surfaces
+
+- **Typography:** The headline remains the dominant element at a `40–54px` desktop scale. Step titles and descriptions remain readable while consuming less height.
+- **Spacing and layout rhythm:** All four steps, connector, descriptions, preview panels, and the primary action fit in one desktop viewport. No overlap or clipping was detected.
+- **Colors and tokens:** Existing white, cyan, blue, violet, and navy tokens are unchanged.
+- **Image and icon quality:** Existing Lucide icons and code-rendered product previews remain sharp; no asset substitution was introduced.
+- **Copy and content:** No text or workflow step was removed or rewritten for the compression.
+
+## Responsive And Interaction Verification
+
+- Desktop section, sticky header, and action are fully visible at `1512 x 862`.
+- Mobile continues to use the existing vertical journey at `390 x 844`; document and viewport widths both remain `390px`, with no horizontal overflow.
+- `Nasıl çalıştığını görün` still resolves to `/dna-nedir/degerlendirme-sistemi`; local route response: `200`.
+- Browser console errors and warnings: none.
+- Production build: passed.
+- TypeScript lint: passed after the build regenerated Next.js route types.
+- `git diff --check`: passed.
+
+No unresolved P0, P1, or P2 findings remain.
+
+final result: passed
+
+---
+
 # DNA Intelligence Page Design QA
 
 ## Scope
@@ -55,6 +100,52 @@ The selected hero direction was preserved. The two lower layers were then inspec
 
 - **P3:** The small Next.js development indicator visible in the local captures is development-only and is absent from production builds.
 - The implementation intentionally uses the existing production logo and shared marketing header rather than duplicating the reference as a separate one-off component.
+
+No unresolved P0, P1, or P2 findings remain.
+
+final result: passed
+
+---
+
+# Landing Page Copy And Solution Cards Design QA
+
+## Scope
+
+- Route: `/`
+- Before-state hero: `/var/folders/7j/kgq_1qrj27n39d0yjmkfh1_40000gn/T/TemporaryItems/NSIRD_screencaptureui_EVQ1uZ/Ekran Resmi 2026-07-28 15.27.47.png`
+- Before-state solutions: `/var/folders/7j/kgq_1qrj27n39d0yjmkfh1_40000gn/T/TemporaryItems/NSIRD_screencaptureui_SsjJAu/Ekran Resmi 2026-07-28 15.27.56.png`
+- Desktop implementation hero: `.tmp/landing-qa/landing-desktop-1960-fixed.png`
+- Desktop implementation solutions: `.tmp/landing-qa/landing-solutions-desktop-1960-fixed.png`
+- Combined hero comparison: `.tmp/landing-qa/hero-before-after.png`
+- Combined solutions comparison: `.tmp/landing-qa/solutions-before-after.png`
+- Desktop verification viewport: `1960 x 1200`
+- Mobile verification viewport: `390 x 844`
+
+## Design Result
+
+- Removed internal implementation language such as `deterministik` and `harici LLM` from the public hero and final call to action.
+- Replaced the technical product paragraph with a clear visitor-facing explanation of assessment organization, development follow-up, and report preparation.
+- Rewrote the solution heading and five card descriptions in natural product language while retaining the existing clinical responsibility boundary.
+- Shortened the education card title and reserved enough vertical space between every icon, heading, and description.
+- Hid the secondary hero badge on mobile because the fixed navigation covered it; the desktop badge remains visible.
+- Preserved the production logo, hero artwork, gradients, typography, navigation, and call-to-action hierarchy.
+
+## Verification
+
+- The before state and implementation were reviewed together in two side-by-side comparison artifacts.
+- Desktop solution cards: `5/5` have no icon-title overlap and no text overflow.
+- Mobile solution cards: `5/5` have no icon-title overlap and no text overflow.
+- Desktop and mobile document widths match their viewports; horizontal overflow: none.
+- Public landing text contains no `deterministik`, external-model, model-API, or internet-search implementation jargon.
+- Existing intended-use and therapist responsibility boundaries remain enforced in the product contract and tests.
+- Lint: passed.
+- Production build: passed.
+
+## Iterations
+
+- **P1 - Public copy exposed internal architecture:** Replaced technical safeguards with benefit-led product language while keeping the same safety behavior behind the interface.
+- **P1 - Solution card collision:** Changed the cards from vertically centred content to a stable top-aligned layout with explicit icon clearance.
+- **P2 - Mobile badge clipping:** Removed the redundant badge at the mobile breakpoint so no text sits behind the fixed header.
 
 No unresolved P0, P1, or P2 findings remain.
 

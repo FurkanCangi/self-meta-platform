@@ -501,8 +501,7 @@
   }
 
   .badge{
-    width:100%;
-    padding:11px 14px;
+    display:none;
   }
 
   .badgeBrand{

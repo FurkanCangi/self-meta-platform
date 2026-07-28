@@ -4,11 +4,11 @@ import "./globals.css";
 import CookieConsent from "./components/CookieConsent";
 import LayoutGate from "./components/layout-gate";
 import { ThemeProvider } from "./components/theme-provider";
-import { DNA_INTELLIGENCE_PLATFORM_DESCRIPTION_TR } from "@/lib/dna/chat/intendedUse";
+import { DNA_INTELLIGENCE_LANDING_DESCRIPTION_TR } from "@/lib/dna/chat/intendedUse";
 
 export const metadata: Metadata = {
   title: "DNA Intelligence | Dynamic Neuro-Regulation Approach",
-  description: DNA_INTELLIGENCE_PLATFORM_DESCRIPTION_TR,
+  description: DNA_INTELLIGENCE_LANDING_DESCRIPTION_TR,
   icons: {
     icon: [
       { url: "/images/favicon.ico" },

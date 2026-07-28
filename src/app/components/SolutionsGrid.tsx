@@ -10,25 +10,25 @@ const items = [
     icon: ClipboardCheck,
     tone: "purple",
     title: "Değerlendirme",
-    body: "Test sonuçlarını, anamnez bilgilerini ve gözlem notlarını aynı yerde görün.",
+    body: "Test sonuçlarını, anamnez bilgilerini ve gözlem notlarını düzenli ve bütüncül biçimde inceleyin.",
   },
   {
     icon: Workflow,
     tone: "blue",
-    title: "Değerlendirme ve Planlama Eğitimi",
-    body: "Eğitimde vaka değerlendirmeyi ve müdahale planlamayı öğrenin; yazılım terapi veya seans planı üretmez.",
+    title: "Klinik Planlama Eğitimi",
+    body: "Vaka değerlendirme ve müdahale planlama becerilerinizi eğitim içerikleriyle geliştirin.",
   },
   {
     icon: TrendingUp,
     tone: "mint",
     title: "Gelişim Takibi",
-    body: "Danışanın önceki ve yeni değerlendirmelerini karşılaştırın.",
+    body: "Süreç boyunca ilerlemeyi izleyin, gelişimi önceki değerlendirmelerle karşılaştırın.",
   },
   {
     icon: FileText,
     tone: "orange",
     title: "Raporlama",
-    body: "Sistem değerlendirme bilgilerinden bir rapor taslağı hazırlar. Taslağı terapist incelemesi ve düzenlemesinden sonra kaydedin veya paylaşın.",
+    body: "Değerlendirme verilerinden hazırlanan rapor taslağını inceleyin, düzenleyin, kaydedin ve paylaşın.",
   },
   {
     icon: ScanSearch,
@@ -77,9 +77,9 @@ export default function SolutionsGrid() {
             <span className={styles.pillIcon} />
             Sunduğumuz Çözümler
           </div>
-          <h2 className={styles.h2}>Değerlendirme, rapor ve takip işlemlerini tek yerden yapın.</h2>
+          <h2 className={styles.h2}>Klinik süreçleri iyileştiren entegre çözümler.</h2>
           <p className={styles.lead}>
-            Test sonuçları, raporlar ve takip notları aynı yerde tutulur. Son değerlendirmeyi her zaman terapist yapar.
+            DNA Intelligence; değerlendirme, raporlama, takip ve eğitim araçlarını tek bir çalışma alanında birleştirir.
           </p>
         </div>
 

@@ -1,7 +1,7 @@
 import Image from "next/image";
 import {
-  DNA_INTELLIGENCE_PLATFORM_BOUNDARY_TR,
-  DNA_INTELLIGENCE_PLATFORM_DESCRIPTION_TR,
+  DNA_INTELLIGENCE_LANDING_BOUNDARY_TR,
+  DNA_INTELLIGENCE_LANDING_DESCRIPTION_TR,
 } from "@/lib/dna/chat/intendedUse";
 import styles from "./LandingHeroV2.module.css";
 
@@ -41,18 +41,16 @@ export default function LandingHeroV2() {
         <div className={styles.copy}>
           <div className={styles.badge}>
             <span className={styles.badgeBrand}>DNA Intelligence</span>
-            <span className={styles.badgeSub}>Değerlendirme ve rapor hazırlama platformu</span>
+            <span className={styles.badgeSub}>Klinik değerlendirme ve raporlama platformu</span>
           </div>
 
           <h1 className={styles.h1}>
-            Değerlendirme bilgilerini tek yerde toplayın.
-            <span>Raporunuzu daha kolay hazırlayın.</span>
+            Klinik değerlendirmede
+            <span>daha kapsamlı analiz.</span>
           </h1>
 
           <p className={styles.lead}>
-            {DNA_INTELLIGENCE_PLATFORM_DESCRIPTION_TR} {DNA_INTELLIGENCE_PLATFORM_BOUNDARY_TR}
-            {" "}Anamnez bilgileri, test sonuçları ve gözlem notları tek yerde tutulur; çalışma zamanında
-            haricî LLM veya internetten bilgi arama kullanılmaz.
+            {DNA_INTELLIGENCE_LANDING_DESCRIPTION_TR} {DNA_INTELLIGENCE_LANDING_BOUNDARY_TR}
           </p>
 
           <div className={styles.actions}>

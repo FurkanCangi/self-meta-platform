@@ -13,6 +13,12 @@ export const DNA_INTELLIGENCE_PLATFORM_DESCRIPTION_TR =
 export const DNA_INTELLIGENCE_PLATFORM_BOUNDARY_TR =
   "Platform klinik öncelik, müdahale, tedavi veya seans planına kendiliğinden karar vermez; nihai yorum, düzenleme ve klinik karar terapiste aittir." as const
 
+export const DNA_INTELLIGENCE_LANDING_DESCRIPTION_TR =
+  "DNA Intelligence; test sonuçlarını, anamnez bilgilerini ve gözlem notlarını tek bir çalışma alanında bir araya getirir. Değerlendirme, raporlama ve takip süreçlerinizi daha düzenli ve bütüncül yürütmenize yardımcı olur." as const
+
+export const DNA_INTELLIGENCE_LANDING_BOUNDARY_TR =
+  "Son değerlendirme ve klinik karar her zaman terapiste aittir." as const
+
 export const DNA_INTELLIGENCE_SUPPORTED_CAPABILITY_IDS = [
   "explain_neurophysiology_and_regulation",
   "compare_curated_concepts",

@@ -208,13 +208,13 @@
   --accentSoft:rgba(115, 87, 255, .14);
   --accentGlow:rgba(115, 87, 255, .24);
   position:relative;
-  min-height:204px;
+  min-height:224px;
   display:flex;
   flex-direction:column;
-  justify-content:flex-end;
+  justify-content:flex-start;
   overflow:hidden;
   border-radius:24px;
-  padding:24px 20px 22px;
+  padding:104px 20px 22px;
   background:
     linear-gradient(145deg, rgba(255,255,255,.78), rgba(255,255,255,.5)),
     radial-gradient(circle at 82% 12%, var(--accentSoft), transparent 34%);
@@ -379,8 +379,8 @@
   }
 
   .card{
-    min-height:204px;
-    padding:22px 18px 20px;
+    min-height:224px;
+    padding:100px 18px 20px;
   }
 
   .card h3{
@@ -418,12 +418,12 @@
   }
 
   .card{
-    min-height:186px;
+    min-height:216px;
   }
 
   .card:nth-child(5){
     grid-column:1 / -1;
-    min-height:168px;
+    min-height:188px;
   }
 }
 
@@ -460,13 +460,13 @@
   }
 
   .card{
-    min-height:188px;
-    padding:18px 13px 16px;
+    min-height:210px;
+    padding:76px 13px 16px;
     border-radius:20px;
   }
 
   .card:nth-child(5){
-    min-height:138px;
+    min-height:164px;
   }
 
   .card::before{

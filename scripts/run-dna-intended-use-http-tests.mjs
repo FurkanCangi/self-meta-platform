@@ -69,11 +69,11 @@ async function main() {
   try {
     await waitUntilReady(baseUrl, child)
     const cases = [
-      { path: "/", required: ["klinik karar terapiste aittir", "haricî LLM veya internetten bilgi arama kullanılmaz"] },
-      { path: "/cozumler", required: ["klinik öncelik ve müdahale kararı terapiste aittir"] },
-      { path: "/dna-nedir", required: ["Klinik önceliği terapist belirler", "Deterministik klinik çalışma platformu"] },
+      { path: "/", required: ["Klinik değerlendirmede", "Son değerlendirme ve klinik karar her zaman terapiste aittir"] },
+      { path: "/cozumler", required: ["Son değerlendirmeyi ve kararı terapist verir"] },
+      { path: "/dna-nedir", required: ["Sistem taslağı hazırlar; terapist inceler, düzenler ve son halini verir", "rapor hazırlamayı kolaylaştırır"] },
       { path: "/dna-nedir/ai-raporlama", required: ["hedef veya takip kararı üretilmez", "Deterministik motor ne yapar?"] },
-      { path: "/self-regulasyon-nedir", required: ["altta yatan biyolojik mekanizmayı", "Sistem klinik öncelik veya müdahale planı üretmez"] },
+      { path: "/self-regulasyon-nedir", required: ["tek başına kesin neden göstermez", "Müdahale hedeflerini ve uygulama planını terapist belirler"] },
       { path: "/klinik-alanlar/fizyolojik-regulasyon", required: ["Platform biyolojik yük veya otonom durum çıkarımı yapmaz"] },
       { path: "/iletisim", required: ["Deterministik raporlama"] },
       { path: "/terms", required: ["Deterministik Rapor Taslakları", "Tanı ve ayırıcı tanı"] },
@@ -87,6 +87,11 @@ async function main() {
       assert.equal(response.status, 200, `${testCase.path}: HTTP ${response.status}`)
       for (const phrase of FORBIDDEN) assert.ok(!html.includes(phrase), `${testCase.path}: forbidden claim: ${phrase}`)
       for (const phrase of testCase.required) assert.ok(html.includes(phrase), `${testCase.path}: required boundary missing: ${phrase}`)
+      if (testCase.path === "/") {
+        for (const phrase of ["deterministik", "haricî LLM", "model API", "internetten bilgi arama"]) {
+          assert.ok(!html.toLocaleLowerCase("tr-TR").includes(phrase.toLocaleLowerCase("tr-TR")), `/: technical jargon leaked: ${phrase}`)
+        }
+      }
     }
 
     const assistant = await fetch(`${baseUrl}/dna-asistani`, { redirect: "manual" })
