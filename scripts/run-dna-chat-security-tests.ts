@@ -832,6 +832,8 @@ assert.equal(auditMetadata.citation_count, 2)
 assert.equal(auditMetadata.http_result, 200)
 assert.equal(auditMetadata.audit_status, "written")
 assert.equal(auditMetadata.user_issue_category, null)
+assert.equal(auditMetadata.assurance_status, "not_recorded")
+assert.equal(auditMetadata.subquestion_count, 0)
 for (const forbidden of ["question", "answer", "client_code", "client_id", "report_id", "scores", "case_evidence", "anamnez", "ip_address", "user_agent", "passage_text", "raw_answers", "retrieval_scores"]) {
   assert.ok(!(forbidden in auditMetadata), `Audit metadata yasak içerik taşıyor: ${forbidden}`)
 }

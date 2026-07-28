@@ -1,4 +1,5 @@
 import { detectDnaConversationFollowUpKind, resolveDnaChat } from "./engine"
+import { evaluateDnaChatRuntimeAssurance } from "./runtimeAssurance"
 import { evaluateDnaChatRuntimeRelease } from "./governance/runtimeReleaseGate"
 import { DNA_INTELLIGENCE_PUBLIC_INTENDED_USE } from "./intendedUse"
 import { DNA_KNOWLEDGE_AUTHORITY_CONTRACT_VERSION } from "./knowledgeAuthority"
@@ -78,6 +79,10 @@ export type DnaChatApiAuditInput = {
   httpResult?: number
   auditStatus?: DnaChatTelemetryAuditResult
   userIssueCategory?: DnaChatIssueCategory | null
+  assuranceVersion?: string
+  assuranceStatus?: "passed" | "not_recorded"
+  sourceBindingCoveragePercent?: number
+  subquestionCount?: 0 | 1 | 2
 }
 
 export const DNA_CHAT_AUDIT_METADATA_KEYS = Object.freeze([
@@ -95,6 +100,10 @@ export const DNA_CHAT_AUDIT_METADATA_KEYS = Object.freeze([
   "http_result",
   "audit_status",
   "user_issue_category",
+  "assurance_version",
+  "assurance_status",
+  "source_binding_coverage_percent",
+  "subquestion_count",
 ] as const)
 
 export function buildDnaChatAuditMetadata(input: DnaChatApiAuditInput) {
@@ -113,6 +122,10 @@ export function buildDnaChatAuditMetadata(input: DnaChatApiAuditInput) {
     httpStatus: input.httpResult ?? 200,
     auditResult: input.auditStatus ?? "written",
     userIssueCategory: input.userIssueCategory ?? null,
+    assuranceVersion: input.assuranceVersion ?? "not_recorded",
+    assuranceStatus: input.assuranceStatus ?? "not_recorded",
+    sourceBindingCoveragePercent: input.sourceBindingCoveragePercent ?? 0,
+    subquestionCount: input.subquestionCount ?? 0,
   })
   if (!telemetry.accepted || !telemetry.record) {
     throw new Error(`dna_chat_audit_metadata_rejected:${telemetry.reasonCodes.join(",")}`)
@@ -133,6 +146,10 @@ export function buildDnaChatAuditMetadata(input: DnaChatApiAuditInput) {
     http_result: record.httpStatus,
     audit_status: record.auditResult,
     user_issue_category: record.userIssueCategory,
+    assurance_version: record.assuranceVersion,
+    assurance_status: record.assuranceStatus,
+    source_binding_coverage_percent: record.sourceBindingCoveragePercent,
+    subquestion_count: record.subquestionCount,
   }
 }
 
@@ -238,7 +255,12 @@ function responseUnits(
     const summary = answer.answerUnits.find((unit) => unit.kind === "summary") ?? answer.answerUnits[0]
     const boundary = answer.answerUnits.find((unit) =>
       unit.kind === "safety_boundary" || unit.kind === "limitation")
-    candidates = [summary, boundary].filter((unit): unit is DnaChatAnswerUnit => Boolean(unit))
+    const compoundSummaries = answer.answerUnits.filter((unit) =>
+      /^response-[12]-summary$/.test(unit.id))
+    candidates = compoundSummaries.length === 2
+      ? [summary, ...compoundSummaries, boundary]
+          .filter((unit): unit is DnaChatAnswerUnit => Boolean(unit))
+      : [summary, boundary].filter((unit): unit is DnaChatAnswerUnit => Boolean(unit))
   } else {
     const maxScientificUnits = responseDepth === "standard" ? 4 : 6
     candidates = answer.answerUnits.filter((unit, index, all) => {
@@ -249,7 +271,10 @@ function responseUnits(
     })
   }
 
-  const maxUnits = responseDepth === "short" ? 2 : responseDepth === "standard" ? 7 : 9
+  const containsCompoundSummary = candidates.some((unit) => /^response-[12]-summary$/.test(unit.id))
+  const maxUnits = responseDepth === "short"
+    ? containsCompoundSummary ? 4 : 2
+    : responseDepth === "standard" ? 7 : 9
   return [...new Map(candidates.map((unit) => [unit.id, {
     ...unit,
     sourceIds: unit.sourceIds.filter((sourceId) => visibleSourceIds.has(sourceId)),
@@ -265,7 +290,16 @@ function responseUnits(
 
 function responseSources(answer: DnaChatResponse, maxSources: number) {
   const sourceById = new Map(answer.sources.map((source) => [source.id, source]))
-  const prioritizedIds = answer.answerUnits.flatMap((unit) => unit.sourceIds)
+  const unitSourceIds = answer.answerUnits
+    .map((unit) => [...new Set(unit.sourceIds)])
+    .filter((sourceIds) => sourceIds.length > 0)
+  // First give every visible answer unit one source, then fill remaining card
+  // capacity. This prevents a two-part answer's first topic from consuming the
+  // entire short-profile source budget.
+  const prioritizedIds = [
+    ...unitSourceIds.flatMap((sourceIds) => sourceIds.slice(0, 1)),
+    ...unitSourceIds.flatMap((sourceIds) => sourceIds.slice(1)),
+  ]
   const ordered = [
     ...prioritizedIds.flatMap((sourceId) => {
       const source = sourceById.get(sourceId)
@@ -744,6 +778,18 @@ export async function resolveDnaChatApiRequest(
       accessedCaseReport,
     }
   }
+  const assurance = evaluateDnaChatRuntimeAssurance({
+    question: payload.question,
+    runtimeAnswer,
+    publicBody,
+  })
+  if (!assurance.allowed) {
+    return {
+      status: 500,
+      body: { ok: false, error: "dna_chat_failed" },
+      accessedCaseReport,
+    }
+  }
   let route: DnaChatRoute
   let outcome: DnaChatResponse["outcome"]
   let intentId: string | null
@@ -799,6 +845,10 @@ export async function resolveDnaChatApiRequest(
     httpResult: 200,
     auditStatus: "written",
     userIssueCategory: null,
+    assuranceVersion: assurance.version,
+    assuranceStatus: "passed",
+    sourceBindingCoveragePercent: assurance.metrics.sourceBindingCoveragePercent,
+    subquestionCount: assurance.metrics.subquestionCount,
   })
 
   if (!audit.ok && accessedCaseReport) {

@@ -4,7 +4,7 @@
     "rawQuestionCountInRepository": 0,
     "rawResultsStoredOnResearchSsdOnly": true
   },
-  "engineClosureSha256": "a0d966119e950466b3bf89842a30653e45815eb5929ec8a24625a98fb7758fb7",
+  "engineClosureSha256": "0721063ac2cb95fd4c2820bfad84229413d529d0f683458e37a829095a7aa9d8",
   "holdout": {
     "firstOfficial": {
       "bankLogicalSha256": "57f936f18746bfe52b167bd69d22367df48492fd91b3a28d56bfa42e905b6c0a",
@@ -75,7 +75,7 @@
       "bankLogicalSha256": "57f936f18746bfe52b167bd69d22367df48492fd91b3a28d56bfa42e905b6c0a",
       "counts": {
         "accuracyPercent": 98.89,
-        "answeredCoveragePercent": 68.44,
+        "answeredCoveragePercent": 70.89,
         "boundaryPercent": 100,
         "byCategory": {
           "alias_inflection_typo": {
@@ -164,21 +164,21 @@
         "passed": 445,
         "total": 450
       },
-      "engineClosureSha256": "a0d966119e950466b3bf89842a30653e45815eb5929ec8a24625a98fb7758fb7",
+      "engineClosureSha256": "0721063ac2cb95fd4c2820bfad84229413d529d0f683458e37a829095a7aa9d8",
       "firstRunPreserved": true,
       "gatesPassed": true,
-      "resultSha256": "b9aaeaad02eb0248ebd8e20864a61df6d0006d6b00d52d83ef026b9001bfc5e1"
+      "resultSha256": "29481106627b169c92bf12c33207d134023fe41c3525932f6aa32929288fa3cb"
     },
     "releaseGateUsesCombinedPostFixAfterPreservingNewExtensionFirstOfficial": true,
     "totalCombinedCount": 450
   },
   "independentHumanValidation": false,
-  "manifestSha256": "6a7cb253ab4e246b5908c39cddb479009b3be0b3deaa1e11d2ca39be6ae2a67b",
+  "manifestSha256": "f22a772ea8c9dd86ce0abdf75fc0f82ad50fedbbae62f5f8a10b9e1f0e6db511",
   "open": {
     "bankLogicalSha256": "6b58f72f5d134b5556c57c9bc1a1e20271ca69df501c13c0d150b617af386526",
     "counts": {
       "accuracyPercent": 98.1,
-      "answeredCoveragePercent": 66.29,
+      "answeredCoveragePercent": 66.38,
       "boundaryPercent": 100,
       "byCategory": {
         "adversarial_character_loss": {
@@ -338,11 +338,11 @@
       "total": 1050
     },
     "gatesPassed": true,
-    "resultSha256": "22ba4537d00c62bf74f02e38adce352ec6a09cc0341b8cced6b45eeadbac22b4",
+    "resultSha256": "3e726e31325f4410fc47e18a02796bd8e900ba8e4c98f7f8e89233ba0bf2909e",
     "subsets": {
       "frozenRegression": {
         "accuracyPercent": 100,
-        "answeredCoveragePercent": 63.64,
+        "answeredCoveragePercent": 64.94,
         "boundaryPercent": 100,
         "byCategory": {
           "adversarial_character_loss": {

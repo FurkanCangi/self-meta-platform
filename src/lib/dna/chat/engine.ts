@@ -1597,7 +1597,18 @@ function splitDnaChatQuestion(question: string): { parts: string[]; overflow: bo
     .split(/\s*,?\s*(?:sonra|ardından|ardindan)\s+(?:bağımsız\s+olarak\s+|bagimsiz\s+olarak\s+)?/giu)
     .map((part) => part.trim().replace(/^önce\s+|^once\s+/iu, ""))
     .filter(Boolean)
-  const explicitSequentialParts = sequentialParts.length === 2
+  const startsExplicitSequence = /^\s*(?:önce|once)\b/iu.test(question)
+  const hasTwoExplicitQuestionCues = sequentialParts.length === 2 && sequentialParts.every((part) =>
+    questionMarker.test(normalizeDnaChatText(part)))
+  const hasBoundedTopicSequence = sequentialParts.length === 2 && startsExplicitSequence &&
+    sequentialParts.every((part) =>
+      questionMarker.test(normalizeDnaChatText(part)) || Boolean(findCatalogTopic(`${part} nedir?`)))
+  const hasFramedDefinitionSequence = sequentialParts.length === 2 &&
+    /\bicin temel cerceve\w*\b.+\b(?:sonra|ardindan)\b.+\bicin tanim\w*\b/.test(
+      normalizeDnaChatText(question),
+    )
+  const explicitSequentialParts = hasTwoExplicitQuestionCues ||
+    hasBoundedTopicSequence || hasFramedDefinitionSequence
     ? sequentialParts.map((part) => /\b(?:nedir|anlat|acikla|açıkla|tanım|tanim|çerçeve|cerceve)\w*/iu.test(part)
       ? part
       : `${part} nedir?`)
@@ -1668,6 +1679,24 @@ function splitDnaChatQuestion(question: string): { parts: string[]; overflow: bo
         ? conjunctionParts
         : [question]
   return { parts: parts.slice(0, 2), overflow: parts.length > 2 }
+}
+
+export type DnaChatQuestionStructure = Readonly<{
+  subquestionCount: 1 | 2
+  overflow: boolean
+}>
+
+/**
+ * Returns only the bounded structure of a question. The actual question parts
+ * deliberately stay inside the engine so assurance and telemetry code cannot
+ * accidentally persist clinical or conversational text.
+ */
+export function inspectDnaChatQuestionStructure(question: string): DnaChatQuestionStructure {
+  const split = splitDnaChatQuestion(question)
+  return Object.freeze({
+    subquestionCount: split.parts.length === 2 ? 2 : 1,
+    overflow: split.overflow,
+  })
 }
 
 function catalogTopicIdFromResponse(response: DnaChatResponse): string | null {

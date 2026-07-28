@@ -3,7 +3,10 @@ export {
   getDnaChatCaseContextAuthority,
   hasUsableDnaCaseContext,
 } from "./caseContext"
-export { resolveDnaChat } from "./engine"
+export {
+  inspectDnaChatQuestionStructure,
+  resolveDnaChat,
+} from "./engine"
 export {
   buildDnaChatAuditMetadata,
   DNA_CHAT_AUDIT_METADATA_KEYS,
@@ -19,6 +22,18 @@ export {
   DNA_CHAT_SOCIAL_CONVERSATION_VERSION,
   resolveDnaChatSocialConversation,
 } from "./socialConversation"
+export {
+  DNA_CHAT_RUNTIME_ASSURANCE_VERSION,
+  evaluateDnaChatRuntimeAssurance,
+} from "./runtimeAssurance"
+export {
+  DNA_CHAT_DETERMINISTIC_RUBRIC_VERSION,
+  dnaChatHitAtK,
+  dnaChatRecallAtK,
+  dnaChatReciprocalRank,
+  evaluateDnaChatDeterministicRubric,
+  evaluateDnaChatRubricMetaSet,
+} from "./evaluation/deterministicRubric"
 export {
   DNA_INTELLIGENCE_AUDIT_NOTICE_TR,
   DNA_INTELLIGENCE_COMPOSER_NOTICE_TR,
@@ -66,6 +81,23 @@ export type {
   DnaChatCaseLoadResult,
   DnaChatLatencyCategory,
 } from "./apiResolver"
+
+export type {
+  DnaChatAssuranceIssue,
+  DnaChatAssuranceIssueCode,
+  DnaChatAssuranceStage,
+  DnaChatRuntimeAssuranceReport,
+} from "./runtimeAssurance"
+
+export type {
+  DnaChatDeterministicRubric,
+  DnaChatDeterministicRubricResult,
+  DnaChatExpectedDisposition,
+  DnaChatRubricMetaCase,
+  DnaChatRubricMetaEvaluation,
+} from "./evaluation/deterministicRubric"
+
+export type { DnaChatQuestionStructure } from "./engine"
 
 export type {
   DnaChatCaseContextInput,

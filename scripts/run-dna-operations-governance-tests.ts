@@ -69,6 +69,10 @@ const safeTelemetryInput = {
   httpStatus: 200,
   auditResult: "written",
   userIssueCategory: null,
+  assuranceVersion: "dna-chat-runtime-assurance@1",
+  assuranceStatus: "passed",
+  sourceBindingCoveragePercent: 100,
+  subquestionCount: 1,
 }
 
 const telemetry = buildDnaChatTelemetryRecord(safeTelemetryInput)
@@ -84,6 +88,11 @@ for (const forbiddenKey of DNA_CHAT_TELEMETRY_DENIED_KEYS) {
 assert.equal(buildDnaChatTelemetryRecord({ ...safeTelemetryInput, custom: "value" }).accepted, false)
 assert.equal(buildDnaChatTelemetryRecord({ ...safeTelemetryInput, topic: "çocuğun davranışı" }).accepted, false)
 assert.equal(buildDnaChatTelemetryRecord({ ...safeTelemetryInput, citationCount: 3 }).accepted, false)
+assert.equal(buildDnaChatTelemetryRecord({
+  ...safeTelemetryInput,
+  sourceBindingCoveragePercent: 101,
+}).accepted, false)
+assert.equal(buildDnaChatTelemetryRecord({ ...safeTelemetryInput, subquestionCount: 3 }).accepted, false)
 
 assert.equal(Object.keys(DNA_CHAT_ISSUE_CATEGORY_LABELS_TR).length, 8)
 const feedback = buildDnaChatCategoricalFeedbackRecord({

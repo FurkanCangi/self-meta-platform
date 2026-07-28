@@ -20,6 +20,10 @@ export const DNA_CHAT_TELEMETRY_ALLOWED_INPUT_KEYS = Object.freeze([
   "httpStatus",
   "auditResult",
   "userIssueCategory",
+  "assuranceVersion",
+  "assuranceStatus",
+  "sourceBindingCoveragePercent",
+  "subquestionCount",
 ] as const)
 
 /**
@@ -74,6 +78,7 @@ export const DNA_CHAT_ISSUE_CATEGORIES = Object.freeze([
 
 export type DnaChatIssueCategory = (typeof DNA_CHAT_ISSUE_CATEGORIES)[number]
 export type DnaChatTelemetryAuditResult = "written" | "failed" | "not_required"
+export type DnaChatTelemetryAssuranceStatus = "passed" | "not_recorded"
 export type DnaChatTelemetryLatencyCategory = "lt_100ms" | "100_to_999ms" | "gte_1000ms"
 
 export type DnaChatTelemetryRecord = Readonly<{
@@ -91,6 +96,10 @@ export type DnaChatTelemetryRecord = Readonly<{
   httpStatus: number
   auditResult: DnaChatTelemetryAuditResult
   userIssueCategory: DnaChatIssueCategory | null
+  assuranceVersion: string
+  assuranceStatus: DnaChatTelemetryAssuranceStatus
+  sourceBindingCoveragePercent: number
+  subquestionCount: 0 | 1 | 2
 }>
 
 export type DnaChatTelemetryDecision = Readonly<{
@@ -123,6 +132,7 @@ const LATENCY_CATEGORIES = new Set<DnaChatTelemetryLatencyCategory>([
 ])
 const AUDIT_RESULTS = new Set<DnaChatTelemetryAuditResult>(["written", "failed", "not_required"])
 const ISSUE_CATEGORIES = new Set<DnaChatIssueCategory>(DNA_CHAT_ISSUE_CATEGORIES)
+const ASSURANCE_STATUSES = new Set<DnaChatTelemetryAssuranceStatus>(["passed", "not_recorded"])
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false
@@ -197,6 +207,19 @@ export function buildDnaChatTelemetryRecord(input: unknown): DnaChatTelemetryDec
     && !ISSUE_CATEGORIES.has(input.userIssueCategory as DnaChatIssueCategory)) {
     reasons.push("telemetry_user_issue_category_invalid")
   }
+  if (!safeIdentifier(input.assuranceVersion)) reasons.push("telemetry_assurance_version_invalid")
+  if (!ASSURANCE_STATUSES.has(input.assuranceStatus as DnaChatTelemetryAssuranceStatus)) {
+    reasons.push("telemetry_assurance_status_invalid")
+  }
+  if (typeof input.sourceBindingCoveragePercent !== "number"
+    || !Number.isFinite(input.sourceBindingCoveragePercent)
+    || input.sourceBindingCoveragePercent < 0
+    || input.sourceBindingCoveragePercent > 100) {
+    reasons.push("telemetry_source_binding_coverage_invalid")
+  }
+  if (![0, 1, 2].includes(Number(input.subquestionCount))) {
+    reasons.push("telemetry_subquestion_count_invalid")
+  }
 
   const reasonCodes = uniqueSorted(reasons)
   if (reasonCodes.length > 0) {
@@ -230,6 +253,10 @@ export function buildDnaChatTelemetryRecord(input: unknown): DnaChatTelemetryDec
       httpStatus: input.httpStatus as number,
       auditResult: input.auditResult as DnaChatTelemetryAuditResult,
       userIssueCategory: input.userIssueCategory as DnaChatIssueCategory | null,
+      assuranceVersion: input.assuranceVersion as string,
+      assuranceStatus: input.assuranceStatus as DnaChatTelemetryAssuranceStatus,
+      sourceBindingCoveragePercent: input.sourceBindingCoveragePercent as number,
+      subquestionCount: input.subquestionCount as 0 | 1 | 2,
     }),
   })
 }

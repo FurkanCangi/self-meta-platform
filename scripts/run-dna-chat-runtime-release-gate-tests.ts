@@ -46,7 +46,7 @@ import {
 
 async function main() {
 const exactEngineSourceClosure = assertCurrentDnaEvaluationEngineSourceClosure(process.cwd())
-assert.equal(exactEngineSourceClosure.length, 122)
+assert.equal(exactEngineSourceClosure.length, 124)
 assert.ok(
   exactEngineSourceClosure.includes("src/lib/dna/chat/socialConversation.ts"),
   "Sosyal konuşma katmanı exact runtime source closure içinde kalmalı",
@@ -75,9 +75,11 @@ for (const requiredEngineAuthoritySource of [
   "src/lib/dna/chat/evaluation/evaluationDatasetIntegrity.ts",
   "src/lib/dna/chat/evaluation/evaluationGates.ts",
   "src/lib/dna/chat/evaluation/evaluationGovernance.ts",
+  "src/lib/dna/chat/evaluation/deterministicRubric.ts",
   "src/lib/dna/chat/evaluation/generated/currentDevelopmentHistoryAuthority.json",
   "src/lib/dna/chat/index.ts",
   "src/lib/dna/chat/operations/requestTiming.ts",
+  "src/lib/dna/chat/runtimeAssurance.ts",
   "src/lib/dna/chat/release/previewPromotion.ts",
   "src/lib/dna/chat/release/productionRuntimeAuthority.ts",
   "src/lib/dna/chat/release/runtimeDeploymentAuthorization.ts",

@@ -214,6 +214,10 @@ assert.equal(auditMetadata.citation_count, 2)
 assert.equal(auditMetadata.http_result, 200)
 assert.equal(auditMetadata.audit_status, "written")
 assert.equal(auditMetadata.user_issue_category, null)
+assert.equal(auditMetadata.assurance_version, "not_recorded")
+assert.equal(auditMetadata.assurance_status, "not_recorded")
+assert.equal(auditMetadata.source_binding_coverage_percent, 0)
+assert.equal(auditMetadata.subquestion_count, 0)
 for (const forbiddenAuditField of [
   "question",
   "answer",
@@ -304,6 +308,9 @@ assert.equal(shortProfileDeps.state.audits[0]?.packageVersion, "dna-chat-catalog
 assert.equal(shortProfileDeps.state.audits[0]?.packageSha256, null)
 assert.ok(["lt_100ms", "100_to_999ms", "gte_1000ms"].includes(shortProfileDeps.state.audits[0]?.latencyCategory || ""))
 assert.equal(shortProfileDeps.state.audits[0]?.errorCode, null)
+assert.equal(shortProfileDeps.state.audits[0]?.assuranceVersion, "dna-chat-runtime-assurance@1")
+assert.equal(shortProfileDeps.state.audits[0]?.assuranceStatus, "passed")
+assert.equal(shortProfileDeps.state.audits[0]?.subquestionCount, 1)
 
 const naturalDeep = await resolveDnaChatApiRequest({
   question: "İnsular korteksi kanıtlarıyla açıkla.",
