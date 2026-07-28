@@ -2,73 +2,98 @@
   "artifacts": {
     "holdout": {
       "fileMode": "0600",
-      "fileSha256": "40937a6f48a6cb8511b4f5973430473406f595094f0cc16c738fd8545e6a0977",
-      "logicalSha256": "96f843c2273822a0e307df9290edfb6dac19b361703c84e591d4267afa06a8b3",
-      "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/turkish-flexibility-bank/v1/locked-holdout.json",
+      "fileSha256": "e8decec88dcf4ce68ebf90cbac4e7508711a491daf1ac1e10f8379feacbc97aa",
+      "logicalSha256": "57f936f18746bfe52b167bd69d22367df48492fd91b3a28d56bfa42e905b6c0a",
+      "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/turkish-flexibility-bank/v2/locked-holdout.json",
       "seedStoredInRepository": false
     },
     "open": {
       "fileMode": "0600",
-      "fileSha256": "acc1fc6d2b8bcb466e93fb4b45bc94b5316445809d6d6d919eac73dfa98e7d46",
-      "logicalSha256": "8edefe9bf36ac296f80e17a2ac32db46e7fba7b33fc4676bb37051ea1f2a349b",
-      "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/turkish-flexibility-bank/v1/open-bank.json"
+      "fileSha256": "48738fa7f8f9b0ad3f059cb126d87de2ed24562839546ee2c5f8fb04105e227a",
+      "logicalSha256": "6b58f72f5d134b5556c57c9bc1a1e20271ca69df501c13c0d150b617af386526",
+      "researchSsdRelativePath": "Outputs/SelfMetaAI/dna-intelligence/turkish-flexibility-bank/v2/open-bank.json"
+    },
+    "preservedV1": {
+      "holdoutFileSha256": "40937a6f48a6cb8511b4f5973430473406f595094f0cc16c738fd8545e6a0977",
+      "holdoutLogicalSha256": "96f843c2273822a0e307df9290edfb6dac19b361703c84e591d4267afa06a8b3",
+      "openFileSha256": "acc1fc6d2b8bcb466e93fb4b45bc94b5316445809d6d6d919eac73dfa98e7d46",
+      "openLogicalSha256": "8edefe9bf36ac296f80e17a2ac32db46e7fba7b33fc4676bb37051ea1f2a349b",
+      "unchanged": true
     }
   },
-  "authorityClass": "development_and_locked_internal_evaluation",
-  "boundaries": {
-    "activationAllowed": false,
-    "bookIndependent": true,
-    "claimOrPassageTextUsed": false,
-    "developmentOnly": true,
-    "directBookContentRead": false,
-    "independentHumanValidation": false,
-    "officialHoldout": true,
-    "rawContentStoredOnResearchSsdOnly": true,
-    "releaseEligible": false,
-    "reviewStatus": "codex_dual_pass_audited_not_independent_human_validation",
-    "runtimeEligible": false
+  "authorityClass": "development_and_mixed_history_locked_internal_evaluation",
+  "catalogCoverage": {
+    "directlyTestedInNewOpenDefinitionFamily": 118,
+    "liveCatalogTopicCount": 118,
+    "percent": 100
   },
   "counts": {
-    "lockedHoldout": 200,
-    "open": 500,
-    "openExpansion": 423,
-    "openFrozenRegression": 77,
-    "total": 700
+    "holdoutHistoricalV1": 200,
+    "holdoutNewFirstBlindExtension": 250,
+    "lockedHoldout": 450,
+    "open": 1050,
+    "openLegacyV1": 500,
+    "openNewExtension": 550,
+    "total": 1500
+  },
+  "dataLeakage": {
+    "rawQuestionCountInRepository": 0,
+    "rawQuestionsStoredOnResearchSsdOnly": true,
+    "templateFamiliesSeparatedAcrossOpenAndHoldout": true
   },
   "distributions": {
-    "lockedHoldout": {
-      "compound_cross_topic": 25,
-      "compound_same_topic": 25,
-      "daily_short_incomplete": 30,
-      "follow_up_repair": 45,
-      "mixed_turkish_english": 20,
-      "safety_unsupported_false_premise": 20,
-      "typo_character_token": 35
+    "holdoutNewExtension": {
+      "alias_inflection_typo": 32,
+      "colloquial_elliptical": 25,
+      "compound_safe_refusal": 20,
+      "compound_topic_pair": 25,
+      "correction_retry": 15,
+      "evidence_age_measurement": 24,
+      "follow_up_reference": 35,
+      "topic_definition_coverage": 59,
+      "unknown_near_boundary": 15
     },
-    "openExpansion": {
-      "compound_cross_topic": 55,
-      "compound_same_topic": 55,
-      "daily_short_incomplete": 70,
-      "follow_up_repair": 90,
-      "mixed_turkish_english": 45,
-      "safety_unsupported_false_premise": 38,
-      "typo_character_token": 70
+    "openNewExtension": {
+      "alias_inflection_typo": 72,
+      "colloquial_elliptical": 55,
+      "compound_safe_refusal": 45,
+      "compound_topic_pair": 55,
+      "correction_retry": 40,
+      "evidence_age_measurement": 55,
+      "follow_up_reference": 75,
+      "topic_definition_coverage": 118,
+      "unknown_near_boundary": 35
     }
   },
-  "firstOfficialHoldoutResult": "pending_until_engine_changes_complete",
-  "frozenRegression": {
-    "bankSha256": "360ebcdf14a17f24159bda0f16385a5ca006ad2cd6e58a3e506d18ffa4012f36",
-    "count": 77,
-    "unchanged": true
+  "evaluationPolicy": {
+    "combinedHoldoutCount": 450,
+    "failedFirstBlindRowsMustNotBeRelabeledOrDeleted": true,
+    "genuinelyNewFirstBlindCount": 250,
+    "historicalNonBlindCount": 200,
+    "scoresMustReportNewFirstBlindSeparately": true
   },
-  "manifestSha256": "16ffed7664c9916b6069ab62731546072d69d99234f933290df00dc457cf00b7",
+  "independentHumanValidation": false,
+  "manifestSha256": "4b128436de06f69900fc732eac124dc74d524c0a9308431013f3ddb14bb5395d",
   "qualityControls": {
     "allPassed": true,
     "exactCrossOverlap": 0,
     "exactHoldoutDuplicates": 0,
     "exactOpenDuplicates": 0,
-    "nearCrossOverlap": 0
+    "extensionOnly": {
+      "crossOverlap": 0,
+      "holdoutDuplicates": 0,
+      "nearCrossOverlap": 0,
+      "openDuplicates": 0
+    },
+    "inheritedLegacyDuplicateBaseline": {
+      "cross": 0,
+      "holdout": 0,
+      "nearCross": 0,
+      "open": 3
+    },
+    "nearCrossOverlap": 0,
+    "templateFamilyCrossOverlap": 0
   },
-  "schemaVersion": "dna.turkish-flexibility-manifest.v1",
-  "version": "dna-turkish-flexibility-bank@1"
+  "schemaVersion": "dna.turkish-flexibility-manifest.v2",
+  "version": "dna-turkish-flexibility-bank@2"
 }

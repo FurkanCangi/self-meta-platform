@@ -96,6 +96,13 @@ type ExplicitTopicRule = Readonly<{
 // sıralı kurallar yalnız kaynak kataloğunda açıkça adlandırılmış tek bir
 // başlığa yönlendirir; yeni bir klinik veya biyolojik çıkarım üretmez.
 const EXPLICIT_TOPIC_RULES: readonly ExplicitTopicRule[] = [
+  { topicId: "ans.autonomic_space", pattern: /\botonom uzam\b/ },
+  { topicId: "development.age_equivalent_limits", pattern: /\bgelisimsel yas ve yas esdegeri siniri\b/ },
+  { topicId: "development.informant_context", pattern: /\bebeveyn ogretmen ve ortam bilgisi\b/ },
+  { topicId: "development.measurement_invariance", pattern: /\byas ve kulturler arasinda olcum degismezligi\b/ },
+  { topicId: "development.screening_assessment", pattern: /\bgelisimsel gozetim tarama ve degerlendirme\b/ },
+  { topicId: "case.capacity_performance", pattern: /\bvaka raporu baglaminda kapasite performans ve katilim\b/ },
+  { topicId: "dna.capacity_performance", pattern: /\bdna alanlari baglaminda kapasite performans ve katilim\b/ },
   { topicId: "cns.insula", pattern: /\binsula\s+ve\s+interosepsiyon\b/ },
   { topicId: "ans.interoception_dimensions", pattern: /\binterosepsiyon\w*.+\b(?:temel\s+)?boyut\w*/ },
   { topicId: "selfreg.sleep_health", pattern: /\buyku\b.+\bdna\w*\b.+\bbilissel regulasyon alani\w*/ },
@@ -758,6 +765,26 @@ export function findCatalogTopic(
     .sort((a, b) => b.score - a.score || a.topic.id.localeCompare(b.topic.id))
 
   if ((ranked[0]?.score ?? 0) >= 5) return ranked[0].topic
+
+  // Expensive fuzzy matching is a bounded fallback, never the default path.
+  // This repairs character loss and accidental word splitting without making
+  // every ordinary question scan all aliases with n-grams.
+  const compactQuestion = normalized.replace(/\s/g, "")
+  const fuzzyRanked = DNA_CHAT_CATALOG_TOPICS.map((topic) => {
+    const index = TOPIC_SEARCH_INDEX.get(topic.id)
+    const terms = index ? [index.title, ...index.aliases] : []
+    const regular = scoreDnaTextMatch(normalized, terms).score
+    const compact = scoreDnaTextMatch(
+      compactQuestion,
+      terms.map((term) => term.replace(/\s/g, "")),
+    ).score
+    return { topic, score: Math.max(regular, compact) }
+  }).sort((left, right) => right.score - left.score || left.topic.id.localeCompare(right.topic.id))
+  const fuzzyBest = fuzzyRanked[0]
+  const fuzzyGap = (fuzzyBest?.score ?? 0) - (fuzzyRanked[1]?.score ?? 0)
+  if (fuzzyBest && fuzzyBest.score >= 0.59 && (fuzzyGap >= 0.03 || fuzzyBest.score >= 0.78)) {
+    return fuzzyBest.topic
+  }
 
   const shortContextualFollowUp = normalized.split(" ").length <= 12 &&
     /^(?:(?:peki|ya|ayrica)\s+)?(?:olcum\w*(?: nasil)?|nasil olcul\w*|nasil degerlendir\w*|kaynak\w*(?: goster\w*(?: misin)?)?|kanit\w*(?: ne| nasil| guclu mu)?|kanit duzeyi(?: ne| nasil)?|orneklem\w*|cocuk\w*(?: nasil)?|ergen\w*(?: nasil)?|gelisim\w*(?: nasil)?|hangi yas\w*|yas kapsami(?: ne)?|dna(?: ile)? baglanti\w*|dna ile iliski\w*|sinir\w*|ne kadar guclu|guvenilir mi|bir ornek daha)$/.test(

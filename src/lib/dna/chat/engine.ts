@@ -12,7 +12,7 @@ import {
   resolveDnaCatalogReasoning,
   type DnaCatalogReasoningDraft,
 } from "./catalogReasoning"
-import { getCatalogTopicById } from "./catalog"
+import { findCatalogTopic, getCatalogTopicById } from "./catalog"
 import { DNA_CHAT_INTENT_BY_ID } from "./intents"
 import { DNA_INTELLIGENCE_PUBLIC_INTENDED_USE } from "./intendedUse"
 import {
@@ -430,17 +430,22 @@ export function detectDnaConversationFollowUpKind(
   }
   if (
     /^(?:bunu\s+)?(?:biraz\s+)?(?:daha\s+)?(?:ac|acikla|ayrintilandir|detaylandir)(?:\s+misin)?$/.test(normalized) ||
-    /^(?:biraz\s+)?daha\s+(?:ayrinti|detay)(?:li)?$/.test(normalized)
+    /^(?:biraz\s+)?daha\s+(?:ayrinti|detay)(?:li)?$/.test(normalized) ||
+    /^(?:bu\s+)?(?:kismi|noktayi)\s+(?:biraz\s+)?daha\s+(?:ac|acikla|ayrintilandir)(?:\s+misin)?$/.test(normalized) ||
+    /^(?:bir\s+kademe\s+)?daha\s+(?:ayrintilandir\w*|detaylandir\w*)(?:\s+misin)?$/.test(normalized)
   ) return "expand"
-  if (/^(?:bunu\s+)?(?:daha\s+)?(?:basit|sade)(?:ce)?\s+(?:anlat|acikla)(?:\s+misin)?$/.test(normalized) || /^(?:en\s+)?sade\s+haliyle$/.test(normalized)) return "simplify"
-  if (/^(?:(?:peki|ya)\s+)?(?:cocuklarda|kucuk cocuklarda|ergenlerde|erken cocuklukta|yas grubuna gore)(?:\s+(?:nasil|ayni mi|ne degisir))?$/.test(normalized)) return "age_scope"
-  if (/^(?:bunun\s+)?(?:bilimsel\s+)?(?:kaniti|dayanagi|kaynaklari)(?:\s+(?:ne|nasil|guclu mu|peki|gosterir misin))?$/.test(normalized) || /^bilimsel dayanak peki$/.test(normalized)) return "evidence"
-  if (/^(?:bunun\s+)?(?:olcumu\s+nasil|nasil olculuyor|nasil olculur|hangi yolla incelenir)$/.test(normalized)) return "measurement"
+  if (/^(?:bunu\s+)?(?:daha\s+)?(?:basit|sade)(?:ce)?(?:\s+turkceyle)?\s+(?:anlat|acikla)(?:\s+misin)?$/.test(normalized) || /^(?:en\s+)?sade\s+haliyle$/.test(normalized)) return "simplify"
+  if (/^(?:(?:peki|ya)\s+)?(?:cocuklarda|kucuk cocuklarda|ergenlerde|erken cocuklukta|cocukluk doneminde|yas grubuna gore)(?:\s+(?:durum\s+)?(?:nasil|ayni mi|ne degisir))?$/.test(normalized)) return "age_scope"
+  if (/^(?:bunun|bu bilginin)?\s*(?:bilimsel\s+)?(?:kaniti|kanit tarafi|dayanagi|kaynaklari)(?:\s+(?:ne|nasil|ne soyluyor|guclu mu|peki|gosterir misin))?$/.test(normalized) || /^bilimsel dayanak peki$/.test(normalized)) return "evidence"
+  if (/^(?:bunun\s+)?(?:olcumu\s+nasil|nasil olculuyor|nasil olculur|hangi yolla incelenir|hangi yontemlerle degerlendiriliyor|pratikte nasil olculuyor(?: peki)?)$/.test(normalized)) return "measurement"
   if (
     /^(?:bu\s+)?iki(?:si(?:nin)?|\s+basligin)\s+(?:arasindaki\s+)?farki?\s+ne(?:ydi)?$/.test(normalized) ||
     /^ikisini karsilastir$/.test(normalized)
   ) return "comparison"
-  if (/\b(?:baska turlu anlat|farkli anlat|yeniden anlat|tekrar acikla)\b/.test(normalized)) {
+  if (
+    /\b(?:baska turlu anlat|farkli anlat|yeniden anlat|tekrar acikla|baska cumlelerle acikla|farkli bir anlatimla kur|farkli bir anlatim|daha anlasilir baska bir anlatim)\b/.test(normalized) ||
+    /\bayni noktayi farkli bir anlatimla kur\w*/.test(normalized)
+  ) {
     return "retry"
   }
   if (/^(?:peki bu|bununla iliskisi ne|bunun iliskisi ne|buna ornek verir misin|hangi yas icin gecerli|orneklemi|gelisimi nasil|dna baglantisi|dna ile iliskisi|siniri|ne kadar guclu|guvenilir mi|bir ornek daha)$/.test(normalized)) {
@@ -476,6 +481,7 @@ function conversationRepairRoutingQuestion(
   if (!repairKind) return question
 
   if (repairKind === "correction") {
+    const correctionTopics = validConversationTopics(previousTopic, context)
     let corrected = question.trim()
       .replace(/^(?:hayır|hayir|yok)\b[,:;]?\s*/iu, "")
       .replace(/^(?:beni|sorumu)?\s*(?:yanlış anladın|yanlis anladin)\b[,:;]?\s*/iu, "")
@@ -483,8 +489,15 @@ function conversationRepairRoutingQuestion(
     const correctionBoundary = corrected.match(/\b(?:değil|degil)\b[,:;]?\s*(.+)$/iu)
     if (correctionBoundary?.[1]) corrected = correctionBoundary[1]
     corrected = corrected
-      .replace(/\b(?:sordum|soruyorum|demek istedim|kastettim)\b[.!?]*$/iu, "")
+      .replace(/\b(?:sordum|soruyorum|soruyordum|demek istedim|kastettim)\b[.!?]*$/iu, "")
+      .replace(/\bkonusunu\b[.!?]*$/iu, "")
       .trim()
+    const normalizedCorrected = normalizeDnaChatText(corrected)
+    const explicitContextTopic = correctionTopics.find((topic) => {
+      const title = normalizeDnaChatText(topic.title)
+      return normalizedCorrected === title || ` ${normalizedCorrected} `.includes(` ${title} `)
+    })
+    if (explicitContextTopic) return `${explicitContextTopic.title} nedir?`
     if (corrected.length >= 2 && normalizeDnaChatText(corrected) !== normalizeDnaChatText(question)) {
       return `${corrected} nedir?`
     }
@@ -549,7 +562,7 @@ function extractDeclaredActualQuestion(question: string): string {
 
 function isClearlyOutOfDomainQuestion(question: string): boolean {
   const normalized = normalizeDnaChatText(question)
-  return /\b(?:yemek tarifi|otomobil motoru|kuantum dolaniklik|futbol maci|roma imparatorlugu|web scraper|marsa yolculuk|kripto para|siir yaz)\b/.test(normalized)
+  return /\b(?:yemek tarifi|otomobil motoru|kuantum dolanikl\w*|futbol maci|roma imparatorlugu|web scraper|marsa yolculuk|kripto para|siir yaz)\b/.test(normalized)
 }
 
 function notAvailableResponse(
@@ -1511,10 +1524,14 @@ function resolveSingleDnaChat(
 
 function splitDnaChatQuestion(question: string): { parts: string[]; overflow: boolean } {
   const questionMarker = /\b(?:ne|nedir|ne demek|ne diyor|nasil|neden|hangi|neyi|olur mu|midir|mudur|misin|anlat\w*|acikla\w*|degerlendiril\w*|kapsar\w*|gosterir mi|iliskili mi|olcumu|kaniti|kaynagi|kaynaklari|gelisimi|yas kapsami|tani\w*\s+koy\w*|teshis\w*\s+et\w*|ilac\w*\s+yaz\w*|tedavi\w*\s+oner\w*|seans\w*\s+planla\w*)\b/
-  const questionMarkCandidates = question
+  const rawQuestionMarkCandidates = question
     .split(/\?+/)
     .map((part) => part.trim())
     .filter((part) => normalizeDnaChatText(part).replace(/\d/g, "").length >= 2)
+  const questionMarkCandidates = rawQuestionMarkCandidates.length === 3 &&
+    /\bikinci sorum\b/.test(normalizeDnaChatText(rawQuestionMarkCandidates[1]))
+    ? [rawQuestionMarkCandidates[0], `${rawQuestionMarkCandidates[1]}? ${rawQuestionMarkCandidates[2]}`]
+    : rawQuestionMarkCandidates
   const questionMarkParts = questionMarkCandidates.length > 1 && questionMarkCandidates.every((part) =>
     questionMarker.test(normalizeDnaChatText(part)))
     ? questionMarkCandidates
@@ -1527,6 +1544,33 @@ function splitDnaChatQuestion(question: string): { parts: string[]; overflow: bo
     structuralCandidates.every((part) => questionMarker.test(normalizeDnaChatText(part))) ||
     (structuralCandidates.length === 2 && /\bikinci sorum\b/.test(normalizeDnaChatText(structuralCandidates[1])))
   ) ? structuralCandidates : []
+  const sequentialParts = question
+    .split(/\s*,?\s*(?:sonra|ardından|ardindan)\s+(?:bağımsız\s+olarak\s+|bagimsiz\s+olarak\s+)?/giu)
+    .map((part) => part.trim().replace(/^önce\s+|^once\s+/iu, ""))
+    .filter(Boolean)
+  const explicitSequentialParts = sequentialParts.length === 2
+    ? sequentialParts.map((part) => /\b(?:nedir|anlat|acikla|açıkla|tanım|tanim|çerçeve|cerceve)\w*/iu.test(part)
+      ? part
+      : `${part} nedir?`)
+    : []
+  const colonIndex = question.indexOf(":")
+  const colonPrefix = colonIndex >= 0 ? normalizeDnaChatText(question.slice(0, colonIndex)) : ""
+  const colonPairBody = colonIndex >= 0 && colonPrefix === "iki konuyu karistirmadan acikla"
+    ? question.slice(colonIndex + 1).trim()
+    : null
+  const catalogPairParts = colonPairBody
+    ? Array.from(colonPairBody.matchAll(/\s+ve\s+/giu)).flatMap((match) => {
+        const splitAt = match.index ?? -1
+        if (splitAt < 0) return []
+        const left = colonPairBody.slice(0, splitAt).trim()
+        const right = colonPairBody.slice(splitAt + match[0].length).replace(/[.!?]+$/u, "").trim()
+        const leftTopic = findCatalogTopic(`${left} nedir?`)
+        const rightTopic = findCatalogTopic(`${right} nedir?`)
+        return leftTopic && rightTopic && leftTopic.id !== rightTopic.id
+          ? [[`${left} nedir?`, `${right} nedir?`]]
+          : []
+      })[0] ?? []
+    : []
   const additionalParts = question
     .split(/\s+(?:ayrıca|ayrica)\s+/giu)
     .map((part) => part.trim())
@@ -1563,6 +1607,10 @@ function splitDnaChatQuestion(question: string): { parts: string[]; overflow: bo
     ? questionMarkParts
     : structuralParts.length > 1
       ? structuralParts
+      : explicitSequentialParts.length > 1
+        ? explicitSequentialParts
+      : catalogPairParts.length > 1
+        ? catalogPairParts
       : hasIndependentSeparateTopicQuestions
         ? separateTopicParts
       : hasIndependentAdditionalQuestions

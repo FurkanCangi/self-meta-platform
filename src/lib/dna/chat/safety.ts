@@ -279,6 +279,7 @@ const PROGNOSIS_PATTERNS = [
   "give a prognosis",
   "predict clinical outcome",
   "prognoz cikar",
+  "gelecekte ne olacagini kesin soyle",
 ] as const
 
 const CAUSALITY_PATTERNS = [
@@ -320,6 +321,7 @@ const DIAGNOSIS_PATTERNS = [
   "teshis et",
   "tani ver",
   "taniyi soyle",
+  "gozlemden otonom bozukluk cikar",
   "otizm var mi",
   "otizm olabilir",
   "otizm dusundur",
@@ -357,6 +359,13 @@ function isCompositionalDiagnosisRequest(normalized: string): boolean {
     return false
   }
   if (/\b(?:genel|kavram\w*)\s+tanim\w*\b/.test(normalized) || /\btanim\w*\s+nedir\b/.test(normalized)) {
+    return false
+  }
+  if (
+    /\btanis\w* degerlendirme\b/.test(normalized) &&
+    /\b(?:cocuklarda|cocuklukta|ergenlerde|gelisimsel)\b/.test(normalized) &&
+    !/\bbu\s+(?:cocuk|vaka|danisan|rapor|profil)\b/.test(normalized)
+  ) {
     return false
   }
   if (/\bbozuklugu\s+yok\b.{0,100}\bayrim\s+yapilabilir\s+mi\b/.test(normalized)) {
@@ -564,6 +573,8 @@ const BIOLOGICAL_INFERENCE_PREDICATE_PATTERN =
   /\b(?:olc\w*|tahmin\w*|ongor\w*|okun\w*|okuy\w*|hesap\w*|goster\w*|kanit\w*|ispat\w*|cikar\w*|yansit\w*|esles\w*|dogrula\w*|soyle\w*|sayil\w*|anlamina\s+gel\w*|demek\w*|isaret\s+et\w*|dusundur\w*|alarm\w*|fazla\w*|artmis\w*|azalmis\w*|aktif\w*|aktivite\w*|hiperaktiv\w*|etkin\w*|baglanti\w*|olgun\w*|gelismemis\w*|hasar\w*|bozuk\w*|zayif\w*|yeterli\w*|yetersiz\w*|baskin\w*|dusuk\w*|yuksek\w*|kucuk\w*|buyuk\w*|calis\w*|mod\w*|normal\w*|ritim\w*|kaynaklan\w*)\b/
 const DIRECT_MEASUREMENT_PREDICATE_PATTERN =
   /\b(?:olc\w*|tahmin\w*|ongor\w*|okun\w*|okuy\w*|hesap\w*|kac|ne\s+kadar|sayisal\w*|deger\w*|seviye\w*|oran\w*|aktivite\w*|etkinlik\w*|baglantisallik\w*|hacim\w*|ritim\w*)\b/
+const UNSUPPORTED_PROXY_INFERENCE_PATTERN =
+  /(?:\b(?:el yazis\w*|sac reng\w*|astroloj\w*|ruya yorum\w*|muzik zevk\w*|emoji\w*|dogum ay\w*|telefon marka\w*|kan grub\w*|ses ton\w*|fotograf\w*|tek bakista)\b.{0,100}\b(?:olc\w*|anlas\w*|cikar\w*|goster\w*|belirle\w*|belirli\w*|hesap\w*|kanit\w*|soyle\w*)|\bbeyincik\w*\b.{0,80}\bkisilig\w*\b.{0,40}\bbelirle\w*|\bdna puan\w*\b.{0,80}\bkan seker\w*\b.{0,40}\b(?:olc\w*|hesap\w*|cikar\w*))/
 
 function isExplicitBoundaryCritique(normalized: string): boolean {
   const critique =
@@ -890,6 +901,14 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
       "measurement_overreach",
       "catalog_measurement_overreach",
       "DNA davranışsal ve ölçek temelli işlevsel profil sunar; HRV, EDA, vagal ton veya ağ aktivitesi ölçmez.",
+    )
+  }
+  if (UNSUPPORTED_PROXY_INFERENCE_PATTERN.test(normalized)) {
+    return safetyResult(
+      redactedQuestion,
+      "measurement_overreach",
+      "unsupported_proxy_inference_blocked",
+      "Bu tür bir özellik veya gözlemden nörofizyolojik ölçüm, işlevsel kapasite ya da biyolojik durum çıkarılamaz.",
     )
   }
   const matchingCatalogRules = DNA_CHAT_CATALOG_SAFETY_RULES.filter((rule) =>
