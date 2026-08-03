@@ -17,6 +17,7 @@ import { DNA_CHAT_INTENT_BY_ID } from "./intents"
 import { DNA_INTELLIGENCE_PUBLIC_INTENDED_USE } from "./intendedUse"
 import {
   DNA_PRODUCT_AUTHORITY_PENDING,
+  DNA_OWNER_BOOK_CHAT_AUTHORITY,
   EXTERNAL_SCIENCE_AUTHORITY_PENDING,
   authoritySet,
   canAuthoritySupportAnswerRole,
@@ -125,6 +126,7 @@ function roleForAuthority(
   authority: DnaKnowledgeAuthorityRef,
 ): DnaKnowledgeAnswerRole {
   if (authority.layer === "dna_product_information") return "product_definition"
+  if (authority.layer === "owner_book_information") return "owner_book_information"
   if (authority.layer === "external_scientific_information") return "scientific_evidence"
   if (authority.layer === "case_information") return "case_finding"
   return "safety_boundary"
@@ -434,31 +436,32 @@ function ownerBookResponse(
     claimBoundary:
       "Bu içerik sahibin seçtiği tek kitap sürümünden alınmıştır; cümle düzeyindeki atıf eşlemesi sonraki denetim aşamasında tamamlanacaktır.",
     sampleScope: "Kitabın ilgili başlığındaki anlatımla sınırlıdır.",
-    authority: EXTERNAL_SCIENCE_AUTHORITY_PENDING,
+    authority: DNA_OWNER_BOOK_CHAT_AUTHORITY,
   }
   const sourceIds = [source.id]
   const answerUnits: DnaChatAnswerUnitInput[] = [
     {
-      id: `owner-book-summary:${match.passageIds[0] ?? match.topicId}`,
+      id: match.claimIds[0] ?? `owner-book-summary:${match.passageIds[0] ?? match.topicId}`,
       kind: "summary",
-      role: "scientific_evidence",
+      role: "owner_book_information",
       text: match.summary,
-      authority: EXTERNAL_SCIENCE_AUTHORITY_PENDING,
+      authority: DNA_OWNER_BOOK_CHAT_AUTHORITY,
       sourceIds,
     },
     ...match.details.map((detail, index) => ({
-      id: `owner-book-detail:${match.passageIds[index + 1] ?? `${match.topicId}:${index + 1}`}`,
+      id: match.claimIds[index + 1]
+        ?? `owner-book-detail:${match.passageIds[index + 1] ?? `${match.topicId}:${index + 1}`}`,
       kind: "detail" as const,
-      role: "scientific_evidence" as const,
+      role: "owner_book_information" as const,
       text: detail,
-      authority: EXTERNAL_SCIENCE_AUTHORITY_PENDING,
+      authority: DNA_OWNER_BOOK_CHAT_AUTHORITY,
       sourceIds,
     })),
   ]
   return makeResponse({
     route: "theory",
     outcome: "answered",
-    classification: "literature",
+    classification: "dna_concept",
     topic: match.topic,
     intentId: `owner-book:${match.topicId}`,
     summary: match.summary,
@@ -471,7 +474,7 @@ function ownerBookResponse(
       topicIds: [...match.topicIds].slice(0, 2),
       lastQueryKind: conversationQueryKind(queryKind),
     },
-    answerAuthority: EXTERNAL_SCIENCE_AUTHORITY_PENDING,
+    answerAuthority: DNA_OWNER_BOOK_CHAT_AUTHORITY,
     answerUnits,
   })
 }

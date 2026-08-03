@@ -80,6 +80,7 @@ export const DNA_EVALUATION_ENGINE_SOURCE_FILES = Object.freeze([
   "src/app/api/app/dna-chat/feedback/route.ts",
   "src/app/api/app/dna-chat/route.ts",
   "src/app/components/app-shell/useAppSurface.ts",
+  "src/app/components/therapist-identity.tsx",
   "src/app/dna-asistani/DnaAssistantClient.tsx",
   "src/app/dna-asistani/DnaIssueFeedback.tsx",
   "src/lib/assessment/assessmentEngine.ts",
@@ -91,6 +92,9 @@ export const DNA_EVALUATION_ENGINE_SOURCE_FILES = Object.freeze([
   "src/lib/dna/chat/catalog/benchmarkQuestions.ts",
   "src/lib/dna/chat/catalog/canonicalBenchmarkData.ts",
   "src/lib/dna/chat/catalog/claims.ts",
+  "src/lib/dna/chat/catalog/generated/dense/runtime.json",
+  "src/lib/dna/chat/catalog/generated/owner-book/manifest.json",
+  "src/lib/dna/chat/catalog/generated/owner-book/runtime.json",
   "src/lib/dna/chat/catalog/generated/v3/claim-passage-links.json",
   "src/lib/dna/chat/catalog/generated/v3/claims.json",
   "src/lib/dna/chat/catalog/generated/v3/lexical-index.json",
@@ -148,6 +152,7 @@ export const DNA_EVALUATION_ENGINE_SOURCE_FILES = Object.freeze([
   "src/lib/dna/chat/operations/userFeedback.ts",
   "src/lib/dna/chat/ownedCaseAnswer.ts",
   "src/lib/dna/chat/ownedCaseContextCore.ts",
+  "src/lib/dna/chat/ownerBookRuntime.ts",
   "src/lib/dna/chat/release/hardNoGo.ts",
   "src/lib/dna/chat/release/previewPromotion.ts",
   "src/lib/dna/chat/release/productionRuntimeAuthority.ts",
@@ -199,6 +204,7 @@ export const DNA_EVALUATION_ENGINE_SOURCE_FILES = Object.freeze([
   "src/lib/security/rateLimitPolicy.ts",
   "src/lib/security/securityExemptions.ts",
   "src/lib/supabase/admin.ts",
+  "src/lib/supabase/client.ts",
   "src/lib/supabase/server.ts",
 ] as const)
 

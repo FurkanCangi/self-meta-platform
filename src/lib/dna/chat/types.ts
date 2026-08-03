@@ -246,6 +246,7 @@ export type DnaChatAnswerUnit = {
   kind: "summary" | "detail" | "case_evidence" | "limitation" | "safety_boundary"
   role:
     | "product_definition"
+    | "owner_book_information"
     | "scientific_evidence"
     | "dna_specific_validation"
     | "case_finding"

@@ -3,6 +3,7 @@ export const DNA_KNOWLEDGE_AUTHORITY_CONTRACT_VERSION =
 
 export const DNA_KNOWLEDGE_AUTHORITY_LAYERS = [
   "dna_product_information",
+  "owner_book_information",
   "external_scientific_information",
   "case_information",
   "safety_and_product_boundaries",
@@ -57,6 +58,20 @@ export type DnaProductAuthorityRef = AuthorityBase<
     | null
 }
 
+export type DnaOwnerBookAuthorityRef = AuthorityBase<
+  "owner_book_information",
+  "owner_approved"
+> & {
+  readonly proof: {
+    readonly kind: "owner_book_chat_use"
+    readonly approvalRecordId: "owner-book-chat-use@1"
+    readonly bookVersion: "self-regulasyon-owner-current@1"
+    readonly bookSha256: "e8c6643bbc70dd0c8147fb79cc51a6d0d674f21197d917cf6127ca8fa90c8c59"
+    readonly sourceId: "book.self-regulation.owner-current"
+    readonly citationMappingStatus: "pending"
+  }
+}
+
 export type DnaExternalScienceAuthorityRef = AuthorityBase<
   "external_scientific_information",
   "codex_multi_pass_audited"
@@ -103,6 +118,7 @@ export type DnaSafetyPolicyAuthorityRef = AuthorityBase<
 
 export type DnaKnowledgeAuthorityRef =
   | DnaProductAuthorityRef
+  | DnaOwnerBookAuthorityRef
   | DnaExternalScienceAuthorityRef
   | DnaCaseAuthorityRef
   | DnaSafetyPolicyAuthorityRef
@@ -216,6 +232,26 @@ export const EXTERNAL_SCIENCE_AUTHORITY_PENDING: DnaExternalScienceAuthorityRef 
       "Kaynak doğrulaması, DNA ürün geçerliğini göstermez ve passage bağlı çok geçişli V3 denetiminin yerine geçmez.",
     proof: null,
   })
+
+export const DNA_OWNER_BOOK_CHAT_AUTHORITY: DnaOwnerBookAuthorityRef =
+  freezeAuthority({
+    contractVersion: DNA_KNOWLEDGE_AUTHORITY_CONTRACT_VERSION,
+    layer: "owner_book_information",
+    approvalRequirement: "owner_approved",
+    verificationStatus: "verified",
+    releaseEligible: true,
+    labelTr: "Sahibin sohbet kullanımı için onayladığı kitap",
+    boundaryTr:
+      "Sahip onayı kitabın sohbet içinde kullanılmasına izin verir; bilimsel geçerlik, bağımsız uzman doğrulaması veya cümle düzeyinde kaynakça eşlemesi anlamına gelmez.",
+    proof: {
+      kind: "owner_book_chat_use",
+      approvalRecordId: "owner-book-chat-use@1",
+      bookVersion: "self-regulasyon-owner-current@1",
+      bookSha256: "e8c6643bbc70dd0c8147fb79cc51a6d0d674f21197d917cf6127ca8fa90c8c59",
+      sourceId: "book.self-regulation.owner-current",
+      citationMappingStatus: "pending",
+    },
+  }, { releaseEligible: true })
 
 export function createOwnerApprovedProductAuthority(input: {
   approvalRecordId: string
@@ -427,6 +463,15 @@ export function isReleaseEligibleAuthority(
         record.artifactPassageSha256 === authority.proof?.artifactPassageSha256 &&
         record.canonicalPassageSha256 === authority.proof?.canonicalPassageSha256)
   }
+  if (authority.layer === "owner_book_information") {
+    return authority.approvalRequirement === "owner_approved" &&
+      authority.proof.kind === "owner_book_chat_use" &&
+      authority.proof.approvalRecordId === "owner-book-chat-use@1" &&
+      authority.proof.bookVersion === "self-regulasyon-owner-current@1" &&
+      authority.proof.bookSha256 === "e8c6643bbc70dd0c8147fb79cc51a6d0d674f21197d917cf6127ca8fa90c8c59" &&
+      authority.proof.sourceId === "book.self-regulation.owner-current" &&
+      authority.proof.citationMappingStatus === "pending"
+  }
   if (authority.layer === "external_scientific_information") {
     return authority.approvalRequirement === "codex_multi_pass_audited" &&
       authority.proof?.kind === "codex_multi_pass_audit" &&
@@ -457,6 +502,7 @@ export function authoritySet(
 
 export const DNA_KNOWLEDGE_ANSWER_ROLES = [
   "product_definition",
+  "owner_book_information",
   "scientific_evidence",
   "dna_specific_validation",
   "case_finding",
@@ -475,6 +521,7 @@ export function canAuthoritySupportAnswerRole(
   if (authority.releaseEligible && !isReleaseEligibleAuthority(authority)) return false
   if (options.requireReleaseEligible && !isReleaseEligibleAuthority(authority)) return false
   if (role === "product_definition") return authority.layer === "dna_product_information"
+  if (role === "owner_book_information") return authority.layer === "owner_book_information"
   if (role === "scientific_evidence") {
     return authority.layer === "external_scientific_information"
   }
@@ -531,6 +578,12 @@ export const DNA_KNOWLEDGE_AUTHORITY_CONTRACT = Object.freeze({
       labelTr: "Dış Bilimsel Bilgi",
       authorityTr: "Hakemli yayınlar, kılavuzlar ve kitaplar",
       approvalRequirement: "codex_multi_pass_audited",
+    },
+    {
+      layer: "owner_book_information",
+      labelTr: "Sahip Onaylı Kitap Bilgisi",
+      authorityTr: "Sahibin sohbet kullanımı için onayladığı güncel tek kitap",
+      approvalRequirement: "owner_approved",
     },
     {
       layer: "case_information",

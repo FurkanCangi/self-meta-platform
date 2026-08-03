@@ -1,0 +1,97 @@
+{
+  "counts": {
+    "externalCandidatesPreserved": 1000,
+    "externalUnitsLive": 0,
+    "lockedHoldoutQuestions": 1500,
+    "openDevelopmentQuestions": 5000,
+    "ownerKnowledgeUnits": 4008,
+    "ownerSentencesTerminal": 4909,
+    "questionSurfaces": 52106
+  },
+  "coverage": {
+    "matrixSha256": "d3de6a4d525f3a43357eb05307f1898de8ad91d44d20971e6d310e302d9a22df",
+    "unfilledCellCount": 3
+  },
+  "evaluation": {
+    "holdoutFirstResultImmutable": true,
+    "lockedHoldoutCurrentEngineResult": {
+      "accuracy": 97.133,
+      "caseCount": 1500,
+      "correct": 1457,
+      "fileSha256": "ff16dcd6ab8a67e75a8c070d966eb90d40d0eeabf51bb89244807168a7e06511",
+      "p95Ms": 24.184,
+      "resultSha256": "605dee8bc2ecf798fbdc3136ce2a300ef03bb00da4d1be7466c7dc4f66f0cc73"
+    },
+    "lockedHoldoutFirstResult": {
+      "accuracy": 96.2,
+      "caseCount": 1500,
+      "correct": 1443,
+      "fileSha256": "e44b0186586f824772db88f08361d1731ba2ebb9161405ebfcf9320bf9aedd66",
+      "p95Ms": 15.377,
+      "resultSha256": "6d1d506605b74d94ad0af01e1850961d7e226f27f39a5cc9d5f1c55147fd8f3c"
+    },
+    "lockedHoldoutPostFixResult": {
+      "accuracy": 97.133,
+      "caseCount": 1500,
+      "correct": 1457,
+      "fileSha256": "ff16dcd6ab8a67e75a8c070d966eb90d40d0eeabf51bb89244807168a7e06511",
+      "p95Ms": 24.184,
+      "resultSha256": "605dee8bc2ecf798fbdc3136ce2a300ef03bb00da4d1be7466c7dc4f66f0cc73"
+    },
+    "openDevelopment": {
+      "accuracy": 98.32,
+      "caseCount": 5000,
+      "correct": 4916,
+      "fileSha256": "ea3dea972b0eac698b1016e4bf0019ca9688a5f818527731e6c47ceccd21ed15",
+      "p95Ms": 0.758,
+      "resultSha256": "c735f1caba76415888956fc132e57102fd3b5af11cf9ff2128cc843ba45db7c2"
+    }
+  },
+  "hashes": {
+    "decisionsSha256": "75eea20a8be6967a1434cf51ed7cf1e96b38c0d949a30b0fd39e7618878b3646",
+    "externalDecisionsSha256": "ccde2fcf7a20a4743f53920992c3036be6f8d622c51c3f137d4725ad20e8030b",
+    "holdoutPostFixResultSha256": "ff16dcd6ab8a67e75a8c070d966eb90d40d0eeabf51bb89244807168a7e06511",
+    "holdoutResultSha256": "e44b0186586f824772db88f08361d1731ba2ebb9161405ebfcf9320bf9aedd66",
+    "holdoutSha256": "c29d6c4ac6ed0552c0cef492c0c52ff00036302a4d8331a02ca9584068a9197f",
+    "openBankSha256": "28d77034005452d0e974f2db17b36b767e00e8a771e22edc15dd292e5f568264",
+    "openResultSha256": "ea3dea972b0eac698b1016e4bf0019ca9688a5f818527731e6c47ceccd21ed15",
+    "ownerBookSha256": "e8c6643bbc70dd0c8147fb79cc51a6d0d674f21197d917cf6127ca8fa90c8c59",
+    "ownerRuntimeSha256": "8d2c08fa8abf43f33d08e96aa34b592eafc4982662827cb350ca6174038f8581",
+    "runtimeSha256": "359435273f307ed7103620a105a30f497be313377396cba0f09e933473a3a73e",
+    "surfacesSha256": "d50f8df9fdadfda1b50f11fb03e8d9de2870a2330ba3c04ae871200cb6eebe6f",
+    "unitsSha256": "0b007f8b4450e7850d7d3425ba499023c71ecd5742c05397d93170b42beeed64"
+  },
+  "manifestSha256": "a50f66c0c4909e48d831a6e331bea6c4014cbc088e1ac22657a20b0207321188",
+  "pipelineVersion": "dna-knowledge-expansion@1",
+  "runtimePolicy": {
+    "embedding": false,
+    "externalLlm": false,
+    "newDatabaseTable": false,
+    "runtimeInternet": false,
+    "vectorDatabase": false
+  },
+  "schemaVersion": "dna-knowledge-expansion-manifest@1",
+  "source": {
+    "approvalStatus": "owner_approved_for_chat_use",
+    "citationStatus": "pending_sentence_mapping",
+    "id": "book.self-regulation.owner-current",
+    "legacyChapterFilesIncluded": [],
+    "scientificValidationStatus": "not_established_by_owner_approval",
+    "sha256": "e8c6643bbc70dd0c8147fb79cc51a6d0d674f21197d917cf6127ca8fa90c8c59",
+    "title": "Self-Regülasyon Kitabı"
+  },
+  "status": "release_candidate_evaluated",
+  "storage": {
+    "rawDecisionsInRepository": 0,
+    "rawQuestionsInRepository": 0,
+    "researchSsdRelativeRoot": "Outputs/SelfMetaAI/dna-intelligence/knowledge-expansion/v1"
+  },
+  "terminalDecisions": {
+    "accepted": 4005,
+    "context_dependent": 531,
+    "duplicate": 22,
+    "needs_split": 1,
+    "nonfactual": 349,
+    "unsafe_for_answer": 1
+  }
+}

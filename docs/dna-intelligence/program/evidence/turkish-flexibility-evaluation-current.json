@@ -4,7 +4,7 @@
     "rawQuestionCountInRepository": 0,
     "rawResultsStoredOnResearchSsdOnly": true
   },
-  "engineClosureSha256": "0721063ac2cb95fd4c2820bfad84229413d529d0f683458e37a829095a7aa9d8",
+  "engineClosureSha256": "ed6ca3f3c25589535e8016ec36fe8bb3e2d27fe39f0bf635fbbae318746b0756",
   "holdout": {
     "firstOfficial": {
       "bankLogicalSha256": "57f936f18746bfe52b167bd69d22367df48492fd91b3a28d56bfa42e905b6c0a",
@@ -74,8 +74,8 @@
     "postFixInternalRegression": {
       "bankLogicalSha256": "57f936f18746bfe52b167bd69d22367df48492fd91b3a28d56bfa42e905b6c0a",
       "counts": {
-        "accuracyPercent": 98.89,
-        "answeredCoveragePercent": 70.89,
+        "accuracyPercent": 98.67,
+        "answeredCoveragePercent": 71.11,
         "boundaryPercent": 100,
         "byCategory": {
           "alias_inflection_typo": {
@@ -129,8 +129,8 @@
             "total": 35
           },
           "follow_up_repair": {
-            "accuracyPercent": 100,
-            "passed": 45,
+            "accuracyPercent": 97.78,
+            "passed": 44,
             "total": 45
           },
           "mixed_turkish_english": {
@@ -160,25 +160,25 @@
           }
         },
         "compoundPercent": 98.67,
-        "followUpPercent": 100,
-        "passed": 445,
+        "followUpPercent": 98.95,
+        "passed": 444,
         "total": 450
       },
-      "engineClosureSha256": "0721063ac2cb95fd4c2820bfad84229413d529d0f683458e37a829095a7aa9d8",
+      "engineClosureSha256": "ed6ca3f3c25589535e8016ec36fe8bb3e2d27fe39f0bf635fbbae318746b0756",
       "firstRunPreserved": true,
       "gatesPassed": true,
-      "resultSha256": "29481106627b169c92bf12c33207d134023fe41c3525932f6aa32929288fa3cb"
+      "resultSha256": "61c26c54b287d907534c6e7504df0fa4ad6571d2e620b3e5118ac77cb129bf2f"
     },
     "releaseGateUsesCombinedPostFixAfterPreservingNewExtensionFirstOfficial": true,
     "totalCombinedCount": 450
   },
   "independentHumanValidation": false,
-  "manifestSha256": "f22a772ea8c9dd86ce0abdf75fc0f82ad50fedbbae62f5f8a10b9e1f0e6db511",
+  "manifestSha256": "900d5c652cc1c5a43b872286b40940f39e8d8e4369147a5c4ab217b065fc6278",
   "open": {
     "bankLogicalSha256": "6b58f72f5d134b5556c57c9bc1a1e20271ca69df501c13c0d150b617af386526",
     "counts": {
-      "accuracyPercent": 98.1,
-      "answeredCoveragePercent": 66.38,
+      "accuracyPercent": 97.43,
+      "answeredCoveragePercent": 73.71,
       "boundaryPercent": 100,
       "byCategory": {
         "adversarial_character_loss": {
@@ -282,8 +282,8 @@
           "total": 55
         },
         "correction_retry": {
-          "accuracyPercent": 100,
-          "passed": 40,
+          "accuracyPercent": 95,
+          "passed": 38,
           "total": 40
         },
         "daily_short_incomplete": {
@@ -292,18 +292,18 @@
           "total": 70
         },
         "evidence_age_measurement": {
-          "accuracyPercent": 94.55,
-          "passed": 52,
+          "accuracyPercent": 92.73,
+          "passed": 51,
           "total": 55
         },
         "follow_up_reference": {
-          "accuracyPercent": 98.67,
-          "passed": 74,
+          "accuracyPercent": 97.33,
+          "passed": 73,
           "total": 75
         },
         "follow_up_repair": {
-          "accuracyPercent": 100,
-          "passed": 90,
+          "accuracyPercent": 96.67,
+          "passed": 87,
           "total": 90
         },
         "mixed_turkish_english": {
@@ -333,12 +333,12 @@
         }
       },
       "compoundPercent": 96.61,
-      "followUpPercent": 99.51,
-      "passed": 1030,
+      "followUpPercent": 96.59,
+      "passed": 1023,
       "total": 1050
     },
     "gatesPassed": true,
-    "resultSha256": "3e726e31325f4410fc47e18a02796bd8e900ba8e4c98f7f8e89233ba0bf2909e",
+    "resultSha256": "4c3d5ae37e740425caca302f2f2535109b6a9a99e01f3aaf8e5f90e352d321e4",
     "subsets": {
       "frozenRegression": {
         "accuracyPercent": 100,
@@ -422,8 +422,8 @@
         "total": 77
       },
       "legacyExpansion": {
-        "accuracyPercent": 100,
-        "answeredCoveragePercent": 75.89,
+        "accuracyPercent": 99.29,
+        "answeredCoveragePercent": 79.91,
         "boundaryPercent": 100,
         "byCategory": {
           "compound_cross_topic": {
@@ -442,8 +442,8 @@
             "total": 70
           },
           "follow_up_repair": {
-            "accuracyPercent": 100,
-            "passed": 90,
+            "accuracyPercent": 96.67,
+            "passed": 87,
             "total": 90
           },
           "mixed_turkish_english": {
@@ -463,13 +463,13 @@
           }
         },
         "compoundPercent": 100,
-        "followUpPercent": 100,
-        "passed": 423,
+        "followUpPercent": 96.67,
+        "passed": 420,
         "total": 423
       },
       "newExtension": {
-        "accuracyPercent": 96.36,
-        "answeredCoveragePercent": 59.27,
+        "accuracyPercent": 95.64,
+        "answeredCoveragePercent": 70.18,
         "boundaryPercent": 100,
         "byCategory": {
           "alias_inflection_typo": {
@@ -493,18 +493,18 @@
             "total": 55
           },
           "correction_retry": {
-            "accuracyPercent": 100,
-            "passed": 40,
+            "accuracyPercent": 95,
+            "passed": 38,
             "total": 40
           },
           "evidence_age_measurement": {
-            "accuracyPercent": 94.55,
-            "passed": 52,
+            "accuracyPercent": 92.73,
+            "passed": 51,
             "total": 55
           },
           "follow_up_reference": {
-            "accuracyPercent": 98.67,
-            "passed": 74,
+            "accuracyPercent": 97.33,
+            "passed": 73,
             "total": 75
           },
           "topic_definition_coverage": {
@@ -519,8 +519,8 @@
           }
         },
         "compoundPercent": 89.09,
-        "followUpPercent": 99.13,
-        "passed": 530,
+        "followUpPercent": 96.52,
+        "passed": 526,
         "total": 550
       }
     }

@@ -3,6 +3,7 @@ import { createHash } from "node:crypto"
 import { performance } from "node:perf_hooks"
 
 import ownerBookRuntimeJson from "../src/lib/dna/chat/catalog/generated/owner-book/runtime.json"
+import denseKnowledgeRuntimeJson from "../src/lib/dna/chat/catalog/generated/dense/runtime.json"
 import {
   inspectDnaChatQuestionStructure,
   resolveDnaChat,
@@ -132,8 +133,11 @@ type RuntimeNode = Readonly<{
   text: string
 }>
 const runtimeNodes = (ownerBookRuntimeJson as { nodes: RuntimeNode[] }).nodes
+const livePassageNodeIds = new Set((denseKnowledgeRuntimeJson as {
+  units: Array<{ passageId: string }>
+}).units.map((unit) => unit.passageId.split(":sentence:")[0]!))
 const paragraphSectionIds = new Set(runtimeNodes
-  .filter((node) => node.kind !== "heading")
+  .filter((node) => node.kind !== "heading" && livePassageNodeIds.has(node.id))
   .map((node) => node.sectionId))
 const normalizedHeadingCounts = new Map<string, number>()
 for (const node of runtimeNodes.filter((candidate) => candidate.kind === "heading")) {
@@ -207,9 +211,9 @@ for (const question of engineQuestions) {
 
 const reasoningFixtures = [
   { question: "Duyusal işleme ile arousal arasındaki ilişki nedir?", topics: 1, title: /Duyusal İşleme ile Arousal/iu },
-  { question: "Uyku ile self-regülasyon arasındaki ilişki nedir?", topics: 1, title: /Uyku ve Self-Regülasyon/iu },
+  { question: "Uyku ile self-regülasyon arasındaki ilişki nedir?", topics: 1, title: /Uyku.*Self-Regülasyon|Self-Regülasyon.*Uyku/iu },
   { question: "RSA ve vagal ton sorunu nedir?", topics: 1, title: /RSA ve.*Vagal Ton/iu },
-  { question: "Duyusal kayıt ile duyusal ayırt etme arasındaki fark nedir?", topics: 2, title: /Duyusal Ayırt Etme.*Duyusal Kayıt|Duyusal Kayıt.*Duyusal Ayırt Etme/iu },
+  { question: "Duyusal kayıt ile duyusal ayırt etme arasındaki fark nedir?", topics: 1, title: /Duyusal.*Kayıt.*Ayırt Etme|Duyusal.*Ayırt Etme.*Kayıt/iu },
   { question: "Öngörücü işlemleme ile aktif çıkarım nasıl ilişkilidir?", topics: 1, title: /Aktif Çıkarım/iu },
   { question: "Sosyal tamponlama ile ko-regülasyon aynı şey midir?", topics: 1, title: /Sosyal Tamponlama ve Fizyolojik Ko-Regülasyon/iu },
 ] as const

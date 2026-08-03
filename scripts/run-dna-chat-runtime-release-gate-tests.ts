@@ -46,7 +46,7 @@ import {
 
 async function main() {
 const exactEngineSourceClosure = assertCurrentDnaEvaluationEngineSourceClosure(process.cwd())
-assert.equal(exactEngineSourceClosure.length, 124)
+assert.equal(exactEngineSourceClosure.length, 130)
 assert.ok(
   exactEngineSourceClosure.includes("src/lib/dna/chat/socialConversation.ts"),
   "Sosyal konuşma katmanı exact runtime source closure içinde kalmalı",
@@ -69,6 +69,10 @@ assert.match(
 )
 for (const requiredEngineAuthoritySource of [
   "src/app/dna-asistani/DnaAssistantClient.tsx",
+  "src/app/components/therapist-identity.tsx",
+  "src/lib/dna/chat/catalog/generated/dense/runtime.json",
+  "src/lib/dna/chat/catalog/generated/owner-book/manifest.json",
+  "src/lib/dna/chat/catalog/generated/owner-book/runtime.json",
   "src/lib/dna/chat/catalog/generated/v3/server.ts",
   "src/lib/dna/chat/catalog/generated/v3/types.ts",
   "src/lib/dna/chat/conversationPolicy.ts",
@@ -79,6 +83,7 @@ for (const requiredEngineAuthoritySource of [
   "src/lib/dna/chat/evaluation/generated/currentDevelopmentHistoryAuthority.json",
   "src/lib/dna/chat/index.ts",
   "src/lib/dna/chat/operations/requestTiming.ts",
+  "src/lib/dna/chat/ownerBookRuntime.ts",
   "src/lib/dna/chat/runtimeAssurance.ts",
   "src/lib/dna/chat/release/previewPromotion.ts",
   "src/lib/dna/chat/release/productionRuntimeAuthority.ts",
@@ -89,6 +94,7 @@ for (const requiredEngineAuthoritySource of [
   "src/lib/security/rateLimit.ts",
   "src/lib/security/rateLimitPolicy.ts",
   "src/lib/supabase/admin.ts",
+  "src/lib/supabase/client.ts",
   "src/lib/supabase/server.ts",
   "scripts/run-dna-evaluation-release-check.ts",
 ] as const) {

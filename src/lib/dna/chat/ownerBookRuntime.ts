@@ -1,5 +1,6 @@
 import ownerBookManifestJson from "./catalog/generated/owner-book/manifest.json"
 import ownerBookRuntimeJson from "./catalog/generated/owner-book/runtime.json"
+import denseKnowledgeRuntimeJson from "./catalog/generated/dense/runtime.json"
 import { normalizeDnaChatText, tokenizeDnaChatText } from "./text"
 
 export const DNA_OWNER_BOOK_RUNTIME_VERSION = "dna-owner-book-retrieval@1" as const
@@ -68,6 +69,35 @@ type OwnerBookManifest = Readonly<{
   runtimeBytes: number
 }>
 
+type DenseOwnerBookUnit = Readonly<{
+  id: string
+  claimId: string
+  passageId: string
+  sourceId: typeof DNA_OWNER_BOOK_SOURCE_ID
+  sentenceSha256: string
+  text: string
+  title: string
+  topicId: string
+  domain: string
+  dimensions: readonly string[]
+  focus: string
+}>
+
+type DenseOwnerBookRuntime = Readonly<{
+  schemaVersion: "dna-dense-knowledge-runtime@1"
+  pipelineVersion: string
+  source: OwnerBookRuntimePackage["source"] & Readonly<{
+    approvalStatus: "owner_approved_for_chat_use"
+    scientificValidationStatus: "not_established_by_owner_approval"
+  }>
+  counts: Readonly<{
+    ownerUnits: number
+    externalCandidatesPreserved: number
+    externalUnitsLive: number
+  }>
+  units: readonly DenseOwnerBookUnit[]
+}>
+
 export type DnaOwnerBookMatch = Readonly<{
   retrievalVersion: typeof DNA_OWNER_BOOK_RUNTIME_VERSION
   sourceId: typeof DNA_OWNER_BOOK_SOURCE_ID
@@ -81,6 +111,7 @@ export type DnaOwnerBookMatch = Readonly<{
   topicIds: readonly string[]
   summary: string
   details: readonly string[]
+  claimIds: readonly string[]
   passageIds: readonly string[]
   excerpt: string
   score: number
@@ -90,6 +121,7 @@ export type DnaOwnerBookMatch = Readonly<{
 
 type IndexedNode = Readonly<{
   node: OwnerBookNode
+  units: readonly DenseOwnerBookUnit[]
   tokenSet: ReadonlySet<string>
   headingTokenSet: ReadonlySet<string>
   normalizedText: string
@@ -125,6 +157,24 @@ const GENERIC_QUERY_TOKENS = new Set([
   "genel",
   "gore",
   "gosterir",
+  "ifade",
+  "ifadesi",
+  "ifadesini",
+  "ifadesinin",
+  "anlama",
+  "anlamaliyim",
+  "anliyorum",
+  "aciklaniyor",
+  "aciklanir",
+  "cumle",
+  "cumleyi",
+  "anlayamadim",
+  "kitaptaki",
+  "bilgisini",
+  "kismi",
+  "nokta",
+  "noktasi",
+  "process",
   "iliski",
   "ise",
   "kapsamli",
@@ -208,6 +258,7 @@ const GENERIC_SECTION_TITLES = new Set([
 
 const runtimePackage = ownerBookRuntimeJson as unknown as OwnerBookRuntimePackage
 const runtimeManifest = ownerBookManifestJson as unknown as OwnerBookManifest
+const denseRuntime = denseKnowledgeRuntimeJson as unknown as DenseOwnerBookRuntime
 
 function validatePackage(): OwnerBookRuntimePackage {
   if (runtimePackage.schemaVersion !== "dna-owner-book-runtime@1"
@@ -231,19 +282,57 @@ function validatePackage(): OwnerBookRuntimePackage {
 }
 
 const BOOK = validatePackage()
+const BOOK_NODE_IDS = new Set(BOOK.nodes.map((node) => node.id))
+
+function validateDenseRuntime(): DenseOwnerBookRuntime {
+  if (denseRuntime.schemaVersion !== "dna-dense-knowledge-runtime@1"
+    || denseRuntime.source.id !== DNA_OWNER_BOOK_SOURCE_ID
+    || denseRuntime.source.sha256 !== BOOK.source.sha256
+    || denseRuntime.source.approvalStatus !== "owner_approved_for_chat_use"
+    || denseRuntime.source.scientificValidationStatus !== "not_established_by_owner_approval"
+    || denseRuntime.counts.ownerUnits !== denseRuntime.units.length
+    || denseRuntime.counts.externalCandidatesPreserved !== 1_000
+    || denseRuntime.counts.externalUnitsLive !== 0
+    || denseRuntime.units.some((unit) =>
+      !unit.id
+      || unit.id !== unit.claimId
+      || unit.sourceId !== DNA_OWNER_BOOK_SOURCE_ID
+      || !unit.passageId
+      || !unit.text
+      || !SHA256_PATTERN.test(unit.sentenceSha256)
+      || !unit.topicId.startsWith(OWNER_BOOK_TOPIC_PREFIX)
+      || !BOOK_NODE_IDS.has(unit.passageId.split(":sentence:")[0] ?? ""))) {
+    throw new Error("dna_owner_book_dense_runtime_invalid")
+  }
+  return denseRuntime
+}
+
+const DENSE_BOOK = validateDenseRuntime()
+const DENSE_UNITS_BY_NODE_ID = new Map<string, DenseOwnerBookUnit[]>()
+for (const unit of DENSE_BOOK.units) {
+  const nodeId = unit.passageId.split(":sentence:")[0]!
+  const rows = DENSE_UNITS_BY_NODE_ID.get(nodeId) ?? []
+  rows.push(unit)
+  DENSE_UNITS_BY_NODE_ID.set(nodeId, rows)
+}
 const SEARCHABLE_NODES: readonly IndexedNode[] = Object.freeze(BOOK.nodes
-  .filter((node) => node.kind !== "heading")
-  .map((node) => Object.freeze({
+  .filter((node) => node.kind !== "heading" && DENSE_UNITS_BY_NODE_ID.has(node.id))
+  .map((node) => {
+    const units = Object.freeze([...(DENSE_UNITS_BY_NODE_ID.get(node.id) ?? [])])
+    const unitText = units.map((unit) => unit.text).join(" ")
+    return Object.freeze({
     node,
-    tokenSet: new Set(node.tokens),
+    units,
+    tokenSet: new Set(tokenizeDnaChatText(unitText)),
     headingTokenSet: new Set(node.headingTokens),
-    normalizedText: normalizeDnaChatText(node.text),
-  })))
+    normalizedText: normalizeDnaChatText(unitText),
+  })}))
 const NODE_BY_ID = new Map(BOOK.nodes.map((node) => [node.id, node]))
 const SECTION_NODES = new Map<string, IndexedNode[]>()
 const DOCUMENT_FREQUENCY = new Map<string, number>()
 const TOKEN_POSTINGS = new Map<string, IndexedNode[]>()
 const EQUIVALENT_TOKEN_CACHE = new Map<string, readonly string[]>()
+const VOCABULARY_BY_FIRST_AND_LENGTH = new Map<string, string[]>()
 
 for (const indexed of SEARCHABLE_NODES) {
   const rows = SECTION_NODES.get(indexed.node.sectionId) ?? []
@@ -255,6 +344,12 @@ for (const indexed of SEARCHABLE_NODES) {
     postings.push(indexed)
     TOKEN_POSTINGS.set(token, postings)
   }
+}
+for (const token of TOKEN_POSTINGS.keys()) {
+  const key = `${token[0] ?? ""}:${token.length}`
+  const values = VOCABULARY_BY_FIRST_AND_LENGTH.get(key) ?? []
+  values.push(token)
+  VOCABULARY_BY_FIRST_AND_LENGTH.set(key, values)
 }
 
 function tokensEquivalent(left: string, right: string): boolean {
@@ -303,8 +398,14 @@ function setHasEquivalent(values: ReadonlySet<string>, token: string): boolean {
 function equivalentVocabularyTokens(token: string): readonly string[] {
   const cached = EQUIVALENT_TOKEN_CACHE.get(token)
   if (cached) return cached
-  const values = Object.freeze([...TOKEN_POSTINGS.keys()].filter((candidate) =>
-    tokensEquivalent(candidate, token)))
+  if (TOKEN_POSTINGS.has(token)) {
+    const exact = Object.freeze([token])
+    EQUIVALENT_TOKEN_CACHE.set(token, exact)
+    return exact
+  }
+  const candidates = [-1, 0, 1].flatMap((offset) =>
+    VOCABULARY_BY_FIRST_AND_LENGTH.get(`${token[0] ?? ""}:${token.length + offset}`) ?? [])
+  const values = Object.freeze(candidates.filter((candidate) => tokensEquivalent(candidate, token)))
   EQUIVALENT_TOKEN_CACHE.set(token, values)
   return values
 }
@@ -392,6 +493,13 @@ function candidateNodes(tokens: readonly string[], sectionId: string | null): re
   return [...values.values()]
 }
 
+function quotedQuestionAnchor(question: string): string | null {
+  const match = String(question || "").match(/[“"]([^”"]{24,})[”"]/u)
+  if (!match?.[1]) return null
+  const anchor = normalizeDnaChatText(match[1]).trim()
+  return anchor.split(" ").length >= 5 ? anchor : null
+}
+
 function isFollowUpQuestion(question: string): boolean {
   const normalized = normalizeDnaChatText(question)
   return /^(?:bunu|biraz daha|ikisi|bunun|bu bilgi|onceki cevap)\b/.test(normalized)
@@ -417,7 +525,15 @@ function scoreNode(indexed: IndexedNode, tokens: readonly string[], question: st
   )
   const coverage = tokens.length ? matchedTokens.length / tokens.length : 0
   const completeCoverageBonus = coverage === 1 && tokens.length > 1 ? 12 : 0
+  const atomicCompleteCoverage = tokens.length > 1 && indexed.units.some((unit) => {
+    const unitTokens = new Set(tokenizeDnaChatText(unit.text))
+    return tokens.every((token) => setHasEquivalent(unitTokens, token))
+  })
+  // Prefer a single accepted claim that contains the whole query over a score
+  // assembled from one token in a heading and another in an unrelated claim.
+  const atomicClaimBonus = atomicCompleteCoverage ? 24 : 0
   const normalizedQuestion = normalizeDnaChatText(question)
+  const quotedAnchor = quotedQuestionAnchor(question)
   const contentPhrase = tokens.slice(0, 4).join(" ")
   const normalizedHeadingPath = normalizeDnaChatText(indexed.node.headingPath.join(" "))
   const normalizedLeafHeading = normalizeDnaChatText(indexed.node.headingPath.at(-1) ?? "")
@@ -438,7 +554,8 @@ function scoreNode(indexed: IndexedNode, tokens: readonly string[], question: st
       : 0
   return Object.freeze({
     indexed,
-    score: Number((tokenWeight + headingWeight + leafHeadingWeight + coverage * 4 + completeCoverageBonus + phraseBonus + headingPhraseBonus + leafPhraseBonus).toFixed(6)),
+    score: Number((tokenWeight + headingWeight + leafHeadingWeight + coverage * 4 + completeCoverageBonus + atomicClaimBonus + phraseBonus + headingPhraseBonus + leafPhraseBonus +
+      (quotedAnchor && indexed.normalizedText.includes(quotedAnchor) ? 80 : 0)).toFixed(6)),
     coverage: Number(coverage.toFixed(6)),
     matchedTokens: Object.freeze(matchedTokens),
   })
@@ -451,6 +568,18 @@ function displaySentence(value: string): string {
     .replace(/\s+([,.;:!?])/g, "$1")
     .replace(/\s+/g, " ")
     .trim()
+}
+
+function matchedDisplayPhrase(sentence: string, tokens: readonly string[]): string | null {
+  if (!tokens.length || tokens.length > 4) return null
+  const words = sentence.match(/[\p{L}\p{N}]+(?:[-’'][\p{L}\p{N}]+)*/gu) ?? []
+  const normalizedWords = words.map((word) => normalizeDnaChatText(word))
+  for (let index = 0; index <= normalizedWords.length - tokens.length; index += 1) {
+    if (tokens.every((token, offset) => tokensEquivalent(token, normalizedWords[index + offset]!))) {
+      return words.slice(index, index + tokens.length).join(" ")
+    }
+  }
+  return null
 }
 
 function sentenceScore(
@@ -483,8 +612,8 @@ function safeExcerpt(value: string): string {
   return clean.length <= 320 ? clean : `${clean.slice(0, 317).trimEnd()}...`
 }
 
-const BOUND_DISPLAY_SENTENCES = new Set(BOOK.nodes.flatMap((node) =>
-  node.kind === "heading" ? [] : node.sentences.map(displaySentence)).filter(Boolean))
+const BOUND_DISPLAY_SENTENCES = new Set(DENSE_BOOK.units
+  .map((unit) => displaySentence(unit.text)).filter(Boolean))
 
 export function isDnaOwnerBookTopicId(value: string | null | undefined): boolean {
   return sectionIdFromTopicId(value) !== null
@@ -511,6 +640,9 @@ export function getDnaOwnerBookRuntimeStatus() {
     sourceSha256: BOOK.source.sha256,
     citationStatus: BOOK.source.citationStatus,
     counts: Object.freeze({ ...BOOK.counts }),
+    atomicKnowledgeUnits: DENSE_BOOK.counts.ownerUnits,
+    externalCandidatesPreserved: DENSE_BOOK.counts.externalCandidatesPreserved,
+    externalUnitsLive: DENSE_BOOK.counts.externalUnitsLive,
     legacyChapterFilesIncluded: Object.freeze([...BOOK.source.legacyChapterFilesIncluded]),
   })
 }
@@ -536,7 +668,15 @@ export function resolveDnaOwnerBook(
   const tokens = queryTokens(question, previousHeading)
   if (!tokens.length) return null
 
-  const candidates = candidateNodes(tokens, usePreviousSection ? previousSectionId : null)
+  const quotedAnchor = quotedQuestionAnchor(question)
+  const exactAnchorCandidates = quotedAnchor
+    ? SEARCHABLE_NODES.filter((indexed) =>
+        (!usePreviousSection || indexed.node.sectionId === previousSectionId) &&
+        indexed.normalizedText.includes(quotedAnchor))
+    : []
+  const candidates = exactAnchorCandidates.length
+    ? exactAnchorCandidates
+    : candidateNodes(tokens, usePreviousSection ? previousSectionId : null)
   const scored = candidates
     .map((indexed) => scoreNode(indexed, tokens, question))
     .filter((row) => row.matchedTokens.length > 0)
@@ -590,18 +730,19 @@ export function resolveDnaOwnerBook(
         row.coverage >= Math.min(best.coverage, deepAnswer ? 0.34 : 0.25)
     })
     .slice(0, deepAnswer ? 12 : 8)
-  const sentenceCandidates = topNodes.flatMap((row) => row.indexed.node.sentences
-    .map((sentence, sentenceIndex) => ({
-      sentence: displaySentence(sentence),
-      sentenceIndex,
+  const sentenceCandidates = topNodes.flatMap((row) => row.indexed.units
+    .map((unit, unitIndex) => ({
+      sentence: displaySentence(unit.text),
+      unit,
+      unitIndex,
       row,
-      score: sentenceScore(sentence, row, tokens, sentenceIndex),
+      score: sentenceScore(unit.text, row, tokens, unitIndex),
     })))
     .filter((candidate) => candidate.sentence.length >= 24)
     .sort((left, right) =>
       right.score - left.score ||
       left.row.indexed.node.order - right.row.indexed.node.order ||
-      left.sentenceIndex - right.sentenceIndex)
+      left.unitIndex - right.unitIndex)
   const alternateAnswer = /\b(?:baska turlu|farkli bicimde|farkli anlat|yeniden anlat|tekrar acikla)\b/.test(
     normalizedQuestion,
   )
@@ -646,11 +787,14 @@ export function resolveDnaOwnerBook(
   }
   if (!selected.length) return null
 
-  const sourceNodes = [...new Map(selected.map((row) => [row.row.indexed.node.id, row.row.indexed.node])).values()]
   const bestNode = best.indexed.node
   const topicLabels = selectedSectionLeaders.map((row) => displayTopicForNode(row.indexed.node))
   const topicIds = selectedSectionLeaders.map((row) => topicIdForSection(row.indexed.node.sectionId))
-  const topic = [...new Set(topicLabels)].join(" · ")
+  const directMatchedTopic = selectedSectionLeaders.length === 1 && bestLeafHeadingCoverage < 0.5
+    ? selected.map((candidate) => matchedDisplayPhrase(candidate.sentence, tokens))
+      .find((value): value is string => Boolean(value)) ?? null
+    : null
+  const topic = directMatchedTopic ?? [...new Set(topicLabels)].join(" · ")
   return Object.freeze({
     retrievalVersion: DNA_OWNER_BOOK_RUNTIME_VERSION,
     sourceId: BOOK.source.id,
@@ -664,7 +808,8 @@ export function resolveDnaOwnerBook(
     topicIds: Object.freeze(topicIds),
     summary: selected[0].sentence,
     details: Object.freeze(selected.slice(1).map((candidate) => candidate.sentence)),
-    passageIds: Object.freeze(sourceNodes.map((node) => node.id)),
+    claimIds: Object.freeze(selected.map((candidate) => candidate.unit.claimId)),
+    passageIds: Object.freeze(selected.map((candidate) => candidate.unit.passageId)),
     excerpt: safeExcerpt(bestNode.text),
     score: best.score,
     headingCoverage: Number(bestHeadingCoverage.toFixed(6)),

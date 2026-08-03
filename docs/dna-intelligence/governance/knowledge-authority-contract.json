@@ -14,6 +14,12 @@
       "approvalRequirement": "codex_multi_pass_audited"
     },
     {
+      "layer": "owner_book_information",
+      "labelTr": "Sahip Onaylı Kitap Bilgisi",
+      "authorityTr": "Sahibin sohbet kullanımı için onayladığı güncel tek kitap",
+      "approvalRequirement": "owner_approved"
+    },
+    {
       "layer": "case_information",
       "labelTr": "Vaka Bilgisi",
       "authorityTr": "Sahipliği doğrulanmış yapılandırılmış güvenli rapor bağlamı",

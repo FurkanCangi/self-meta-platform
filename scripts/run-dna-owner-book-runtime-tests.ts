@@ -27,6 +27,9 @@ assert.equal(status.counts.sentences, 4909)
 assert.equal(status.counts.sentencesWithoutInlineCitation, 4647)
 assert.equal(status.counts.citationPendingSentences, status.counts.sentences)
 assert.equal(status.counts.references, 224)
+assert.equal(status.atomicKnowledgeUnits, 4008)
+assert.equal(status.externalCandidatesPreserved, 1000)
+assert.equal(status.externalUnitsLive, 0)
 assert.ok(hasDnaOwnerBookSourceId(DNA_OWNER_BOOK_SOURCE_ID))
 assert.equal(hasDnaOwnerBookSourceId("book.legacy-chapter-1"), false)
 
@@ -50,6 +53,8 @@ for (const question of retrievalQuestions) {
   assert.ok(match, `${question}: kitapta doğrudan karşılık bulunmalı`)
   assert.equal(match.sourceId, DNA_OWNER_BOOK_SOURCE_ID)
   assert.ok(match.passageIds.length > 0)
+  assert.equal(match.claimIds.length, match.passageIds.length)
+  assert.ok(match.claimIds.every((claimId) => claimId.startsWith("owner.unit:")))
   assert.ok(isDnaOwnerBookOutputTextBound(match.summary), `${question}: özet kitap cümlesine bağlı olmalı`)
   assert.ok(match.details.every(isDnaOwnerBookOutputTextBound), `${question}: ayrıntılar kitap cümlesine bağlı olmalı`)
 }
@@ -61,8 +66,10 @@ for (const question of [
 ]) {
   const answer = resolveDnaChat({ question })
   assert.equal(answer.outcome, "answered", `${question}: sohbet motoru yanıtlamalı`)
-  assert.equal(answer.classification, "literature")
+  assert.equal(answer.classification, "dna_concept")
   assert.ok(answer.sources.some((source) => source.id === DNA_OWNER_BOOK_SOURCE_ID))
+  assert.ok(answer.answerUnits.every((unit) =>
+    unit.role !== "owner_book_information" || unit.id.startsWith("owner.unit:")))
   assert.ok(isDnaOwnerBookOutputTextBound(answer.summary))
   assert.ok(answer.details.every(isDnaOwnerBookOutputTextBound))
 }
@@ -121,6 +128,7 @@ console.log(JSON.stringify({
   sourceId: status.sourceId,
   sourceSha256: status.sourceSha256,
   counts: status.counts,
+  atomicKnowledgeUnits: status.atomicKnowledgeUnits,
   retrievalQuestions: retrievalQuestions.length,
   safetyRefusals: 5,
   deterministicRepeats: hashes.length,

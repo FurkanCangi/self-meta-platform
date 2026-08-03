@@ -25,6 +25,7 @@ import {
   DNA_KNOWLEDGE_AUTHORITY_CONTRACT_VERSION,
   DNA_KNOWLEDGE_AUTHORITY_LAYERS,
   DNA_PRODUCT_AUTHORITY_PENDING,
+  DNA_OWNER_BOOK_CHAT_AUTHORITY,
   EXTERNAL_SCIENCE_AUTHORITY_PENDING,
   canAuthoritySupportAnswerRole,
   createAuditedExternalScienceAuthority,
@@ -97,10 +98,11 @@ async function main() {
       "case_information",
       "dna_product_information",
       "external_scientific_information",
+      "owner_book_information",
       "safety_and_product_boundaries",
     ],
   )
-  assert.equal(DNA_KNOWLEDGE_AUTHORITY_CONTRACT.authorities.length, 4)
+  assert.equal(DNA_KNOWLEDGE_AUTHORITY_CONTRACT.authorities.length, 5)
   assert.equal(DNA_KNOWLEDGE_AUTHORITY_CONTRACT.nonSubstitutionRules.length, 5)
 
   assert.equal(DNA_PRODUCT_AUTHORITY_PENDING.verificationStatus, "pending")
@@ -109,6 +111,17 @@ async function main() {
   assert.equal(EXTERNAL_SCIENCE_AUTHORITY_PENDING.releaseEligible, false)
   assert.equal(isReleaseEligibleAuthority(DNA_PRODUCT_AUTHORITY_PENDING), false)
   assert.equal(isReleaseEligibleAuthority(EXTERNAL_SCIENCE_AUTHORITY_PENDING), false)
+  assert.equal(isReleaseEligibleAuthority(DNA_OWNER_BOOK_CHAT_AUTHORITY), true)
+  assert.equal(
+    canAuthoritySupportAnswerRole(DNA_OWNER_BOOK_CHAT_AUTHORITY, "owner_book_information", {
+      requireReleaseEligible: true,
+    }),
+    true,
+  )
+  assert.equal(
+    canAuthoritySupportAnswerRole(DNA_OWNER_BOOK_CHAT_AUTHORITY, "scientific_evidence"),
+    false,
+  )
   assert.throws(() => createOwnerApprovedProductAuthority({
     approvalRecordId: "approval.record",
     bookVersion: "book.v1",
