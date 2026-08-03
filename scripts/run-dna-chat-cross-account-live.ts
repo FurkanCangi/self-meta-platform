@@ -1219,7 +1219,7 @@ async function main() {
         "classification", "outcome", "response_depth", "source_ids", "citation_count",
         "latency_category", "http_result", "audit_status", "user_issue_category",
         "assurance_version", "assurance_status", "source_binding_coverage_percent",
-        "subquestion_count",
+        "subquestion_count", "resolution_mode", "confidence_band", "routed_topic_ids",
       ])
       const legacyMetadataKeys = new Set([
         "request_id", "mode", "intent", "classification", "outcome",
