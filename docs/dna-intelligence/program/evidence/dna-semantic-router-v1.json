@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "dna-semantic-router-manifest@1",
+  "routerVersion": "dna-semantic-router@1",
+  "engineTarget": "dna-chat-engine@2.1",
+  "runtimeGeneration": "v2_legacy",
+  "algorithm": "ftrl_proximal_ovr",
+  "trainingRows": 4017,
+  "validationRows": 983,
+  "lockedRowsExcluded": 1500,
+  "labels": [
+    "domain:attention_working_memory_executive",
+    "domain:autonomic_hrv",
+    "domain:cellular_neurophysiology",
+    "domain:cns_networks",
+    "domain:development_neurodiversity",
+    "domain:emotion_self_coregulation",
+    "domain:interoception_sensory",
+    "domain:measurement_case_boundaries",
+    "domain:sleep_circadian",
+    "domain:stress_arousal_recovery",
+    "kind:definition",
+    "kind:development",
+    "kind:evidence",
+    "kind:measurement",
+    "kind:relation"
+  ],
+  "selectedHyperparameters": {
+    "alpha": 0.08,
+    "beta": 1,
+    "l1": 0.02,
+    "l2": 0.8,
+    "epochs": 3
+  },
+  "validation": {
+    "domainAccuracy": 0.7344862665310274,
+    "kindAccuracy": 0.8158697863682605,
+    "macroAccuracy": 0.775178026449644
+  },
+  "trainingCorpusSha256": "ca12b21b46c019963a20a11aa9517dd6dd29585a42c3f9e5b053f5e43582a2f4",
+  "holdoutExclusionSha256": "86f9185c504cf985407e301938855ff5ef9ac6ed97a09cfdb5777b41ce31e966",
+  "artifactSha256": "68ed3180c9b56e4dfb2b3c9ec364c0b2567586ab6111a0f65c8a4d0b92f1cce1",
+  "artifactBytes": 3406561,
+  "runtimeTraining": false,
+  "userMessageRetention": false,
+  "externalLlm": false
+}

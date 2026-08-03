@@ -1,11 +1,11 @@
 import { DNA_CHAT_CATALOG_VERSION } from "./catalog/types"
 import { isDnaChatEngineResponseAuthentic } from "./engine"
-import type { DnaChatResponse } from "./types"
+import { DNA_CHAT_ENGINE_VERSION, type DnaChatResponse } from "./types"
 import type { DnaV3RetrievalAnswer } from "./v3RetrievalCore"
 
 export type DnaChatRuntimeMetadata = Readonly<{
   generation: "v2_legacy" | "v3"
-  engineVersion: "dna-chat-engine@2" | "dna-chat-engine@3"
+  engineVersion: typeof DNA_CHAT_ENGINE_VERSION | "dna-chat-engine@3"
   catalogVersion: string
   packageVersion: string
   packageSha256: string | null
@@ -40,7 +40,7 @@ export function createDnaV2RuntimeAnswer(answer: DnaChatResponse): DnaChatRuntim
     generation: "v2_legacy",
     metadata: Object.freeze({
       generation: "v2_legacy",
-      engineVersion: "dna-chat-engine@2",
+      engineVersion: DNA_CHAT_ENGINE_VERSION,
       catalogVersion: DNA_CHAT_CATALOG_VERSION,
       packageVersion: DNA_CHAT_CATALOG_VERSION,
       packageSha256: null,

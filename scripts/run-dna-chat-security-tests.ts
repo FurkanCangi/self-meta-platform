@@ -314,8 +314,11 @@ const canonicalUnsupportedBoundaryQuestions = [
 ] as const
 for (const question of canonicalUnsupportedBoundaryQuestions) {
   const response = resolveDnaChat({ mode: "theory", question })
-  assert.ok(
-    ["not_available", "clarification"].includes(response.classification),
+  assert.equal(response.outcome, "answered", `Güvenli sınır açıklanmalı: ${question}`)
+  assert.ok(response.sources.length > 0, `Güvenli sınır kaynağa bağlı olmalı: ${question}`)
+  assert.match(
+    response.answerTr,
+    /(?:çıkarılamaz|karşılık.*değildir|göstermez|öngörülemez|prognoz)/iu,
     `Kanonik desteklenmeyen soru güvenli biçimde sınırlandırılmadı: ${question}`,
   )
 }
@@ -737,7 +740,8 @@ assert.match(client, /unit\.kind !== "safety_boundary" \|\| unit\.section === "c
 assert.match(client, /Tartışmalı teori/)
 assert.doesNotMatch(client, /Raporda Yok/)
 assert.match(client, /Seçili raporda bulunamadı/)
-assert.match(client, /Henüz yanıtlayamıyorum/)
+assert.match(client, /Soruyu birlikte netleştirelim/)
+assert.doesNotMatch(client, /Henüz yanıtlayamıyorum/)
 assert.match(client, /answer\.availabilityScope === "report"/)
 assert.match(client, /Kanıt yetersiz/)
 assert.match(client, /Bu ilişki kurulmamıştır/)
@@ -811,7 +815,7 @@ const auditMetadata = buildDnaChatAuditMetadata({
   intentId: "selfreg.interoception",
   classification: "hypothesis",
   outcome: "answered",
-  engineVersion: "dna-chat-engine@2",
+  engineVersion: "dna-chat-engine@2.1",
   runtimeGeneration: "v2_legacy",
   catalogVersion: "dna-chat-catalog@2",
   packageVersion: "dna-chat-catalog@2",

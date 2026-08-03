@@ -192,7 +192,7 @@ const auditMetadata = buildDnaChatAuditMetadata({
   intentId: "selfreg.interoception",
   classification: "hypothesis",
   outcome: "answered",
-  engineVersion: "dna-chat-engine@2",
+  engineVersion: "dna-chat-engine@2.1",
   runtimeGeneration: "v2_legacy",
   catalogVersion: "dna-chat-catalog@2",
   packageVersion: "dna-chat-catalog@2",
@@ -270,7 +270,7 @@ const theoryWithReport = await resolveDnaChatApiRequest({
 assert.equal(theoryWithReport.status, 200)
 assert.equal(theoryWithReport.accessedCaseReport, false)
 assert.equal(theoryWithReportDeps.state.loadCalls, 0, "Teori sorusu seçili/yabancı reportId için DB okumamalı")
-assert.equal(theoryWithReport.body.engineVersion, "dna-chat-engine@2")
+assert.equal(theoryWithReport.body.engineVersion, "dna-chat-engine@2.1")
 assert.equal(theoryWithReport.body.runtimeGeneration, "v2_legacy")
 assert.equal(theoryWithReport.body.catalogVersion, "dna-chat-catalog@2")
 assert.equal(theoryWithReport.body.packageVersion, "dna-chat-catalog@2")

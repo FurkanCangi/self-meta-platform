@@ -24,8 +24,9 @@
   "authorityClass": "development_and_mixed_history_locked_internal_evaluation",
   "catalogCoverage": {
     "directlyTestedInNewOpenDefinitionFamily": 118,
-    "liveCatalogTopicCount": 118,
-    "percent": 100
+    "liveCatalogTopicCount": 136,
+    "percent": 86.76,
+    "postV2TopicsTestedBySeparateReleaseGates": 18
   },
   "counts": {
     "holdoutHistoricalV1": 200,
@@ -73,7 +74,7 @@
     "scoresMustReportNewFirstBlindSeparately": true
   },
   "independentHumanValidation": false,
-  "manifestSha256": "4b128436de06f69900fc732eac124dc74d524c0a9308431013f3ddb14bb5395d",
+  "manifestSha256": "d2e9a0925c925e448243305e9d0f343861d7e9413c06c614c778388d123886bd",
   "qualityControls": {
     "allPassed": true,
     "exactCrossOverlap": 0,

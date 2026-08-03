@@ -46,7 +46,7 @@ import {
 
 async function main() {
 const exactEngineSourceClosure = assertCurrentDnaEvaluationEngineSourceClosure(process.cwd())
-assert.equal(exactEngineSourceClosure.length, 131)
+assert.equal(exactEngineSourceClosure.length, 134)
 assert.ok(
   exactEngineSourceClosure.includes("src/lib/dna/chat/socialConversation.ts"),
   "Sosyal konuşma katmanı exact runtime source closure içinde kalmalı",
@@ -73,6 +73,7 @@ for (const requiredEngineAuthoritySource of [
   "src/lib/dna/chat/catalog/generated/dense/runtime.json",
   "src/lib/dna/chat/catalog/generated/owner-book/manifest.json",
   "src/lib/dna/chat/catalog/generated/owner-book/runtime.json",
+  "src/lib/dna/chat/catalog/generated/semantic-router/artifact.json",
   "src/lib/dna/chat/catalog/generated/v3/server.ts",
   "src/lib/dna/chat/catalog/generated/v3/types.ts",
   "src/lib/dna/chat/conversationPolicy.ts",
@@ -85,6 +86,8 @@ for (const requiredEngineAuthoritySource of [
   "src/lib/dna/chat/operations/requestTiming.ts",
   "src/lib/dna/chat/ownerBookRuntime.ts",
   "src/lib/dna/chat/runtimeAssurance.ts",
+  "src/lib/dna/chat/semanticRouter.ts",
+  "src/lib/dna/chat/semanticRouterFtrl.ts",
   "src/lib/dna/chat/release/previewPromotion.ts",
   "src/lib/dna/chat/release/productionRuntimeAuthority.ts",
   "src/lib/dna/chat/release/runtimeDeploymentAuthorization.ts",
@@ -177,7 +180,7 @@ for (const blockedState of [
 }
 const currentV2 = evaluateDnaChatRuntimeRelease({
   generation: "v2_legacy",
-  engineVersion: "dna-chat-engine@2",
+  engineVersion: "dna-chat-engine@2.1",
 })
 assert.deepEqual(currentV2, {
   gateVersion: DNA_CHAT_RUNTIME_RELEASE_GATE_VERSION,
@@ -410,7 +413,7 @@ const forgedAllowlistedApiResult = await resolveDnaChatApiRequest({
     return { ok: true }
   },
 })
-assert.equal(forgedAllowlistedAnswer.engineVersion, "dna-chat-engine@2")
+assert.equal(forgedAllowlistedAnswer.engineVersion, "dna-chat-engine@2.1")
 assert.equal(forgedAllowlistedApiResult.status, 500)
 assert.deepEqual(forgedAllowlistedApiResult.body, { ok: false, error: "dna_chat_failed" })
 assert.equal(

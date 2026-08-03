@@ -154,6 +154,9 @@ for (const entry of benchmark) {
   resolveDnaChat({
     mode: entry.mode,
     question: entry.question,
+    // The original 120-question quality benchmark asserts V1/V2 intent IDs.
+    // Semantic nearest-parent behavior has its own isolated 1,000-case gate.
+    runtimeKnowledgeScope: "legacy_catalog",
     ...(entry.mode === "case" ? { caseContext: benchmarkCase } : {}),
   })
 }
@@ -163,6 +166,7 @@ for (const entry of benchmark) {
   const response = resolveDnaChat({
     mode: entry.mode,
     question: entry.question,
+    runtimeKnowledgeScope: "legacy_catalog",
     ...(entry.mode === "case" ? { caseContext: benchmarkCase } : {}),
   })
   durations.push(performance.now() - startedAt)
@@ -431,20 +435,25 @@ assert.equal(caseLiterature.classification, "literature", "Vaka literatür sorus
 assert.ok(caseLiterature.sources.some((source) => source.type === "literature"), "Vaka literatür cevabında doğrulanmış kaynak bulunmalı")
 
 assert.equal(
-  resolveDnaChat({ mode: "theory", question: "duyusal regulasyon nedir" }).intentId,
+  resolveDnaChat({ mode: "theory", question: "duyusal regulasyon nedir", runtimeKnowledgeScope: "legacy_catalog" }).intentId,
   "theory_sensory",
   "Kesin duyusal eşleşme ağırlıklı adayla yer değiştirmemeli",
 )
 assert.equal(
-  resolveDnaChat({ mode: "theory", question: "mss ve oss nedir" }).intentId,
+  resolveDnaChat({ mode: "theory", question: "mss ve oss nedir", runtimeKnowledgeScope: "legacy_catalog" }).intentId,
   "theory_nervous_system_frame",
   "Kesin MSS/OSS eşleşmesi kısa phrase adayından önce gelmeli",
 )
 
-const selfRegulationSeed = resolveDnaChat({ mode: "theory", question: "self regulasyon nedir" })
+const selfRegulationSeed = resolveDnaChat({
+  mode: "theory",
+  question: "self regulasyon nedir",
+  runtimeKnowledgeScope: "legacy_catalog",
+})
 const selfRegulationLiterature = resolveDnaChat({
   mode: "theory",
   question: "Literatür ne diyor?",
+  runtimeKnowledgeScope: "legacy_catalog",
   previousTopic: selfRegulationSeed.topic,
 })
 assert.equal(selfRegulationLiterature.classification, "literature")
@@ -456,11 +465,16 @@ assert.ok(
 const selfRegulationContinuation = resolveDnaChat({
   mode: "theory",
   question: "devam",
+  runtimeKnowledgeScope: "legacy_catalog",
   previousTopic: selfRegulationLiterature.topic,
 })
 assert.notEqual(selfRegulationContinuation.classification, "not_available", "Literatür yanıtından sonraki devam bağlamı kaybolmamalı")
 
-const genericLiterature = resolveDnaChat({ mode: "theory", question: "Literatür ne diyor?" })
+const genericLiterature = resolveDnaChat({
+  mode: "theory",
+  question: "Literatür ne diyor?",
+  runtimeKnowledgeScope: "legacy_catalog",
+})
 assert.equal(genericLiterature.classification, "clarification", "Konusuz literatür sorusu konu seçtirmeli")
 
 const caseAssemblyDurations: number[] = []

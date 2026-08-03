@@ -96,6 +96,7 @@ type ExplicitTopicRule = Readonly<{
 // sıralı kurallar yalnız kaynak kataloğunda açıkça adlandırılmış tek bir
 // başlığa yönlendirir; yeni bir klinik veya biyolojik çıkarım üretmez.
 const EXPLICIT_TOPIC_RULES: readonly ExplicitTopicRule[] = [
+  { topicId: "neuro.chemical_synapse", pattern: /^sinaps nedir$/ },
   { topicId: "neuro.membrane_potential", pattern: /\b(?:membran potansiyeli|dinlenim membran potansiyeli|elektrokimyasal gradyan|sodyum potasyum pompasi|na k pump)\b/ },
   { topicId: "neuro.action_potential", pattern: /\b(?:aksiyon potansiyeli|action potential|refrakter donem|hep ya da hic)\b/ },
   { topicId: "neuro.myelin_conduction", pattern: /\b(?:saltatorik iletim|ranvier dugum\w*|miyelinli akson)\b/ },

@@ -211,7 +211,7 @@ const CLASSIFICATION_META: Record<DnaChatClassification, { label: string; classN
   case_finding: { label: "Rapor Bulgusu", className: "border-cyan-200 bg-cyan-50 text-cyan-700" },
   hypothesis: { label: "Hipotez", className: "border-amber-200 bg-amber-50 text-amber-800" },
   clarification: { label: "Açıklama Gerekli", className: "border-slate-200 bg-slate-50 text-slate-700" },
-  not_available: { label: "Bilgi Bulunamadı", className: "border-slate-200 bg-slate-50 text-slate-700" },
+  not_available: { label: "Başlığı Netleştirelim", className: "border-slate-200 bg-slate-50 text-slate-700" },
   refusal: { label: "Kapsam Dışı", className: "border-rose-200 bg-rose-50 text-rose-700" },
 }
 
@@ -535,7 +535,7 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
         ? (row.intendedUse as DnaIntelligencePublicIntendedUse)
         : DNA_INTELLIGENCE_PUBLIC_INTENDED_USE,
     suggestedQuestions: normalizeStringList(row.suggestedQuestions),
-    engineVersion: String(row.engineVersion || "dna-chat-engine@2").trim(),
+    engineVersion: String(row.engineVersion || "dna-chat-engine@2.1").trim(),
     catalogVersion: String(row.catalogVersion || "dna-chat-catalog@2").trim(),
     packageVersion: String(row.packageVersion || "dna-chat-catalog@2").trim(),
     packageSha256: typeof row.packageSha256 === "string" && /^[a-f0-9]{64}$/.test(row.packageSha256)
@@ -1350,7 +1350,7 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
           </span>
           <div className="min-w-0 flex-1 pt-0.5">
             <h3 className="text-sm font-black leading-6 text-[var(--sm-text)]">
-              {isReportUnavailable ? "Seçili raporda bulunamadı" : "Henüz yanıtlayamıyorum"}
+              {isReportUnavailable ? "Seçili raporda bulunamadı" : "Soruyu birlikte netleştirelim"}
             </h3>
             <p className="mt-1 text-sm font-medium leading-6 text-[var(--sm-text-soft)]">
               {answer.summary}

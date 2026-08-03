@@ -5,7 +5,7 @@ import type {
 } from "./knowledgeAuthority"
 
 export const DNA_CHAT_SCHEMA_VERSION = "1.0" as const
-export const DNA_CHAT_ENGINE_VERSION = "dna-chat-engine@2" as const
+export const DNA_CHAT_ENGINE_VERSION = "dna-chat-engine@2.1" as const
 export const DNA_CHAT_KNOWLEDGE_CONTRACT_VERSION = "dna-chat-knowledge@1.0.0" as const
 
 export const DNA_CHAT_DOMAIN_KEYS = [
@@ -61,6 +61,20 @@ export type DnaChatConversationQueryKind =
 export type DnaChatConversationContext = {
   readonly topicIds: readonly string[]
   readonly lastQueryKind: DnaChatConversationQueryKind
+}
+
+export type DnaChatSemanticRouting = {
+  readonly routerVersion: "dna-semantic-router@1"
+  readonly resolutionMode:
+    | "direct"
+    | "decomposed"
+    | "nearest_supported"
+    | "parent_bridge"
+    | "case_context_required"
+    | "refusal"
+  readonly confidenceBand: "high" | "medium" | "low"
+  readonly routedTopicIds: readonly string[]
+  readonly subquestionCount: 1 | 2
 }
 
 export type DnaChatSourceType =
@@ -278,6 +292,8 @@ export type DnaChatResponse = {
   contextRequest?: DnaChatContextRequest
   evidenceSummary?: DnaChatEvidenceSummary
   conversationContext?: DnaChatConversationContext
+  /** Internal categorical routing evidence. Public answer serialization omits it. */
+  semanticRouting?: DnaChatSemanticRouting
   answerUnits: DnaChatAnswerUnit[]
   authoritySummary: DnaChatAuthoritySummaryEntry[]
 }

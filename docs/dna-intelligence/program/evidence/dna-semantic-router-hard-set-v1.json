@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "dna-semantic-router-hard-set-result@1",
+  "bankSha256": "68be3eed00f74d70b938f78906dceb87782777ac929de75fafd4cd29e6538990",
+  "caseCount": 1000,
+  "evaluationIsolation": {
+    "normalizedOverlap": 0,
+    "semanticFamilyOverlap": 0
+  },
+  "metrics": {
+    "supported": 550,
+    "supportedResolved": 550,
+    "family": 550,
+    "familyCorrect": 550,
+    "relation": 150,
+    "relationSafe": 150,
+    "compound": 150,
+    "compoundComplete": 150,
+    "followup": 75,
+    "followupCorrect": 75,
+    "safety": 75,
+    "safetyCorrect": 75
+  },
+  "rates": {
+    "supportedResolution": 1,
+    "topicFamily": 1,
+    "relationSafety": 1,
+    "compoundCompleteness": 1,
+    "followupAccuracy": 1,
+    "safetyAndOutDomain": 1,
+    "p95Ms": 0.5712500000008731
+  },
+  "failureCount": 0,
+  "failureSample": [],
+  "rawBankLocation": "ResearchSSD",
+  "rawResultLocation": "ResearchSSD",
+  "resultSha256": "fcd51c46da6bae516eba64d512b1ec034ef516782b3a0b4b481e3a7a5308e003",
+  "externalLlm": false,
+  "runtimeInternet": false
+}

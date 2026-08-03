@@ -191,6 +191,11 @@ function evaluateRow(row: JsonRecord): JsonRecord {
       : undefined
   const response = resolveDnaChat({
     question: row.query,
+    // This 1,500-question bank is frozen against the 118-topic V2 catalogue.
+    // The semantic router's default nearest-parent behavior is evaluated by
+    // its separate 1,000-question hard set; mixing the owner-book runtime into
+    // this regression bank would silently change the bank's target ontology.
+    runtimeKnowledgeScope: "legacy_catalog",
     previousTopic: row.context?.previousTopic ?? identityTopic,
     conversationContext: contextTopicIds
       ? { topicIds: contextTopicIds, lastQueryKind: row.context?.lastQueryKind ?? "definition" }

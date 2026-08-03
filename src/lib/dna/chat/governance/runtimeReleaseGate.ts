@@ -10,7 +10,7 @@ import {
 import { DNA_CURRENT_V3_ENGINE_CODE_AUTHORITY } from "../evaluation/generated/currentEngineCodeAuthority"
 
 export const DNA_CHAT_RUNTIME_RELEASE_GATE_VERSION = "dna-chat-runtime-release-gate@1" as const
-export const DNA_V2_LEGACY_ENGINE_VERSION = "dna-chat-engine@2" as const
+export const DNA_V2_LEGACY_ENGINE_VERSION = "dna-chat-engine@2.1" as const
 export const DNA_V3_RUNTIME_ENGINE_VERSION = "dna-chat-engine@3" as const
 
 /**

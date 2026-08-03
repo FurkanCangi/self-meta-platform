@@ -135,7 +135,7 @@ async function main() {
     intentId: "selfreg.synthetic",
     classification: "case_finding",
     outcome: "answered",
-    engineVersion: "dna-chat-engine@2",
+    engineVersion: "dna-chat-engine@2.1",
     runtimeGeneration: "v2_legacy",
     catalogVersion: "dna-chat-catalog@2",
     packageVersion: "dna-chat-catalog@2",

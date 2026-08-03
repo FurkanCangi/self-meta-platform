@@ -28,7 +28,7 @@ const followUps = [
   ["Bunu biraz aç.", "expand", "answered"],
   ["Biraz daha ayrıntı?", "expand", "answered"],
   ["Daha basit anlat.", "simplify", "answered"],
-  ["Peki çocuklarda?", "age_scope", "not_available"],
+  ["Peki çocuklarda?", "age_scope", "answered"],
   ["Bunun kanıtı ne?", "evidence", "answered"],
   ["Nasıl ölçülüyor?", "measurement", "answered"],
   ["Başka türlü anlat.", "retry", "answered"],
@@ -43,6 +43,13 @@ for (const [question, kind, outcome] of followUps) {
   })
   assert.equal(answer.outcome, outcome, question)
   assert.deepEqual(answer.conversationContext?.topicIds, ["cns.insula"], question)
+  if (kind === "age_scope") {
+    assert.equal(answer.sources.length > 0, true, "yaş takibi kaynaklı olmalı")
+    assert.equal(answer.answerUnits
+      .filter((unit) => unit.kind === "summary" || unit.kind === "detail")
+      .every((unit) => unit.sourceIds.length > 0), true, "olgusal yaş yanıtı kaynak bağı taşımalı")
+    assert.doesNotMatch(answer.answerTr, /tanı koyar|insula işlevi zayıftır|beyin hasarı/iu)
+  }
 }
 
 const comparison = resolveDnaChat({

@@ -24,6 +24,9 @@ export const DNA_CHAT_TELEMETRY_ALLOWED_INPUT_KEYS = Object.freeze([
   "assuranceStatus",
   "sourceBindingCoveragePercent",
   "subquestionCount",
+  "resolutionMode",
+  "confidenceBand",
+  "routedTopicIds",
 ] as const)
 
 /**
@@ -100,6 +103,9 @@ export type DnaChatTelemetryRecord = Readonly<{
   assuranceStatus: DnaChatTelemetryAssuranceStatus
   sourceBindingCoveragePercent: number
   subquestionCount: 0 | 1 | 2
+  resolutionMode: "direct" | "decomposed" | "nearest_supported" | "parent_bridge" | "case_context_required" | "refusal"
+  confidenceBand: "high" | "medium" | "low"
+  routedTopicIds: readonly string[]
 }>
 
 export type DnaChatTelemetryDecision = Readonly<{
@@ -133,6 +139,10 @@ const LATENCY_CATEGORIES = new Set<DnaChatTelemetryLatencyCategory>([
 const AUDIT_RESULTS = new Set<DnaChatTelemetryAuditResult>(["written", "failed", "not_required"])
 const ISSUE_CATEGORIES = new Set<DnaChatIssueCategory>(DNA_CHAT_ISSUE_CATEGORIES)
 const ASSURANCE_STATUSES = new Set<DnaChatTelemetryAssuranceStatus>(["passed", "not_recorded"])
+const RESOLUTION_MODES = new Set([
+  "direct", "decomposed", "nearest_supported", "parent_bridge", "case_context_required", "refusal",
+])
+const CONFIDENCE_BANDS = new Set(["high", "medium", "low"])
 
 function isPlainRecord(value: unknown): value is Record<string, unknown> {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false
@@ -170,6 +180,9 @@ export function buildDnaChatTelemetryRecord(input: unknown): DnaChatTelemetryDec
     if (deniedKeys.has(key)) reasons.push(`telemetry_denied_key:${key}`)
     else if (!allowedKeys.has(key)) reasons.push(`telemetry_unknown_key:${key}`)
   }
+  const resolutionMode = input.resolutionMode ?? "direct"
+  const confidenceBand = input.confidenceBand ?? "medium"
+  const routedTopicIds = input.routedTopicIds ?? []
 
   if (!safeIdentifier(input.requestId)) reasons.push("telemetry_request_id_invalid")
   if (!safeIdentifier(input.engineVersion)) reasons.push("telemetry_engine_version_invalid")
@@ -220,6 +233,17 @@ export function buildDnaChatTelemetryRecord(input: unknown): DnaChatTelemetryDec
   if (![0, 1, 2].includes(Number(input.subquestionCount))) {
     reasons.push("telemetry_subquestion_count_invalid")
   }
+  if (!RESOLUTION_MODES.has(String(resolutionMode))) {
+    reasons.push("telemetry_resolution_mode_invalid")
+  }
+  if (!CONFIDENCE_BANDS.has(String(confidenceBand))) {
+    reasons.push("telemetry_confidence_band_invalid")
+  }
+  if (!Array.isArray(routedTopicIds)
+    || routedTopicIds.length > 2
+    || routedTopicIds.some((topicId) => !safeIdentifier(topicId))) {
+    reasons.push("telemetry_routed_topic_ids_invalid")
+  }
 
   const reasonCodes = uniqueSorted(reasons)
   if (reasonCodes.length > 0) {
@@ -257,6 +281,9 @@ export function buildDnaChatTelemetryRecord(input: unknown): DnaChatTelemetryDec
       assuranceStatus: input.assuranceStatus as DnaChatTelemetryAssuranceStatus,
       sourceBindingCoveragePercent: input.sourceBindingCoveragePercent as number,
       subquestionCount: input.subquestionCount as 0 | 1 | 2,
+      resolutionMode: resolutionMode as DnaChatTelemetryRecord["resolutionMode"],
+      confidenceBand: confidenceBand as DnaChatTelemetryRecord["confidenceBand"],
+      routedTopicIds: uniqueSorted(routedTopicIds as string[]).slice(0, 2),
     }),
   })
 }

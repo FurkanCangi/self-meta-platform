@@ -1164,8 +1164,8 @@ async function main() {
       invariant(withoutReport.status === 200, `Theory-only request returned HTTP ${withoutReport.status}.`)
       invariant(withForeign.body.ok === true && withoutReport.body.ok === true, "Theory request did not succeed.")
       invariant(
-        withForeign.body.engineVersion === "dna-chat-engine@2",
-        "Theory request did not use dna-chat-engine@2.",
+        withForeign.body.engineVersion === "dna-chat-engine@2.1",
+        "Theory request did not use dna-chat-engine@2.1.",
       )
       invariant(
         Array.isArray(withForeign.body.sources) && withForeign.body.sources.length > 0,
@@ -1194,7 +1194,7 @@ async function main() {
 
       invariant(ownCase.status === 200, `Owned case returned HTTP ${ownCase.status}.`)
       invariant(ownCase.body.ok === true, "Owned case did not return ok=true.")
-      invariant(ownCase.body.engineVersion === "dna-chat-engine@2", "Owned case used the wrong engine version.")
+      invariant(ownCase.body.engineVersion === "dna-chat-engine@2.1", "Owned case used the wrong engine version.")
       invariant(
         ownCase.body.classification === "case_finding" || ownCase.body.classification === "hypothesis",
         `Owned case did not return a case-scoped classification ` +

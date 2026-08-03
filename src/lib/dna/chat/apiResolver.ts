@@ -83,6 +83,9 @@ export type DnaChatApiAuditInput = {
   assuranceStatus?: "passed" | "not_recorded"
   sourceBindingCoveragePercent?: number
   subquestionCount?: 0 | 1 | 2
+  resolutionMode?: "direct" | "decomposed" | "nearest_supported" | "parent_bridge" | "case_context_required" | "refusal"
+  confidenceBand?: "high" | "medium" | "low"
+  routedTopicIds?: string[]
 }
 
 export const DNA_CHAT_AUDIT_METADATA_KEYS = Object.freeze([
@@ -104,6 +107,9 @@ export const DNA_CHAT_AUDIT_METADATA_KEYS = Object.freeze([
   "assurance_status",
   "source_binding_coverage_percent",
   "subquestion_count",
+  "resolution_mode",
+  "confidence_band",
+  "routed_topic_ids",
 ] as const)
 
 export function buildDnaChatAuditMetadata(input: DnaChatApiAuditInput) {
@@ -126,6 +132,9 @@ export function buildDnaChatAuditMetadata(input: DnaChatApiAuditInput) {
     assuranceStatus: input.assuranceStatus ?? "not_recorded",
     sourceBindingCoveragePercent: input.sourceBindingCoveragePercent ?? 0,
     subquestionCount: input.subquestionCount ?? 0,
+    resolutionMode: input.resolutionMode ?? "direct",
+    confidenceBand: input.confidenceBand ?? "medium",
+    routedTopicIds: input.routedTopicIds ?? [],
   })
   if (!telemetry.accepted || !telemetry.record) {
     throw new Error(`dna_chat_audit_metadata_rejected:${telemetry.reasonCodes.join(",")}`)
@@ -150,6 +159,9 @@ export function buildDnaChatAuditMetadata(input: DnaChatApiAuditInput) {
     assurance_status: record.assuranceStatus,
     source_binding_coverage_percent: record.sourceBindingCoveragePercent,
     subquestion_count: record.subquestionCount,
+    resolution_mode: record.resolutionMode,
+    confidence_band: record.confidenceBand,
+    routed_topic_ids: record.routedTopicIds,
   }
 }
 
@@ -850,6 +862,30 @@ export async function resolveDnaChatApiRequest(
     assuranceStatus: "passed",
     sourceBindingCoveragePercent: assurance.metrics.sourceBindingCoveragePercent,
     subquestionCount: assurance.metrics.subquestionCount,
+    resolutionMode: runtimeAnswer.generation === "v2_legacy"
+      ? runtimeAnswer.answer.semanticRouting?.resolutionMode
+        ?? (runtimeAnswer.answer.outcome === "refused"
+          ? "refusal"
+          : runtimeAnswer.answer.contextRequest
+            ? "case_context_required"
+            : assurance.metrics.subquestionCount === 2
+              ? "decomposed"
+              : "direct")
+      : runtimeAnswer.answer.status === "refusal"
+        ? "refusal"
+        : runtimeAnswer.answer.contextRequest
+          ? "case_context_required"
+          : assurance.metrics.subquestionCount === 2
+            ? "decomposed"
+            : "direct",
+    confidenceBand: runtimeAnswer.generation === "v2_legacy"
+      ? runtimeAnswer.answer.semanticRouting?.confidenceBand ?? "high"
+      : "high",
+    routedTopicIds: runtimeAnswer.generation === "v2_legacy"
+      ? [...(runtimeAnswer.answer.semanticRouting?.routedTopicIds
+        ?? runtimeAnswer.answer.conversationContext?.topicIds
+        ?? [])].slice(0, 2)
+      : [],
   })
 
   if (!audit.ok && accessedCaseReport) {

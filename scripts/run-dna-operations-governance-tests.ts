@@ -57,7 +57,7 @@ const HASH_B = "b".repeat(64)
 
 const safeTelemetryInput = {
   requestId: "11111111-1111-4111-8111-111111111111",
-  engineVersion: "dna-chat-engine@2",
+  engineVersion: "dna-chat-engine@2.1",
   packVersion: "dna-chat-catalog@2",
   topic: "cns.insula",
   classification: "literature",
@@ -73,6 +73,9 @@ const safeTelemetryInput = {
   assuranceStatus: "passed",
   sourceBindingCoveragePercent: 100,
   subquestionCount: 1,
+  resolutionMode: "direct",
+  confidenceBand: "high",
+  routedTopicIds: ["cns.insula"],
 }
 
 const telemetry = buildDnaChatTelemetryRecord(safeTelemetryInput)

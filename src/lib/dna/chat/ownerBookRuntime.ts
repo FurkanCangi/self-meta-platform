@@ -614,6 +614,7 @@ function safeExcerpt(value: string): string {
 
 const BOUND_DISPLAY_SENTENCES = new Set(DENSE_BOOK.units
   .map((unit) => displaySentence(unit.text)).filter(Boolean))
+const OWNER_BOOK_MATCH_CACHE = new Map<string, DnaOwnerBookMatch>()
 
 export function isDnaOwnerBookTopicId(value: string | null | undefined): boolean {
   return sectionIdFromTopicId(value) !== null
@@ -652,6 +653,9 @@ export function resolveDnaOwnerBook(
   conversationTopicIds: readonly string[] = [],
   responseDepth: "short" | "standard" | "deep" = "standard",
 ): DnaOwnerBookMatch | null {
+  const cacheKey = `${question}\u0000${conversationTopicIds.slice(0, 2).join("\u0001")}\u0000${responseDepth}`
+  const cached = OWNER_BOOK_MATCH_CACHE.get(cacheKey)
+  if (cached) return cached
   const normalizedQuestion = normalizeDnaChatText(question)
   const previousSectionId = conversationTopicIds
     .map(sectionIdFromTopicId)
@@ -795,7 +799,7 @@ export function resolveDnaOwnerBook(
       .find((value): value is string => Boolean(value)) ?? null
     : null
   const topic = directMatchedTopic ?? [...new Set(topicLabels)].join(" · ")
-  return Object.freeze({
+  const match = Object.freeze({
     retrievalVersion: DNA_OWNER_BOOK_RUNTIME_VERSION,
     sourceId: BOOK.source.id,
     sourceTitle: BOOK.source.title,
@@ -815,4 +819,7 @@ export function resolveDnaOwnerBook(
     headingCoverage: Number(bestHeadingCoverage.toFixed(6)),
     leafHeadingCoverage: Number(bestLeafHeadingCoverage.toFixed(6)),
   })
+  if (OWNER_BOOK_MATCH_CACHE.size >= 2_048) OWNER_BOOK_MATCH_CACHE.clear()
+  OWNER_BOOK_MATCH_CACHE.set(cacheKey, match)
+  return match
 }

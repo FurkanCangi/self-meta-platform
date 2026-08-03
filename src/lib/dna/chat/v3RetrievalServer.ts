@@ -126,7 +126,7 @@ export function getCommittedDnaChatRuntimeStatus(rolloutSubjectKey?: string | nu
     engineVersion: selection.generation === "v3"
       ? "dna-chat-engine@3"
       : selection.generation === "v2_legacy"
-        ? "dna-chat-engine@2"
+        ? "dna-chat-engine@2.1"
         : null,
     catalogVersion: selection.generation !== "v2_legacy"
       ? DNA_V3_VALIDATED_STATIC_PACKAGE.manifest.graphVersion

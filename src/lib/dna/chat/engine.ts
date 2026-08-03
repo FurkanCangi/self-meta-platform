@@ -42,6 +42,13 @@ import {
 import { routeDnaChatQuestion } from "./router"
 import { inspectDnaChatSafety } from "./safety"
 import {
+  DNA_SEMANTIC_ROUTER_VERSION,
+  buildDnaQuestionFrame,
+  routeDnaSemanticQuestion,
+  type DnaSemanticConfidenceBand,
+  type DnaSemanticResolutionMode,
+} from "./semanticRouter"
+import {
   resolveDnaChatSocialConversation,
   type DnaChatSocialMatch,
 } from "./socialConversation"
@@ -65,6 +72,7 @@ import {
   type DnaChatSafeCaseContext,
   type DnaChatSafetyCategory,
   type DnaChatSafetyResult,
+  type DnaChatSemanticRouting,
   type DnaChatSourceRef,
 } from "./types"
 
@@ -157,6 +165,7 @@ function makeResponse(input: {
   contextRequest?: DnaChatContextRequest
   evidenceSummary?: DnaChatEvidenceSummary
   conversationContext?: DnaChatConversationContext
+  semanticRouting?: DnaChatSemanticRouting
   answerAuthority?: DnaKnowledgeAuthorityRef
   answerUnits?: readonly DnaChatAnswerUnitInput[]
   authorityGateChecked?: boolean
@@ -330,6 +339,7 @@ function makeResponse(input: {
     ...(input.contextRequest ? { contextRequest: input.contextRequest } : {}),
     ...(input.evidenceSummary ? { evidenceSummary: input.evidenceSummary } : {}),
     ...(input.conversationContext ? { conversationContext: input.conversationContext } : {}),
+    ...(input.semanticRouting ? { semanticRouting: input.semanticRouting } : {}),
   })
 }
 
@@ -420,6 +430,11 @@ function ownerBookResponse(
   match: DnaOwnerBookMatch,
   safety: DnaChatSafetyResult,
   queryKind: DnaChatQueryKind,
+  semantic?: Readonly<{
+    mode: DnaSemanticResolutionMode
+    confidenceBand: DnaSemanticConfidenceBand
+    parentLabel: string
+  }>,
 ): DnaChatResponse | null {
   if (catalogClaimGuardBlocked([match.summary, ...match.details])) return null
   const source: DnaChatSourceRef = {
@@ -464,7 +479,9 @@ function ownerBookResponse(
     classification: "dna_concept",
     topic: match.topic,
     intentId: `owner-book:${match.topicId}`,
-    summary: match.summary,
+    summary: semantic
+      ? `Soruyu ${semantic.parentLabel} açısından ele alırsak: ${match.summary}`
+      : match.summary,
     details: match.details,
     sources: [source],
     limitations: [],
@@ -476,6 +493,91 @@ function ownerBookResponse(
     },
     answerAuthority: DNA_OWNER_BOOK_CHAT_AUTHORITY,
     answerUnits,
+    ...(semantic ? {
+      semanticRouting: {
+        routerVersion: DNA_SEMANTIC_ROUTER_VERSION,
+        resolutionMode: semantic.mode,
+        confidenceBand: semantic.confidenceBand,
+        routedTopicIds: [...match.topicIds].slice(0, 2),
+        subquestionCount: 1,
+      },
+    } : {}),
+  })
+}
+
+function preserveVerifiedFollowUpTopics(
+  response: DnaChatResponse,
+  originalQuestion: string,
+  request: DnaChatRequest,
+): DnaChatResponse {
+  const followUpKind = detectDnaConversationFollowUpKind(originalQuestion)
+  if (!followUpKind || followUpKind === "correction" || response.outcome === "refused") return response
+  const verifiedTopics = validConversationTopics(request.previousTopic, request.conversationContext)
+  if (!verifiedTopics.length) return response
+  const topicIds = verifiedTopics
+    .slice(0, followUpKind === "comparison" ? 2 : 1)
+    .map((topic) => topic.id)
+  if (!topicIds.length) return response
+  const lastQueryKind: DnaChatConversationQueryKind = followUpKind === "comparison"
+    ? "comparison"
+    : followUpKind === "age_scope"
+      ? "development"
+      : followUpKind === "evidence"
+        ? "evidence"
+        : followUpKind === "measurement"
+          ? "measurement"
+          : request.conversationContext?.lastQueryKind ?? "unknown"
+  return attestDnaChatEngineResponse({
+    ...response,
+    conversationContext: {
+      topicIds,
+      lastQueryKind,
+    },
+    ...(response.semanticRouting ? {
+      semanticRouting: {
+        ...response.semanticRouting,
+        routedTopicIds: topicIds,
+      },
+    } : {}),
+  })
+}
+
+function semanticFallbackResponse(
+  question: string,
+  request: DnaChatRequest,
+  safety: DnaChatSafetyResult,
+  queryKind: DnaChatQueryKind,
+): DnaChatResponse | null {
+  if (request.runtimeKnowledgeScope === "legacy_catalog") return null
+  const decision = routeDnaSemanticQuestion(question, request.conversationContext)
+  if (!decision.enabled || !decision.inDomain || !decision.parentQuestion || !decision.parentLabel) {
+    return null
+  }
+  const mode: DnaSemanticResolutionMode = decision.confidenceBand === "low"
+    ? "parent_bridge"
+    : "nearest_supported"
+  const parentDraft = resolveDnaCatalogReasoning({
+    question: decision.parentQuestion,
+    previousTopic: null,
+    queryKind: "definition",
+  })
+  if (parentDraft && parentDraft.classification !== "not_available") {
+    return catalogResponse(parentDraft, safety, undefined, {
+      mode,
+      confidenceBand: decision.confidenceBand,
+      parentLabel: decision.parentLabel,
+    })
+  }
+  const parentMatch = resolveDnaOwnerBook(
+    decision.parentQuestion,
+    request.conversationContext?.topicIds ?? [],
+    request.responseDepth,
+  )
+  if (!parentMatch) return null
+  return ownerBookResponse(parentMatch, safety, queryKind, {
+    mode,
+    confidenceBand: decision.confidenceBand,
+    parentLabel: decision.parentLabel,
   })
 }
 
@@ -507,7 +609,10 @@ export function detectDnaConversationFollowUpKind(
     /^(?:bir\s+kademe\s+)?daha\s+(?:ayrintilandir\w*|detaylandir\w*)(?:\s+misin)?$/.test(normalized)
   ) return "expand"
   if (/^(?:bunu\s+)?(?:daha\s+)?(?:basit|sade)(?:ce)?(?:\s+turkceyle)?\s+(?:anlat|anlatir|acikla|aciklar)(?:\s+misin)?$/.test(normalized) || /^(?:en\s+)?sade\s+haliyle$/.test(normalized)) return "simplify"
-  if (/^(?:(?:peki|ya)\s+)?(?:cocuklarda|kucuk cocuklarda|ergenlerde|erken cocuklukta|cocukluk doneminde|yas grubuna gore)(?:\s+(?:durum\s+)?(?:nasil|ayni mi|ne degisir))?$/.test(normalized)) return "age_scope"
+  if (
+    /^(?:(?:peki|ya)\s+)?(?:cocuklarda|kucuk cocuklarda|ergenlerde|erken cocuklukta|cocukluk doneminde|yas grubuna gore)(?:\s+(?:durum\s+)?(?:nasil|ayni mi|ne degisir))?$/.test(normalized) ||
+    /^(?:(?:peki|ya)\s+)?erken cocukluk icin ne degis(?:ir|iyor)$/.test(normalized)
+  ) return "age_scope"
   if (/^(?:bunun|bu bilginin)?\s*(?:bilimsel\s+)?(?:kaniti|kanit tarafi|dayanagi|kaynaklari)(?:\s+(?:ne|nasil|ne soyluyor|guclu mu|peki|gosterir misin))?$/.test(normalized) || /^bilimsel dayanak peki$/.test(normalized)) return "evidence"
   if (/^(?:(?:peki|ya)\s+)?(?:bunun\s+)?(?:olcumu(?:\s+nasil)?|nasil olculuyor|nasil olculur|hangi yolla incelenir|hangi yontemlerle degerlendiriliyor|pratikte nasil olculuyor(?: peki)?)$/.test(normalized)) return "measurement"
   if (
@@ -686,6 +791,7 @@ function isUnsupportedStandaloneKnowledgeQuestion(
     /\bacc ile yurutucu islev\b.+\bnasil bir bag\b/.test(normalized) ||
     /\bokul oncesi donemde acc\b.+\bdogrudan olcul\w*/.test(normalized) ||
     /\bacc nin interosepsiyon merkezi\b.+\bcalisma var mi\b/.test(normalized)
+    || /^hrv ve rsa ayni sey midir$/.test(normalized)
   )
 }
 
@@ -800,6 +906,11 @@ function catalogResponse(
   draft: DnaCatalogReasoningDraft,
   safety: DnaChatSafetyResult,
   conversationTopicIds?: readonly string[],
+  semantic?: Readonly<{
+    mode: DnaSemanticResolutionMode
+    confidenceBand: DnaSemanticConfidenceBand
+    parentLabel: string
+  }>,
 ): DnaChatResponse {
   const hasSources = draft.sources.length > 0
   const answered = draft.classification !== "not_available" && hasSources
@@ -894,7 +1005,9 @@ function catalogResponse(
     classification: answered ? draft.classification : "not_available",
     topic: draft.topicTitle,
     intentId: `catalog:${draft.topicId}:${draft.queryKind}`,
-    summary: draft.summary,
+    summary: semantic
+      ? `Soruyu ${semantic.parentLabel} açısından ele alırsak: ${draft.summary}`
+      : draft.summary,
     details: draft.details,
     sources: answered ? draft.sources : [],
     limitations: draft.limitations,
@@ -909,6 +1022,15 @@ function catalogResponse(
     suggestedQuestions: draft.suggestedQuestions,
     answerAuthority: topicAuthority,
     answerUnits: catalogAnswerUnits,
+    ...(semantic ? {
+      semanticRouting: {
+        routerVersion: DNA_SEMANTIC_ROUTER_VERSION,
+        resolutionMode: semantic.mode,
+        confidenceBand: semantic.confidenceBand,
+        routedTopicIds: [draft.topicId],
+        subquestionCount: 1,
+      },
+    } : {}),
   })
 }
 
@@ -1533,6 +1655,25 @@ function resolveSingleDnaChat(
   )
   const routingPreviousTopic = conversationTopics[0]?.id ?? request.previousTopic
   const legacyRoutingPreviousTopic = conversationTopics[0]?.title ?? request.previousTopic
+  const normalizedQuestion = normalizeDnaChatText(question)
+  const boundaryQuestion =
+    /\b(?:puan|skor|profil|davranis|gozlem)\w*\b.{0,120}\bsinir sistemi\b.{0,100}\b(?:cikar\w*|durum\w*|goster\w*|anlas\w*)\b/.test(normalizedQuestion) &&
+      /\b(?:yapilabilir mi|mumkun mu|sakincali|sorunlu|dogru mu|neden|niye)\b/.test(normalizedQuestion)
+      ? "DNA alanları beynin altı bölümüne karşılık gelir mi?"
+      : /\b(?:erken|cocukluk|gelisimsel)\w*\b.{0,140}\b(?:yetiskin|ileride|gelecek|sonuc)\w*\b.{0,100}\b(?:kesin|ongor\w*|belirle\w*|goster\w*)\b/.test(normalizedQuestion)
+        ? "DNA puanı gelişimsel yörüngeyi gösterir mi?"
+        : null
+  if (boundaryQuestion && request.runtimeKnowledgeScope !== "legacy_catalog") {
+    const boundaryDraft = resolveDnaCatalogReasoning({
+      question: boundaryQuestion,
+      previousTopic: null,
+      queryKind: "misconception",
+      ageMonths: caseContext?.ageMonths,
+    })
+    if (boundaryDraft && boundaryDraft.classification !== "not_available") {
+      return catalogResponse(boundaryDraft, safety)
+    }
+  }
   if (isUnsupportedStandaloneKnowledgeQuestion(question, conversationTopics.length > 0)) {
     return unmatchedResponse(safety)
   }
@@ -1544,6 +1685,12 @@ function resolveSingleDnaChat(
   }
 
   const followUpKind = detectDnaConversationFollowUpKind(question)
+  if (followUpKind === "comparison" && conversationTopics.length !== 2) {
+    return clarificationResponse(
+      safety,
+      "Karşılaştırma için konuşmada doğrulanmış iki ayrı başlık bulunmuyor. Karşılaştırmak istediğiniz iki başlığı yazın.",
+    )
+  }
   if (followUpKind === "comparison" && conversationTopics.length === 2) {
     if (conversationTopics.every((topic) => isDnaOwnerBookTopicId(topic.id))) {
       const comparisonQuestion = `${conversationTopics[0].title} ile ${conversationTopics[1].title} arasındaki fark nedir?`
@@ -1636,7 +1783,11 @@ function resolveSingleDnaChat(
     request.mode && routed.intent && routed.route !== "unknown" && !catalogContextFollowUp,
   )
   if (!preferLegacy) {
+    const routingCatalogTopic = findCatalogTopic(question, routingPreviousTopic)
     const explicitBookCue = /\b(?:kitaba gore|kitapta|kitabimizda|self regulasyon kitab\w*)\b/.test(
+      normalizeDnaChatText(question),
+    )
+    const hasExplicitScientificEntity = /\b(?:acc|anterior singulat|insula|insular|prefrontal|hrv|rsa|barorefleks|kortizol|hpa|melatonin|adenozin)\b/.test(
       normalizeDnaChatText(question),
     )
     const hasBookConversationContext = (request.conversationContext?.topicIds ?? [])
@@ -1685,7 +1836,7 @@ function resolveSingleDnaChat(
     }
     const catalogDraft = resolveDnaCatalogReasoning({
       question,
-      previousTopic: routingPreviousTopic,
+      previousTopic: routingCatalogTopic?.id ?? routingPreviousTopic,
       queryKind,
       ageMonths: caseContext?.ageMonths,
     })
@@ -1698,17 +1849,14 @@ function resolveSingleDnaChat(
       candidateBookMatch &&
       preciseBookHeadingMatch &&
       !explicitDnaProductQuestion &&
+      !hasExplicitScientificEntity &&
       !catalogIsSpecific
     ) {
       const preciseBookAnswer = ownerBookResponse(candidateBookMatch, safety, queryKind)
       if (preciseBookAnswer) return preciseBookAnswer
     }
     if (catalogDraft) {
-      const exactLegacyProductFallback = catalogDraft.classification === "not_available"
-        && routed.route === "dna"
-        && Boolean(routed.intent)
-        && routed.match.method === "exact"
-      if (!exactLegacyProductFallback) {
+      if (catalogDraft.classification !== "not_available" || request.runtimeKnowledgeScope === "legacy_catalog") {
         return catalogResponse(
           catalogDraft,
           safety,
@@ -1720,7 +1868,7 @@ function resolveSingleDnaChat(
     }
 
     const bookEligibleQuery = request.runtimeKnowledgeScope !== "legacy_catalog" &&
-      (explicitBookCue || hasBookConversationContext || bookEligibleQueryKind)
+      (explicitBookCue || hasBookConversationContext || (bookEligibleQueryKind && !hasExplicitScientificEntity))
     const bookMatch = bookEligibleQuery
       ? candidateBookMatch ?? resolveDnaOwnerBook(
           question,
@@ -1733,6 +1881,9 @@ function resolveSingleDnaChat(
       : null
     if (bookAnswer) return bookAnswer
   }
+
+  const semanticAnswer = semanticFallbackResponse(question, request, safety, queryKind)
+  if (semanticAnswer) return semanticAnswer
 
   if (!routed.intent || routed.route === "unknown") {
     return unmatchedResponse(safety)
@@ -1760,7 +1911,7 @@ function resolveSingleDnaChat(
 }
 
 function splitDnaChatQuestion(question: string): { parts: string[]; overflow: boolean } {
-  const questionMarker = /\b(?:ne|nedir|ne demek|ne diyor|nasil|neden|hangi|neyi|olur mu|midir|mudur|misin|anlat\w*|acikla\w*|degerlendiril\w*|kapsar\w*|gosterir mi|iliskili mi|olcumu|kaniti|kaynagi|kaynaklari|gelisimi|yas kapsami|tani\w*\s+koy\w*|teshis\w*\s+et\w*|ilac\w*\s+yaz\w*|tedavi\w*\s+oner\w*|seans\w*\s+planla\w*)\b/
+  const questionMarker = /\b(?:ne|nedir|ne demek|ne diyor|nasil|neden|hangi|neyi|olur mu|midir|mudur|misin|anlat\w*|acikla\w*|bilgi\s+ver\w*|degerlendiril\w*|kapsar\w*|gosterir mi|iliskili mi|olcumu|kaniti|kaynagi|kaynaklari|gelisimi|yas kapsami|tani\w*\s+koy\w*|teshis\w*\s+et\w*|ilac\w*\s+yaz\w*|tedavi\w*\s+oner\w*|seans\w*\s+planla\w*)\b/
   const rawQuestionMarkCandidates = question
     .split(/\?+/)
     .map((part) => part.trim())
@@ -1844,7 +1995,10 @@ function splitDnaChatQuestion(question: string): { parts: string[]; overflow: bo
         : null
     })
     .find((parts): parts is string[] => Boolean(parts)) ?? []
-  const hasIndependentQuestions = conjunctionParts.length === 2
+  const hasSingleSubjectContrast = /\bneyi gosterir\s+ve\s+neyi gostermez\b/.test(
+    normalizeDnaChatText(question),
+  )
+  const hasIndependentQuestions = conjunctionParts.length === 2 && !hasSingleSubjectContrast
   const hasIndependentAdditionalQuestions = additionalParts.length > 1 && additionalParts.every((part) =>
     questionMarker.test(normalizeDnaChatText(part)),
   )
@@ -2139,6 +2293,17 @@ function combineDnaChatResponses(
     } : {}),
     suggestedQuestions: stableUnique(responses.flatMap((response) => response.suggestedQuestions), 4),
     answerUnits: combinedUnits,
+    semanticRouting: {
+      routerVersion: DNA_SEMANTIC_ROUTER_VERSION,
+      resolutionMode: contextRequest ? "case_context_required" : "decomposed",
+      confidenceBand: responses.some((response) => response.semanticRouting?.confidenceBand === "low")
+        ? "low"
+        : responses.some((response) => response.semanticRouting?.confidenceBand === "medium")
+          ? "medium"
+          : "high",
+      routedTopicIds: combinedTopicIds,
+      subquestionCount: 2,
+    },
   })
 }
 
@@ -2176,14 +2341,21 @@ export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
         request.previousTopic,
         request.conversationContext,
       )
-  const routingSafety = knowledgeQuestion !== question && routingQuestion === knowledgeQuestion
-    ? safety
-    : routingQuestion === question
-      ? safety
-      : emptySafety(routingQuestion)
+  // The routing question may contain a validated catalog/book title injected
+  // from conversation context. Re-running privacy detection over that trusted
+  // title can mistake title-case scientific phrases for a person's name. The
+  // original user text has already passed the complete safety gate above.
+  const routingSafety = safety
   if (routingSafety.blocked && !safety.blocked) return refusalResponse(routingSafety)
 
   const split = splitDnaChatQuestion(routingQuestion)
+  if (request.runtimeKnowledgeScope !== "legacy_catalog") {
+    buildDnaQuestionFrame({
+      questions: split.parts,
+      conversationContext: request.conversationContext,
+      responseDepth: request.responseDepth,
+    })
+  }
   if (split.overflow) {
     if (safety.blocked) return refusalResponse(safety)
     return clarificationResponse(
@@ -2197,8 +2369,7 @@ export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
     }
     const partSafeties = split.parts.map(emptySafety)
     const hasSafePart = partSafeties.some((partSafety) => !partSafety.blocked)
-    const hasBlockedPart = partSafeties.some((partSafety) => partSafety.blocked)
-    if (safety.blocked && (!hasSafePart || !hasBlockedPart)) return refusalResponse(safety)
+    if (safety.blocked && !hasSafePart) return refusalResponse(safety)
 
     const firstResponse = partSafeties[0].blocked
       ? refusalResponse(partSafeties[0])
@@ -2222,9 +2393,10 @@ export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
     )
   }
   if (safety.blocked) return refusalResponse(safety)
-  return resolveSingleDnaChat(
+  const response = resolveSingleDnaChat(
     { ...request, question: routingQuestion },
     routingQuestion,
     routingSafety,
   )
+  return preserveVerifiedFollowUpTopics(response, question, request)
 }

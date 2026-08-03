@@ -68,7 +68,7 @@ const sourceCardMapsToClaim = includesAll(clientSource, [
 const reportAbsenceDiffersFromScienceUnknown = includesAll(clientSource, [
   'answer.availabilityScope === "report"',
   "Seçili raporda bulunamadı",
-  "Henüz yanıtlayamıyorum",
+  "Soruyu birlikte netleştirelim",
   "case_missing: \"Raporda bulunmayan veya eksik veri\"",
 ]) && !clientSource.includes("Raporda Yok")
 

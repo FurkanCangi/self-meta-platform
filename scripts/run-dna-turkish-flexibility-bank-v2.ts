@@ -212,7 +212,32 @@ function seededShuffle<T>(values: readonly T[], seed: string): T[] {
   return result
 }
 
-const TOPICS = Object.freeze([...DNA_CHAT_CATALOG_TOPICS].sort((left, right) => left.id.localeCompare(right.id, "en")))
+// V2 bankası oluşturulduktan sonra eklenen 18 temel nörofizyoloji başlığı ayrı
+// foundational-expansion ve semantic-router kapılarında sınanır. Tarihsel
+// kilitli bankanın anlam evreni bu listeyle sabit tutulur.
+const POST_V2_FOUNDATIONAL_TOPIC_IDS = new Set([
+  "ans.autonomic_relay",
+  "ans.baroreflex",
+  "ans.hrv_interpretation",
+  "ans.hrv_respiration",
+  "ans.hrv_signal_quality",
+  "ans.hrv_time_domain",
+  "neuro.action_potential",
+  "neuro.chemical_synapse",
+  "neuro.membrane_potential",
+  "neuro.myelin_conduction",
+  "neuro.synaptic_potentials",
+  "neuro.synaptic_receptors",
+  "sleep.psg",
+  "sleep.rem",
+  "sleep.scn",
+  "sleep.sleep_pressure",
+  "sleep.sleep_stages",
+  "sleep.zeitgeber",
+])
+const TOPICS = Object.freeze(DNA_CHAT_CATALOG_TOPICS
+  .filter((topic) => !POST_V2_FOUNDATIONAL_TOPIC_IDS.has(topic.id))
+  .sort((left, right) => left.id.localeCompare(right.id, "en")))
 const TOPIC_IDS = new Set(TOPICS.map((topic) => topic.id))
 const DUPLICATE_TITLES = new Set(TOPICS
   .filter((topic, index, rows) => rows.some((candidate, candidateIndex) =>
@@ -645,6 +670,17 @@ function buildHoldout(v1: JsonRecord, seed: string): JsonRecord {
   return { ...base, holdoutSha256: hashValue(base) }
 }
 
+function rebindHoldoutCatalogMetadata(holdout: JsonRecord): JsonRecord {
+  const base = withoutHash({
+    ...holdout,
+    sourceBindings: {
+      ...holdout.sourceBindings,
+      catalogTopicMetadataSha256: catalogMetadataHash(),
+    },
+  }, "holdoutSha256")
+  return { ...base, holdoutSha256: hashValue(base) }
+}
+
 function withoutHash(value: JsonRecord, key: string): JsonRecord {
   const payload = { ...value }
   delete payload[key]
@@ -731,9 +767,10 @@ function manifestPayload(open: JsonRecord, holdout: JsonRecord, controls: JsonRe
       total: 1_500,
     },
     catalogCoverage: {
-      liveCatalogTopicCount: TOPICS.length,
+      liveCatalogTopicCount: DNA_CHAT_CATALOG_TOPICS.length,
       directlyTestedInNewOpenDefinitionFamily: TOPICS.length,
-      percent: 100,
+      postV2TopicsTestedBySeparateReleaseGates: POST_V2_FOUNDATIONAL_TOPIC_IDS.size,
+      percent: Number(((TOPICS.length / DNA_CHAT_CATALOG_TOPICS.length) * 100).toFixed(2)),
     },
     distributions: {
       openNewExtension: OPEN_EXTENSION_COUNTS,
@@ -784,10 +821,13 @@ function build(): JsonRecord {
   const v1Holdout = readSsdJson(V1_HOLDOUT)
   const open = buildOpen(v1Open)
   const holdout = existsSync(V2_HOLDOUT)
-    ? readSsdJson(V2_HOLDOUT)
+    ? rebindHoldoutCatalogMetadata(readSsdJson(V2_HOLDOUT))
     : buildHoldout(v1Holdout, randomBytes(32).toString("hex"))
   atomicWrite(V2_OPEN, open, 0o600, true)
   if (!existsSync(V2_HOLDOUT)) atomicWrite(V2_HOLDOUT, holdout, 0o600, false)
+  else if (stableJson(readSsdJson(V2_HOLDOUT)) !== stableJson(holdout)) {
+    atomicWrite(V2_HOLDOUT, holdout, 0o600, true)
+  }
   const controls = validateArtifacts(readSsdJson(V2_OPEN), readSsdJson(V2_HOLDOUT), v1Open, v1Holdout)
   const manifest = manifestPayload(open, holdout, controls)
   atomicWrite(MANIFEST, manifest, 0o644, true)
