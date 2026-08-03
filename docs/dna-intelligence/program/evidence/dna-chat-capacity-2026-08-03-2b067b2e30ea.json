@@ -1,0 +1,207 @@
+{
+  "schemaVersion": "dna-chat-capacity-snapshot@1",
+  "snapshotId": "2026-08-03-2b067b2e30ea",
+  "asOf": "2026-08-03",
+  "interpretation": {
+    "primaryRule": "Bilgi birimi, soru yüzeyi, kaynak ve test sorusu ayrı paydalardır.",
+    "liveFactRecordDefinition": "Canlı owner-book atomları ile canlı kaynak-bağlı katalog iddialarının aritmetik toplamıdır.",
+    "globalUniquenessStatus": "not_deduplicated_across_owner_book_and_verified_catalog",
+    "marketingUniqueKnowledgeUnits": null,
+    "reason": "İki canlı katman arasında küresel semantik tekilleştirme tamamlanmadı."
+  },
+  "architecture": {
+    "engine": "dna-chat-engine@2",
+    "catalogVersion": "dna-chat-catalog@2",
+    "pipelineVersion": "dna-knowledge-expansion@1",
+    "mode": "deterministic_source_grounded",
+    "runtimeInternet": false,
+    "externalLlm": false,
+    "embedding": false,
+    "vectorDatabase": false,
+    "responseProfiles": [
+      "short",
+      "standard",
+      "deep"
+    ],
+    "supportedQueryKinds": [
+      "definition",
+      "comparison",
+      "relation",
+      "measurement",
+      "development",
+      "evidence",
+      "misconception",
+      "dna_relation",
+      "case_finding",
+      "case_theory"
+    ],
+    "supportedQueryKindCount": 10,
+    "maximumCompoundSubQuestions": 2
+  },
+  "liveInventory": {
+    "ownerBook": {
+      "documents": 1,
+      "terminalSentences": 4909,
+      "terminalDecisionDistribution": {
+        "accepted": 4005,
+        "context_dependent": 531,
+        "duplicate": 22,
+        "needs_split": 1,
+        "nonfactual": 349,
+        "unsafe_for_answer": 1
+      },
+      "atomicKnowledgeUnits": 4008,
+      "uniqueClaims": 4008,
+      "uniquePassages": 4008,
+      "uniqueTopics": 759,
+      "questionSurfaces": 52106,
+      "domainDistribution": {
+        "attention_working_memory_executive": 359,
+        "autonomic_hrv": 158,
+        "cellular_neurophysiology": 14,
+        "cns_networks": 434,
+        "development_neurodiversity": 954,
+        "emotion_self_coregulation": 623,
+        "interoception_sensory": 780,
+        "measurement_case_boundaries": 360,
+        "sleep_circadian": 127,
+        "stress_arousal_recovery": 199
+      },
+      "dimensionDistribution": {
+        "comparison": 823,
+        "daily_function": 1517,
+        "definition": 240,
+        "development": 2323,
+        "measurement": 948,
+        "misconception_boundary": 522,
+        "process": 1807,
+        "relation": 1170,
+        "theory": 885
+      },
+      "citationMappingPendingSentences": 4909,
+      "sentencesWithInlineCitation": 262,
+      "sentencesWithoutInlineCitation": 4647,
+      "approvalStatus": "owner_approved_for_chat_use",
+      "scientificValidationStatus": "not_established_by_owner_approval"
+    },
+    "verifiedScienceCatalog": {
+      "researchPacks": 20,
+      "canonicalTopics": 136,
+      "sourceLinkedClaims": 276,
+      "exactPassageLinkedClaims": 37,
+      "claimPassageLinks": 37,
+      "uniqueCatalogPassages": 37,
+      "explicitSingleStepRelations": 182,
+      "verifiedSourceRecords": 164,
+      "claimSourceLinks": 585,
+      "averageSourcesPerClaim": 2.12,
+      "relationSourceLinks": 400,
+      "safetyRules": 43,
+      "canonicalBenchmarkQuestions": 1856,
+      "canonicalBenchmarkHoldoutQuestions": 928,
+      "canonicalSemanticFamilies": 1756,
+      "canonicalSafetyRefusals": 341,
+      "canonicalSupportedAnswerable": 802
+    },
+    "totals": {
+      "liveFactRecords": 4284,
+      "globallyDeduplicatedLiveKnowledgeUnits": null,
+      "globallyDeduplicated": false,
+      "liveQuestionSurfaces": 52106,
+      "liveSafetyRules": 43
+    }
+  },
+  "coverage": {
+    "domains": 10,
+    "dimensions": 14,
+    "totalCells": 140,
+    "filledCells": 137,
+    "unfilledCells": 3,
+    "filledPercent": 97.86,
+    "matrixSha256": "d3de6a4d525f3a43357eb05307f1898de8ad91d44d20971e6d310e302d9a22df"
+  },
+  "evaluation": {
+    "denseCatalog": {
+      "openDevelopment": {
+        "accuracy": 98.32,
+        "caseCount": 5000,
+        "correct": 4916,
+        "fileSha256": "ea3dea972b0eac698b1016e4bf0019ca9688a5f818527731e6c47ceccd21ed15",
+        "p95Ms": 0.758,
+        "resultSha256": "c735f1caba76415888956fc132e57102fd3b5af11cf9ff2128cc843ba45db7c2"
+      },
+      "lockedHoldoutFirst": {
+        "accuracy": 96.2,
+        "caseCount": 1500,
+        "correct": 1443,
+        "fileSha256": "e44b0186586f824772db88f08361d1731ba2ebb9161405ebfcf9320bf9aedd66",
+        "p95Ms": 15.377,
+        "resultSha256": "6d1d506605b74d94ad0af01e1850961d7e226f27f39a5cc9d5f1c55147fd8f3c"
+      },
+      "lockedHoldoutCurrent": {
+        "accuracy": 97.133,
+        "caseCount": 1500,
+        "correct": 1457,
+        "fileSha256": "ff16dcd6ab8a67e75a8c070d966eb90d40d0eeabf51bb89244807168a7e06511",
+        "p95Ms": 24.184,
+        "resultSha256": "605dee8bc2ecf798fbdc3136ce2a300ef03bb00da4d1be7466c7dc4f66f0cc73"
+      },
+      "lockedFirstResultImmutable": true,
+      "totalCurrentEvaluatedQuestions": 6500,
+      "openAndCurrentHoldoutDescriptiveAccuracy": 98.046,
+      "combinedAccuracyIsOfficialSingleScore": false
+    },
+    "canonicalCatalog": {
+      "questions": 1856,
+      "holdoutQuestions": 928,
+      "semanticFamilies": 1756,
+      "safetyRefusalQuestions": 341
+    }
+  },
+  "lockedCandidates": {
+    "externalScience": {
+      "status": "external_science_candidate_locked",
+      "units": 1000,
+      "uniquePrimaryClaims": 1000,
+      "uniquePrimaryPassages": 901,
+      "uniqueQuestionForms": 5000,
+      "pdfArtifacts": 23,
+      "licensedRuntimeCandidateSources": 5,
+      "licensedRuntimeCandidatePages": 1286,
+      "holdoutQuestions": 500,
+      "flexibilityBankOverlap": 0,
+      "runtimeEligible": false,
+      "releaseEligible": false,
+      "unitsLive": 0
+    }
+  },
+  "derivedMetrics": {
+    "ownerAcceptedTerminalDecisionPercent": 81.58,
+    "questionSurfacesPerOwnerKnowledgeUnit": 13,
+    "ownerKnowledgeUnitsPerTerminalSentence": 0.816,
+    "externalCandidateActivationPercent": 0
+  },
+  "claimLanguage": {
+    "allowed": [
+      "4.008 owner-book atomik bilgi birimi canlıdır.",
+      "276 doğrulanmış kaynak bağlantılı katalog iddiası canlıdır.",
+      "52.106 deterministik soru yüzeyi desteklenmektedir.",
+      "1.000 dış-bilim bilgi birimi yayın dışı aday pakette kilitlidir."
+    ],
+    "prohibited": [
+      "4.284 küresel olarak benzersiz bilgi birimi",
+      "52.106 soruyla eğitilmiş LLM",
+      "1.000 dış-bilim birimi canlı",
+      "Uzmanlarca doğrulanmış kitap modeli"
+    ]
+  },
+  "sourceIntegrity": {
+    "denseManifestSha256": "a50f66c0c4909e48d831a6e331bea6c4014cbc088e1ac22657a20b0207321188",
+    "denseRuntimeSha256": "359435273f307ed7103620a105a30f497be313377396cba0f09e933473a3a73e",
+    "ownerBookRuntimeSha256": "8d2c08fa8abf43f33d08e96aa34b592eafc4982662827cb350ca6174038f8581",
+    "ownerBookSourceSha256": "e8c6643bbc70dd0c8147fb79cc51a6d0d674f21197d917cf6127ca8fa90c8c59",
+    "externalCandidateUnitsSha256": "3f21434ced955ac25e1f28b078b65de8bc9876c977d67b9ff34937bb120860d0",
+    "canonicalCatalogIdentitySha256": "2998322d185e0a626ed2b74837fcaa29e9e56173d3149ad917bae2c60175772e"
+  },
+  "snapshotSha256": "a3c23a6568d1052c594c9905751302007ca55bc22a2594c13e6e4fdfbd4b1c77"
+}

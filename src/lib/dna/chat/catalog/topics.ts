@@ -6,6 +6,7 @@ import { V5_CASE_BOUNDARY_TOPICS } from "./v5CaseBoundariesCatalog"
 import { V5_COREGULATION_TOPICS } from "./v5CoregulationCatalog"
 import { V5_DEVELOPMENT_TOPICS } from "./v5DevelopmentCatalog"
 import { V5_SIX_DOMAINS_TOPICS } from "./v5SixDomainsCatalog"
+import { V6_FOUNDATIONAL_EXPANSION_TOPICS } from "./v6FoundationalExpansionCatalog"
 
 function topic(
   input: Omit<DnaChatCatalogTopic, "version" | "reviewStatus">,
@@ -1659,6 +1660,7 @@ export const DNA_CHAT_CATALOG_TOPICS: readonly DnaChatCatalogTopic[] = Object.fr
   ...V5_SIX_DOMAINS_TOPICS,
   ...V5_DEVELOPMENT_TOPICS,
   ...V5_COREGULATION_TOPICS,
+  ...V6_FOUNDATIONAL_EXPANSION_TOPICS,
 ])
 
 export const DNA_CHAT_CATALOG_TOPIC_BY_ID = new Map(

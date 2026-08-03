@@ -118,6 +118,7 @@ export const DNA_EVALUATION_ENGINE_SOURCE_FILES = Object.freeze([
   "src/lib/dna/chat/catalog/v5CoregulationCatalog.ts",
   "src/lib/dna/chat/catalog/v5DevelopmentCatalog.ts",
   "src/lib/dna/chat/catalog/v5SixDomainsCatalog.ts",
+  "src/lib/dna/chat/catalog/v6FoundationalExpansionCatalog.ts",
   "src/lib/dna/chat/catalogReasoning.ts",
   "src/lib/dna/chat/conversationPolicy.ts",
   "src/lib/dna/chat/engine.ts",

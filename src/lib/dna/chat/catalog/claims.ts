@@ -6,6 +6,7 @@ import { V5_CASE_BOUNDARY_CLAIMS } from "./v5CaseBoundariesCatalog"
 import { V5_COREGULATION_CLAIMS } from "./v5CoregulationCatalog"
 import { V5_DEVELOPMENT_CLAIMS } from "./v5DevelopmentCatalog"
 import { V5_SIX_DOMAINS_CLAIMS } from "./v5SixDomainsCatalog"
+import { V6_FOUNDATIONAL_EXPANSION_CLAIMS } from "./v6FoundationalExpansionCatalog"
 
 function claim(
   input: Omit<
@@ -1583,6 +1584,7 @@ export const DNA_CHAT_CATALOG_CLAIMS: readonly DnaChatCatalogClaim[] = Object.fr
   ...V5_SIX_DOMAINS_CLAIMS,
   ...V5_DEVELOPMENT_CLAIMS,
   ...V5_COREGULATION_CLAIMS,
+  ...V6_FOUNDATIONAL_EXPANSION_CLAIMS,
 ])
 
 export const DNA_CHAT_CATALOG_CLAIM_BY_ID = new Map(

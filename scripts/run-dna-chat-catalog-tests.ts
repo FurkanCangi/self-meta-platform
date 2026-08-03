@@ -107,7 +107,7 @@ const existingLiteratureIdByDoi = new Map(
 
 for (const source of DNA_CHAT_CATALOG_SOURCES) {
   assert.equal(source.sourceVerified, true)
-  assert.match(source.verifiedAt, /^2026-07-(?:16|17)$/)
+  assert.match(source.verifiedAt, /^2026-\d{2}-\d{2}$/)
   assert.ok(source.title && source.authors && source.publication && source.claimBoundary)
   assert.match(source.url, /^https:\/\//, `${source.id}: resmî URL HTTPS olmalı`)
   assert.doesNotMatch(source.url, /sandbox:|utm_|turn\d+(?:search|open|view)|researchgate/i)

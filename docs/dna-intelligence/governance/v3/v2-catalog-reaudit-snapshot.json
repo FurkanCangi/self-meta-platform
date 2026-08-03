@@ -139,6 +139,42 @@
       "auditEvidenceSha256": null
     },
     {
+      "auditId": "reaudit.claim.ans.baroreflex.corrective",
+      "legacyClaimId": "claim.ans.baroreflex.corrective",
+      "legacyClaimSha256": "e1c062030b4fc8dcc37a5f61015509b484b6a980141c88a68faab7af10ae3bdd",
+      "topicId": "ans.baroreflex",
+      "sourceIds": [
+        "OPEN_PHYSIOLOGY_UW_2023"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ans.baroreflex.response_example",
+      "legacyClaimId": "claim.ans.baroreflex.response_example",
+      "legacyClaimSha256": "0038ed5a1ee5eea018a96066e706f5879a0bbe87bf8593a0a9134c6e2e8b36ed",
+      "topicId": "ans.baroreflex",
+      "sourceIds": [
+        "OPEN_PHYSIOLOGY_UW_2023"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
       "auditId": "reaudit.claim.ans.behavior_not_disorder",
       "legacyClaimId": "claim.ans.behavior_not_disorder",
       "legacyClaimSha256": "4fd946743420e1d067ba4b59c62d104bbc93117ff07219022341de7cf76bc1a7",
@@ -223,6 +259,60 @@
       "sourceIds": [
         "SAPER_2002",
         "WEHRWEIN_ET_AL_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ans.relay.postganglionic_pattern",
+      "legacyClaimId": "claim.ans.relay.postganglionic_pattern",
+      "legacyClaimSha256": "3c82f25b60248e2d5eeefd155d276e1b3bb718b40f85c9c500857e350d5ef9bd",
+      "topicId": "ans.autonomic_relay",
+      "sourceIds": [
+        "OPEN_PHYSIOLOGY_UW_2023"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ans.relay.preganglionic_ach",
+      "legacyClaimId": "claim.ans.relay.preganglionic_ach",
+      "legacyClaimSha256": "8b4dea739f781d88b2b77ee9c94f7c398290902628e11aa1d23d2e9dc983d7dd",
+      "topicId": "ans.autonomic_relay",
+      "sourceIds": [
+        "OPEN_PHYSIOLOGY_UW_2023"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.ans.relay.two_neuron",
+      "legacyClaimId": "claim.ans.relay.two_neuron",
+      "legacyClaimSha256": "d4b49d21f828d16c3fe2ede263c5bddc1a9628d8ca0f70c6fcfb71eb5acfff2e",
+      "topicId": "ans.autonomic_relay",
+      "sourceIds": [
+        "OPEN_PHYSIOLOGY_UW_2023"
       ],
       "passageIds": [],
       "status": "quarantined",
@@ -3100,6 +3190,42 @@
       "auditEvidenceSha256": null
     },
     {
+      "auditId": "reaudit.claim.hrv.interpretation.no_one_to_one",
+      "legacyClaimId": "claim.hrv.interpretation.no_one_to_one",
+      "legacyClaimSha256": "901ea0e5070122ebc91dcb1c1f19d64943f271e13beba8a109c4c70eb3522d83",
+      "topicId": "ans.hrv_interpretation",
+      "sourceIds": [
+        "QUIGLEY_ET_AL_2024_HRV_GUIDELINES"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.hrv.interpretation.phasic_tonic",
+      "legacyClaimId": "claim.hrv.interpretation.phasic_tonic",
+      "legacyClaimSha256": "e7dcb8b5c262505cc5aade95deba5e6b0b0380962b2e4e18d41c277fe17c69d1",
+      "topicId": "ans.hrv_interpretation",
+      "sourceIds": [
+        "QUIGLEY_ET_AL_2024_HRV_GUIDELINES"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
       "auditId": "reaudit.claim.hrv.lfhf",
       "legacyClaimId": "claim.hrv.lfhf",
       "legacyClaimSha256": "76cd89724da4315fb1f4767c855637480cc3c66ab492f7f222753a4eb36ba0bd",
@@ -3126,6 +3252,114 @@
       "sourceIds": [
         "LABORDE_ET_AL_2017",
         "TASK_FORCE_HRV_1996"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.hrv.respiration.hf_rsa_distinction",
+      "legacyClaimId": "claim.hrv.respiration.hf_rsa_distinction",
+      "legacyClaimSha256": "4353556f6f0e20454363ab9aa469468c09070fd49ac5cfad5d85a91b45bb91fc",
+      "topicId": "ans.hrv_respiration",
+      "sourceIds": [
+        "QUIGLEY_ET_AL_2024_HRV_GUIDELINES"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.hrv.respiration.rate_depth",
+      "legacyClaimId": "claim.hrv.respiration.rate_depth",
+      "legacyClaimSha256": "3ba4ff2de9156a485fd64386d78c32168ccff55eaa558b59f602cb7bc5e3e897",
+      "topicId": "ans.hrv_respiration",
+      "sourceIds": [
+        "QUIGLEY_ET_AL_2024_HRV_GUIDELINES"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.hrv.signal.artifact_control",
+      "legacyClaimId": "claim.hrv.signal.artifact_control",
+      "legacyClaimSha256": "80c4aed12ff6c16e2776071931f6a98620c8c26c1c7eb400f8e5e09450ed7ef1",
+      "topicId": "ans.hrv_signal_quality",
+      "sourceIds": [
+        "QUIGLEY_ET_AL_2024_HRV_GUIDELINES"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.hrv.signal.interbeat_interval",
+      "legacyClaimId": "claim.hrv.signal.interbeat_interval",
+      "legacyClaimSha256": "fd047dd8a49908b40276e6370e04f598e23bb7f2ec3959d01690ece52733e5d9",
+      "topicId": "ans.hrv_signal_quality",
+      "sourceIds": [
+        "QUIGLEY_ET_AL_2024_HRV_GUIDELINES"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.hrv.time_domain.recording_duration",
+      "legacyClaimId": "claim.hrv.time_domain.recording_duration",
+      "legacyClaimSha256": "6b8d8b25e889fef360b278365cc852eef8b3b092347c635ceded1aa132f49398",
+      "topicId": "ans.hrv_time_domain",
+      "sourceIds": [
+        "QUIGLEY_ET_AL_2024_HRV_GUIDELINES"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.hrv.time_domain.sdnn_rmssd",
+      "legacyClaimId": "claim.hrv.time_domain.sdnn_rmssd",
+      "legacyClaimSha256": "ba975ac26d3a41ca26b020fae845846286b00f0dece572c7bcb231775c4c1641",
+      "topicId": "ans.hrv_time_domain",
+      "sourceIds": [
+        "QUIGLEY_ET_AL_2024_HRV_GUIDELINES"
       ],
       "passageIds": [],
       "status": "quarantined",
@@ -3587,6 +3821,222 @@
       "sourceIds": [
         "BUSH_ET_AL_2000",
         "HEILBRONNER_HAYDEN_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.neuro.action_potential.graded_distinction",
+      "legacyClaimId": "claim.neuro.action_potential.graded_distinction",
+      "legacyClaimSha256": "ff177ea35195db34ae6c0269f30a7ef8d490e3ccd2257db1dbf98a5de74ed10c",
+      "topicId": "neuro.action_potential",
+      "sourceIds": [
+        "OPEN_PHYSIOLOGY_UW_2023"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.neuro.action_potential.refractory_period",
+      "legacyClaimId": "claim.neuro.action_potential.refractory_period",
+      "legacyClaimSha256": "7f1805f643fa9cb0f34cfe833cb92eeaf88925b76110cafb7966b47a9562921b",
+      "topicId": "neuro.action_potential",
+      "sourceIds": [
+        "OPEN_NEUROSCIENCE_CANADIAN_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.neuro.membrane.electrochemical_gradient",
+      "legacyClaimId": "claim.neuro.membrane.electrochemical_gradient",
+      "legacyClaimSha256": "672e1e7a41f2731c197a2b42b2f570a78a15742fd7b1d3017e8178036b15ad84",
+      "topicId": "neuro.membrane_potential",
+      "sourceIds": [
+        "OPEN_PHYSIOLOGY_UW_2023"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.neuro.membrane.sodium_potassium_pump",
+      "legacyClaimId": "claim.neuro.membrane.sodium_potassium_pump",
+      "legacyClaimSha256": "40b4bf396dc0fe50dd41314b2a9b7832d825a6cf838eae96850578d75d0126d1",
+      "topicId": "neuro.membrane_potential",
+      "sourceIds": [
+        "OPEN_NEUROSCIENCE_CANADIAN_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.neuro.myelin.nodes",
+      "legacyClaimId": "claim.neuro.myelin.nodes",
+      "legacyClaimSha256": "8eb93bdbd123088b0f55b55a6f81b92ac4318d58d5df4b96ff0b273438b263ed",
+      "topicId": "neuro.myelin_conduction",
+      "sourceIds": [
+        "OPEN_NEUROSCIENCE_CANADIAN_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.neuro.myelin.saltatory",
+      "legacyClaimId": "claim.neuro.myelin.saltatory",
+      "legacyClaimSha256": "6796b6a728fd7bf2ef69a39ea2b0a4d223bf54995c227769147a78d82a4377f8",
+      "topicId": "neuro.myelin_conduction",
+      "sourceIds": [
+        "OPEN_PHYSIOLOGY_UW_2023"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.neuro.receptor.ionotropic",
+      "legacyClaimId": "claim.neuro.receptor.ionotropic",
+      "legacyClaimSha256": "7988cfa42de6bf189e31491239d28c583af764a082c6135e91622ec7af6cb3f3",
+      "topicId": "neuro.synaptic_receptors",
+      "sourceIds": [
+        "OPEN_PHYSIOLOGY_UW_2023"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.neuro.receptor.metabotropic",
+      "legacyClaimId": "claim.neuro.receptor.metabotropic",
+      "legacyClaimSha256": "cc8271d67f5653ee49d32984d0b510c7479c701cf91debd84efc2693aa17cefb",
+      "topicId": "neuro.synaptic_receptors",
+      "sourceIds": [
+        "OPEN_PHYSIOLOGY_UW_2023"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.neuro.synapse.calcium_entry",
+      "legacyClaimId": "claim.neuro.synapse.calcium_entry",
+      "legacyClaimSha256": "a491cd57de7a94140d85d23da1302d03beaaa8f44c381f38fa01f07efb5c191d",
+      "topicId": "neuro.chemical_synapse",
+      "sourceIds": [
+        "OPEN_PHYSIOLOGY_UW_2023"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.neuro.synapse.exocytosis",
+      "legacyClaimId": "claim.neuro.synapse.exocytosis",
+      "legacyClaimSha256": "142936428d63de95b5d883d23de5a90f4bc3a6c83dfe750f98d973cb4b36de53",
+      "topicId": "neuro.chemical_synapse",
+      "sourceIds": [
+        "OPEN_PHYSIOLOGY_UW_2023"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.neuro.synaptic_potential.epsp_ipsp",
+      "legacyClaimId": "claim.neuro.synaptic_potential.epsp_ipsp",
+      "legacyClaimSha256": "087cdc4c615893eeb7e6624d125e8d7e02d999af0a3bca37c854ab63b1fb2e7c",
+      "topicId": "neuro.synaptic_potentials",
+      "sourceIds": [
+        "OPEN_PHYSIOLOGY_UW_2023"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.neuro.synaptic_potential.summation",
+      "legacyClaimId": "claim.neuro.synaptic_potential.summation",
+      "legacyClaimSha256": "6504f1a8c1f3d77bf82313fe825a6a5be41238b171b55e00dcd8c37442d3086e",
+      "topicId": "neuro.synaptic_potentials",
+      "sourceIds": [
+        "OPEN_PHYSIOLOGY_UW_2023"
       ],
       "passageIds": [],
       "status": "quarantined",
@@ -4362,12 +4812,228 @@
       "auditEvidenceSha256": null
     },
     {
+      "auditId": "reaudit.claim.sleep.pressure.adenosine_intro",
+      "legacyClaimId": "claim.sleep.pressure.adenosine_intro",
+      "legacyClaimSha256": "56031ed98175e97f682a63d0d378ed872dc17e63040b7f0bd82126a419eeaf4e",
+      "topicId": "sleep.sleep_pressure",
+      "sourceIds": [
+        "OPEN_SCIENCE_OF_SLEEP_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.pressure.time_awake",
+      "legacyClaimId": "claim.sleep.pressure.time_awake",
+      "legacyClaimSha256": "d27efe93a435a779e0be268189264ef7ad6486a36907445220bccd2cebaab6e2",
+      "topicId": "sleep.sleep_pressure",
+      "sourceIds": [
+        "OPEN_SCIENCE_OF_SLEEP_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.psg.actigraphy_validation",
+      "legacyClaimId": "claim.sleep.psg.actigraphy_validation",
+      "legacyClaimSha256": "9f7d68dff23734239262d3e6ccc3773f9de4cb69361bd8e0208a4d6353dbec91",
+      "topicId": "sleep.psg",
+      "sourceIds": [
+        "OPEN_SCIENCE_OF_SLEEP_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.psg.components",
+      "legacyClaimId": "claim.sleep.psg.components",
+      "legacyClaimSha256": "2391544835648bfb4fef7fed72d472806e92417b93d350d4d5c86c8dbcd7fe9b",
+      "topicId": "sleep.psg",
+      "sourceIds": [
+        "OPEN_SCIENCE_OF_SLEEP_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.psg.eeg_scalp",
+      "legacyClaimId": "claim.sleep.psg.eeg_scalp",
+      "legacyClaimSha256": "4906b82f1c285135262cf646d51e65ccf3c6c93cf6da00db0705fd8e42f7e131",
+      "topicId": "sleep.psg",
+      "sourceIds": [
+        "OPEN_SCIENCE_OF_SLEEP_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.rem.features",
+      "legacyClaimId": "claim.sleep.rem.features",
+      "legacyClaimSha256": "af5e4c4a04e17ae7adfcbdd80ef1c27b6cc8adf1e668312abefe51b7dc831195",
+      "topicId": "sleep.rem",
+      "sourceIds": [
+        "OPEN_SCIENCE_OF_SLEEP_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.scn.animal_evidence",
+      "legacyClaimId": "claim.sleep.scn.animal_evidence",
+      "legacyClaimSha256": "c11b39aa5f2be3be8555409910b595e530f89b2635e77f55164754bf0d637038",
+      "topicId": "sleep.scn",
+      "sourceIds": [
+        "OPEN_SCIENCE_OF_SLEEP_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.scn.light_melatonin",
+      "legacyClaimId": "claim.sleep.scn.light_melatonin",
+      "legacyClaimSha256": "3c87f56cfce2731d81318f08bcac8a89fb2670b7c45bc6d94abb2bdd2d83db03",
+      "topicId": "sleep.scn",
+      "sourceIds": [
+        "OPEN_SCIENCE_OF_SLEEP_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.stages.distinguishable",
+      "legacyClaimId": "claim.sleep.stages.distinguishable",
+      "legacyClaimSha256": "ad1426de92f74951ebaead6e7eccba48208e2375a8603eefaffe6f2b2379348d",
+      "topicId": "sleep.sleep_stages",
+      "sourceIds": [
+        "OPEN_SCIENCE_OF_SLEEP_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.stages.n2_markers",
+      "legacyClaimId": "claim.sleep.stages.n2_markers",
+      "legacyClaimSha256": "bb5b536f26cea38aab77beade169316f5f80cfd659ad467212149a8d67330535",
+      "topicId": "sleep.sleep_stages",
+      "sourceIds": [
+        "OPEN_SCIENCE_OF_SLEEP_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
       "auditId": "reaudit.claim.sleep.two_process",
       "legacyClaimId": "claim.sleep.two_process",
       "legacyClaimSha256": "e3751d16694d5785f0ef7522b876b157f6a766277fb2f27f3be476b9dfc1a25d",
       "topicId": "selfreg.sleep_regulation",
       "sourceIds": [
         "BORBELY_ET_AL_2016"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.zeitgeber.definition",
+      "legacyClaimId": "claim.sleep.zeitgeber.definition",
+      "legacyClaimSha256": "146c618efb4c5914eecce8c80f02de861fc54b56c2ebbcd9b1ad6db2f5958761",
+      "topicId": "sleep.zeitgeber",
+      "sourceIds": [
+        "OPEN_SCIENCE_OF_SLEEP_2022"
+      ],
+      "passageIds": [],
+      "status": "quarantined",
+      "v3Eligible": false,
+      "exclusionReasons": [
+        "legacy_expert_pending",
+        "legacy_source_id_is_not_passage_evidence",
+        "missing_real_passage"
+      ],
+      "auditEvidenceSha256": null
+    },
+    {
+      "auditId": "reaudit.claim.sleep.zeitgeber.endogenous_clock",
+      "legacyClaimId": "claim.sleep.zeitgeber.endogenous_clock",
+      "legacyClaimSha256": "696abc0afeecbc74e8c19ea1a4663d4c636ccb8d046db0667f3546da6ec20367",
+      "topicId": "sleep.zeitgeber",
+      "sourceIds": [
+        "OPEN_SCIENCE_OF_SLEEP_2022"
       ],
       "passageIds": [],
       "status": "quarantined",
@@ -4616,16 +5282,16 @@
     }
   ],
   "counts": {
-    "auditedClaims": 239,
+    "auditedClaims": 276,
     "releaseEligibleClaims": 0,
-    "quarantinedClaims": 239,
-    "missingRealPassage": 239,
-    "legacyExpertPending": 239
+    "quarantinedClaims": 276,
+    "missingRealPassage": 276,
+    "legacyExpertPending": 276
   },
   "sourceAudit": {
-    "totalSources": 160,
-    "referencedByClaims": 151,
-    "referencedAnywhere": 153,
+    "totalSources": 164,
+    "referencedByClaims": 155,
+    "referencedAnywhere": 157,
     "unusedForClaimIds": [
       "CRITCHLEY_GARFINKEL_2017",
       "ENGLAND_MASON_ET_AL_2023",
@@ -4647,5 +5313,5 @@
       "THAYER_LANE_2009"
     ]
   },
-  "snapshotSha256": "f22abe41616cc361337127af77714f64afe4f77337e930918172f3bc6b0eafc1"
+  "snapshotSha256": "8bf7c033f7c6f085618bc695259e468420933802ee8dd310708cd0144937bf45"
 }

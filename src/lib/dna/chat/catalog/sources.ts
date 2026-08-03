@@ -6,6 +6,7 @@ import { V5_CASE_BOUNDARY_SOURCES } from "./v5CaseBoundariesCatalog"
 import { V5_COREGULATION_SOURCES } from "./v5CoregulationCatalog"
 import { V5_DEVELOPMENT_SOURCES } from "./v5DevelopmentCatalog"
 import { V5_SIX_DOMAINS_SOURCES } from "./v5SixDomainsCatalog"
+import { V6_FOUNDATIONAL_EXPANSION_SOURCES } from "./v6FoundationalExpansionCatalog"
 
 function source(
   input: Omit<DnaChatCatalogSource, "version" | "sourceVerified" | "verifiedAt">,
@@ -1605,6 +1606,7 @@ export const DNA_CHAT_CATALOG_SOURCES: readonly DnaChatCatalogSource[] = Object.
   ...V5_SIX_DOMAINS_SOURCES,
   ...V5_DEVELOPMENT_SOURCES,
   ...V5_COREGULATION_SOURCES,
+  ...V6_FOUNDATIONAL_EXPANSION_SOURCES,
 ])
 
 export const DNA_CHAT_CATALOG_SOURCE_BY_ID = new Map(

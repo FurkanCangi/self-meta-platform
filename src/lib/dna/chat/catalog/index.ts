@@ -49,4 +49,13 @@ export {
 } from "./search"
 export { DNA_CHAT_CATALOG_SOURCES, DNA_CHAT_CATALOG_SOURCE_BY_ID } from "./sources"
 export { DNA_CHAT_CATALOG_TOPICS, DNA_CHAT_CATALOG_TOPIC_BY_ID } from "./topics"
+export {
+  V6_FOUNDATIONAL_EXPANSION_CLAIMS,
+  V6_FOUNDATIONAL_EXPANSION_PASSAGES,
+  V6_FOUNDATIONAL_EXPANSION_RELATIONS,
+  V6_FOUNDATIONAL_EXPANSION_SOURCES,
+  V6_FOUNDATIONAL_EXPANSION_TOPICS,
+  V6_FOUNDATIONAL_EXPANSION_VERSION,
+} from "./v6FoundationalExpansionCatalog"
+export type { DnaFoundationalPassage } from "./v6FoundationalExpansionCatalog"
 export * from "./types"

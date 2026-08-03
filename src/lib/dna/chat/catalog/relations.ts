@@ -6,6 +6,7 @@ import { V5_CASE_BOUNDARY_RELATIONS } from "./v5CaseBoundariesCatalog"
 import { V5_COREGULATION_RELATIONS } from "./v5CoregulationCatalog"
 import { V5_DEVELOPMENT_RELATIONS } from "./v5DevelopmentCatalog"
 import { V5_SIX_DOMAINS_RELATIONS } from "./v5SixDomainsCatalog"
+import { V6_FOUNDATIONAL_EXPANSION_RELATIONS } from "./v6FoundationalExpansionCatalog"
 
 function relation(
   input: Omit<DnaChatCatalogRelation, "version" | "maxHops">,
@@ -913,4 +914,5 @@ export const DNA_CHAT_CATALOG_RELATIONS: readonly DnaChatCatalogRelation[] = Obj
   ...V5_SIX_DOMAINS_RELATIONS,
   ...V5_DEVELOPMENT_RELATIONS,
   ...V5_COREGULATION_RELATIONS,
+  ...V6_FOUNDATIONAL_EXPANSION_RELATIONS,
 ])

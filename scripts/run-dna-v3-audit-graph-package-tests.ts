@@ -454,7 +454,7 @@ function literalModuleSpecifiers(source: string): readonly string[] {
 
 function importsGeneratedV3Json(source: string): boolean {
   return literalModuleSpecifiers(source).some((specifier) =>
-    /(?:^|\/)(?:claims|passages|sources|relations|claim-passage-links|lexical-index|manifest)\.json$/.test(specifier))
+    /(?:^|\/)generated\/v3\/(?:claims|passages|sources|relations|claim-passage-links|lexical-index|manifest)\.json$/.test(specifier))
 }
 
 function importsGeneratedV3Server(source: string): boolean {
@@ -561,12 +561,13 @@ async function assertServerBoundary(): Promise<void> {
 }
 
 async function main(): Promise<void> {
-  assert.equal(DNA_CHAT_CATALOG_CLAIMS.length, 239)
-  assert.equal(DNA_CURRENT_V2_CATALOG_REAUDIT.counts.auditedClaims, 239)
+  const expectedCurrentCatalogClaims = 276
+  assert.equal(DNA_CHAT_CATALOG_CLAIMS.length, expectedCurrentCatalogClaims)
+  assert.equal(DNA_CURRENT_V2_CATALOG_REAUDIT.counts.auditedClaims, expectedCurrentCatalogClaims)
   assert.equal(DNA_CURRENT_V2_CATALOG_REAUDIT.counts.releaseEligibleClaims, 0)
-  assert.equal(DNA_CURRENT_V2_CATALOG_REAUDIT.counts.quarantinedClaims, 239)
-  assert.equal(DNA_CURRENT_V2_CATALOG_REAUDIT.counts.missingRealPassage, 239)
-  assert.equal(DNA_CURRENT_V2_CATALOG_REAUDIT.counts.legacyExpertPending, 239)
+  assert.equal(DNA_CURRENT_V2_CATALOG_REAUDIT.counts.quarantinedClaims, expectedCurrentCatalogClaims)
+  assert.equal(DNA_CURRENT_V2_CATALOG_REAUDIT.counts.missingRealPassage, expectedCurrentCatalogClaims)
+  assert.equal(DNA_CURRENT_V2_CATALOG_REAUDIT.counts.legacyExpertPending, expectedCurrentCatalogClaims)
   assert.equal(DNA_CURRENT_V2_CATALOG_REAUDIT.v2MutationPerformed, false)
   assert.ok(DNA_CURRENT_V2_CATALOG_REAUDIT.claims.every((record) =>
     record.status === "quarantined"
@@ -583,7 +584,7 @@ async function main(): Promise<void> {
     sources: DNA_CHAT_CATALOG_SOURCES,
   })
   assert.equal(repeated.snapshotSha256, DNA_CURRENT_V2_CATALOG_REAUDIT.snapshotSha256)
-  assert.equal(DNA_CHAT_CATALOG_CLAIMS.length, 239, "V2 catalog must remain unchanged")
+  assert.equal(DNA_CHAT_CATALOG_CLAIMS.length, expectedCurrentCatalogClaims, "V2 catalog must remain unchanged during re-audit")
   assert.throws(() => reauditDnaV2CatalogForTest({
     claims: DNA_CHAT_CATALOG_CLAIMS,
     relations: DNA_CHAT_CATALOG_RELATIONS,
@@ -607,8 +608,8 @@ async function main(): Promise<void> {
   }
 
   const compiled = emptyPackage()
-  assert.equal(compiled.manifest.counts.excluded.legacyV2Claims, 239)
-  assert.equal(compiled.manifest.counts.excluded.missingRealPassage, 239)
+  assert.equal(compiled.manifest.counts.excluded.legacyV2Claims, expectedCurrentCatalogClaims)
+  assert.equal(compiled.manifest.counts.excluded.missingRealPassage, expectedCurrentCatalogClaims)
   assert.equal(compiled.manifest.counts.included.claims, 0)
   assert.equal(compiled.manifest.releaseRegistryCount, 0)
   assert.equal(compiled.manifest.runtimeEligible, false)

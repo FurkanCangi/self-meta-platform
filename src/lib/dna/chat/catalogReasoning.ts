@@ -59,6 +59,20 @@ const AGE_SCOPE_LABELS: Record<DnaChatCatalogTopic["ageScope"], string> = {
   mixed: "Karma yaş örneklemleri",
 }
 
+function isNearDuplicateAnswerUnit(left: string, right: string): boolean {
+  const tokens = (value: string) => new Set(
+    normalizeDnaChatText(value)
+      .split(" ")
+      .filter((token) => token.length >= 3),
+  )
+  const leftTokens = tokens(left)
+  const rightTokens = tokens(right)
+  const smaller = Math.min(leftTokens.size, rightTokens.size)
+  if (smaller < 3) return false
+  const overlap = [...leftTokens].filter((token) => rightTokens.has(token)).length
+  return overlap / smaller >= 0.8
+}
+
 export type DnaCatalogReasoningDraft = {
   queryKind: DnaChatQueryKind
   route: Exclude<DnaChatRoute, "unknown" | "case">
@@ -970,14 +984,19 @@ export function resolveDnaCatalogReasoning(input: {
     authority: authorityForCatalogTopic(topic),
     sourceIds: [...topic.sourceIds],
   }
-  const seenDetails = new Set<string>()
+  const seenDetails: string[] = []
   const detailEntries = [
     ...relationEntries.slice(1),
     ...claimEntries,
     ...topicEntries,
   ].filter((entry) => {
-    if (!entry.text || entry.text === summaryEntry.text || seenDetails.has(entry.text)) return false
-    seenDetails.add(entry.text)
+    if (
+      !entry.text ||
+      entry.text === summaryEntry.text ||
+      isNearDuplicateAnswerUnit(entry.text, summaryEntry.text) ||
+      seenDetails.some((seen) => isNearDuplicateAnswerUnit(entry.text, seen))
+    ) return false
+    seenDetails.push(entry.text)
     return true
   }).slice(0, 5)
   const summary = queryKind === "misconception"

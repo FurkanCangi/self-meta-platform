@@ -138,6 +138,8 @@ export type DnaChatCatalogClaim = {
   readonly text: string
   readonly detail: string
   readonly sourceIds: readonly string[]
+  /** Exact source-passage records used by newly passage-audited catalog units. */
+  readonly passageIds?: readonly string[]
   readonly evidenceLevel: DnaChatCatalogEvidenceLevel
   readonly ageScope: DnaChatCatalogAgeScope
   readonly claimType: DnaChatCatalogClaimType

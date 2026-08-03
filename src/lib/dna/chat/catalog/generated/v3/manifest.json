@@ -3,7 +3,7 @@
   "graphVersion": "dna-v3-claim-passage-graph@1",
   "generatedAt": "2026-07-19T00:00:00.000Z",
   "sourceCutoffDate": "2026-07-19",
-  "inputManifestSha256": "c222f0b3938e98d11d002fa481f0742a30bcd3558a0b01f1ba5aaf29e24f8da7",
+  "inputManifestSha256": "c330cc42fd36bfcf1cf158b520390243749a02fa01d1089f50c8120418cac890",
   "releasePackageInputSha256": "74632950b10d55de833f29443d8e600bd186692a58e610fe81cd6edc2cb6616d",
   "releaseAuthorizationSetSha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
   "packageSha256": "797fc079ac2e21d799c906e80f972a34aefb55e8c67d8b28c69cf4f3d04aef96",
@@ -20,9 +20,9 @@
       "answerUnits": 0
     },
     "excluded": {
-      "legacyV2Claims": 239,
-      "missingRealPassage": 239,
-      "legacyExpertPending": 239,
+      "legacyV2Claims": 276,
+      "missingRealPassage": 276,
+      "legacyExpertPending": 276,
       "orphanLegacySources": 7
     }
   },
@@ -34,7 +34,7 @@
     "claimPassageLinks": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
     "lexicalIndex": "13ab068388722de485d18642b66c0f9ec52613bc06a21913fc493700b58b4f93"
   },
-  "v2ReauditSnapshotSha256": "f22abe41616cc361337127af77714f64afe4f77337e930918172f3bc6b0eafc1",
+  "v2ReauditSnapshotSha256": "8bf7c033f7c6f085618bc695259e468420933802ee8dd310708cd0144937bf45",
   "releaseRegistryCount": 0,
   "runtimeEligible": false
 }
