@@ -1,0 +1,43 @@
+{
+  "content": {
+    "bodyTextSha256": "d0ad1ddec270a2673522171422151fda7d70406498edf166fa539b51ea8b8b5c",
+    "nodesSha256": "42f86eb54431eb4c0b5622f19c50bbee434b847d89c603d529f069b7275b6c4a",
+    "referenceTextSha256": "3b3c74a86740d439c5a42b404ff5296ce0d3329741d485700fb88c28c86e64b5"
+  },
+  "counts": {
+    "citationPendingSentences": 4909,
+    "headings": 875,
+    "nodes": 3513,
+    "paragraphs": 2637,
+    "references": 224,
+    "sentences": 4909,
+    "sentencesWithInlineCitation": 262,
+    "sentencesWithoutInlineCitation": 4647,
+    "tables": 1
+  },
+  "pipelineVersion": "dna-single-owner-book-ingestion@1",
+  "runtimeBytes": 2916542,
+  "runtimePath": "src/lib/dna/chat/catalog/generated/owner-book/runtime.json",
+  "runtimePolicy": {
+    "citationMappingPending": true,
+    "embedding": false,
+    "externalLlm": false,
+    "runtimeInternet": false,
+    "safetyGateRequired": true,
+    "vectorDatabase": false
+  },
+  "runtimeSha256": "8d2c08fa8abf43f33d08e96aa34b592eafc4982662827cb350ca6174038f8581",
+  "schemaVersion": "dna-owner-book-runtime-manifest@1",
+  "source": {
+    "author": "Abdullah Furkan CANGİ",
+    "citationStatus": "pending_sentence_mapping",
+    "fileName": "Self-Regülasyon Kitabı.docx",
+    "id": "book.self-regulation.owner-current",
+    "legacyChapterFilesIncluded": [],
+    "modifiedAt": "2026-08-03T07:09:00Z",
+    "selectedByOwner": true,
+    "sha256": "e8c6643bbc70dd0c8147fb79cc51a6d0d674f21197d917cf6127ca8fa90c8c59",
+    "title": "Self-Regülasyon Kitabı",
+    "year": 2026
+  }
+}

@@ -94,8 +94,11 @@ export type DnaChatSourceRef = {
   title: string
   labelTr: string
   excerptTr: string
+  authors?: string
   citation?: string
   year?: number
+  locator?: string
+  sourceType?: string
   doi?: string | null
   url?: string
   claimBoundary?: string
@@ -171,6 +174,9 @@ export type DnaChatRequest = {
   previousTopic?: string | null
   conversationContext?: DnaChatConversationContext | null
   caseContext?: DnaChatCaseContextInput | DnaChatSafeCaseContext
+  responseDepth?: "short" | "standard" | "deep"
+  /** Internal regression scope; the public API schema never accepts this field. */
+  runtimeKnowledgeScope?: "all" | "legacy_catalog"
 }
 
 export type DnaChatSafetyCategory =

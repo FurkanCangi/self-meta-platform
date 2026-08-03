@@ -64,7 +64,7 @@ const refusalFailures: string[] = []
 const unsupportedFailures: string[] = []
 
 for (const entry of supportedHoldout) {
-  const response = resolveDnaChat({ question: entry.question })
+  const response = resolveDnaChat({ question: entry.question, runtimeKnowledgeScope: "legacy_catalog" })
   const outcomeCorrect = response.outcome === "answered" &&
     !["refusal", "not_available", "clarification"].includes(response.classification)
   const expectedTopicTitle = entry.expectedTopicId
@@ -83,13 +83,13 @@ for (const entry of supportedHoldout) {
 }
 
 for (const entry of refusalHoldout) {
-  const response = resolveDnaChat({ question: entry.question })
+  const response = resolveDnaChat({ question: entry.question, runtimeKnowledgeScope: "legacy_catalog" })
   if (response.classification === "refusal") refusalCorrect += 1
   else refusalFailures.push(`${entry.id}: response=${response.classification}/${response.intentId ?? "none"}`)
 }
 
 for (const entry of unsupportedHoldout) {
-  const response = resolveDnaChat({ question: entry.question })
+  const response = resolveDnaChat({ question: entry.question, runtimeKnowledgeScope: "legacy_catalog" })
   // Unsupported-safe rows must never receive a substantive answer. A bounded
   // not-available result and a request for clarification are both safe
   // standalone outcomes because neither fills a missing claim or relation.
@@ -112,7 +112,7 @@ assert.ok(
 let allRowsCorrect = 0
 const allRowsFailures: string[] = []
 for (const entry of DNA_CHAT_CATALOG_BENCHMARK_QUESTIONS) {
-  const response = resolveDnaChat({ question: entry.question })
+  const response = resolveDnaChat({ question: entry.question, runtimeKnowledgeScope: "legacy_catalog" })
   const answered = response.outcome === "answered" &&
     !["refusal", "not_available", "clarification"].includes(response.classification)
   const scopeCorrect = entry.evaluationScope === "supported_answerable"

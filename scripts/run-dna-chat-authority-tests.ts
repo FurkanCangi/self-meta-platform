@@ -596,16 +596,17 @@ async function main() {
   )
   for (const requiredUiContract of [
     "visibleAnswerUnits.map",
-    "Otoritesine göre ayrılmış yanıt",
-    'case_evidence: "Rapor dayanağı"',
-    'limitation: "Sınırlılık"',
-    'safety_boundary: "Güvenlik sınırı"',
-    "Denetim bekliyor",
+    "sourceNumberById",
     "!hasStructuredUnits && answer.caseEvidence.length",
-    "Yanıtta kullanılan bilgi otoriteleri",
+    "Kaynaklar ({answer.sources.length})",
   ]) {
     assert.ok(assistantUi.includes(requiredUiContract), `UI authority contract: ${requiredUiContract}`)
   }
+  assert.doesNotMatch(
+    assistantUi,
+    /Otoritesine göre ayrılmış yanıt|Denetim bekliyor|Yanıtta kullanılan bilgi otoriteleri/,
+    "Teknik otorite ve denetim etiketleri ana sohbet arayüzünde gösterilmemeli",
+  )
   assert.doesNotMatch(
     assistantUi,
     /unit\.authority\.boundaryTr|source\.authority\?\.boundaryTr/,

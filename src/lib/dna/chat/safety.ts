@@ -504,6 +504,9 @@ function isCompositionalManipulationRequest(normalized: string): boolean {
   )
 }
 
+const OWNER_BOOK_BULK_EXTRACTION_PATTERN =
+  /\b(?:kitab\w*|self\s+regulasyon\s+kitab\w*)\b.{0,120}\b(?:tamam\w*|tum\w*|butun\w*|her\s+(?:cumle|paragraf|sayfa)\w*)\b.{0,120}\b(?:disa(?:ri)?\s+aktar\w*|dok\w*|kopyala\w*|listele\w*|yaz\w*|ver\w*|paylas\w*)\b/
+
 const INTERNAL_DATA_TARGET_PATTERN =
   /\b(?:ham\s+(?:madde\w*|cevap\w*|yanit\w*|anamnez\w*|veri\w*)|(?:anket|olcek|form)\w*\s+(?:yanit|cevap)\w*|form\w*\s+isaretleme\w*|puan\s+hesab\w*\b.{0,60}\bkatsayi\w*|snapshot\w*|answers\w*|eslestirme\s+puan\w*|ozgun\s+ceva(?:p|b)\w*|kural\s+kimlik\w*|kural\s+agirlik\w*|audit\s+log\w*|audit\s+kayd\w*|router\w*\s+(?:in\s+)?(?:karar\s+agac\w*|esik\w*)|klinik\s+json\w*|gizli\s+iz\s+kayd\w*|veritabani\w*)\b/
 const DATA_EXTRACTION_ACTION_PATTERN =
@@ -837,6 +840,14 @@ export function inspectDnaChatSafety(question: string): DnaChatSafetyResult {
       "internal_data",
       "raw_or_internal_data_request_blocked",
       "Ham madde cevapları, gizli eşikler, kural listeleri, trace ve audit ayrıntıları sohbet yanıtına açılmaz.",
+    )
+  }
+  if (OWNER_BOOK_BULK_EXTRACTION_PATTERN.test(normalized)) {
+    return safetyResult(
+      redactedQuestion,
+      "manipulation",
+      "owner_book_bulk_extraction_blocked",
+      "Kitap, konuya bağlı kısa ve kaynaklı yanıtlar için kullanılabilir; kitabın tamamı veya toplu bölümleri sohbet üzerinden dışarı aktarılamaz.",
     )
   }
   if (includesAny(normalized, MANIPULATION_PATTERNS) || isCompositionalManipulationRequest(normalized)) {

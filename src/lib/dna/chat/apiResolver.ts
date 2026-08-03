@@ -697,6 +697,7 @@ export async function resolveDnaChatApiRequest(
         question: payload.question,
         previousTopic: payload.context?.previousTopic || null,
         conversationContext,
+        responseDepth,
       }))
 
   if (!isDnaChatRuntimeAnswerAuthentic(runtimeAnswer)) {

@@ -6,6 +6,7 @@ import {
 import { evaluateDnaChatOperationalEnvironment } from "@/lib/dna/chat/operations/incidentResponse"
 import { DNA_CHAT_CATALOG_SOURCE_BY_ID } from "@/lib/dna/chat/catalog"
 import { readDnaChatRequestBody } from "@/lib/dna/chat/apiResolver"
+import { hasDnaOwnerBookSourceId } from "@/lib/dna/chat/ownerBookRuntime"
 import { hasCommittedDnaV3SourceId } from "@/lib/dna/chat/v3RetrievalServer"
 import { requireConfirmedUser, requireTrustedMutation } from "@/lib/security/apiGuards"
 import { recordDataAccessAuditEvent } from "@/lib/security/privacyOps"
@@ -100,6 +101,7 @@ export async function POST(request: Request) {
 
     if (record.sourceId) {
       const sourceExists = DNA_CHAT_CATALOG_SOURCE_BY_ID.has(record.sourceId)
+        || hasDnaOwnerBookSourceId(record.sourceId)
         || hasCommittedDnaV3SourceId(record.sourceId)
       const auditMetadata = requestAudit.data.metadata
         && typeof requestAudit.data.metadata === "object"
