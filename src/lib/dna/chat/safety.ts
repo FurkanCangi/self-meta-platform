@@ -170,6 +170,8 @@ const MANIPULATION_PATTERNS = [
   "prompt sinirlarini yok say",
   "sistem mesajini goster",
   "sistem prompt",
+  "system prompt",
+  "system promptu goster",
   "gizli prompt",
   "ham veritabani",
   "ham json",
@@ -185,6 +187,9 @@ const MANIPULATION_PATTERNS = [
   "kural listesini goster",
   "gizli kural",
   "gizli kurallari",
+  "gizli rule",
+  "rule id",
+  "rule idleri",
   "karar izini goster",
   "audit trail",
   "trace ve audit",
@@ -228,6 +233,10 @@ const INTERNAL_DATA_PATTERNS = [
   "soru bazli cevaplari",
   "puanlama esiklerini",
   "router esiklerini",
+  "gizli esikleri",
+  "esikleri dok",
+  "kural idlerini",
+  "rule idlerini",
   "gizli trace",
   "gizli audit",
   "madde yanitlarini",
@@ -238,6 +247,11 @@ const INTERNAL_DATA_PATTERNS = [
 
 const CROSS_CASE_PATTERNS = [
   "baska terapistin raporunu goster",
+  "diger terapistin raporunu goster",
+  "baska terapistin raporunu",
+  "diger terapistin raporunu",
+  "baska terapistin raporunu ac",
+  "diger terapistin raporunu ac",
   "baska vaka ile karsilastir",
   "diger vaka ile karsilastir",
   "baska danisanla karsilastir",
@@ -352,9 +366,17 @@ const INDIVIDUAL_CLINICAL_CONTEXT_PATTERN =
 const DIAGNOSTIC_CONCEPT_PATTERN =
   /\b(?:tani(?:sal\w*|si\w*|yi\w*|ya\w*|nin\w*|niz\w*|\s+koy\w*|\s+ver\w*)|teshis\w*|hastali(?:k|g)\w*|bozuklu(?:k|g)\w*|dsm(?:\s*5)?|asd|otiz\w*|otistik\w*|dehb|adhd|spektrum\w*|norogelisimsel|zihinsel\s+gerilik|ayirici\s+tani|klinik\s+(?:etiket\w*|tablo\w*|kategori\w*)|psikiyatrik\s+(?:etiket\w*|kategori\w*))\b/
 const DIAGNOSTIC_REQUEST_PATTERN =
-  /\b(?:tani\w*.{0,80}\bkoy\w*|ad\w*\s+soyle\w*|siniflandir\w*|etiket\w*|daralt\w*|indir\w*|secenek\w*\s+ver\w*|sahip\s+mi|sayil\w*\s+(?:mi|mu)|say\w*\s+miy\w*|destekli\w*\s+(?:mi|mu)|ihtimal\w*|yuzde\s+kac|daha\s+yakin|sonuc\w*\s+donustur\w*|ad\w*\s+tahmin\w*|var\s+mi\s+yok\s+mu|gosterge\w*|kod\w*\s+sec\w*|kanaat\w*|acikca\s+belirt\w*|diyebilir\w*\s+miy\w*)\b/
+  /\b(?:tani\w*.{0,80}\bkoy\w*|ayirici\s+tani\w*.{0,80}\b(?:liste\w*|cikar\w*|yaz\w*)|ad\w*\s+soyle\w*|siniflandir\w*|etiket\w*|daralt\w*|indir\w*|secenek\w*\s+ver\w*|sahip\s+mi|sayil\w*\s+(?:mi|mu)|say\w*\s+miy\w*|destekli\w*\s+(?:mi|mu)|ihtimal\w*|yuzde\s+kac|daha\s+yakin|sonuc\w*\s+donustur\w*|ad\w*\s+tahmin\w*|var\s+mi\s+yok\s+mu|gosterge\w*|kod\w*\s+sec\w*|kanaat\w*|acikca\s+belirt\w*|diyebilir\w*\s+miy\w*)\b/
 
 function isCompositionalDiagnosisRequest(normalized: string): boolean {
+  // RSA adındaki "aritmi" sözcüğü genel bir kavram sorusudur; bireysel tanı
+  // talebi olmadığı sürece tanı kapısına takılmamalıdır.
+  if (/^(?:rsa|respiratuvar sinus aritmisi) (?:bir )?(?:kalp )?hastali(?:gi|k) mi$/.test(normalized)) {
+    return false
+  }
+  if (/\b(?:gelisimsel farklilik|gelisim farki)\w*\b.+\bhastalik mi\b/.test(normalized)) {
+    return false
+  }
   if (
     /\b(?:yanlis|hatali) oncul\w*\b.{0,100}\bkabul etmeden\b/.test(normalized) ||
     /\bvarsayim\w*\b.{0,80}\bkarsilast\w*\b/.test(normalized)
@@ -372,6 +394,13 @@ function isCompositionalDiagnosisRequest(normalized: string): boolean {
     return false
   }
   if (/\bbozuklugu\s+yok\b.{0,100}\bayrim\s+yapilabilir\s+mi\b/.test(normalized)) {
+    return false
+  }
+  if (
+    /\btarama\w*(?:\s+ve)?\s+tanisal degerlendirme\b/.test(normalized) &&
+    /\b(?:temel cerceve|temel tanim|tanimi anlat|nedir|ne demek)\b/.test(normalized) &&
+    !/\b(?:bu cocuk|bu vaka|bu danisan|bu rapor|rapordaki|vakadaki)\b/.test(normalized)
+  ) {
     return false
   }
   if (!DIAGNOSTIC_CONCEPT_PATTERN.test(normalized)) return false
@@ -573,6 +602,8 @@ const INDIVIDUALIZED_PROXY_PATTERN =
   /\b(?:puan\w*|skor\w*|profil\w*|yas\s+esdeger\w*|gorev\s+(?:sonuc\w*|puan\w*|hata\w*)|uyku\s+(?:oruntu\w*|puani\w*)|(?:test|olcek|anket|dna)\s+(?:sonuc\w*|puan\w*)|bu\s+(?:cocuk|vaka|danisan|rapor)\w*|rapordaki|cocugun|danisan\w*)\b/
 const PRODUCT_OR_DEICTIC_PROXY_PATTERN =
   /\b(?:dna|puan\w*|skor\w*|profil\w*|davranis\w*|gozlem\w*|belirti\w*|gorev\s+(?:sonuc\w*|puan\w*|hata\w*)|uyku\s+(?:oruntu\w*|puani\w*)|(?:test|olcek|anket|dna)\s+(?:sonuc\w*|puan\w*)|bu\s+(?:cocuk|vaka|danisan|rapor)\w*|rapordaki|danisan\w*)\b/
+const INDIVIDUAL_REPORT_PROXY_PATTERN =
+  /\b(?:bu\s+rapor\w*|rapordaki\w*|raporum\w*|raporun\w*|rapor\s+(?:veri|puan|skor|bulgu|sonuc)\w*)\b/
 const BIOLOGICAL_TARGET_PATTERN =
   /\b(?:beyin(?:\s+(?:bolgesi|agi|olgunlugu))?|sinir\s+sistemi\w*|fight\s+or\s+flight|korteks\w*|frontal\s+lob\w*|frontopariyetal\s+ag\w*|dikkat\s+ag\w*|yurutucu\s+ag\w*|pfc|dlpfc|vmpfc|prefrontal\w*|acc|singulat\w*|insula\w*|insular\w*|amigdala\w*|salience\s+ag\w*|merkezi\s+otonom\s+ag\w*|can\s+(?:agi|etkinligi|aktivitesi)|vagus\w*|vagal\w*|sempatik\w*|parasempatik\w*|hrv|eda|ern|hpa|crh|acth|kortizol\w*|melatonin\w*|hormon\w*|scn|sirkadiyen\s+faz\w*|biyolojik\s+saat\w*|uyarilma\s+biyoloji\w*|vestibuler\s+sistem\w*|uyku\s+(?:evre\w*|mimari\w*)|allostatik\s+yuk\w*|calisma\s+bellegi\s+kapasite\w*|yurutucu\s+kapasite\w*|fonolojik\s+dongu\w*|zeka\w*|noradrenalin\w*|norepinefrin\w*|norolojik\s+esi(?:k|g)\w*|interoseptif\s+dogrulu(?:k|g)\w*)\b/
 const BIOLOGICAL_INFERENCE_PREDICATE_PATTERN =
@@ -604,6 +635,10 @@ function compositionalBiologicalOverreach(
   source: string,
 ): "measurement_overreach" | "biological_inference" | null {
   if (isExplicitBoundaryCritique(normalized)) return null
+  if (
+    /\b(?:arastirma|bilimsel|literatur) rapor\w*\b/.test(normalized) &&
+    !/\b(?:bu cocuk|bu vaka|bu danisan|cocug\w*|danisan\w*|dna puan\w*|skor\w*)\b/.test(normalized)
+  ) return null
 
   const queryKind = classifyCatalogQueryKind(source)
   const generalDevelopmentFrame =
@@ -618,7 +653,7 @@ function compositionalBiologicalOverreach(
   if (researchFrame) return null
 
   if (
-    !PROFILE_OR_OBSERVATION_PROXY_PATTERN.test(normalized) ||
+    !(PROFILE_OR_OBSERVATION_PROXY_PATTERN.test(normalized) || INDIVIDUAL_REPORT_PROXY_PATTERN.test(normalized)) ||
     !BIOLOGICAL_TARGET_PATTERN.test(normalized) ||
     !BIOLOGICAL_INFERENCE_PREDICATE_PATTERN.test(normalized)
   ) {

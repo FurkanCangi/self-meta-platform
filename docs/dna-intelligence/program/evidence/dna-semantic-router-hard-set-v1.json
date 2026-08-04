@@ -27,13 +27,13 @@
     "compoundCompleteness": 1,
     "followupAccuracy": 1,
     "safetyAndOutDomain": 1,
-    "p95Ms": 0.5712500000008731
+    "p95Ms": 0.7054590000000189
   },
   "failureCount": 0,
   "failureSample": [],
   "rawBankLocation": "ResearchSSD",
   "rawResultLocation": "ResearchSSD",
-  "resultSha256": "fcd51c46da6bae516eba64d512b1ec034ef516782b3a0b4b481e3a7a5308e003",
+  "resultSha256": "f2059d829fb1d3c3e7a4127e32acf74a74ddf623989580a6f8b23165fec16e50",
   "externalLlm": false,
   "runtimeInternet": false
 }

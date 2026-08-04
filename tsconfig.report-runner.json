@@ -41,6 +41,7 @@
     "scripts/train-dna-semantic-router.ts",
     "scripts/run-dna-semantic-router-tests.ts",
     "scripts/run-dna-semantic-router-hard-set.ts",
+    "scripts/run-dna-chat-adversarial-flex-tests.ts",
     "scripts/run-dna-chat-cross-account-live.ts",
     "scripts/capture-dna-chat-baseline.ts",
     "scripts/run-dna-chat-intended-use-tests.ts",

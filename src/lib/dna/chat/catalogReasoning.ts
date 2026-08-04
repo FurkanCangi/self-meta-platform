@@ -99,7 +99,7 @@ function hasExplicitComparisonCue(normalizedQuestion: string): boolean {
   return /\barasindaki fark(?: ne| nedir| nedir acaba)?\b/.test(normalizedQuestion) ||
     /\b(?:ayni|ayni bir) (?:biyolojik )?(?:sey|surec|yapi|kavram|terim|islev|bilesen|mekanizma)(?: mi| midir| mudur)\b/.test(normalizedQuestion) ||
     /\bbirbirine (?:tamamen )?ters(?: mi| midir| mudur)\b/.test(normalizedQuestion) ||
-    /\bbirbirinden (?:tamamen )?(?:bagimsiz|ayri|farkli)(?: mi| midir| mudur)\b/.test(normalizedQuestion)
+    /\bbirbirinden (?:tamamen )?(?:bagimsiz|ayri|farkli|kopuk)(?: mi| midir| mudur)\b/.test(normalizedQuestion)
 }
 
 function hasSafeDefinitionCue(normalizedQuestion: string): boolean {
@@ -122,6 +122,9 @@ function hasSafeDefinitionCue(normalizedQuestion: string): boolean {
 
 export function classifyDnaChatQueryKind(question: string): DnaChatQueryKind {
   const normalized = normalizeDnaChatText(question)
+  if (/\bvaka yorum sinir\w*\b.+\bdna\w*\b.+\balti alan\w*\b/.test(normalized)) {
+    return "definition"
+  }
   // This mixed-language phrase asks for the evidence/measurement boundary of
   // one named topic; `scope ... boundary ... ayrılır` is not a comparison
   // between two biological concepts.
@@ -129,6 +132,10 @@ export function classifyDnaChatQueryKind(question: string): DnaChatQueryKind {
     return "evidence"
   }
   if (hasExplicitComparisonCue(normalized)) return "comparison"
+  if (
+    /\bne demek\b/.test(normalized) &&
+    !/\b(?:neden|niye|kanit|kaynak|olc\w*|ilisk\w*|baglanti\w*|etkile\w*)\b/.test(normalized)
+  ) return "definition"
   if (/^(?:(?:peki|ya|ayrica)\s+)?(?:olcum\w*(?: nasil)?|nasil olcul\w*|nasil degerlendir\w*)$/.test(normalized)) return "measurement"
   if (/^(?:(?:peki|ya|ayrica)\s+)?(?:kaynak\w*(?: goster\w*(?: misin)?)?|kanit\w*(?: ne| nasil| guclu mu)?|kanit duzeyi(?: ne| nasil)?|orneklem\w*|ne kadar guclu|guvenilir mi)$/.test(normalized)) {
     return "evidence"
@@ -138,6 +145,18 @@ export function classifyDnaChatQueryKind(question: string): DnaChatQueryKind {
   }
   if (/^(?:(?:peki|ya)\s+)?(?:dna baglanti\w*|dna ile iliski\w*)$/.test(normalized)) {
     return "dna_relation"
+  }
+  if (/\bfizyolojik regulasyon\b.+\bparasempatik\w*\b/.test(normalized)) {
+    return "misconception"
+  }
+  if (/\b(?:gelisimsel farklilik|gelisim farki)\w*\b.+\bhastalik mi\b/.test(normalized)) {
+    return "misconception"
+  }
+  if (/\byurutucu islev alani\b.+\bprefrontal korteks\w*\b.+\bolcer mi\b/.test(normalized)) {
+    return "measurement"
+  }
+  if (/\bdna alan\w*\b.+\bgunluk katilim\w*\b/.test(normalized)) {
+    return "definition"
   }
 
   const catalogKind = classifyCatalogQueryKind(question) as CatalogQueryKind
@@ -189,8 +208,21 @@ function topicPatterns(topic: DnaChatCatalogTopic): string[] {
     .filter(Boolean)
 }
 
+const RELATION_ROUTING_ALIASES: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  "ans.interoception": ["bedeni hissetme", "bedeni hissetmek", "ic bedeni hissetme"],
+  "selfreg.daily_rhythm": [
+    "hafta sonu gec yatma",
+    "haftasonu gec yatmak",
+    "gec yatma",
+    "gec yatmak",
+    "yatis saati",
+  ],
+  "selfreg.executive_functions": ["planlama", "plan yapmak", "plan kurmak"],
+})
+
 function topicIdentityPatterns(topic: DnaChatCatalogTopic): string[] {
-  return [topic.title, ...topic.aliases]
+  const routingAliases = RELATION_ROUTING_ALIASES[topic.id] ?? []
+  return [topic.title, ...topic.aliases, ...routingAliases]
     .map(normalizeDnaChatText)
     .filter(Boolean)
 }

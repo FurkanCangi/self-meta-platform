@@ -220,7 +220,11 @@ export function evaluateDnaChatRuntimeAssurance(input: Readonly<{
     }
   }
 
-  if (structure.subquestionCount === 2 && input.runtimeAnswer.generation === "v2_legacy") {
+  if (
+    structure.subquestionCount === 2 &&
+    input.runtimeAnswer.generation === "v2_legacy" &&
+    input.runtimeAnswer.answer.outcome !== "refused"
+  ) {
     const ids = new Set(internalUnits.map((unit) => unit.id))
     if (!ids.has("response-1-summary") || !ids.has("response-2-summary")) {
       addIssue(issues, "selection", "compound_internal_section_missing")
@@ -265,7 +269,11 @@ export function evaluateDnaChatRuntimeAssurance(input: Readonly<{
     }
   }
 
-  if (structure.subquestionCount === 2 && input.runtimeAnswer.generation === "v2_legacy") {
+  if (
+    structure.subquestionCount === 2 &&
+    input.runtimeAnswer.generation === "v2_legacy" &&
+    input.runtimeAnswer.answer.outcome !== "refused"
+  ) {
     const publicIds = new Set(publicUnits.map((unit) => String(unit.id || "")))
     if (!publicIds.has("response-1-summary") || !publicIds.has("response-2-summary")) {
       addIssue(issues, "output", "compound_public_section_missing")

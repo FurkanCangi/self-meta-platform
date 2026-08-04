@@ -98,12 +98,33 @@ const DNA_DOMAIN_TOKEN_ROOTS = [
 ] as const
 
 export function normalizeDnaChatText(value: string): string {
-  return String(value || "")
+  const normalized = String(value || "")
     .toLocaleLowerCase("tr-TR")
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/ı/g, "i")
     .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+
+  // A deliberately small repair lexicon for high-value domain terms. These
+  // substitutions repair common keyboard/character-loss errors without
+  // turning arbitrary words into clinical concepts.
+  return normalized
+    .replace(/\bcouklarda\b/g, "cocuklarda")
+    .replace(/\binsla\b/g, "insula")
+    .replace(/\bmiyeln\b/g, "miyelin")
+    .replace(/\binterosepsion\b/g, "interosepsiyon")
+    .replace(/\binteroseption\b/g, "interosepsiyon")
+    .replace(/\bsirkadyen\b/g, "sirkadiyen")
+    .replace(/\bfr ontoparietal\b/g, "frontoparietal")
+    .replace(/\bessnluluk\b/g, "essonluluk")
+    .replace(/\byakin sama\b/g, "yakinsama")
+    .replace(/\bzinci ri\b/g, "zinciri")
+    .replace(/\bbolg eden\b/g, "bolgeden")
+    .replace(/\bko reglasyon\b/g, "es regulasyon")
+    .replace(/\bko regulasyon\b/g, "es regulasyon")
+    .replace(/\bcoregulasyon\b/g, "es regulasyon")
     .replace(/\s+/g, " ")
     .trim()
 }

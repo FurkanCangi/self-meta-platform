@@ -4,7 +4,7 @@
     "rawQuestionCountInRepository": 0,
     "rawResultsStoredOnResearchSsdOnly": true
   },
-  "engineClosureSha256": "22fa508966ea049ef7beb750ff00deb9d0aff52aa7503e762f4f4a46056965d5",
+  "engineClosureSha256": "4ab6e0dacee1a8dc678aa9fc13b839e19c5495f1125a58715a3545e2b8e8c5d6",
   "holdout": {
     "firstOfficial": {
       "bankLogicalSha256": "57f936f18746bfe52b167bd69d22367df48492fd91b3a28d56bfa42e905b6c0a",
@@ -74,18 +74,18 @@
     "postFixInternalRegression": {
       "bankLogicalSha256": "57f936f18746bfe52b167bd69d22367df48492fd91b3a28d56bfa42e905b6c0a",
       "counts": {
-        "accuracyPercent": 98.89,
-        "answeredCoveragePercent": 70.67,
+        "accuracyPercent": 98.67,
+        "answeredCoveragePercent": 57.33,
         "boundaryPercent": 100,
         "byCategory": {
           "alias_inflection_typo": {
-            "accuracyPercent": 93.75,
-            "passed": 30,
+            "accuracyPercent": 90.63,
+            "passed": 29,
             "total": 32
           },
           "colloquial_elliptical": {
-            "accuracyPercent": 92,
-            "passed": 23,
+            "accuracyPercent": 96,
+            "passed": 24,
             "total": 25
           },
           "compound_cross_topic": {
@@ -119,8 +119,8 @@
             "total": 30
           },
           "evidence_age_measurement": {
-            "accuracyPercent": 100,
-            "passed": 24,
+            "accuracyPercent": 95.83,
+            "passed": 23,
             "total": 24
           },
           "follow_up_reference": {
@@ -161,24 +161,24 @@
         },
         "compoundPercent": 98.67,
         "followUpPercent": 100,
-        "passed": 445,
+        "passed": 444,
         "total": 450
       },
-      "engineClosureSha256": "22fa508966ea049ef7beb750ff00deb9d0aff52aa7503e762f4f4a46056965d5",
+      "engineClosureSha256": "4ab6e0dacee1a8dc678aa9fc13b839e19c5495f1125a58715a3545e2b8e8c5d6",
       "firstRunPreserved": true,
       "gatesPassed": true,
-      "resultSha256": "d9b1dd201d6c6073ff053be3515ad754d71b10c0c28afdc7a08fd5e3983ac0b6"
+      "resultSha256": "91e9a3fbfb3fb1c44db28d8e6ae93d3dd052d9c2991e6081b3aad5561ead0710"
     },
     "releaseGateUsesCombinedPostFixAfterPreservingNewExtensionFirstOfficial": true,
     "totalCombinedCount": 450
   },
   "independentHumanValidation": false,
-  "manifestSha256": "23ed6c97685b51a83de348a940b9069fe192f4efa96fd247204f14dea19a501a",
+  "manifestSha256": "db7405c764b15c643ff6951a6d8e20e9f753181996e52f96e2814f6d8653e922",
   "open": {
     "bankLogicalSha256": "6b58f72f5d134b5556c57c9bc1a1e20271ca69df501c13c0d150b617af386526",
     "counts": {
-      "accuracyPercent": 98.19,
-      "answeredCoveragePercent": 71.71,
+      "accuracyPercent": 99.81,
+      "answeredCoveragePercent": 70.57,
       "boundaryPercent": 100,
       "byCategory": {
         "adversarial_character_loss": {
@@ -252,13 +252,13 @@
           "total": 8
         },
         "alias_inflection_typo": {
-          "accuracyPercent": 88.89,
-          "passed": 64,
+          "accuracyPercent": 98.61,
+          "passed": 71,
           "total": 72
         },
         "colloquial_elliptical": {
-          "accuracyPercent": 98.18,
-          "passed": 54,
+          "accuracyPercent": 100,
+          "passed": 55,
           "total": 55
         },
         "compound_cross_topic": {
@@ -277,8 +277,8 @@
           "total": 55
         },
         "compound_topic_pair": {
-          "accuracyPercent": 89.09,
-          "passed": 49,
+          "accuracyPercent": 98.18,
+          "passed": 54,
           "total": 55
         },
         "correction_retry": {
@@ -292,8 +292,8 @@
           "total": 70
         },
         "evidence_age_measurement": {
-          "accuracyPercent": 94.55,
-          "passed": 52,
+          "accuracyPercent": 100,
+          "passed": 55,
           "total": 55
         },
         "follow_up_reference": {
@@ -317,8 +317,8 @@
           "total": 38
         },
         "topic_definition_coverage": {
-          "accuracyPercent": 99.15,
-          "passed": 117,
+          "accuracyPercent": 100,
+          "passed": 118,
           "total": 118
         },
         "typo_character_token": {
@@ -332,17 +332,17 @@
           "total": 35
         }
       },
-      "compoundPercent": 96.61,
+      "compoundPercent": 99.44,
       "followUpPercent": 100,
-      "passed": 1031,
+      "passed": 1048,
       "total": 1050
     },
     "gatesPassed": true,
-    "resultSha256": "bba5343833c51f5949f3fea2b45b8036f5e76c65e20bbb200a710835f5fc7de6",
+    "resultSha256": "ae641a820f0eb6e99dfe1e83712b9bf41d16d3085ab64166aedf6ebc00200bd9",
     "subsets": {
       "frozenRegression": {
         "accuracyPercent": 100,
-        "answeredCoveragePercent": 64.94,
+        "answeredCoveragePercent": 54.55,
         "boundaryPercent": 100,
         "byCategory": {
           "adversarial_character_loss": {
@@ -423,7 +423,7 @@
       },
       "legacyExpansion": {
         "accuracyPercent": 100,
-        "answeredCoveragePercent": 75.89,
+        "answeredCoveragePercent": 74.7,
         "boundaryPercent": 100,
         "byCategory": {
           "compound_cross_topic": {
@@ -468,18 +468,18 @@
         "total": 423
       },
       "newExtension": {
-        "accuracyPercent": 96.55,
-        "answeredCoveragePercent": 69.45,
+        "accuracyPercent": 99.64,
+        "answeredCoveragePercent": 69.64,
         "boundaryPercent": 100,
         "byCategory": {
           "alias_inflection_typo": {
-            "accuracyPercent": 88.89,
-            "passed": 64,
+            "accuracyPercent": 98.61,
+            "passed": 71,
             "total": 72
           },
           "colloquial_elliptical": {
-            "accuracyPercent": 98.18,
-            "passed": 54,
+            "accuracyPercent": 100,
+            "passed": 55,
             "total": 55
           },
           "compound_safe_refusal": {
@@ -488,8 +488,8 @@
             "total": 45
           },
           "compound_topic_pair": {
-            "accuracyPercent": 89.09,
-            "passed": 49,
+            "accuracyPercent": 98.18,
+            "passed": 54,
             "total": 55
           },
           "correction_retry": {
@@ -498,8 +498,8 @@
             "total": 40
           },
           "evidence_age_measurement": {
-            "accuracyPercent": 94.55,
-            "passed": 52,
+            "accuracyPercent": 100,
+            "passed": 55,
             "total": 55
           },
           "follow_up_reference": {
@@ -508,8 +508,8 @@
             "total": 75
           },
           "topic_definition_coverage": {
-            "accuracyPercent": 99.15,
-            "passed": 117,
+            "accuracyPercent": 100,
+            "passed": 118,
             "total": 118
           },
           "unknown_near_boundary": {
@@ -518,9 +518,9 @@
             "total": 35
           }
         },
-        "compoundPercent": 89.09,
+        "compoundPercent": 98.18,
         "followUpPercent": 100,
-        "passed": 531,
+        "passed": 548,
         "total": 550
       }
     }

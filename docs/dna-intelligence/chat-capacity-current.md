@@ -1,7 +1,7 @@
 # DNA Asistanı kapasite kaydı
 
-Tarih: **2026-08-03**
-Kayıt kimliği: `2026-08-03-2b067b2e30ea`
+Tarih: **2026-08-04**
+Kayıt kimliği: `2026-08-04-4892dd9f4a15`
 
 Bu kayıt, chat boxın bilgi miktarını şişirmeden izlemek için oluşturuldu. Bilgi birimi,
 soru yüzeyi, kaynak, konu, ilişki ve test sorusu ayrı ölçülür.
@@ -17,7 +17,7 @@ soru yüzeyi, kaynak, konu, ilişki ve test sorusu ayrı ölçülür.
 | Farklı soru yüzeyi | 52.106 | Aynı bilginin akademik, gündelik, hatalı ve bağlamsal sorulma biçimleri |
 | Kanonik konu | 136 | Kaynaklı klasik katalogdaki yönlendirme başlıkları |
 | Kitap konu bölümü | 759 | Kitap içindeki ayrı başlık/bağlam düğümleri |
-| Açık tek-adımlı ilişki | 182 | Zincirleme mekanizma üretmeden kullanılabilen graf kenarı |
+| Açık tek-adımlı ilişki | 183 | Zincirleme mekanizma üretmeden kullanılabilen graf kenarı |
 | Doğrulanmış kaynak kaydı | 164 | Canlı klasik katalog kaynakları |
 | Güvenlik kuralı | 43 | Tanı, tedavi, nedensellik ve veri sınırları |
 
@@ -25,7 +25,7 @@ soru yüzeyi, kaynak, konu, ilişki ve test sorusu ayrı ölçülür.
 
 Canlı envanter vektörü:
 
-`L = (Kₒ, Cᵥ, Pᵥ, Q, T, R, S, G) = (4008, 276, 37, 52106, 136, 182, 164, 43)`
+`L = (Kₒ, Cᵥ, Pᵥ, Q, T, R, S, G) = (4008, 276, 37, 52106, 136, 183, 164, 43)`
 
 - `Kₒ`: owner-book atomik bilgi birimi
 - `Cᵥ`: doğrulanmış kaynak bağlantılı katalog iddiası

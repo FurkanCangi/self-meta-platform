@@ -1247,6 +1247,19 @@ export const V5_SIX_DOMAINS_RELATIONS: readonly DnaChatCatalogRelation[] =
         "İçerik yakınlığı tanı, içsel duygu veya limbik sistem ölçümü değildir.",
     }),
     relation({
+      id: "relation.dna-emotional.reactivity-recovery",
+      fromTopicId: "dna.emotional_regulation",
+      toTopicId: "selfreg.reactivity_recovery",
+      predicate: "conceptually_related_to",
+      summary:
+        "DNA duygusal alanındaki reaktivite ve yeniden katılım başlıkları, genel literatürdeki tepki ve toparlanma ayrımıyla kavramsal yakınlık taşır.",
+      sourceIds: ["COLE_ET_AL_2004", "GROSS_2015", "BLAIR_RAVER_2015"],
+      evidenceLevel: "theoretical",
+      ageScope: "developmental",
+      claimBoundary:
+        "Bu yakınlık biyolojik mekanizma, tanı veya kişiye özgü toparlanma kapasitesi ölçümü değildir.",
+    }),
+    relation({
       id: "relation.dna-cognitive.attention",
       fromTopicId: "dna.cognitive_regulation",
       toTopicId: "cns.attention",

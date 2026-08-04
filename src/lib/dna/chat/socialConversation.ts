@@ -19,6 +19,7 @@ export type DnaChatSocialMatch = {
 const SOCIAL_UTTERANCES: Record<DnaChatSocialIntent, readonly string[]> = {
   greeting: [
     "merhaba",
+    "meraba",
     "merhabalar",
     "selam",
     "selamlar",
@@ -28,7 +29,9 @@ const SOCIAL_UTTERANCES: Record<DnaChatSocialIntent, readonly string[]> = {
     "gunaydin",
     "iyi gunler",
     "iyi aksamlar",
+    "iyi aksamlar kolay gelsin",
     "iyi geceler",
+    "kolay gelsin",
   ],
   wellbeing: [
     "nasilsin",
@@ -39,14 +42,19 @@ const SOCIAL_UTTERANCES: Record<DnaChatSocialIntent, readonly string[]> = {
     "sen nasilsin",
     "merhaba nasilsin",
     "selam nasilsin",
+    "selam naber",
+    "slm nbr",
   ],
   thanks: [
     "tesekkurler",
     "tesekkur ederim",
+    "tesekkur ettim",
     "cok tesekkur ederim",
     "sag ol",
     "sagol",
+    "saol",
     "eyvallah",
+    "eyw",
   ],
   farewell: [
     "gorusuruz",
@@ -57,6 +65,8 @@ const SOCIAL_UTTERANCES: Record<DnaChatSocialIntent, readonly string[]> = {
   ],
   capabilities: [
     "sen kimsin",
+    "sen kimsin ne yapiyorsun",
+    "sen kimsin ne yapiyosun",
     "kimsin",
     "ne yapabilirsin",
     "bana nasil yardim edebilirsin",

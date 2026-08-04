@@ -12,21 +12,10 @@ import type {
   DnaChatCatalogTopic,
   DnaChatQueryKind,
 } from "./types"
-import { scoreDnaTextMatch } from "../text"
+import { normalizeDnaChatText, scoreDnaTextMatch } from "../text"
 
 function normalizeCatalogText(value: string): string {
-  return value
-    .toLocaleLowerCase("tr-TR")
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/ı/g, "i")
-    .replace(/ç/g, "c")
-    .replace(/ğ/g, "g")
-    .replace(/ö/g, "o")
-    .replace(/ş/g, "s")
-    .replace(/ü/g, "u")
-    .replace(/[^a-z0-9]+/g, " ")
-    .trim()
+  return normalizeDnaChatText(value)
 }
 
 function stripCatalogInstructionPrefix(value: string): string {
@@ -54,6 +43,7 @@ const FLEXIBILITY_ROUTING_ALIASES: Readonly<Record<string, readonly string[]>> =
     "psychophysiology hrv",
   ],
   "cns.insula": ["insula ve interosepsiyon", "insula stimulation"],
+  "ans.interoception": ["bedeni hissetme", "bedeni hissetmek", "ic bedeni hissetme"],
   "case.validity_reliability": [
     "cosmin ve ölçüm niteliği",
     "ölçüm aracı değerlendirmesi",
@@ -66,6 +56,13 @@ const FLEXIBILITY_ROUTING_ALIASES: Readonly<Record<string, readonly string[]>> =
   "ans.polyvagal": ["polyvagal teori", "polyvagal theory", "teori sınırı"],
   "selfreg.core": ["self regülasyon ölçümü", "self regulation measurement", "öz düzenleme ölçümü"],
   "selfreg.sleep_health": ["uyku ve duygusal reaktivite", "sleep emotional reactivity"],
+  "selfreg.daily_rhythm": [
+    "hafta sonu gec yatma",
+    "haftasonu gec yatmak",
+    "gec yatma",
+    "gec yatmak",
+    "yatis saati",
+  ],
 })
 
 const TOPIC_SEARCH_INDEX = new Map(
@@ -96,26 +93,86 @@ type ExplicitTopicRule = Readonly<{
 // sıralı kurallar yalnız kaynak kataloğunda açıkça adlandırılmış tek bir
 // başlığa yönlendirir; yeni bir klinik veya biyolojik çıkarım üretmez.
 const EXPLICIT_TOPIC_RULES: readonly ExplicitTopicRule[] = [
-  { topicId: "neuro.chemical_synapse", pattern: /^sinaps nedir$/ },
+  { topicId: "case.development_culture", pattern: /(?:\bcocuk\w* kanit\w*\b.+\byetiskin\w*\b|\byetiskin\w* kanit\w*\b.+\bcocuk\w*\b).+\b(?:tasi|aktar|uygula)\w*/ },
+  { topicId: "case.capacity_performance", pattern: /\bvaka raporu baglaminda kapasite performans ve katilim\b/ },
+  { topicId: "dna.capacity_performance", pattern: /\bdna alanlari baglaminda (?:kapasite performans ve katilim|yapabilme ve katilim)\b/ },
+  { topicId: "case.interpretation_boundaries", pattern: /\bvaka ve rapor yorum sinir\w*\b/ },
+  { topicId: "development.informant_context", pattern: /\bebeveyn ogretmen ve ortam bilgisi\b/ },
+  { topicId: "development.screening_assessment", pattern: /\bgelisimsel gozetim tarama ve degerlendirme\b/ },
+  { topicId: "development.variability", pattern: /\bcocuklar arasi ve cocuk ici degiskenlik\b/ },
+  { topicId: "selfreg.sensory_measurement", pattern: /\bduyusal modulasyonun degerlendirilmesi\b/ },
+  { topicId: "selfreg.sleep_measurement", pattern: /\bcocuk uykusunun olcumu\b/ },
+  { topicId: "selfreg.coregulation_scaffolding", pattern: /\bes regulasyon destegi ve iskeleleme\b/ },
+  { topicId: "selfreg.coregulation_culture", pattern: /\bes regulasyon ve kulturel baglam\b/ },
+  { topicId: "dna.physiological_regulation", pattern: /\bdna fizyolojik regulasyon alani\b/ },
+  { topicId: "cns.performance_monitoring", pattern: /\bperformans izleme\b/ },
+  { topicId: "cns.anterior_cingulate", pattern: /\banterior singulat korteks\b/ },
+  { topicId: "ans.allostasis", pattern: /\ballostaz\b/ },
+  { topicId: "development.supported_performance", pattern: /\bdestekli ve bagimsiz performans\b/ },
+  { topicId: "case.contextual_variability", pattern: /\bbaglamsal degiskenlik\b/ },
+  { topicId: "cns.executive_measurement", pattern: /\byurutucu islevlerin olcumu\b/ },
+  { topicId: "ans.interoception_modalities", pattern: /\binteroseptif modaliteler\b/ },
+  { topicId: "dna.measurement_levels", pattern: /\bdna olcum duzeyleri\b/ },
+  { topicId: "cns.attention_development", pattern: /\bdikkatin gelisimi\b/ },
+  { topicId: "cns.selective_attention", pattern: /\bsecici dikkat\b/ },
+  { topicId: "selfreg.emotion_strategies", pattern: /\bduygu duzenleme stratejileri ve esneklik\b/ },
+  { topicId: "cns.prefrontal_development", pattern: /\bprefrontal gelisim\b/ },
+  { topicId: "development.uneven_profile", pattern: /\beszamanli olmayan gelisim ve dengesiz profil\b/ },
+  { topicId: "cns.prefrontal_control", pattern: /\bfrontoparietal kontrol agi\b/ },
+  { topicId: "dna.measurement_levels", pattern: /\bolcumler arasi yakinsama\b/ },
+  { topicId: "case.interpretation_boundaries", pattern: /\bveri yorum karar zinciri\b/ },
+  { topicId: "cns.reverse_inference", pattern: /\bbolgeden davranis cikarma\b/ },
+  { topicId: "cns.executive_measurement", pattern: /\bgorev ve olcek farki\b/ },
+  { topicId: "ans.overview", pattern: /\botonom sinir sistemi icin temel cerceve\w*\b/ },
+  { topicId: "selfreg.sensory_measurement", pattern: /\bduyusal (?:modulasyon|regulasyon)\w*\b.+\b(?:nasil )?olc\w*/ },
+  { topicId: "ans.development", pattern: /(?:\byetiskin\w*\b.+\bhrv\w*\b.+\bcocuk\w*\b|\bcocuk\w*\b.+\bhrv\w*\b.+\byetiskin\w*\b)/ },
+  { topicId: "cns.prefrontal_development", pattern: /(?:\bcocuk\w*\b.+\bprefrontal\w*\b.+\byetiskin\w*\b|\byetiskin\w*\b.+\bprefrontal\w*\b.+\bcocuk\w*\b)/ },
+  { topicId: "cns.insula_development", pattern: /(?:\byetiskin\w*\b.+\binsula\w*\b.+\bcocuk\w*\b|\bcocuk\w*\b.+\binsula\w*\b.+\byetiskin\w*\b)/ },
+  { topicId: "cns.executive_measurement", pattern: /\byurutucu gorev\w*\b.+\btest tekrar test guvenirlig\w*\b/ },
+  { topicId: "case.change_interpretation", pattern: /\bdna puan\w*\b.+\b(?:terapi|mudahale) etk\w*\b.+\bkanit\w*/ },
+  { topicId: "dna.capacity_performance", pattern: /\bdna alan\w*\b.+\bgunluk katilim\w*\b/ },
+  { topicId: "selfreg.coregulation_development", pattern: /\bes (?:regulasyon|duzenleme)\b.+\b(?:yas|gelisim|bebek|okul|biter)\w*/ },
+  { topicId: "dna.physiological_regulation", pattern: /\bfizyolojik regulasyon\b.+\bparasempatik\w*\b/ },
+  { topicId: "development.differences", pattern: /\b(?:gelisimsel farklilik|gelisim farki)\w*/ },
+  { topicId: "case.validity_reliability", pattern: /\btest\s*tekrar\s*test guvenirlig\w*\b/ },
+  { topicId: "development.age_equivalent_limits", pattern: /\b(?:gelisimsel yas|yas esdegeri)\b/ },
+  { topicId: "development.overview", pattern: /\berken cocuklukta tek gelisimsel gozlem\b/ },
+  { topicId: "dna.six_domains", pattern: /\bvaka yorum sinir\w*\b.+\bdna\w*\b.+\balti alan\w*\b/ },
+  { topicId: "dna.emotional_regulation", pattern: /\btoparlanma\w*\b.+\bdna\w*\b.+\bduygusal regulasyon alan\w*\b/ },
+  { topicId: "cns.executive_measurement", pattern: /\byurutucu islev test\w*\b.+\bmotor\w*/ },
+  { topicId: "neuro.myelin_conduction", pattern: /\bmiyelin\w*\b/ },
+  { topicId: "neuro.action_potential", pattern: /\b(?:reseptor potansiyeli.+action potential|action potential.+reseptor potansiyeli)\b/ },
+  { topicId: "neuro.synaptic_receptors", pattern: /\b(?:reseptor\w*|iyonotropik|metabotropik|ikinci haberci|gpcr)\b/ },
+  { topicId: "neuro.chemical_synapse", pattern: /(?:\bsinaps\w*\b|\bnorotransmiter\w*\b|\bnoron\w*\b.{0,80}\b(?:mesaj|bilgi|iletis|konus)\w*)/ },
   { topicId: "neuro.membrane_potential", pattern: /\b(?:membran potansiyeli|dinlenim membran potansiyeli|elektrokimyasal gradyan|sodyum potasyum pompasi|na k pump)\b/ },
   { topicId: "neuro.action_potential", pattern: /\b(?:aksiyon potansiyeli|action potential|refrakter donem|hep ya da hic)\b/ },
   { topicId: "neuro.myelin_conduction", pattern: /\b(?:saltatorik iletim|ranvier dugum\w*|miyelinli akson)\b/ },
   { topicId: "neuro.chemical_synapse", pattern: /\b(?:kimyasal sinaps|sinaptik uc\w*.+kalsiyum|norotransmiter sal\w*|ekzositoz)\b/ },
-  { topicId: "neuro.synaptic_receptors", pattern: /\b(?:iyonotropik|metabotropik|ikinci haberci|gpcr)\b/ },
   { topicId: "neuro.synaptic_potentials", pattern: /\b(?:epsp|ipsp|postsinaptik potansiyel|sinaptik toplama)\b/ },
+  { topicId: "cns.distributed_networks", pattern: /\b(?:korteks\w*.+tek\s+(?:bir\s+)?is|beyin\w* ag\w*.+(?:beraber|birlikte|tek tek))\b/ },
+  { topicId: "cns.insula", pattern: /\binsula\w*\b.+\bbeden\w*\s+hisset\w*\b/ },
+  { topicId: "cns.central_autonomic_network", pattern: /(?:\bmss\b.+\boss\b|\boss\b.+\bmss\b)/ },
+  { topicId: "ans.measurement_limits", pattern: /\bbarorefleks\w*\b.+\bgunluk yasam\w*\b/ },
+  { topicId: "ans.sympathetic_parasympathetic", pattern: /^(?!.*\b(?:hrv|hpa)\b).*\b(?:parasempatik|sempatik)\w*\b/ },
+  { topicId: "ans.measurement_limits", pattern: /\bvagal ton\w*\b/ },
+  { topicId: "selfreg.arousal", pattern: /\b(?:arousal|uyarilma)\w*\b.+\b(?:performans|ideal|artar|azalir|bozul)\w*/ },
+  { topicId: "selfreg.sensory_modulation", pattern: /^(?!.*\bdna\b).*(?:\bduyusal\s+(?:modulasyon|arayis|kacinma)\w*\b|\b(?:ses|isik|dokunma)\w*\b.{0,90}\b(?:modulasyon|hassas)\w*)/ },
+  { topicId: "selfreg.coregulation", pattern: /\b(?:birlikte\s+regule|es regulasyon|es duzenleme|ko regulasyon)\w*\b/ },
   { topicId: "sleep.scn", pattern: /\b(?:scn nedir|scn gorevi|suprakiazmatik cekirdek)\b/ },
-  { topicId: "sleep.sleep_pressure", pattern: /(?:^uyku basinci ne demek$|\badenozin\w*\b.+\buyku\b|\buyku\w*\b.+\badenozin\b)/ },
+  { topicId: "sleep.sleep_pressure", pattern: /(?:\buyku (?:basinci|baskisi)\b|\badenozin\w*\b.+\buyku\b|\buyku\w*\b.+\badenozin\b|\buyanik(?:lik| kal)\w*\b.+\buyku (?:istegi|ihtiyaci)\b)/ },
   { topicId: "sleep.zeitgeber", pattern: /\b(?:zeitgeber|zaman verici|sirkadiyen zaman ipucu)\b/ },
   { topicId: "sleep.psg", pattern: /\b(?:psg bilesen\w*|polisomnografi\w*.+(?:eeg|eog|emg|aktigrafi)|uyku eeg)\b/ },
-  { topicId: "sleep.sleep_stages", pattern: /\b(?:uyku evre\w*|nrem 2|n2 uykusu|uyku igcigi|k kompleksi)\b/ },
+  { topicId: "sleep.sleep_stages", pattern: /(?:\brem\b.+\bnrem\b|\bnrem\b.+\brem\b|\b(?:uyku evre\w*|nrem 2|n2 uykusu|uyku igcigi|k kompleksi)\b)/ },
   { topicId: "sleep.rem", pattern: /\b(?:rem uykusu|rem atonisi|rem ruyalari)\b/ },
+  { topicId: "selfreg.circadian_rhythm", pattern: /\b(?:melatonin\w*|hafta\s*sonu\w*.+gec yat\w*|biyolojik saat)\b/ },
+  { topicId: "case.interpretation_boundaries", pattern: /\btek\s+(?:(?:bir|bi)\s+)?test\s+sonuc\w*\b/ },
   { topicId: "ans.autonomic_relay", pattern: /\b(?:otonom ganglion|preganglionik|postganglionik|iki noronlu (?:otonom )?yol)\b/ },
   { topicId: "ans.baroreflex", pattern: /^(?:barorefleks nedir|baroreceptor reflex nedir|basinc refleksi kalp ve damarlari nasil etkiler)$/ },
   { topicId: "ans.hrv_signal_quality", pattern: /\b(?:hrv sinyal kalite\w*|at\w* arasi aralik|interbeat interval|hrv artefakt\w*|ectopic beat)\b/ },
   { topicId: "ans.hrv_time_domain", pattern: /(?:\bsdnn\b.+\brmssd\b|\brmssd\b.+\bsdnn\b|\bzaman alani hrv\b|\bhrv kayit suresi\b)/ },
-  { topicId: "ans.hrv_respiration", pattern: /(?:\bhrv\w*\b.+\bsolunum\w*\b|\bsolunum\w*\b.+\bhrv\w*\b|\bhf hrv\b.+\brsa\b)/ },
+  { topicId: "ans.hrv_respiration", pattern: /(?:\bhrv\w*\b.+\b(?:solunum|nefes)\w*\b|\b(?:solunum|nefes)\w*\b.+\bhrv\w*\b|\bhf hrv\b.+\brsa\b)/ },
   { topicId: "ans.hrv_interpretation", pattern: /(?:\bhrv\b.+\b(?:stres|psikolojik|fazik|tonik)\w*\b|\b(?:fazik|tonik)\w*\b.+\bhrv\b)/ },
-  { topicId: "ans.hrv", pattern: /\brsa\b/ },
+  { topicId: "ans.hrv", pattern: /\b(?:rsa|respiratuvar sinus aritmisi)\b/ },
   { topicId: "ans.measurement_limits", pattern: /\bbarorefleks\w*\b.+\b(?:gunluk yasam|duyarlilik|hrv)\b/ },
   { topicId: "selfreg.sleep_regulation", pattern: /^homeostatik uyku baskisi nedir$/ },
   { topicId: "selfreg.reactivity_recovery", pattern: /^duygusal reaktivite ile duygu duzenleme nasil ayrilir$/ },
@@ -150,7 +207,7 @@ const EXPLICIT_TOPIC_RULES: readonly ExplicitTopicRule[] = [
   { topicId: "case.change_interpretation", pattern: /\b(?:minimal saptanabilir degisim|guvenilir degisim indeksi|mdc|ortalamaya regresyon|uygulama etkisi|puan degisimi)\b/ },
   { topicId: "case.change_interpretation", pattern: /\btekrar olcumde hangi hata kaynaklari\b/ },
   { topicId: "case.measurement_uncertainty", pattern: /\b(?:olcum hatasi|standart olcum hatasi|guven araligi|puan belirsizligi)\b/ },
-  { topicId: "case.multi_informant", pattern: /\b(?:bilgi veren uyusmazligi|ebeveyn ve ogretmen|ebeveyn ogretmen|proxy bildirim|coklu bilgi veren)\b/ },
+  { topicId: "case.multi_informant", pattern: /\b(?:bilgi veren uyusmazligi|ebeveyn(?:le| ile| ve)? ogretmen|proxy bildirim|coklu bilgi veren)\b/ },
   { topicId: "case.development_culture", pattern: /\b(?:olcum degismezligi|kulturel adalet|kulturel gecerlik|kulturel uyarlama|yas esdegeri|yas normu|ceviri)\w*/ },
   { topicId: "case.screening_diagnosis", pattern: /\b(?:tarama|tanisal degerlendirme|pozitif yordayici deger|prevalans|kesme puaninin dogrulugu)\w*/ },
   { topicId: "case.score_interpretation", pattern: /\b(?:norm grubu|yuzdelik|persentil|kesme puani|ham puan|standart puan|norm referansli|olcut referansli)\w*/ },
@@ -344,7 +401,9 @@ export function classifyCatalogQueryKind(question: string): DnaChatQueryKind {
     /\b(?:vaka ve rapor yorum siniri|vaka yorum siniri|rapor yorum siniri|vaka raporu)\b/.test(normalized) &&
     /\b(?:nedir|ne demek|gecerlik|guvenirlik|puan|yorum|sinir|kaynak|gozlem|raporlama)\w*\b/.test(normalized) &&
     !/\b(?:bu rapor|son rapor|raporum|rapordaki|secili rapor|bu vaka|vakadaki)\b/.test(normalized)
-  const hasCase = !asksGeneralReportBoundary && /\b(?:son rapor\w*|raporum\w*|rapordaki|bu rapor\w*|secili rapor\w*|son degerlendirme\w*|bu vaka\w*|vakadaki|vaka raporu\w*|vaka skor\w*)\b/.test(
+  const asksGeneralCapacityPerformance =
+    /\bvaka raporu baglaminda kapasite performans ve katilim\b/.test(normalized)
+  const hasCase = !asksGeneralReportBoundary && !asksGeneralCapacityPerformance && /\b(?:son rapor\w*|raporum\w*|rapordaki|bu rapor\w*|secili rapor\w*|son degerlendirme\w*|bu vaka\w*|vakadaki|vaka raporu\w*|vaka skor\w*)\b/.test(
     normalized,
   )
   const hasTheory = containsAny(normalized, [
@@ -450,7 +509,7 @@ export function classifyCatalogQueryKind(question: string): DnaChatQueryKind {
   }
 
   if (
-    /\b(?:cocuklarda hrv guvenilir|norm grubunun temsil edici|kesme puaninin dogrulugu|bilgi veren uyusmazligi\w* ne kadar yaygin|olcum degismezligi neden onemli|alan toplam puani neden biyolojik belirtec|altin standart var mi|evrensel tani siniflamasi|ne kadar bilinmektedir|etki ne buyuklugundedir|hangi bilgi bosluklari|gelisimsel tarama testleri kesin sonuc|grup ortalamasi bireysel cocuk|korelasyon gelisimsel neden|norogoruntu\w* davranis\w* neden|test tekrar test guvenirligi neden onemli)\b/.test(normalized)
+    /\b(?:cocuklarda hrv guvenilir|norm grubunun temsil edici|kesme puaninin dogrulugu|bilgi veren uyusmazligi\w* ne kadar yaygin|olcum degismezligi neden onemli|alan toplam puani neden biyolojik belirtec|altin standart var mi|evrensel tani siniflamasi|ne kadar bilinmektedir|etki ne buyuklugundedir|hangi bilgi bosluklari|gelisimsel tarama testleri kesin sonuc|grup ortalamasi bireysel cocuk|korelasyon gelisimsel neden|norogoruntu\w* davranis\w* neden|test tekrar test guvenirligi (?:neden|niye) onemli)\b/.test(normalized)
   ) {
     return "evidence"
   }

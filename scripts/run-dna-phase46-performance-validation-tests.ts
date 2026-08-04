@@ -248,7 +248,11 @@ async function main() {
       question: benchmark.question.slice(0, 600),
       responseDepth: "deep",
     }, apiDependencies({ requestId: `phase46-size-${index}` }))
-    assert.equal(result.status, 200)
+    assert.equal(
+      result.status,
+      200,
+      `benchmark-size-${index}: ${benchmark.question} -> ${JSON.stringify(result.body)}`,
+    )
     deepResponseMaxBytes = Math.max(
       deepResponseMaxBytes,
       Buffer.byteLength(JSON.stringify(result.body), "utf8"),
