@@ -3,14 +3,20 @@ import {
   classifyDnaChatLunaEligibility,
   DNA_CHAT_LUNA_MODEL,
   DNA_CHAT_LUNA_POLICY_VERSION,
+  scoreDnaChatReadability,
   shouldPolishDnaChatAnswer,
   shouldUseDnaChatLunaInterpretation,
   validateDnaChatLunaInterpretation,
   validateDnaChatLunaPolish,
 } from "../src/lib/dna/chat/lunaPolicy"
+import {
+  buildDnaChatLunaAuditMetadata,
+  calculateDnaChatLunaUsage,
+  dnaChatLunaBudgetBand,
+} from "../src/lib/dna/chat/lunaUsage"
 
 assert.equal(DNA_CHAT_LUNA_MODEL, "gpt-5.6-luna")
-assert.equal(DNA_CHAT_LUNA_POLICY_VERSION, "dna-chat-luna-policy@1")
+assert.equal(DNA_CHAT_LUNA_POLICY_VERSION, "dna-chat-luna-policy@2")
 
 assert.deepEqual(classifyDnaChatLunaEligibility({
   enabled: true,
@@ -41,9 +47,10 @@ const interpretation = validateDnaChatLunaInterpretation(
     subquestions: [{
       question: "İnsular korteks ile interosepsiyon nasıl bağlantılıdır?",
       operation: "relation",
-      domain: "insula_interoception",
+      topicId: "cns.insula",
     }],
   },
+  ["cns.insula", "ans.interoception"],
 )
 assert.ok(interpretation)
 assert.equal(interpretation?.subquestions.length, 1)
@@ -55,25 +62,28 @@ assert.ok(validateDnaChatLunaInterpretation(
     subquestions: [{
       question: "Beynin içten gelen beden sinyallerini fark etmesi ile interosepsiyon aynı şey mi, yoksa farklı mı?",
       operation: "comparison",
-      domain: "insula_interoception",
+      topicId: "ans.interoception",
     }],
   },
+  ["cns.insula", "ans.interoception"],
 ), "The conjunction 'yoksa' must not be treated as the negation marker 'yok'")
 
 assert.equal(validateDnaChatLunaInterpretation(
   "HRV 5 dakika ölçülür mü?",
   {
     normalizedQuestion: "HRV 10 dakika ölçülür mü?",
-    subquestions: [{ question: "HRV nasıl ölçülür?", operation: "measurement", domain: "autonomic_nervous_system" }],
+    subquestions: [{ question: "HRV nasıl ölçülür?", operation: "measurement", topicId: "ans.hrv" }],
   },
+  ["ans.hrv"],
 ), null, "Numbers must not change")
 
 assert.equal(validateDnaChatLunaInterpretation(
   "Bu ilişki kanıtlanmış değildir mi?",
   {
     normalizedQuestion: "Bu ilişki kesin olarak kanıtlanmıştır mı?",
-    subquestions: [{ question: "İlişki kanıtlanmış mıdır?", operation: "evidence", domain: "unknown" }],
+    subquestions: [{ question: "İlişki kanıtlanmış mıdır?", operation: "evidence", topicId: "ans.hrv" }],
   },
+  ["ans.hrv"],
 ), null, "Negation and claim force must not change")
 
 const originals = [{
@@ -110,7 +120,7 @@ const reordered = validateDnaChatLunaPolish([
     { id: "unit-1", text: originals[0].text },
   ],
 })
-assert.deepEqual(reordered?.map((unit) => unit.id), ["unit-2", "unit-1"], "Source-bound units may be relevance-ranked")
+assert.equal(reordered, null, "Source-bound unit order must remain unchanged")
 
 assert.equal(validateDnaChatLunaPolish(originals, {
   units: [{
@@ -144,6 +154,44 @@ assert.equal(shouldPolishDnaChatAnswer({
   runtimeGeneration: "v3",
   answerUnits: originals,
 }), false, "Locked V3 candidate must not be modified")
+assert.equal(shouldPolishDnaChatAnswer({
+  question: "İnsula nedir?",
+  classification: "literature",
+  responseDepth: "standard",
+  runtimeGeneration: "v2_legacy",
+  answerUnits: originals,
+}), false, "Clear answers must not be randomly sampled for polish")
+assert.ok(scoreDnaChatReadability("İnsula beden sinyallerinin işlenmesine katkı sağlar.") >= 0.75)
+
+const usage = calculateDnaChatLunaUsage({
+  inputTokens: 1_000,
+  cachedInputTokens: 200,
+  outputTokens: 100,
+})
+assert.deepEqual(usage, {
+  inputTokens: 1_000,
+  cachedInputTokens: 200,
+  outputTokens: 100,
+  costMicrousd: 1_420,
+})
+assert.equal(dnaChatLunaBudgetBand(2_699, 9_000), "warning")
+assert.equal(dnaChatLunaBudgetBand(1_349, 9_000), "restricted")
+assert.equal(dnaChatLunaBudgetBand(449, 9_000), "critical")
+const audit = buildDnaChatLunaAuditMetadata({
+  requestId: "request-1",
+  policyVersion: DNA_CHAT_LUNA_POLICY_VERSION,
+  model: DNA_CHAT_LUNA_MODEL,
+  interpretationStatus: "applied:candidate_selected",
+  polishStatus: "skipped:not_run",
+  usage,
+  budgetBand: "normal",
+})
+assert.deepEqual(Object.keys(audit).sort(), [
+  "budget_band", "cached_input_tokens", "cost_microusd", "input_tokens", "interpretation_status",
+  "model", "output_tokens", "policy_version", "polish_status", "pricing_version", "request_id", "schema_version",
+].sort())
+assert.equal("question" in audit, false)
+assert.equal("answer" in audit, false)
 
 assert.equal(shouldUseDnaChatLunaInterpretation({
   question: "İnsular korteks nedir?",

@@ -2,7 +2,7 @@ import { inspectDnaChatSafety } from "./safety"
 import { normalizeDnaChatText } from "./text"
 import type { DnaChatMode } from "./types"
 
-export const DNA_CHAT_LUNA_POLICY_VERSION = "dna-chat-luna-policy@1" as const
+export const DNA_CHAT_LUNA_POLICY_VERSION = "dna-chat-luna-policy@2" as const
 export const DNA_CHAT_LUNA_MODEL = "gpt-5.6-luna" as const
 
 export const DNA_CHAT_LUNA_OPERATIONS = [
@@ -44,7 +44,7 @@ export type DnaChatLunaInterpretation = Readonly<{
   subquestions: readonly Readonly<{
     question: string
     operation: DnaChatLunaOperation
-    domain: DnaChatLunaDomain
+    topicId: string
   }>[]
 }>
 
@@ -208,6 +208,7 @@ export function classifyDnaChatLunaEligibility(input: Readonly<{
 export function validateDnaChatLunaInterpretation(
   originalQuestion: string,
   candidate: unknown,
+  allowedTopicIds: readonly string[],
 ): DnaChatLunaInterpretation | null {
   if (!candidate || typeof candidate !== "object") return null
   const row = candidate as Record<string, unknown>
@@ -222,21 +223,26 @@ export function validateDnaChatLunaInterpretation(
     const item = entry as Record<string, unknown>
     const question = typeof item.question === "string" ? item.question.trim() : ""
     const operation = typeof item.operation === "string" ? item.operation as DnaChatLunaOperation : "unknown"
-    const domain = typeof item.domain === "string" ? item.domain as DnaChatLunaDomain : "unknown"
+    const topicId = typeof item.topicId === "string" ? item.topicId.trim() : ""
     if (
       question.length < 2
       || question.length > 400
       || !DNA_CHAT_LUNA_OPERATIONS.includes(operation)
-      || !DNA_CHAT_LUNA_DOMAINS.includes(domain)
+      || !allowedTopicIds.includes(topicId)
     ) return []
-    return [{ question, operation, domain }]
+    return [{ question, operation, topicId }]
   })
   if (subquestions.length !== row.subquestions.length) return null
 
   const original = String(originalQuestion || "").trim()
+  const combinedSubquestions = subquestions.map((entry) => entry.question).join(" ")
   if (!sameStringArray(uniqueNumbers(original), uniqueNumbers(normalizedQuestion))) return null
+  if (!sameStringArray(uniqueNumbers(original), uniqueNumbers(combinedSubquestions))) return null
   for (const markers of [NEGATION_MARKERS, CLAIM_FORCE_MARKERS, CLINICAL_ACTION_MARKERS] as const) {
     if (!sameStringArray(markerSignature(original, markers), markerSignature(normalizedQuestion, markers))) {
+      return null
+    }
+    if (!sameStringArray(markerSignature(original, markers), markerSignature(combinedSubquestions, markers))) {
       return null
     }
   }
@@ -257,6 +263,7 @@ export function shouldPolishDnaChatAnswer(input: Readonly<{
   responseDepth: string
   runtimeGeneration: string
   answerUnits: readonly DnaChatLunaTextUnit[]
+  questionInterpretationApplied?: boolean
 }>): boolean {
   if (input.runtimeGeneration !== "v2_legacy") return false
   if (["refusal", "not_available", "clarification"].includes(input.classification)) return false
@@ -267,16 +274,26 @@ export function shouldPolishDnaChatAnswer(input: Readonly<{
     && unit.kind !== "safety_boundary"
     && (unit.sourceIds?.length ?? 0) > 0)
   if (!eligibleUnits.length) return false
-  const normalizedQuestion = normalizeDnaChatText(input.question)
   if (isExplicitDnaChatLanguagePolishRequest(input.question)) return true
-  // Stable 20% sampling keeps the optional second model call bounded while
-  // spreading language QA across real question shapes without storing them.
-  let hash = 2166136261
-  for (const character of normalizedQuestion) {
-    hash ^= character.charCodeAt(0)
-    hash = Math.imul(hash, 16777619)
-  }
-  return (hash >>> 0) % 100 < 20
+  const combinedText = eligibleUnits.map((unit) => unit.text).join(" ")
+  if (scoreDnaChatReadability(combinedText) < 0.75) return true
+  return Boolean(input.questionInterpretationApplied && eligibleUnits.length > 1)
+}
+
+export function scoreDnaChatReadability(text: string): number {
+  const trimmed = String(text || "").trim()
+  if (!trimmed) return 1
+  const sentences = trimmed.split(/[.!?]+/u).map((value) => value.trim()).filter(Boolean)
+  const words = normalizeDnaChatText(trimmed).split(" ").filter(Boolean)
+  const averageSentence = words.length / Math.max(1, sentences.length)
+  const longWords = words.filter((word) => word.length >= 12).length
+  const punctuationDensity = (trimmed.match(/[;:()]/g) ?? []).length / Math.max(1, sentences.length)
+  let score = 1
+  if (averageSentence > 22) score -= Math.min(0.24, (averageSentence - 22) * 0.012)
+  if (longWords / Math.max(1, words.length) > 0.16) score -= 0.12
+  if (punctuationDensity > 1.25) score -= 0.1
+  if (trimmed.length > 900) score -= 0.08
+  return Number(Math.max(0, Math.min(1, score)).toFixed(6))
 }
 
 export function isExplicitDnaChatLanguagePolishRequest(question: string): boolean {
@@ -307,13 +324,13 @@ export function validateDnaChatLunaPolish(
   const seen = new Set<string>()
   const polished: Array<Readonly<{ id: string; text: string }>> = []
 
-  for (const entry of row.units) {
+  for (const [index, entry] of row.units.entries()) {
     if (!entry || typeof entry !== "object") return null
     const unit = entry as Record<string, unknown>
     const id = typeof unit.id === "string" ? unit.id : ""
     const text = typeof unit.text === "string" ? unit.text.trim() : ""
     const original = originalById.get(id)
-    if (!original || seen.has(id) || !text) return null
+    if (!original || originals[index]?.id !== id || seen.has(id) || !text) return null
     if (text.length < original.text.length * 0.62 || text.length > original.text.length * 1.38) return null
     if (!sameStringArray(uniqueNumbers(original.text), uniqueNumbers(text))) return null
     for (const markers of [NEGATION_MARKERS, CLAIM_FORCE_MARKERS, CLINICAL_ACTION_MARKERS] as const) {

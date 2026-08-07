@@ -22,10 +22,19 @@ import {
   resolveCommittedDnaChatRuntime,
 } from "@/lib/dna/chat/v3RetrievalServer"
 import {
-  attachDnaChatLunaLanguageSupport,
+  createDnaChatLunaSafetyIdentifier,
   polishDnaChatPublicAnswerWithLuna,
   prepareDnaChatQuestionWithLuna,
+  type DnaChatLunaStageTrace,
 } from "@/lib/dna/chat/lunaServer"
+import {
+  buildDnaChatLunaAuditMetadata,
+  sumDnaChatLunaUsage,
+} from "@/lib/dna/chat/lunaUsage"
+import {
+  DNA_CHAT_LUNA_MODEL,
+  DNA_CHAT_LUNA_POLICY_VERSION,
+} from "@/lib/dna/chat/lunaPolicy"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -269,6 +278,47 @@ async function writeDnaChatAudit(params: {
   }
 }
 
+const LUNA_BUDGET_BAND_ORDER = ["normal", "warning", "restricted", "critical", "exhausted"] as const
+
+async function writeDnaChatLunaAudit(params: Readonly<{
+  userId: string
+  requestId: string
+  interpretation: DnaChatLunaStageTrace
+  polish?: DnaChatLunaStageTrace | null
+}>) {
+  const traces = [params.interpretation, ...(params.polish ? [params.polish] : [])]
+  const usage = sumDnaChatLunaUsage(traces.map((entry) => entry.usage))
+  if (usage.inputTokens === 0 && usage.outputTokens === 0) return { ok: true as const, skipped: true as const }
+  const budgetBand = [...traces]
+    .sort((left, right) =>
+      LUNA_BUDGET_BAND_ORDER.indexOf(right.budgetBand) - LUNA_BUDGET_BAND_ORDER.indexOf(left.budgetBand))[0]
+    ?.budgetBand ?? "normal"
+  try {
+    const admin = createSupabaseAdminClient()
+    return await recordDataAccessAuditEvent({
+      admin,
+      actorUserId: params.userId,
+      subjectUserId: params.userId,
+      action: "dna_chat_language_support",
+      resourceType: "dna_chat_request",
+      resourceId: params.requestId,
+      legalBasis: "service_operation_and_cost_control",
+      metadata: buildDnaChatLunaAuditMetadata({
+        requestId: params.requestId,
+        policyVersion: DNA_CHAT_LUNA_POLICY_VERSION,
+        model: DNA_CHAT_LUNA_MODEL,
+        interpretationStatus: `${params.interpretation.status}:${params.interpretation.reason}`,
+        polishStatus: params.polish ? `${params.polish.status}:${params.polish.reason}` : "skipped:not_run",
+        usage,
+        budgetBand,
+      }),
+    })
+  } catch (error) {
+    console.error("[dna-chat-luna] operational audit unavailable", error instanceof Error ? error.message : "unknown")
+    return { ok: false as const, error: "audit_insert_failed" as const }
+  }
+}
+
 export async function GET() {
   try {
     if (!operationalAvailability("dna-chat-reports").allowed) {
@@ -330,12 +380,17 @@ export async function POST(request: Request) {
     const parsed = await timing.measure("payload", () => readPayload(request))
     if (!parsed.ok) return finish(parsed.response)
     const payload = parsed.data
+    const requestId = crypto.randomUUID()
+    const lunaSafetyIdentifier = createDnaChatLunaSafetyIdentifier(auth.user.id)
     const prepared = await timing.measure(
       "language_interpretation",
-      () => prepareDnaChatQuestionWithLuna(payload),
+      () => prepareDnaChatQuestionWithLuna(payload, {
+        safetyIdentifier: lunaSafetyIdentifier,
+        rolloutSubjectKey: auth.user.id,
+      }),
     )
     const resolution = await timing.measure("runtime_resolution", () => resolveDnaChatApiRequest(prepared.payload, {
-      createRequestId: () => crypto.randomUUID(),
+      createRequestId: () => requestId,
       // The authenticated owner ID is used only as the deterministic rollout
       // bucket input. It is never exposed in the answer or audit metadata.
       resolveRuntimeAnswer: (input) => resolveCommittedDnaChatRuntime({
@@ -365,6 +420,7 @@ export async function POST(request: Request) {
     }))
 
     let responseBody = resolution.body
+    let polishTrace: DnaChatLunaStageTrace | null = null
     if (resolution.status === 200 && responseBody.ok === true) {
       const polished = await timing.measure(
         "language_polish",
@@ -372,20 +428,26 @@ export async function POST(request: Request) {
           originalQuestion: payload.question,
           interpretedQuestion: prepared.payload.question,
           questionInterpretation: prepared.status,
+          safetyIdentifier: lunaSafetyIdentifier,
+          rolloutSubjectKey: auth.user.id,
           mode: payload.mode,
           reportId: payload.reportId,
           body: responseBody,
         }),
       )
-      responseBody = attachDnaChatLunaLanguageSupport(
-        polished.body,
-        prepared.status,
-        polished.status,
-      )
+      responseBody = polished.body
+      polishTrace = polished.trace
     }
 
-    const requestId = typeof responseBody.requestId === "string" ? responseBody.requestId : null
-    return finish(json(responseBody, { status: resolution.status }), requestId)
+    await timing.measure("language_audit", () => writeDnaChatLunaAudit({
+      userId: auth.user.id,
+      requestId,
+      interpretation: prepared.trace,
+      polish: polishTrace,
+    }))
+
+    const publicRequestId = typeof responseBody.requestId === "string" ? responseBody.requestId : requestId
+    return finish(json(responseBody, { status: resolution.status }), publicRequestId)
   } catch (error) {
     console.error("[dna-chat] request failed", error instanceof Error ? error.message : "unknown")
     return finish(errorResponse("dna_chat_failed", 500))

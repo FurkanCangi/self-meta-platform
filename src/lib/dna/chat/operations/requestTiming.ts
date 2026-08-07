@@ -9,6 +9,7 @@ export const DNA_CHAT_REQUEST_TIMING_STAGES = Object.freeze([
   "language_interpretation",
   "runtime_resolution",
   "language_polish",
+  "language_audit",
   "report_list",
   "case_answer",
   "audit_write",

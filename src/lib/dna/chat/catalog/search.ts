@@ -956,14 +956,15 @@ export function rankCatalogTopicCandidates(
     return { topic, score }
   }).sort((left, right) => right.score - left.score || left.topic.id.localeCompare(right.topic.id))
 
-  const topScore = Math.max(1, scored[0]?.score ?? 1)
-  const result = Object.freeze(scored
-    .filter((entry, index) => index < boundedLimit && entry.score > 0)
+  const result = (scored[0]?.score ?? 0) <= 0
+    ? Object.freeze([])
+    : Object.freeze(scored
+    .filter((_, index) => index < boundedLimit)
     .map((entry) => Object.freeze({
       topicId: entry.topic.id,
       title: entry.topic.title,
       category: entry.topic.category,
-      confidence: Number(Math.min(0.999, entry.score / topScore).toFixed(6)),
+      confidence: Number(Math.min(0.999, entry.score / 72).toFixed(6)),
       score: Number(entry.score.toFixed(6)),
     })))
   TOPIC_CANDIDATE_CACHE.set(cacheKey, result)
