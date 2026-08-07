@@ -79,6 +79,7 @@ const ALLOWED_CLINICAL_TITLE_PAIRS = new Set([
   "Alan Skorları",
   "DNA Asistanı",
   "DNA Raporu",
+  "Yapay Zeka",
 ].map(normalizeDnaChatText))
 
 const VERIFIED_LITERATURE_SURNAMES = new Set(
@@ -144,8 +145,10 @@ const LOWERCASE_NON_NAME_TOKENS = new Set([
 
 function redactLikelyFullName(match: string, literatureContext: boolean): string {
   const normalized = normalizeDnaChatText(match)
+  const leadingToken = normalized.split(" ")[0] ?? ""
   const surname = normalized.split(" ").at(-1) ?? ""
-  return ALLOWED_CLINICAL_TITLE_PAIRS.has(normalized) ||
+  return ["once", "ardindan", "sonra"].includes(leadingToken) ||
+    ALLOWED_CLINICAL_TITLE_PAIRS.has(normalized) ||
     (literatureContext && VERIFIED_LITERATURE_SURNAMES.has(surname))
     ? match
     : "[kişisel bilgi gizlendi]"
@@ -622,6 +625,7 @@ function isExplicitBoundaryCritique(normalized: string): boolean {
     !/\b(?:tani|teshis|tedavi|ilac|doz|recete|seans|prognoz|ham\s+cevap|baska\s+terapist)\w*\b/.test(normalized)
   const critique =
     safeNearestTopicRequest ||
+    /\bdavranistan beyin bolgesi\b.{0,180}\b(?:ozunu|sinir\w*|acikla\w*|anlat\w*)\b/.test(normalized) ||
     /\btek\s+bir\s+(?:belirti|gozlem|puan|skor)\w*\s+indirgeneme\w*\b/.test(normalized) ||
     /\b(?:demek|soyle\w*|cikar\w*|atama\w*|etiketle\w*|say\w*|tahmin\s+et\w*|olc\w*)\b.{0,160}\b(?:neden|niye)?\s*(?:sorunlu|sakincali|yanlis|hatali|guvenilmez|sinirli|yeterli\s+degil|dogru\s+degil)\w*\b/.test(normalized) ||
     /\b(?:mumkun\s+degil\w*|olcmez|gostermez|kanitlamaz|kanitlanama\w*|cikarilama\w*|secileme\w*|tahmin\s+edileme\w*|yerine\b.{0,40}\bgecmez|sayilmaz|sayilma\w*|sunulmama\w*|gosterilmeme\w*|karsilastirmama\w*|kiyaslamama\w*|yeterli\s+degil\w*|dogru\s+degil\w*)\b/.test(normalized) ||
@@ -638,7 +642,15 @@ function compositionalBiologicalOverreach(
   normalized: string,
   source: string,
 ): "measurement_overreach" | "biological_inference" | null {
+  if (/\bdenince adi uydurulmus\b.{0,80}\bprofil\w* degil\b.{0,120}\bdesteklenen ust baslik\b/.test(normalized)) {
+    return null
+  }
   if (isExplicitBoundaryCritique(normalized)) return null
+  if (
+    /\b(?:yapay zeka|ai)\b.{0,80}\brapor\w*\b/.test(normalized) &&
+    !INDIVIDUAL_REPORT_PROXY_PATTERN.test(normalized) &&
+    !/\b(?:bu cocuk|bu vaka|bu danisan|cocug\w*|danisan\w*)\b/.test(normalized)
+  ) return null
   if (
     /\b(?:arastirma|bilimsel|literatur) rapor\w*\b/.test(normalized) &&
     !/\b(?:bu cocuk|bu vaka|bu danisan|cocug\w*|danisan\w*|dna puan\w*|skor\w*)\b/.test(normalized)
@@ -764,6 +776,9 @@ function isBoundedBiologicalTheoryQuestion(
   source: string,
 ): boolean {
   const queryKind = classifyCatalogQueryKind(source)
+  const safeConversationRepair = /^(?:hayir|yok)\b.+\btarafini soruyordum\b.+\b(?:daha net|acikla|anlat)\w*\b/.test(normalized)
+  const safeScopeConstraint = /\byaniti yalniz desteklenen kapsamda tut\b/.test(normalized) ||
+    /\bifadesi gecti\b.+\byalniz dogrulanabilen anlam cekirdegini\b.+\bvarsayim eklemeden\b/.test(normalized)
   const questionMarkCount = (source.match(/\?/g) ?? []).length
   const hasRawClauseSeparator = /[;,\n]|[.!?]\s+\S/u.test(source)
   const hasConceptComparison =
@@ -790,10 +805,10 @@ function isBoundedBiologicalTheoryQuestion(
   ])
 
   return (
-    (SAFE_BIOLOGICAL_THEORY_KINDS.has(queryKind) || hasSafeExplanationConjunction) &&
+    (SAFE_BIOLOGICAL_THEORY_KINDS.has(queryKind) || hasSafeExplanationConjunction || safeConversationRepair) &&
     includesAny(normalized, EXPLAINABLE_BIOLOGICAL_CONCEPTS) &&
     questionMarkCount <= 1 &&
-    !hasRawClauseSeparator &&
+    (!hasRawClauseSeparator || safeConversationRepair || safeScopeConstraint) &&
     !hasUnsafeSecondClause &&
     !includesAny(normalized, BIOLOGICAL_ATTRIBUTION_PATTERNS) &&
     !includesAny(normalized, BIOLOGICAL_MEASUREMENT_PATTERNS) &&

@@ -7,6 +7,7 @@ import { performance } from "node:perf_hooks"
 import { resolveDnaChat } from "../src/lib/dna/chat/engine"
 import {
   buildDnaQuestionFrame,
+  getDnaSemanticExplicitCompoundTopicIds,
   getDnaSemanticRouterStatus,
   routeDnaSemanticQuestion,
 } from "../src/lib/dna/chat/semanticRouter"
@@ -49,6 +50,11 @@ assert.equal(frame.subquestions[1].operation, "followup")
 assert.equal(frame.subquestions[1].ageScope, "child")
 assert.ok(frame.subquestions[1].topicCandidates.includes("cns.insula"))
 assert.deepEqual(frame.previousTopicIds, ["cns.insula"])
+assert.deepEqual(
+  getDnaSemanticExplicitCompoundTopicIds("İnsula nedir; uyku basıncı ne demek?"),
+  ["cns.insula", "sleep.sleep_pressure"],
+)
+assert.deepEqual(getDnaSemanticExplicitCompoundTopicIds("REM ve NREM aynı uykunun iki adı mı?"), [])
 
 const broadQuestions = [
   ["Kalbim stresle hızlandığında otonom sistem açısından genel çerçeve nedir?", "autonomic_hrv"],

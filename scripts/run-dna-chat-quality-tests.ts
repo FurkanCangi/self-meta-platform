@@ -490,6 +490,7 @@ assert.ok(caseAssemblyP95 < 25, `Vaka cevap birleştirme p95 ${caseAssemblyP95.t
 console.log(JSON.stringify({
   ok: true,
   benchmark: { total: 120, correct, accuracy: Number((accuracy * 100).toFixed(2)), securityCorrect },
+  failures,
   performance: { engineP95Ms: Number(engineP95.toFixed(3)), caseAssemblyP95Ms: Number(caseAssemblyP95.toFixed(3)) },
   fixtures: fixtureFiles.length,
   suggestedQuestions: { total: suggestedQuestionCount, answerable: suggestedQuestionCount },

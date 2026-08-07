@@ -2,7 +2,7 @@ import { inspectDnaChatSafety } from "./safety"
 import { normalizeDnaChatText } from "./text"
 import type { DnaChatMode } from "./types"
 
-export const DNA_CHAT_LUNA_POLICY_VERSION = "dna-chat-luna-policy@2" as const
+export const DNA_CHAT_LUNA_POLICY_VERSION = "dna-chat-luna-policy@3" as const
 export const DNA_CHAT_LUNA_MODEL = "gpt-5.6-luna" as const
 
 export const DNA_CHAT_LUNA_OPERATIONS = [
@@ -116,6 +116,15 @@ const CLINICAL_ACTION_MARKERS = [
   "mudahale plani",
 ] as const
 
+const AGE_SCOPE_MARKERS = [
+  "bebek",
+  "cocuk",
+  "ergen",
+  "yetiskin",
+  "erken cocukluk",
+  "okul oncesi",
+] as const
+
 const STYLE_ONLY_TOKENS = new Set([
   "acik",
   "acikca",
@@ -159,6 +168,15 @@ function markerSignature(value: string, markers: readonly string[]): string[] {
     const escaped = normalizedMarker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
     if (normalizedMarker === "degil") return /\bdegil\w*\b/.test(normalized)
     return new RegExp(`(?:^|\\s)${escaped}(?:$|\\s)`).test(normalized)
+  }).sort()
+}
+
+function ageScopeSignature(value: string): string[] {
+  const normalized = normalizeDnaChatText(value)
+  return AGE_SCOPE_MARKERS.filter((marker) => {
+    const normalizedMarker = normalizeDnaChatText(marker)
+    const escaped = normalizedMarker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    return new RegExp(`(?:^|\\s)${escaped}\\w*(?:$|\\s)`).test(normalized)
   }).sort()
 }
 
@@ -218,7 +236,7 @@ export function validateDnaChatLunaInterpretation(
   if (normalizedQuestion.length < 2 || normalizedQuestion.length > 600) return null
   if (!Array.isArray(row.subquestions) || row.subquestions.length < 1 || row.subquestions.length > 2) return null
 
-  const subquestions = row.subquestions.flatMap((entry) => {
+  const parsedSubquestions = row.subquestions.flatMap((entry) => {
     if (!entry || typeof entry !== "object") return []
     const item = entry as Record<string, unknown>
     const question = typeof item.question === "string" ? item.question.trim() : ""
@@ -232,9 +250,22 @@ export function validateDnaChatLunaInterpretation(
     ) return []
     return [{ question, operation, topicId }]
   })
-  if (subquestions.length !== row.subquestions.length) return null
+  if (parsedSubquestions.length !== row.subquestions.length) return null
 
   const original = String(originalQuestion || "").trim()
+  const normalizedOriginal = normalizeDnaChatText(original)
+  const isConversationCorrection = /^(?:hayir|yok)\b.+\b(?:sordum|soruyorum|soruyordum|kastim|demek istedigim)\b/.test(
+    normalizedOriginal,
+  )
+  const isSpellingRepair = /^(?:notumda|notlarimda|mesajda|soruda)\b.+\b(?:yazmisim|yazilmis|geciyor)\b/.test(
+    normalizedOriginal,
+  )
+  const isSingleTopicCorrection = isConversationCorrection || isSpellingRepair
+  const subquestions = isSpellingRepair && parsedSubquestions.length === 2 &&
+    parsedSubquestions[0]?.topicId === parsedSubquestions[1]?.topicId
+    ? [parsedSubquestions[0]!]
+    : parsedSubquestions
+  if (isSingleTopicCorrection && subquestions.length !== 1) return null
   const combinedSubquestions = subquestions.map((entry) => entry.question).join(" ")
   if (!sameStringArray(uniqueNumbers(original), uniqueNumbers(normalizedQuestion))) return null
   if (!sameStringArray(uniqueNumbers(original), uniqueNumbers(combinedSubquestions))) return null
@@ -246,10 +277,16 @@ export function validateDnaChatLunaInterpretation(
       return null
     }
   }
+  const originalAgeScope = ageScopeSignature(original)
+  if (!sameStringArray(originalAgeScope, ageScopeSignature(normalizedQuestion))) return null
+  if (!sameStringArray(originalAgeScope, ageScopeSignature(combinedSubquestions))) return null
   const originalFamilies = new Set(meaningfulTokens(original).map(tokenFamily))
   const normalizedFamilies = new Set(meaningfulTokens(normalizedQuestion).map(tokenFamily))
   const shared = [...originalFamilies].filter((family) => normalizedFamilies.has(family)).length
-  if (originalFamilies.size >= 3 && shared / originalFamilies.size < 0.34) return null
+  const combinedFamilies = new Set(meaningfulTokens(combinedSubquestions).map(tokenFamily))
+  const combinedShared = [...originalFamilies].filter((family) => combinedFamilies.has(family)).length
+  if (originalFamilies.size >= 3 && shared / originalFamilies.size < 0.24) return null
+  if (originalFamilies.size >= 3 && combinedShared / originalFamilies.size < 0.18) return null
 
   return Object.freeze({
     normalizedQuestion,
@@ -305,17 +342,47 @@ export function shouldUseDnaChatLunaInterpretation(input: Readonly<{
   question: string
   inDomain: boolean
   confidenceBand: "high" | "medium" | "low"
+  runnerUpGap?: number
+  topCandidateConfidence?: number
 }>): boolean {
   if (!input.inDomain || input.confidenceBand !== "high") return true
   const normalized = normalizeDnaChatText(input.question)
   const hasClosingPunctuation = /[?!.]\s*$/.test(input.question)
-  const looksNoisyOrConversational = /\b(?:bisi|bisey|sey|falan|hani|nasi|nap|neydi|gibi bi|tarzi|sanki|acaba ya)\b/.test(normalized)
+  const looksNoisyOrConversational = /\b(?:bisi|bisey|sey|falan|hani|nasi|nap|neydi|gibi bi|tarzi|sanki|acaba ya|notumda|yazmisim|yanlis yaz|dogrusu ne|ne demek istedim)\b/.test(normalized)
   const explicitConversationRepair = /\b(?:hayir|kastim|demek istedigim|onu soruyordum|duzelt)\b/.test(normalized)
-  // A high-confidence local decision is authoritative. Luna is allowed to
-  // override it only when the user explicitly repairs the conversation;
-  // broad style or spelling cues alone are not enough to replace a supported
-  // deterministic route.
-  return explicitConversationRepair || !hasClosingPunctuation || looksNoisyOrConversational
+  const closeCandidates = Number.isFinite(input.runnerUpGap) &&
+    Number(input.runnerUpGap) < 0.14 &&
+    Number(input.topCandidateConfidence ?? 0) < 0.9
+  return explicitConversationRepair || !hasClosingPunctuation || looksNoisyOrConversational || closeCandidates
+}
+
+export function shouldPreserveLocalDnaChatTopic(input: Readonly<{
+  question: string
+  inDomain: boolean
+  confidenceBand: "high" | "medium" | "low"
+  runnerUpGap: number
+  topCandidateConfidence: number
+  selectedTopicIds: readonly string[]
+  topTopicId?: string | null
+  contextTopicIds?: readonly string[]
+}>): boolean {
+  if (!input.topTopicId || input.selectedTopicIds.every((topicId) => topicId === input.topTopicId)) return false
+  const normalized = normalizeDnaChatText(input.question)
+  const explicitConversationRepair = /\b(?:hayir|kastim|demek istedigim|onu soruyordum|duzelt)\b/.test(normalized)
+  const noisyOrConversational = /\b(?:bisi|bisey|sey|falan|hani|nasi|nap|neydi|gibi bi|tarzi|sanki|acaba ya|notumda|yazmisim|yanlis yaz|dogrusu ne|ne demek istedim)\b/.test(normalized)
+  const validatedContextTopics = new Set(input.contextTopicIds ?? [])
+  const explicitSameTopicContinuation = validatedContextTopics.size > 0 &&
+    /\b(?:onceki|az onceki|ayni kapsamda|baska basliga gecmeyelim)\b/.test(normalized)
+  if (
+    explicitSameTopicContinuation &&
+    input.selectedTopicIds.some((topicId) => !validatedContextTopics.has(topicId))
+  ) return true
+  return input.inDomain &&
+    input.confidenceBand === "high" &&
+    input.topCandidateConfidence >= 0.75 &&
+    input.runnerUpGap >= 0.16 &&
+    !explicitConversationRepair &&
+    !noisyOrConversational
 }
 
 export function validateDnaChatLunaPolish(

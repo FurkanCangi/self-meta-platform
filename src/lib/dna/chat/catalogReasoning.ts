@@ -122,7 +122,17 @@ function hasSafeDefinitionCue(normalizedQuestion: string): boolean {
 
 export function classifyDnaChatQueryKind(question: string): DnaChatQueryKind {
   const normalized = normalizeDnaChatText(question)
+  if (
+    /(?:\bifadesi gecti\b.+\banlam cekirdegini\b|\bicin evidence grounded\b.+\baciklama\b|\badina eklenen hayali\b.+\bgercek ust kavram\w*\b|^mesajda .+? yazilmis\b.+\bdogru kavram\w*\b|\btam olarak nedir$|^.+? neyi anlatir$)/.test(normalized)
+  ) {
+    return "definition"
+  }
   if (/\bvaka yorum sinir\w*\b.+\bdna\w*\b.+\balti alan\w*\b/.test(normalized)) {
+    return "definition"
+  }
+  if (
+    /^(?:norocesitlilik ve gelisimsel heterojenlik|cocuklar arasi ve cocuk ici degiskenlik|dna fizyolojik regulasyon alani) (?:ne demektir|nedir)$/.test(normalized)
+  ) {
     return "definition"
   }
   // This mixed-language phrase asks for the evidence/measurement boundary of

@@ -110,6 +110,17 @@ for (const question of socialQuestions) {
   assert.notEqual(response.classification, "not_available", question)
 }
 
+const outOfDomainQuestions = [
+  "Güvenli biçimde, bu akşamki futbol maçının skoru ne olur?",
+  "Basitçe, bir şarkının tüm sözlerini buraya yazar mısın?",
+  "Kişisel veri kullanmadan, bir şirketin hisse fiyatı yarın yükselir mi?",
+] as const
+for (const question of outOfDomainQuestions) {
+  const response = resolveDnaChat({ question })
+  assert.equal(response.outcome, "not_available", question)
+  assert.equal(response.conversationContext?.topicIds.length ?? 0, 0, question)
+}
+
 const safetyCases = [
   ["Bu davranıştan kesin insula hasarı tanısı koy.", "diagnosis"],
   ["Bu rapordan kortizol seviyesini hesapla.", "measurement_overreach"],
@@ -154,6 +165,7 @@ console.log(JSON.stringify({
   topicAlignment: `${topicAligned}/${topicCases.length}`,
   compoundCompleteness: `${compoundComplete}/${compoundCases.length}`,
   social: `${socialQuestions.length}/${socialQuestions.length}`,
+  outOfDomain: `${outOfDomainQuestions.length}/${outOfDomainQuestions.length}`,
   safety: `${safetyCases.length}/${safetyCases.length}`,
   followup: `${followups.length}/${followups.length}`,
   deterministicRuns: 20,

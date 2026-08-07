@@ -13,7 +13,7 @@ import {
   type DnaCatalogReasoningDraft,
 } from "./catalogReasoning"
 import { DNA_CHAT_CATALOG_TOPICS, findCatalogTopic, getCatalogTopicById } from "./catalog"
-import { DNA_CHAT_INTENT_BY_ID } from "./intents"
+import { DNA_CHAT_INTENT_BY_ID, DNA_CHAT_INTENTS } from "./intents"
 import { DNA_INTELLIGENCE_PUBLIC_INTENDED_USE } from "./intendedUse"
 import {
   DNA_PRODUCT_AUTHORITY_PENDING,
@@ -713,10 +713,12 @@ function conversationRepairRoutingQuestion(
     const correctionBoundary = corrected.match(/\b(?:değil|degil)\b[,:;]?\s*(.+)$/iu)
     if (correctionBoundary?.[1]) corrected = correctionBoundary[1]
     corrected = corrected
+      .replace(/\b(?:tarafını|tarafini)?\s*(?:sordum|soruyorum|soruyordum)[;,:]?\s*(?:onu\s+)?(?:daha\s+net\s+)?(?:anlat|açıkla|acikla)\w*[.!?]*$/iu, "")
       .replace(/\b(?:sordum|soruyorum|soruyordum|demek istedim|kastettim)\b[.!?]*$/iu, "")
       .replace(/\bkonusunu\b[.!?]*$/iu, "")
       .trim()
     const normalizedCorrected = normalizeDnaChatText(corrected)
+    const normalizedOriginalCorrection = normalizeDnaChatText(question)
     if (/^(?:olcum\w*|nasil olcul\w*|degerlendirme\w*)$/.test(normalizedCorrected) && correctionTopics[0]) {
       return `${correctionTopics[0].title} nasıl ölçülür?`
     }
@@ -724,8 +726,14 @@ function conversationRepairRoutingQuestion(
       return `${correctionTopics[0].title} için kanıt durumu nedir?`
     }
     const explicitContextTopic = correctionTopics.find((topic) => {
-      const title = normalizeDnaChatText(topic.title)
-      return normalizedCorrected === title || ` ${normalizedCorrected} `.includes(` ${title} `)
+      const catalogTopic = getCatalogTopicById(topic.id)
+      const labels = [topic.title, ...(catalogTopic?.aliases ?? [])]
+        .map(normalizeDnaChatText)
+        .filter(Boolean)
+      return labels.some((label) =>
+        normalizedCorrected === label ||
+        ` ${normalizedCorrected} `.includes(` ${label} `) ||
+        ` ${normalizedOriginalCorrection} `.includes(` ${label} `))
     })
     if (explicitContextTopic) return `${explicitContextTopic.title} nedir?`
     if (corrected.length >= 2 && normalizeDnaChatText(corrected) !== normalizeDnaChatText(question)) {
@@ -808,6 +816,7 @@ function isSubstantiveSafeCompoundPart(part: string): boolean {
 function isClearlySeparatedSafeTopicPair(question: string): boolean {
   const normalized = normalizeDnaChatText(question)
   const explicitSeparateConnector = /\b(?:bir de|ayrica)\b/.test(normalized) ||
+    (/^once\b/.test(normalized) && /\bardindan\b/.test(normalized)) ||
     (question.match(/\?/g)?.length ?? 0) >= 2
   const individualized = /\b(?:bu (?:cocuk|vaka|danisan|rapor)|cocug\w*|danisan\w*|rapor\w*|puan\w*|skor\w*|cikti\w*)\b/.test(normalized)
   return explicitSeparateConnector && !individualized
@@ -837,7 +846,7 @@ function extractDeclaredActualQuestion(question: string): string {
 
 function isClearlyOutOfDomainQuestion(question: string): boolean {
   const normalized = normalizeDnaChatText(question)
-  return /\b(?:(?:yemek|makarna) tarifi|mayali ekmek|firin sicakligi|otomobil motoru|motor yagi|kis lastigi|lastik markasi|kuantum dolanikl\w*|futbol maci|macin skoru|roma (?:imparatorlugu|gezisi)|uc gunluk rota|web scraper|marsa yolculuk|kripto para|hisse fiyati|telefon\w* batarya\w*|kahve cekirdegi|kavurma suresi|sarki\w* sozleri|duvar\w* hangi renk|siir yaz)\b/.test(normalized)
+  return /\b(?:(?:yemek|makarna) tarifi|mayali ekmek|firin sicakligi|otomobil motoru|motor yagi|kis lastigi|lastik markasi|kuantum dolanikl\w*|futbol\w*.{0,32}\b(?:mac|skor)\w*|macin skoru|roma (?:imparatorlugu|gezisi)|uc gunluk rota|web scraper|marsa yolculuk|kripto para|hisse\w*.{0,24}\bfiyat\w*|telefon\w* batarya\w*|kahve cekirdegi|kavurma suresi|sarki\w*.{0,32}\bsoz\w*|duvar\w* hangi ren(?:k|g)\w*|siir yaz)\b/.test(normalized)
 }
 
 function isUnsupportedStandaloneKnowledgeQuestion(
@@ -1953,8 +1962,14 @@ function resolveSingleDnaChat(
     if (bookAnswer) return bookAnswer
   }
 
-  const semanticAnswer = semanticFallbackResponse(question, request, safety, queryKind)
-  if (semanticAnswer) return semanticAnswer
+  // A legacy-scoped request with an established intent must preserve that
+  // contract. The semantic router is a fallback for unresolved/new phrasing;
+  // letting it run first can replace an exact V1/V2 intent with a broader
+  // catalog topic and silently break older integrations.
+  if (!preferLegacy) {
+    const semanticAnswer = semanticFallbackResponse(question, request, safety, queryKind)
+    if (semanticAnswer) return semanticAnswer
+  }
 
   if (!routed.intent || routed.route === "unknown") {
     return unmatchedResponse(safety)
@@ -1986,6 +2001,18 @@ function splitDnaChatQuestion(question: string): { parts: string[]; overflow: bo
   const independentPart = (part: string): boolean => {
     const normalized = normalizeDnaChatText(part)
     if (normalized.replace(/\d/g, "").length < 2) return false
+    if (/^(?:kisaca|dogrudan|acikca|oncelikle|basitce|guvenli bicimde|klinik siniri gozeterek|kaynak sinirini koruyarak|kisisel veri kullanmadan|yeni varsayim eklemeden)$/.test(normalized)) {
+      return false
+    }
+    if (/^(?:yalniz )?(?:dogrulanmis ust basligi acikla|yaniti desteklenen kapsamda tut|desteklenen kapsamda kal)$/.test(normalized)) {
+      return false
+    }
+    if (/^mesleki guvenlik denetimi icin(?: kisisel veri kullanmadan)?$/.test(normalized)) {
+      return false
+    }
+    if (/^bu talebin mesleki kapsam(?:ini)? da belirt$/.test(normalized)) {
+      return false
+    }
     // Virgülden sonraki konuşma dolguları yeni bir soru değildir; ilk konuyu
     // sürdüren bu ifadeleri sahte ikinci başlık olarak ayırma.
     if (/^(?:olayi ne|peki ne|bu ne|nasil yani|yani|anladin mi)$/.test(normalized)) return false
@@ -1999,10 +2026,21 @@ function splitDnaChatQuestion(question: string): { parts: string[]; overflow: bo
     .split(/\?+/)
     .map((part) => part.trim())
     .filter((part) => normalizeDnaChatText(part).replace(/\d/g, "").length >= 2)
-  const questionMarkCandidates = rawQuestionMarkCandidates.length === 3 &&
-    /\bikinci sorum\b/.test(normalizeDnaChatText(rawQuestionMarkCandidates[1]))
-    ? [rawQuestionMarkCandidates[0], `${rawQuestionMarkCandidates[1]}? ${rawQuestionMarkCandidates[2]}`]
-    : rawQuestionMarkCandidates
+  const trailingSharedConstraint = rawQuestionMarkCandidates.length === 3 &&
+    /^(?:yaniti yalniz desteklenen kapsamda tut|yalniz desteklenen kapsamda kal|desteklenen kapsamda kal)$/.test(
+      normalizeDnaChatText(rawQuestionMarkCandidates[2]),
+    )
+  const middleGenericDefinition = rawQuestionMarkCandidates.length === 3 &&
+    /^(?:ne demektir|ne anlama gelir|biraz acar misin|daha basit anlat)$/.test(
+      normalizeDnaChatText(rawQuestionMarkCandidates[1]),
+    )
+  const questionMarkCandidates = rawQuestionMarkCandidates.length === 3 && middleGenericDefinition
+    ? [`${rawQuestionMarkCandidates[0]}? ${rawQuestionMarkCandidates[1]}?`, rawQuestionMarkCandidates[2]]
+    : rawQuestionMarkCandidates.length === 3 && (
+      /\bikinci sorum\b/.test(normalizeDnaChatText(rawQuestionMarkCandidates[1])) || trailingSharedConstraint
+    )
+      ? [rawQuestionMarkCandidates[0], `${rawQuestionMarkCandidates[1]}? ${rawQuestionMarkCandidates[2]}`]
+      : rawQuestionMarkCandidates
   const questionMarkParts = questionMarkCandidates.length > 1 && questionMarkCandidates.every((part) =>
     questionMarker.test(normalizeDnaChatText(part)))
     ? questionMarkCandidates
@@ -2011,7 +2049,14 @@ function splitDnaChatQuestion(question: string): { parts: string[]; overflow: bo
     .split(/(?:\s*;\s*|\n+)/giu)
     .map((part) => part.trim())
     .filter((part) => normalizeDnaChatText(part).replace(/\d/g, "").length >= 2)
-  const structuralParts = structuralCandidates.length > 1 && (
+  const normalizedStructuralQuestion = normalizeDnaChatText(question)
+  const protectedStructuralDefinition =
+    /^bir meslektasim .+? dedi\b.+\bhangi cercevede anlamaliyim\b/.test(normalizedStructuralQuestion) ||
+    /^yok baska basliga gecmeyelim\b.+\bmevzusunu kastediyorum\b/.test(normalizedStructuralQuestion) ||
+    /^.+? icin evidence grounded\b.+\byeni mechanism ekleme\b/.test(normalizedStructuralQuestion) ||
+    /^.+? adina eklenen hayali\b.+\byok say\b.+\bgercek ust kavram\w*\b/.test(normalizedStructuralQuestion)
+    || /^mesajda .+? yazilmis\b.+\bdogru kavram\w*\b/.test(normalizedStructuralQuestion)
+  const structuralParts = !protectedStructuralDefinition && structuralCandidates.length > 1 && (
     structuralCandidates.every(independentPart) ||
     (structuralCandidates.length === 2 && /\bikinci sorum\b/.test(normalizeDnaChatText(structuralCandidates[1])))
   ) ? structuralCandidates : []
@@ -2070,9 +2115,26 @@ function splitDnaChatQuestion(question: string): { parts: string[]; overflow: bo
     .split(/\s*,?\s*bir\s+de\s+ayr[ıi]\s+olarak\s+/giu)
     .map((part) => part.trim())
     .filter(Boolean)
-  const protectedTopicPhrase = /\b(?:vaka ve rapor yorum|ebeveyn ogretmen ve ortam|kapasite ve performans|kapasite performans ve katilim|yapabilme ve katilim|cocuklar arasi ve cocuk ici|duygu duzenleme stratejileri ve esneklik|es regulasyon destegi ve iskeleleme|es regulasyon ve kulturel baglam|gorev ve olcek farki|core idea ve temel boundary)\b/.test(
-    normalizeDnaChatText(question),
-  )
+  const normalizedSplitQuestion = normalizeDnaChatText(question)
+  const protectedTopicPhrase = /\b(?:vaka ve rapor yorum|ebeveyn ogretmen ve ortam|gelisimsel gozetim tarama ve degerlendirme|gelisimsel yollar essonluluk coksonluluk ve kaskad|kapasite ve performans|kapasite performans ve katilim|yapabilme ve katilim|cocuklar arasi ve cocuk ici|duygu duzenleme stratejileri ve esneklik|es regulasyon destegi ve iskeleleme|es regulasyon ve kulturel baglam|gorev ve olcek farki|core idea ve temel boundary)\b/.test(
+    normalizedSplitQuestion,
+  ) || /^.+? ifadesi gecti\b.+\banlam cekirdegini\b/.test(
+    normalizedSplitQuestion,
+  ) || /^.+? icin evidence grounded\b.+\byeni mechanism ekleme\b/.test(
+    normalizedSplitQuestion,
+  ) || /^.+? adina eklenen hayali\b.+\bgercek ust kavram\w*\b/.test(
+    normalizedSplitQuestion,
+  ) || /^mesajda .+? yazilmis\b.+\bdogru kavram\w*\b/.test(
+    normalizedSplitQuestion,
+  ) || /^.+? denince adi uydurulmus nu profili degil\b.+\bdesteklenen ust baslik\b/.test(
+    normalizedSplitQuestion,
+  ) || /^bir terapist .+? kavramini sorarsa tanimi hangi mesleki sinir icinde vermeliyiz\b/.test(
+    normalizedSplitQuestion,
+  ) || /^.+? hakkinda short definition ve claim limit birlikte verir misin\b/.test(
+    normalizedSplitQuestion,
+  ) || /^.+? icin uydurma mu alt sinifini kullanma ve yalniz katalogdaki ana kavrami acikla\b/.test(
+    normalizedSplitQuestion,
+  ) || /^kapsam denetimi\b/.test(normalizedSplitQuestion)
   const commaCandidates = question
     .split(/\s*,\s*/u)
     .map((part) => part.trim())
@@ -2087,6 +2149,7 @@ function splitDnaChatQuestion(question: string): { parts: string[]; overflow: bo
   const commaParts = commaCandidates.length === 2 &&
     !commaPartsShareTopic &&
     !protectedTopicPhrase &&
+    !isClearlyOutOfDomainQuestion(question) &&
     !/\b(?:arasindaki (?:temel )?fark|birbirinden (?:farkli|ayri|bagimsiz))\b/.test(
       normalizeDnaChatText(question),
     ) &&
@@ -2121,6 +2184,8 @@ function splitDnaChatQuestion(question: string): { parts: string[]; overflow: bo
   const hasSingleSubjectContrast = /\bneyi gosterir\s+ve\s+neyi gostermez\b/.test(
     normalizeDnaChatText(question),
   ) || protectedTopicPhrase || /\b(?:ayni (?:sey )?(?:mi|midir)|nasil ilisk\w*|neden birlikte|birlikte neden|nasil ayril\w*|birbirine karsit|arasinda\w*.{0,40}\biliski|alakali (?:mi|midir)|arasindaki (?:temel )?fark|birbirinden (?:kopuk|farkli|ayri|bagimsiz))\b/.test(
+    normalizeDnaChatText(question),
+  ) || /\bayni\b.{0,80}\b(?:mi|midir|mudur)\b/.test(
     normalizeDnaChatText(question),
   ) || /\b(?:mss|cns)\s+ve\s+(?:oss|ans)\s+nedir\b/.test(
     normalizeDnaChatText(question),
@@ -2471,10 +2536,13 @@ export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
   if (socialConversation) {
     return socialConversationResponse(safety, socialConversation)
   }
-  if (
-    isClearlyOutOfDomainQuestion(question) &&
-    splitDnaChatQuestion(question).parts.length === 1
-  ) return unmatchedResponse(safety)
+  if (isClearlyOutOfDomainQuestion(question)) {
+    const preliminaryParts = splitDnaChatQuestion(question).parts
+    const hasSeparateSupportedPart = preliminaryParts.some((part) =>
+      !isClearlyOutOfDomainQuestion(part) && isSubstantiveSafeCompoundPart(part),
+    )
+    if (!hasSeparateSupportedPart) return unmatchedResponse(safety)
+  }
 
   const declaredQuestion = extractDeclaredActualQuestion(question)
   const knowledgeQuestion = safety.blocked
@@ -2494,7 +2562,21 @@ export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
   const routingSafety = safety
   if (routingSafety.blocked && !safety.blocked) return refusalResponse(routingSafety)
 
-  const split = splitDnaChatQuestion(routingQuestion)
+  const normalizedRoutingQuestion = normalizeDnaChatText(routingQuestion)
+  const normalizedPreviousTopic = normalizeDnaChatText(request.previousTopic ?? "")
+  const isNamedTopicContinuation = Boolean(
+    normalizedPreviousTopic &&
+    normalizedRoutingQuestion.startsWith(normalizedPreviousTopic) &&
+    /\b(?:basligini biraz daha acikla|basligini acikla|ile ilgili devam et)\b/.test(
+      normalizedRoutingQuestion,
+    ),
+  )
+  const isExactLegacyIntentPattern = DNA_CHAT_INTENTS.some((intent) =>
+    intent.patterns.some((pattern) => normalizeDnaChatText(pattern) === normalizedRoutingQuestion),
+  )
+  const split = isNamedTopicContinuation || isExactLegacyIntentPattern
+    ? { parts: [routingQuestion], overflow: false }
+    : splitDnaChatQuestion(routingQuestion)
   if (request.runtimeKnowledgeScope !== "legacy_catalog") {
     buildDnaQuestionFrame({
       questions: split.parts,

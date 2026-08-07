@@ -83,6 +83,48 @@ const TOPIC_SEARCH_INDEX = new Map(
   }),
 )
 
+// Canonical titles and sufficiently specific aliases are stronger routing
+// evidence than broad measurement/development shortcuts. Keep only terms that
+// belong to one topic; genuinely shared labels remain available to the normal
+// scorer instead of being forced to an arbitrary topic.
+const UNIQUE_TOPIC_TERM_OWNER = (() => {
+  const owners = new Map<string, Set<string>>()
+  for (const topic of DNA_CHAT_CATALOG_TOPICS) {
+    const topicId = topic.id
+    const terms = [topic.title, ...topic.aliases].map(normalizeCatalogText)
+    for (const term of terms) {
+      const tokens = term.split(" ").filter(Boolean)
+      if (term.length < 7 || (tokens.length === 1 && term.length < 10)) continue
+      const current = owners.get(term) ?? new Set<string>()
+      current.add(topicId)
+      owners.set(term, current)
+    }
+  }
+  return new Map([...owners.entries()].flatMap(([term, topicIds]) =>
+    topicIds.size === 1 ? [[term, [...topicIds][0]!] as const] : []))
+})()
+
+// Some labels intentionally occur in both a broad case-boundary card and a
+// more specific concept card. When the user starts with the complete label,
+// route to the concept that actually defines that label. Contextual words such
+// as "vaka raporu" and "DNA alanı" are still handled by the explicit rules.
+const PREFERRED_SHARED_TOPIC_TERMS: Readonly<Record<string, string>> = Object.freeze({
+  "adrenal stres sistemi": "selfreg.hpa_axis",
+  "duygusal tepkisellik": "selfreg.reactivity_recovery",
+  "ebeveyn cocuk senkronisi": "selfreg.dyadic_synchrony",
+  "essonluluk": "dna.domain_overlap",
+  "gelisimsel tarama": "development.screening_assessment",
+  "informant discrepancy": "development.informant_context",
+  "olcum degismezligi": "development.measurement_invariance",
+  "otonom sistem": "ans.overview",
+  "gelisim yolu": "development.trajectory",
+  "gelisimsel uygunluk": "case.development_culture",
+  "reseptor potansiyeli farki": "neuro.action_potential",
+  "yasa gore calisma bellegi": "cns.working_memory_development",
+  "polisomnografi ve uyku sinyalleri": "sleep.psg",
+  "sempatik baskin": "ans.sympathetic_parasympathetic",
+})
+
 type ExplicitTopicRule = Readonly<{
   topicId: string
   pattern: RegExp
@@ -93,6 +135,39 @@ type ExplicitTopicRule = Readonly<{
 // sıralı kurallar yalnız kaynak kataloğunda açıkça adlandırılmış tek bir
 // başlığa yönlendirir; yeni bir klinik veya biyolojik çıkarım üretmez.
 const EXPLICIT_TOPIC_RULES: readonly ExplicitTopicRule[] = [
+  // Narrow disambiguation rules for questions that contain two valid topic
+  // labels. These must precede the broad single-label fallbacks below.
+  { topicId: "development.pathways", pattern: /\b(?:developmental cascade|gelisimsel (?:yol|kaskad)|essonluluk|coksonluluk)\w*\b/ },
+  { topicId: "development.variability", pattern: /\bcocuklar arasi\b.+\bcocuk ici degiskenlik\b/ },
+  { topicId: "cns.central_autonomic_network", pattern: /\b(?:central autonomic network|merkezi otonom ag)\b/ },
+  { topicId: "selfreg.executive_functions", pattern: /\bbilissel esneklik\b.+\bef ifades\w*\b/ },
+  { topicId: "dna.emotional_regulation", pattern: /\bdna duygusal (?:duzenleme|regulasyon) alan\w*\b/ },
+  { topicId: "dna.six_domains", pattern: /\bdna alti alan\b/ },
+  { topicId: "case.multi_informant", pattern: /\bbilgi veren uyusmazlig\w*\b/ },
+  { topicId: "cns.reverse_inference", pattern: /\bdavranistan beyin bolgesi\b/ },
+  { topicId: "ans.development", pattern: /\bcocuklarda ans\b.+\b(?:hangi )?yas\w*\b/ },
+  { topicId: "ans.overview", pattern: /\botonom (?:sinir )?sistem\w*\b/ },
+  { topicId: "case.screening_diagnosis", pattern: /\bpozitif tarama\b/ },
+  { topicId: "cns.sustained_attention", pattern: /\buyaniklik gorevi\b/ },
+  { topicId: "dna.cognitive_regulation", pattern: /\bdna\w*\b.+\bbilissel regulasyon\b.+\byurutucu islev\w*\b/ },
+  { topicId: "ans.hrv", pattern: /(?:\bdusuk hrv\b.+\bvagal ton\w*\b|\bhrv\b.+\bvagal ton\w*\b.+\b(?:ayni|cikar)\w*)/ },
+  { topicId: "ans.interoception", pattern: /\bdna\w*\b.+\binterosepsiyon alan\w*\b.+\bguvenli anlat\w*/ },
+  { topicId: "ans.autonomic_space", pattern: /\bsempatik\w*\b.+\bparasempatik\w*\b.+\bayni anda\b/ },
+  { topicId: "cns.insula", pattern: /\binsula\w*\b.+\bbeden sinyal\w*\b.+\b(?:isle|butunle|temsil)\w*/ },
+  { topicId: "selfreg.emotion_regulation", pattern: /\bdna\w*\b.+\bduygusal regulasyon alan\w*\b.+\binterosepsiyon\w*\b/ },
+  { topicId: "selfreg.social_buffering", pattern: /\bes regulasyon\b.+\bsosyal tamponlama\b.+\bayni\b/ },
+  { topicId: "ans.hrv", pattern: /\bhrv\b.+\bcocuk\w*\b.+\btoparlan\w*\b.+\b(?:goster|olc|yansit)\w*/ },
+  { topicId: "selfreg.habituation", pattern: /\bhabituasyon\b.+\bduyusal kacin\w*\b.+\bfark\w*/ },
+  { topicId: "selfreg.sensory_modulation", pattern: /\ben guvenilir\b.+\bduyusal modulasyon olceg\w*\b/ },
+  { topicId: "selfreg.coregulation", pattern: /^es duzenleme okul caginda da onemli midir$/ },
+  { topicId: "selfreg.sleep_regulation", pattern: /^homeostatik uyku baskisi nedir$/ },
+  { topicId: "selfreg.sleep_measurement", pattern: /\buyku kalite\w*\b.+\btek bir\b.+\bcocuk olceg\w*\b/ },
+  { topicId: "cns.selective_attention", pattern: /\bgurultulu sinif\w*\b.+\bperformans\w*\b.+\bdegis\w*/ },
+  { topicId: "cns.attention", pattern: /\bdikkat\b.+\bcalisma bellegi\b.+\biliski\w*/ },
+  { topicId: "cns.working_memory_measurement", pattern: /\bcalisma bellegi kapasite\w*\b.+\bgorev performans\w*\b.+\bayni\b/ },
+  { topicId: "cns.attention", pattern: /\bdikkat\b.+\bdna\w*\b.+\bbilissel regulasyon alan\w*\b/ },
+  { topicId: "development.screening_assessment", pattern: /\bgelisimsel gozetim\b.+\btarama\b.+\bfark\w*/ },
+  { topicId: "case.report_communication", pattern: /\bcocugun guclu yon\w*\b.+\brapor\w*\b.+\bgorunur\w*/ },
   { topicId: "case.development_culture", pattern: /(?:\bcocuk\w* kanit\w*\b.+\byetiskin\w*\b|\byetiskin\w* kanit\w*\b.+\bcocuk\w*\b).+\b(?:tasi|aktar|uygula)\w*/ },
   { topicId: "case.capacity_performance", pattern: /\bvaka raporu baglaminda kapasite performans ve katilim\b/ },
   { topicId: "dna.capacity_performance", pattern: /\bdna alanlari baglaminda (?:kapasite performans ve katilim|yapabilme ve katilim)\b/ },
@@ -132,6 +207,7 @@ const EXPLICIT_TOPIC_RULES: readonly ExplicitTopicRule[] = [
   { topicId: "case.change_interpretation", pattern: /\bdna puan\w*\b.+\b(?:terapi|mudahale) etk\w*\b.+\bkanit\w*/ },
   { topicId: "dna.capacity_performance", pattern: /\bdna alan\w*\b.+\bgunluk katilim\w*\b/ },
   { topicId: "selfreg.coregulation_development", pattern: /\bes (?:regulasyon|duzenleme)\b.+\b(?:yas|gelisim|bebek|okul|biter)\w*/ },
+  { topicId: "selfreg.coregulation_development", pattern: /\bes regulasyonun gelisim\w*\b/ },
   { topicId: "dna.physiological_regulation", pattern: /\bfizyolojik regulasyon\b.+\bparasempatik\w*\b/ },
   { topicId: "development.differences", pattern: /\b(?:gelisimsel farklilik|gelisim farki)\w*/ },
   { topicId: "case.validity_reliability", pattern: /\btest\s*tekrar\s*test guvenirlig\w*\b/ },
@@ -463,6 +539,37 @@ export function classifyCatalogQueryKind(question: string): DnaChatQueryKind {
   if (hasCase && hasTheory) return "case_theory"
   if (hasCase) return "case_finding"
 
+  // These frames ask for the meaning/boundary of the named concept. A word
+  // such as "gelişimsel" or "çocuk" inside the concept name must not turn the
+  // request into an age-course question.
+  if (
+    /^(?:hayir|yok)\b.+\btarafini soruyordum\b.+\b(?:daha net|acikla|anlat)\w*\b/.test(normalized) ||
+    /^bir terapist .+? kavramini sorarsa tanimi hangi mesleki sinir icinde vermeliyiz\b/.test(normalized) ||
+    /^.+? biciminde yazilmis terimin dogru kavramini bulup aciklar misin\b/.test(normalized) ||
+    /^.+? hakkinda short definition ve claim limit birlikte verir misin\b/.test(normalized) ||
+    /^.+? icin uydurma mu alt sinifini kullanma ve yalniz katalogdaki ana kavrami acikla\b/.test(normalized) ||
+    /^.+? icin ayri bir temel aciklama yapar misin\b/.test(normalized) ||
+    /^bir meslektasim .+? dedi\b.+\bhangi cercevede anlamaliyim\b/.test(normalized) ||
+    /^.+? icin plain turkish core meaning istiyorum\b/.test(normalized) ||
+    /^yok baska basliga gecmeyelim\b.+\bmevzusunu kastediyorum\b/.test(normalized) ||
+    /^.+? denince adi uydurulmus nu profili degil\b.+\bdesteklenen ust baslik\b/.test(normalized) ||
+    /^iki seyi karistiriyorum .+? derken neyi kastediyoruz$/.test(normalized) ||
+    /^(?:peki )?.+? dedigimizde ozunde ne var$/.test(normalized) ||
+    /\bdenince\b.+\b(?:ana|temel) cerceve nedir\b/.test(normalized) ||
+    /\bicin core idea ve temel boundary ne\b/.test(normalized) ||
+    /\bicin (?:ana|temel) cerceve nedir\b/.test(normalized) ||
+    /\bicindeki bilinmeyen\b.+\b(?:ana|ust|guvenli ust) cerceve\w*\b/.test(normalized) ||
+    /\bifadesinin ozunu\b.+\b(?:acikla|anlat)\w*\b/.test(normalized) ||
+    /\bicin adi gecen\b.+\byerine bildigin ana basligi anlat\b/.test(normalized) ||
+    /\bkavramini acikla\b/.test(normalized) ||
+    /\bbasligini karistirmadan tanimla\b/.test(normalized) ||
+    /\bmeselesi nasil aciklanir\b/.test(normalized) ||
+    /\b(?:tam olarak )?neyi anlatiyo\w*\b/.test(normalized) ||
+    /^(?:gelisimsel tarama|essonluluk|sempatik baskin) nedir$/.test(normalized)
+  ) {
+    return "definition"
+  }
+
   if (/\bbaglamsal degiskenlik ne (?:demektir|demek)\b/.test(normalized)) {
     return "definition"
   }
@@ -779,6 +886,101 @@ function termIndex(normalizedQuestion: string, normalizedTerm: string): number {
   return match.index + (match[0].startsWith(" ") ? 1 : 0)
 }
 
+function uniquelyNamedTopicForQuestion(normalizedQuestion: string): DnaChatCatalogTopic | null {
+  const leadingQuestion = normalizedQuestion.replace(
+    /^(?:(?:hayir|peki|kisaca|dogrudan|acikca|oncelikle|basitce)\s+)+/,
+    "",
+  )
+  const matches = [...UNIQUE_TOPIC_TERM_OWNER.entries()].flatMap(([term, topicId]) => {
+    const index = termIndex(leadingQuestion, term)
+    return index === 0 ? [{ term, topicId, index }] : []
+  }).sort((left, right) =>
+    left.index - right.index ||
+    right.term.split(" ").length - left.term.split(" ").length ||
+    right.term.length - left.term.length ||
+    left.topicId.localeCompare(right.topicId, "en"))
+  return matches[0]
+    ? DNA_CHAT_CATALOG_TOPIC_BY_ID.get(matches[0].topicId) ?? null
+    : null
+}
+
+function preferredSharedTopicForQuestion(normalizedQuestion: string): DnaChatCatalogTopic | null {
+  const leadingQuestion = normalizedQuestion.replace(
+    /^(?:(?:hayir|peki|kisaca|dogrudan|acikca|oncelikle|basitce)\s+)+/,
+    "",
+  )
+  const match = Object.entries(PREFERRED_SHARED_TOPIC_TERMS)
+    .filter(([term]) => termIndex(leadingQuestion, term) === 0)
+    .sort(([left], [right]) => right.length - left.length || left.localeCompare(right, "tr"))[0]
+  return match ? DNA_CHAT_CATALOG_TOPIC_BY_ID.get(match[1]) ?? null : null
+}
+
+function fuzzyRoutingCore(normalizedQuestion: string): string {
+  return normalizedQuestion
+    .replace(/^bir yerde\s+/, "")
+    .replace(/^(?:notumda|notlarimda|mesajda|soruda)\s+/, "")
+    .replace(/\b(?:yazmisim|yazilmis|geciyor)\s+(?:sanirim\s+)?(?:neyi kastetmis olabilirim(?: ve asil anlami ne)?|bu ne olabilir|dogrusu ne)\b.*$/g, "")
+    .replace(/\bdiye gordum bu tam olarak neyi kapsiyo\w*\b/g, "")
+    .replace(/\b(?:tam\s+)?olark\b/g, "tam olarak")
+    .replace(/\b(?:tam olarak )?neyi anlatiyo\w*\b/g, "")
+    .replace(/\b(?:meselesi )?nasil aciklanir\b/g, "")
+    .replace(/\bdenince terapist acisindan akilda tutulacak ana cerceve nedir\b/g, "")
+    .replace(/\bicin core idea ve temel boundary ne\b/g, "")
+    .replace(/\b(?:tam olarak )?(?:nedir|ne demek|ne anlatiyor)\b/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+}
+
+function boundedDamerauSimilarity(leftValue: string, rightValue: string): number {
+  const left = leftValue.replace(/\s/g, "")
+  const right = rightValue.replace(/\s/g, "")
+  if (left.length < 4 || right.length < 4) return 0
+  if (Math.abs(left.length - right.length) > Math.ceil(Math.max(left.length, right.length) * 0.45)) return 0
+  const rows = Array.from({ length: left.length + 1 }, () => Array<number>(right.length + 1).fill(0))
+  for (let index = 0; index <= left.length; index += 1) rows[index]![0] = index
+  for (let index = 0; index <= right.length; index += 1) rows[0]![index] = index
+  for (let i = 1; i <= left.length; i += 1) {
+    for (let j = 1; j <= right.length; j += 1) {
+      const cost = left[i - 1] === right[j - 1] ? 0 : 1
+      rows[i]![j] = Math.min(
+        rows[i - 1]![j]! + 1,
+        rows[i]![j - 1]! + 1,
+        rows[i - 1]![j - 1]! + cost,
+      )
+      if (i > 1 && j > 1 && left[i - 1] === right[j - 2] && left[i - 2] === right[j - 1]) {
+        rows[i]![j] = Math.min(rows[i]![j]!, rows[i - 2]![j - 2]! + 1)
+      }
+    }
+  }
+  return Number((1 - rows[left.length]![right.length]! / Math.max(left.length, right.length)).toFixed(6))
+}
+
+function isNamedConceptDefinitionFrame(normalizedQuestion: string): boolean {
+  if (/\b(?:fark\w*|ayni\w*|karsilastir\w*|arasindaki|ilisk\w*|baglanti\w*)\b/.test(normalizedQuestion)) {
+    return false
+  }
+  return (
+    /\bdenince\b.+\b(?:ana|temel) cerceve nedir\b/.test(normalizedQuestion) ||
+    /\bicin core idea ve temel boundary ne\b/.test(normalizedQuestion) ||
+    /\bicin (?:ana|temel) cerceve nedir\b/.test(normalizedQuestion) ||
+    /\bicindeki bilinmeyen\b.+\b(?:ana|ust|guvenli ust) cerceve\w*\b/.test(normalizedQuestion) ||
+    /\bsozuyle kastedilen temel mesleki cerceve\b/.test(normalizedQuestion) ||
+    /^bir meslektasim .+? dedi\b.+\bhangi cercevede anlamaliyim\b/.test(normalizedQuestion) ||
+    /^.+? icin plain turkish core meaning istiyorum\b/.test(normalizedQuestion) ||
+    /^yok baska basliga gecmeyelim\b.+\bmevzusunu kastediyorum\b/.test(normalizedQuestion) ||
+    /^.+? denince adi uydurulmus nu profili degil\b.+\bdesteklenen ust baslik\b/.test(normalizedQuestion) ||
+    /^.+? ifadesi gecti\b.+\banlam cekirdegini\b/.test(normalizedQuestion) ||
+    /^.+? icin evidence grounded\b.+\baciklama\b/.test(normalizedQuestion) ||
+    /^.+? adina eklenen hayali\b.+\bgercek ust kavram\w*\b/.test(normalizedQuestion) ||
+    /^mesajda .+? yazilmis\b.+\bdogru kavram\w*\b/.test(normalizedQuestion) ||
+    /^.+? tam olarak nedir$/.test(normalizedQuestion) ||
+    /^iki seyi karistiriyorum .+? derken neyi kastediyoruz$/.test(normalizedQuestion) ||
+    /^(?:peki )?.+? dedigimizde ozunde ne var$/.test(normalizedQuestion) ||
+    /\b(?:tam olarak )?neyi anlatiyo\w*\b/.test(normalizedQuestion) ||
+    /^(?:gelisimsel tarama|essonluluk|sempatik baskin) nedir$/.test(normalizedQuestion)
+  )
+}
+
 function scoreTopic(
   normalizedQuestion: string,
   topic: DnaChatCatalogTopic,
@@ -844,6 +1046,33 @@ export function findCatalogTopic(
   if (!normalized) return null
   if (
     previousTopic &&
+    /^(?:hayir|yok)\b.+\btarafini soruyordum\b/.test(normalized)
+  ) {
+    const contextualTopic = topicFromPreviousContext(previousTopic)
+    if (contextualTopic) return contextualTopic
+  }
+  const framedTarget =
+    /\bbaglamini koruyarak (.+?) basliginin kaynakta desteklenen ana fikrini acikla\b/.exec(normalized)?.[1] ??
+    /^(.+?): clinical meaning ile evidence boundary birlikte nasil anlatilir\b/.exec(normalized)?.[1] ??
+    /^(.+?) altinda gectigi soylenen hayali sigma alt turunu tanimlama\b/.exec(normalized)?.[1] ??
+    /^bir terapist (.+?) kavramini sorarsa tanimi hangi mesleki sinir icinde vermeliyiz\b/.exec(normalized)?.[1] ??
+    /^(.+?) biciminde yazilmis terimin dogru kavramini bulup aciklar misin\b/.exec(normalized)?.[1] ??
+    /^(.+?) hakkinda short definition ve claim limit birlikte verir misin\b/.exec(normalized)?.[1] ??
+    /^(.+?) icin uydurma mu alt sinifini kullanma ve yalniz katalogdaki ana kavrami acikla\b/.exec(normalized)?.[1] ??
+    /^(.+?) icin ayri bir temel aciklama yapar misin\b/.exec(normalized)?.[1] ??
+    /^bir meslektasim (.+?) dedi bunu laf[ıi] dolandirmadan fakat desteklenmeyen cikarim da yapmadan hangi cercevede anlamaliyim$/.exec(normalized)?.[1] ??
+    /^(.+?) icin plain turkish core meaning istiyorum clinical overclaim olmadan anlatir misin$/.exec(normalized)?.[1] ??
+    /^yok baska basliga gecmeyelim az onceki (.+?) mevzusunu kastediyorum onu yeniden ve daha anlasilir soyler misin$/.exec(normalized)?.[1] ??
+    /^(.+?) denince adi uydurulmus nu profili degil gercekte hangi desteklenen ust baslik konusulmali$/.exec(normalized)?.[1] ??
+    /^iki seyi karistiriyorum (.+?) derken neyi kastediyoruz$/.exec(normalized)?.[1] ??
+    /^(?:peki )?(.+?) dedigimizde ozunde ne var$/.exec(normalized)?.[1] ??
+    null
+  if (framedTarget) {
+    const framedTopic = findCatalogTopic(`${framedTarget} nedir?`, previousTopic)
+    if (framedTopic) return framedTopic
+  }
+  if (
+    previousTopic &&
     /^(?:(?:peki|ya|ayrica)\s+)?(?:cocuk\w*(?: nasil)?|ergen\w*(?: nasil)?|gelisim\w*(?: nasil)?|hangi yas\w*|yas kapsami(?: ne)?)$/.test(normalized)
   ) {
     return contextualTopicFromPreviousContext(previousTopic, normalized)
@@ -855,25 +1084,57 @@ export function findCatalogTopic(
   // canonical title. Honor that exact title before looser legacy shortcuts so
   // a selected topic cannot be displaced by a secondary word in the rewritten
   // question.
-  const canonicalFramedTopic = DNA_CHAT_CATALOG_TOPICS.find((topic) => {
+  const canonicalFramedTopic = DNA_CHAT_CATALOG_TOPICS.flatMap((topic) => {
     const title = TOPIC_SEARCH_INDEX.get(topic.id)?.title
-    return Boolean(title && normalized.startsWith(`${title} hakkinda `))
-  })
+    if (!title) return []
+    const framed = normalized.startsWith(`${title} hakkinda `) ||
+      normalized.startsWith(`${title} sozuyle `) ||
+      normalized.startsWith(`${title} icinde `) ||
+      normalized === `${title} nedir` ||
+      normalized.startsWith(`${title} nedir `) ||
+      normalized.startsWith(`${title} ne anlama gelir`) ||
+      normalized.includes(`onceki dogrulanmis ${title} basligini`)
+    return framed ? [{ topic, titleLength: title.length }] : []
+  }).sort((left, right) =>
+    right.titleLength - left.titleLength || left.topic.id.localeCompare(right.topic.id, "en"))[0]?.topic
   if (canonicalFramedTopic) return canonicalFramedTopic
+  const preferredNamedTopic = preferredSharedTopicForQuestion(normalized)
+  const explicitNamedAnswerFrame = /(?:\bifadesi gecti\b.+\banlam cekirdegini\b|\bicin evidence grounded\b.+\baciklama\b|\badina eklenen hayali\b.+\bgercek ust kavram\b|\btam olarak nedir$)/.test(normalized)
+  if (preferredNamedTopic && explicitNamedAnswerFrame) return preferredNamedTopic
+  if (isNamedConceptDefinitionFrame(normalized)) {
+    const preferredSharedTopic = preferredSharedTopicForQuestion(normalized)
+    if (preferredSharedTopic) return preferredSharedTopic
+    const uniquelyNamedTopic = uniquelyNamedTopicForQuestion(normalized)
+    if (uniquelyNamedTopic) return uniquelyNamedTopic
+  }
+  const routingCore = fuzzyRoutingCore(normalized) || normalized
+  const routingCoreChanged = routingCore !== normalized
+  if (routingCoreChanged) {
+    const preferredFuzzy = Object.entries(PREFERRED_SHARED_TOPIC_TERMS)
+      .map(([term, topicId]) => ({ topicId, score: boundedDamerauSimilarity(routingCore, term) }))
+      .sort((left, right) => right.score - left.score || left.topicId.localeCompare(right.topicId, "en"))
+    if ((preferredFuzzy[0]?.score ?? 0) >= 0.72 &&
+      (preferredFuzzy[0]?.score ?? 0) - (preferredFuzzy[1]?.score ?? 0) >= 0.08) {
+      const preferredTopic = DNA_CHAT_CATALOG_TOPIC_BY_ID.get(preferredFuzzy[0]!.topicId)
+      if (preferredTopic) return preferredTopic
+    }
+  }
   const explicitTopic = explicitTopicForQuestion(normalized)
   if (explicitTopic) return explicitTopic
   // A user may accidentally insert a space inside a long concept name
   // ("inte rosepsiyon", "co gnitive flexibility"). Match only long,
   // catalog-owned terms and prefer the longest hit so this repair cannot turn
   // short ordinary words into an overly specific clinical topic.
-  const compactQuestionForExactMatch = normalized.replace(/\s/g, "")
+  const compactQuestionForExactMatch = routingCore.replace(/\s/g, "")
   const compactExactTopic = DNA_CHAT_CATALOG_TOPICS
     .flatMap((topic) => {
       const index = TOPIC_SEARCH_INDEX.get(topic.id)
       const terms = index ? [index.title, ...index.aliases] : []
       const bestLength = terms.reduce((maximum, term) => {
         const compactTerm = term.replace(/\s/g, "")
-        return compactTerm.length >= 7 && termIndex(normalized, term) < 0 && compactQuestionForExactMatch.includes(compactTerm)
+        return compactTerm.length >= 7 &&
+          compactTerm.length / Math.max(1, compactQuestionForExactMatch.length) >= 0.7 &&
+          termIndex(routingCore, term) < 0 && compactQuestionForExactMatch.includes(compactTerm)
           ? Math.max(maximum, compactTerm.length)
           : maximum
       }, 0)
@@ -902,31 +1163,51 @@ export function findCatalogTopic(
     }))
     .sort((a, b) => b.score - a.score || a.topic.id.localeCompare(b.topic.id))
 
-  if ((ranked[0]?.score ?? 0) >= 5) return ranked[0].topic
+  if ((ranked[0]?.score ?? 0) >= 5 && !routingCoreChanged) return ranked[0].topic
 
   // Expensive fuzzy matching is a bounded fallback, never the default path.
   // This repairs character loss and accidental word splitting without making
   // every ordinary question scan all aliases with n-grams.
-  const compactQuestion = normalized.replace(/\s/g, "")
+  const compactQuestion = routingCore.replace(/\s/g, "")
   const fuzzyEligible = normalized.split(" ").length <= 6 ||
+    (routingCoreChanged && routingCore.split(" ").length <= 8) ||
     /\b(?:tam olarak nedir ve neyi kapsar|ifadesini duydum dogru cercevesi ne)\b/.test(normalized)
   const fuzzyRanked = fuzzyEligible
     ? DNA_CHAT_CATALOG_TOPICS.map((topic) => {
     const index = TOPIC_SEARCH_INDEX.get(topic.id)
     const terms = index ? [index.title, ...index.aliases] : []
-    const regular = scoreDnaTextMatch(normalized, terms).score
-    const compact = scoreDnaTextMatch(
+    const regularMatch = scoreDnaTextMatch(routingCore, terms)
+    const compactMatch = scoreDnaTextMatch(
       compactQuestion,
       terms.map((term) => term.replace(/\s/g, "")),
-    ).score
-    return { topic, score: Math.max(regular, compact) }
+    )
+    const regularPatternCoverage = regularMatch.pattern
+      ? normalizeCatalogText(regularMatch.pattern).replace(/\s/g, "").length / Math.max(1, compactQuestion.length)
+      : 0
+    const compactPatternCoverage = compactMatch.pattern
+      ? normalizeCatalogText(compactMatch.pattern).replace(/\s/g, "").length / Math.max(1, compactQuestion.length)
+      : 0
+    const regular = routingCoreChanged
+      ? Math.max(regularPatternCoverage >= 0.7 ? regularMatch.score : 0, regularMatch.ngramScore * 0.9)
+      : regularMatch.score
+    const compact = routingCoreChanged
+      ? Math.max(compactPatternCoverage >= 0.7 ? compactMatch.score : 0, compactMatch.ngramScore * 0.9)
+      : compactMatch.score
+    const edit = routingCoreChanged
+      ? terms.reduce((maximum, term) => Math.max(maximum, boundedDamerauSimilarity(routingCore, term)), 0)
+      : 0
+    return { topic, score: Math.max(regular, compact, edit) }
       }).sort((left, right) => right.score - left.score || left.topic.id.localeCompare(right.topic.id))
     : []
   const fuzzyBest = fuzzyRanked[0]
   const fuzzyGap = (fuzzyBest?.score ?? 0) - (fuzzyRanked[1]?.score ?? 0)
-  if (fuzzyBest && fuzzyBest.score >= 0.59 && (fuzzyGap >= 0.03 || fuzzyBest.score >= 0.78)) {
+  const highConfidenceFuzzy = fuzzyBest && fuzzyBest.score >= 0.59 &&
+    (fuzzyGap >= 0.03 || fuzzyBest.score >= 0.78)
+  const explicitRepairFrameFuzzy = fuzzyBest && routingCoreChanged && fuzzyBest.score >= 0.42 && fuzzyGap >= 0.08
+  if (fuzzyBest && (highConfidenceFuzzy || explicitRepairFrameFuzzy)) {
     return fuzzyBest.topic
   }
+  if ((ranked[0]?.score ?? 0) >= 5) return ranked[0].topic
 
   const shortContextualFollowUp = normalized.split(" ").length <= 12 &&
     /^(?:(?:peki|ya|ayrica)\s+)?(?:olcum\w*(?: nasil)?|nasil olcul\w*|nasil degerlendir\w*|kaynak\w*(?: goster\w*(?: misin)?)?|kanit\w*(?: ne| nasil| guclu mu)?|kanit duzeyi(?: ne| nasil)?|orneklem\w*|cocuk\w*(?: nasil)?|ergen\w*(?: nasil)?|gelisim\w*(?: nasil)?|hangi yas\w*|yas kapsami(?: ne)?|dna(?: ile)? baglanti\w*|dna ile iliski\w*|sinir\w*|ne kadar guclu|guvenilir mi|bir ornek daha)$/.test(
@@ -971,6 +1252,10 @@ export function rankCatalogTopicCandidates(
   if (cached) return cached
   const primary = findCatalogTopic(question, previousTopic)
   const queryTokens = new Set(normalized.split(" ").filter((token) => token.length >= 3))
+  const routingCore = fuzzyRoutingCore(normalized) || normalized
+  const routingCoreChanged = routingCore !== normalized
+  const fuzzyEligible = routingCore.split(" ").length <= 8 &&
+    (routingCoreChanged || normalized.split(" ").length <= 6)
   const scored = DNA_CHAT_CATALOG_TOPICS.map((topic) => {
     const index = TOPIC_SEARCH_INDEX.get(topic.id)
     const termTokens = new Set(index
@@ -980,7 +1265,31 @@ export function rankCatalogTopicCandidates(
     const ruleScore = scoreTopic(normalized, topic).score
     const contextBoost = previousTopic === topic.id ? 12 : 0
     const primaryBoost = primary?.id === topic.id ? 36 : 0
-    const score = ruleScore + Math.min(lexicalOverlap, 4) * 4 + contextBoost + primaryBoost
+    const regularFuzzy = fuzzyEligible && index
+      ? scoreDnaTextMatch(routingCore, [index.title, ...index.aliases])
+      : null
+    const compactFuzzy = fuzzyEligible && index
+      ? scoreDnaTextMatch(
+          routingCore.replace(/\s/g, ""),
+          [index.title, ...index.aliases].map((term) => term.replace(/\s/g, "")),
+        )
+      : null
+    const fuzzyScore = Math.max(
+      regularFuzzy ? Math.max(regularFuzzy.score, routingCoreChanged ? regularFuzzy.ngramScore * 0.9 : 0) : 0,
+      compactFuzzy ? Math.max(compactFuzzy.score, routingCoreChanged ? compactFuzzy.ngramScore * 0.9 : 0) : 0,
+      routingCoreChanged && index
+        ? [index.title, ...index.aliases].reduce(
+            (maximum, term) => Math.max(maximum, boundedDamerauSimilarity(routingCore, term)),
+            0,
+          )
+        : 0,
+    )
+    // Explicit correction frames may contain more than one accidental edit.
+    // Keep their lower-scoring alternatives in the bounded shortlist so the
+    // local ranker or Luna can select among known topic IDs; this never creates
+    // a new topic or answer claim.
+    const fuzzyBoost = fuzzyScore >= (routingCoreChanged ? 0.3 : 0.42) ? fuzzyScore * 44 : 0
+    const score = ruleScore + Math.min(lexicalOverlap, 4) * 4 + contextBoost + primaryBoost + fuzzyBoost
     return { topic, score }
   }).sort((left, right) => right.score - left.score || left.topic.id.localeCompare(right.topic.id))
 

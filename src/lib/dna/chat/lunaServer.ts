@@ -9,6 +9,7 @@ import {
   DNA_CHAT_LUNA_POLICY_VERSION,
   isExplicitDnaChatLanguagePolishRequest,
   shouldUseDnaChatLunaInterpretation,
+  shouldPreserveLocalDnaChatTopic,
   shouldPolishDnaChatAnswer,
   validateDnaChatLunaInterpretation,
   validateDnaChatLunaPolish,
@@ -24,7 +25,12 @@ import {
   type DnaChatLunaUsage,
 } from "./lunaUsage"
 import type { DnaChatApiPayload } from "./apiResolver"
-import { getDnaSemanticTopicCandidates, routeDnaSemanticQuestion } from "./semanticRouter"
+import { getCatalogTopicById } from "./catalog"
+import {
+  getDnaSemanticExplicitCompoundTopicIds,
+  getDnaSemanticTopicCandidates,
+  routeDnaSemanticQuestion,
+} from "./semanticRouter"
 import { normalizeDnaChatText } from "./text"
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
@@ -344,10 +350,15 @@ export async function prepareDnaChatQuestionWithLuna(
     || (!localDecision.inDomain && (candidates[0]?.confidence ?? 0) < 0.35)) {
     return { payload, status: "skipped", trace: trace("skipped", "no_supported_candidate") }
   }
+  if (getDnaSemanticExplicitCompoundTopicIds(payload.question).length === 2) {
+    return { payload, status: "skipped", trace: trace("skipped", "local_explicit_compound") }
+  }
   const shouldInterpret = shouldUseDnaChatLunaInterpretation({
     question: payload.question,
     inDomain: localDecision.inDomain,
     confidenceBand: localDecision.confidenceBand,
+    runnerUpGap: localDecision.runnerUpGap,
+    topCandidateConfidence: candidates[0]?.confidence ?? 0,
   })
   if (!shouldInterpret) {
     return { payload, status: "skipped", trace: trace("skipped", "clean_high_confidence") }
@@ -399,7 +410,15 @@ export async function prepareDnaChatQuestionWithLuna(
     ].join(" "),
     content: JSON.stringify({
       question: payload.question,
-      candidates: candidates.map(({ topicId, title }) => ({ topicId, title })),
+      candidates: candidates.map(({ topicId, title }) => {
+        const topic = getCatalogTopicById(topicId)
+        return {
+          topicId,
+          title,
+          aliases: topic?.aliases.slice(0, 6) ?? [],
+          keywords: topic?.keywords.slice(0, 6) ?? [],
+        }
+      }),
     }),
   })
   if (!candidate) {
@@ -423,14 +442,16 @@ export async function prepareDnaChatQuestionWithLuna(
     markFailure()
     return { payload, status: "fallback", trace: trace("fallback", "interpretation_guard_rejected", commonTrace) }
   }
-  const explicitConversationRepair = /\b(?:hayir|kastim|demek istedigim|onu soruyordum|duzelt)\b/.test(
-    normalizeDnaChatText(payload.question),
-  )
-  if (
-    localDecision.inDomain &&
-    !explicitConversationRepair &&
-    interpretation.subquestions.some((entry) => entry.topicId !== candidates[0]?.topicId)
-  ) {
+  if (shouldPreserveLocalDnaChatTopic({
+    question: payload.question,
+    inDomain: localDecision.inDomain,
+    confidenceBand: localDecision.confidenceBand,
+    runnerUpGap: localDecision.runnerUpGap,
+    topCandidateConfidence: candidates[0]?.confidence ?? 0,
+    selectedTopicIds: interpretation.subquestions.map((entry) => entry.topicId),
+    topTopicId: candidates[0]?.topicId,
+    contextTopicIds: payload.context?.topicIds,
+  })) {
     markFailure()
     return {
       payload,

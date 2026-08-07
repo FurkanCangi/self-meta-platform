@@ -214,6 +214,21 @@ export function getDnaSemanticTopicCandidates(
   return rankCatalogTopicCandidates(question, previousTopic, limit)
 }
 
+/**
+ * Detects only explicit two-part messages whose parts already resolve to two
+ * different supported topics. Such questions do not need an external
+ * interpretation call and keeping them local prevents a correct compound
+ * answer from being collapsed or redirected.
+ */
+export function getDnaSemanticExplicitCompoundTopicIds(question: string): readonly string[] {
+  const parts = question.split(/\s*;\s*|\n+/u).map((part) => part.trim()).filter(Boolean)
+  if (parts.length !== 2) return Object.freeze([])
+  const selected = parts.map((part) => getDnaSemanticTopicCandidates(part, null, 3)[0] ?? null)
+  if (selected.some((candidate) => !candidate || candidate.confidence < 0.45)) return Object.freeze([])
+  const topicIds = selected.map((candidate) => candidate!.topicId)
+  return topicIds[0] !== topicIds[1] ? Object.freeze(topicIds) : Object.freeze([])
+}
+
 export function buildDnaQuestionFrame(input: Readonly<{
   questions: readonly string[]
   conversationContext?: DnaChatConversationContext | null

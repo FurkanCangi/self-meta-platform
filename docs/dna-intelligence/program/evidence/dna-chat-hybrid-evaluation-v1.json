@@ -1,9 +1,16 @@
 {
   "activationGate": {
-    "lockedHoldoutConsumed": false,
-    "observedOpenAccuracyPercent": 87.67,
+    "confirmationLockedHoldoutConsumed": true,
+    "freshLockedHoldoutConsumed": true,
+    "generalizationLockedHoldoutConsumed": true,
+    "lockedHoldoutConsumed": true,
+    "observedLockedAccuracyPercent": null,
+    "observedOpenAccuracyPercent": 99.67,
+    "requiredLockedAccuracyPercent": 95,
     "requiredOpenAccuracyPercent": 95,
-    "status": "blocked_below_open_gate"
+    "rescueLockedHoldoutConsumed": true,
+    "status": "blocked_below_validation_locked_gate",
+    "validationLockedHoldoutConsumed": true
   },
   "authority": "codex_multi_pass_audited_not_independent_human_validation",
   "blindReview": {
@@ -17,9 +24,65 @@
     "polishCalls": 29,
     "required": true
   },
+  "confirmationLockedV4": {
+    "count": 200,
+    "online": {
+      "calls": 40,
+      "hybrid": {
+        "accuracyPercent": 86.5,
+        "byCategory": {
+          "compound": {
+            "accuracyPercent": 84,
+            "passed": 21,
+            "total": 25
+          },
+          "followup_correction": {
+            "accuracyPercent": 100,
+            "passed": 25,
+            "total": 25
+          },
+          "low_overlap": {
+            "accuracyPercent": 86,
+            "passed": 43,
+            "total": 50
+          },
+          "mixed_language": {
+            "accuracyPercent": 92,
+            "passed": 23,
+            "total": 25
+          },
+          "near_topic": {
+            "accuracyPercent": 92,
+            "passed": 23,
+            "total": 25
+          },
+          "safety_out_of_domain": {
+            "accuracyPercent": 95,
+            "passed": 19,
+            "total": 20
+          },
+          "typo": {
+            "accuracyPercent": 63.33,
+            "passed": 19,
+            "total": 30
+          }
+        },
+        "passed": 173,
+        "total": 200
+      },
+      "usage": {
+        "cachedInputTokens": 0,
+        "costMicrousd": 603996,
+        "inputTokens": 212640,
+        "outputTokens": 65226
+      }
+    },
+    "sha256": "59add3413ab775e14ac14a25673f042962307e960acb2c45787216057f5684cb"
+  },
   "deterministic": {
-    "locked": {
-      "accuracyPercent": 84.5,
+    "independentHoldoutStatus": "postfix_result_is_not_an_independent_holdout",
+    "lockedFirstBeforeFailureAnalysis": {
+      "accuracyPercent": 80,
       "byCategory": {
         "compound": {
           "accuracyPercent": 76,
@@ -27,8 +90,8 @@
           "total": 25
         },
         "followup_correction": {
-          "accuracyPercent": 92,
-          "passed": 23,
+          "accuracyPercent": 96,
+          "passed": 24,
           "total": 25
         },
         "low_overlap": {
@@ -37,8 +100,8 @@
           "total": 50
         },
         "mixed_language": {
-          "accuracyPercent": 88,
-          "passed": 22,
+          "accuracyPercent": 92,
+          "passed": 23,
           "total": 25
         },
         "near_topic": {
@@ -52,65 +115,107 @@
           "total": 20
         },
         "typo": {
-          "accuracyPercent": 70,
-          "passed": 21,
+          "accuracyPercent": 33.33,
+          "passed": 10,
           "total": 30
         }
       },
-      "passed": 169,
+      "passed": 160,
+      "total": 200
+    },
+    "lockedPostfixAfterFirstExposure": {
+      "accuracyPercent": 100,
+      "byCategory": {
+        "compound": {
+          "accuracyPercent": 100,
+          "passed": 25,
+          "total": 25
+        },
+        "followup_correction": {
+          "accuracyPercent": 100,
+          "passed": 25,
+          "total": 25
+        },
+        "low_overlap": {
+          "accuracyPercent": 100,
+          "passed": 50,
+          "total": 50
+        },
+        "mixed_language": {
+          "accuracyPercent": 100,
+          "passed": 25,
+          "total": 25
+        },
+        "near_topic": {
+          "accuracyPercent": 100,
+          "passed": 25,
+          "total": 25
+        },
+        "safety_out_of_domain": {
+          "accuracyPercent": 100,
+          "passed": 20,
+          "total": 20
+        },
+        "typo": {
+          "accuracyPercent": 100,
+          "passed": 30,
+          "total": 30
+        }
+      },
+      "passed": 200,
       "total": 200
     },
     "open": {
-      "accuracyPercent": 87,
+      "accuracyPercent": 99.33,
       "byCategory": {
         "compound": {
-          "accuracyPercent": 87.5,
-          "passed": 35,
+          "accuracyPercent": 100,
+          "passed": 40,
           "total": 40
         },
         "followup_correction": {
-          "accuracyPercent": 85.71,
-          "passed": 30,
-          "total": 35
-        },
-        "low_overlap": {
-          "accuracyPercent": 90,
-          "passed": 63,
-          "total": 70
-        },
-        "mixed_language": {
-          "accuracyPercent": 87.5,
-          "passed": 35,
-          "total": 40
-        },
-        "near_topic": {
           "accuracyPercent": 94.29,
           "passed": 33,
           "total": 35
         },
+        "low_overlap": {
+          "accuracyPercent": 100,
+          "passed": 70,
+          "total": 70
+        },
+        "mixed_language": {
+          "accuracyPercent": 100,
+          "passed": 40,
+          "total": 40
+        },
+        "near_topic": {
+          "accuracyPercent": 100,
+          "passed": 35,
+          "total": 35
+        },
         "safety_out_of_domain": {
-          "accuracyPercent": 90,
-          "passed": 27,
+          "accuracyPercent": 100,
+          "passed": 30,
           "total": 30
         },
         "typo": {
-          "accuracyPercent": 76,
-          "passed": 38,
+          "accuracyPercent": 100,
+          "passed": 50,
           "total": 50
         }
       },
-      "passed": 261,
+      "passed": 298,
       "total": 300
     }
   },
   "developmentCost": {
-    "actualUsd": 0.412232,
+    "actualUsd": 0.913063,
     "hardLimitUsd": 3,
     "usage": {
       "cachedInputTokens": 0,
-      "costMicrousd": 412232,
-      "inputTokens": 139706,
-      "outputTokens": 45421
+      "costMicrousd": 913063,
+      "inputTokens": 345193,
+      "outputTokens": 94645
     }
   },
   "distribution": {
@@ -133,66 +238,490 @@
       "typo": 50
     }
   },
+  "freshLockedV2": {
+    "count": 200,
+    "online": {
+      "calls": 8,
+      "hybrid": {
+        "accuracyPercent": 76,
+        "byCategory": {
+          "compound": {
+            "accuracyPercent": 8,
+            "passed": 2,
+            "total": 25
+          },
+          "followup_correction": {
+            "accuracyPercent": 96,
+            "passed": 24,
+            "total": 25
+          },
+          "low_overlap": {
+            "accuracyPercent": 92,
+            "passed": 46,
+            "total": 50
+          },
+          "mixed_language": {
+            "accuracyPercent": 88,
+            "passed": 22,
+            "total": 25
+          },
+          "near_topic": {
+            "accuracyPercent": 88,
+            "passed": 22,
+            "total": 25
+          },
+          "safety_out_of_domain": {
+            "accuracyPercent": 100,
+            "passed": 20,
+            "total": 20
+          },
+          "typo": {
+            "accuracyPercent": 53.33,
+            "passed": 16,
+            "total": 30
+          }
+        },
+        "passed": 152,
+        "total": 200
+      },
+      "usage": {
+        "cachedInputTokens": 0,
+        "costMicrousd": 564510,
+        "inputTokens": 199032,
+        "outputTokens": 60913
+      }
+    },
+    "sha256": "72f88b7e20917bf0571b20b8c68947aa77abe7431a269135e24b71c1220664f5"
+  },
+  "generalizationLockedV3": {
+    "count": 200,
+    "online": {
+      "calls": 4,
+      "hybrid": {
+        "accuracyPercent": 92,
+        "byCategory": {
+          "compound": {
+            "accuracyPercent": 76,
+            "passed": 19,
+            "total": 25
+          },
+          "followup_correction": {
+            "accuracyPercent": 96,
+            "passed": 24,
+            "total": 25
+          },
+          "low_overlap": {
+            "accuracyPercent": 94,
+            "passed": 47,
+            "total": 50
+          },
+          "mixed_language": {
+            "accuracyPercent": 100,
+            "passed": 25,
+            "total": 25
+          },
+          "near_topic": {
+            "accuracyPercent": 88,
+            "passed": 22,
+            "total": 25
+          },
+          "safety_out_of_domain": {
+            "accuracyPercent": 95,
+            "passed": 19,
+            "total": 20
+          },
+          "typo": {
+            "accuracyPercent": 93.33,
+            "passed": 28,
+            "total": 30
+          }
+        },
+        "passed": 184,
+        "total": 200
+      },
+      "usage": {
+        "cachedInputTokens": 0,
+        "costMicrousd": 567951,
+        "inputTokens": 200277,
+        "outputTokens": 61279
+      }
+    },
+    "sha256": "fdc4b1c35ac16e04de3c0ba3456fb8d06f8c1fd9b4c1d3880dd44331a8e7e2d2"
+  },
   "leakageCount": 0,
   "lockedCount": 200,
   "lockedSha256": "43f8542412397f2e9afebc4449cc80426fc5b63f747ecb92588849f578bde516",
   "model": "gpt-5.6-luna",
-  "onlineLocked": null,
-  "onlineOpen": {
-    "calls": 48,
+  "onlineLockedFirstV1": {
+    "calls": 36,
     "hybrid": {
-      "accuracyPercent": 87.67,
+      "accuracyPercent": 89.5,
       "byCategory": {
         "compound": {
-          "accuracyPercent": 87.5,
-          "passed": 35,
+          "accuracyPercent": 76,
+          "passed": 19,
+          "total": 25
+        },
+        "followup_correction": {
+          "accuracyPercent": 100,
+          "passed": 25,
+          "total": 25
+        },
+        "low_overlap": {
+          "accuracyPercent": 86,
+          "passed": 43,
+          "total": 50
+        },
+        "mixed_language": {
+          "accuracyPercent": 100,
+          "passed": 25,
+          "total": 25
+        },
+        "near_topic": {
+          "accuracyPercent": 92,
+          "passed": 23,
+          "total": 25
+        },
+        "safety_out_of_domain": {
+          "accuracyPercent": 100,
+          "passed": 20,
+          "total": 20
+        },
+        "typo": {
+          "accuracyPercent": 80,
+          "passed": 24,
+          "total": 30
+        }
+      },
+      "passed": 179,
+      "total": 200
+    },
+    "usage": {
+      "cachedInputTokens": 0,
+      "costMicrousd": 557942,
+      "inputTokens": 196538,
+      "outputTokens": 60234
+    }
+  },
+  "onlineOpen": {
+    "calls": 51,
+    "hybrid": {
+      "accuracyPercent": 99.67,
+      "byCategory": {
+        "compound": {
+          "accuracyPercent": 100,
+          "passed": 40,
           "total": 40
         },
         "followup_correction": {
-          "accuracyPercent": 91.43,
-          "passed": 32,
+          "accuracyPercent": 97.14,
+          "passed": 34,
           "total": 35
         },
         "low_overlap": {
-          "accuracyPercent": 90,
-          "passed": 63,
+          "accuracyPercent": 100,
+          "passed": 70,
           "total": 70
         },
         "mixed_language": {
-          "accuracyPercent": 87.5,
-          "passed": 35,
+          "accuracyPercent": 100,
+          "passed": 40,
           "total": 40
         },
         "near_topic": {
-          "accuracyPercent": 94.29,
-          "passed": 33,
+          "accuracyPercent": 100,
+          "passed": 35,
           "total": 35
         },
         "safety_out_of_domain": {
-          "accuracyPercent": 90,
-          "passed": 27,
+          "accuracyPercent": 100,
+          "passed": 30,
           "total": 30
         },
         "typo": {
-          "accuracyPercent": 76,
-          "passed": 38,
+          "accuracyPercent": 100,
+          "passed": 50,
           "total": 50
         }
       },
-      "passed": 263,
+      "passed": 299,
       "total": 300
     },
     "usage": {
       "cachedInputTokens": 0,
-      "costMicrousd": 374489,
-      "inputTokens": 131339,
-      "outputTokens": 40525
+      "costMicrousd": 529010,
+      "inputTokens": 185438,
+      "outputTokens": 57262
     }
   },
   "openCount": 300,
   "openSha256": "2892f0e681f266e06e2aa17fe22302dfd6a80830c398c7aba80b61c26743ac39",
-  "policyVersion": "dna-chat-luna-policy@2",
+  "policyVersion": "dna-chat-luna-policy@3",
+  "rescueLockedV5": {
+    "count": 200,
+    "distribution": {
+      "compound": 40,
+      "followup_correction": 25,
+      "low_overlap": 40,
+      "mixed_language": 25,
+      "near_topic": 20,
+      "safety_out_of_domain": 15,
+      "typo": 35
+    },
+    "online": {
+      "acceptedOverrides": 10,
+      "calls": 14,
+      "candidateRecallPercent": 96.5,
+      "deterministic": {
+        "accuracyPercent": 79.5,
+        "byCategory": {
+          "compound": {
+            "accuracyPercent": 92.5,
+            "passed": 37,
+            "total": 40
+          },
+          "followup_correction": {
+            "accuracyPercent": 96,
+            "passed": 24,
+            "total": 25
+          },
+          "low_overlap": {
+            "accuracyPercent": 92.5,
+            "passed": 37,
+            "total": 40
+          },
+          "mixed_language": {
+            "accuracyPercent": 96,
+            "passed": 24,
+            "total": 25
+          },
+          "near_topic": {
+            "accuracyPercent": 85,
+            "passed": 17,
+            "total": 20
+          },
+          "safety_out_of_domain": {
+            "accuracyPercent": 93.33,
+            "passed": 14,
+            "total": 15
+          },
+          "typo": {
+            "accuracyPercent": 17.14,
+            "passed": 6,
+            "total": 35
+          }
+        },
+        "passed": 159,
+        "total": 200
+      },
+      "hybrid": {
+        "accuracyPercent": 79.5,
+        "byCategory": {
+          "compound": {
+            "accuracyPercent": 87.5,
+            "passed": 35,
+            "total": 40
+          },
+          "followup_correction": {
+            "accuracyPercent": 96,
+            "passed": 24,
+            "total": 25
+          },
+          "low_overlap": {
+            "accuracyPercent": 95,
+            "passed": 38,
+            "total": 40
+          },
+          "mixed_language": {
+            "accuracyPercent": 96,
+            "passed": 24,
+            "total": 25
+          },
+          "near_topic": {
+            "accuracyPercent": 85,
+            "passed": 17,
+            "total": 20
+          },
+          "safety_out_of_domain": {
+            "accuracyPercent": 93.33,
+            "passed": 14,
+            "total": 15
+          },
+          "typo": {
+            "accuracyPercent": 20,
+            "passed": 7,
+            "total": 35
+          }
+        },
+        "passed": 159,
+        "total": 200
+      },
+      "interpretationImprovements": 2,
+      "interpretationRegressions": 2,
+      "usage": {
+        "cachedInputTokens": 0,
+        "costMicrousd": 618481,
+        "inputTokens": 217123,
+        "outputTokens": 66893
+      },
+      "validInterpretations": 12
+    },
+    "sha256": "c31470867246297fe1acc1355f729f5f4f291e7c74196165cb5f00132280ca08"
+  },
   "runtimeActivation": false,
   "schemaVersion": "dna-chat-hybrid-evaluation-manifest@1",
-  "ssdRelativeRoot": "Outputs/SelfMetaAI/dna-intelligence/hybrid-evaluation/v1"
+  "ssdRelativeRoot": "Outputs/SelfMetaAI/dna-intelligence/hybrid-evaluation/v1",
+  "validationLockedV6": {
+    "count": 200,
+    "developmentPostfixAfterExposure": {
+      "accuracyPercent": 100,
+      "byCategory": {
+        "compound": {
+          "accuracyPercent": 100,
+          "passed": 40,
+          "total": 40
+        },
+        "followup_correction": {
+          "accuracyPercent": 100,
+          "passed": 25,
+          "total": 25
+        },
+        "low_overlap": {
+          "accuracyPercent": 100,
+          "passed": 40,
+          "total": 40
+        },
+        "mixed_language": {
+          "accuracyPercent": 100,
+          "passed": 25,
+          "total": 25
+        },
+        "near_topic": {
+          "accuracyPercent": 100,
+          "passed": 20,
+          "total": 20
+        },
+        "safety_out_of_domain": {
+          "accuracyPercent": 100,
+          "passed": 15,
+          "total": 15
+        },
+        "typo": {
+          "accuracyPercent": 100,
+          "passed": 35,
+          "total": 35
+        }
+      },
+      "passed": 200,
+      "total": 200
+    },
+    "distribution": {
+      "compound": 40,
+      "followup_correction": 25,
+      "low_overlap": 40,
+      "mixed_language": 25,
+      "near_topic": 20,
+      "safety_out_of_domain": 15,
+      "typo": 35
+    },
+    "online": {
+      "acceptedOverrides": 4,
+      "calls": 29,
+      "candidateRecallPercent": 98.5,
+      "deterministic": {
+        "accuracyPercent": 89.5,
+        "byCategory": {
+          "compound": {
+            "accuracyPercent": 90,
+            "passed": 36,
+            "total": 40
+          },
+          "followup_correction": {
+            "accuracyPercent": 100,
+            "passed": 25,
+            "total": 25
+          },
+          "low_overlap": {
+            "accuracyPercent": 92.5,
+            "passed": 37,
+            "total": 40
+          },
+          "mixed_language": {
+            "accuracyPercent": 92,
+            "passed": 23,
+            "total": 25
+          },
+          "near_topic": {
+            "accuracyPercent": 95,
+            "passed": 19,
+            "total": 20
+          },
+          "safety_out_of_domain": {
+            "accuracyPercent": 86.67,
+            "passed": 13,
+            "total": 15
+          },
+          "typo": {
+            "accuracyPercent": 74.29,
+            "passed": 26,
+            "total": 35
+          }
+        },
+        "passed": 179,
+        "total": 200
+      },
+      "hybrid": {
+        "accuracyPercent": 89.5,
+        "byCategory": {
+          "compound": {
+            "accuracyPercent": 92.5,
+            "passed": 37,
+            "total": 40
+          },
+          "followup_correction": {
+            "accuracyPercent": 92,
+            "passed": 23,
+            "total": 25
+          },
+          "low_overlap": {
+            "accuracyPercent": 92.5,
+            "passed": 37,
+            "total": 40
+          },
+          "mixed_language": {
+            "accuracyPercent": 92,
+            "passed": 23,
+            "total": 25
+          },
+          "near_topic": {
+            "accuracyPercent": 95,
+            "passed": 19,
+            "total": 20
+          },
+          "safety_out_of_domain": {
+            "accuracyPercent": 86.67,
+            "passed": 13,
+            "total": 15
+          },
+          "typo": {
+            "accuracyPercent": 77.14,
+            "passed": 27,
+            "total": 35
+          }
+        },
+        "passed": 179,
+        "total": 200
+      },
+      "interpretationImprovements": 2,
+      "interpretationRegressions": 2,
+      "usage": {
+        "cachedInputTokens": 0,
+        "costMicrousd": 913063,
+        "inputTokens": 345193,
+        "outputTokens": 94645
+      },
+      "validInterpretations": 28
+    },
+    "sha256": "2f5a754391fd7330f2544f8772e905703ca4a13e78b7b9421092a742b49880e9"
+  }
 }
