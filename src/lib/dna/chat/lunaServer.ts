@@ -12,6 +12,7 @@ import {
   shouldPolishDnaChatAnswer,
   validateDnaChatLunaInterpretation,
   validateDnaChatLunaPolish,
+  type DnaChatLunaOperation,
   type DnaChatLunaTextUnit,
 } from "./lunaPolicy"
 import {
@@ -24,6 +25,7 @@ import {
 } from "./lunaUsage"
 import type { DnaChatApiPayload } from "./apiResolver"
 import { getDnaSemanticTopicCandidates, routeDnaSemanticQuestion } from "./semanticRouter"
+import { normalizeDnaChatText } from "./text"
 
 const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
 const REQUEST_TIMEOUT_MS = 5_000
@@ -274,9 +276,39 @@ function isSimpleSocialMessage(question: string) {
   return /^(?:merhaba|selam|gunaydin|günaydın|iyi aksamlar|iyi akşamlar|tesekkur|teşekkür)[!. ]*$/.test(normalized)
 }
 
-function composeInterpretedQuestion(subquestions: readonly Readonly<{ question: string }>[]) {
-  if (subquestions.length === 1) return subquestions[0]?.question.trim() ?? ""
-  return subquestions.map((entry) => `${entry.question.trim().replace(/[?!.]+$/u, "")}?`).join(" ")
+function composeInterpretedQuestion(
+  subquestions: readonly Readonly<{ question: string; topicId: string }>[],
+  candidates: readonly Readonly<{ topicId: string; title: string }>[],
+) {
+  const titleById = new Map(candidates.map((candidate) => [candidate.topicId, candidate.title]))
+  const framed = subquestions.map((entry) => {
+    const title = titleById.get(entry.topicId)
+    const question = entry.question.trim().replace(/[?!.]+$/u, "")
+    return `${title ? `${title} hakkında: ` : ""}${question}?`
+  })
+  return framed.length === 1 ? framed[0] ?? "" : framed.join(" ")
+}
+
+function conversationKindForOperation(operation: DnaChatLunaOperation) {
+  if (["definition", "comparison", "relation", "measurement", "development", "evidence"].includes(operation)) {
+    return operation as "definition" | "comparison" | "relation" | "measurement" | "development" | "evidence"
+  }
+  return "unknown" as const
+}
+
+function contextualQuestionForSingleInterpretation(
+  originalQuestion: string,
+  operation: DnaChatLunaOperation,
+) {
+  const normalized = normalizeDnaChatText(originalQuestion)
+  const carriesEssentialQualifier = /\b\d+(?:[.,]\d+)?\b/.test(originalQuestion) ||
+    /\b(?:cocuk|ergen|yetiskin|bebek|yas|degil|yok|olmaz|olamaz|kesin|tani|tedavi|ilac|doz|prognoz)\w*\b/.test(normalized)
+  if (carriesEssentialQualifier) return null
+  if (operation === "definition" || operation === "follow_up") return "Bunu daha net açıkla."
+  if (operation === "measurement") return "Bu nasıl ölçülür?"
+  if (operation === "development") return "Bu gelişim boyunca nasıl değişir?"
+  if (operation === "evidence") return "Bunun kanıtı nedir?"
+  return null
 }
 
 export async function prepareDnaChatQuestionWithLuna(
@@ -309,7 +341,7 @@ export async function prepareDnaChatQuestionWithLuna(
   )
   if (!candidates.length
     || (candidates[0]?.score ?? 0) <= 0
-    || (!localDecision.inDomain && (candidates[0]?.confidence ?? 0) < 0.5)) {
+    || (!localDecision.inDomain && (candidates[0]?.confidence ?? 0) < 0.35)) {
     return { payload, status: "skipped", trace: trace("skipped", "no_supported_candidate") }
   }
   const shouldInterpret = shouldUseDnaChatLunaInterpretation({
@@ -391,10 +423,30 @@ export async function prepareDnaChatQuestionWithLuna(
     markFailure()
     return { payload, status: "fallback", trace: trace("fallback", "interpretation_guard_rejected", commonTrace) }
   }
-  const interpretedQuestion = composeInterpretedQuestion(interpretation.subquestions)
+  const explicitConversationRepair = /\b(?:hayir|kastim|demek istedigim|onu soruyordum|duzelt)\b/.test(
+    normalizeDnaChatText(payload.question),
+  )
+  if (
+    localDecision.inDomain &&
+    !explicitConversationRepair &&
+    interpretation.subquestions.some((entry) => entry.topicId !== candidates[0]?.topicId)
+  ) {
+    markFailure()
+    return {
+      payload,
+      status: "fallback",
+      trace: trace("fallback", "local_supported_topic_preserved", commonTrace),
+    }
+  }
+  const interpretedQuestion = composeInterpretedQuestion(interpretation.subquestions, candidates)
+  const single = interpretation.subquestions.length === 1 ? interpretation.subquestions[0] : null
+  const contextualQuestion = single
+    ? contextualQuestionForSingleInterpretation(payload.question, single.operation)
+    : null
+  const preparedQuestion = contextualQuestion ?? interpretedQuestion
   const normalizedEligibility = classifyDnaChatLunaEligibility({
     enabled: true,
-    question: interpretedQuestion,
+    question: preparedQuestion,
     mode: payload.mode,
     reportId: payload.reportId,
   })
@@ -404,7 +456,18 @@ export async function prepareDnaChatQuestionWithLuna(
   }
   markSuccess()
   return {
-    payload: { ...payload, question: interpretedQuestion },
+    payload: {
+      ...payload,
+      question: preparedQuestion,
+      context: contextualQuestion && single
+        ? {
+            ...payload.context,
+            previousTopic: single.topicId,
+            topicIds: [single.topicId],
+            lastQueryKind: conversationKindForOperation(single.operation),
+          }
+        : payload.context,
+    },
     status: "applied",
     trace: trace("applied", "candidate_selected", commonTrace),
   }

@@ -47,6 +47,7 @@
     "scripts/run-dna-chat-intended-use-tests.ts",
     "scripts/run-dna-chat-forbidden-imports.ts",
     "scripts/run-dna-chat-luna-policy-tests.ts",
+    "scripts/run-dna-chat-hybrid-evaluation.ts",
     "scripts/run-dna-chat-authority-tests.ts",
     "scripts/run-dna-chat-book-lifecycle-tests.ts",
     "scripts/run-dna-owner-book-runtime-tests.ts",

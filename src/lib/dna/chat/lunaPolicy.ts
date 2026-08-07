@@ -310,7 +310,12 @@ export function shouldUseDnaChatLunaInterpretation(input: Readonly<{
   const normalized = normalizeDnaChatText(input.question)
   const hasClosingPunctuation = /[?!.]\s*$/.test(input.question)
   const looksNoisyOrConversational = /\b(?:bisi|bisey|sey|falan|hani|nasi|nap|neydi|gibi bi|tarzi|sanki|acaba ya)\b/.test(normalized)
-  return !hasClosingPunctuation || looksNoisyOrConversational
+  const explicitConversationRepair = /\b(?:hayir|kastim|demek istedigim|onu soruyordum|duzelt)\b/.test(normalized)
+  // A high-confidence local decision is authoritative. Luna is allowed to
+  // override it only when the user explicitly repairs the conversation;
+  // broad style or spelling cues alone are not enough to replace a supported
+  // deterministic route.
+  return explicitConversationRepair || !hasClosingPunctuation || looksNoisyOrConversational
 }
 
 export function validateDnaChatLunaPolish(

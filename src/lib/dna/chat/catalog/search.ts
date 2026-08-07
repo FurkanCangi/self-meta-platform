@@ -851,8 +851,36 @@ export function findCatalogTopic(
   if (/^(?:(?:peki\s+)?erken cocuklukta (?:nasil|nasil degisir|ne degisir)|erken cocukluk icin ne degisiyor)$/.test(normalized)) {
     return contextualTopicFromPreviousContext(previousTopic, normalized)
   }
+  // The bounded Luna router frames its selected catalog candidate with the
+  // canonical title. Honor that exact title before looser legacy shortcuts so
+  // a selected topic cannot be displaced by a secondary word in the rewritten
+  // question.
+  const canonicalFramedTopic = DNA_CHAT_CATALOG_TOPICS.find((topic) => {
+    const title = TOPIC_SEARCH_INDEX.get(topic.id)?.title
+    return Boolean(title && normalized.startsWith(`${title} hakkinda `))
+  })
+  if (canonicalFramedTopic) return canonicalFramedTopic
   const explicitTopic = explicitTopicForQuestion(normalized)
   if (explicitTopic) return explicitTopic
+  // A user may accidentally insert a space inside a long concept name
+  // ("inte rosepsiyon", "co gnitive flexibility"). Match only long,
+  // catalog-owned terms and prefer the longest hit so this repair cannot turn
+  // short ordinary words into an overly specific clinical topic.
+  const compactQuestionForExactMatch = normalized.replace(/\s/g, "")
+  const compactExactTopic = DNA_CHAT_CATALOG_TOPICS
+    .flatMap((topic) => {
+      const index = TOPIC_SEARCH_INDEX.get(topic.id)
+      const terms = index ? [index.title, ...index.aliases] : []
+      const bestLength = terms.reduce((maximum, term) => {
+        const compactTerm = term.replace(/\s/g, "")
+        return compactTerm.length >= 7 && termIndex(normalized, term) < 0 && compactQuestionForExactMatch.includes(compactTerm)
+          ? Math.max(maximum, compactTerm.length)
+          : maximum
+      }, 0)
+      return bestLength ? [{ topic, bestLength }] : []
+    })
+    .sort((left, right) => right.bestLength - left.bestLength || left.topic.id.localeCompare(right.topic.id, "en"))[0]?.topic
+  if (compactExactTopic) return compactExactTopic
   if (!previousTopic && /^(?:bu )?cocuklarda da gecerli mi$/.test(normalized)) return null
   if (/^duyusal modalite nedir$/.test(normalized)) return null
   const queryKind = classifyCatalogQueryKind(question)

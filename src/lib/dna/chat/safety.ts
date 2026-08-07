@@ -440,8 +440,12 @@ const PRESCRIPTIVE_ACTION_PATTERN =
   /\b(?:hazirla\w*|uygula\w*|uygulayayim|sirala\w*|cikar\w*|kac\s+seans|uygun\w*|yaz\w*|iyilestir\w*|hedef\w*|aktivite\w*|belirle\w*|sec\w*|protokol\w*|oner\w*|tasarla\w*|oncelig\w*|planla\w*|recetele\w*|ilerle(?:yelim|yeyim|meli\w*)|ne\s+calis\w*|calis(?:alim|ayim|maliy\w*)|program\w*\s+olustur\w*|ne\s+yapal\w*)\b/
 
 function isCompositionalTreatmentRequest(normalized: string): boolean {
+  // "terapist" begins with the Turkish string "terapi" but names a
+  // professional, not a treatment request. Remove it before evaluating the
+  // treatment concept/action pair.
+  const treatmentText = normalized.replace(/\bterapist\w*\b/g, " ")
   if (
-    /\bbaslig\w*\b.{0,100}\b(?:sade|bilimsel|kavramsal)\b.{0,100}\b(?:anlat|acikla|kapsam)\w*/.test(normalized)
+    /\bbaslig\w*\b.{0,100}\b(?:sade|bilimsel|kavramsal)\b.{0,100}\b(?:anlat|acikla|kapsam)\w*/.test(treatmentText)
   ) {
     return false
   }
@@ -450,11 +454,11 @@ function isCompositionalTreatmentRequest(normalized: string): boolean {
   ) {
     return true
   }
-  if (!TREATMENT_CONCEPT_PATTERN.test(normalized)) return false
+  if (!TREATMENT_CONCEPT_PATTERN.test(treatmentText)) return false
   return (
-    PRESCRIPTIVE_ACTION_PATTERN.test(normalized) ||
-    (INDIVIDUAL_CLINICAL_CONTEXT_PATTERN.test(normalized) &&
-      /\b(?:hangi|ne|nasil|kac|uygun|oncelik|gerek)\w*\b/.test(normalized))
+    PRESCRIPTIVE_ACTION_PATTERN.test(treatmentText) ||
+    (INDIVIDUAL_CLINICAL_CONTEXT_PATTERN.test(treatmentText) &&
+      /\b(?:hangi|ne|nasil|kac|uygun|oncelik|gerek)\w*\b/.test(treatmentText))
   )
 }
 
@@ -772,10 +776,11 @@ function isBoundedBiologicalTheoryQuestion(
     hasConceptComparison &&
     andCount === 1 &&
     /\b(?:dorsal vagal|ventral vagal|vagal shutdown|sempatik baskin|parasempatik yetersiz)\s+ve\s+(?:dorsal vagal|ventral vagal|vagal shutdown|sempatik baskin|parasempatik yetersiz)\b/.test(normalized)
+  const hasSafeExplanationConjunction = /\bcore idea ve temel boundary\b/.test(normalized)
   const hasUnsafeSecondClause =
     SECOND_CLAUSE_MARKERS.filter((marker) => marker !== " ve ")
       .some((marker) => normalized.includes(marker)) ||
-    (andCount > 0 && !hasSafeConceptConjunction)
+    (andCount > 0 && !hasSafeConceptConjunction && !hasSafeExplanationConjunction)
   const hasGlobalUnsafeRequest = includesAny(normalized, [
     ...PROGNOSIS_PATTERNS,
     ...CAUSALITY_PATTERNS,
@@ -785,7 +790,7 @@ function isBoundedBiologicalTheoryQuestion(
   ])
 
   return (
-    SAFE_BIOLOGICAL_THEORY_KINDS.has(queryKind) &&
+    (SAFE_BIOLOGICAL_THEORY_KINDS.has(queryKind) || hasSafeExplanationConjunction) &&
     includesAny(normalized, EXPLAINABLE_BIOLOGICAL_CONCEPTS) &&
     questionMarkCount <= 1 &&
     !hasRawClauseSeparator &&

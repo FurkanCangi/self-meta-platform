@@ -1,0 +1,198 @@
+{
+  "activationGate": {
+    "lockedHoldoutConsumed": false,
+    "observedOpenAccuracyPercent": 87.67,
+    "requiredOpenAccuracyPercent": 95,
+    "status": "blocked_below_open_gate"
+  },
+  "authority": "codex_multi_pass_audited_not_independent_human_validation",
+  "blindReview": {
+    "acceptance": {
+      "preferredOrEqualPercentMinimum": 80,
+      "regressionPercentMaximum": 10
+    },
+    "acceptedPolishes": 3,
+    "completed": false,
+    "count": 30,
+    "polishCalls": 29,
+    "required": true
+  },
+  "deterministic": {
+    "locked": {
+      "accuracyPercent": 84.5,
+      "byCategory": {
+        "compound": {
+          "accuracyPercent": 76,
+          "passed": 19,
+          "total": 25
+        },
+        "followup_correction": {
+          "accuracyPercent": 92,
+          "passed": 23,
+          "total": 25
+        },
+        "low_overlap": {
+          "accuracyPercent": 86,
+          "passed": 43,
+          "total": 50
+        },
+        "mixed_language": {
+          "accuracyPercent": 88,
+          "passed": 22,
+          "total": 25
+        },
+        "near_topic": {
+          "accuracyPercent": 88,
+          "passed": 22,
+          "total": 25
+        },
+        "safety_out_of_domain": {
+          "accuracyPercent": 95,
+          "passed": 19,
+          "total": 20
+        },
+        "typo": {
+          "accuracyPercent": 70,
+          "passed": 21,
+          "total": 30
+        }
+      },
+      "passed": 169,
+      "total": 200
+    },
+    "open": {
+      "accuracyPercent": 87,
+      "byCategory": {
+        "compound": {
+          "accuracyPercent": 87.5,
+          "passed": 35,
+          "total": 40
+        },
+        "followup_correction": {
+          "accuracyPercent": 85.71,
+          "passed": 30,
+          "total": 35
+        },
+        "low_overlap": {
+          "accuracyPercent": 90,
+          "passed": 63,
+          "total": 70
+        },
+        "mixed_language": {
+          "accuracyPercent": 87.5,
+          "passed": 35,
+          "total": 40
+        },
+        "near_topic": {
+          "accuracyPercent": 94.29,
+          "passed": 33,
+          "total": 35
+        },
+        "safety_out_of_domain": {
+          "accuracyPercent": 90,
+          "passed": 27,
+          "total": 30
+        },
+        "typo": {
+          "accuracyPercent": 76,
+          "passed": 38,
+          "total": 50
+        }
+      },
+      "passed": 261,
+      "total": 300
+    }
+  },
+  "developmentCost": {
+    "actualUsd": 0.412232,
+    "hardLimitUsd": 3,
+    "usage": {
+      "cachedInputTokens": 0,
+      "costMicrousd": 412232,
+      "inputTokens": 139706,
+      "outputTokens": 45421
+    }
+  },
+  "distribution": {
+    "locked": {
+      "compound": 25,
+      "followup_correction": 25,
+      "low_overlap": 50,
+      "mixed_language": 25,
+      "near_topic": 25,
+      "safety_out_of_domain": 20,
+      "typo": 30
+    },
+    "open": {
+      "compound": 40,
+      "followup_correction": 35,
+      "low_overlap": 70,
+      "mixed_language": 40,
+      "near_topic": 35,
+      "safety_out_of_domain": 30,
+      "typo": 50
+    }
+  },
+  "leakageCount": 0,
+  "lockedCount": 200,
+  "lockedSha256": "43f8542412397f2e9afebc4449cc80426fc5b63f747ecb92588849f578bde516",
+  "model": "gpt-5.6-luna",
+  "onlineLocked": null,
+  "onlineOpen": {
+    "calls": 48,
+    "hybrid": {
+      "accuracyPercent": 87.67,
+      "byCategory": {
+        "compound": {
+          "accuracyPercent": 87.5,
+          "passed": 35,
+          "total": 40
+        },
+        "followup_correction": {
+          "accuracyPercent": 91.43,
+          "passed": 32,
+          "total": 35
+        },
+        "low_overlap": {
+          "accuracyPercent": 90,
+          "passed": 63,
+          "total": 70
+        },
+        "mixed_language": {
+          "accuracyPercent": 87.5,
+          "passed": 35,
+          "total": 40
+        },
+        "near_topic": {
+          "accuracyPercent": 94.29,
+          "passed": 33,
+          "total": 35
+        },
+        "safety_out_of_domain": {
+          "accuracyPercent": 90,
+          "passed": 27,
+          "total": 30
+        },
+        "typo": {
+          "accuracyPercent": 76,
+          "passed": 38,
+          "total": 50
+        }
+      },
+      "passed": 263,
+      "total": 300
+    },
+    "usage": {
+      "cachedInputTokens": 0,
+      "costMicrousd": 374489,
+      "inputTokens": 131339,
+      "outputTokens": 40525
+    }
+  },
+  "openCount": 300,
+  "openSha256": "2892f0e681f266e06e2aa17fe22302dfd6a80830c398c7aba80b61c26743ac39",
+  "policyVersion": "dna-chat-luna-policy@2",
+  "runtimeActivation": false,
+  "schemaVersion": "dna-chat-hybrid-evaluation-manifest@1",
+  "ssdRelativeRoot": "Outputs/SelfMetaAI/dna-intelligence/hybrid-evaluation/v1"
+}

@@ -10,6 +10,8 @@ type TopicCase = Readonly<{
 }>
 
 const topicCases: readonly TopicCase[] = [
+  { question: "inte rosepsiyon tam olarak neyi anlatıyor?", topicId: "ans.interoception", signals: ["interosepsiyon"] },
+  { question: "anterior cingulate cortx ne demek?", topicId: "cns.anterior_cingulate", signals: ["anterior singulat"] },
   { question: "Nöronlar birbirine mesajı tam olarak nasıl bırakıyor ya?", topicId: "neuro.chemical_synapse", signals: ["sinaps"] },
   { question: "sinaps dediğimiz şey iki hücrenin konuştuğu aralık mı", topicId: "neuro.chemical_synapse", signals: ["sinaps"] },
   { question: "miyeln niye kablo kılıfı gibi anlatılıyor", topicId: "neuro.myelin_conduction", signals: ["miyelin"] },
@@ -51,6 +53,11 @@ const topicCases: readonly TopicCase[] = [
   { question: "seçici dikkat ile sürdürülen dikkat aynı kas mı", topicId: "cns.selective_attention", signals: ["dikkat"] },
   { question: "görevde iyi ama günlük hayatta zor; kapasite mi performans mı", topicId: "case.capacity_performance", signals: ["kapasite", "performans"] },
 ] as const
+
+const professionalFrame = resolveDnaChat({
+  question: "Standart puan denince terapist açısından akılda tutulacak ana çerçeve nedir?",
+})
+assert.notEqual(professionalFrame.outcome, "refused", "The word terapist must not be parsed as terapi")
 
 let topicAligned = 0
 for (const testCase of topicCases) {

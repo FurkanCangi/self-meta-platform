@@ -837,7 +837,7 @@ function extractDeclaredActualQuestion(question: string): string {
 
 function isClearlyOutOfDomainQuestion(question: string): boolean {
   const normalized = normalizeDnaChatText(question)
-  return /\b(?:(?:yemek|makarna) tarifi|otomobil motoru|kuantum dolanikl\w*|futbol maci|roma imparatorlugu|web scraper|marsa yolculuk|kripto para|siir yaz)\b/.test(normalized)
+  return /\b(?:(?:yemek|makarna) tarifi|mayali ekmek|firin sicakligi|otomobil motoru|motor yagi|kis lastigi|lastik markasi|kuantum dolanikl\w*|futbol maci|macin skoru|roma (?:imparatorlugu|gezisi)|uc gunluk rota|web scraper|marsa yolculuk|kripto para|hisse fiyati|telefon\w* batarya\w*|kahve cekirdegi|kavurma suresi|sarki\w* sozleri|duvar\w* hangi renk|siir yaz)\b/.test(normalized)
 }
 
 function isUnsupportedStandaloneKnowledgeQuestion(
@@ -2070,7 +2070,7 @@ function splitDnaChatQuestion(question: string): { parts: string[]; overflow: bo
     .split(/\s*,?\s*bir\s+de\s+ayr[ıi]\s+olarak\s+/giu)
     .map((part) => part.trim())
     .filter(Boolean)
-  const protectedTopicPhrase = /\b(?:vaka ve rapor yorum|ebeveyn ogretmen ve ortam|kapasite ve performans|kapasite performans ve katilim|yapabilme ve katilim|cocuklar arasi ve cocuk ici|duygu duzenleme stratejileri ve esneklik|es regulasyon destegi ve iskeleleme|es regulasyon ve kulturel baglam|gorev ve olcek farki)\b/.test(
+  const protectedTopicPhrase = /\b(?:vaka ve rapor yorum|ebeveyn ogretmen ve ortam|kapasite ve performans|kapasite performans ve katilim|yapabilme ve katilim|cocuklar arasi ve cocuk ici|duygu duzenleme stratejileri ve esneklik|es regulasyon destegi ve iskeleleme|es regulasyon ve kulturel baglam|gorev ve olcek farki|core idea ve temel boundary)\b/.test(
     normalizeDnaChatText(question),
   )
   const commaCandidates = question
