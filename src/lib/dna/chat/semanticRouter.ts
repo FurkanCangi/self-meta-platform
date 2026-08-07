@@ -1,4 +1,9 @@
 import artifactJson from "./catalog/generated/semantic-router/artifact.json"
+import {
+  DNA_CHAT_CATALOG_RELATIONS,
+  rankCatalogTopicCandidates,
+  type DnaCatalogTopicCandidate,
+} from "./catalog"
 import { normalizeDnaChatText } from "./text"
 import type { DnaChatConversationContext, DnaChatQueryKind } from "./types"
 import {
@@ -6,7 +11,7 @@ import {
   type DnaSemanticRouterArtifact,
 } from "./semanticRouterFtrl"
 
-export const DNA_QUESTION_FRAME_VERSION = "dna-question-frame@1" as const
+export const DNA_QUESTION_FRAME_VERSION = "dna-question-frame@2" as const
 export const DNA_SEMANTIC_ROUTER_VERSION = "dna-semantic-router@1" as const
 
 export type DnaSemanticResolutionMode =
@@ -22,6 +27,7 @@ export type DnaSemanticConfidenceBand = "high" | "medium" | "low"
 export type DnaQuestionFrame = Readonly<{
   version: typeof DNA_QUESTION_FRAME_VERSION
   subquestions: readonly Readonly<{
+    normalizedQuestion: string
     topicCandidates: readonly string[]
     auxiliaryConcepts: readonly string[]
     operation: DnaChatQueryKind | "followup"
@@ -29,6 +35,8 @@ export type DnaQuestionFrame = Readonly<{
     negated: boolean
     correction: boolean
     requiresReport: boolean
+    topicConfidence: number
+    relationshipConfidence: number
   }>[]
   previousTopicIds: readonly string[]
   responseDepth: "short" | "standard" | "deep"
@@ -44,6 +52,8 @@ export type DnaSemanticRouterDecision = Readonly<{
   parentQuestion: string | null
   parentLabel: string | null
   inDomain: boolean
+  runnerUpGap: number
+  topicCandidates: readonly DnaCatalogTopicCandidate[]
 }>
 
 const ARTIFACT = artifactJson as unknown as DnaSemanticRouterArtifact
@@ -167,6 +177,43 @@ function semanticConcepts(question: string) {
   return { topicCandidates, auxiliaryConcepts }
 }
 
+function relationshipConfidence(topicIds: readonly string[], operation: DnaChatQueryKind | "followup") {
+  if (operation !== "relation" && operation !== "comparison") return 1
+  if (topicIds.length < 2) return 0
+  return DNA_CHAT_CATALOG_RELATIONS.some((relation) =>
+    (relation.fromTopicId === topicIds[0] && relation.toTopicId === topicIds[1])
+    || (relation.fromTopicId === topicIds[1] && relation.toTopicId === topicIds[0])) ? 1 : 0
+}
+
+function domainFromTopicCandidate(candidate: DnaCatalogTopicCandidate | undefined): string | null {
+  if (!candidate) return null
+  if (candidate.topicId.includes("sleep") || candidate.topicId.includes("circadian")) return "sleep_circadian"
+  if (candidate.topicId.includes("interoception") || candidate.topicId.includes("sensory")) return "interoception_sensory"
+  if (candidate.topicId.startsWith("cns.")) return "cns_networks"
+  if (candidate.topicId.startsWith("ans.")) return "autonomic_hrv"
+  if (candidate.topicId.startsWith("development.")) return "development_neurodiversity"
+  if (candidate.topicId.startsWith("case.")) return "measurement_case_boundaries"
+  if (candidate.topicId.includes("attention") || candidate.topicId.includes("executive")) {
+    return "attention_working_memory_executive"
+  }
+  if (candidate.topicId.includes("stress") || candidate.topicId.includes("arousal") || candidate.topicId.includes("recovery")) {
+    return "stress_arousal_recovery"
+  }
+  return candidate.category === "central_nervous_system"
+    ? "cns_networks"
+    : candidate.category === "autonomic_nervous_system" || candidate.category === "sympathetic_parasympathetic"
+      ? "autonomic_hrv"
+      : "emotion_self_coregulation"
+}
+
+export function getDnaSemanticTopicCandidates(
+  question: string,
+  previousTopic?: string | null,
+  limit = 5,
+) {
+  return rankCatalogTopicCandidates(question, previousTopic, limit)
+}
+
 export function buildDnaQuestionFrame(input: Readonly<{
   questions: readonly string[]
   conversationContext?: DnaChatConversationContext | null
@@ -177,14 +224,34 @@ export function buildDnaQuestionFrame(input: Readonly<{
     subquestions: Object.freeze(input.questions.slice(0, 2).map((question) => {
       const normalized = normalizeDnaChatText(question)
       const concepts = semanticConcepts(question)
+      const operation = operationFromRules(question)
+      const rankedCandidates = getDnaSemanticTopicCandidates(
+        question,
+        input.conversationContext?.topicIds[0] ?? null,
+      )
+      const topicCandidates = [...new Set([
+        ...(operation === "followup" ? input.conversationContext?.topicIds ?? [] : []),
+        ...rankedCandidates.map((candidate) => candidate.topicId),
+        ...concepts.topicCandidates,
+      ])].slice(0, 5)
+      const topScore = rankedCandidates[0]?.score ?? 0
+      const runnerUpScore = rankedCandidates[1]?.score ?? 0
+      const gap = topScore > 0 ? Math.max(0, (topScore - runnerUpScore) / topScore) : 0
       return Object.freeze({
-        topicCandidates: Object.freeze(concepts.topicCandidates),
+        normalizedQuestion: normalized,
+        topicCandidates: Object.freeze(topicCandidates),
         auxiliaryConcepts: Object.freeze(concepts.auxiliaryConcepts),
-        operation: operationFromRules(question),
+        operation,
         ageScope: ageScope(question),
         negated: /\b(?:degil|istemiyorum|olmadan|yok)\b/.test(normalized),
         correction: /^(?:hayir|yok)\b/.test(normalized),
         requiresReport: /\b(?:bu vaka|raporum|raporumu|sectigim rapor|bu danisan)\b/.test(normalized),
+        topicConfidence: Number(Math.min(1, Math.max(
+          rankedCandidates[0]?.confidence ?? 0,
+          concepts.topicCandidates.length ? 0.82 : 0,
+          gap,
+        )).toFixed(6)),
+        relationshipConfidence: relationshipConfidence(topicCandidates, operation),
       })
     })),
     previousTopicIds: Object.freeze([...(input.conversationContext?.topicIds ?? [])].slice(0, 2)),
@@ -211,15 +278,29 @@ export function routeDnaSemanticQuestion(
     Math.max(...right.matches.map((value) => value.length)) -
       Math.max(...left.matches.map((value) => value.length)) ||
     left.id.localeCompare(right.id))
-  const domain = anchoredDomains[0]?.id ?? predictedDomain
+  const topicCandidates = getDnaSemanticTopicCandidates(
+    question,
+    conversationContext?.topicIds[0] ?? null,
+  )
+  const domain = anchoredDomains[0]?.id ?? domainFromTopicCandidate(topicCandidates[0]) ?? predictedDomain
   const config = domain ? DOMAIN_CONFIG[domain] : null
   const ruleKind = operationFromRules(question)
   const predictedKind = kindPrediction?.label.slice("kind:".length) as DnaChatQueryKind | "followup" | undefined
   const queryKind = ruleKind === "definition" && predictedKind ? predictedKind : ruleKind
   const contextBound = Boolean(conversationContext?.topicIds.length)
   const anchored = anchoredDomains.length > 0
-  const inDomain = enabled && Boolean(config) && (anchored || contextBound)
-  const confidence = inDomain ? Number((domainPrediction?.probability ?? 0).toFixed(6)) : 0
+  const catalogConfidence = topicCandidates[0]?.confidence ?? 0
+  const topScore = topicCandidates[0]?.score ?? 0
+  const runnerUpScore = topicCandidates[1]?.score ?? 0
+  const runnerUpGap = topScore > 0 ? Math.max(0, (topScore - runnerUpScore) / topScore) : 0
+  const inDomain = enabled && Boolean(config) && (anchored || contextBound || catalogConfidence >= 0.5)
+  const confidence = inDomain
+    ? Number(Math.min(1, Math.max(
+        domainPrediction?.probability ?? 0,
+        anchored ? 0.86 : 0,
+        catalogConfidence * 0.76 + runnerUpGap * 0.24,
+      )).toFixed(6))
+    : 0
   return Object.freeze({
     routerVersion: DNA_SEMANTIC_ROUTER_VERSION,
     enabled,
@@ -230,6 +311,8 @@ export function routeDnaSemanticQuestion(
     parentQuestion: inDomain ? config?.parentQuestion ?? null : null,
     parentLabel: inDomain ? config?.label ?? null : null,
     inDomain,
+    runnerUpGap: Number(runnerUpGap.toFixed(6)),
+    topicCandidates,
   })
 }
 

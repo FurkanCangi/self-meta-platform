@@ -46,7 +46,9 @@ export {
   getRelationsForTopic,
   getSourcesForClaim,
   normalizeCatalogText,
+  rankCatalogTopicCandidates,
 } from "./search"
+export type { DnaCatalogTopicCandidate } from "./search"
 export { DNA_CHAT_CATALOG_SOURCES, DNA_CHAT_CATALOG_SOURCE_BY_ID } from "./sources"
 export { DNA_CHAT_CATALOG_TOPICS, DNA_CHAT_CATALOG_TOPIC_BY_ID } from "./topics"
 export {

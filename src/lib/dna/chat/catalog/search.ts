@@ -915,6 +915,65 @@ export function findCatalogTopic(
   return null
 }
 
+export type DnaCatalogTopicCandidate = Readonly<{
+  topicId: string
+  title: string
+  category: DnaChatCatalogTopic["category"]
+  confidence: number
+  score: number
+}>
+
+const TOPIC_CANDIDATE_CACHE = new Map<string, readonly DnaCatalogTopicCandidate[]>()
+const TOPIC_CANDIDATE_CACHE_LIMIT = 512
+
+/**
+ * Returns a bounded, deterministic shortlist for routing support. The values
+ * are topic identifiers only; no scientific statement is generated here.
+ */
+export function rankCatalogTopicCandidates(
+  question: string,
+  previousTopic?: string | null,
+  limit = 5,
+): readonly DnaCatalogTopicCandidate[] {
+  const normalized = normalizeCatalogText(stripCatalogInstructionPrefix(question))
+  if (!normalized) return Object.freeze([])
+  const boundedLimit = Math.max(3, Math.min(5, limit))
+  const cacheKey = `${normalized}\u0000${previousTopic ?? ""}\u0000${boundedLimit}`
+  const cached = TOPIC_CANDIDATE_CACHE.get(cacheKey)
+  if (cached) return cached
+  const primary = findCatalogTopic(question, previousTopic)
+  const queryTokens = new Set(normalized.split(" ").filter((token) => token.length >= 3))
+  const scored = DNA_CHAT_CATALOG_TOPICS.map((topic) => {
+    const index = TOPIC_SEARCH_INDEX.get(topic.id)
+    const termTokens = new Set(index
+      ? [index.title, ...index.aliases, ...index.keywords].flatMap((term) => term.split(" "))
+      : [])
+    const lexicalOverlap = [...queryTokens].filter((token) => termTokens.has(token)).length
+    const ruleScore = scoreTopic(normalized, topic).score
+    const contextBoost = previousTopic === topic.id ? 12 : 0
+    const primaryBoost = primary?.id === topic.id ? 36 : 0
+    const score = ruleScore + Math.min(lexicalOverlap, 4) * 4 + contextBoost + primaryBoost
+    return { topic, score }
+  }).sort((left, right) => right.score - left.score || left.topic.id.localeCompare(right.topic.id))
+
+  const topScore = Math.max(1, scored[0]?.score ?? 1)
+  const result = Object.freeze(scored
+    .filter((entry, index) => index < boundedLimit && entry.score > 0)
+    .map((entry) => Object.freeze({
+      topicId: entry.topic.id,
+      title: entry.topic.title,
+      category: entry.topic.category,
+      confidence: Number(Math.min(0.999, entry.score / topScore).toFixed(6)),
+      score: Number(entry.score.toFixed(6)),
+    })))
+  TOPIC_CANDIDATE_CACHE.set(cacheKey, result)
+  if (TOPIC_CANDIDATE_CACHE.size > TOPIC_CANDIDATE_CACHE_LIMIT) {
+    const firstKey = TOPIC_CANDIDATE_CACHE.keys().next().value
+    if (typeof firstKey === "string") TOPIC_CANDIDATE_CACHE.delete(firstKey)
+  }
+  return result
+}
+
 export function getCatalogTopicById(id: string): DnaChatCatalogTopic | null {
   return DNA_CHAT_CATALOG_TOPIC_BY_ID.get(id) ?? null
 }
