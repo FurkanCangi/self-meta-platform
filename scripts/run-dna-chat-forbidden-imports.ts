@@ -6,10 +6,12 @@ import path from "node:path"
 const ROOT = process.cwd()
 const ENTRYPOINT = path.join(ROOT, "src/app/api/app/dna-chat/route.ts")
 const CHAT_ROOT = path.join(ROOT, "src/lib/dna/chat")
+const LUNA_SERVER_BOUNDARY = "src/lib/dna/chat/lunaServer.ts"
 const SERVER_ONLY_BOUNDARIES = new Set([
   "src/lib/dna/chat/ownedCaseAnswer.ts",
   "src/lib/dna/chat/v3RetrievalServer.ts",
   "src/lib/dna/chat/catalog/generated/v3/server.ts",
+  LUNA_SERVER_BOUNDARY,
 ])
 
 const REQUIRED_GRAPH_FILES = [
@@ -178,6 +180,7 @@ async function main() {
   assert.ok(chatFiles.length >= 15, `DNA chat yerel import grafı beklenenden dar: ${chatFiles.length}`)
   for (const file of chatFiles) {
     const source = await fs.readFile(file, "utf8")
+    const relativeFile = path.relative(ROOT, file)
     const parsed = parseImports(source)
     for (const specifier of parsed.specifiers) {
       if (specifier === "server-only") {
@@ -192,10 +195,23 @@ async function main() {
     }
     for (const forbidden of FORBIDDEN_RUNTIME_PATTERNS) {
       if (forbidden.pattern.test(source)) {
-        failures.push(`${path.relative(ROOT, file)}: forbidden runtime primitive: ${forbidden.name}`)
+        const allowedLunaPrimitive = relativeFile === LUNA_SERVER_BOUNDARY
+          && (forbidden.name === "fetch" || forbidden.name === "model credential")
+        if (!allowedLunaPrimitive) {
+          failures.push(`${relativeFile}: forbidden runtime primitive: ${forbidden.name}`)
+        }
       }
     }
   }
+
+  const lunaSource = await fs.readFile(path.join(ROOT, LUNA_SERVER_BOUNDARY), "utf8")
+  const lunaPolicySource = await fs.readFile(path.join(ROOT, "src/lib/dna/chat/lunaPolicy.ts"), "utf8")
+  assert.ok(lunaSource.includes('import "server-only"'), "Luna boundary must remain server-only")
+  assert.ok(lunaSource.includes("DNA_CHAT_LUNA_MODEL"), "Luna boundary must use the centrally fixed model constant")
+  assert.ok(lunaPolicySource.includes('DNA_CHAT_LUNA_MODEL = "gpt-5.6-luna"'), "Only GPT-5.6 Luna may be configured")
+  assert.ok(lunaSource.includes('"https://api.openai.com/v1/responses"'), "Luna boundary must use only the Responses endpoint")
+  assert.ok(/store:\s*false/.test(lunaSource), "Luna requests must disable provider storage")
+  assert.equal((lunaSource.match(/https:\/\//g) || []).length, 1, "Luna boundary must not contain another network destination")
 
   assert.deepEqual(failures, [], failures.join("\n"))
   console.log(JSON.stringify({
@@ -206,7 +222,8 @@ async function main() {
     unresolvedImports: graph.unresolved.length,
     externalSpecifiers: graph.externalSpecifiers,
     externalModelModules: 0,
-    chatRuntimeNetworkPrimitives: 0,
+    chatRuntimeNetworkPrimitives: 1,
+    externalModelBoundary: LUNA_SERVER_BOUNDARY,
     serverOnlyRuntimeBoundaries: [...SERVER_ONLY_BOUNDARIES].sort(),
   }, null, 2))
 }

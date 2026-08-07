@@ -589,6 +589,8 @@ for (const sentinel of maliciousSnapshotSentinels) {
 
 const route = read("src/app/api/app/dna-chat/route.ts")
 const apiResolver = read("src/lib/dna/chat/apiResolver.ts")
+const lunaServer = read("src/lib/dna/chat/lunaServer.ts")
+const lunaPolicy = read("src/lib/dna/chat/lunaPolicy.ts")
 const rateLimitRuntime = read("src/lib/security/rateLimit.ts")
 const rateLimitPolicy = read("src/lib/security/rateLimitPolicy.ts")
 const ownedCaseAnswer = read("src/lib/dna/chat/ownedCaseAnswer.ts")
@@ -674,7 +676,14 @@ assert.doesNotMatch(
   /\{[^}]*\b(?:chat_context|chatContext|report_text|reportText|anamnez|trace)\b[^}]*\}\s*=\s*snapshot\b/,
   "Yasak snapshot alanları destructuring ile okunamaz",
 )
-assert.match(route, /resolveDnaChatApiRequest\(payload/)
+assert.match(route, /prepareDnaChatQuestionWithLuna\(payload\)/)
+assert.match(route, /resolveDnaChatApiRequest\(prepared\.payload/)
+assert.match(lunaServer, /import "server-only"/)
+assert.match(lunaServer, /store:\s*false/)
+assert.match(lunaServer, /polishDnaChatPublicAnswerWithLuna/)
+assert.match(lunaPolicy, /inspectDnaChatSafety\(question\)/)
+assert.match(lunaPolicy, /input\.mode === "case" \|\| input\.reportId/)
+assert.match(lunaPolicy, /unit\.role\s*!==\s*"case_finding"/)
 assert.match(route, /error: "report_not_found"/)
 assert.match(apiResolver, /requiresCaseContext && payload\.reportId/)
 assert.match(apiResolver, /let accessedCaseReport = false/)
@@ -919,5 +928,6 @@ console.log(JSON.stringify({
   allowedPolyvagalTheory: boundedPolyvagalTheoryQuestions.length,
   genericChildPhraseNotPrivacy: true,
   ownership: "strict_chain_static_contract",
-  externalModel: false,
+  externalLanguageSupport: true,
+  externalClinicalAnswer: false,
 }, null, 2))

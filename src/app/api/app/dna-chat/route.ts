@@ -21,6 +21,11 @@ import {
   getCommittedDnaChatRuntimeStatus,
   resolveCommittedDnaChatRuntime,
 } from "@/lib/dna/chat/v3RetrievalServer"
+import {
+  attachDnaChatLunaLanguageSupport,
+  polishDnaChatPublicAnswerWithLuna,
+  prepareDnaChatQuestionWithLuna,
+} from "@/lib/dna/chat/lunaServer"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -325,7 +330,11 @@ export async function POST(request: Request) {
     const parsed = await timing.measure("payload", () => readPayload(request))
     if (!parsed.ok) return finish(parsed.response)
     const payload = parsed.data
-    const resolution = await timing.measure("runtime_resolution", () => resolveDnaChatApiRequest(payload, {
+    const prepared = await timing.measure(
+      "language_interpretation",
+      () => prepareDnaChatQuestionWithLuna(payload),
+    )
+    const resolution = await timing.measure("runtime_resolution", () => resolveDnaChatApiRequest(prepared.payload, {
       createRequestId: () => crypto.randomUUID(),
       // The authenticated owner ID is used only as the deterministic rollout
       // bucket input. It is never exposed in the answer or audit metadata.
@@ -355,8 +364,28 @@ export async function POST(request: Request) {
       ),
     }))
 
-    const requestId = typeof resolution.body.requestId === "string" ? resolution.body.requestId : null
-    return finish(json(resolution.body, { status: resolution.status }), requestId)
+    let responseBody = resolution.body
+    if (resolution.status === 200 && responseBody.ok === true) {
+      const polished = await timing.measure(
+        "language_polish",
+        () => polishDnaChatPublicAnswerWithLuna({
+          originalQuestion: payload.question,
+          interpretedQuestion: prepared.payload.question,
+          questionInterpretation: prepared.status,
+          mode: payload.mode,
+          reportId: payload.reportId,
+          body: responseBody,
+        }),
+      )
+      responseBody = attachDnaChatLunaLanguageSupport(
+        polished.body,
+        prepared.status,
+        polished.status,
+      )
+    }
+
+    const requestId = typeof responseBody.requestId === "string" ? responseBody.requestId : null
+    return finish(json(responseBody, { status: resolution.status }), requestId)
   } catch (error) {
     console.error("[dna-chat] request failed", error instanceof Error ? error.message : "unknown")
     return finish(errorResponse("dna_chat_failed", 500))

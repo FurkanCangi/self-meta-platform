@@ -1,4 +1,4 @@
-export const DNA_CHAT_REQUEST_TIMING_VERSION = "dna-chat-request-timing@1" as const
+export const DNA_CHAT_REQUEST_TIMING_VERSION = "dna-chat-request-timing@2" as const
 
 export const DNA_CHAT_REQUEST_TIMING_STAGES = Object.freeze([
   "operational_gate",
@@ -6,7 +6,9 @@ export const DNA_CHAT_REQUEST_TIMING_STAGES = Object.freeze([
   "authentication",
   "rate_limit",
   "payload",
+  "language_interpretation",
   "runtime_resolution",
+  "language_polish",
   "report_list",
   "case_answer",
   "audit_write",
