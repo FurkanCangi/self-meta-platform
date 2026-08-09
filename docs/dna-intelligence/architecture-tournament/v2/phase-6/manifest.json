@@ -1,0 +1,229 @@
+{
+  "schemaVersion": "dna-architecture-preliminary-pareto-phase6@1",
+  "generatedAt": "2026-08-09T10:18:00.824Z",
+  "benchmarkSha256": "8b025dcda1fb4a02f815ee6835ba3c6628aacbbcb7b35a2a3377109ed9bcf914",
+  "status": "preliminary_selection_pending_real_cost_and_blind_human_evaluation",
+  "minimumQualityPolicy": {
+    "totalScoreAtLeast": 80,
+    "endToEndAccuracyAtLeast": 0.95,
+    "hardSafetyDecision": "PASS",
+    "claimFidelityPointsRequired": 8,
+    "displayedHardFailuresRequired": 0
+  },
+  "eligibility": {
+    "S0": {
+      "pass": false,
+      "reasons": [
+        "total_score_below_80",
+        "end_to_end_accuracy_below_95pct"
+      ],
+      "equivalentTo": null
+    },
+    "S1": {
+      "pass": true,
+      "reasons": [],
+      "equivalentTo": null
+    },
+    "S2": {
+      "pass": true,
+      "reasons": [],
+      "equivalentTo": null
+    },
+    "S3": {
+      "pass": false,
+      "reasons": [
+        "total_score_below_80",
+        "end_to_end_accuracy_below_95pct"
+      ],
+      "equivalentTo": null
+    },
+    "S5": {
+      "pass": true,
+      "reasons": [],
+      "equivalentTo": null
+    },
+    "S6": {
+      "pass": false,
+      "reasons": [
+        "total_score_below_80",
+        "end_to_end_accuracy_below_95pct"
+      ],
+      "equivalentTo": null
+    },
+    "S9": {
+      "pass": true,
+      "reasons": [],
+      "equivalentTo": "S1"
+    },
+    "S10": {
+      "pass": true,
+      "reasons": [],
+      "equivalentTo": "S1"
+    }
+  },
+  "equivalentArchitecturesExcludedFromIndependentSelection": {
+    "S9": "S1",
+    "S10": "S1"
+  },
+  "qualityWindowRule": "Architectures within two points of the highest 90-point quality-core score enter the production balance comparison, if they also pass minimum quality.",
+  "monthlyCostReference": {
+    "queries": 100000,
+    "scope": "provider API only",
+    "localHostingCost": "not_measured",
+    "warning": "This is not a full production monthly cost estimate."
+  },
+  "categories": {
+    "qualityWinner": {
+      "architecture": "S1",
+      "totalScore": 83.785538,
+      "qualityCoreScore": 74.027264,
+      "rationale": "Highest measured Understanding + Knowledge Selection + Response score."
+    },
+    "costWinner": {
+      "architecture": "S1",
+      "totalScore": 83.785538,
+      "qualityCoreScore": 74.027264,
+      "rationale": "Lowest provider cost among minimum-quality systems; ties resolved by lower RAM and operational complexity."
+    },
+    "productionWinnerCandidate": {
+      "architecture": "S1",
+      "totalScore": 83.785538,
+      "qualityCoreScore": 74.027264,
+      "rationale": "Within two quality points, then lowest provider cost, operational load, external dependency, latency and failure surface."
+    }
+  },
+  "qualityWindow": [
+    "S1",
+    "S2",
+    "S5"
+  ],
+  "paretoFrontier": [
+    "S1"
+  ],
+  "comparison": {
+    "S0": {
+      "minimumQuality": {
+        "pass": false,
+        "reasons": [
+          "total_score_below_80",
+          "end_to_end_accuracy_below_95pct"
+        ],
+        "equivalentTo": null
+      },
+      "totalScore": 66.486379,
+      "qualityCoreScore": 57.349285,
+      "withinTwoPointsOfQualityWinner": false,
+      "providerCostAt100kQueriesUsd": 0,
+      "localHostingCost": "not_measured",
+      "peakRssMb": 160,
+      "p95LatencyMs": 391.808,
+      "operationalComplexity": 1,
+      "externalProviders": 0,
+      "failureSurface": 1
+    },
+    "S1": {
+      "minimumQuality": {
+        "pass": true,
+        "reasons": [],
+        "equivalentTo": null
+      },
+      "totalScore": 83.785538,
+      "qualityCoreScore": 74.027264,
+      "withinTwoPointsOfQualityWinner": true,
+      "providerCostAt100kQueriesUsd": 0,
+      "localHostingCost": "not_measured",
+      "peakRssMb": 160,
+      "p95LatencyMs": 277.638,
+      "operationalComplexity": 1,
+      "externalProviders": 0,
+      "failureSurface": 1
+    },
+    "S2": {
+      "minimumQuality": {
+        "pass": true,
+        "reasons": [],
+        "equivalentTo": null
+      },
+      "totalScore": 81.990649,
+      "qualityCoreScore": 73.651397,
+      "withinTwoPointsOfQualityWinner": true,
+      "providerCostAt100kQueriesUsd": 0,
+      "localHostingCost": "not_measured",
+      "peakRssMb": 870.797,
+      "p95LatencyMs": 609.836,
+      "operationalComplexity": 2,
+      "externalProviders": 0,
+      "failureSurface": 2
+    },
+    "S3": {
+      "minimumQuality": {
+        "pass": false,
+        "reasons": [
+          "total_score_below_80",
+          "end_to_end_accuracy_below_95pct"
+        ],
+        "equivalentTo": null
+      },
+      "totalScore": 79.352856,
+      "qualityCoreScore": 72.164039,
+      "withinTwoPointsOfQualityWinner": true,
+      "providerCostAt100kQueriesUsd": 0,
+      "localHostingCost": "not_measured",
+      "peakRssMb": 870.797,
+      "p95LatencyMs": 1154.158,
+      "operationalComplexity": 3,
+      "externalProviders": 0,
+      "failureSurface": 3
+    },
+    "S5": {
+      "minimumQuality": {
+        "pass": true,
+        "reasons": [],
+        "equivalentTo": null
+      },
+      "totalScore": 80.140136,
+      "qualityCoreScore": 73.880931,
+      "withinTwoPointsOfQualityWinner": true,
+      "providerCostAt100kQueriesUsd": 30.551545,
+      "localHostingCost": "not_measured",
+      "peakRssMb": 870.797,
+      "p95LatencyMs": 1109.977,
+      "operationalComplexity": 4,
+      "externalProviders": 1,
+      "failureSurface": 4
+    },
+    "S6": {
+      "minimumQuality": {
+        "pass": false,
+        "reasons": [
+          "total_score_below_80",
+          "end_to_end_accuracy_below_95pct"
+        ],
+        "equivalentTo": null
+      },
+      "totalScore": 77.950914,
+      "qualityCoreScore": 72.393504,
+      "withinTwoPointsOfQualityWinner": true,
+      "providerCostAt100kQueriesUsd": 30.379907,
+      "localHostingCost": "not_measured",
+      "peakRssMb": 870.797,
+      "p95LatencyMs": 1638.036,
+      "operationalComplexity": 5,
+      "externalProviders": 1,
+      "failureSurface": 5
+    }
+  },
+  "decision": "S1 is the preliminary production candidate; Phase 9 may change this after blind human preference, independent generalization and real hosting-cost measurement.",
+  "sourceArtifacts": {
+    "phase5ManifestSha256": "45aec804fe0da695aaa5c5fc81a6611fe48cb5f2c9785aa9632b610cfc1aa8a3",
+    "phase4ManifestSha256": "11bc3327765cfe58a74dd898e260bf01d388d4a62eba9e5d17faeb10f7a8620a"
+  },
+  "boundaries": {
+    "productionAffected": false,
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "finalArchitectureDecision": false,
+    "independentBlindHumanEvaluationComplete": false,
+    "realMonthlyHostingCostMeasured": false
+  }
+}

@@ -1,0 +1,2319 @@
+{
+  "schemaVersion": "dna-architecture-quality-score-phase5@1",
+  "generatedAt": "2026-08-09T10:18:00.824Z",
+  "benchmarkSha256": "8b025dcda1fb4a02f815ee6835ba3c6628aacbbcb7b35a2a3377109ed9bcf914",
+  "status": "provisional_automated_score_blind_human_evaluation_pending",
+  "scoringPolicy": {
+    "maximum": 100,
+    "weights": {
+      "understanding": {
+        "maximum": 30,
+        "dimensions": {
+          "intent": 7,
+          "topicFocus": 8,
+          "followupCorrection": 8,
+          "multiIntent": 4,
+          "ood": 3
+        }
+      },
+      "knowledgeSelection": {
+        "maximum": 25,
+        "dimensions": {
+          "retrieval": 10,
+          "answerability": 5,
+          "claimSelection": 10
+        }
+      },
+      "response": {
+        "maximum": 35,
+        "dimensions": {
+          "directness": 7,
+          "completeness": 7,
+          "claimFidelity": 8,
+          "naturalTurkish": 8,
+          "consistencyRepetition": 5
+        }
+      },
+      "operationalUx": {
+        "maximum": 10,
+        "dimensions": {
+          "latency": 5,
+          "gracefulFailure": 3,
+          "consistency": 2
+        }
+      }
+    },
+    "retrievalComposite": "0.35*Recall@1 + 0.20*Recall@3 + 0.15*Recall@5 + 0.15*MRR + 0.15*nDCG@5",
+    "latency": "5 points at <=250 ms p95, then logarithmic decay to zero at 4000 ms",
+    "confidenceInterval": "95% Jeffreys-adjusted delta approximation over automated proportions; fixed operational proxies excluded from sampling variance",
+    "confidenceBoundary": "Intervals do not include blind-human judgment or dataset-reuse uncertainty."
+  },
+  "ranking": [
+    {
+      "rank": 1,
+      "architecture": "S1",
+      "score": 83.785538,
+      "confidenceInterval95": {
+        "lower": 82.268322,
+        "upper": 85.302754
+      }
+    },
+    {
+      "rank": 2,
+      "architecture": "S10",
+      "score": 83.785538,
+      "confidenceInterval95": {
+        "lower": 82.268322,
+        "upper": 85.302754
+      }
+    },
+    {
+      "rank": 3,
+      "architecture": "S9",
+      "score": 83.785538,
+      "confidenceInterval95": {
+        "lower": 82.268322,
+        "upper": 85.302754
+      }
+    },
+    {
+      "rank": 4,
+      "architecture": "S2",
+      "score": 81.990649,
+      "confidenceInterval95": {
+        "lower": 80.448922,
+        "upper": 83.532376
+      }
+    },
+    {
+      "rank": 5,
+      "architecture": "S5",
+      "score": 80.140136,
+      "confidenceInterval95": {
+        "lower": 78.61332,
+        "upper": 81.666952
+      }
+    },
+    {
+      "rank": 6,
+      "architecture": "S3",
+      "score": 79.352856,
+      "confidenceInterval95": {
+        "lower": 78.090367,
+        "upper": 80.615345
+      }
+    },
+    {
+      "rank": 7,
+      "architecture": "S6",
+      "score": 77.950914,
+      "confidenceInterval95": {
+        "lower": 76.706674,
+        "upper": 79.195154
+      }
+    },
+    {
+      "rank": 8,
+      "architecture": "S0",
+      "score": 66.486379,
+      "confidenceInterval95": {
+        "lower": 64.957644,
+        "upper": 68.015114
+      }
+    }
+  ],
+  "architectures": {
+    "S0": {
+      "architecture": "S0",
+      "composition": "legacy deterministic",
+      "equivalentTo": null,
+      "hardSafetyDecision": "PASS",
+      "score": 66.486379,
+      "maximum": 100,
+      "confidenceInterval95": {
+        "lower": 64.957644,
+        "upper": 68.015114
+      },
+      "qualityCoreScore": 57.349285,
+      "qualityCoreMaximum": 90,
+      "sections": {
+        "understanding": {
+          "score": 6.210596,
+          "maximum": 30,
+          "confidenceInterval95": {
+            "lower": 5.072325,
+            "upper": 7.348867
+          },
+          "dimensions": {
+            "intent": {
+              "key": "intent",
+              "max": 7,
+              "rate": 0.116,
+              "score": 0.812,
+              "n": 250,
+              "evidence": "A0 locked intent accuracy",
+              "fixed": false,
+              "status": "measured"
+            },
+            "topicFocus": {
+              "key": "topicFocus",
+              "max": 8,
+              "rate": 0.128667,
+              "score": 1.029333,
+              "n": 250,
+              "evidence": "A0 locked topic/focus macro-F1; missing focus is scored as zero",
+              "fixed": false,
+              "status": "measured"
+            },
+            "followupCorrection": {
+              "key": "followupCorrection",
+              "max": 8,
+              "rate": 0.25,
+              "score": 2,
+              "n": 44,
+              "evidence": "A0 follow-up/correction accuracy",
+              "fixed": false,
+              "status": "measured"
+            },
+            "multiIntent": {
+              "key": "multiIntent",
+              "max": 4,
+              "rate": 0,
+              "score": 0,
+              "n": 25,
+              "evidence": "A0 two-question split F1",
+              "fixed": false,
+              "status": "measured"
+            },
+            "ood": {
+              "key": "ood",
+              "max": 3,
+              "rate": 0.789754,
+              "score": 2.369263,
+              "n": 250,
+              "evidence": "A0 OOD AUROC",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "knowledgeSelection": {
+          "score": 19.408256,
+          "maximum": 25,
+          "confidenceInterval95": {
+            "lower": 18.619023,
+            "upper": 20.197489
+          },
+          "dimensions": {
+            "retrieval": {
+              "key": "retrieval",
+              "max": 10,
+              "rate": 0.975962,
+              "score": 9.759615,
+              "n": 182,
+              "evidence": "B0 weighted Recall@1/3/5, MRR and nDCG@5",
+              "fixed": false,
+              "status": "measured"
+            },
+            "answerability": {
+              "key": "answerability",
+              "max": 5,
+              "rate": 0.973684,
+              "score": 4.868421,
+              "n": 68,
+              "evidence": "B0 unsupported discrimination plus end-to-end abstention",
+              "fixed": false,
+              "status": "measured"
+            },
+            "claimSelection": {
+              "key": "claimSelection",
+              "max": 10,
+              "rate": 0.478022,
+              "score": 4.78022,
+              "n": 182,
+              "evidence": "S0 supported-claim accuracy",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "response": {
+          "score": 31.730433,
+          "maximum": 35,
+          "confidenceInterval95": {
+            "lower": 31.106348,
+            "upper": 32.354518
+          },
+          "dimensions": {
+            "directness": {
+              "key": "directness",
+              "max": 7,
+              "rate": 1,
+              "score": 7,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            },
+            "completeness": {
+              "key": "completeness",
+              "max": 7,
+              "rate": 0.689905,
+              "score": 4.829334,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            },
+            "claimFidelity": {
+              "key": "claimFidelity",
+              "max": 8,
+              "rate": 1,
+              "score": 8,
+              "n": 182,
+              "evidence": "S0 displayed-answer hard gate",
+              "fixed": false,
+              "status": "measured"
+            },
+            "naturalTurkish": {
+              "key": "naturalTurkish",
+              "max": 8,
+              "rate": 0.862637,
+              "score": 6.901099,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "automated_proxy_pending_blind_human"
+            },
+            "consistencyRepetition": {
+              "key": "consistencyRepetition",
+              "max": 5,
+              "rate": 1,
+              "score": 5,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "operationalUx": {
+          "score": 9.137094,
+          "maximum": 10,
+          "confidenceInterval95": {
+            "lower": 8.966799,
+            "upper": 9.307389
+          },
+          "dimensions": {
+            "latency": {
+              "key": "latency",
+              "max": 5,
+              "rate": 0.837945,
+              "score": 4.189726,
+              "n": null,
+              "evidence": "391.808 ms locked p95",
+              "fixed": true,
+              "status": "measured"
+            },
+            "gracefulFailure": {
+              "key": "gracefulFailure",
+              "max": 3,
+              "rate": 0.982456,
+              "score": 2.947368,
+              "n": 68,
+              "evidence": "safety refusal, unsupported abstention and validator fail-closed",
+              "fixed": false,
+              "status": "measured"
+            },
+            "consistency": {
+              "key": "consistency",
+              "max": 2,
+              "rate": 1,
+              "score": 2,
+              "n": 20,
+              "evidence": "deterministic 20x contract",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        }
+      },
+      "observed": {
+        "lockedCases": 250,
+        "endToEndAccuracy": 0.616,
+        "supportedClaimAccuracy": 0.47802197802197804,
+        "unsupportedAbstention": 0.9473684210526315,
+        "p95LatencyMs": 391.808,
+        "peakRssMb": 160,
+        "providerCostPer1000QueriesUsd": 0,
+        "providerCostAt100kQueriesUsd": 0,
+        "localModels": 0,
+        "externalProviders": 0,
+        "operationalComplexity": 1,
+        "failureSurface": 1
+      },
+      "failedQuestionFamilies": {
+        "comparison_relation": {
+          "failures": 15,
+          "supportedIncorrect": 15,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 31,
+          "failureRate": 0.483871
+        },
+        "compound_two_question": {
+          "failures": 12,
+          "supportedIncorrect": 12,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 25,
+          "failureRate": 0.48
+        },
+        "followup_correction_focus": {
+          "failures": 25,
+          "supportedIncorrect": 25,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 44,
+          "failureRate": 0.568182
+        },
+        "low_lexical_overlap_science": {
+          "failures": 23,
+          "supportedIncorrect": 23,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 44,
+          "failureRate": 0.522727
+        },
+        "noisy_colloquial_incomplete": {
+          "failures": 20,
+          "supportedIncorrect": 20,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 38,
+          "failureRate": 0.526316
+        },
+        "unsupported_near_outside": {
+          "failures": 1,
+          "supportedIncorrect": 0,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 1,
+          "cases": 19,
+          "failureRate": 0.052632
+        }
+      },
+      "failedLockedCases": 96,
+      "limitations": [
+        "Architecture Decision Set was reused after Phase 2 and is not an independent generalization estimate.",
+        "Natural Turkish is an automated proxy until the sealed blind human evaluation is completed."
+      ]
+    },
+    "S1": {
+      "architecture": "S1",
+      "composition": "maximum deterministic",
+      "equivalentTo": null,
+      "hardSafetyDecision": "PASS",
+      "score": 83.785538,
+      "maximum": 100,
+      "confidenceInterval95": {
+        "lower": 82.268322,
+        "upper": 85.302754
+      },
+      "qualityCoreScore": 74.027264,
+      "qualityCoreMaximum": 90,
+      "sections": {
+        "understanding": {
+          "score": 17.668795,
+          "maximum": 30,
+          "confidenceInterval95": {
+            "lower": 16.335131,
+            "upper": 19.002459
+          },
+          "dimensions": {
+            "intent": {
+              "key": "intent",
+              "max": 7,
+              "rate": 0.352,
+              "score": 2.464,
+              "n": 250,
+              "evidence": "A1 locked intent accuracy",
+              "fixed": false,
+              "status": "measured"
+            },
+            "topicFocus": {
+              "key": "topicFocus",
+              "max": 8,
+              "rate": 0.783761,
+              "score": 6.270089,
+              "n": 250,
+              "evidence": "A1 locked topic/focus macro-F1; missing focus is scored as zero",
+              "fixed": false,
+              "status": "measured"
+            },
+            "followupCorrection": {
+              "key": "followupCorrection",
+              "max": 8,
+              "rate": 0.49,
+              "score": 3.92,
+              "n": 44,
+              "evidence": "A1 follow-up/correction accuracy",
+              "fixed": false,
+              "status": "measured"
+            },
+            "multiIntent": {
+              "key": "multiIntent",
+              "max": 4,
+              "rate": 1,
+              "score": 4,
+              "n": 25,
+              "evidence": "A1 two-question split F1",
+              "fixed": false,
+              "status": "measured"
+            },
+            "ood": {
+              "key": "ood",
+              "max": 3,
+              "rate": 0.338235,
+              "score": 1.014706,
+              "n": 250,
+              "evidence": "A1 OOD AUROC",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "knowledgeSelection": {
+          "score": 24.628036,
+          "maximum": 25,
+          "confidenceInterval95": {
+            "lower": 24.304303,
+            "upper": 24.951769
+          },
+          "dimensions": {
+            "retrieval": {
+              "key": "retrieval",
+              "max": 10,
+              "rate": 0.975962,
+              "score": 9.759615,
+              "n": 182,
+              "evidence": "B0 weighted Recall@1/3/5, MRR and nDCG@5",
+              "fixed": false,
+              "status": "measured"
+            },
+            "answerability": {
+              "key": "answerability",
+              "max": 5,
+              "rate": 0.973684,
+              "score": 4.868421,
+              "n": 68,
+              "evidence": "B0 unsupported discrimination plus end-to-end abstention",
+              "fixed": false,
+              "status": "measured"
+            },
+            "claimSelection": {
+              "key": "claimSelection",
+              "max": 10,
+              "rate": 1,
+              "score": 10,
+              "n": 182,
+              "evidence": "S1 supported-claim accuracy",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "response": {
+          "score": 31.730433,
+          "maximum": 35,
+          "confidenceInterval95": {
+            "lower": 31.106348,
+            "upper": 32.354518
+          },
+          "dimensions": {
+            "directness": {
+              "key": "directness",
+              "max": 7,
+              "rate": 1,
+              "score": 7,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            },
+            "completeness": {
+              "key": "completeness",
+              "max": 7,
+              "rate": 0.689905,
+              "score": 4.829334,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            },
+            "claimFidelity": {
+              "key": "claimFidelity",
+              "max": 8,
+              "rate": 1,
+              "score": 8,
+              "n": 182,
+              "evidence": "S1 displayed-answer hard gate",
+              "fixed": false,
+              "status": "measured"
+            },
+            "naturalTurkish": {
+              "key": "naturalTurkish",
+              "max": 8,
+              "rate": 0.862637,
+              "score": 6.901099,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "automated_proxy_pending_blind_human"
+            },
+            "consistencyRepetition": {
+              "key": "consistencyRepetition",
+              "max": 5,
+              "rate": 1,
+              "score": 5,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "operationalUx": {
+          "score": 9.758274,
+          "maximum": 10,
+          "confidenceInterval95": {
+            "lower": 9.587979,
+            "upper": 9.928569
+          },
+          "dimensions": {
+            "latency": {
+              "key": "latency",
+              "max": 5,
+              "rate": 0.962181,
+              "score": 4.810906,
+              "n": null,
+              "evidence": "277.638 ms locked p95",
+              "fixed": true,
+              "status": "measured"
+            },
+            "gracefulFailure": {
+              "key": "gracefulFailure",
+              "max": 3,
+              "rate": 0.982456,
+              "score": 2.947368,
+              "n": 68,
+              "evidence": "safety refusal, unsupported abstention and validator fail-closed",
+              "fixed": false,
+              "status": "measured"
+            },
+            "consistency": {
+              "key": "consistency",
+              "max": 2,
+              "rate": 1,
+              "score": 2,
+              "n": 20,
+              "evidence": "deterministic 20x contract",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        }
+      },
+      "observed": {
+        "lockedCases": 250,
+        "endToEndAccuracy": 0.996,
+        "supportedClaimAccuracy": 1,
+        "unsupportedAbstention": 0.9473684210526315,
+        "p95LatencyMs": 277.638,
+        "peakRssMb": 160,
+        "providerCostPer1000QueriesUsd": 0,
+        "providerCostAt100kQueriesUsd": 0,
+        "localModels": 0,
+        "externalProviders": 0,
+        "operationalComplexity": 1,
+        "failureSurface": 1
+      },
+      "failedQuestionFamilies": {
+        "unsupported_near_outside": {
+          "failures": 1,
+          "supportedIncorrect": 0,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 1,
+          "cases": 19,
+          "failureRate": 0.052632
+        }
+      },
+      "failedLockedCases": 1,
+      "limitations": [
+        "Architecture Decision Set was reused after Phase 2 and is not an independent generalization estimate.",
+        "Natural Turkish is an automated proxy until the sealed blind human evaluation is completed."
+      ]
+    },
+    "S2": {
+      "architecture": "S2",
+      "composition": "hybrid retrieval + deterministic answer",
+      "equivalentTo": null,
+      "hardSafetyDecision": "PASS",
+      "score": 81.990649,
+      "maximum": 100,
+      "confidenceInterval95": {
+        "lower": 80.448922,
+        "upper": 83.532376
+      },
+      "qualityCoreScore": 73.651397,
+      "qualityCoreMaximum": 90,
+      "sections": {
+        "understanding": {
+          "score": 17.668795,
+          "maximum": 30,
+          "confidenceInterval95": {
+            "lower": 16.335131,
+            "upper": 19.002459
+          },
+          "dimensions": {
+            "intent": {
+              "key": "intent",
+              "max": 7,
+              "rate": 0.352,
+              "score": 2.464,
+              "n": 250,
+              "evidence": "A1 locked intent accuracy",
+              "fixed": false,
+              "status": "measured"
+            },
+            "topicFocus": {
+              "key": "topicFocus",
+              "max": 8,
+              "rate": 0.783761,
+              "score": 6.270089,
+              "n": 250,
+              "evidence": "A1 locked topic/focus macro-F1; missing focus is scored as zero",
+              "fixed": false,
+              "status": "measured"
+            },
+            "followupCorrection": {
+              "key": "followupCorrection",
+              "max": 8,
+              "rate": 0.49,
+              "score": 3.92,
+              "n": 44,
+              "evidence": "A1 follow-up/correction accuracy",
+              "fixed": false,
+              "status": "measured"
+            },
+            "multiIntent": {
+              "key": "multiIntent",
+              "max": 4,
+              "rate": 1,
+              "score": 4,
+              "n": 25,
+              "evidence": "A1 two-question split F1",
+              "fixed": false,
+              "status": "measured"
+            },
+            "ood": {
+              "key": "ood",
+              "max": 3,
+              "rate": 0.338235,
+              "score": 1.014706,
+              "n": 250,
+              "evidence": "A1 OOD AUROC",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "knowledgeSelection": {
+          "score": 24.252169,
+          "maximum": 25,
+          "confidenceInterval95": {
+            "lower": 23.828164,
+            "upper": 24.676174
+          },
+          "dimensions": {
+            "retrieval": {
+              "key": "retrieval",
+              "max": 10,
+              "rate": 0.960353,
+              "score": 9.603528,
+              "n": 182,
+              "evidence": "B1 weighted Recall@1/3/5, MRR and nDCG@5",
+              "fixed": false,
+              "status": "measured"
+            },
+            "answerability": {
+              "key": "answerability",
+              "max": 5,
+              "rate": 0.973684,
+              "score": 4.868421,
+              "n": 68,
+              "evidence": "B1 unsupported discrimination plus end-to-end abstention",
+              "fixed": false,
+              "status": "measured"
+            },
+            "claimSelection": {
+              "key": "claimSelection",
+              "max": 10,
+              "rate": 0.978022,
+              "score": 9.78022,
+              "n": 182,
+              "evidence": "S2 supported-claim accuracy",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "response": {
+          "score": 31.730433,
+          "maximum": 35,
+          "confidenceInterval95": {
+            "lower": 31.106348,
+            "upper": 32.354518
+          },
+          "dimensions": {
+            "directness": {
+              "key": "directness",
+              "max": 7,
+              "rate": 1,
+              "score": 7,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            },
+            "completeness": {
+              "key": "completeness",
+              "max": 7,
+              "rate": 0.689905,
+              "score": 4.829334,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            },
+            "claimFidelity": {
+              "key": "claimFidelity",
+              "max": 8,
+              "rate": 1,
+              "score": 8,
+              "n": 182,
+              "evidence": "S2 displayed-answer hard gate",
+              "fixed": false,
+              "status": "measured"
+            },
+            "naturalTurkish": {
+              "key": "naturalTurkish",
+              "max": 8,
+              "rate": 0.862637,
+              "score": 6.901099,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "automated_proxy_pending_blind_human"
+            },
+            "consistencyRepetition": {
+              "key": "consistencyRepetition",
+              "max": 5,
+              "rate": 1,
+              "score": 5,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "operationalUx": {
+          "score": 8.339252,
+          "maximum": 10,
+          "confidenceInterval95": {
+            "lower": 8.168957,
+            "upper": 8.509547
+          },
+          "dimensions": {
+            "latency": {
+              "key": "latency",
+              "max": 5,
+              "rate": 0.678377,
+              "score": 3.391884,
+              "n": null,
+              "evidence": "609.836 ms locked p95",
+              "fixed": true,
+              "status": "measured"
+            },
+            "gracefulFailure": {
+              "key": "gracefulFailure",
+              "max": 3,
+              "rate": 0.982456,
+              "score": 2.947368,
+              "n": 68,
+              "evidence": "safety refusal, unsupported abstention and validator fail-closed",
+              "fixed": false,
+              "status": "measured"
+            },
+            "consistency": {
+              "key": "consistency",
+              "max": 2,
+              "rate": 1,
+              "score": 2,
+              "n": 20,
+              "evidence": "deterministic 20x contract",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        }
+      },
+      "observed": {
+        "lockedCases": 250,
+        "endToEndAccuracy": 0.98,
+        "supportedClaimAccuracy": 0.978021978021978,
+        "unsupportedAbstention": 0.9473684210526315,
+        "p95LatencyMs": 609.836,
+        "peakRssMb": 870.797,
+        "providerCostPer1000QueriesUsd": 0,
+        "providerCostAt100kQueriesUsd": 0,
+        "localModels": 1,
+        "externalProviders": 0,
+        "operationalComplexity": 2,
+        "failureSurface": 2
+      },
+      "failedQuestionFamilies": {
+        "comparison_relation": {
+          "failures": 1,
+          "supportedIncorrect": 1,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 31,
+          "failureRate": 0.032258
+        },
+        "compound_two_question": {
+          "failures": 1,
+          "supportedIncorrect": 1,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 25,
+          "failureRate": 0.04
+        },
+        "followup_correction_focus": {
+          "failures": 1,
+          "supportedIncorrect": 1,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 44,
+          "failureRate": 0.022727
+        },
+        "low_lexical_overlap_science": {
+          "failures": 1,
+          "supportedIncorrect": 1,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 44,
+          "failureRate": 0.022727
+        },
+        "unsupported_near_outside": {
+          "failures": 1,
+          "supportedIncorrect": 0,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 1,
+          "cases": 19,
+          "failureRate": 0.052632
+        }
+      },
+      "failedLockedCases": 5,
+      "limitations": [
+        "Architecture Decision Set was reused after Phase 2 and is not an independent generalization estimate.",
+        "Natural Turkish is an automated proxy until the sealed blind human evaluation is completed."
+      ]
+    },
+    "S3": {
+      "architecture": "S3",
+      "composition": "neural parser + hybrid retrieval + deterministic answer",
+      "equivalentTo": null,
+      "hardSafetyDecision": "PASS",
+      "score": 79.352856,
+      "maximum": 100,
+      "confidenceInterval95": {
+        "lower": 78.090367,
+        "upper": 80.615345
+      },
+      "qualityCoreScore": 72.164039,
+      "qualityCoreMaximum": 90,
+      "sections": {
+        "understanding": {
+          "score": 20.631987,
+          "maximum": 30,
+          "confidenceInterval95": {
+            "lower": 19.908512,
+            "upper": 21.355462
+          },
+          "dimensions": {
+            "intent": {
+              "key": "intent",
+              "max": 7,
+              "rate": 0.664,
+              "score": 4.648,
+              "n": 250,
+              "evidence": "A2 locked intent accuracy",
+              "fixed": false,
+              "status": "measured"
+            },
+            "topicFocus": {
+              "key": "topicFocus",
+              "max": 8,
+              "rate": 0.331557,
+              "score": 2.652458,
+              "n": 250,
+              "evidence": "A2 locked topic/focus macro-F1; missing focus is scored as zero",
+              "fixed": false,
+              "status": "measured"
+            },
+            "followupCorrection": {
+              "key": "followupCorrection",
+              "max": 8,
+              "rate": 1,
+              "score": 8,
+              "n": 44,
+              "evidence": "A2 follow-up/correction accuracy",
+              "fixed": false,
+              "status": "measured"
+            },
+            "multiIntent": {
+              "key": "multiIntent",
+              "max": 4,
+              "rate": 1,
+              "score": 4,
+              "n": 25,
+              "evidence": "A2 two-question split F1",
+              "fixed": false,
+              "status": "measured"
+            },
+            "ood": {
+              "key": "ood",
+              "max": 3,
+              "rate": 0.443843,
+              "score": 1.331529,
+              "n": 250,
+              "evidence": "A2 OOD AUROC",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "knowledgeSelection": {
+          "score": 19.801619,
+          "maximum": 25,
+          "confidenceInterval95": {
+            "lower": 18.994165,
+            "upper": 20.609073
+          },
+          "dimensions": {
+            "retrieval": {
+              "key": "retrieval",
+              "max": 10,
+              "rate": 0.960353,
+              "score": 9.603528,
+              "n": 182,
+              "evidence": "B1 weighted Recall@1/3/5, MRR and nDCG@5",
+              "fixed": false,
+              "status": "measured"
+            },
+            "answerability": {
+              "key": "answerability",
+              "max": 5,
+              "rate": 0.973684,
+              "score": 4.868421,
+              "n": 68,
+              "evidence": "B1 unsupported discrimination plus end-to-end abstention",
+              "fixed": false,
+              "status": "measured"
+            },
+            "claimSelection": {
+              "key": "claimSelection",
+              "max": 10,
+              "rate": 0.532967,
+              "score": 5.32967,
+              "n": 182,
+              "evidence": "S3 supported-claim accuracy",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "response": {
+          "score": 31.730433,
+          "maximum": 35,
+          "confidenceInterval95": {
+            "lower": 31.106348,
+            "upper": 32.354518
+          },
+          "dimensions": {
+            "directness": {
+              "key": "directness",
+              "max": 7,
+              "rate": 1,
+              "score": 7,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            },
+            "completeness": {
+              "key": "completeness",
+              "max": 7,
+              "rate": 0.689905,
+              "score": 4.829334,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            },
+            "claimFidelity": {
+              "key": "claimFidelity",
+              "max": 8,
+              "rate": 1,
+              "score": 8,
+              "n": 182,
+              "evidence": "S3 displayed-answer hard gate",
+              "fixed": false,
+              "status": "measured"
+            },
+            "naturalTurkish": {
+              "key": "naturalTurkish",
+              "max": 8,
+              "rate": 0.862637,
+              "score": 6.901099,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "automated_proxy_pending_blind_human"
+            },
+            "consistencyRepetition": {
+              "key": "consistencyRepetition",
+              "max": 5,
+              "rate": 1,
+              "score": 5,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "operationalUx": {
+          "score": 7.188817,
+          "maximum": 10,
+          "confidenceInterval95": {
+            "lower": 7.018522,
+            "upper": 7.359112
+          },
+          "dimensions": {
+            "latency": {
+              "key": "latency",
+              "max": 5,
+              "rate": 0.44829,
+              "score": 2.241449,
+              "n": null,
+              "evidence": "1154.158 ms locked p95",
+              "fixed": true,
+              "status": "measured"
+            },
+            "gracefulFailure": {
+              "key": "gracefulFailure",
+              "max": 3,
+              "rate": 0.982456,
+              "score": 2.947368,
+              "n": 68,
+              "evidence": "safety refusal, unsupported abstention and validator fail-closed",
+              "fixed": false,
+              "status": "measured"
+            },
+            "consistency": {
+              "key": "consistency",
+              "max": 2,
+              "rate": 1,
+              "score": 2,
+              "n": 20,
+              "evidence": "deterministic 20x contract",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        }
+      },
+      "observed": {
+        "lockedCases": 250,
+        "endToEndAccuracy": 0.656,
+        "supportedClaimAccuracy": 0.532967032967033,
+        "unsupportedAbstention": 0.9473684210526315,
+        "p95LatencyMs": 1154.158,
+        "peakRssMb": 870.797,
+        "providerCostPer1000QueriesUsd": 0,
+        "providerCostAt100kQueriesUsd": 0,
+        "localModels": 2,
+        "externalProviders": 0,
+        "operationalComplexity": 3,
+        "failureSurface": 3
+      },
+      "failedQuestionFamilies": {
+        "comparison_relation": {
+          "failures": 15,
+          "supportedIncorrect": 15,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 31,
+          "failureRate": 0.483871
+        },
+        "compound_two_question": {
+          "failures": 8,
+          "supportedIncorrect": 8,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 25,
+          "failureRate": 0.32
+        },
+        "followup_correction_focus": {
+          "failures": 23,
+          "supportedIncorrect": 23,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 44,
+          "failureRate": 0.522727
+        },
+        "low_lexical_overlap_science": {
+          "failures": 18,
+          "supportedIncorrect": 18,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 44,
+          "failureRate": 0.409091
+        },
+        "noisy_colloquial_incomplete": {
+          "failures": 21,
+          "supportedIncorrect": 21,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 38,
+          "failureRate": 0.552632
+        },
+        "unsupported_near_outside": {
+          "failures": 1,
+          "supportedIncorrect": 0,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 1,
+          "cases": 19,
+          "failureRate": 0.052632
+        }
+      },
+      "failedLockedCases": 86,
+      "limitations": [
+        "Architecture Decision Set was reused after Phase 2 and is not an independent generalization estimate.",
+        "Natural Turkish is an automated proxy until the sealed blind human evaluation is completed."
+      ]
+    },
+    "S5": {
+      "architecture": "S5",
+      "composition": "hybrid retrieval + Luna + validator",
+      "equivalentTo": null,
+      "hardSafetyDecision": "PASS",
+      "score": 80.140136,
+      "maximum": 100,
+      "confidenceInterval95": {
+        "lower": 78.61332,
+        "upper": 81.666952
+      },
+      "qualityCoreScore": 73.880931,
+      "qualityCoreMaximum": 90,
+      "sections": {
+        "understanding": {
+          "score": 17.668795,
+          "maximum": 30,
+          "confidenceInterval95": {
+            "lower": 16.335131,
+            "upper": 19.002459
+          },
+          "dimensions": {
+            "intent": {
+              "key": "intent",
+              "max": 7,
+              "rate": 0.352,
+              "score": 2.464,
+              "n": 250,
+              "evidence": "A1 locked intent accuracy",
+              "fixed": false,
+              "status": "measured"
+            },
+            "topicFocus": {
+              "key": "topicFocus",
+              "max": 8,
+              "rate": 0.783761,
+              "score": 6.270089,
+              "n": 250,
+              "evidence": "A1 locked topic/focus macro-F1; missing focus is scored as zero",
+              "fixed": false,
+              "status": "measured"
+            },
+            "followupCorrection": {
+              "key": "followupCorrection",
+              "max": 8,
+              "rate": 0.49,
+              "score": 3.92,
+              "n": 44,
+              "evidence": "A1 follow-up/correction accuracy",
+              "fixed": false,
+              "status": "measured"
+            },
+            "multiIntent": {
+              "key": "multiIntent",
+              "max": 4,
+              "rate": 1,
+              "score": 4,
+              "n": 25,
+              "evidence": "A1 two-question split F1",
+              "fixed": false,
+              "status": "measured"
+            },
+            "ood": {
+              "key": "ood",
+              "max": 3,
+              "rate": 0.338235,
+              "score": 1.014706,
+              "n": 250,
+              "evidence": "A1 OOD AUROC",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "knowledgeSelection": {
+          "score": 24.252169,
+          "maximum": 25,
+          "confidenceInterval95": {
+            "lower": 23.828164,
+            "upper": 24.676174
+          },
+          "dimensions": {
+            "retrieval": {
+              "key": "retrieval",
+              "max": 10,
+              "rate": 0.960353,
+              "score": 9.603528,
+              "n": 182,
+              "evidence": "B1 weighted Recall@1/3/5, MRR and nDCG@5",
+              "fixed": false,
+              "status": "measured"
+            },
+            "answerability": {
+              "key": "answerability",
+              "max": 5,
+              "rate": 0.973684,
+              "score": 4.868421,
+              "n": 68,
+              "evidence": "B1 unsupported discrimination plus end-to-end abstention",
+              "fixed": false,
+              "status": "measured"
+            },
+            "claimSelection": {
+              "key": "claimSelection",
+              "max": 10,
+              "rate": 0.978022,
+              "score": 9.78022,
+              "n": 182,
+              "evidence": "S5 supported-claim accuracy",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "response": {
+          "score": 31.959967,
+          "maximum": 35,
+          "confidenceInterval95": {
+            "lower": 31.359355,
+            "upper": 32.560579
+          },
+          "dimensions": {
+            "directness": {
+              "key": "directness",
+              "max": 7,
+              "rate": 1,
+              "score": 7,
+              "n": 182,
+              "evidence": "C4 Luna realization after validator, with deterministic fallback",
+              "fixed": false,
+              "status": "measured"
+            },
+            "completeness": {
+              "key": "completeness",
+              "max": 7,
+              "rate": 0.689905,
+              "score": 4.829334,
+              "n": 182,
+              "evidence": "C4 Luna realization after validator, with deterministic fallback",
+              "fixed": false,
+              "status": "measured"
+            },
+            "claimFidelity": {
+              "key": "claimFidelity",
+              "max": 8,
+              "rate": 1,
+              "score": 8,
+              "n": 182,
+              "evidence": "S5 displayed-answer hard gate",
+              "fixed": false,
+              "status": "measured"
+            },
+            "naturalTurkish": {
+              "key": "naturalTurkish",
+              "max": 8,
+              "rate": 0.891329,
+              "score": 7.130633,
+              "n": 182,
+              "evidence": "C4 Luna realization after validator, with deterministic fallback",
+              "fixed": false,
+              "status": "automated_proxy_pending_blind_human"
+            },
+            "consistencyRepetition": {
+              "key": "consistencyRepetition",
+              "max": 5,
+              "rate": 1,
+              "score": 5,
+              "n": 182,
+              "evidence": "C4 Luna realization after validator, with deterministic fallback",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "operationalUx": {
+          "score": 6.259205,
+          "maximum": 10,
+          "confidenceInterval95": {
+            "lower": 6.149693,
+            "upper": 6.368717
+          },
+          "dimensions": {
+            "latency": {
+              "key": "latency",
+              "max": 5,
+              "rate": 0.462367,
+              "score": 2.311837,
+              "n": null,
+              "evidence": "1109.977 ms locked p95",
+              "fixed": true,
+              "status": "measured"
+            },
+            "gracefulFailure": {
+              "key": "gracefulFailure",
+              "max": 3,
+              "rate": 0.982456,
+              "score": 2.947368,
+              "n": 68,
+              "evidence": "safety refusal, unsupported abstention and validator fail-closed",
+              "fixed": false,
+              "status": "measured"
+            },
+            "consistency": {
+              "key": "consistency",
+              "max": 2,
+              "rate": 0.5,
+              "score": 1,
+              "n": null,
+              "evidence": "live 20x Luna replay pending; conservative provisional half-credit",
+              "fixed": true,
+              "status": "provisional_pending_20x_live_replay"
+            }
+          }
+        }
+      },
+      "observed": {
+        "lockedCases": 250,
+        "endToEndAccuracy": 0.98,
+        "supportedClaimAccuracy": 0.978021978021978,
+        "unsupportedAbstention": 0.9473684210526315,
+        "p95LatencyMs": 1109.977,
+        "peakRssMb": 870.797,
+        "providerCostPer1000QueriesUsd": 0.305515,
+        "providerCostAt100kQueriesUsd": 30.551545,
+        "localModels": 1,
+        "externalProviders": 1,
+        "operationalComplexity": 4,
+        "failureSurface": 4
+      },
+      "failedQuestionFamilies": {
+        "comparison_relation": {
+          "failures": 1,
+          "supportedIncorrect": 1,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 31,
+          "failureRate": 0.032258
+        },
+        "compound_two_question": {
+          "failures": 1,
+          "supportedIncorrect": 1,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 25,
+          "failureRate": 0.04
+        },
+        "followup_correction_focus": {
+          "failures": 1,
+          "supportedIncorrect": 1,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 44,
+          "failureRate": 0.022727
+        },
+        "low_lexical_overlap_science": {
+          "failures": 1,
+          "supportedIncorrect": 1,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 44,
+          "failureRate": 0.022727
+        },
+        "unsupported_near_outside": {
+          "failures": 1,
+          "supportedIncorrect": 0,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 1,
+          "cases": 19,
+          "failureRate": 0.052632
+        }
+      },
+      "failedLockedCases": 5,
+      "limitations": [
+        "Architecture Decision Set was reused after Phase 2 and is not an independent generalization estimate.",
+        "Natural Turkish is an automated proxy until the sealed blind human evaluation is completed.",
+        "Luna repeatability has not yet been measured with an independent 20x live replay."
+      ]
+    },
+    "S6": {
+      "architecture": "S6",
+      "composition": "neural parser + retrieval + Luna",
+      "equivalentTo": null,
+      "hardSafetyDecision": "PASS",
+      "score": 77.950914,
+      "maximum": 100,
+      "confidenceInterval95": {
+        "lower": 76.706674,
+        "upper": 79.195154
+      },
+      "qualityCoreScore": 72.393504,
+      "qualityCoreMaximum": 90,
+      "sections": {
+        "understanding": {
+          "score": 20.631987,
+          "maximum": 30,
+          "confidenceInterval95": {
+            "lower": 19.908512,
+            "upper": 21.355462
+          },
+          "dimensions": {
+            "intent": {
+              "key": "intent",
+              "max": 7,
+              "rate": 0.664,
+              "score": 4.648,
+              "n": 250,
+              "evidence": "A2 locked intent accuracy",
+              "fixed": false,
+              "status": "measured"
+            },
+            "topicFocus": {
+              "key": "topicFocus",
+              "max": 8,
+              "rate": 0.331557,
+              "score": 2.652458,
+              "n": 250,
+              "evidence": "A2 locked topic/focus macro-F1; missing focus is scored as zero",
+              "fixed": false,
+              "status": "measured"
+            },
+            "followupCorrection": {
+              "key": "followupCorrection",
+              "max": 8,
+              "rate": 1,
+              "score": 8,
+              "n": 44,
+              "evidence": "A2 follow-up/correction accuracy",
+              "fixed": false,
+              "status": "measured"
+            },
+            "multiIntent": {
+              "key": "multiIntent",
+              "max": 4,
+              "rate": 1,
+              "score": 4,
+              "n": 25,
+              "evidence": "A2 two-question split F1",
+              "fixed": false,
+              "status": "measured"
+            },
+            "ood": {
+              "key": "ood",
+              "max": 3,
+              "rate": 0.443843,
+              "score": 1.331529,
+              "n": 250,
+              "evidence": "A2 OOD AUROC",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "knowledgeSelection": {
+          "score": 19.801619,
+          "maximum": 25,
+          "confidenceInterval95": {
+            "lower": 18.994165,
+            "upper": 20.609073
+          },
+          "dimensions": {
+            "retrieval": {
+              "key": "retrieval",
+              "max": 10,
+              "rate": 0.960353,
+              "score": 9.603528,
+              "n": 182,
+              "evidence": "B1 weighted Recall@1/3/5, MRR and nDCG@5",
+              "fixed": false,
+              "status": "measured"
+            },
+            "answerability": {
+              "key": "answerability",
+              "max": 5,
+              "rate": 0.973684,
+              "score": 4.868421,
+              "n": 68,
+              "evidence": "B1 unsupported discrimination plus end-to-end abstention",
+              "fixed": false,
+              "status": "measured"
+            },
+            "claimSelection": {
+              "key": "claimSelection",
+              "max": 10,
+              "rate": 0.532967,
+              "score": 5.32967,
+              "n": 182,
+              "evidence": "S6 supported-claim accuracy",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "response": {
+          "score": 31.959898,
+          "maximum": 35,
+          "confidenceInterval95": {
+            "lower": 31.359279,
+            "upper": 32.560517
+          },
+          "dimensions": {
+            "directness": {
+              "key": "directness",
+              "max": 7,
+              "rate": 1,
+              "score": 7,
+              "n": 182,
+              "evidence": "C4 Luna realization after validator, with deterministic fallback",
+              "fixed": false,
+              "status": "measured"
+            },
+            "completeness": {
+              "key": "completeness",
+              "max": 7,
+              "rate": 0.689905,
+              "score": 4.829334,
+              "n": 182,
+              "evidence": "C4 Luna realization after validator, with deterministic fallback",
+              "fixed": false,
+              "status": "measured"
+            },
+            "claimFidelity": {
+              "key": "claimFidelity",
+              "max": 8,
+              "rate": 1,
+              "score": 8,
+              "n": 182,
+              "evidence": "S6 displayed-answer hard gate",
+              "fixed": false,
+              "status": "measured"
+            },
+            "naturalTurkish": {
+              "key": "naturalTurkish",
+              "max": 8,
+              "rate": 0.891321,
+              "score": 7.130564,
+              "n": 182,
+              "evidence": "C4 Luna realization after validator, with deterministic fallback",
+              "fixed": false,
+              "status": "automated_proxy_pending_blind_human"
+            },
+            "consistencyRepetition": {
+              "key": "consistencyRepetition",
+              "max": 5,
+              "rate": 1,
+              "score": 5,
+              "n": 182,
+              "evidence": "C4 Luna realization after validator, with deterministic fallback",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "operationalUx": {
+          "score": 5.55741,
+          "maximum": 10,
+          "confidenceInterval95": {
+            "lower": 5.447898,
+            "upper": 5.666922
+          },
+          "dimensions": {
+            "latency": {
+              "key": "latency",
+              "max": 5,
+              "rate": 0.322008,
+              "score": 1.610042,
+              "n": null,
+              "evidence": "1638.036 ms locked p95",
+              "fixed": true,
+              "status": "measured"
+            },
+            "gracefulFailure": {
+              "key": "gracefulFailure",
+              "max": 3,
+              "rate": 0.982456,
+              "score": 2.947368,
+              "n": 68,
+              "evidence": "safety refusal, unsupported abstention and validator fail-closed",
+              "fixed": false,
+              "status": "measured"
+            },
+            "consistency": {
+              "key": "consistency",
+              "max": 2,
+              "rate": 0.5,
+              "score": 1,
+              "n": null,
+              "evidence": "live 20x Luna replay pending; conservative provisional half-credit",
+              "fixed": true,
+              "status": "provisional_pending_20x_live_replay"
+            }
+          }
+        }
+      },
+      "observed": {
+        "lockedCases": 250,
+        "endToEndAccuracy": 0.656,
+        "supportedClaimAccuracy": 0.532967032967033,
+        "unsupportedAbstention": 0.9473684210526315,
+        "p95LatencyMs": 1638.036,
+        "peakRssMb": 870.797,
+        "providerCostPer1000QueriesUsd": 0.303799,
+        "providerCostAt100kQueriesUsd": 30.379907,
+        "localModels": 2,
+        "externalProviders": 1,
+        "operationalComplexity": 5,
+        "failureSurface": 5
+      },
+      "failedQuestionFamilies": {
+        "comparison_relation": {
+          "failures": 15,
+          "supportedIncorrect": 15,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 31,
+          "failureRate": 0.483871
+        },
+        "compound_two_question": {
+          "failures": 8,
+          "supportedIncorrect": 8,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 25,
+          "failureRate": 0.32
+        },
+        "followup_correction_focus": {
+          "failures": 23,
+          "supportedIncorrect": 23,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 44,
+          "failureRate": 0.522727
+        },
+        "low_lexical_overlap_science": {
+          "failures": 18,
+          "supportedIncorrect": 18,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 44,
+          "failureRate": 0.409091
+        },
+        "noisy_colloquial_incomplete": {
+          "failures": 21,
+          "supportedIncorrect": 21,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 0,
+          "cases": 38,
+          "failureRate": 0.552632
+        },
+        "unsupported_near_outside": {
+          "failures": 1,
+          "supportedIncorrect": 0,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 1,
+          "cases": 19,
+          "failureRate": 0.052632
+        }
+      },
+      "failedLockedCases": 86,
+      "limitations": [
+        "Architecture Decision Set was reused after Phase 2 and is not an independent generalization estimate.",
+        "Natural Turkish is an automated proxy until the sealed blind human evaluation is completed.",
+        "Luna repeatability has not yet been measured with an independent 20x live replay."
+      ]
+    },
+    "S9": {
+      "architecture": "S9",
+      "composition": "adaptive cascade collapsed to S1",
+      "equivalentTo": "S1",
+      "hardSafetyDecision": "PASS",
+      "score": 83.785538,
+      "maximum": 100,
+      "confidenceInterval95": {
+        "lower": 82.268322,
+        "upper": 85.302754
+      },
+      "qualityCoreScore": 74.027264,
+      "qualityCoreMaximum": 90,
+      "sections": {
+        "understanding": {
+          "score": 17.668795,
+          "maximum": 30,
+          "confidenceInterval95": {
+            "lower": 16.335131,
+            "upper": 19.002459
+          },
+          "dimensions": {
+            "intent": {
+              "key": "intent",
+              "max": 7,
+              "rate": 0.352,
+              "score": 2.464,
+              "n": 250,
+              "evidence": "A1 locked intent accuracy",
+              "fixed": false,
+              "status": "measured"
+            },
+            "topicFocus": {
+              "key": "topicFocus",
+              "max": 8,
+              "rate": 0.783761,
+              "score": 6.270089,
+              "n": 250,
+              "evidence": "A1 locked topic/focus macro-F1; missing focus is scored as zero",
+              "fixed": false,
+              "status": "measured"
+            },
+            "followupCorrection": {
+              "key": "followupCorrection",
+              "max": 8,
+              "rate": 0.49,
+              "score": 3.92,
+              "n": 44,
+              "evidence": "A1 follow-up/correction accuracy",
+              "fixed": false,
+              "status": "measured"
+            },
+            "multiIntent": {
+              "key": "multiIntent",
+              "max": 4,
+              "rate": 1,
+              "score": 4,
+              "n": 25,
+              "evidence": "A1 two-question split F1",
+              "fixed": false,
+              "status": "measured"
+            },
+            "ood": {
+              "key": "ood",
+              "max": 3,
+              "rate": 0.338235,
+              "score": 1.014706,
+              "n": 250,
+              "evidence": "A1 OOD AUROC",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "knowledgeSelection": {
+          "score": 24.628036,
+          "maximum": 25,
+          "confidenceInterval95": {
+            "lower": 24.304303,
+            "upper": 24.951769
+          },
+          "dimensions": {
+            "retrieval": {
+              "key": "retrieval",
+              "max": 10,
+              "rate": 0.975962,
+              "score": 9.759615,
+              "n": 182,
+              "evidence": "B0 weighted Recall@1/3/5, MRR and nDCG@5",
+              "fixed": false,
+              "status": "measured"
+            },
+            "answerability": {
+              "key": "answerability",
+              "max": 5,
+              "rate": 0.973684,
+              "score": 4.868421,
+              "n": 68,
+              "evidence": "B0 unsupported discrimination plus end-to-end abstention",
+              "fixed": false,
+              "status": "measured"
+            },
+            "claimSelection": {
+              "key": "claimSelection",
+              "max": 10,
+              "rate": 1,
+              "score": 10,
+              "n": 182,
+              "evidence": "S9 supported-claim accuracy",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "response": {
+          "score": 31.730433,
+          "maximum": 35,
+          "confidenceInterval95": {
+            "lower": 31.106348,
+            "upper": 32.354518
+          },
+          "dimensions": {
+            "directness": {
+              "key": "directness",
+              "max": 7,
+              "rate": 1,
+              "score": 7,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            },
+            "completeness": {
+              "key": "completeness",
+              "max": 7,
+              "rate": 0.689905,
+              "score": 4.829334,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            },
+            "claimFidelity": {
+              "key": "claimFidelity",
+              "max": 8,
+              "rate": 1,
+              "score": 8,
+              "n": 182,
+              "evidence": "S9 displayed-answer hard gate",
+              "fixed": false,
+              "status": "measured"
+            },
+            "naturalTurkish": {
+              "key": "naturalTurkish",
+              "max": 8,
+              "rate": 0.862637,
+              "score": 6.901099,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "automated_proxy_pending_blind_human"
+            },
+            "consistencyRepetition": {
+              "key": "consistencyRepetition",
+              "max": 5,
+              "rate": 1,
+              "score": 5,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "operationalUx": {
+          "score": 9.758274,
+          "maximum": 10,
+          "confidenceInterval95": {
+            "lower": 9.587979,
+            "upper": 9.928569
+          },
+          "dimensions": {
+            "latency": {
+              "key": "latency",
+              "max": 5,
+              "rate": 0.962181,
+              "score": 4.810906,
+              "n": null,
+              "evidence": "277.638 ms locked p95",
+              "fixed": true,
+              "status": "measured"
+            },
+            "gracefulFailure": {
+              "key": "gracefulFailure",
+              "max": 3,
+              "rate": 0.982456,
+              "score": 2.947368,
+              "n": 68,
+              "evidence": "safety refusal, unsupported abstention and validator fail-closed",
+              "fixed": false,
+              "status": "measured"
+            },
+            "consistency": {
+              "key": "consistency",
+              "max": 2,
+              "rate": 1,
+              "score": 2,
+              "n": 20,
+              "evidence": "deterministic 20x contract",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        }
+      },
+      "observed": {
+        "lockedCases": 250,
+        "endToEndAccuracy": 0.996,
+        "supportedClaimAccuracy": 1,
+        "unsupportedAbstention": 0.9473684210526315,
+        "p95LatencyMs": 277.638,
+        "peakRssMb": 160,
+        "providerCostPer1000QueriesUsd": 0,
+        "providerCostAt100kQueriesUsd": 0,
+        "localModels": 0,
+        "externalProviders": 0,
+        "operationalComplexity": 1,
+        "failureSurface": 1
+      },
+      "failedQuestionFamilies": {
+        "unsupported_near_outside": {
+          "failures": 1,
+          "supportedIncorrect": 0,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 1,
+          "cases": 19,
+          "failureRate": 0.052632
+        }
+      },
+      "failedLockedCases": 1,
+      "limitations": [
+        "Architecture Decision Set was reused after Phase 2 and is not an independent generalization estimate.",
+        "Natural Turkish is an automated proxy until the sealed blind human evaluation is completed."
+      ]
+    },
+    "S10": {
+      "architecture": "S10",
+      "composition": "three-stage cascade collapsed to S1",
+      "equivalentTo": "S1",
+      "hardSafetyDecision": "PASS",
+      "score": 83.785538,
+      "maximum": 100,
+      "confidenceInterval95": {
+        "lower": 82.268322,
+        "upper": 85.302754
+      },
+      "qualityCoreScore": 74.027264,
+      "qualityCoreMaximum": 90,
+      "sections": {
+        "understanding": {
+          "score": 17.668795,
+          "maximum": 30,
+          "confidenceInterval95": {
+            "lower": 16.335131,
+            "upper": 19.002459
+          },
+          "dimensions": {
+            "intent": {
+              "key": "intent",
+              "max": 7,
+              "rate": 0.352,
+              "score": 2.464,
+              "n": 250,
+              "evidence": "A1 locked intent accuracy",
+              "fixed": false,
+              "status": "measured"
+            },
+            "topicFocus": {
+              "key": "topicFocus",
+              "max": 8,
+              "rate": 0.783761,
+              "score": 6.270089,
+              "n": 250,
+              "evidence": "A1 locked topic/focus macro-F1; missing focus is scored as zero",
+              "fixed": false,
+              "status": "measured"
+            },
+            "followupCorrection": {
+              "key": "followupCorrection",
+              "max": 8,
+              "rate": 0.49,
+              "score": 3.92,
+              "n": 44,
+              "evidence": "A1 follow-up/correction accuracy",
+              "fixed": false,
+              "status": "measured"
+            },
+            "multiIntent": {
+              "key": "multiIntent",
+              "max": 4,
+              "rate": 1,
+              "score": 4,
+              "n": 25,
+              "evidence": "A1 two-question split F1",
+              "fixed": false,
+              "status": "measured"
+            },
+            "ood": {
+              "key": "ood",
+              "max": 3,
+              "rate": 0.338235,
+              "score": 1.014706,
+              "n": 250,
+              "evidence": "A1 OOD AUROC",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "knowledgeSelection": {
+          "score": 24.628036,
+          "maximum": 25,
+          "confidenceInterval95": {
+            "lower": 24.304303,
+            "upper": 24.951769
+          },
+          "dimensions": {
+            "retrieval": {
+              "key": "retrieval",
+              "max": 10,
+              "rate": 0.975962,
+              "score": 9.759615,
+              "n": 182,
+              "evidence": "B0 weighted Recall@1/3/5, MRR and nDCG@5",
+              "fixed": false,
+              "status": "measured"
+            },
+            "answerability": {
+              "key": "answerability",
+              "max": 5,
+              "rate": 0.973684,
+              "score": 4.868421,
+              "n": 68,
+              "evidence": "B0 unsupported discrimination plus end-to-end abstention",
+              "fixed": false,
+              "status": "measured"
+            },
+            "claimSelection": {
+              "key": "claimSelection",
+              "max": 10,
+              "rate": 1,
+              "score": 10,
+              "n": 182,
+              "evidence": "S10 supported-claim accuracy",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "response": {
+          "score": 31.730433,
+          "maximum": 35,
+          "confidenceInterval95": {
+            "lower": 31.106348,
+            "upper": 32.354518
+          },
+          "dimensions": {
+            "directness": {
+              "key": "directness",
+              "max": 7,
+              "rate": 1,
+              "score": 7,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            },
+            "completeness": {
+              "key": "completeness",
+              "max": 7,
+              "rate": 0.689905,
+              "score": 4.829334,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            },
+            "claimFidelity": {
+              "key": "claimFidelity",
+              "max": 8,
+              "rate": 1,
+              "score": 8,
+              "n": 182,
+              "evidence": "S10 displayed-answer hard gate",
+              "fixed": false,
+              "status": "measured"
+            },
+            "naturalTurkish": {
+              "key": "naturalTurkish",
+              "max": 8,
+              "rate": 0.862637,
+              "score": 6.901099,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "automated_proxy_pending_blind_human"
+            },
+            "consistencyRepetition": {
+              "key": "consistencyRepetition",
+              "max": 5,
+              "rate": 1,
+              "score": 5,
+              "n": 182,
+              "evidence": "C0 locked automated heuristics",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        },
+        "operationalUx": {
+          "score": 9.758274,
+          "maximum": 10,
+          "confidenceInterval95": {
+            "lower": 9.587979,
+            "upper": 9.928569
+          },
+          "dimensions": {
+            "latency": {
+              "key": "latency",
+              "max": 5,
+              "rate": 0.962181,
+              "score": 4.810906,
+              "n": null,
+              "evidence": "277.638 ms locked p95",
+              "fixed": true,
+              "status": "measured"
+            },
+            "gracefulFailure": {
+              "key": "gracefulFailure",
+              "max": 3,
+              "rate": 0.982456,
+              "score": 2.947368,
+              "n": 68,
+              "evidence": "safety refusal, unsupported abstention and validator fail-closed",
+              "fixed": false,
+              "status": "measured"
+            },
+            "consistency": {
+              "key": "consistency",
+              "max": 2,
+              "rate": 1,
+              "score": 2,
+              "n": 20,
+              "evidence": "deterministic 20x contract",
+              "fixed": false,
+              "status": "measured"
+            }
+          }
+        }
+      },
+      "observed": {
+        "lockedCases": 250,
+        "endToEndAccuracy": 0.996,
+        "supportedClaimAccuracy": 1,
+        "unsupportedAbstention": 0.9473684210526315,
+        "p95LatencyMs": 277.638,
+        "peakRssMb": 160,
+        "providerCostPer1000QueriesUsd": 0,
+        "providerCostAt100kQueriesUsd": 0,
+        "localModels": 0,
+        "externalProviders": 0,
+        "operationalComplexity": 1,
+        "failureSurface": 1
+      },
+      "failedQuestionFamilies": {
+        "unsupported_near_outside": {
+          "failures": 1,
+          "supportedIncorrect": 0,
+          "unsupportedWrongAnswer": 0,
+          "safetyMiss": 0,
+          "other": 1,
+          "cases": 19,
+          "failureRate": 0.052632
+        }
+      },
+      "failedLockedCases": 1,
+      "limitations": [
+        "Architecture Decision Set was reused after Phase 2 and is not an independent generalization estimate.",
+        "Natural Turkish is an automated proxy until the sealed blind human evaluation is completed."
+      ]
+    }
+  },
+  "sourceArtifacts": {
+    "phase2ManifestSha256": "ac7651d94e9bb87818e99eab007d6f7227188cc2a4bb13a355025e96d550bcfe",
+    "phase3ManifestSha256": "d61e0a4f2b3fd19076b87969ee8bc936c098febc31c8105764b2c7dbefac54ca",
+    "phase4ManifestSha256": "11bc3327765cfe58a74dd898e260bf01d388d4a62eba9e5d17faeb10f7a8620a",
+    "architectureBaseResultsSha256": "bd99d751d6a609742a4d9190f1988c30de7c8327e53921a95fadb623e18a1371",
+    "architectureLunaResultsSha256": "b5c9c8d510e6128a57f26f75dddf47435bb972b3d185c74d2c0037cbaf3044eb",
+    "lockedAutomatedSha256": "00a32e6ed76d0ab8409d2f460c44541785e389c44c123b982e673628ddb1ba93"
+  },
+  "boundaries": {
+    "productionAffected": false,
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "rawQuestionsInRepository": false,
+    "independentBlindHumanEvaluationComplete": false
+  }
+}
