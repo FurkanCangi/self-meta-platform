@@ -1,0 +1,106 @@
+{
+  "schemaVersion": "dna-architecture-tournament-regression-hashes@1",
+  "frozenControlGitSha": "9b54fd70411783e5f179f0cddc4564f33226447a",
+  "rawQuestionsStored": false,
+  "rawAnswersStored": false,
+  "count": 12,
+  "aggregateSha256": "abb5a88e7f33f1b8c0dec05917598af38dce10adb539c7c9a6010470c5f746d0",
+  "rows": [
+    {
+      "id": "baseline-01",
+      "requestSha256": "692ce7112a46cd9df8b8bd7a9444ce2346af5689aaaa2a70b39c70e5e69adac5",
+      "responseSha256": "d81f2754c634a4a4140490302cb738216e866f381a19332816ef5f9a2205226c",
+      "classification": "clarification",
+      "topic": "conversation.greeting",
+      "engineVersion": "dna-chat-engine@2.1"
+    },
+    {
+      "id": "baseline-02",
+      "requestSha256": "cf7699876023e3007f98e6dd1d79e9d15dc80ddfdbba2d6e87e75dbc3fd60790",
+      "responseSha256": "b93e43ca92552200c7f641b114c55b31f2648493a479836478c933d57e985fb6",
+      "classification": "not_available",
+      "topic": null,
+      "engineVersion": "dna-chat-engine@2.1"
+    },
+    {
+      "id": "baseline-03",
+      "requestSha256": "7c5ca59a019072e17b8ffa2a42a95a83c14c4943ca41b819ed3250e721c59d2a",
+      "responseSha256": "c9fe0748e9f944a45dc76e9d2caad3a50eb4f34e4e766ae6a150aef8864af6e7",
+      "classification": "dna_concept",
+      "topic": "Self-regülasyon",
+      "engineVersion": "dna-chat-engine@2.1"
+    },
+    {
+      "id": "baseline-04",
+      "requestSha256": "2e9920ed0857d7e2a2d7188fd76e8dcc1337b97d25186069111d36a2bb105b45",
+      "responseSha256": "6b33484ea221304584c7a0c5682c4a81f5377cd907bd908a90b4f224d130ab93",
+      "classification": "dna_concept",
+      "topic": "Self-regülasyon",
+      "engineVersion": "dna-chat-engine@2.1"
+    },
+    {
+      "id": "baseline-05",
+      "requestSha256": "dc737c3710e8a7723bdf38f34942a1671401887623b02ecacad51998d0967c41",
+      "responseSha256": "d36628ffe3afcf05859cedb544794bd06a1d2c8ef944cbba928b0069e9796fa7",
+      "classification": "dna_concept",
+      "topic": "İnsular korteks",
+      "engineVersion": "dna-chat-engine@2.1"
+    },
+    {
+      "id": "baseline-06",
+      "requestSha256": "b1378760718dede85c45e39ca05106b3ce19c195ed1f06df69eeb91ccfce7b19",
+      "responseSha256": "c1145410100505fe5a87daf6488149e35c0d901b260f02cda5b4359edb9ee28c",
+      "classification": "dna_concept",
+      "topic": "Sempatik ve parasempatik süreçler",
+      "engineVersion": "dna-chat-engine@2.1"
+    },
+    {
+      "id": "baseline-07",
+      "requestSha256": "7eb66050ac8fdd6ab6b04d2fd88c28a7d9f8e9e71de8769a654994844c2a6979",
+      "responseSha256": "c895737df9cd4159a40b7e5e3ec8bc382ee2532bc50792bba56e604b12b20282",
+      "classification": "dna_concept",
+      "topic": "Uyku sağlığı",
+      "engineVersion": "dna-chat-engine@2.1"
+    },
+    {
+      "id": "baseline-08",
+      "requestSha256": "924e487f82689b5b41db75dde65bc54d63ad26561858ff5e6fc9265829a810c6",
+      "responseSha256": "ea49eb2cb21b0c4a66db760b91f39bd0075768a2fc95df89e8cc3749e058f2f4",
+      "classification": "dna_concept",
+      "topic": "Ko-regülasyon",
+      "engineVersion": "dna-chat-engine@2.1"
+    },
+    {
+      "id": "baseline-09",
+      "requestSha256": "08dbf460b9f96587793176882f851a81f7325aa9f9b19ab78bfed0587234eb2a",
+      "responseSha256": "d03f3c2bc0afac391cfb9655412b360039cc8082306f05e2d177d22a24add567",
+      "classification": "dna_concept",
+      "topic": "Kalp hızı değişkenliği",
+      "engineVersion": "dna-chat-engine@2.1"
+    },
+    {
+      "id": "baseline-10",
+      "requestSha256": "143ff8b07b8c8af5013f7e89cd507efc3dedbd5f8524ff7f8388f1f4859f730c",
+      "responseSha256": "f7d8903419f22b71387b83f7f5505dd0b8426c04931bea81be49e48e67227ae3",
+      "classification": "clarification",
+      "topic": "Kalp hızı değişkenliği",
+      "engineVersion": "dna-chat-engine@2.1"
+    },
+    {
+      "id": "baseline-11",
+      "requestSha256": "9d7f9dee5a00b8c73c95da7ccefa66e5898b8327ace82a456cfe0db2459f10cf",
+      "responseSha256": "e2f98d7eb6ed6035f2150dabcfc8f5cc5275635f3510efbb8b1d1e7e864d4d6f",
+      "classification": "refusal",
+      "topic": null,
+      "engineVersion": "dna-chat-engine@2.1"
+    },
+    {
+      "id": "baseline-12",
+      "requestSha256": "dd38ffb1079dc24767b9a414fa186eeb17b5a6858f5cd269f380614a643c9ad7",
+      "responseSha256": "83e375d0006d33393e9c9b0e2b1fbc7effd201d1fc419bcd173149080eaf7c45",
+      "classification": "dna_concept",
+      "topic": "DNA işlevsel profil yorumu",
+      "engineVersion": "dna-chat-engine@2.1"
+    }
+  ]
+}

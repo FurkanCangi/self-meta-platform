@@ -1,0 +1,29 @@
+{
+  "baselineGitSha": "9b54fd70411783e5f179f0cddc4564f33226447a",
+  "buildEvidence": {
+    "command": "npx next build --webpack",
+    "note": "Default Turbopack process stalled without an error and was not counted as a pass.",
+    "result": "passed",
+    "routeCount": 100
+  },
+  "commands": [
+    "chat:tournament:engine-mode",
+    "chat:security",
+    "report:privacy",
+    "chat:api",
+    "chat:determinism",
+    "lint",
+    "build"
+  ],
+  "measuredEvidence": {
+    "apiMockP95Ms": 27.413,
+    "determinismP95Ms": 9.672,
+    "determinismRequests": 8,
+    "privacy": "passed",
+    "repeatsPerRequest": 20,
+    "security": "passed"
+  },
+  "recordedAt": "2026-08-09",
+  "schemaVersion": "dna-architecture-tournament-phase0-gates@1",
+  "status": "passed"
+}

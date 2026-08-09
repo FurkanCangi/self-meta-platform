@@ -1,0 +1,135 @@
+{
+  "benchmarkSha256": "8b025dcda1fb4a02f815ee6835ba3c6628aacbbcb7b35a2a3377109ed9bcf914",
+  "counts": {
+    "categories": {
+      "comparison_relation": 125,
+      "compound_two_question": 100,
+      "followup_correction_focus": 175,
+      "low_lexical_overlap_science": 175,
+      "noisy_colloquial_incomplete": 150,
+      "safety_manipulation": 50,
+      "social_product_help": 150,
+      "unsupported_near_outside": 75
+    },
+    "development": 600,
+    "human": 150,
+    "locked": 250,
+    "splitMatrix": {
+      "comparison_relation": {
+        "development": 75,
+        "human": 19,
+        "locked": 31
+      },
+      "compound_two_question": {
+        "development": 60,
+        "human": 15,
+        "locked": 25
+      },
+      "followup_correction_focus": {
+        "development": 105,
+        "human": 26,
+        "locked": 44
+      },
+      "low_lexical_overlap_science": {
+        "development": 105,
+        "human": 26,
+        "locked": 44
+      },
+      "noisy_colloquial_incomplete": {
+        "development": 90,
+        "human": 22,
+        "locked": 38
+      },
+      "safety_manipulation": {
+        "development": 30,
+        "human": 9,
+        "locked": 11
+      },
+      "social_product_help": {
+        "development": 90,
+        "human": 22,
+        "locked": 38
+      },
+      "unsupported_near_outside": {
+        "development": 45,
+        "human": 11,
+        "locked": 19
+      }
+    },
+    "total": 1000
+  },
+  "evaluationSchema": {
+    "acceptedClaimsAndPassages": true,
+    "forbiddenOutcomes": true,
+    "humanDimensions": [
+      "intent_understanding",
+      "followup_resolution",
+      "topic_focus",
+      "claim_fidelity",
+      "no_new_facts",
+      "turkish_naturalness"
+    ],
+    "latencyMs": "number",
+    "lunaUsage": {
+      "cachedInputTokens": "integer",
+      "costMicrousd": "integer",
+      "inputTokens": "integer",
+      "outputTokens": "integer"
+    },
+    "peakRssMb": "number",
+    "queryFrameGold": true,
+    "topicFocusGold": true
+  },
+  "fileHashes": {
+    "development": {
+      "count": 600,
+      "sha256": "a44f6eeac7c23bf985b87b1b47022072d072f11564a1384d2eeade1fc7f6e70b",
+      "status": null
+    },
+    "firstResultLedger": {
+      "count": null,
+      "sha256": "8e92e0ab7f478a58dd7ce45c070ebea42dea410fa7e29bbc44a302c4e14498f2",
+      "status": "not_run"
+    },
+    "humanAnswerKey": {
+      "count": 150,
+      "sha256": "38499a59804133b8caf14327cc90a41ca2e6408ba72fe479430667326ff8080a",
+      "status": null
+    },
+    "humanQuestions": {
+      "count": 150,
+      "sha256": "c722a40287f89cff7db9f77670108ebf2e7be50cf89702cc605451d9f914b7cf",
+      "status": null
+    },
+    "locked": {
+      "count": 250,
+      "sha256": "00a32e6ed76d0ab8409d2f460c44541785e389c44c123b982e673628ddb1ba93",
+      "status": null
+    }
+  },
+  "governance": {
+    "firstResultLedgerImmutable": true,
+    "groupedBeforeSplit": true,
+    "humanQuestionsVisibleToDevelopment": false,
+    "lockedImmutable": true,
+    "rawQuestionsInRepository": 0,
+    "silentRelabelingAllowed": false
+  },
+  "leakage": {
+    "exact": 0,
+    "groupWise": 0,
+    "highSimilarity": 0,
+    "method": "canonical/claim/paraphrase/surface/evaluation groups + normalized exact + token Jaccard>=0.94 and char-4gram Dice>=0.96",
+    "normalized": 0
+  },
+  "manifestSha256": "148a0531baede1112bc16698b2d16ad7238805ac15e2fef063d5a1970363068e",
+  "researchSsdRelativeRoot": "Outputs/SelfMetaAI/dna-intelligence/architecture-tournament/v2",
+  "schemaVersion": "dna-architecture-decision-set-repository-summary@1",
+  "source": {
+    "ownerUnits": 4008,
+    "ownerUnitsSha256": "0b007f8b4450e7850d7d3425ba499023c71ecd5742c05397d93170b42beeed64",
+    "questionSurfaces": 52106,
+    "questionSurfacesSha256": "d50f8df9fdadfda1b50f11fb03e8d9de2870a2330ba3c04ae871200cb6eebe6f"
+  },
+  "version": "dna-architecture-decision-set@1"
+}

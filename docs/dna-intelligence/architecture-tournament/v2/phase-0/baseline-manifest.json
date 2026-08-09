@@ -1,0 +1,280 @@
+{
+  "baselineAnswers": {
+    "aggregateSha256": "abb5a88e7f33f1b8c0dec05917598af38dce10adb539c7c9a6010470c5f746d0",
+    "count": 12,
+    "fileSha256": "2ea0c2c5dbebb5985432658a9441f78228bc4fc78911488fdc757834c2650849",
+    "rawAnswersStored": false,
+    "rawQuestionsStored": false
+  },
+  "baselineSha256": "3bae2427006741955bdf17ee70b9fb21b77b1f4d2c377c92ebe47d1eb913f02d",
+  "capacity": {
+    "externalCandidatesPreserved": 1000,
+    "externalUnitsLive": 0,
+    "lockedHoldoutQuestions": 1500,
+    "openDevelopmentQuestions": 5000,
+    "ownerKnowledgeUnits": 4008,
+    "ownerSentencesTerminal": 4909,
+    "questionSurfaces": 52106
+  },
+  "captureDate": "2026-08-09",
+  "controlGroup": {
+    "gitSha": "9b54fd70411783e5f179f0cddc4564f33226447a",
+    "publicRuntime": "legacy",
+    "rollbackCommand": "DNA_ENGINE_VERSION=legacy",
+    "tournamentRuntime": "shadow_only"
+  },
+  "environment": {
+    "dnaEngineVersionPresentLocally": false,
+    "localEnvironmentVariableNames": [
+      "EDUCATION_VIDEO_BUCKET",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "OPENAI_API_KEY",
+      "OWNER_AUDIT_EMAILS",
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "VIDEO_PROVIDER"
+    ],
+    "recordedNamesOnly": true,
+    "safeCodeDefault": "legacy",
+    "secretValuesRecorded": false
+  },
+  "hashes": {
+    "answerGenerator": {
+      "fileCount": 4,
+      "files": [
+        {
+          "bytes": 107331,
+          "path": "src/lib/dna/chat/engine.ts",
+          "sha256": "3abf3b0748ef4794d439d8602641b628c6f96da8070567b7698f2096075d5d18"
+        },
+        {
+          "bytes": 4746,
+          "path": "src/lib/dna/chat/ownedCaseAnswer.ts",
+          "sha256": "45e6beff2bb2a4ca22ac888793ba8346032465bbc9c3436dc6e45b67fd4d9e7d"
+        },
+        {
+          "bytes": 2932,
+          "path": "src/lib/dna/chat/runtimeAnswer.ts",
+          "sha256": "f129dc92f1191fff228a533c8bba5495c016d1c43b7fa6c4898e267bd3ed08bb"
+        },
+        {
+          "bytes": 2305,
+          "path": "src/lib/dna/chat/v3ResponseProfiles.ts",
+          "sha256": "067fe67138570a297fd466d44b8fe033be9cae4d0a95d21a8c7984ac1a7f81d4"
+        }
+      ],
+      "sha256": "9dea38f38ba2cace4c928cd9c661bde5be81dfb31ee3dbdc89e10f9b6b9582d8"
+    },
+    "catalogAndBook": {
+      "fileCount": 5,
+      "files": [
+        {
+          "bytes": 4008,
+          "path": "src/lib/dna/chat/catalog/generated/dense/manifest.json",
+          "sha256": "ccaec7374a1a74cb84170ce612eca8c0cc674e647482467b71b5f9f861f25e45"
+        },
+        {
+          "bytes": 3113962,
+          "path": "src/lib/dna/chat/catalog/generated/dense/runtime.json",
+          "sha256": "359435273f307ed7103620a105a30f497be313377396cba0f09e933473a3a73e"
+        },
+        {
+          "bytes": 1525,
+          "path": "src/lib/dna/chat/catalog/generated/owner-book/manifest.json",
+          "sha256": "e4844893b62c8993d407d969bede7b02ace0648034def7d0a6b807333bbe07c4"
+        },
+        {
+          "bytes": 2916542,
+          "path": "src/lib/dna/chat/catalog/generated/owner-book/runtime.json",
+          "sha256": "8d2c08fa8abf43f33d08e96aa34b592eafc4982662827cb350ca6174038f8581"
+        },
+        {
+          "bytes": 2428,
+          "path": "src/lib/dna/chat/catalog/index.ts",
+          "sha256": "fb90499cfd7a50c56a1c5e85d949cf6a45b0203a134a17cc52b870d910229b66"
+        }
+      ],
+      "sha256": "2e3dec63def6661343ec903aa7d7b50cb4646395efc05983548c02e5405448f5"
+    },
+    "conversationState": {
+      "fileCount": 2,
+      "files": [
+        {
+          "bytes": 8333,
+          "path": "src/lib/dna/chat/conversationPolicy.ts",
+          "sha256": "cbdc4843281fc2b2e93b2964ca348c52259b5a73a836fcbb2aae7132b515873e"
+        },
+        {
+          "bytes": 8502,
+          "path": "src/lib/dna/chat/types.ts",
+          "sha256": "2d81b0bd4b14aeaf57918d8d13cf1294c347bec0e09537a775035165a56788a1"
+        }
+      ],
+      "sha256": "f37d396cc6d343cc471ab68d8997f21793e660947c1a3432b7ba0fab772715d3"
+    },
+    "ftrl": {
+      "fileCount": 2,
+      "files": [
+        {
+          "bytes": 3406561,
+          "path": "src/lib/dna/chat/catalog/generated/semantic-router/artifact.json",
+          "sha256": "68ed3180c9b56e4dfb2b3c9ec364c0b2567586ab6111a0f65c8a4d0b92f1cce1"
+        },
+        {
+          "bytes": 15869,
+          "path": "src/lib/dna/chat/semanticRouter.ts",
+          "sha256": "608d4daca9e461ae52dfd2e063c82fd401a610e57bdf187c6df5950ce812027a"
+        }
+      ],
+      "sha256": "925af20ed38767512ecaebbdc0582163dbe650844f188d8807081ce774e8f2e4"
+    },
+    "lexicalRetrieval": {
+      "fileCount": 3,
+      "files": [
+        {
+          "bytes": 77810,
+          "path": "src/lib/dna/chat/catalog/search.ts",
+          "sha256": "6bd93c2a298f8b218d2f290b810bc4d854170d097974aa804267bc8618c7f789"
+        },
+        {
+          "bytes": 107331,
+          "path": "src/lib/dna/chat/engine.ts",
+          "sha256": "3abf3b0748ef4794d439d8602641b628c6f96da8070567b7698f2096075d5d18"
+        },
+        {
+          "bytes": 9561,
+          "path": "src/lib/dna/chat/text.ts",
+          "sha256": "a305f8ae13616b5de922c55fa6ebc8d284d95285c39d04dacfeb5b37d77b19c1"
+        }
+      ],
+      "sha256": "7d21945e8c4bcd356ce18b70de9fde662b28768d8e5fb1fc0681be93d1480d4b"
+    },
+    "luna": {
+      "fileCount": 3,
+      "files": [
+        {
+          "bytes": 15762,
+          "path": "src/lib/dna/chat/lunaPolicy.ts",
+          "sha256": "33b8e5c5e44a920ba166b3ae814331de064c4614ccec69862bfe6a594b4db0f6"
+        },
+        {
+          "bytes": 24788,
+          "path": "src/lib/dna/chat/lunaServer.ts",
+          "sha256": "2c35a867446fcf46f0adb206e3c863e26399429ea21ef50a702122ad069c95d5"
+        },
+        {
+          "bytes": 4016,
+          "path": "src/lib/dna/chat/lunaUsage.ts",
+          "sha256": "0059a1d113d089b8a091a3a27a0023797fd80c65c607bd1ec4e6e5588977cb04"
+        }
+      ],
+      "sha256": "feef6053ae83bdbfab243d3a611ea90061c60e1030d9d46f75ef651cad14533b"
+    },
+    "regression": {
+      "fileCount": 5,
+      "files": [
+        {
+          "bytes": 28365,
+          "path": "scripts/run-dna-chat-api-contract-tests.ts",
+          "sha256": "cf682a54bbf2ee0bed8ae0f2a3db0101e530055235f93a9afdea0df71abacfea"
+        },
+        {
+          "bytes": 7020,
+          "path": "scripts/run-dna-chat-conversation-flex-tests.ts",
+          "sha256": "8fd32ef76e977cb9b66a9acab378bb34c3e00e625286cae280e5e98e5dd687c1"
+        },
+        {
+          "bytes": 3112,
+          "path": "scripts/run-dna-chat-determinism-tests.ts",
+          "sha256": "21e23467dd472aa8346f5d5143aad844cf5a90a862f5f4e259bf93f4a1728acb"
+        },
+        {
+          "bytes": 20105,
+          "path": "scripts/run-dna-chat-quality-tests.ts",
+          "sha256": "2da028c61237eb1f7ce010a9e93da62160e6be4b64f1d6a2003d6c4194af2518"
+        },
+        {
+          "bytes": 49962,
+          "path": "scripts/run-dna-chat-security-tests.ts",
+          "sha256": "70ed57f9193e3ef0112656f02dd78a1ddab078297416df4830f061c9fd48097a"
+        }
+      ],
+      "sha256": "aee3bfe877a0f0ead780e441fcae185e83769d4a9b246ecd9b608bd7ccde808c"
+    },
+    "safety": {
+      "fileCount": 3,
+      "files": [
+        {
+          "bytes": 5483,
+          "path": "src/lib/dna/chat/authorityRegistry.ts",
+          "sha256": "8c6327381f1ec7388f796c5fe7d056c255cad7bfd016bcc230f304150b869aa2"
+        },
+        {
+          "bytes": 10534,
+          "path": "src/lib/dna/chat/intendedUse.ts",
+          "sha256": "3ada8fff770c08ed12c85dfc611142ee4f5d09c6d6d8cf5dedea4ca26e724402"
+        },
+        {
+          "bytes": 46232,
+          "path": "src/lib/dna/chat/safety.ts",
+          "sha256": "6ba2540e224714c03f9732098f62a15909ae5907235b51352b355fdbb367f0a7"
+        }
+      ],
+      "sha256": "5da3dfae684c41fa83b282a05d4b6a59e41541e0d746e010b408a15ea9cfab2a"
+    }
+  },
+  "metrics": {
+    "holdoutFirstResultImmutable": true,
+    "lockedHoldoutCurrentEngineResult": {
+      "accuracy": 97.133,
+      "caseCount": 1500,
+      "correct": 1457,
+      "fileSha256": "ff16dcd6ab8a67e75a8c070d966eb90d40d0eeabf51bb89244807168a7e06511",
+      "p95Ms": 24.184,
+      "resultSha256": "605dee8bc2ecf798fbdc3136ce2a300ef03bb00da4d1be7466c7dc4f66f0cc73"
+    },
+    "lockedHoldoutFirstResult": {
+      "accuracy": 96.2,
+      "caseCount": 1500,
+      "correct": 1443,
+      "fileSha256": "e44b0186586f824772db88f08361d1731ba2ebb9161405ebfcf9320bf9aedd66",
+      "p95Ms": 15.377,
+      "resultSha256": "6d1d506605b74d94ad0af01e1850961d7e226f27f39a5cc9d5f1c55147fd8f3c"
+    },
+    "lockedHoldoutPostFixResult": {
+      "accuracy": 97.133,
+      "caseCount": 1500,
+      "correct": 1457,
+      "fileSha256": "ff16dcd6ab8a67e75a8c070d966eb90d40d0eeabf51bb89244807168a7e06511",
+      "p95Ms": 24.184,
+      "resultSha256": "605dee8bc2ecf798fbdc3136ce2a300ef03bb00da4d1be7466c7dc4f66f0cc73"
+    },
+    "openDevelopment": {
+      "accuracy": 98.32,
+      "caseCount": 5000,
+      "correct": 4916,
+      "fileSha256": "ea3dea972b0eac698b1016e4bf0019ca9688a5f818527731e6c47ceccd21ed15",
+      "p95Ms": 0.758,
+      "resultSha256": "c735f1caba76415888956fc132e57102fd3b5af11cf9ff2128cc843ba45db7c2"
+    }
+  },
+  "privacy": {
+    "rawQuestionsInRepository": 0,
+    "secretValuesInManifest": 0
+  },
+  "productionVerification": {
+    "alias": "https://self-meta-platform.vercel.app",
+    "claimBoundary": "Git SHA is the frozen reproducible control; production deployment SHA was not guessed.",
+    "deploymentCommit": null,
+    "projectName": "self-meta-platform",
+    "status": "unverified_vercel_scope_403"
+  },
+  "schemaVersion": "dna-architecture-tournament-production-freeze@1",
+  "versions": {
+    "catalog": "dna-chat-catalog@2",
+    "engine": "dna-chat-engine@2.1",
+    "ownerBookRuntimeSha256": "8d2c08fa8abf43f33d08e96aa34b592eafc4982662827cb350ca6174038f8581",
+    "ownerBookSourceSha256": "e8c6643bbc70dd0c8147fb79cc51a6d0d674f21197d917cf6127ca8fa90c8c59",
+    "questionSurfaceSha256": "d50f8df9fdadfda1b50f11fb03e8d9de2870a2330ba3c04ae871200cb6eebe6f"
+  }
+}
