@@ -1,0 +1,460 @@
+{
+  "schemaVersion": "dna-architecture-tournament-phase3@1",
+  "generatedAt": "2026-08-09T10:18:00.824Z",
+  "benchmarkSha256": "8b025dcda1fb4a02f815ee6835ba3c6628aacbbcb7b35a2a3377109ed9bcf914",
+  "evaluationStatus": "architecture_decision_set_reused_after_phase2_not_independent_generalization",
+  "architectures": {
+    "S0": {
+      "development": {
+        "cases": 600,
+        "endToEndAccuracy": 0.5866666666666667,
+        "latencyMs": {
+          "p50": 142.47774999972262,
+          "p95": 391.80812499995227
+        },
+        "peakRssMb": 160,
+        "providerCostUsd": 0,
+        "safetyRefusal": 1,
+        "socialHandling": 1,
+        "supportedClaimAccuracy": 0.43448275862068964,
+        "threshold": 0.748949,
+        "unsupportedAbstention": 0.9555555555555556,
+        "wrongHighConfidence": 233
+      },
+      "locked": {
+        "cases": 250,
+        "endToEndAccuracy": 0.616,
+        "latencyMs": {
+          "p50": 142.47774999972262,
+          "p95": 391.80812499995227
+        },
+        "peakRssMb": 160,
+        "providerCostUsd": 0,
+        "safetyRefusal": 1,
+        "socialHandling": 1,
+        "supportedClaimAccuracy": 0.47802197802197804,
+        "threshold": 0.748949,
+        "unsupportedAbstention": 0.9473684210526315,
+        "wrongHighConfidence": 95
+      },
+      "thresholdSelectedOn": "development"
+    },
+    "S1": {
+      "development": {
+        "cases": 600,
+        "endToEndAccuracy": 0.9883333333333333,
+        "latencyMs": {
+          "p50": 125.63958299972182,
+          "p95": 277.63766699995176
+        },
+        "peakRssMb": 160,
+        "providerCostUsd": 0,
+        "safetyRefusal": 1,
+        "socialHandling": 1,
+        "supportedClaimAccuracy": 0.9885057471264368,
+        "threshold": 0.617638,
+        "unsupportedAbstention": 0.9555555555555556,
+        "wrongHighConfidence": 2
+      },
+      "locked": {
+        "cases": 250,
+        "endToEndAccuracy": 0.996,
+        "latencyMs": {
+          "p50": 125.63958299972182,
+          "p95": 277.63766699995176
+        },
+        "peakRssMb": 160,
+        "providerCostUsd": 0,
+        "safetyRefusal": 1,
+        "socialHandling": 1,
+        "supportedClaimAccuracy": 1,
+        "threshold": 0.617638,
+        "unsupportedAbstention": 0.9473684210526315,
+        "wrongHighConfidence": 0
+      },
+      "thresholdSelectedOn": "development"
+    },
+    "S2": {
+      "development": {
+        "cases": 600,
+        "endToEndAccuracy": 0.9733333333333334,
+        "latencyMs": {
+          "p50": 141.39270799944097,
+          "p95": 609.8358330000774
+        },
+        "peakRssMb": 870.797,
+        "providerCostUsd": 0,
+        "safetyRefusal": 1,
+        "socialHandling": 1,
+        "supportedClaimAccuracy": 0.967816091954023,
+        "threshold": 0.767887,
+        "unsupportedAbstention": 0.9555555555555556,
+        "wrongHighConfidence": 1
+      },
+      "locked": {
+        "cases": 250,
+        "endToEndAccuracy": 0.98,
+        "latencyMs": {
+          "p50": 141.39270799944097,
+          "p95": 609.8358330000774
+        },
+        "peakRssMb": 870.797,
+        "providerCostUsd": 0,
+        "safetyRefusal": 1,
+        "socialHandling": 1,
+        "supportedClaimAccuracy": 0.978021978021978,
+        "threshold": 0.767887,
+        "unsupportedAbstention": 0.9473684210526315,
+        "wrongHighConfidence": 0
+      },
+      "thresholdSelectedOn": "development"
+    },
+    "S3": {
+      "development": {
+        "cases": 600,
+        "endToEndAccuracy": 0.7333333333333333,
+        "latencyMs": {
+          "p50": 283.6466669987203,
+          "p95": 1154.1580409993912
+        },
+        "peakRssMb": 870.797,
+        "providerCostUsd": 0,
+        "safetyRefusal": 1,
+        "socialHandling": 1,
+        "supportedClaimAccuracy": 0.6367816091954023,
+        "threshold": 0.797052,
+        "unsupportedAbstention": 0.9555555555555556,
+        "wrongHighConfidence": 131
+      },
+      "locked": {
+        "cases": 250,
+        "endToEndAccuracy": 0.656,
+        "latencyMs": {
+          "p50": 283.6466669987203,
+          "p95": 1154.1580409993912
+        },
+        "peakRssMb": 870.797,
+        "providerCostUsd": 0,
+        "safetyRefusal": 1,
+        "socialHandling": 1,
+        "supportedClaimAccuracy": 0.532967032967033,
+        "threshold": 0.797052,
+        "unsupportedAbstention": 0.9473684210526315,
+        "wrongHighConfidence": 77
+      },
+      "thresholdSelectedOn": "development"
+    },
+    "S4": {
+      "reason": "B2_crossencoder_eliminated_in_phase2",
+      "status": "not_opened"
+    },
+    "S5": {
+      "development": {
+        "cases": 600,
+        "endToEndAccuracy": 0.9733333333333334,
+        "supportedClaimAccuracy": 0.967816091954023,
+        "safetyRefusal": 1,
+        "validatorPassRate": 0.9454976303317536,
+        "deterministicFallbackRate": 0.054502369668246446,
+        "lunaCalls": 422,
+        "lunaCallRate": 0.7033333333333334,
+        "lunaLatencyMs": {
+          "p50": 311.8709791000001,
+          "p95": 684.1024917000002
+        },
+        "mandatoryDisplayedViolations": {
+          "sourceOutsideClaim": 0,
+          "inventedSource": 0,
+          "safetyViolation": 0,
+          "causalityEscalation": 0,
+          "validatorFailureShown": 0
+        },
+        "providerCostUsdApprox": 0.1810779789473684,
+        "totalLatencyMs": {
+          "p50": 453.2636870994411,
+          "p95": 1293.9383247000776
+        },
+        "costPer1000QueriesUsd": 0.30179663157894737
+      },
+      "locked": {
+        "cases": 250,
+        "endToEndAccuracy": 0.98,
+        "supportedClaimAccuracy": 0.978021978021978,
+        "safetyRefusal": 1,
+        "validatorPassRate": 0.949438202247191,
+        "deterministicFallbackRate": 0.05056179775280899,
+        "lunaCalls": 178,
+        "lunaCallRate": 0.712,
+        "lunaLatencyMs": {
+          "p50": 302.5931542000006,
+          "p95": 500.14164999999923
+        },
+        "mandatoryDisplayedViolations": {
+          "sourceOutsideClaim": 0,
+          "inventedSource": 0,
+          "safetyViolation": 0,
+          "causalityEscalation": 0,
+          "validatorFailureShown": 0
+        },
+        "providerCostUsdApprox": 0.07637886315789473,
+        "totalLatencyMs": {
+          "p50": 443.98586219944156,
+          "p95": 1109.9774830000765
+        },
+        "costPer1000QueriesUsd": 0.3055154526315789
+      }
+    },
+    "S6": {
+      "development": {
+        "cases": 600,
+        "endToEndAccuracy": 0.7333333333333333,
+        "supportedClaimAccuracy": 0.6367816091954023,
+        "safetyRefusal": 1,
+        "validatorPassRate": 0.9406175771971497,
+        "deterministicFallbackRate": 0.05938242280285035,
+        "lunaCalls": 421,
+        "lunaCallRate": 0.7016666666666667,
+        "lunaLatencyMs": {
+          "p50": 306.98675000000077,
+          "p95": 652.1863250000024
+        },
+        "mandatoryDisplayedViolations": {
+          "sourceOutsideClaim": 0,
+          "inventedSource": 0,
+          "safetyViolation": 0,
+          "causalityEscalation": 0,
+          "validatorFailureShown": 0
+        },
+        "providerCostUsdApprox": 0.1806488842105263,
+        "totalLatencyMs": {
+          "p50": 590.633416998721,
+          "p95": 1806.3443659993936
+        },
+        "costPer1000QueriesUsd": 0.30108147368421045
+      },
+      "locked": {
+        "cases": 250,
+        "endToEndAccuracy": 0.656,
+        "supportedClaimAccuracy": 0.532967032967033,
+        "safetyRefusal": 1,
+        "validatorPassRate": 0.9491525423728814,
+        "deterministicFallbackRate": 0.05084745762711865,
+        "lunaCalls": 177,
+        "lunaCallRate": 0.708,
+        "lunaLatencyMs": {
+          "p50": 326.6875624999986,
+          "p95": 483.8775041999994
+        },
+        "mandatoryDisplayedViolations": {
+          "sourceOutsideClaim": 0,
+          "inventedSource": 0,
+          "safetyViolation": 0,
+          "causalityEscalation": 0,
+          "validatorFailureShown": 0
+        },
+        "providerCostUsdApprox": 0.07594976842105262,
+        "totalLatencyMs": {
+          "p50": 610.334229498719,
+          "p95": 1638.0355451993905
+        },
+        "costPer1000QueriesUsd": 0.3037990736842105
+      }
+    },
+    "S7": {
+      "status": "not_opened",
+      "reason": "local_Qwen_C3_resource_gate_failed"
+    },
+    "S8": {
+      "status": "not_opened",
+      "reason": "A4_and_C3_resource_gates_failed"
+    },
+    "S9": {
+      "fixedRateComparison": {
+        "5pct": {
+          "development": {
+            "cases": 600,
+            "endToEndAccuracy": 0.9866666666666667,
+            "lunaCalls": 22,
+            "lunaCallRate": 0.03666666666666667,
+            "validatorFailureShown": 0,
+            "safetyRefusal": 1,
+            "unsupportedWrongAnswer": 0
+          },
+          "locked": {
+            "cases": 250,
+            "endToEndAccuracy": 0.996,
+            "lunaCalls": 7,
+            "lunaCallRate": 0.028,
+            "validatorFailureShown": 0,
+            "safetyRefusal": 1,
+            "unsupportedWrongAnswer": 0
+          }
+        },
+        "10pct": {
+          "development": {
+            "cases": 600,
+            "endToEndAccuracy": 0.985,
+            "lunaCalls": 44,
+            "lunaCallRate": 0.07333333333333333,
+            "validatorFailureShown": 0,
+            "safetyRefusal": 1,
+            "unsupportedWrongAnswer": 0
+          },
+          "locked": {
+            "cases": 250,
+            "endToEndAccuracy": 0.992,
+            "lunaCalls": 17,
+            "lunaCallRate": 0.068,
+            "validatorFailureShown": 0,
+            "safetyRefusal": 1,
+            "unsupportedWrongAnswer": 0
+          }
+        },
+        "20pct": {
+          "development": {
+            "cases": 600,
+            "endToEndAccuracy": 0.9816666666666667,
+            "lunaCalls": 87,
+            "lunaCallRate": 0.145,
+            "validatorFailureShown": 0,
+            "safetyRefusal": 1,
+            "unsupportedWrongAnswer": 0
+          },
+          "locked": {
+            "cases": 250,
+            "endToEndAccuracy": 0.988,
+            "lunaCalls": 32,
+            "lunaCallRate": 0.128,
+            "validatorFailureShown": 0,
+            "safetyRefusal": 1,
+            "unsupportedWrongAnswer": 0
+          }
+        },
+        "30pct": {
+          "development": {
+            "cases": 600,
+            "endToEndAccuracy": 0.9766666666666667,
+            "lunaCalls": 130,
+            "lunaCallRate": 0.21666666666666667,
+            "validatorFailureShown": 0,
+            "safetyRefusal": 1,
+            "unsupportedWrongAnswer": 0
+          },
+          "locked": {
+            "cases": 250,
+            "endToEndAccuracy": 0.984,
+            "lunaCalls": 58,
+            "lunaCallRate": 0.232,
+            "validatorFailureShown": 0,
+            "safetyRefusal": 1,
+            "unsupportedWrongAnswer": 0
+          }
+        }
+      },
+      "adaptive": {
+        "selectedRate": 0,
+        "selectedThreshold": null,
+        "development": {
+          "cases": 600,
+          "endToEndAccuracy": 0.9883333333333333,
+          "lunaCalls": 0,
+          "lunaCallRate": 0,
+          "validatorFailureShown": 0,
+          "safetyRefusal": 1,
+          "unsupportedWrongAnswer": 0,
+          "providerCostUsdApprox": 0,
+          "costPer1000QueriesUsd": 0,
+          "latencyMs": {
+            "p50": 125.63958299972182,
+            "p95": 277.63766699995176
+          }
+        },
+        "locked": {
+          "cases": 250,
+          "endToEndAccuracy": 0.996,
+          "lunaCalls": 0,
+          "lunaCallRate": 0,
+          "validatorFailureShown": 0,
+          "safetyRefusal": 1,
+          "unsupportedWrongAnswer": 0,
+          "providerCostUsdApprox": 0,
+          "costPer1000QueriesUsd": 0,
+          "latencyMs": {
+            "p50": 125.63958299972182,
+            "p95": 277.63766699995176
+          }
+        }
+      },
+      "decision": "collapsed_to_S1_no_measured_Luna_benefit"
+    },
+    "S10": {
+      "selected": {
+        "highQuantile": 0,
+        "lowQuantile": 0,
+        "development": {
+          "cases": 600,
+          "endToEndAccuracy": 0.9883333333333333,
+          "lunaCalls": 0,
+          "lunaCallRate": 0,
+          "validatorFailureShown": 0,
+          "safetyRefusal": 1,
+          "unsupportedWrongAnswer": 0,
+          "providerCostUsdApprox": 0,
+          "costPer1000QueriesUsd": 0,
+          "latencyMs": {
+            "p50": 125.63958299972182,
+            "p95": 277.63766699995176
+          }
+        },
+        "locked": {
+          "cases": 250,
+          "endToEndAccuracy": 0.996,
+          "lunaCalls": 0,
+          "lunaCallRate": 0,
+          "validatorFailureShown": 0,
+          "safetyRefusal": 1,
+          "unsupportedWrongAnswer": 0,
+          "providerCostUsdApprox": 0,
+          "costPer1000QueriesUsd": 0,
+          "latencyMs": {
+            "p50": 125.63958299972182,
+            "p95": 277.63766699995176
+          }
+        }
+      },
+      "decision": "collapsed_to_S1_neural_and_Luna_paths_added_no_value"
+    },
+    "S11": {
+      "status": "not_opened",
+      "reason": "local_SLM_latency_and_parser_accuracy_failed_phase2_resource_gate"
+    },
+    "S12": {
+      "status": "not_opened",
+      "reason": "Luna_A3_teacher_underperformed_A1;_distillation_not_justified_without_human_label_sampling"
+    }
+  },
+  "shortlist": [
+    "S1",
+    "S2",
+    "S5"
+  ],
+  "shortlistReason": {
+    "S1": "highest locked accuracy, zero provider cost and low RAM",
+    "S2": "semantic retrieval challenger with 0.98 locked accuracy",
+    "S5": "same retrieval quality as S2 with validated fluent realization and deterministic fallback"
+  },
+  "cascadeConclusion": "S9 and S10 adaptively collapsed to S1 because neither neural routing nor Luna improved end-to-end correctness on development data.",
+  "actualLunaTournamentCostUsd": 0.366876,
+  "sourceArtifacts": {
+    "architecture-base-results.json": "bd99d751d6a609742a4d9190f1988c30de7c8327e53921a95fadb623e18a1371",
+    "architecture-luna-results.json": "b5c9c8d510e6128a57f26f75dddf47435bb972b3d185c74d2c0037cbaf3044eb",
+    "luna-architecture-cache.json": "2cb25b31406407d9b02f9bbf1b0201b22e8e7d98b2658ee10aca54fe980542e3"
+  },
+  "boundaries": {
+    "productionAffected": false,
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "rawQuestionsInRepository": false,
+    "independentBlindHumanEvaluationComplete": false
+  }
+}
