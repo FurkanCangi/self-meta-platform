@@ -1,0 +1,521 @@
+{
+  "schemaVersion": "dna-architecture-layer-tournament-phase2@1",
+  "generatedAt": "2026-08-09T09:50:43.322Z",
+  "benchmarkSha256": "8b025dcda1fb4a02f815ee6835ba3c6628aacbbcb7b35a2a3377109ed9bcf914",
+  "benchmark": {
+    "development": 600,
+    "lockedAutomated": 250,
+    "blindHuman": 150
+  },
+  "status": "automated_layer_tournament_complete_blind_human_preference_pending",
+  "postSealSelectionRevision": {
+    "sealedFirstResultPreserved": true,
+    "layerCFrom": [
+      "C1_improved_controlled_nlg",
+      "C2_retrieve_and_fill"
+    ],
+    "layerCTo": [
+      "C0_existing_deterministic",
+      "C2_retrieve_and_fill"
+    ],
+    "reason": "C0 locked completeness and relevance exceeded C1; finalist interpretation was corrected without changing any locked answer or metric."
+  },
+  "layerA": {
+    "A0": {
+      "cases": 850,
+      "intentAccuracy": 0.10235294117647059,
+      "topicMacroF1": 0.25333333333333324,
+      "focusMacroF1": 0,
+      "followupAccuracy": 0.4966442953020134,
+      "correctionAccuracy": 0,
+      "comparisonTargetF1": 0.4277456647398844,
+      "twoQuestionSplitF1": 0,
+      "oodAuroc": 0.8008117639693658,
+      "frameExactMatch": 0.042352941176470586,
+      "latencyMs": {
+        "p50": 16.63404199999991,
+        "p95": 159.82783299999983
+      },
+      "peakRssMb": 125,
+      "costPer1000Usd": 0,
+      "evaluationScope": "development_plus_locked",
+      "development": {
+        "cases": 600,
+        "intentAccuracy": 0.09666666666666666,
+        "topicMacroF1": 0.25166666666666665,
+        "focusMacroF1": 0,
+        "followupAccuracy": 0.49523809523809526,
+        "correctionAccuracy": 0,
+        "comparisonTargetF1": 0.4462809917355372,
+        "twoQuestionSplitF1": 0,
+        "oodAuroc": 0.8047788227098572,
+        "frameExactMatch": 0.03833333333333333,
+        "latencyMs": {
+          "p50": 16.369957999999997,
+          "p95": 163.7087079999999
+        },
+        "peakRssMb": 135,
+        "costPer1000Usd": 0
+      },
+      "locked": {
+        "cases": 250,
+        "intentAccuracy": 0.116,
+        "topicMacroF1": 0.2573333333333333,
+        "focusMacroF1": 0,
+        "followupAccuracy": 0.5,
+        "correctionAccuracy": 0,
+        "comparisonTargetF1": 0.38461538461538464,
+        "twoQuestionSplitF1": 0,
+        "oodAuroc": 0.789754363283775,
+        "frameExactMatch": 0.052,
+        "latencyMs": {
+          "p50": 17.49870800000008,
+          "p95": 147.00270799999998
+        },
+        "peakRssMb": 138,
+        "costPer1000Usd": 0
+      }
+    },
+    "A1": {
+      "cases": 850,
+      "intentAccuracy": 0.3458823529411765,
+      "topicMacroF1": 0.8137254901960784,
+      "focusMacroF1": 0.7288743724678166,
+      "followupAccuracy": 0.4966442953020134,
+      "correctionAccuracy": 0.4868421052631579,
+      "comparisonTargetF1": 0.9826589595375722,
+      "twoQuestionSplitF1": 1,
+      "oodAuroc": 0.35902991771064474,
+      "frameExactMatch": 0.26235294117647057,
+      "latencyMs": {
+        "p50": 0.6607090000002245,
+        "p95": 32.832249999999476
+      },
+      "peakRssMb": 147,
+      "costPer1000Usd": 0,
+      "evaluationScope": "development_plus_locked",
+      "development": {
+        "cases": 600,
+        "intentAccuracy": 0.3433333333333333,
+        "topicMacroF1": 0.805,
+        "focusMacroF1": 0.7272155072768081,
+        "followupAccuracy": 0.49523809523809526,
+        "correctionAccuracy": 0.49019607843137253,
+        "comparisonTargetF1": 0.9752066115702479,
+        "twoQuestionSplitF1": 1,
+        "oodAuroc": 0.3675513758272379,
+        "frameExactMatch": 0.25333333333333335,
+        "latencyMs": {
+          "p50": 0.6621249999998327,
+          "p95": 30.726791999999932
+        },
+        "peakRssMb": 151,
+        "costPer1000Usd": 0
+      },
+      "locked": {
+        "cases": 250,
+        "intentAccuracy": 0.352,
+        "topicMacroF1": 0.8346666666666667,
+        "focusMacroF1": 0.7328556489262371,
+        "followupAccuracy": 0.5,
+        "correctionAccuracy": 0.48,
+        "comparisonTargetF1": 1,
+        "twoQuestionSplitF1": 1,
+        "oodAuroc": 0.3382352941176471,
+        "frameExactMatch": 0.284,
+        "latencyMs": {
+          "p50": 0.6605409999992844,
+          "p95": 32.832249999999476
+        },
+        "peakRssMb": 154,
+        "costPer1000Usd": 0
+      }
+    },
+    "A2": {
+      "algorithm": "multilingual-e5-small + balanced logistic intent/slot heads",
+      "comparisonTargets": "retrieval_topic_candidates",
+      "correctionAccuracy": 1,
+      "costPer1000Usd": 0,
+      "evaluationCases": 250,
+      "focusMacroF1": null,
+      "followupAccuracy": 1,
+      "frameExactMatch": 0.404,
+      "intentAccuracy": 0.664,
+      "latencyMs": {
+        "p50": 142.91449999927863,
+        "p95": 577.1544579993133
+      },
+      "oodAuroc": 0.44384292178409823,
+      "peakRssMb": 870.797,
+      "topicMacroF1": 0.6631144429040822,
+      "trainingCases": 600,
+      "twoQuestionSplitF1": 1
+    },
+    "A3": {
+      "evaluationCases": 250,
+      "intentAccuracy": 0.372,
+      "topicMacroF1": 0.524,
+      "focusMacroF1": 0.38417179083730174,
+      "followupAccuracy": 0.7954545454545454,
+      "correctionAccuracy": 0.48,
+      "comparisonTargetF1": 0.3717948717948717,
+      "twoQuestionSplitF1": 1,
+      "oodAuroc": 0.1246969696969697,
+      "frameExactMatch": 0.192,
+      "latencyMs": {
+        "p50": 410.9644625000001,
+        "p95": 704.3601125000001
+      },
+      "costPer1000Usd": 0.692425925925926
+    },
+    "A4": {
+      "costPer1000Usd": 0,
+      "decision": "resource_gate_challenger",
+      "evaluationCases": 20,
+      "fullLockedCoverage": false,
+      "intentAccuracy": 0.05,
+      "latencyMs": {
+        "p50": 3593.289458000072,
+        "p95": 5085.884707999867
+      },
+      "resourceGateSample": 20,
+      "topicMacroF1Approx": 0.2,
+      "twoQuestionSplitAccuracy": 0.9,
+      "validJson": 0.95
+    },
+    "automatedFinalists": [
+      "A1_improved_deterministic",
+      "A2_e5_linear_parser"
+    ],
+    "decision": "A1 has the strongest topic/focus/comparison routing at zero marginal cost; A2 has the strongest intent and frame exact match but adds about 871 MB peak RSS and sub-second CPU latency. A3 and A4 do not advance."
+  },
+  "layerB": {
+    "B0": {
+      "cases": 250,
+      "confidenceThreshold": 0.9290245524618461,
+      "latencyMs": {
+        "p50": 124.97904199972254,
+        "p95": 244.80541699995229
+      },
+      "mrr": 1,
+      "ndcgAt5": 1,
+      "peakRssMb": 870.797,
+      "recallAt1": 0.9313186813186813,
+      "recallAt3": 1,
+      "recallAt5": 1,
+      "supportedCases": 182,
+      "unsupportedCases": 68,
+      "unsupportedDiscrimination": 1,
+      "wrongHighConfidence": 0
+    },
+    "B1": {
+      "cases": 250,
+      "confidenceThreshold": 0.8663478947993904,
+      "latencyMs": {
+        "p50": 140.7321669994417,
+        "p95": 577.0035830000779
+      },
+      "mrr": 0.9908424908424909,
+      "ndcgAt5": 0.9829382134965874,
+      "peakRssMb": 870.797,
+      "recallAt1": 0.9148351648351648,
+      "recallAt3": 0.9725274725274725,
+      "recallAt5": 0.9972527472527473,
+      "supportedCases": 182,
+      "unsupportedCases": 68,
+      "unsupportedDiscrimination": 1,
+      "wrongHighConfidence": 0
+    },
+    "B2": {
+      "cases": 50,
+      "confidenceThreshold": 0.0901454353898684,
+      "decision": "eliminated_if_no_material_gain",
+      "fullLockedCoverage": false,
+      "latencyMs": {
+        "p50": 316.58645900097326,
+        "p95": 542.8941669997585
+      },
+      "mrr": 0.9504504504504504,
+      "ndcgAt5": 0.9338013660194499,
+      "peakRssMb": 1035.906,
+      "recallAt1": 0.8783783783783784,
+      "recallAt3": 0.9459459459459459,
+      "recallAt5": 0.9459459459459459,
+      "resourceGateSample": 50,
+      "supportedCases": 37,
+      "unsupportedCases": 13,
+      "unsupportedDiscrimination": 0,
+      "wrongHighConfidence": 2
+    },
+    "automatedFinalists": [
+      "B0_legacy_lexical",
+      "B1_e5_hybrid_rrf"
+    ],
+    "decision": "B0 reached Recall@5 1.0 on this lexical-heavy locked set. B1 reached 0.9973 and remains the semantic challenger. B2 was slower, less accurate and failed unsupported discrimination on its fixed resource-gate sample."
+  },
+  "layerC": {
+    "C0": {
+      "cases": 617,
+      "mandatoryZeros": {
+        "unsupportedClaim": 0,
+        "inventedSource": 0,
+        "inventedNumber": 0,
+        "causalityEscalation": 0,
+        "safetyViolation": 0
+      },
+      "quality": {
+        "directness": 1,
+        "completeness": 0.6932640913172405,
+        "relevance": 0.5884814965132313,
+        "readability": 1,
+        "turkishNaturalnessHeuristic": 0.8492706645056726
+      },
+      "repetition": 0,
+      "blindHumanPreference": "pending_independent_human_evaluation",
+      "evaluationScope": "development_plus_locked",
+      "development": {
+        "cases": 435,
+        "mandatoryZeros": {
+          "unsupportedClaim": 0,
+          "inventedSource": 0,
+          "inventedNumber": 0,
+          "causalityEscalation": 0,
+          "safetyViolation": 0
+        },
+        "quality": {
+          "directness": 1,
+          "completeness": 0.694669558277621,
+          "relevance": 0.5893917749006198,
+          "readability": 1,
+          "turkishNaturalnessHeuristic": 0.8436781609195402
+        },
+        "repetition": 0,
+        "blindHumanPreference": "pending_independent_human_evaluation"
+      },
+      "locked": {
+        "cases": 182,
+        "mandatoryZeros": {
+          "unsupportedClaim": 0,
+          "inventedSource": 0,
+          "inventedNumber": 0,
+          "causalityEscalation": 0,
+          "safetyViolation": 0
+        },
+        "quality": {
+          "directness": 1,
+          "completeness": 0.6899048708350116,
+          "relevance": 0.5863058311367763,
+          "readability": 1,
+          "turkishNaturalnessHeuristic": 0.8626373626373627
+        },
+        "repetition": 0,
+        "blindHumanPreference": "pending_independent_human_evaluation"
+      }
+    },
+    "C1": {
+      "cases": 617,
+      "mandatoryZeros": {
+        "unsupportedClaim": 0,
+        "inventedSource": 0,
+        "inventedNumber": 0,
+        "causalityEscalation": 0,
+        "safetyViolation": 0
+      },
+      "quality": {
+        "directness": 1,
+        "completeness": 0.6887834204605748,
+        "relevance": 0.5847610704128313,
+        "readability": 1,
+        "turkishNaturalnessHeuristic": 0.8492706645056726
+      },
+      "repetition": 0,
+      "blindHumanPreference": "pending_independent_human_evaluation",
+      "evaluationScope": "development_plus_locked",
+      "development": {
+        "cases": 435,
+        "mandatoryZeros": {
+          "unsupportedClaim": 0,
+          "inventedSource": 0,
+          "inventedNumber": 0,
+          "causalityEscalation": 0,
+          "safetyViolation": 0
+        },
+        "quality": {
+          "directness": 1,
+          "completeness": 0.6900211825986654,
+          "relevance": 0.585569896980485,
+          "readability": 1,
+          "turkishNaturalnessHeuristic": 0.8436781609195402
+        },
+        "repetition": 0,
+        "blindHumanPreference": "pending_independent_human_evaluation"
+      },
+      "locked": {
+        "cases": 182,
+        "mandatoryZeros": {
+          "unsupportedClaim": 0,
+          "inventedSource": 0,
+          "inventedNumber": 0,
+          "causalityEscalation": 0,
+          "safetyViolation": 0
+        },
+        "quality": {
+          "directness": 1,
+          "completeness": 0.6858250329327206,
+          "relevance": 0.5828278860340944,
+          "readability": 1,
+          "turkishNaturalnessHeuristic": 0.8626373626373627
+        },
+        "repetition": 0,
+        "blindHumanPreference": "pending_independent_human_evaluation"
+      }
+    },
+    "C2": {
+      "cases": 617,
+      "mandatoryZeros": {
+        "unsupportedClaim": 0,
+        "inventedSource": 0,
+        "inventedNumber": 0,
+        "causalityEscalation": 0,
+        "safetyViolation": 0
+      },
+      "quality": {
+        "directness": 1,
+        "completeness": 0.6179826477291734,
+        "relevance": 0.5447487578993059,
+        "readability": 0.9991896272285251,
+        "turkishNaturalnessHeuristic": 0.8881685575364667
+      },
+      "repetition": 0,
+      "blindHumanPreference": "pending_independent_human_evaluation",
+      "evaluationScope": "development_plus_locked",
+      "development": {
+        "cases": 435,
+        "mandatoryZeros": {
+          "unsupportedClaim": 0,
+          "inventedSource": 0,
+          "inventedNumber": 0,
+          "causalityEscalation": 0,
+          "safetyViolation": 0
+        },
+        "quality": {
+          "directness": 1,
+          "completeness": 0.6194985839354576,
+          "relevance": 0.5462949200526315,
+          "readability": 0.9988505747126437,
+          "turkishNaturalnessHeuristic": 0.8770114942528736
+        },
+        "repetition": 0,
+        "blindHumanPreference": "pending_independent_human_evaluation"
+      },
+      "locked": {
+        "cases": 182,
+        "mandatoryZeros": {
+          "unsupportedClaim": 0,
+          "inventedSource": 0,
+          "inventedNumber": 0,
+          "causalityEscalation": 0,
+          "safetyViolation": 0
+        },
+        "quality": {
+          "directness": 1,
+          "completeness": 0.6143593936097532,
+          "relevance": 0.5410532604449253,
+          "readability": 1,
+          "turkishNaturalnessHeuristic": 0.9148351648351648
+        },
+        "repetition": 0,
+        "blindHumanPreference": "pending_independent_human_evaluation"
+      }
+    },
+    "C3": {
+      "blindHumanPreference": "pending_independent_human_evaluation",
+      "cases": 10,
+      "decision": "resource_gate_challenger",
+      "fullLockedCoverage": false,
+      "latencyMs": {
+        "p50": 8556.869167000514,
+        "p95": 9715.742458000022
+      },
+      "mandatoryZeros": {
+        "causalityEscalation": 0,
+        "inventedNumber": 0,
+        "inventedSource": 0,
+        "safetyViolation": 0
+      },
+      "resourceGateSample": 10
+    },
+    "C4": {
+      "cases": 182,
+      "mandatoryZeros": {
+        "unsupportedClaim": 4,
+        "inventedSource": 0,
+        "inventedNumber": 0,
+        "causalityEscalation": 0,
+        "safetyViolation": 0
+      },
+      "quality": {
+        "directness": 1,
+        "readability": 1,
+        "turkishNaturalness": 0.8928571428571429
+      },
+      "repetition": 0,
+      "latencyMs": {
+        "p50": 407.0807833999999,
+        "p95": 763.9032334000003
+      },
+      "blindHumanPreference": "pending_independent_human_evaluation",
+      "sourceFidelityAdjudication": {
+        "guardAlerts": 4,
+        "confirmedUnsupportedAdditions": 2,
+        "confirmedIds": [
+          "arch-followup_correction_focus-166",
+          "arch-followup_correction_focus-167"
+        ],
+        "falsePositiveGuardIds": [
+          "arch-noisy_colloquial_incomplete-040",
+          "arch-noisy_colloquial_incomplete-083"
+        ],
+        "basis": "codex_source_claim_reread_not_independent_human_validation"
+      },
+      "disqualifiedByMandatoryZero": true
+    },
+    "automatedFinalists": [
+      "C0_existing_deterministic",
+      "C2_retrieve_and_fill"
+    ],
+    "decision": "C0 has the strongest locked completeness/relevance and C2 the strongest Turkish naturalness heuristic; both preserve all mandatory zeros. C1 did not materially beat C0. C4 is more fluent but added a child population qualifier in two answers; C3 is grounded in its sample but too slow and lacks full locked coverage. Blind human preference is still pending."
+  },
+  "costsAndResources": {
+    "lunaMeasuredSuccessfulRunsUsd": 0.299128,
+    "lunaUsage": {
+      "inputTokens": 67522,
+      "cachedInputTokens": 0,
+      "outputTokens": 38601,
+      "costMicrousd": 299128
+    },
+    "localQwen": {
+      "mlxPeakMb": 2689.407424926758,
+      "processPeakRssMb": 816.09375
+    },
+    "e5PeakRssMb": 870.797,
+    "crossEncoderPeakRssMb": 1035.906
+  },
+  "sourceArtifacts": {
+    "deterministic-layer-results.json": "99e4d33492669fe489f9539fe2d5c5b4f017842c9906b493a12e2172318a0541",
+    "semantic-retrieval-results.json": "f289c470e61474efc6ab06283c0844209163b5ba0190f6922721c1d5691890d9",
+    "luna-layer-results.json": "2e4cc19afa5bacac25197fffebdca80527e00001a1c1c03af42e4b985243c781",
+    "local-slm-layer-results.json": "2321f5090ea9379c9709ff04074d231e4c37d635f0be6c68a3a747ffb8e12ca0"
+  },
+  "boundaries": {
+    "productionAffected": false,
+    "runtimeEligible": false,
+    "releaseEligible": false,
+    "engineDefault": "legacy",
+    "rawQuestionsInRepository": false,
+    "rawModelAnswersInRepository": false,
+    "independentHumanEvaluationComplete": false
+  },
+  "ssdSummarySha256": "e02f35e32c5776ba272896f2460ce4f247d2b2f9c0d73c8d576d8632e33c2f52",
+  "rawRowsStoredAt": "ResearchSSD only"
+}
