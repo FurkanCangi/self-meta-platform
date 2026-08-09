@@ -7,6 +7,11 @@ export const DNA_TOURNAMENT_COMPONENT_ENV = Object.freeze({
   lunaParsing: "DNA_TOURNAMENT_LUNA_PARSING_ENABLED",
   lunaRealization: "DNA_TOURNAMENT_LUNA_REALIZATION_ENABLED",
   lunaFallback: "DNA_TOURNAMENT_LUNA_FALLBACK_ENABLED",
+  s13Master: "DNA_S13_ENABLED",
+  s13Query: "DNA_S13_QUERY_ENABLED",
+  s13Realization: "DNA_S13_REALIZATION_ENABLED",
+  s13ConditionalS2: "DNA_S13_CONDITIONAL_S2_ENABLED",
+  s13Repair: "DNA_S13_REPAIR_ENABLED",
 } as const)
 
 export const DNA_TOURNAMENT_CANARY_STAGES = [
@@ -26,7 +31,7 @@ export type DnaTournamentComponentPlan = Readonly<{
   publicAnswerMutationAllowed: boolean
   legacyFallbackGuaranteed: true
   humanEvaluationComplete: boolean
-  productionWinner: "S1" | "S2" | "S5" | null
+  productionWinner: "S1" | "S2" | "S5" | "S13_A" | "S13_B" | null
   releaseAttestationPresent: boolean
   components: Readonly<Record<DnaTournamentComponent, boolean>>
   blockedReasons: readonly string[]
@@ -53,7 +58,7 @@ export function resolveDnaTournamentComponentPlan(
 ): DnaTournamentComponentPlan {
   const selectedStage = stage(env.DNA_TOURNAMENT_CANARY_STAGE)
   const humanEvaluationComplete = enabled(env.DNA_TOURNAMENT_HUMAN_EVALUATION_COMPLETE)
-  const productionWinner = (["S1", "S2", "S5"] as const).find((value) =>
+  const productionWinner = (["S1", "S2", "S5", "S13_A", "S13_B"] as const).find((value) =>
     value === env.DNA_TOURNAMENT_PRODUCTION_WINNER?.trim().toUpperCase()) ?? null
   const releaseAttestationPresent = /^[a-f0-9]{64}$/i.test(
     env.DNA_TOURNAMENT_RELEASE_ATTESTATION_SHA256?.trim() ?? "",
@@ -73,6 +78,23 @@ export function resolveDnaTournamentComponentPlan(
     requested.lunaRealization = false
     requested.lunaFallback = false
     blockedReasons.push("luna_components_require_global_luna_switch")
+  }
+  if (!requested.s13Master) {
+    requested.s13Query = false
+    requested.s13Realization = false
+    requested.s13ConditionalS2 = false
+    requested.s13Repair = false
+  }
+  if ((requested.s13Query || requested.s13Realization || requested.s13Repair)
+      && !enabled(env.DNA_CHAT_LUNA_ENABLED)) {
+    requested.s13Query = false
+    requested.s13Realization = false
+    requested.s13Repair = false
+    blockedReasons.push("s13_luna_components_require_global_luna_switch")
+  }
+  if (requested.s13Repair && !requested.s13Realization) {
+    requested.s13Repair = false
+    blockedReasons.push("s13_repair_requires_realization")
   }
 
   const mutationStage = !["local_shadow", "production_shadow"].includes(selectedStage)

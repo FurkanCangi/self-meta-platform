@@ -1,0 +1,252 @@
+import "server-only"
+
+import {
+  DNA_S13_ANSWERABILITY,
+  DNA_S13_DEPTHS,
+  DNA_S13_FOCUS_VALUES,
+  DNA_S13_INTENTS,
+  DNA_S13_QUESTION_TYPES,
+  preservesDnaS13QuestionMeaning,
+  validateDnaS13QueryFrame,
+  validateDnaS13Realization,
+  type DnaS13AnswerPlan,
+  type DnaS13Claim,
+  type DnaS13QueryFrame,
+  type DnaS13Realization,
+  type DnaS13RequiredAnswerSlot,
+} from "./contracts"
+import { DNA_CHAT_LUNA_MODEL } from "../lunaPolicy"
+
+export const DNA_S13_PROMPT_VERSION = "dna-s13-prompts@1" as const
+export const DNA_S13_REQUEST_TIMEOUT_MS = 5_000
+export const DNA_S13_MAX_CALLS_PER_MESSAGE = 3
+const OPENAI_RESPONSES_URL = "https://api.openai.com/v1/responses"
+
+export type DnaS13ProviderUsage = Readonly<{
+  inputTokens: number
+  cachedInputTokens: number
+  outputTokens: number
+}>
+
+export type DnaS13ProviderResult<T> = Readonly<{
+  value: T
+  responseId: string | null
+  usage: DnaS13ProviderUsage
+  latencyMs: number
+}>
+
+export type DnaS13TopicCandidate = Readonly<{
+  topicId: string
+  title: string
+  aliases?: readonly string[]
+  focusHints?: readonly string[]
+}>
+
+type FetchLike = typeof fetch
+
+function responseText(payload: unknown) {
+  if (!payload || typeof payload !== "object") return null
+  const row = payload as Record<string, unknown>
+  if (typeof row.output_text === "string" && row.output_text.trim()) return row.output_text.trim()
+  if (!Array.isArray(row.output)) return null
+  for (const output of row.output) {
+    if (!output || typeof output !== "object") continue
+    const content = (output as Record<string, unknown>).content
+    if (!Array.isArray(content)) continue
+    for (const item of content) {
+      if (!item || typeof item !== "object") continue
+      const text = (item as Record<string, unknown>).text
+      if (typeof text === "string" && text.trim()) return text.trim()
+    }
+  }
+  return null
+}
+
+function usage(payload: unknown): DnaS13ProviderUsage {
+  const row = payload && typeof payload === "object" ? payload as Record<string, unknown> : {}
+  const raw = row.usage && typeof row.usage === "object" ? row.usage as Record<string, unknown> : {}
+  const details = raw.input_tokens_details && typeof raw.input_tokens_details === "object"
+    ? raw.input_tokens_details as Record<string, unknown>
+    : {}
+  return Object.freeze({
+    inputTokens: Number(raw.input_tokens || 0),
+    cachedInputTokens: Number(details.cached_tokens || 0),
+    outputTokens: Number(raw.output_tokens || 0),
+  })
+}
+
+export async function requestDnaS13StructuredOutput(input: Readonly<{
+  name: string
+  schema: Record<string, unknown>
+  instructions: string
+  content: string
+  maxOutputTokens: number
+  safetyIdentifier?: string | null
+  apiKey?: string
+  fetchImpl?: FetchLike
+}>): Promise<DnaS13ProviderResult<unknown> | null> {
+  const apiKey = input.apiKey?.trim() || process.env.OPENAI_API_KEY?.trim()
+  if (!apiKey) return null
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), DNA_S13_REQUEST_TIMEOUT_MS)
+  const started = performance.now()
+  try {
+    const response = await (input.fetchImpl ?? fetch)(OPENAI_RESPONSES_URL, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: DNA_CHAT_LUNA_MODEL,
+        store: false,
+        reasoning: { effort: "none" },
+        ...(input.safetyIdentifier ? { safety_identifier: input.safetyIdentifier } : {}),
+        instructions: input.instructions,
+        input: input.content,
+        max_output_tokens: input.maxOutputTokens,
+        text: {
+          verbosity: "low",
+          format: { type: "json_schema", name: input.name, strict: true, schema: input.schema },
+        },
+      }),
+      signal: controller.signal,
+    })
+    if (!response.ok) return null
+    const payload = await response.json() as unknown
+    const text = responseText(payload)
+    if (!text) return null
+    let value: unknown
+    try { value = JSON.parse(text) as unknown } catch { return null }
+    const row = payload as Record<string, unknown>
+    return Object.freeze({
+      value,
+      responseId: typeof row.id === "string" ? row.id : null,
+      usage: usage(payload),
+      latencyMs: performance.now() - started,
+    })
+  } catch {
+    return null
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
+function queryFrameSchema(topicIds: readonly string[]) {
+  const allowedTopics = [...new Set([...topicIds, "unknown", "conversation.social", "product.help", "safety.refusal"])]
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: ["normalizedQuestion", "responseDepth", "uncertain", "subquestions"],
+    properties: {
+      normalizedQuestion: { type: "string", minLength: 2, maxLength: 600 },
+      responseDepth: { type: "string", enum: [...DNA_S13_DEPTHS] },
+      uncertain: { type: "boolean" },
+      subquestions: {
+        type: "array", minItems: 1, maxItems: 2,
+        items: {
+          type: "object", additionalProperties: false,
+          required: ["id", "question", "intent", "topicId", "focus", "questionType", "followUp", "correction", "comparisonTargetTopicIds", "answerabilityHint"],
+          properties: {
+            id: { type: "string", enum: ["q1", "q2"] },
+            question: { type: "string", minLength: 2, maxLength: 400 },
+            intent: { type: "string", enum: [...DNA_S13_INTENTS] },
+            topicId: { type: "string", enum: allowedTopics },
+            focus: { type: "string", enum: [...DNA_S13_FOCUS_VALUES] },
+            questionType: { type: "string", enum: [...DNA_S13_QUESTION_TYPES] },
+            followUp: { type: "boolean" },
+            correction: { type: "boolean" },
+            comparisonTargetTopicIds: { type: "array", minItems: 0, maxItems: 2, items: { type: "string", enum: allowedTopics } },
+            answerabilityHint: { type: "string", enum: [...DNA_S13_ANSWERABILITY] },
+          },
+        },
+      },
+    },
+  }
+}
+
+const realizationSchema = {
+  type: "object",
+  additionalProperties: false,
+  required: ["answer", "coveredSlots", "usedClaimIds", "usedSourceIds", "unsupportedAddition"],
+  properties: {
+    answer: { type: "string", minLength: 2, maxLength: 6_000 },
+    coveredSlots: { type: "array", minItems: 0, maxItems: 8, items: { type: "string" } },
+    usedClaimIds: { type: "array", minItems: 0, maxItems: 12, items: { type: "string" } },
+    usedSourceIds: { type: "array", minItems: 0, maxItems: 12, items: { type: "string" } },
+    unsupportedAddition: { type: "boolean" },
+  },
+} as const
+
+export async function requestDnaS13QueryFrame(input: Readonly<{
+  question: string
+  responseDepth: "short" | "standard" | "deep"
+  candidates: readonly DnaS13TopicCandidate[]
+  conversation?: Readonly<{ topicIds: readonly string[]; focus?: string; questionType?: string }> | null
+  safetyIdentifier?: string | null
+  apiKey?: string
+  fetchImpl?: FetchLike
+}>): Promise<DnaS13ProviderResult<DnaS13QueryFrame> | null> {
+  const candidate = await requestDnaS13StructuredOutput({
+    name: "dna_s13_query_frame",
+    schema: queryFrameSchema(input.candidates.map((item) => item.topicId)),
+    instructions: [
+      "Yalnız kullanıcının iletisini yapılandır; bilimsel cevap veya yeni bilgi üretme.",
+      "En fazla iki bağımsız alt soru çıkar. Yalnız verilen topicId değerlerini kullan.",
+      "Sayıyı, yaşı, olumsuzluğu, kesinlik düzeyini ve klinik eylem anlamını değiştirme.",
+      "Takip ve düzeltme ifadelerinde verilen konuşma bağlamını yalnız yönlendirme ipucu olarak kullan.",
+    ].join(" "),
+    content: JSON.stringify({
+      question: input.question,
+      requestedDepth: input.responseDepth,
+      conversation: input.conversation ?? null,
+      candidates: input.candidates,
+    }),
+    maxOutputTokens: 420,
+    safetyIdentifier: input.safetyIdentifier,
+    apiKey: input.apiKey,
+    fetchImpl: input.fetchImpl,
+  })
+  if (!candidate) return null
+  const value = validateDnaS13QueryFrame(candidate.value, input.candidates.map((item) => item.topicId))
+  if (!value || !preservesDnaS13QuestionMeaning(input.question, value)) return null
+  return Object.freeze({ ...candidate, value })
+}
+
+export async function requestDnaS13Realization(input: Readonly<{
+  question: string
+  frame: DnaS13QueryFrame
+  plan: DnaS13AnswerPlan
+  slots: readonly DnaS13RequiredAnswerSlot[]
+  claims: readonly DnaS13Claim[]
+  repairFailureCodes?: readonly string[]
+  previousCandidate?: string | null
+  safetyIdentifier?: string | null
+  apiKey?: string
+  fetchImpl?: FetchLike
+}>): Promise<DnaS13ProviderResult<DnaS13Realization> | null> {
+  const candidate = await requestDnaS13StructuredOutput({
+    name: input.repairFailureCodes?.length ? "dna_s13_grounded_repair" : "dna_s13_grounded_realization",
+    schema: realizationSchema as unknown as Record<string, unknown>,
+    instructions: [
+      "Soruyu yalnız verilen claim metinleriyle doğrudan, açık ve doğal Türkçeyle yanıtla.",
+      "Yeni olgu, örnek, sayı, kaynak, yaş kapsamı, biyolojik mekanizma, nedensellik veya klinik öneri ekleme.",
+      "Her desteklenen required slotu cevapla; iki alt soruda iki slotu da atlama.",
+      "Claim kimliklerini metinde gösterme. Teknik sınırlamayı yalnız gerçekten gerekli olduğunda kısa söyle.",
+      "Kısaca: gibi mekanik bir açılışı zorunlu kullanma.",
+      input.repairFailureCodes?.length ? `Önceki aday şu doğrulama hatalarını verdi: ${input.repairFailureCodes.join(", ")}. Bunları düzelt.` : "",
+    ].filter(Boolean).join(" "),
+    content: JSON.stringify({
+      question: input.question,
+      frame: input.frame,
+      answerPlan: input.plan,
+      slots: input.slots,
+      claims: input.claims,
+      previousCandidate: input.previousCandidate ?? null,
+    }),
+    maxOutputTokens: input.frame.responseDepth === "deep" ? 900 : input.frame.responseDepth === "short" ? 320 : 600,
+    safetyIdentifier: input.safetyIdentifier,
+    apiKey: input.apiKey,
+    fetchImpl: input.fetchImpl,
+  })
+  if (!candidate) return null
+  const value = validateDnaS13Realization(candidate.value)
+  return value ? Object.freeze({ ...candidate, value }) : null
+}

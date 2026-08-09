@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "dna-s13-repository-summary@1",
+  "status": "awaiting_pro_evaluation",
+  "checkpointSha256": "2f2492ff981652df84125d5ffbc480d2953e43ad8b1d8e929c3ccb044f57145d",
+  "artifacts": {
+    "s13-freeze.json": {
+      "sha256": "6da2dc8cc7bf329913238996bd2726ba6e64c63602c0573063499e46812a6e57",
+      "bytes": 3287
+    },
+    "s13-freeze-amendment.json": {
+      "sha256": "3fa5eab89bb7c2ada69e2db6ed27fd9f58117c48a6f1d882780eadefc2de26a7",
+      "bytes": 903
+    },
+    "final-ux-challenge.json": {
+      "sha256": "a6be14d2fa5ac9e50a7066edd9296ee3a7ff08c5c5fd06672550d46bc65f17c4",
+      "bytes": 264706
+    },
+    "automatic-results.json": {
+      "sha256": "8750776380664025468e9ebed3256dc0e5e480d724e99fc20b3e594c267ad16e",
+      "bytes": 534205
+    },
+    "chatgpt-pro-evaluation-package.json": {
+      "sha256": "56eba825e0a8dd4339d1d459d983138d8a735f9e68567f68858b6189fd23ec65",
+      "bytes": 154503
+    }
+  },
+  "boundaries": {
+    "rawArtifactsOnResearchSsd": true,
+    "productionAffected": false,
+    "finalWinnerSelected": false
+  }
+}

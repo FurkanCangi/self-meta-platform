@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dna-s13-realization@1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["answer", "coveredSlots", "usedClaimIds", "usedSourceIds", "unsupportedAddition"],
+  "properties": {
+    "answer": { "type": "string", "minLength": 2, "maxLength": 6000 },
+    "coveredSlots": { "type": "array", "maxItems": 8, "uniqueItems": true, "items": { "type": "string" } },
+    "usedClaimIds": { "type": "array", "maxItems": 12, "uniqueItems": true, "items": { "type": "string" } },
+    "usedSourceIds": { "type": "array", "maxItems": 12, "uniqueItems": true, "items": { "type": "string" } },
+    "unsupportedAddition": { "type": "boolean" }
+  }
+}

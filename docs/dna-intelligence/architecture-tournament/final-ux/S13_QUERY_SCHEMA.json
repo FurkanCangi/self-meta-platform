@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "dna-s13-query-frame@1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["normalizedQuestion", "responseDepth", "uncertain", "subquestions"],
+  "properties": {
+    "normalizedQuestion": { "type": "string", "minLength": 2, "maxLength": 600 },
+    "responseDepth": { "enum": ["short", "standard", "deep"] },
+    "uncertain": { "type": "boolean" },
+    "subquestions": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "question", "intent", "topicId", "focus", "questionType", "followUp", "correction", "comparisonTargetTopicIds", "answerabilityHint"],
+        "properties": {
+          "id": { "enum": ["q1", "q2"] },
+          "question": { "type": "string", "minLength": 2, "maxLength": 400 },
+          "intent": { "enum": ["scientific_question", "social_product", "unsupported", "safety"] },
+          "topicId": { "type": "string", "description": "Runtime candidate allowlist enum" },
+          "focus": { "enum": ["definition", "physiology", "process", "development", "measurement", "evidence", "comparison", "relation", "daily_function", "interpretation_boundary", "general"] },
+          "questionType": { "enum": ["definition", "explanation", "comparison", "relation", "measurement", "development", "evidence", "follow_up", "product_help", "unknown"] },
+          "followUp": { "type": "boolean" },
+          "correction": { "type": "boolean" },
+          "comparisonTargetTopicIds": { "type": "array", "minItems": 0, "maxItems": 2, "items": { "type": "string" } },
+          "answerabilityHint": { "enum": ["supported", "partial", "unsupported", "uncertain"] }
+        }
+      }
+    }
+  }
+}
