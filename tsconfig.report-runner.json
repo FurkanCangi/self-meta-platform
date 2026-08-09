@@ -49,6 +49,8 @@
     "scripts/run-dna-chat-luna-policy-tests.ts",
     "scripts/run-dna-chat-hybrid-evaluation.ts",
     "scripts/run-dna-tournament-engine-mode-tests.ts",
+    "scripts/run-dna-tournament-phase10-tests.ts",
+    "scripts/run-dna-tournament-phase7-load.ts",
     "scripts/capture-dna-tournament-regression.ts",
     "scripts/run-dna-layer-tournament.ts",
     "scripts/run-dna-chat-authority-tests.ts",

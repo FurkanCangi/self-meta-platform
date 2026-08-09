@@ -1,0 +1,398 @@
+{
+  "schemaVersion": "dna-architecture-real-cost-load-phase7@1",
+  "generatedAt": "2026-08-09T11:22:31.676Z",
+  "measurement": {
+    "kind": "local_real_engine_sample_plus_measured_tournament_usage_projection",
+    "host": "darwin/arm64",
+    "sample": {
+      "iterations": 81,
+      "requestedIterations": 250,
+      "stoppedAtTimeBudget": true,
+      "latencyMs": {
+        "p50": 72.217,
+        "p95": 309.199,
+        "p99": 525.474,
+        "maximum": 525.474
+      },
+      "throughputPerSecond": 10.059,
+      "cpuMsPerRequest": 102.7925,
+      "rssMb": {
+        "start": 306.47,
+        "peak": 338.55
+      },
+      "bandwidthBytesPerRequest": {
+        "request": 168.46,
+        "response": 14555.58,
+        "total": 14724.04
+      },
+      "failureRate": 0
+    },
+    "concurrencyBoundary": "The deterministic core is synchronous; burst concurrency values are capacity projections, not a production traffic blast.",
+    "cacheHitRate": 0,
+    "lunaTokensPerCall": {
+      "input": 71.274,
+      "cachedInput": 0,
+      "output": 39.161
+    },
+    "lunaLatencyMs": {
+      "p50": 302.5931542000006,
+      "p95": 500.14164999999923
+    }
+  },
+  "pricing": {
+    "asOf": "2026-08-09",
+    "luna": {
+      "inputUsdPerMillion": 1,
+      "cachedInputUsdPerMillion": 0.1,
+      "outputUsdPerMillion": 6
+    },
+    "vercelFra1": {
+      "activeCpuUsdPerHour": 0.184,
+      "provisionedMemoryUsdPerGbHour": 0.0152,
+      "includedInvocations": 1000000
+    },
+    "hetznerGermanyFinland": {
+      "cpx22FourGbUsdMonthly": 22.99,
+      "cpx32EightGbUsdMonthly": 41.99,
+      "ipv4EurMonthly": 0.5,
+      "pricingEffective": "2026-06-15"
+    },
+    "pricesExcludeTaxes": true
+  },
+  "costPer1000Messages": {
+    "deterministicProviderUsd": 0,
+    "s5LunaValidatedProviderUsd": 0.305515,
+    "localQwenProviderUsd": 0,
+    "localQwenAlwaysOnServerUsdMonthly": 41.99
+  },
+  "estimatedMonthlyCost100Users": [
+    {
+      "id": "100x20_daily",
+      "users": 100,
+      "messagesPerUserPerDay": 20,
+      "burstConcurrency": 20,
+      "monthlyRequests": 60000,
+      "intensiveHourRequests": null,
+      "deterministic": {
+        "lunaCalls": 0,
+        "lunaProviderUsd": 0,
+        "vercelComputeProjectionUsd": 0.32,
+        "combinedIncrementalUsd": 0.32
+      },
+      "s5LunaValidated": {
+        "lunaCalls": 42720,
+        "lunaProviderUsd": 18.33,
+        "vercelComputeProjectionUsd": 0.32,
+        "combinedIncrementalUsd": 18.65
+      },
+      "localQwenAlwaysOn": {
+        "providerApiUsd": 0,
+        "minimumFourGbServerUsd": 22.99,
+        "recommendedEightGbHeadroomServerUsd": 41.99,
+        "measuredMacLatencyMs": {
+          "p50": 8556.869167000514,
+          "p95": 9715.742458000022
+        },
+        "measuredMlxPeakMb": 2689.407424926758,
+        "measuredProcessPeakRssMb": 816.09375,
+        "warning": "The local Qwen resource gate was measured on Apple MLX, not on the quoted Linux server. Server inference latency remains unverified."
+      },
+      "supabaseProjectedOperations": {
+        "rateLimitRpcMinimum": 120000,
+        "auditWritesMinimum": 60000,
+        "lunaQuotaRpcApprox": 42720,
+        "note": "Counts are route-contract projections; plan overage depends on the active Supabase plan and database load."
+      },
+      "bandwidthGb": 0.823
+    },
+    {
+      "id": "100x50_daily",
+      "users": 100,
+      "messagesPerUserPerDay": 50,
+      "burstConcurrency": 50,
+      "monthlyRequests": 150000,
+      "intensiveHourRequests": null,
+      "deterministic": {
+        "lunaCalls": 0,
+        "lunaProviderUsd": 0,
+        "vercelComputeProjectionUsd": 0.8,
+        "combinedIncrementalUsd": 0.8
+      },
+      "s5LunaValidated": {
+        "lunaCalls": 106800,
+        "lunaProviderUsd": 45.83,
+        "vercelComputeProjectionUsd": 0.8,
+        "combinedIncrementalUsd": 46.63
+      },
+      "localQwenAlwaysOn": {
+        "providerApiUsd": 0,
+        "minimumFourGbServerUsd": 22.99,
+        "recommendedEightGbHeadroomServerUsd": 41.99,
+        "measuredMacLatencyMs": {
+          "p50": 8556.869167000514,
+          "p95": 9715.742458000022
+        },
+        "measuredMlxPeakMb": 2689.407424926758,
+        "measuredProcessPeakRssMb": 816.09375,
+        "warning": "The local Qwen resource gate was measured on Apple MLX, not on the quoted Linux server. Server inference latency remains unverified."
+      },
+      "supabaseProjectedOperations": {
+        "rateLimitRpcMinimum": 300000,
+        "auditWritesMinimum": 150000,
+        "lunaQuotaRpcApprox": 106800,
+        "note": "Counts are route-contract projections; plan overage depends on the active Supabase plan and database load."
+      },
+      "bandwidthGb": 2.057
+    }
+  ],
+  "estimatedMonthlyCost200Users": [
+    {
+      "id": "200x50_daily",
+      "users": 200,
+      "messagesPerUserPerDay": 50,
+      "burstConcurrency": 100,
+      "monthlyRequests": 300000,
+      "intensiveHourRequests": null,
+      "deterministic": {
+        "lunaCalls": 0,
+        "lunaProviderUsd": 0,
+        "vercelComputeProjectionUsd": 1.61,
+        "combinedIncrementalUsd": 1.61
+      },
+      "s5LunaValidated": {
+        "lunaCalls": 213600,
+        "lunaProviderUsd": 91.65,
+        "vercelComputeProjectionUsd": 1.61,
+        "combinedIncrementalUsd": 93.26
+      },
+      "localQwenAlwaysOn": {
+        "providerApiUsd": 0,
+        "minimumFourGbServerUsd": 22.99,
+        "recommendedEightGbHeadroomServerUsd": 41.99,
+        "measuredMacLatencyMs": {
+          "p50": 8556.869167000514,
+          "p95": 9715.742458000022
+        },
+        "measuredMlxPeakMb": 2689.407424926758,
+        "measuredProcessPeakRssMb": 816.09375,
+        "warning": "The local Qwen resource gate was measured on Apple MLX, not on the quoted Linux server. Server inference latency remains unverified."
+      },
+      "supabaseProjectedOperations": {
+        "rateLimitRpcMinimum": 600000,
+        "auditWritesMinimum": 300000,
+        "lunaQuotaRpcApprox": 213600,
+        "note": "Counts are route-contract projections; plan overage depends on the active Supabase plan and database load."
+      },
+      "bandwidthGb": 4.114
+    },
+    {
+      "id": "200_intensive_hour",
+      "users": 200,
+      "messagesPerUserPerDay": 50,
+      "burstConcurrency": 200,
+      "concentratedHour": true,
+      "monthlyRequests": 300000,
+      "intensiveHourRequests": 10000,
+      "deterministic": {
+        "lunaCalls": 0,
+        "lunaProviderUsd": 0,
+        "vercelComputeProjectionUsd": 1.61,
+        "combinedIncrementalUsd": 1.61
+      },
+      "s5LunaValidated": {
+        "lunaCalls": 213600,
+        "lunaProviderUsd": 91.65,
+        "vercelComputeProjectionUsd": 1.61,
+        "combinedIncrementalUsd": 93.26
+      },
+      "localQwenAlwaysOn": {
+        "providerApiUsd": 0,
+        "minimumFourGbServerUsd": 22.99,
+        "recommendedEightGbHeadroomServerUsd": 41.99,
+        "measuredMacLatencyMs": {
+          "p50": 8556.869167000514,
+          "p95": 9715.742458000022
+        },
+        "measuredMlxPeakMb": 2689.407424926758,
+        "measuredProcessPeakRssMb": 816.09375,
+        "warning": "The local Qwen resource gate was measured on Apple MLX, not on the quoted Linux server. Server inference latency remains unverified."
+      },
+      "supabaseProjectedOperations": {
+        "rateLimitRpcMinimum": 600000,
+        "auditWritesMinimum": 300000,
+        "lunaQuotaRpcApprox": 213600,
+        "note": "Counts are route-contract projections; plan overage depends on the active Supabase plan and database load."
+      },
+      "bandwidthGb": 4.114
+    }
+  ],
+  "scenarios": [
+    {
+      "id": "100x20_daily",
+      "users": 100,
+      "messagesPerUserPerDay": 20,
+      "burstConcurrency": 20,
+      "monthlyRequests": 60000,
+      "intensiveHourRequests": null,
+      "deterministic": {
+        "lunaCalls": 0,
+        "lunaProviderUsd": 0,
+        "vercelComputeProjectionUsd": 0.32,
+        "combinedIncrementalUsd": 0.32
+      },
+      "s5LunaValidated": {
+        "lunaCalls": 42720,
+        "lunaProviderUsd": 18.33,
+        "vercelComputeProjectionUsd": 0.32,
+        "combinedIncrementalUsd": 18.65
+      },
+      "localQwenAlwaysOn": {
+        "providerApiUsd": 0,
+        "minimumFourGbServerUsd": 22.99,
+        "recommendedEightGbHeadroomServerUsd": 41.99,
+        "measuredMacLatencyMs": {
+          "p50": 8556.869167000514,
+          "p95": 9715.742458000022
+        },
+        "measuredMlxPeakMb": 2689.407424926758,
+        "measuredProcessPeakRssMb": 816.09375,
+        "warning": "The local Qwen resource gate was measured on Apple MLX, not on the quoted Linux server. Server inference latency remains unverified."
+      },
+      "supabaseProjectedOperations": {
+        "rateLimitRpcMinimum": 120000,
+        "auditWritesMinimum": 60000,
+        "lunaQuotaRpcApprox": 42720,
+        "note": "Counts are route-contract projections; plan overage depends on the active Supabase plan and database load."
+      },
+      "bandwidthGb": 0.823
+    },
+    {
+      "id": "100x50_daily",
+      "users": 100,
+      "messagesPerUserPerDay": 50,
+      "burstConcurrency": 50,
+      "monthlyRequests": 150000,
+      "intensiveHourRequests": null,
+      "deterministic": {
+        "lunaCalls": 0,
+        "lunaProviderUsd": 0,
+        "vercelComputeProjectionUsd": 0.8,
+        "combinedIncrementalUsd": 0.8
+      },
+      "s5LunaValidated": {
+        "lunaCalls": 106800,
+        "lunaProviderUsd": 45.83,
+        "vercelComputeProjectionUsd": 0.8,
+        "combinedIncrementalUsd": 46.63
+      },
+      "localQwenAlwaysOn": {
+        "providerApiUsd": 0,
+        "minimumFourGbServerUsd": 22.99,
+        "recommendedEightGbHeadroomServerUsd": 41.99,
+        "measuredMacLatencyMs": {
+          "p50": 8556.869167000514,
+          "p95": 9715.742458000022
+        },
+        "measuredMlxPeakMb": 2689.407424926758,
+        "measuredProcessPeakRssMb": 816.09375,
+        "warning": "The local Qwen resource gate was measured on Apple MLX, not on the quoted Linux server. Server inference latency remains unverified."
+      },
+      "supabaseProjectedOperations": {
+        "rateLimitRpcMinimum": 300000,
+        "auditWritesMinimum": 150000,
+        "lunaQuotaRpcApprox": 106800,
+        "note": "Counts are route-contract projections; plan overage depends on the active Supabase plan and database load."
+      },
+      "bandwidthGb": 2.057
+    },
+    {
+      "id": "200x50_daily",
+      "users": 200,
+      "messagesPerUserPerDay": 50,
+      "burstConcurrency": 100,
+      "monthlyRequests": 300000,
+      "intensiveHourRequests": null,
+      "deterministic": {
+        "lunaCalls": 0,
+        "lunaProviderUsd": 0,
+        "vercelComputeProjectionUsd": 1.61,
+        "combinedIncrementalUsd": 1.61
+      },
+      "s5LunaValidated": {
+        "lunaCalls": 213600,
+        "lunaProviderUsd": 91.65,
+        "vercelComputeProjectionUsd": 1.61,
+        "combinedIncrementalUsd": 93.26
+      },
+      "localQwenAlwaysOn": {
+        "providerApiUsd": 0,
+        "minimumFourGbServerUsd": 22.99,
+        "recommendedEightGbHeadroomServerUsd": 41.99,
+        "measuredMacLatencyMs": {
+          "p50": 8556.869167000514,
+          "p95": 9715.742458000022
+        },
+        "measuredMlxPeakMb": 2689.407424926758,
+        "measuredProcessPeakRssMb": 816.09375,
+        "warning": "The local Qwen resource gate was measured on Apple MLX, not on the quoted Linux server. Server inference latency remains unverified."
+      },
+      "supabaseProjectedOperations": {
+        "rateLimitRpcMinimum": 600000,
+        "auditWritesMinimum": 300000,
+        "lunaQuotaRpcApprox": 213600,
+        "note": "Counts are route-contract projections; plan overage depends on the active Supabase plan and database load."
+      },
+      "bandwidthGb": 4.114
+    },
+    {
+      "id": "200_intensive_hour",
+      "users": 200,
+      "messagesPerUserPerDay": 50,
+      "burstConcurrency": 200,
+      "concentratedHour": true,
+      "monthlyRequests": 300000,
+      "intensiveHourRequests": 10000,
+      "deterministic": {
+        "lunaCalls": 0,
+        "lunaProviderUsd": 0,
+        "vercelComputeProjectionUsd": 1.61,
+        "combinedIncrementalUsd": 1.61
+      },
+      "s5LunaValidated": {
+        "lunaCalls": 213600,
+        "lunaProviderUsd": 91.65,
+        "vercelComputeProjectionUsd": 1.61,
+        "combinedIncrementalUsd": 93.26
+      },
+      "localQwenAlwaysOn": {
+        "providerApiUsd": 0,
+        "minimumFourGbServerUsd": 22.99,
+        "recommendedEightGbHeadroomServerUsd": 41.99,
+        "measuredMacLatencyMs": {
+          "p50": 8556.869167000514,
+          "p95": 9715.742458000022
+        },
+        "measuredMlxPeakMb": 2689.407424926758,
+        "measuredProcessPeakRssMb": 816.09375,
+        "warning": "The local Qwen resource gate was measured on Apple MLX, not on the quoted Linux server. Server inference latency remains unverified."
+      },
+      "supabaseProjectedOperations": {
+        "rateLimitRpcMinimum": 600000,
+        "auditWritesMinimum": 300000,
+        "lunaQuotaRpcApprox": 213600,
+        "note": "Counts are route-contract projections; plan overage depends on the active Supabase plan and database load."
+      },
+      "bandwidthGb": 4.114
+    }
+  ],
+  "limitations": [
+    "Vercel values are incremental compute projections from local CPU/RSS timing, not an invoice.",
+    "Supabase operations are counted, but plan-specific overage and database CPU were not fabricated without billing telemetry.",
+    "No destructive production load test was sent; the 200-user hour is projected from measured service time and target concurrency.",
+    "Local Qwen has zero per-call API cost but incurs an always-on server bill and currently fails the measured latency gate."
+  ],
+  "sourceHashes": {
+    "phase2": "ac7651d94e9bb87818e99eab007d6f7227188cc2a4bb13a355025e96d550bcfe",
+    "phase3": "d61e0a4f2b3fd19076b87969ee8bc936c098febc31c8105764b2c7dbefac54ca"
+  }
+}

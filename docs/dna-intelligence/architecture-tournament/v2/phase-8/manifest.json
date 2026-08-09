@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "dna-architecture-blind-human-phase8@1",
+  "generatedAt": "2026-08-09T11:21:36.176Z",
+  "status": "package_ready_independent_human_ratings_pending",
+  "cases": 150,
+  "answers": 600,
+  "architectures": 4,
+  "dimensions": [
+    "directness",
+    "clarity",
+    "naturalTurkish",
+    "answersQuestion",
+    "warningRestraint",
+    "overallPreference"
+  ],
+  "pairwiseCases": 150,
+  "automatedScientificSafetyEligibility": {
+    "S1": {
+      "cases": 150,
+      "eligible": 140
+    },
+    "S2": {
+      "cases": 150,
+      "eligible": 137
+    },
+    "S5": {
+      "cases": 150,
+      "eligible": 137
+    },
+    "S3": {
+      "cases": 150,
+      "eligible": 80
+    }
+  },
+  "packageSha256": "8d2b4cdfcadba51f68fda67b646f5de96b9640a224530037528c6a1adf994688",
+  "sealedMappingFile": "sealed-architecture-mapping-8d2b4cdfcadb.json",
+  "supersededPackageMappingsPreserved": true,
+  "boundaries": {
+    "codexIsNotHumanEvaluator": true,
+    "independentHumanEvaluationComplete": false,
+    "productionAffected": false,
+    "finalWinnerAllowed": false
+  },
+  "sourceHashes": {
+    "questions": "c722a40287f89cff7db9f77670108ebf2e7be50cf89702cc605451d9f914b7cf",
+    "answerKey": "38499a59804133b8caf14327cc90a41ca2e6408ba72fe479430667326ff8080a",
+    "results": "b4ba97881bdf196a8ea0b10d194e7e7a4ce4a5aa0c570b3846fa311ce997d799"
+  }
+}

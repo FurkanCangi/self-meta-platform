@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "dna-architecture-canary-release-phase10@1",
+  "generatedAt": "2026-08-09T11:28:00.466Z",
+  "status": "infrastructure_ready_rollout_blocked_human_evaluation",
+  "sequence": [
+    "local_shadow",
+    "production_shadow",
+    "internal",
+    "10",
+    "50",
+    "100"
+  ],
+  "independentFlags": {
+    "semanticParser": "DNA_TOURNAMENT_SEMANTIC_PARSER_ENABLED",
+    "embedding": "DNA_TOURNAMENT_EMBEDDING_ENABLED",
+    "reranker": "DNA_TOURNAMENT_RERANKER_ENABLED",
+    "controlledNlg": "DNA_TOURNAMENT_CONTROLLED_NLG_ENABLED",
+    "localSlm": "DNA_TOURNAMENT_LOCAL_SLM_ENABLED",
+    "lunaParsing": "DNA_TOURNAMENT_LUNA_PARSING_ENABLED",
+    "lunaRealization": "DNA_TOURNAMENT_LUNA_REALIZATION_ENABLED",
+    "lunaFallback": "DNA_TOURNAMENT_LUNA_FALLBACK_ENABLED"
+  },
+  "stageFlag": "DNA_TOURNAMENT_CANARY_STAGE",
+  "releaseAuthorizationFlags": {
+    "humanEvaluation": "DNA_TOURNAMENT_HUMAN_EVALUATION_COMPLETE",
+    "productionWinner": "DNA_TOURNAMENT_PRODUCTION_WINNER",
+    "attestationSha256": "DNA_TOURNAMENT_RELEASE_ATTESTATION_SHA256"
+  },
+  "legacyFallback": {
+    "guaranteed": true,
+    "engineFlag": "DNA_ENGINE_VERSION=legacy",
+    "tournamentDefault": "shadow_only"
+  },
+  "liveGates": [
+    "greeting",
+    "noisy_spelling",
+    "followup_correction",
+    "low_lexical_overlap",
+    "two_subquestions",
+    "unsupported_relation",
+    "safety",
+    "synthetic_case",
+    "cross_account_isolation",
+    "audit_fail_closed",
+    "production_latency",
+    "actual_cost",
+    "synthetic_cleanup"
+  ],
+  "gateEvidence": {
+    "automatedSafetyPhase4": "PASS for S1/S2/S5",
+    "phase7CostLoad": "complete",
+    "phase8Package": "complete",
+    "independentHumanRatings": "pending",
+    "productionWinner": null
+  },
+  "activation": {
+    "codeMayDeployWithAllFlagsOff": true,
+    "productionShadowAllowed": true,
+    "internalOrPercentRolloutAllowed": false,
+    "currentAction": "keep_legacy_and_collect_human_ratings"
+  },
+  "boundaries": {
+    "productionAnswerChanged": false,
+    "percentRolloutStarted": false,
+    "syntheticProductionDataCreated": false,
+    "syntheticCleanupRequired": false
+  },
+  "sourceHashes": {
+    "phase9": "8ff9b2be1480b22cf3a56f41d8e4119e5a22c99ad6b26ed1d9dae48cc4538fb2"
+  }
+}

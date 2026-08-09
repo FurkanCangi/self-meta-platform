@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "dna-architecture-production-finalists-phase9@1",
+  "generatedAt": "2026-08-09T11:22:31.755Z",
+  "status": "blocked_independent_human_evaluation_pending",
+  "finalists": [
+    {
+      "id": "A",
+      "category": "Local / Near-Zero Cost",
+      "architecture": "S1",
+      "composition": "Improved deterministic parser + lexical retrieval + controlled deterministic answer",
+      "monthlyCostEvidence": "phase7 deterministic"
+    },
+    {
+      "id": "B",
+      "category": "Balanced",
+      "architecture": "S2",
+      "composition": "Improved deterministic parser + hybrid retrieval + deterministic answer",
+      "monthlyCostEvidence": "phase7 local hybrid; no provider API"
+    },
+    {
+      "id": "C",
+      "category": "Quality Ceiling",
+      "architecture": "S5",
+      "composition": "Hybrid retrieval + Luna realization + deterministic validator",
+      "monthlyCostEvidence": "phase7 S5 Luna validated"
+    }
+  ],
+  "qwenDecision": {
+    "finalist": false,
+    "reason": "Did not beat the finalists on measured latency/resource gate; Linux server latency remains unverified."
+  },
+  "paretoRerun": {
+    "blocked": true,
+    "reason": "independent_human_ratings_missing"
+  },
+  "productionWinner": null,
+  "phase7CostEvidence": {
+    "deterministicCostPer1000Usd": 0,
+    "s5CostPer1000Usd": 0.305515,
+    "localQwenAlwaysOnMonthlyUsd": 41.99
+  },
+  "boundaries": {
+    "exactlyThreeProductionFinalists": true,
+    "finalWinnerSelected": false,
+    "independentHumanEvaluationComplete": false,
+    "productionAffected": false,
+    "runtimeEligible": false,
+    "releaseEligible": false
+  },
+  "sourceHashes": {
+    "phase5": "45aec804fe0da695aaa5c5fc81a6611fe48cb5f2c9785aa9632b610cfc1aa8a3",
+    "phase7": "446d041953e23d98dfbe3f0c042f7da3ae5c2ec8ff63514d915276601fd2a024",
+    "phase8": "61b6f833a545b74324567249dea4c55912748f2a107f9f7aa33b2f0d7cacda15"
+  }
+}
