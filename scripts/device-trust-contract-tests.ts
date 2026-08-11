@@ -19,6 +19,7 @@ function check(label: string, condition: boolean, detail = "") {
 
 const migration = read("supabase/migrations/20260717110912_account_device_trust.sql")
 const registration = read("src/lib/security/sessionRegistration.ts")
+const securityExemptions = read("src/lib/security/securityExemptions.ts")
 const browserIdentity = read("src/lib/security/browserDeviceIdentity.ts")
 const loginPage = read("src/app/login/PageClient.tsx")
 const signupForm = read("src/app/components/auth/DnaSignupForm.tsx")
@@ -78,6 +79,22 @@ check(
   registration.includes("hashDeviceApprovalCode") && registration.includes('createHmac("sha256"')
 )
 check("first device is auto trusted", registration.includes("autoTrust = isFirstDevice && Boolean(proof)"))
+check(
+  "listed test accounts bypass device approval without bypassing app sessions",
+  registration.includes("isSecurityTestExemptEmail(user.email)") &&
+    registration.includes("securityExemptDeviceIdentifier") &&
+    registration.includes('"revoke_account_device_security"') &&
+    registration.includes('eventType: "device_session_started"') &&
+    securityExemptions.includes("ergfurkancangi@gmail.com") &&
+    securityExemptions.includes("sevdenurtatli@icloud.com") &&
+    securityExemptions.includes("busranurtohan@gmail.com") &&
+    securityExemptions.includes("ergnurtuba@gmail.com")
+)
+check(
+  "test-account device identities are stable across phone and desktop browsers",
+  registration.includes('SECURITY_EXEMPT_DEVICE_TYPES: AppSessionDeviceType[] = ["desktop", "mobile", "tablet"]') &&
+    registration.includes('deviceType === "unknown" ? "desktop" : deviceType')
+)
 
 check("browser key is P-256", browserIdentity.includes('namedCurve: "P-256"'))
 check("stored private key is non-extractable", browserIdentity.includes("false,\n      [\"sign\", \"verify\"]"))

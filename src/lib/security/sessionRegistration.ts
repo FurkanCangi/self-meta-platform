@@ -9,6 +9,7 @@ import {
   type VerifiedDeviceProof,
   verifySubmittedDeviceProof,
 } from "@/lib/security/deviceProof"
+import { isSecurityTestExemptEmail } from "@/lib/security/securityExemptions"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 
 export const MAX_REGISTERED_DEVICES = 3
@@ -134,6 +135,151 @@ function isTrustedDevice(device: AccountDeviceRow | null | undefined) {
   )
 }
 
+const SECURITY_EXEMPT_DEVICE_TYPES: AppSessionDeviceType[] = ["desktop", "mobile", "tablet"]
+
+function securityExemptDeviceType(deviceType: AppSessionDeviceType) {
+  return deviceType === "unknown" ? "desktop" : deviceType
+}
+
+function securityExemptDeviceIdentifier(userId: string, deviceType: AppSessionDeviceType) {
+  return `security-exempt-device:${securityExemptDeviceType(deviceType)}:${userId}`
+}
+
+async function ensureSecurityExemptDevice(params: {
+  admin: ReturnType<typeof createSupabaseAdminClient>
+  userId: string
+  deviceHash: string
+  deviceType: AppSessionDeviceType
+  metadata: ReturnType<typeof clientMetadata>
+  deviceSelect: string
+}) {
+  const { admin, userId, deviceHash, deviceType, metadata, deviceSelect } = params
+  const now = new Date().toISOString()
+  const exemptDeviceHashes = new Set(
+    SECURITY_EXEMPT_DEVICE_TYPES.map((type) =>
+      hashDeviceId(userId, securityExemptDeviceIdentifier(userId, type))
+    )
+  )
+
+  const { data: deviceRows, error: deviceRowsError } = await admin
+    .from("account_devices")
+    .select("id, device_fingerprint_hash, revoked_at")
+    .eq("user_id", userId)
+  if (deviceRowsError) return { device: null, error: "device_lookup_failed" }
+
+  const staleDeviceIds = (deviceRows || [])
+    .filter(
+      (device) =>
+        !device.revoked_at && !exemptDeviceHashes.has(String(device.device_fingerprint_hash || ""))
+    )
+    .map((device) => String(device.id))
+
+  for (const staleDeviceId of staleDeviceIds) {
+    const { data: cleanupResult, error: cleanupError } = await admin.rpc(
+      "revoke_account_device_security",
+      {
+        p_user_id: userId,
+        p_device_id: staleDeviceId,
+        p_reason: "security_exempt_device_migration",
+        p_suspend_account: false,
+      }
+    )
+    if (cleanupError || cleanupResult?.ok === false) {
+      return { device: null, error: "security_exempt_device_cleanup_failed" }
+    }
+  }
+
+  const deviceLookup = await admin
+    .from("account_devices")
+    .select(deviceSelect)
+    .eq("user_id", userId)
+    .eq("device_fingerprint_hash", deviceHash)
+    .maybeSingle()
+  if (deviceLookup.error) return { device: null, error: "device_lookup_failed" }
+  let device = deviceLookup.data as unknown as AccountDeviceRow | null
+
+  if (!device) {
+    const insertResult = await admin
+      .from("account_devices")
+      .insert({
+        user_id: userId,
+        device_fingerprint_hash: deviceHash,
+        device_type: securityExemptDeviceType(deviceType),
+        display_name: defaultDeviceName(securityExemptDeviceType(deviceType), metadata.userAgent),
+        first_user_agent: metadata.userAgent,
+        last_user_agent: metadata.userAgent,
+        first_ip: metadata.ipAddress,
+        last_ip: metadata.ipAddress,
+        last_city: metadata.city,
+        last_country: metadata.country,
+        verification_method: "legacy_transition",
+        verification_required: true,
+        verified_at: null,
+        ever_verified_at: null,
+      })
+      .select(deviceSelect)
+      .single()
+
+    if (insertResult.error) {
+      const duplicate = String((insertResult.error as { code?: string }).code || "") === "23505"
+      if (!duplicate) return { device: null, error: "device_create_failed" }
+      const retryLookup = await admin
+        .from("account_devices")
+        .select(deviceSelect)
+        .eq("user_id", userId)
+        .eq("device_fingerprint_hash", deviceHash)
+        .maybeSingle()
+      if (retryLookup.error || !retryLookup.data) {
+        return { device: null, error: "device_lookup_failed" }
+      }
+      device = retryLookup.data as unknown as AccountDeviceRow
+    } else {
+      device = insertResult.data as unknown as AccountDeviceRow
+    }
+  }
+
+  const { data: trustedDevice, error: trustError } = await admin
+    .from("account_devices")
+    .update({
+      device_type: securityExemptDeviceType(deviceType),
+      display_name: defaultDeviceName(securityExemptDeviceType(deviceType), metadata.userAgent),
+      revoked_at: null,
+      verification_method: "legacy_transition",
+      verification_required: false,
+      verified_at: now,
+      ever_verified_at: device.ever_verified_at || now,
+      legacy_transition_until: null,
+      public_key_jwk: null,
+      public_key_fingerprint: null,
+      last_seen_at: now,
+      last_user_agent: metadata.userAgent,
+      last_ip: metadata.ipAddress,
+      last_city: metadata.city,
+      last_country: metadata.country,
+    })
+    .eq("id", device.id)
+    .eq("user_id", userId)
+    .select(deviceSelect)
+    .single()
+  if (trustError || !trustedDevice) {
+    return { device: null, error: "security_exempt_device_trust_failed" }
+  }
+  const trustedDeviceRow = trustedDevice as unknown as AccountDeviceRow
+
+  if (staleDeviceIds.length > 0) {
+    await recordAccountSecurityEvent({
+      userId,
+      eventType: "security_exempt_device_migrated",
+      deviceId: trustedDeviceRow.id,
+      ipAddress: metadata.ipAddress,
+      userAgent: metadata.userAgent,
+      metadata: { revoked_device_count: staleDeviceIds.length },
+    })
+  }
+
+  return { device: trustedDeviceRow, error: null }
+}
+
 async function consumeProofNonce(
   admin: ReturnType<typeof createSupabaseAdminClient>,
   userId: string,
@@ -242,25 +388,31 @@ export async function registerAppSessionForUser(
     return { ok: false, status: "error", error: "auth_session_binding_required", httpStatus: 401 }
   }
 
-  const rawDeviceId = String(input.deviceId || "").trim()
-  if (!rawDeviceId || rawDeviceId.length < 16 || rawDeviceId.length > 200) {
+  const submittedDeviceId = String(input.deviceId || "").trim()
+  if (!submittedDeviceId || submittedDeviceId.length < 16 || submittedDeviceId.length > 200) {
     return { ok: false, status: "error", error: "device_id_invalid", httpStatus: 400 }
   }
 
-  const p256Submitted = input.identityVersion === "p256-v1"
-  const proofResult = await verifySubmittedDeviceProof(rawDeviceId, input)
-  if (p256Submitted && !proofResult.ok) {
+  const metadata = clientMetadata(requestHeaders)
+  const deviceType = normalizeDeviceType(input.deviceType)
+  const devicePolicyExempt = isSecurityTestExemptEmail(user.email)
+  const rawDeviceId = devicePolicyExempt
+    ? securityExemptDeviceIdentifier(user.id, deviceType)
+    : submittedDeviceId
+  const p256Submitted = !devicePolicyExempt && input.identityVersion === "p256-v1"
+  const proofResult = devicePolicyExempt
+    ? null
+    : await verifySubmittedDeviceProof(rawDeviceId, input)
+  if (p256Submitted && proofResult && !proofResult.ok) {
     return { ok: false, status: "error", error: proofResult.error, httpStatus: 403 }
   }
-  const proof = proofResult.ok ? proofResult.proof : null
+  const proof = proofResult?.ok ? proofResult.proof : null
   const admin = createSupabaseAdminClient()
   if (proof) {
     const nonceError = await consumeProofNonce(admin, user.id, proof)
     if (nonceError) return { ok: false, status: "error", error: nonceError, httpStatus: 409 }
   }
 
-  const metadata = clientMetadata(requestHeaders)
-  const deviceType = normalizeDeviceType(input.deviceType)
   const deviceHash = hashDeviceId(user.id, rawDeviceId)
   const lockExemptUser = await isSecurityLockExemptUser(user.id, user.email)
 
@@ -284,14 +436,36 @@ export async function registerAppSessionForUser(
 
   const deviceSelect =
     "id, device_fingerprint_hash, device_type, revoked_at, verification_required, verified_at, ever_verified_at, verification_method, legacy_transition_until, public_key_fingerprint, last_user_agent, last_ip"
-  let { data: existingDevice, error: lookupError } = await admin
-    .from("account_devices")
-    .select(deviceSelect)
-    .eq("user_id", user.id)
-    .eq("device_fingerprint_hash", deviceHash)
-    .maybeSingle()
-  if (lookupError) {
-    return { ok: false, status: "error", error: "device_lookup_failed", httpStatus: 500 }
+  let existingDevice: AccountDeviceRow | null = null
+  if (devicePolicyExempt) {
+    const exemptDevice = await ensureSecurityExemptDevice({
+      admin,
+      userId: user.id,
+      deviceHash,
+      deviceType,
+      metadata,
+      deviceSelect,
+    })
+    if (exemptDevice.error || !exemptDevice.device) {
+      return {
+        ok: false,
+        status: "error",
+        error: exemptDevice.error || "security_exempt_device_failed",
+        httpStatus: 500,
+      }
+    }
+    existingDevice = exemptDevice.device
+  } else {
+    const { data, error: lookupError } = await admin
+      .from("account_devices")
+      .select(deviceSelect)
+      .eq("user_id", user.id)
+      .eq("device_fingerprint_hash", deviceHash)
+      .maybeSingle()
+    if (lookupError) {
+      return { ok: false, status: "error", error: "device_lookup_failed", httpStatus: 500 }
+    }
+    existingDevice = data as AccountDeviceRow | null
   }
 
   const staleNow = new Date().toISOString()
@@ -404,11 +578,13 @@ export async function registerAppSessionForUser(
       httpStatus: 403,
     }
   }
-  const legacyTransitionValid = Boolean(
-    existingDevice?.verification_method === "legacy_transition" &&
-      existingDevice.legacy_transition_until &&
-      new Date(existingDevice.legacy_transition_until).getTime() > Date.now()
-  )
+  const legacyTransitionValid =
+    devicePolicyExempt ||
+    Boolean(
+      existingDevice?.verification_method === "legacy_transition" &&
+        existingDevice.legacy_transition_until &&
+        new Date(existingDevice.legacy_transition_until).getTime() > Date.now()
+    )
   if (!proof && existingDevice?.verification_method === "legacy_transition" && !legacyTransitionValid) {
     const otherTrustedDevices = trustedDevices.filter((trusted) => trusted.id !== existingDevice?.id)
     if (otherTrustedDevices.length === 0) {

@@ -306,6 +306,14 @@ check("session registration replaces only the same device session", sessionRegis
 check("anomaly scoring never auto-locks the account", anomalyDetection.includes('action: "none" | "manual_review"') && !anomalyDetection.includes('action: "temporary_lock"'), "automatic account lock must be disabled")
 check("anomaly scoring tracks frequent device changes", anomalyDetection.includes("frequent_device_changes") && anomalyDetection.includes("sık cihaz ekleme/kaldırma"), "frequent device change scoring missing")
 check("test security exempt emails exist", securityExemptions.includes("SECURITY_TEST_EXEMPT_EMAILS") && securityExemptions.includes("busranurtohan@gmail.com"), "test security exempt emails missing")
+check(
+  "test security exempt emails bypass device approval on phone and desktop",
+  sessionRegistration.includes("isSecurityTestExemptEmail(user.email)") &&
+    sessionRegistration.includes("securityExemptDeviceIdentifier") &&
+    sessionRegistration.includes('SECURITY_EXEMPT_DEVICE_TYPES: AppSessionDeviceType[] = ["desktop", "mobile", "tablet"]') &&
+    sessionRegistration.includes('"revoke_account_device_security"'),
+  "test accounts are still subject to device approval or stale device state"
+)
 check("test exempt users still get session fingerprint audit", !appSession.includes("if (lockExemptUser) return { ok: true, sessionId }"), "lock exempt users should still be audited")
 check("test exempt users are not scored suspicious", anomalyDetection.includes("decision = { score: 0, action: \"none\", reasons: [] }"), "lock exempt users should not retain risk score")
 check("device management cookie is signed", deviceManagementAccess.includes("createHmac") && deviceManagementAccess.includes("timingSafeEqual"), "device management cookie must be signed")
