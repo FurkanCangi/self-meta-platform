@@ -536,7 +536,7 @@ function formatLiteratureForHumanEditor(plan: LockedReportPlan, text: string, se
   let edited = text
   let matchedSourceLanguage = false
   for (const claim of externalClaims) {
-    const source = claim.text.match(/Kaynak:\s*(.+)$/su)?.[1]?.trim()
+    const source = claim.text.match(/Kaynak:\s*([\s\S]+)$/u)?.[1]?.trim()
     if (source) {
       const sourceMarker = `Kaynak: ${source}`
       if (edited.includes(sourceMarker)) {
