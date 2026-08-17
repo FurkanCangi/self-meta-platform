@@ -337,7 +337,12 @@ export function normalizeDnaChatPublicResponse(value: unknown): DnaChatPublicAns
   const requestId = String(row.requestId || "").trim()
   const responseDepth = String(row.responseDepth || "standard") as DnaChatResponseDepth
   const runtimeGeneration = row.runtimeGeneration === "v3" ? "v3" : "v2_legacy"
-  if (!requestId || !RESPONSE_DEPTHS.has(responseDepth)) return null
+  const summary = String(row.summary || "").trim()
+  const clarificationResponse = classification === "clarification"
+    && runtimeGeneration === "v3"
+    && row.outcome === "clarification"
+    && row.limitedRolloutFeedbackEligible !== true
+  if (!requestId || !RESPONSE_DEPTHS.has(responseDepth) || !summary) return null
 
   const rawContextRequest = row.contextRequest
   const contextRequest = rawContextRequest && typeof rawContextRequest === "object"
@@ -380,7 +385,9 @@ export function normalizeDnaChatPublicResponse(value: unknown): DnaChatPublicAns
   const answerUnits = Array.isArray(row.answerUnits)
     ? row.answerUnits.map((entry) => normalizeAnswerUnit(entry, runtimeGeneration, limitedResponse))
       .filter((entry): entry is DnaChatPublicAnswerUnit => Boolean(entry)) : []
-  if (!Array.isArray(row.answerUnits) || !answerUnits.length || answerUnits.length !== row.answerUnits.length) return null
+  if (!Array.isArray(row.answerUnits) || answerUnits.length !== row.answerUnits.length) return null
+  if (!answerUnits.length && !clarificationResponse) return null
+  if (clarificationResponse && (answerUnits.length || sources.length || authoritySummary.length)) return null
 
   const sourceById = new Map<string, DnaChatPublicSourceRef>()
   const sourceCardsBySourceId = new Map<string, DnaChatPublicSourceRef[]>()
@@ -414,7 +421,7 @@ export function normalizeDnaChatPublicResponse(value: unknown): DnaChatPublicAns
     classification,
     ...(row.availabilityScope === "knowledge" || row.availabilityScope === "report"
       ? { availabilityScope: row.availabilityScope } : {}),
-    summary: String(row.summary || "Yanıt oluşturuldu.").trim(),
+    summary,
     details: normalizeStringList(row.details),
     sources,
     authoritySummary,

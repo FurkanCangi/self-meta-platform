@@ -84,7 +84,7 @@ function answeredBody(result: Awaited<ReturnType<typeof limited>>, label: string
 
 function isRenderable(answer: ReturnType<typeof normalizeDnaChatPublicResponse>) {
   return Boolean(answer && answer.requestId && answer.summary
-    && answer.answerUnits.length > 0
+    && (answer.classification === "clarification" || answer.answerUnits.length > 0)
     && answer.answerUnits.every((unit) => unit.text.trim().length > 0))
 }
 
@@ -139,11 +139,12 @@ async function main() {
     lastQueryKind: defineContext.lastQueryKind,
   })
 
-  const whySetup = answeredBody(await limited("Self-regülasyon nedir?", { sessionId: "why" }), "WHY_SETUP")
-  const why = answeredBody(await limited("Bunun önemi ne?", {
-    sessionId: "why",
-    contextToken: whySetup.conversationContext?.limitedRolloutContextToken,
-  }), "WHY")
+  const whyWithoutLimitedContext = await limited("Bunun önemi ne?", {
+    sessionId: "why-after-legacy-deepen-without-token",
+  })
+  assert.equal(whyWithoutLimitedContext.kind, "clarification",
+    "WHY without a limited context token must exercise the production clarification body")
+  const why = clone(whyWithoutLimitedContext.body as JsonRecord)
   const exampleSetup = answeredBody(await limited("Self-regülasyon nedir?", { sessionId: "example" }), "EXAMPLE_SETUP")
   const example = answeredBody(await limited("Buna günlük bir örnek verir misin?", {
     sessionId: "example",
@@ -208,6 +209,14 @@ async function main() {
   malformed.answerUnits[0].authority.approvalRequirement = "unsupported_approval"
   assert.equal(normalizeDnaChatPublicResponse(malformed), null,
     "malformed authority must still fail closed into the generic error path")
+  const missingUnitsOutsideClarification = clone(define)
+  missingUnitsOutsideClarification.answerUnits = []
+  assert.equal(normalizeDnaChatPublicResponse(missingUnitsOutsideClarification), null,
+    "ordinary answers without structured units must remain rejected")
+  const clarificationWithSource = clone(why)
+  clarificationWithSource.sources = [clone(legacyDeepen.sources[0])]
+  assert.equal(normalizeDnaChatPublicResponse(clarificationWithSource), null,
+    "clarification responses must not carry source-backed factual content")
 
   const clientSource = readFileSync(join(process.cwd(), "src/app/dna-asistani/DnaAssistantClient.tsx"), "utf8")
   assert.match(clientSource, /const answer = normalizeAnswer\(payload\)[\s\S]{0,160}if \(!answer\) throw new Error\("dna_chat_failed"\)/u)
@@ -233,8 +242,15 @@ async function main() {
       rawPublicBody: scrubContextToken(legacyDeepen),
       shape: shape(legacyDeepen),
     }
+    const whyEvidence = {
+      evidenceBasis: "production-request-correlated provider-free clarification replay after legacy context-token loss",
+      productionRequestId: "60b1e45f-32ea-45eb-a257-98040bd373da",
+      rawPublicBody: why,
+      shape: shape(why),
+    }
     writeFileSync(join(evidenceDir, "DEFINE_RESPONSE_SHAPE.json"), `${JSON.stringify(defineEvidence, null, 2)}\n`)
     writeFileSync(join(evidenceDir, "DEEPEN_RESPONSE_SHAPE.json"), `${JSON.stringify(deepenEvidence, null, 2)}\n`)
+    writeFileSync(join(evidenceDir, "WHY_CLARIFICATION_RESPONSE_SHAPE.json"), `${JSON.stringify(whyEvidence, null, 2)}\n`)
     writeFileSync(join(evidenceDir, "CLIENT_CONTRACT_MATRIX.json"), `${JSON.stringify({
       schemaVersion: "dna-chat-client-contract-matrix@1",
       providerMode: "$0 deterministic",
@@ -247,14 +263,15 @@ async function main() {
       matrix,
     }, null, 2)}\n`)
     writeFileSync(join(evidenceDir, "ROOT_CAUSE.json"), `${JSON.stringify({
-      schemaVersion: "dna-chat-post-response-root-cause@1",
+      schemaVersion: "dna-chat-post-response-root-cause@2",
       rootCauseIdentified: true,
       genericErrorTrigger: "normalizeAnswer(payload) returned null, then sendQuestion threw dna_chat_failed",
       rootCauseFile: "src/app/dna-asistani/DnaAssistantClient.tsx",
-      rootCauseFunction: "normalizeAnswer -> normalizeAuthority (historical inline implementation)",
-      rootCauseCondition: "legacy owner_book_information + owner_approved authority was absent from the client authority approval map",
+      rootCauseFunction: "normalizeDnaChatPublicResponse -> authority and answer-unit shape guards",
+      rootCauseCondition: "the client rejected two valid server variants: legacy owner_book_information authority and the v3 clarification contract with empty answerUnits",
       productionDefineRequestId: "38f2eaf5-80af-4862-9867-57ed02297ba4",
       productionDeepenRequestId: "935f6e27-8934-47dd-89c2-cc9231a2dacf",
+      productionWhyRequestId: "60b1e45f-32ea-45eb-a257-98040bd373da",
       fixLayer: "shared public response normalizer/client adapter",
     }, null, 2)}\n`)
     writeFileSync(join(evidenceDir, "RESPONSE_SHAPE_DIFF.md"), [
@@ -269,7 +286,7 @@ async function main() {
       `| authority approval | ${define.authoritySummary[0].approvalRequirement} | ${legacyDeepen.authoritySummary[0].approvalRequirement} |`,
       `| responseDepth | ${define.responseDepth} | ${legacyDeepen.responseDepth} |`,
       "",
-      "The server returned DEEPEN with HTTP 200 and a valid legacy public response. The historical client authority allow-map omitted `owner_book_information`, so `authoritySummary` normalization dropped its only entry. The subsequent array-length guard returned `null`, and `sendQuestion` converted that null into `dna_chat_failed`. The shared normalizer now accepts the canonical `owner_book_information + owner_approved` pair while retaining fail-closed checks for malformed authorities.",
+      "The server returned DEEPEN with HTTP 200 and a valid legacy public response. The historical client authority allow-map omitted `owner_book_information`, so `authoritySummary` normalization dropped its only entry. The subsequent array-length guard returned `null`, and `sendQuestion` converted that null into `dna_chat_failed`. After DEEPEN, a context-token-free WHY request can validly return the v3 clarification contract with `answerUnits: []`; the shared normalizer now accepts only that explicit clarification shape while retaining fail-closed checks for malformed authorities, factual answers without units, and clarification bodies carrying sources.",
       "",
     ].join("\n"))
   }
@@ -284,7 +301,7 @@ async function main() {
     genericErrorsForValidFixtures: matrix.filter((row) => !row.normalized || !row.renderable).length,
     malformedFixtureRejected: true,
     exactGenericBranch: "normalizeAnswer(payload) -> null -> throw dna_chat_failed -> ERROR_MESSAGES.dna_chat_failed",
-    rootCause: "legacy owner_book_information authority was absent from the client authority approval map",
+    rootCause: "the client public-response adapter rejected valid legacy owner authority and valid empty-unit clarification variants",
     matrix,
   }, null, 2)}\n`)
 }
