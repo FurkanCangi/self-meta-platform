@@ -2,11 +2,9 @@
 
 import {
   ArrowUp,
-  ChevronDown,
   FileSearch,
   LoaderCircle,
   RefreshCw,
-  ShieldCheck,
   Sparkles,
   X,
 } from "lucide-react"
@@ -29,15 +27,11 @@ import {
   type DnaChatResponseDepth,
 } from "@/lib/dna/chat/conversationPolicy"
 import {
-  DNA_INTELLIGENCE_AUDIT_NOTICE_TR,
   DNA_INTELLIGENCE_REPORT_OWNERSHIP_NOTICE_TR,
-  DNA_INTELLIGENCE_TAGLINE_TR,
 } from "@/lib/dna/chat/intendedUse"
 import {
   normalizeDnaChatPublicResponse,
   type DnaChatPublicAnswer as DnaAnswer,
-  type DnaChatPublicClassification as DnaChatClassification,
-  type DnaChatPublicSourceRef as SourceRef,
   type DnaChatPublicV3AnswerSection as V3AnswerSection,
 } from "@/lib/dna/chat/publicResponseNormalizer"
 import type { DnaChatConversationContext } from "@/lib/dna/chat/types"
@@ -63,25 +57,9 @@ const RESPONSE_DEPTH_OPTIONS: ReadonlyArray<{
   description: string
 }> = [
   { value: "short", label: "Kısa", description: "Ana tanım ve temel sınır" },
-  { value: "standard", label: "Standart", description: "Özet, ilişki ve kanıt sınırı" },
-  { value: "deep", label: "Derin", description: "Daha fazla onaylı ayrıntı ve kaynak" },
+  { value: "standard", label: "Standart", description: "Özet, ilişki ve bilgi sınırı" },
+  { value: "deep", label: "Derin", description: "Daha fazla onaylı ayrıntı" },
 ]
-
-const RESPONSE_DEPTH_LABEL: Record<ResponseDepth, string> = {
-  short: "Kısa yanıt",
-  standard: "Standart yanıt",
-  deep: "Derin yanıt",
-}
-
-const CLASSIFICATION_META: Record<DnaChatClassification, { label: string; className: string }> = {
-  dna_concept: { label: "DNA Kavramı", className: "border-blue-200 bg-blue-50 text-blue-700" },
-  literature: { label: "Literatür", className: "border-violet-200 bg-violet-50 text-violet-700" },
-  case_finding: { label: "Rapor Bulgusu", className: "border-cyan-200 bg-cyan-50 text-cyan-700" },
-  hypothesis: { label: "Hipotez", className: "border-amber-200 bg-amber-50 text-amber-800" },
-  clarification: { label: "Açıklama Gerekli", className: "border-slate-200 bg-slate-50 text-slate-700" },
-  not_available: { label: "Başlığı Netleştirelim", className: "border-slate-200 bg-slate-50 text-slate-700" },
-  refusal: { label: "Kapsam Dışı", className: "border-rose-200 bg-rose-50 text-rose-700" },
-}
 
 const ERROR_MESSAGES: Record<string, string> = {
   request_cancelled: "Yanıt oluşturma durduruldu. Sorunuz korunuyor; hazır olduğunuzda yeniden deneyebilirsiniz.",
@@ -127,22 +105,6 @@ const V3_ANSWER_SECTION_LABEL: Record<V3AnswerSection, string> = {
 
 function normalizeAnswer(value: unknown): DnaAnswer | null {
   return normalizeDnaChatPublicResponse(value)
-}
-
-function sourceTitle(source: SourceRef) {
-  return source.title || source.labelTr || source.citation || source.id
-}
-
-function sourceAuthorYear(source: SourceRef) {
-  const year = source.publicationYear || source.year
-  if (source.authors) return [source.authors, year].filter(Boolean).join(" · ")
-  if (source.labelTr) return source.labelTr
-  if (source.citation) return source.citation
-  return year ? String(year) : "Katalog kaydında belirtilmemiş"
-}
-
-function sourceAnchor(requestId: string, index: number) {
-  return `dna-source-${requestId.replace(/[^a-zA-Z0-9_-]/g, "")}-${index + 1}`
 }
 
 export default function DnaAssistantClient({ initialReportId }: { initialReportId: string }) {
@@ -689,16 +651,11 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
             </span>
             <div className="min-w-0">
               <h1 className="text-base font-black tracking-tight text-[var(--sm-text)]">DNA Asistanı</h1>
-              <p className="mt-0.5 truncate text-[11px] font-semibold text-[var(--sm-text-muted)]">{DNA_INTELLIGENCE_TAGLINE_TR}</p>
+              <p className="mt-0.5 truncate text-[11px] font-semibold text-[var(--sm-text-muted)]">Klinik kararın yerine geçmez</p>
             </div>
           </div>
 
           <div className="flex min-w-0 flex-wrap items-center gap-2 sm:justify-end">
-            <div className="hidden min-h-10 items-center gap-2 rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface)] px-3 text-[11px] font-bold text-[var(--sm-text-muted)] shadow-sm md:flex">
-              <ShieldCheck size={16} className="text-blue-600" aria-hidden="true" />
-              <span title={DNA_INTELLIGENCE_AUDIT_NOTICE_TR}>Sohbet geçmişi tutulmaz · Sınırlı audit</span>
-            </div>
-
             <button
               type="button"
               onClick={startNewConversation}
@@ -884,7 +841,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
                     <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-blue-100 bg-[var(--sm-surface)] text-blue-700 shadow-sm">
                       <LoaderCircle className="animate-spin" size={17} aria-hidden="true" />
                     </span>
-                    Kaynak kontrollü yanıt hazırlanıyor
+                    DNA Intelligence düşünüyor
                   </div>
                 ) : null}
                 <div ref={messageEndRef} />
@@ -955,18 +912,9 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
     )
   }
 
-  const baseMeta = CLASSIFICATION_META[answer.classification]
-  const meta = baseMeta
   const visibleAnswerUnits = answer.answerUnits.filter((unit) =>
     unit.kind !== "safety_boundary" || unit.section === "case_non_inference")
   const hasStructuredUnits = visibleAnswerUnits.length > 0
-  const sourceNumberById = new Map<string, number>()
-  answer.sources.forEach((source, index) => {
-    if (!sourceNumberById.has(source.id)) sourceNumberById.set(source.id, index + 1)
-    if (source.sourceId && !sourceNumberById.has(source.sourceId)) {
-      sourceNumberById.set(source.sourceId, index + 1)
-    }
-  })
   const boundaryText = [
     answer.summary,
     ...answer.details,
@@ -998,16 +946,8 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
           <Sparkles size={17} aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={`inline-flex min-h-7 items-center rounded-full border px-2.5 text-[10px] font-black uppercase tracking-[0.08em] ${meta.className}`}>
-              {meta.label}
-            </span>
-            <span className="inline-flex min-h-7 items-center rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-2.5 text-[10px] font-black text-[var(--sm-text-muted)]">
-              {RESPONSE_DEPTH_LABEL[answer.responseDepth]}
-            </span>
-          </div>
           {answerStatusLabels.length ? (
-            <ul className="mt-2 flex flex-wrap gap-1.5" aria-label="Kanıt ve ilişki uyarıları">
+            <ul className="flex flex-wrap gap-1.5" aria-label="Kanıt ve ilişki uyarıları">
               {answerStatusLabels.map((label) => (
                 <li key={label} className="inline-flex min-h-7 items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 text-[10px] font-black text-amber-900">
                   {label}
@@ -1016,7 +956,7 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
             </ul>
           ) : null}
           {hasStructuredUnits ? (
-            <div className="mt-3 space-y-3" aria-label="Kaynak bağlı yanıt">
+            <div className={answerStatusLabels.length ? "mt-3 space-y-3" : "space-y-3"} aria-label="DNA Intelligence yanıtı">
               {visibleAnswerUnits.map((unit, index) => {
                 const sectionHeading = answer.runtimeGeneration === "v3"
                   && unit.section
@@ -1035,32 +975,6 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
                   ) : null}
                   <p className={`text-sm leading-6 text-[var(--sm-text)] ${unit.kind === "summary" ? "font-semibold" : "font-medium"}`}>
                     {unit.text}
-                    {(unit.citationCardIds.length ? unit.citationCardIds : unit.sourceIds)
-                      .some((citationId) => sourceNumberById.has(citationId)) ? (
-                      <span
-                        className="ml-1 inline-flex flex-wrap items-center gap-1 align-middle text-[10px] font-black text-blue-700"
-                        aria-label={unit.citationCardIds.length
-                          ? "Bu cümlenin claim ve passage düzeyindeki kaynakları"
-                          : "Bu cümleyle ilişkili geçiş kataloğu kaynakları"}
-                      >
-                        {(unit.citationCardIds.length ? unit.citationCardIds : unit.sourceIds).flatMap((citationId) => {
-                          const sourceNumber = sourceNumberById.get(citationId)
-                          if (!sourceNumber) return []
-                          return [
-                            <a
-                              key={`${unit.id}:${citationId}`}
-                              href={`#${sourceAnchor(answer.requestId, sourceNumber - 1)}`}
-                              className="inline-flex min-h-8 min-w-8 items-center justify-center rounded-full px-1.5 underline decoration-blue-300 underline-offset-2 hover:bg-blue-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-                              aria-label={unit.citationCardIds.length
-                                ? `Claim ve passage eşleşmeli kaynak ${sourceNumber}'e git`
-                                : `İlişkili geçiş kataloğu kaynağı ${sourceNumber}'e git`}
-                            >
-                              [{sourceNumber}]
-                            </a>,
-                          ]
-                        })}
-                      </span>
-                    ) : null}
                   </p>
                   </div>
                 )
@@ -1068,7 +982,7 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
             </div>
           ) : (
             <>
-              <p className="mt-3 text-sm font-bold leading-6 text-[var(--sm-text)]">{answer.summary}</p>
+              <p className="text-sm font-bold leading-6 text-[var(--sm-text)]">{answer.summary}</p>
               {answer.details.length ? (
                 <ul className="mt-3 list-disc space-y-2 pl-5 text-sm font-medium leading-6 text-[var(--sm-text-soft)] marker:text-blue-500">
                   {answer.details.map((detail) => <li key={detail}>{detail}</li>)}
@@ -1084,63 +998,6 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
             {answer.caseEvidence.map((evidence) => <li key={evidence}>{evidence}</li>)}
           </ul>
         </div>
-      ) : null}
-
-      {answer.sources.length ? (
-        <details className="group mt-4 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)]">
-          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-3 text-xs font-black text-[var(--sm-text)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
-            Kaynaklar ({answer.sources.length})
-            <ChevronDown className="transition group-open:rotate-180" size={17} aria-hidden="true" />
-          </summary>
-          <div className="space-y-2 border-t border-[var(--sm-border)] p-3">
-            {answer.sources.map((source, sourceIndex) => (
-              <div
-                key={`${source.id}-${sourceIndex}`}
-                id={sourceAnchor(answer.requestId, sourceIndex)}
-                className="scroll-mt-28 rounded-xl border border-[var(--sm-border)] bg-[var(--sm-surface)] p-3"
-              >
-                <div className="text-xs font-black leading-5 text-[var(--sm-text)]">
-                  <span className="mr-1 text-blue-700">[{sourceIndex + 1}]</span>
-                  {sourceTitle(source)}
-                </div>
-                <div className="mt-1 text-[11px] font-bold text-[var(--sm-text-muted)]">
-                  <strong>Yazar/yıl:</strong>{" "}
-                  {sourceAuthorYear(source)}
-                </div>
-                <div className="mt-1 text-[11px] font-bold text-[var(--sm-text-muted)]">
-                  <strong>DOI veya resmî bağlantı:</strong>{" "}
-                  {source.doi ? `DOI: ${source.doi}` : source.url ? "Resmî bağlantı mevcut" : "Katalog kaydında belirtilmemiş"}
-                </div>
-                <dl className="mt-2 grid gap-1.5 rounded-xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)] sm:grid-cols-2">
-                  <div><dt className="inline font-black text-[var(--sm-text)]">Kaynak türü: </dt><dd className="inline">{source.sourceType || source.studyType || source.type || "Belirtilmemiş"}</dd></div>
-                  <div><dt className="inline font-black text-[var(--sm-text)]">Bölüm/sayfa: </dt><dd className="inline">{source.locator || "Katalog kaydında belirtilmemiş"}</dd></div>
-                </dl>
-                {!source.supportedClaim && (source.excerptTr || source.excerpt) ? (
-                  <div className="mt-2 rounded-xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-2 text-xs font-medium leading-5 text-[var(--sm-text-soft)]">
-                    <strong className="text-[var(--sm-text)]">Geçiş kataloğu özeti:</strong>{" "}
-                    {source.excerptTr || source.excerpt}
-                  </div>
-                ) : null}
-                {source.supportedClaim ? (
-                  <p className="mt-2 text-[11px] font-semibold leading-5 text-[var(--sm-text-muted)]"><strong>Desteklediği sınırlı iddia:</strong> {source.supportedClaim}</p>
-                ) : null}
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  {source.url ? (
-                    <a href={source.url} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center rounded-xl px-2 text-xs font-black text-blue-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
-                      Kaynağı aç
-                    </a>
-                  ) : null}
-                  <DnaIssueFeedback
-                    scope="source"
-                    requestId={answer.requestId}
-                    sourceId={source.sourceId || source.id}
-                    sourceIndex={sourceIndex + 1}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
-        </details>
       ) : null}
 
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">

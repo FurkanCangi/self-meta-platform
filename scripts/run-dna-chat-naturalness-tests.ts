@@ -105,8 +105,19 @@ async function main() {
     assert.equal(clientSource.includes(hiddenTechnicalUi), false,
       `Technical UI label resurfaced: ${hiddenTechnicalUi}`)
   }
-  assert.ok(clientSource.includes("Kaynak bağlı yanıt"))
-  assert.ok(clientSource.includes("Kaynaklar ({answer.sources.length})"))
+  for (const hiddenSourceUi of [
+    "Kaynak bağlı yanıt",
+    "Kaynaklar ({answer.sources.length})",
+    "sourceNumberById",
+    "sourceAnchor(",
+    "RESPONSE_DEPTH_LABEL[answer.responseDepth]",
+    "CLASSIFICATION_META[answer.classification]",
+    "Sohbet geçmişi tutulmaz · Sınırlı audit",
+  ]) {
+    assert.equal(clientSource.includes(hiddenSourceUi), false,
+      `Source or internal metadata UI resurfaced: ${hiddenSourceUi}`)
+  }
+  assert.ok(clientSource.includes("DNA Intelligence düşünüyor"))
 
   const hashes = Array.from({ length: 20 }, () => createHash("sha256")
     .update(JSON.stringify(resolveDnaChat({ question: "İnsular korteks nedir?" })))

@@ -282,6 +282,12 @@ for (const question of socialConversationQuestions) {
   assert.equal(response.contextRequest, undefined, `Sosyal konuşma rapor istememeli: ${question}`)
 }
 
+for (const question of ["Merhaba", "Nasılsın?", "Ne yapabilirsin?"]) {
+  const response = resolveDnaChat({ question })
+  assert.match(response.summary, /DNA Intelligence/u, `Sosyal yanıt ürün adını kullanmalı: ${question}`)
+  assert.doesNotMatch(response.summary, /nörofizyoloji/iu, `Sosyal yanıt nörofizyoloji etiketi kullanmamalı: ${question}`)
+}
+
 const greetingWithScientificQuestion = resolveDnaChat({
   question: "Merhaba, insular korteks nedir?",
 })

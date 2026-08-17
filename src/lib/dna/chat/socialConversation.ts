@@ -76,11 +76,11 @@ const SOCIAL_UTTERANCES: Record<DnaChatSocialIntent, readonly string[]> = {
 }
 
 const SOCIAL_RESPONSES: Record<DnaChatSocialIntent, string> = {
-  greeting: "Merhaba! Buradayım. DNA kavramları, nörofizyoloji ve rapor bulguları hakkında konuşabiliriz.",
-  wellbeing: "İyiyim, teşekkür ederim. Hazırım; DNA ve nörofizyolojiyle ilgili konuları birlikte inceleyebiliriz.",
+  greeting: "Merhaba! Buradayım. DNA Intelligence hakkında bilgi verebilirim.",
+  wellbeing: "İyiyim, teşekkür ederim. Hazırım; DNA Intelligence hakkında konuşabiliriz.",
   thanks: "Rica ederim. Yardımcı olabildiysem ne mutlu.",
   farewell: "Görüşmek üzere. İstediğiniz zaman yeniden devam edebiliriz.",
-  capabilities: "DNA kavramlarını ve temel nörofizyolojiyi açıklayabilir, kavramları karşılaştırabilir ve seçtiğiniz rapordaki güvenli bulguları genel bilgilerden ayrı ele alabilirim.",
+  capabilities: "DNA Intelligence kapsamındaki kavramları açıklayabilir, karşılaştırabilir ve seçtiğiniz rapordaki güvenli bulguları genel bilgilerden ayrı ele alabilirim.",
 }
 
 const SOCIAL_INTENT_BY_UTTERANCE = new Map<string, DnaChatSocialIntent>(
