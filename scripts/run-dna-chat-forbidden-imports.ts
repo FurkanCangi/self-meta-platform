@@ -7,11 +7,17 @@ const ROOT = process.cwd()
 const ENTRYPOINT = path.join(ROOT, "src/app/api/app/dna-chat/route.ts")
 const CHAT_ROOT = path.join(ROOT, "src/lib/dna/chat")
 const LUNA_SERVER_BOUNDARY = "src/lib/dna/chat/lunaServer.ts"
+const S13_LUNA_SERVER_BOUNDARY = "src/lib/dna/chat/s13/server.ts"
 const SERVER_ONLY_BOUNDARIES = new Set([
   "src/lib/dna/chat/ownedCaseAnswer.ts",
   "src/lib/dna/chat/v3RetrievalServer.ts",
   "src/lib/dna/chat/catalog/generated/v3/server.ts",
   LUNA_SERVER_BOUNDARY,
+  S13_LUNA_SERVER_BOUNDARY,
+  "src/lib/dna/chat/s13/strictLunaRealizer.server.ts",
+  "src/lib/dna/chat/s13/limitedRollout/context.server.ts",
+  "src/lib/dna/chat/s13/limitedRollout/runner.server.ts",
+  "src/lib/dna/chat/s13/limitedRollout/store.server.ts",
 ])
 
 const REQUIRED_GRAPH_FILES = [
@@ -195,7 +201,7 @@ async function main() {
     }
     for (const forbidden of FORBIDDEN_RUNTIME_PATTERNS) {
       if (forbidden.pattern.test(source)) {
-        const allowedLunaPrimitive = relativeFile === LUNA_SERVER_BOUNDARY
+        const allowedLunaPrimitive = [LUNA_SERVER_BOUNDARY, S13_LUNA_SERVER_BOUNDARY].includes(relativeFile)
           && (forbidden.name === "fetch" || forbidden.name === "model credential")
         if (!allowedLunaPrimitive) {
           failures.push(`${relativeFile}: forbidden runtime primitive: ${forbidden.name}`)
@@ -212,6 +218,11 @@ async function main() {
   assert.ok(lunaSource.includes('"https://api.openai.com/v1/responses"'), "Luna boundary must use only the Responses endpoint")
   assert.ok(/store:\s*false/.test(lunaSource), "Luna requests must disable provider storage")
   assert.equal((lunaSource.match(/https:\/\//g) || []).length, 1, "Luna boundary must not contain another network destination")
+  const s13LunaSource = await fs.readFile(path.join(ROOT, S13_LUNA_SERVER_BOUNDARY), "utf8")
+  assert.ok(s13LunaSource.includes('import "server-only"'), "S13 Luna boundary must remain server-only")
+  assert.ok(s13LunaSource.includes("DNA_CHAT_LUNA_MODEL"), "S13 Luna boundary must use the centrally fixed model constant")
+  assert.ok(/store:\s*false/.test(s13LunaSource), "S13 Luna requests must disable provider storage")
+  assert.equal((s13LunaSource.match(/https:\/\//g) || []).length, 1, "S13 Luna boundary must not contain another network destination")
 
   assert.deepEqual(failures, [], failures.join("\n"))
   console.log(JSON.stringify({
@@ -222,8 +233,8 @@ async function main() {
     unresolvedImports: graph.unresolved.length,
     externalSpecifiers: graph.externalSpecifiers,
     externalModelModules: 0,
-    chatRuntimeNetworkPrimitives: 1,
-    externalModelBoundary: LUNA_SERVER_BOUNDARY,
+    chatRuntimeNetworkPrimitives: 2,
+    externalModelBoundaries: [LUNA_SERVER_BOUNDARY, S13_LUNA_SERVER_BOUNDARY],
     serverOnlyRuntimeBoundaries: [...SERVER_ONLY_BOUNDARIES].sort(),
   }, null, 2))
 }

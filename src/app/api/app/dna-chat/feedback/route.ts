@@ -12,6 +12,13 @@ import { requireConfirmedUser, requireTrustedMutation } from "@/lib/security/api
 import { recordDataAccessAuditEvent } from "@/lib/security/privacyOps"
 import { checkRateLimit } from "@/lib/security/rateLimit"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
+import { DNA_S13_LIMITED_ROLLOUT_ENV } from "@/lib/dna/chat/s13/limitedRollout/config"
+import { hashDnaS13LimitedIdentifier } from "@/lib/dna/chat/s13/limitedRollout/context.server"
+import {
+  DNA_S13_LIMITED_MESSAGE_AUDIT_ACTION,
+  writeDnaS13LimitedFeedback,
+} from "@/lib/dna/chat/s13/limitedRollout/store.server"
+import { buildDnaS13LimitedFeedbackRecord } from "@/lib/dna/chat/s13/limitedRollout/feedback"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -74,21 +81,42 @@ export async function POST(request: Request) {
   } catch {
     return json({ ok: false, error: "invalid_payload" }, { status: 400 })
   }
-  const feedback = buildDnaChatCategoricalFeedbackRecord(parsedBody)
-  if (!feedback.accepted || !feedback.record) {
+  const limitedPayload = parsedBody && typeof parsedBody === "object" && !Array.isArray(parsedBody)
+    && "vote" in parsedBody
+  const telemetrySecret = process.env[DNA_S13_LIMITED_ROLLOUT_ENV.telemetrySecret]?.trim() || ""
+  const subjectIdHash = limitedPayload
+    ? hashDnaS13LimitedIdentifier({ secret: telemetrySecret, kind: "subject", value: auth.user.id })
+    : null
+  const limitedRecord = limitedPayload && subjectIdHash
+    ? buildDnaS13LimitedFeedbackRecord(parsedBody, subjectIdHash)
+    : null
+  const feedback = limitedPayload ? null : buildDnaChatCategoricalFeedbackRecord(parsedBody)
+  if (limitedPayload ? !limitedRecord : !feedback?.accepted || !feedback.record) {
     return json({ ok: false, error: "invalid_payload" }, { status: 400 })
   }
-  const record = feedback.record
+  const record = feedback?.record ?? null
 
   try {
     const admin = createSupabaseAdminClient()
-    const requestAudit = await admin
-      .from("data_access_audit_events")
-      .select("id, metadata")
-      .eq("actor_user_id", auth.user.id)
-      .eq("resource_id", record.requestId)
-      .eq("action", "dna_chat_answer")
-      .maybeSingle()
+    let requestAudit
+    if (limitedRecord) {
+      requestAudit = await admin
+        .from("data_access_audit_events")
+        .select("id, metadata")
+        .eq("actor_user_id", auth.user.id)
+        .eq("resource_id", limitedRecord.requestId)
+        .eq("action", "dna_chat_answer")
+        .maybeSingle()
+    } else {
+      if (!record) return json({ ok: false, error: "invalid_payload" }, { status: 400 })
+      requestAudit = await admin
+        .from("data_access_audit_events")
+        .select("id, metadata")
+        .eq("actor_user_id", auth.user.id)
+        .eq("resource_id", record.requestId)
+        .eq("action", "dna_chat_answer")
+        .maybeSingle()
+    }
     if (requestAudit.error) {
       console.error("[dna-chat-feedback] request ownership lookup failed", {
         errorCode: requestAudit.error.code || null,
@@ -99,6 +127,27 @@ export async function POST(request: Request) {
       return json({ ok: false, error: "feedback_request_not_found" }, { status: 404 })
     }
 
+    if (limitedRecord) {
+      const limitedAudit = await admin
+        .from("data_access_audit_events")
+        .select("id")
+        .eq("actor_user_id", auth.user.id)
+        .eq("resource_id", limitedRecord.requestId)
+        .eq("action", DNA_S13_LIMITED_MESSAGE_AUDIT_ACTION)
+        .maybeSingle()
+      if (limitedAudit.error || !limitedAudit.data?.id) {
+        return json({ ok: false, error: "feedback_request_not_found" }, { status: 404 })
+      }
+      const result = await writeDnaS13LimitedFeedback({
+        admin,
+        actorUserId: auth.user.id,
+        record: limitedRecord,
+      })
+      if (!result.ok) return json({ ok: false, error: "feedback_unavailable" }, { status: 503 })
+      return json({ ok: true, vote: limitedRecord.vote, reason: limitedRecord.reason })
+    }
+
+    if (!record) return json({ ok: false, error: "invalid_payload" }, { status: 400 })
     if (record.sourceId) {
       const sourceExists = DNA_CHAT_CATALOG_SOURCE_BY_ID.has(record.sourceId)
         || hasDnaOwnerBookSourceId(record.sourceId)
@@ -142,5 +191,5 @@ export async function POST(request: Request) {
     return json({ ok: false, error: "feedback_unavailable" }, { status: 503 })
   }
 
-  return json({ ok: true, category: record.category })
+  return json({ ok: true, category: record!.category })
 }

@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.report-runner.json",
+  "compilerOptions": {
+    "outDir": ".tmp/knowledge-v2-shadow"
+  },
+  "include": [
+    "scripts/run-dna-knowledge-core-v2-shadow-tests.ts",
+    "scripts/run-dna-knowledge-core-v2-shadow.ts",
+    "src/lib/dna/**/*.ts"
+  ]
+}

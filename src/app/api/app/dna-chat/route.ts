@@ -35,6 +35,26 @@ import {
   DNA_CHAT_LUNA_MODEL,
   DNA_CHAT_LUNA_POLICY_VERSION,
 } from "@/lib/dna/chat/lunaPolicy"
+import { isOwnerAuditEmail } from "@/lib/owner/ownerAccess"
+import {
+  DNA_S13_LIMITED_ROLLOUT_ENV,
+  resolveDnaS13LimitedRolloutConfig,
+  resolveDnaS13LimitedRolloutGate,
+} from "@/lib/dna/chat/s13/limitedRollout/config"
+import { hashDnaS13LimitedIdentifier } from "@/lib/dna/chat/s13/limitedRollout/context.server"
+import { inspectDnaS13LimitedRolloutPrivacy } from "@/lib/dna/chat/s13/limitedRollout/privacy"
+import { getDnaS13LimitedRolloutReleaseCandidate } from "@/lib/dna/chat/s13/limitedRollout/release"
+import {
+  createDnaS13LimitedFallbackTelemetry,
+  runDnaS13LimitedRolloutMessage,
+} from "@/lib/dna/chat/s13/limitedRollout/runner.server"
+import {
+  readDnaS13LimitedDailySpend,
+  writeDnaS13LimitedTelemetry,
+} from "@/lib/dna/chat/s13/limitedRollout/store.server"
+import { evaluateDnaS13LimitedBudget } from "@/lib/dna/chat/s13/limitedRollout/telemetry"
+import { DNA_INTELLIGENCE_INTENDED_USE_VERSION } from "@/lib/dna/chat/intendedUse"
+import { DNA_KNOWLEDGE_AUTHORITY_CONTRACT_VERSION } from "@/lib/dna/chat/knowledgeAuthority"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -52,6 +72,8 @@ const dnaChatPostSchema = z
     responseDepth: z.enum(["short", "standard", "deep"]).optional(),
     question: z.string().trim().min(2).max(600),
     reportId: z.string().uuid().optional(),
+    conversationId: z.string().uuid().optional(),
+    limitedRolloutContextToken: z.string().trim().min(16).max(2_048).optional(),
     context: z
       .object({
         previousTopic: z.string().trim().min(1).max(120).optional(),
@@ -125,6 +147,12 @@ function tooManyRequestsResponse(resetAt: number) {
   const response = errorResponse("too_many_requests", 429, { retryAfter })
   response.headers.set("Retry-After", String(retryAfter))
   return response
+}
+
+function limitedLatencyCategory(elapsedMs: number): DnaChatApiAuditInput["latencyCategory"] {
+  if (elapsedMs < 100) return "lt_100ms"
+  if (elapsedMs < 1_000) return "100_to_999ms"
+  return "gte_1000ms"
 }
 
 async function normalizeAuthFailure(response: NextResponse) {
@@ -346,6 +374,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const requestStartedAt = performance.now()
   const timing = createDnaChatRequestTimer()
   const finish = <T extends Response>(response: T, requestId?: string | null): T => {
     const record = timing.complete({ status: response.status, requestId })
@@ -379,15 +408,211 @@ export async function POST(request: Request) {
 
     const parsed = await timing.measure("payload", () => readPayload(request))
     if (!parsed.ok) return finish(parsed.response)
-    const payload = parsed.data
+    const {
+      conversationId,
+      limitedRolloutContextToken,
+      ...payload
+    } = parsed.data
     const requestId = crypto.randomUUID()
     const lunaSafetyIdentifier = createDnaChatLunaSafetyIdentifier(auth.user.id)
+    const limitedConfig = resolveDnaS13LimitedRolloutConfig()
+    const limitedGate = resolveDnaS13LimitedRolloutGate({
+      config: limitedConfig,
+      subjectKey: auth.user.id,
+      trustedOwner: isOwnerAuditEmail(auth.user.email),
+    })
+    const limitedTelemetrySecret = process.env[DNA_S13_LIMITED_ROLLOUT_ENV.telemetrySecret]?.trim() || ""
+    const limitedContextSecret = process.env[DNA_S13_LIMITED_ROLLOUT_ENV.contextSecret]?.trim() || ""
+    const subjectIdHash = hashDnaS13LimitedIdentifier({
+      secret: limitedTelemetrySecret,
+      kind: "subject",
+      value: auth.user.id,
+    })
+    const stableConversationId = conversationId || requestId
+    const conversationIdHash = hashDnaS13LimitedIdentifier({
+      secret: limitedTelemetrySecret,
+      kind: "conversation",
+      value: `${auth.user.id}\u0000${stableConversationId}`,
+    })
+    let forceDeterministicNormalPath = false
+
+    if (limitedGate.routed) {
+      if (!subjectIdHash || !conversationIdHash || limitedContextSecret.length < 32) {
+        forceDeterministicNormalPath = true
+        console.error("[dna-s13-limited] configuration failed closed", {
+          reason: "limited_rollout_secret_missing_or_invalid",
+        })
+      } else {
+        const admin = createSupabaseAdminClient()
+        const release = getDnaS13LimitedRolloutReleaseCandidate()
+        const privacy = inspectDnaS13LimitedRolloutPrivacy({
+          question: payload.question,
+          mode: payload.mode,
+          reportId: payload.reportId,
+        })
+        const safeTelemetryBase = {
+          requestId,
+          createdAt: new Date().toISOString(),
+          releaseVersion: release.releaseVersion,
+          releaseHash: release.releaseHash,
+          subjectIdHash,
+          conversationIdHash,
+          rolloutPhase: limitedConfig.phase,
+          privacy,
+          totalMs: Math.max(0, performance.now() - requestStartedAt),
+        } as const
+        if (!privacy.allowed) {
+          forceDeterministicNormalPath = true
+          await writeDnaS13LimitedTelemetry({
+            admin,
+            actorUserId: auth.user.id,
+            record: createDnaS13LimitedFallbackTelemetry({
+              ...safeTelemetryBase,
+              status: "privacy_blocked",
+              reason: "privacy_blocked",
+            }),
+          }).catch(() => ({ ok: false as const }))
+        } else {
+          const spend = await readDnaS13LimitedDailySpend({ admin })
+          const budget = evaluateDnaS13LimitedBudget({
+            spentMicrousd: spend.spentMicrousd,
+            capMicrousd: limitedConfig.dailyLunaCapMicrousd,
+            nearCapPercent: limitedConfig.nearCapPercent,
+          })
+          if (!spend.ok || !budget.allowed) {
+            forceDeterministicNormalPath = true
+            await writeDnaS13LimitedTelemetry({
+              admin,
+              actorUserId: auth.user.id,
+              record: createDnaS13LimitedFallbackTelemetry({
+                ...safeTelemetryBase,
+                status: "cost_guardrail",
+                reason: spend.ok ? "daily_cost_cap_closed" : "daily_cost_ledger_unavailable",
+              }),
+            }).catch(() => ({ ok: false as const }))
+          } else {
+            if (budget.nearCap) {
+              console.warn("[dna-s13-limited] daily Luna budget near cap", {
+                utilizationPercent: budget.utilizationPercent,
+              })
+            }
+            const limited = await timing.measure("runtime_resolution", () => runDnaS13LimitedRolloutMessage({
+              requestId,
+              subjectId: auth.user.id,
+              subjectIdHash,
+              conversationIdHash,
+              sessionId: conversationIdHash.slice(0, 40),
+              question: payload.question,
+              responseDepth: payload.responseDepth ?? "standard",
+              contextToken: limitedRolloutContextToken ?? null,
+              contextSecret: limitedContextSecret,
+              privacy,
+              rolloutPhase: limitedConfig.phase,
+              safetyIdentifier: lunaSafetyIdentifier,
+              simplifyExperimentalEnabled: false,
+            }))
+            const telemetryWrite = await writeDnaS13LimitedTelemetry({
+              admin,
+              actorUserId: auth.user.id,
+              record: limited.telemetry,
+            })
+            if (limited.kind === "clarification") {
+              const standardAudit = await writeDnaChatAudit({
+                userId: auth.user.id,
+                requestId,
+                mode: "theory",
+                intentId: null,
+                classification: "clarification",
+                outcome: "clarification",
+                engineVersion: "dna-s13-strict-v4",
+                runtimeGeneration: "v3",
+                catalogVersion: release.fingerprints.catalog.version,
+                packageVersion: release.releaseVersion,
+                packageSha256: release.releaseHash,
+                intendedUseVersion: DNA_INTELLIGENCE_INTENDED_USE_VERSION,
+                sourceIds: [],
+                authorityContractVersion: DNA_KNOWLEDGE_AUTHORITY_CONTRACT_VERSION,
+                policyVersion: "dna-s13-routing-clarification@1",
+                authoritySet: [],
+                responseDepth: payload.responseDepth ?? "standard",
+                latencyCategory: limitedLatencyCategory(limited.telemetry.latency.totalMs),
+                errorCode: null,
+                citationCount: 0,
+                httpResult: 200,
+                assuranceVersion: "dna-s13-routing-validator@1",
+                assuranceStatus: "not_recorded",
+                sourceBindingCoveragePercent: 0,
+                subquestionCount: 0,
+                resolutionMode: "refusal",
+                confidenceBand: "low",
+                routedTopicIds: [],
+              })
+              if (!telemetryWrite.ok || !standardAudit.ok) {
+                return finish(errorResponse("audit_unavailable", 503), requestId)
+              }
+              return finish(json(limited.body, { status: 200 }), requestId)
+            }
+            if (limited.kind === "answered") {
+              const topicId = limited.telemetry.routing.topicIds[0] ?? null
+              const standardAudit = await writeDnaChatAudit({
+                userId: auth.user.id,
+                requestId,
+                mode: "theory",
+                intentId: topicId,
+                classification: "literature",
+                outcome: "answered",
+                engineVersion: "dna-s13-strict-v4",
+                runtimeGeneration: "v3",
+                catalogVersion: release.fingerprints.catalog.version,
+                packageVersion: release.releaseVersion,
+                packageSha256: release.releaseHash,
+                intendedUseVersion: DNA_INTELLIGENCE_INTENDED_USE_VERSION,
+                sourceIds: ["book.self-regulation.owner-current"],
+                authorityContractVersion: DNA_KNOWLEDGE_AUTHORITY_CONTRACT_VERSION,
+                policyVersion: "dna-s13-limited-rollout-policy@1",
+                authoritySet: ["owner_approved_book"],
+                responseDepth: payload.responseDepth ?? "standard",
+                latencyCategory: limitedLatencyCategory(limited.telemetry.latency.totalMs),
+                errorCode: null,
+                citationCount: 1,
+                httpResult: 200,
+                assuranceVersion: "dna-s13-strict-validator@3",
+                assuranceStatus: "passed",
+                sourceBindingCoveragePercent: 100,
+                subquestionCount: limited.telemetry.routing.topicIds.length as 1 | 2,
+                resolutionMode: limited.telemetry.routing.topicIds.length === 2 ? "decomposed" : "direct",
+                confidenceBand: "high",
+                routedTopicIds: [...limited.telemetry.routing.topicIds],
+              })
+              if (!telemetryWrite.ok || !standardAudit.ok) {
+                return finish(errorResponse("audit_unavailable", 503), requestId)
+              }
+              return finish(json(limited.body, { status: 200 }), requestId)
+            }
+            forceDeterministicNormalPath = true
+          }
+        }
+      }
+    }
+
     const prepared = await timing.measure(
       "language_interpretation",
-      () => prepareDnaChatQuestionWithLuna(payload, {
-        safetyIdentifier: lunaSafetyIdentifier,
-        rolloutSubjectKey: auth.user.id,
-      }),
+      () => forceDeterministicNormalPath
+        ? Promise.resolve({
+            payload,
+            status: "skipped" as const,
+            trace: {
+              status: "skipped" as const,
+              reason: "s13_limited_fail_closed",
+              budgetBand: "normal" as const,
+              usage: { inputTokens: 0, cachedInputTokens: 0, outputTokens: 0, costMicrousd: 0 },
+              providerResponseId: null,
+            },
+          })
+        : prepareDnaChatQuestionWithLuna(payload, {
+            safetyIdentifier: lunaSafetyIdentifier,
+            rolloutSubjectKey: auth.user.id,
+          }),
     )
     const resolution = await timing.measure("runtime_resolution", () => resolveDnaChatApiRequest(prepared.payload, {
       createRequestId: () => requestId,
@@ -421,7 +646,7 @@ export async function POST(request: Request) {
 
     let responseBody = resolution.body
     let polishTrace: DnaChatLunaStageTrace | null = null
-    if (resolution.status === 200 && responseBody.ok === true) {
+    if (!forceDeterministicNormalPath && resolution.status === 200 && responseBody.ok === true) {
       const polished = await timing.measure(
         "language_polish",
         () => polishDnaChatPublicAnswerWithLuna({

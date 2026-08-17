@@ -119,6 +119,27 @@ export type DnaOwnerBookMatch = Readonly<{
   leafHeadingCoverage: number
 }>
 
+export type DnaOwnerBookClaimMetadata = Readonly<{
+  claimId: string
+  passageId: string
+  title: string
+  topicId: string
+  domain: string
+  dimensions: readonly string[]
+  focus: string
+}>
+
+export type DnaOwnerBookTopicClaim = DnaOwnerBookClaimMetadata & Readonly<{
+  text: string
+  sourceId: typeof DNA_OWNER_BOOK_SOURCE_ID
+  nodeId: string
+  nodeOrder: number
+  sentenceIndex: number
+  sectionId: string
+  headingPath: readonly string[]
+  directTopicClaim: boolean
+}>
+
 type IndexedNode = Readonly<{
   node: OwnerBookNode
   units: readonly DenseOwnerBookUnit[]
@@ -308,7 +329,10 @@ function validateDenseRuntime(): DenseOwnerBookRuntime {
 }
 
 const DENSE_BOOK = validateDenseRuntime()
+const DENSE_UNIT_BY_CLAIM_ID = new Map(DENSE_BOOK.units.map((unit) => [unit.claimId, unit]))
 const DENSE_UNITS_BY_NODE_ID = new Map<string, DenseOwnerBookUnit[]>()
+const SHADOW_DENSE_UNIT_BY_CLAIM_ID = new Map<string, DenseOwnerBookUnit>()
+const SHADOW_DENSE_UNITS_BY_NODE_ID = new Map<string, DenseOwnerBookUnit[]>()
 for (const unit of DENSE_BOOK.units) {
   const nodeId = unit.passageId.split(":sentence:")[0]!
   const rows = DENSE_UNITS_BY_NODE_ID.get(nodeId) ?? []
@@ -648,22 +672,127 @@ export function getDnaOwnerBookRuntimeStatus() {
   })
 }
 
+export function getDnaOwnerBookClaimMetadata(claimId: string): DnaOwnerBookClaimMetadata | null {
+  const normalizedClaimId = String(claimId || "").trim()
+  const unit = DENSE_UNIT_BY_CLAIM_ID.get(normalizedClaimId) ?? SHADOW_DENSE_UNIT_BY_CLAIM_ID.get(normalizedClaimId)
+  if (!unit) return null
+  return Object.freeze({
+    claimId: unit.claimId,
+    passageId: unit.passageId,
+    title: unit.title,
+    topicId: unit.topicId,
+    domain: unit.domain,
+    dimensions: Object.freeze([...unit.dimensions]),
+    focus: unit.focus,
+  })
+}
+
+/**
+ * Test-only shadow catalog hook. It never changes the committed catalog and is
+ * unavailable when the application runs with NODE_ENV=production.
+ */
+export function registerDnaOwnerBookShadowUnitsForTest(units: readonly DenseOwnerBookUnit[]) {
+  if (process.env.NODE_ENV === "production") throw new Error("dna_owner_book_shadow_catalog_production_forbidden")
+  if (units.length > 500) throw new Error("dna_owner_book_shadow_catalog_too_large")
+  SHADOW_DENSE_UNIT_BY_CLAIM_ID.clear()
+  SHADOW_DENSE_UNITS_BY_NODE_ID.clear()
+  const seenTexts = new Set(DENSE_BOOK.units.map((unit) => normalizeDnaChatText(unit.text)))
+  for (const unit of units) {
+    const nodeId = unit.passageId.split(":sentence:")[0] ?? ""
+    if (!unit.id.startsWith("shadow.owner.unit:")
+      || unit.id !== unit.claimId
+      || unit.sourceId !== DNA_OWNER_BOOK_SOURCE_ID
+      || !unit.topicId.startsWith(OWNER_BOOK_TOPIC_PREFIX)
+      || !BOOK_NODE_IDS.has(nodeId)
+      || !unit.text.trim()
+      || !SHA256_PATTERN.test(unit.sentenceSha256)
+      || seenTexts.has(normalizeDnaChatText(unit.text))
+      || SHADOW_DENSE_UNIT_BY_CLAIM_ID.has(unit.claimId)) {
+      throw new Error(`dna_owner_book_shadow_unit_invalid:${unit.claimId || "missing"}`)
+    }
+    const frozen = Object.freeze({ ...unit, dimensions: Object.freeze([...unit.dimensions]) })
+    SHADOW_DENSE_UNIT_BY_CLAIM_ID.set(frozen.claimId, frozen)
+    const rows = SHADOW_DENSE_UNITS_BY_NODE_ID.get(nodeId) ?? []
+    rows.push(frozen)
+    SHADOW_DENSE_UNITS_BY_NODE_ID.set(nodeId, rows)
+    seenTexts.add(normalizeDnaChatText(frozen.text))
+  }
+}
+
+/**
+ * Returns the ordered, source-bound claim sequence for a topic. Direct child
+ * sections are included so a structural lead-in can be completed from its
+ * verified enumeration without widening retrieval to unrelated headings.
+ */
+export function getDnaOwnerBookTopicClaims(
+  topicId: string,
+  includeDirectChildren = true,
+): readonly DnaOwnerBookTopicClaim[] {
+  const sectionId = sectionIdFromTopicId(topicId)
+  const heading = sectionId ? NODE_BY_ID.get(sectionId) : null
+  if (!sectionId || !heading || heading.kind !== "heading") return Object.freeze([])
+  const rootPath = heading.headingPath
+  const rootLevel = heading.headingLevel ?? rootPath.length
+  const allowedSections = new Set<string>([sectionId])
+  if (includeDirectChildren) {
+    for (const node of BOOK.nodes) {
+      if (node.kind !== "heading" || node.order <= heading.order) continue
+      const level = node.headingLevel ?? node.headingPath.length
+      if (level <= rootLevel) break
+      const sameRoot = rootPath.every((part, index) => node.headingPath[index] === part)
+      if (sameRoot && level === rootLevel + 1) allowedSections.add(node.sectionId)
+    }
+  }
+  const rows: DnaOwnerBookTopicClaim[] = []
+  for (const node of BOOK.nodes) {
+    if (!allowedSections.has(node.sectionId) || node.kind === "heading") continue
+    const units = [
+      ...(DENSE_UNITS_BY_NODE_ID.get(node.id) ?? []),
+      ...(SHADOW_DENSE_UNITS_BY_NODE_ID.get(node.id) ?? []),
+    ]
+    for (const unit of units) {
+      const sentenceIndex = Math.max(0, Number(unit.passageId.match(/:sentence:(\d+)$/u)?.[1] ?? 1) - 1)
+      rows.push(Object.freeze({
+        claimId: unit.claimId,
+        passageId: unit.passageId,
+        title: unit.title,
+        topicId: unit.topicId,
+        domain: unit.domain,
+        dimensions: Object.freeze([...unit.dimensions]),
+        focus: unit.focus,
+        text: unit.text,
+        sourceId: unit.sourceId,
+        nodeId: node.id,
+        nodeOrder: node.order,
+        sentenceIndex,
+        sectionId: node.sectionId,
+        headingPath: Object.freeze([...node.headingPath]),
+        directTopicClaim: node.sectionId === sectionId,
+      }))
+    }
+  }
+  return Object.freeze(rows.sort((left, right) => left.nodeOrder - right.nodeOrder
+    || left.sentenceIndex - right.sentenceIndex || left.claimId.localeCompare(right.claimId)))
+}
+
 export function resolveDnaOwnerBook(
   question: string,
   conversationTopicIds: readonly string[] = [],
   responseDepth: "short" | "standard" | "deep" = "standard",
+  forcedTopicId?: string | null,
 ): DnaOwnerBookMatch | null {
-  const cacheKey = `${question}\u0000${conversationTopicIds.slice(0, 2).join("\u0001")}\u0000${responseDepth}`
+  const cacheKey = `${question}\u0000${conversationTopicIds.slice(0, 2).join("\u0001")}\u0000${responseDepth}\u0000${forcedTopicId ?? ""}`
   const cached = OWNER_BOOK_MATCH_CACHE.get(cacheKey)
   if (cached) return cached
   const normalizedQuestion = normalizeDnaChatText(question)
-  const previousSectionId = conversationTopicIds
+  const forcedSectionId = sectionIdFromTopicId(forcedTopicId)
+  const previousSectionId = forcedSectionId ?? conversationTopicIds
     .map(sectionIdFromTopicId)
     .find((value): value is string => Boolean(value)) ?? null
   if (!previousSectionId && /^(?:erken cocukluk|cocukluk|cocuklar|ergenler|yetiskinler) icin ne degis\w*/.test(
     normalizedQuestion,
   )) return null
-  const followUp = isFollowUpQuestion(question)
+  const followUp = Boolean(forcedSectionId) || isFollowUpQuestion(question)
   if (followUp && !previousSectionId) return null
   const usePreviousSection = Boolean(previousSectionId && followUp)
   const previousHeading = usePreviousSection && previousSectionId
@@ -822,4 +951,23 @@ export function resolveDnaOwnerBook(
   if (OWNER_BOOK_MATCH_CACHE.size >= 2_048) OWNER_BOOK_MATCH_CACHE.clear()
   OWNER_BOOK_MATCH_CACHE.set(cacheKey, match)
   return match
+}
+
+/**
+ * Retrieves fresh verified claims inside an already resolved catalog topic.
+ * The topic id constrains retrieval; previous answer prose is never reused.
+ */
+export function resolveDnaOwnerBookTopic(
+  topicId: string,
+  operationQuestion = "bunu açıkla",
+  responseDepth: "short" | "standard" | "deep" = "standard",
+): DnaOwnerBookMatch | null {
+  const sectionId = sectionIdFromTopicId(topicId)
+  const heading = sectionId ? topicHeading(sectionId) : null
+  if (!sectionId || !heading) return null
+  const normalizedOperation = normalizeDnaChatText(operationQuestion)
+  const effectiveQuestion = /\b(?:ornek|ornegin|mesela)\b/u.test(normalizedOperation)
+    ? `${heading} örnek`
+    : heading
+  return resolveDnaOwnerBook(effectiveQuestion, [], responseDepth, topicId)
 }

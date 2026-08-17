@@ -1,0 +1,13 @@
+{
+  "capturedAt": "2026-08-11",
+  "scoringVersion": "dna-polarity-v2",
+  "routeSha256": "31c83c66549a2c27d295673e60b666c1a166603c97d355e076b4252cab981740",
+  "reportEngineSha256": "c3dbbc05b4e3f71134d292cb3c09df6d5944e5379eec2c21ad83df2d9b15e079",
+  "legacy": [
+    { "case": 1, "totalScore": 159, "globalLevel": "Atipik", "domainLevels": ["Riskli", "Riskli", "Atipik", "Atipik", "Riskli", "Riskli"], "reportSha256": "93ade0dc14e073749f4e139be70c3b2b97bae07a39371940b0db284c03504375" },
+    { "case": 2, "totalScore": 197, "globalLevel": "Riskli", "domainLevels": ["Tipik", "Tipik", "Tipik", "Riskli", "Riskli", "Riskli"], "reportSha256": "8194a0fe4c2db8673a8aafc9dd61692c01fcd78311b14b2c815b5b39423c009c" },
+    { "case": 3, "totalScore": 176, "globalLevel": "Riskli", "domainLevels": ["Riskli", "Riskli", "Riskli", "Riskli", "Riskli", "Riskli"], "reportSha256": "c31e2b579233345631eed67c73805ccce8425de4b53fa872483bafb28ccbdaae" },
+    { "case": 4, "totalScore": 160, "globalLevel": "Atipik", "domainLevels": ["Riskli", "Riskli", "Riskli", "Riskli", "Riskli", "Riskli"], "reportSha256": "abb3f08b24d9d4d6fe7783342f0d5818b3ebbce698334c6f1815b03097cba72d" },
+    { "case": 5, "totalScore": 180, "globalLevel": "Riskli", "domainLevels": ["Riskli", "Tipik", "Tipik", "Riskli", "Riskli", "Tipik"], "reportSha256": "b168c00976f130fc94655a03d11b7ef846bb11502077c391c0eb0cdf2cdbd305" }
+  ]
+}

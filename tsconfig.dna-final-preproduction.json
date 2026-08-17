@@ -1,0 +1,24 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp/dna-final-preproduction",
+    "rootDir": ".",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2020",
+    "incremental": false,
+    "isolatedModules": false,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "scripts/run-dna-adaptive-realization-tests.ts",
+    "scripts/run-dna-chat-final-preproduction.ts",
+    "scripts/run-dna-s13-heading-concept-qa.ts",
+    "src/lib/dna/chat/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next"
+  ]
+}

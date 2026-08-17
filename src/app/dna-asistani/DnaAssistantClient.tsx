@@ -39,7 +39,11 @@ import type {
   DnaChatConversationContext,
   DnaChatConversationQueryKind,
 } from "@/lib/dna/chat/types"
-import DnaIssueFeedback from "./DnaIssueFeedback"
+import {
+  isDnaS13LimitedOwnerBookAuthority,
+  validateDnaS13LimitedPublicResponse,
+} from "@/lib/dna/chat/s13/limitedRollout/responseContract"
+import DnaIssueFeedback, { DnaLimitedRolloutFeedback } from "./DnaIssueFeedback"
 
 type DnaChatClassification =
   | "dna_concept"
@@ -65,6 +69,7 @@ type KnowledgeAuthority = {
   layer:
     | "dna_product_information"
     | "external_scientific_information"
+    | "owner_book_information"
     | "case_information"
     | "safety_and_product_boundaries"
   labelTr: string
@@ -96,6 +101,7 @@ type AnswerUnit = {
   kind: "summary" | "detail" | "case_evidence" | "limitation" | "safety_boundary"
   role:
     | "product_definition"
+    | "owner_book_information"
     | "scientific_evidence"
     | "dna_specific_validation"
     | "case_finding"
@@ -178,6 +184,8 @@ type DnaAnswer = {
   packageVersion: string
   packageSha256: string | null
   topic: string | null
+  limitedRolloutFeedbackEligible: boolean
+  limitedRolloutContextToken: string | null
   conversationContext?: DnaChatConversationContext
   contextRequest?: ContextRequest
   evidenceSummary?: EvidenceSummary
@@ -249,6 +257,7 @@ function normalizeStringList(value: unknown): string[] {
 const AUTHORITY_LAYERS = new Set<KnowledgeAuthority["layer"]>([
   "dna_product_information",
   "external_scientific_information",
+  "owner_book_information",
   "case_information",
   "safety_and_product_boundaries",
 ])
@@ -258,7 +267,7 @@ const AUTHORITY_STATUSES = new Set<KnowledgeAuthority["verificationStatus"]>([
   "verified",
   "test_only",
 ])
-const AUTHORITY_APPROVAL_BY_LAYER: Record<KnowledgeAuthority["layer"], string> = {
+const LEGACY_AUTHORITY_APPROVAL_BY_LAYER: Partial<Record<KnowledgeAuthority["layer"], string>> = {
   dna_product_information: "owner_approved",
   external_scientific_information: "codex_multi_pass_audited",
   case_information: "report_derived",
@@ -268,10 +277,11 @@ const ANSWER_UNIT_KINDS = new Set<AnswerUnit["kind"]>([
   "summary", "detail", "case_evidence", "limitation", "safety_boundary",
 ])
 const ANSWER_UNIT_ROLES = new Set<AnswerUnit["role"]>([
-  "product_definition", "scientific_evidence", "dna_specific_validation", "case_finding", "safety_boundary",
+  "product_definition", "owner_book_information", "scientific_evidence", "dna_specific_validation", "case_finding", "safety_boundary",
 ])
 const ANSWER_ROLE_LAYER: Record<AnswerUnit["role"], KnowledgeAuthority["layer"]> = {
   product_definition: "dna_product_information",
+  owner_book_information: "owner_book_information",
   scientific_evidence: "external_scientific_information",
   dna_specific_validation: "external_scientific_information",
   case_finding: "case_information",
@@ -306,9 +316,21 @@ const V3_ANSWER_SECTION_LABEL: Record<V3AnswerSection, string> = {
   boundary: "Kanıt ve yorum sınırları",
 }
 
-function normalizeAuthority(value: unknown): KnowledgeAuthority | null {
+function normalizeAuthority(value: unknown, limitedResponse = false): KnowledgeAuthority | null {
   if (!value || typeof value !== "object") return null
   const row = value as Record<string, unknown>
+  if (limitedResponse) {
+    if (!isDnaS13LimitedOwnerBookAuthority(row)) return null
+    return {
+      contractVersion: String(row.contractVersion),
+      layer: "owner_book_information",
+      labelTr: String(row.labelTr),
+      approvalRequirement: String(row.approvalRequirement),
+      verificationStatus: "verified",
+      releaseEligible: true,
+      boundaryTr: String(row.boundaryTr),
+    }
+  }
   const layer = String(row.layer || "") as KnowledgeAuthority["layer"]
   const verificationStatus = String(row.verificationStatus || "") as KnowledgeAuthority["verificationStatus"]
   const contractVersion = String(row.contractVersion || "").trim()
@@ -320,7 +342,8 @@ function normalizeAuthority(value: unknown): KnowledgeAuthority | null {
     !AUTHORITY_LAYERS.has(layer) ||
     !AUTHORITY_STATUSES.has(verificationStatus) ||
     !labelTr ||
-    approvalRequirement !== AUTHORITY_APPROVAL_BY_LAYER[layer] ||
+    !LEGACY_AUTHORITY_APPROVAL_BY_LAYER[layer] ||
+    approvalRequirement !== LEGACY_AUTHORITY_APPROVAL_BY_LAYER[layer] ||
     (releaseEligible && verificationStatus !== "verified")
   ) return null
   return {
@@ -336,12 +359,12 @@ function normalizeAuthority(value: unknown): KnowledgeAuthority | null {
   }
 }
 
-function normalizeSource(value: unknown): SourceRef | null {
+function normalizeSource(value: unknown, limitedResponse = false): SourceRef | null {
   if (!value || typeof value !== "object") return null
   const row = value as Record<string, unknown>
   const id = String(row.id || "").trim()
   if (!id) return null
-  const authority = normalizeAuthority(row.authority)
+  const authority = normalizeAuthority(row.authority, limitedResponse)
   const optionalString = (key: string) => {
     const candidate = String(row[key] || "").trim()
     return candidate || undefined
@@ -385,12 +408,16 @@ function normalizeSource(value: unknown): SourceRef | null {
   }
 }
 
-function normalizeAnswerUnit(value: unknown, runtimeGeneration: DnaAnswer["runtimeGeneration"]): AnswerUnit | null {
+function normalizeAnswerUnit(
+  value: unknown,
+  runtimeGeneration: DnaAnswer["runtimeGeneration"],
+  limitedResponse = false,
+): AnswerUnit | null {
   if (!value || typeof value !== "object") return null
   const row = value as Record<string, unknown>
   const kind = String(row.kind || "") as AnswerUnit["kind"]
   const role = String(row.role || "") as AnswerUnit["role"]
-  const authority = normalizeAuthority(row.authority)
+  const authority = normalizeAuthority(row.authority, limitedResponse)
   const id = String(row.id || "").trim()
   const text = String(row.text || "").trim()
   const rawSection = String(row.section || "") as V3AnswerSection
@@ -416,6 +443,13 @@ function normalizeAnswerUnit(value: unknown, runtimeGeneration: DnaAnswer["runti
 function normalizeAnswer(value: unknown): DnaAnswer | null {
   if (!value || typeof value !== "object") return null
   const row = value as Record<string, unknown>
+  const hasLimitedRolloutContract = row.limitedRolloutContract !== undefined
+  const limitedRolloutContract = hasLimitedRolloutContract
+    ? validateDnaS13LimitedPublicResponse(row)
+    : null
+  if (hasLimitedRolloutContract && !limitedRolloutContract) return null
+  if (row.limitedRolloutFeedbackEligible === true && !limitedRolloutContract) return null
+  const limitedResponse = Boolean(limitedRolloutContract)
   const classification = String(row.classification || "") as DnaChatClassification
   if (!(classification in CLASSIFICATION_META)) return null
   const requestId = String(row.requestId || "").trim()
@@ -460,14 +494,20 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
   const conversationContext = rawConversationTopicIds.length && rawLastQueryKind && CONVERSATION_QUERY_KINDS.has(rawLastQueryKind)
     ? { topicIds: rawConversationTopicIds, lastQueryKind: rawLastQueryKind }
     : undefined
+  const limitedRolloutContextToken = rawConversationContext && typeof rawConversationContext === "object"
+    && typeof (rawConversationContext as Record<string, unknown>).limitedRolloutContextToken === "string"
+    ? String((rawConversationContext as Record<string, unknown>).limitedRolloutContextToken).slice(0, 2_048)
+    : null
 
   const sources = Array.isArray(row.sources)
-    ? row.sources.map(normalizeSource).filter((entry): entry is SourceRef => Boolean(entry))
+    ? row.sources
+        .map((entry) => normalizeSource(entry, limitedResponse))
+        .filter((entry): entry is SourceRef => Boolean(entry))
     : []
   if (Array.isArray(row.sources) && sources.length !== row.sources.length) return null
   const authoritySummary = Array.isArray(row.authoritySummary)
     ? row.authoritySummary
-        .map(normalizeAuthority)
+        .map((entry) => normalizeAuthority(entry, limitedResponse))
         .filter((entry): entry is KnowledgeAuthority => Boolean(entry))
     : []
   if (!Array.isArray(row.authoritySummary) || authoritySummary.length !== row.authoritySummary.length) {
@@ -475,7 +515,7 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
   }
   const answerUnits = Array.isArray(row.answerUnits)
     ? row.answerUnits
-        .map((entry) => normalizeAnswerUnit(entry, runtimeGeneration))
+        .map((entry) => normalizeAnswerUnit(entry, runtimeGeneration, limitedResponse))
         .filter((entry): entry is AnswerUnit => Boolean(entry))
     : []
   if (!Array.isArray(row.answerUnits) || !answerUnits.length || answerUnits.length !== row.answerUnits.length) {
@@ -500,6 +540,7 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
   }
   if (runtimeGeneration === "v3" && answerUnits.some((unit) => {
     const isScientific = unit.role === "product_definition"
+      || unit.role === "owner_book_information"
       || unit.role === "scientific_evidence"
       || unit.role === "dna_specific_validation"
     if (!isScientific) return unit.citationCardIds.length > 0
@@ -542,6 +583,8 @@ function normalizeAnswer(value: unknown): DnaAnswer | null {
       ? row.packageSha256
       : null,
     topic: typeof row.topic === "string" && row.topic.trim() ? row.topic.trim() : null,
+    limitedRolloutFeedbackEligible: limitedResponse,
+    limitedRolloutContextToken,
     ...(conversationContext ? { conversationContext } : {}),
     ...(contextRequest ? { contextRequest } : {}),
     ...(evidenceSummary && Object.values(evidenceSummary).some(Boolean) ? { evidenceSummary } : {}),
@@ -582,6 +625,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [previousTopic, setPreviousTopic] = useState<string | null>(null)
   const [conversationContext, setConversationContext] = useState<DnaChatConversationContext | null>(null)
+  const [limitedRolloutContextToken, setLimitedRolloutContextToken] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState("")
   const [sendErrorCode, setSendErrorCode] = useState("")
@@ -595,6 +639,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
   const reportPickerFocusPendingRef = useRef(false)
   const reportRequestSequenceRef = useRef(0)
   const requestCoordinatorRef = useRef(createDnaChatRequestCoordinator())
+  const conversationIdRef = useRef("")
   const reportSelectionCoordinatorRef = useRef(createDnaChatReportSelectionCoordinator())
 
   const selectedReport = reports.find((report) => report.id === selectedReportId) || null
@@ -709,6 +754,8 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
     setMessages([])
     setPreviousTopic(null)
     setConversationContext(null)
+    setLimitedRolloutContextToken(null)
+    conversationIdRef.current = ""
     setPendingReportQuestion(null)
     setQuestion("")
     setSendError("")
@@ -798,6 +845,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
     }
 
     try {
+      if (!conversationIdRef.current) conversationIdRef.current = crypto.randomUUID()
       const response = await fetch("/api/app/dna-chat", {
         method: "POST",
         credentials: "same-origin",
@@ -810,6 +858,8 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
         body: JSON.stringify({
           question: request.snapshot.question,
           responseDepth: request.snapshot.responseDepth,
+          conversationId: conversationIdRef.current,
+          ...(limitedRolloutContextToken ? { limitedRolloutContextToken } : {}),
           ...(request.snapshot.reportId ? { reportId: request.snapshot.reportId } : {}),
           ...((request.snapshot.previousTopic || request.snapshot.conversationContext)
             ? {
@@ -837,6 +887,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
       setMessages((current) => [...current, { id: messageId("assistant"), role: "assistant", answer }])
       setPreviousTopic(answer.topic)
       setConversationContext(answer.conversationContext ?? null)
+      setLimitedRolloutContextToken(answer.limitedRolloutContextToken)
       if (answer.contextRequest?.type === "report" && !request.snapshot.reportId) {
         setPendingReportQuestion(request.snapshot.question)
         reportPickerFocusPendingRef.current = true
@@ -1369,8 +1420,7 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
   const baseMeta = CLASSIFICATION_META[answer.classification]
   const meta = baseMeta
   const visibleAnswerUnits = answer.answerUnits.filter((unit) =>
-    unit.kind !== "limitation"
-      && (unit.kind !== "safety_boundary" || unit.section === "case_non_inference"))
+    unit.kind !== "safety_boundary" || unit.section === "case_non_inference")
   const hasStructuredUnits = visibleAnswerUnits.length > 0
   const sourceNumberById = new Map<string, number>()
   answer.sources.forEach((source, index) => {
@@ -1555,7 +1605,10 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
         </details>
       ) : null}
 
-      <div className="mt-3 flex justify-end">
+      <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+        {answer.limitedRolloutFeedbackEligible ? (
+          <DnaLimitedRolloutFeedback requestId={answer.requestId} />
+        ) : null}
         <DnaIssueFeedback scope="answer" requestId={answer.requestId} />
       </div>
         </div>

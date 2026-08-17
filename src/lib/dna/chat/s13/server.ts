@@ -16,6 +16,13 @@ import {
   type DnaS13RequiredAnswerSlot,
 } from "./contracts"
 import { DNA_CHAT_LUNA_MODEL } from "../lunaPolicy"
+import { validateDnaS13StrictRealization, type DnaS13StrictPlan, type DnaS13StrictRealization } from "./strictContracts"
+import {
+  DNA_S13_STRICT_PROMPT_VERSION,
+  dnaS13StrictContent,
+  dnaS13StrictInstructions,
+  dnaS13StrictRealizationSchema,
+} from "./strictPrompt"
 
 export const DNA_S13_PROMPT_VERSION = "dna-s13-prompts@1" as const
 export const DNA_S13_REQUEST_TIMEOUT_MS = 5_000
@@ -30,6 +37,7 @@ export type DnaS13ProviderUsage = Readonly<{
 
 export type DnaS13ProviderResult<T> = Readonly<{
   value: T
+  rawOutput: string
   responseId: string | null
   usage: DnaS13ProviderUsage
   latencyMs: number
@@ -118,6 +126,7 @@ export async function requestDnaS13StructuredOutput(input: Readonly<{
     const row = payload as Record<string, unknown>
     return Object.freeze({
       value,
+      rawOutput: text,
       responseId: typeof row.id === "string" ? row.id : null,
       usage: usage(payload),
       latencyMs: performance.now() - started,
@@ -248,5 +257,33 @@ export async function requestDnaS13Realization(input: Readonly<{
   })
   if (!candidate) return null
   const value = validateDnaS13Realization(candidate.value)
+  return value ? Object.freeze({ ...candidate, value }) : null
+}
+
+export async function requestDnaS13StrictRealization(input: Readonly<{
+  question: string
+  plan: DnaS13StrictPlan
+  repairFailureCodes?: readonly string[]
+  previousCandidate?: DnaS13StrictRealization | null
+  safetyIdentifier?: string | null
+  apiKey?: string
+  fetchImpl?: FetchLike
+}>): Promise<DnaS13ProviderResult<DnaS13StrictRealization> | null> {
+  const candidate = await requestDnaS13StructuredOutput({
+    name: input.repairFailureCodes?.length ? "dna_s13_strict_repair" : "dna_s13_strict_realization",
+    schema: dnaS13StrictRealizationSchema(input.plan) as Record<string, unknown>,
+    instructions: `${DNA_S13_STRICT_PROMPT_VERSION}. ${dnaS13StrictInstructions(input.repairFailureCodes)}`,
+    content: dnaS13StrictContent(input.question, input.plan, input.previousCandidate),
+    maxOutputTokens: input.plan.responseDepth === "deep" ? 1_100 : input.plan.responseDepth === "short" ? 320 : 760,
+    safetyIdentifier: input.safetyIdentifier,
+    apiKey: input.apiKey,
+    fetchImpl: input.fetchImpl,
+  })
+  if (!candidate) return null
+  const value = validateDnaS13StrictRealization(
+    candidate.value,
+    input.plan.slots.map((slot) => slot.id),
+    input.plan.lockedClaimIds,
+  )
   return value ? Object.freeze({ ...candidate, value }) : null
 }

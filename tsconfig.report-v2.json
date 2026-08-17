@@ -1,0 +1,30 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp/report-v2",
+    "rootDir": ".",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2020",
+    "incremental": false,
+    "isolatedModules": false
+  },
+  "include": [
+    "scripts/report-v2-cases.ts",
+    "scripts/run-report-v2-tests.ts",
+    "scripts/run-report-v2-blind.ts",
+    "scripts/run-report-v2-language-hardening.ts",
+    "scripts/run-report-v2-final-language-qa.ts",
+    "scripts/run-report-v2-quality-consolidation.ts",
+    "scripts/run-report-v2-final-consistency.ts",
+    "scripts/run-report-v2-production-readiness.ts",
+    "scripts/run-report-v2-plain-clinical-turkish.ts",
+    "scripts/run-report-v2-plain-integration-qa.ts",
+    "scripts/run-report-v2-human-readability-acceptance.ts",
+    "scripts/run-report-v2-human-clinical-editor-pass.ts",
+    "scripts/run-report-v2-clinical-content-release-candidate.ts",
+    "scripts/run-report-v2-luna-smoke.ts",
+    "src/lib/dna/reportV2/**/*.ts"
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp/dna-international-adjudication",
+    "rootDir": ".",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2020",
+    "incremental": false,
+    "isolatedModules": false,
+    "resolveJsonModule": true
+  },
+  "include": [
+    "scripts/run-dna-international-gate-adjudication.ts",
+    "src/lib/dna/chat/**/*.ts"
+  ],
+  "exclude": ["node_modules", ".next"]
+}

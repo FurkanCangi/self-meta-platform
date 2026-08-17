@@ -1,0 +1,12 @@
+{
+  "extends": "./tsconfig.report-runner.json",
+  "include": [
+    "scripts/run-dna-e2e-user-intent-certification.ts",
+    "src/lib/dna/chat/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    "src/lib/dna/reportV2"
+  ]
+}

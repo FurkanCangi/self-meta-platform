@@ -46,6 +46,11 @@ export type DnaS13Focus = typeof DNA_S13_FOCUS_VALUES[number]
 export type DnaS13QuestionType = typeof DNA_S13_QUESTION_TYPES[number]
 export type DnaS13Depth = typeof DNA_S13_DEPTHS[number]
 export type DnaS13Answerability = typeof DNA_S13_ANSWERABILITY[number]
+export const DNA_S13_REQUESTED_FACETS = Object.freeze([
+  "definition", "function", "boundary", "supported_meaning", "limitation",
+  "components", "core_scope", "explanatory_detail", "distinction", "verified_example",
+] as const)
+export type DnaS13RequestedFacet = typeof DNA_S13_REQUESTED_FACETS[number]
 
 export type DnaS13Subquestion = Readonly<{
   id: string
@@ -58,6 +63,7 @@ export type DnaS13Subquestion = Readonly<{
   correction: boolean
   comparisonTargetTopicIds: readonly string[]
   answerabilityHint: DnaS13Answerability
+  requestedFacets?: readonly DnaS13RequestedFacet[]
 }>
 
 export type DnaS13QueryFrame = Readonly<{
@@ -88,6 +94,13 @@ export type DnaS13Claim = Readonly<{
   sourceIds: readonly string[]
   topicId: string
   focus?: string
+  sectionId?: string
+  title?: string
+  domain?: string
+  dimensions?: readonly string[]
+  authorityClass?: string
+  citationStatus?: string
+  answerEligible?: boolean
 }>
 
 export type DnaS13RetrievalPackage = Readonly<{
@@ -151,10 +164,12 @@ export function validateDnaS13QueryFrame(
     const questionType = item.questionType as DnaS13QuestionType
     const answerabilityHint = item.answerabilityHint as DnaS13Answerability
     const targets = stringArray(item.comparisonTargetTopicIds, 2)
+    const requestedFacets = stringArray(item.requestedFacets ?? [], 4) as DnaS13RequestedFacet[] | null
     if (id !== `q${index + 1}` || question.length < 2 || question.length > 400) return null
     if (!DNA_S13_INTENTS.includes(intent) || !allowed.has(topicId)) return null
     if (!DNA_S13_FOCUS_VALUES.includes(focus) || !DNA_S13_QUESTION_TYPES.includes(questionType)) return null
-    if (!DNA_S13_ANSWERABILITY.includes(answerabilityHint) || targets === null) return null
+    if (!DNA_S13_ANSWERABILITY.includes(answerabilityHint) || targets === null || requestedFacets === null) return null
+    if (requestedFacets.some((facet) => !DNA_S13_REQUESTED_FACETS.includes(facet))) return null
     if (targets.some((target) => !allowed.has(target))) return null
     if (typeof item.followUp !== "boolean" || typeof item.correction !== "boolean") return null
     if (questionType === "comparison" && targets.length < 2) return null
@@ -170,6 +185,7 @@ export function validateDnaS13QueryFrame(
       correction: item.correction,
       comparisonTargetTopicIds: Object.freeze(targets),
       answerabilityHint,
+      requestedFacets: Object.freeze(requestedFacets),
     }))
   }
 
