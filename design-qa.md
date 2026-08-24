@@ -100,14 +100,15 @@ final result: passed
 ## Finding And Iteration
 
 - **P1 — Theme source mismatch made “Merhaba,” nearly invisible:** The screenshot showed a light hero surface while `dark:` text utilities followed the OS/browser dark preference, producing a very pale heading and supporting copy.
-- **Fix:** Bound greeting text, hero surface, borders, shadows, halos, and supporting card colors to the application's existing `data-theme` CSS variables. Split the greeting into explicit label/name spans and gave the name gradient light/dark theme tokens.
+- **Fix:** Bound greeting text and surfaces to the application's existing `data-theme` values. Split the greeting into explicit label/name spans and defined the decorative name, halo, and primary-card colors as stable light/dark theme classes.
 - **Post-fix evidence:** Light state computed heading `rgb(15, 23, 42)` on `rgb(255, 255, 255)`. Dark state computed heading `rgb(248, 250, 252)` on `rgb(16, 24, 39)`. Both states preserve `Merhaba, Furkan` without wrapping or clipping.
+- **Production-bundle iteration:** The first production check found that newly introduced decorative custom properties were removed by CSS optimization and that the initial arbitrary border syntax resolved to the current text color. Replaced decorative variables with explicit theme classes and corrected borders to the existing semantic border token; this release cannot pass until the optimized production CSS and live authenticated screen both confirm the fix.
 
 ## Required Fidelity Surfaces
 
 - **Typography:** Existing system font, heavy display weight, desktop scale, tracking, and copy hierarchy are preserved. The explicit `0.22em` label/name gap removes the visually weak raw-text transition.
 - **Spacing and layout rhythm:** Hero dimensions and surrounding card grid are unchanged. The greeting stays on one line at the tested desktop viewport and can wrap as one controlled inline group at narrower widths.
-- **Colors and tokens:** Light and dark output now follow `--sm-*` application theme variables instead of OS-driven Tailwind `dark:` behavior. The name uses cyan/blue/violet theme tokens in both modes.
+- **Colors and tokens:** Semantic surfaces follow the existing `--sm-*` variables instead of OS-driven Tailwind `dark:` behavior. Decorative name and halo colors use direct `data-theme` class overrides so production CSS optimization cannot remove them.
 - **Image and icon quality:** No image, logo, or icon asset was changed.
 - **Copy and content:** `Merhaba, Furkan` and the supporting sentence are unchanged.
 

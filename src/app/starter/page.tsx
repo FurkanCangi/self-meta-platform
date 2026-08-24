@@ -96,11 +96,11 @@ export default function StarterPage() {
     <div className="relative px-4 py-5 md:px-6 md:py-7">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_14%_8%,rgba(0,200,215,0.13),transparent_32%),radial-gradient(circle_at_86%_14%,rgba(124,58,237,0.12),transparent_34%)]" />
       <div className="dna-app-only dna-app-page space-y-4">
-        <section className="rounded-[22px] border border-[color:var(--sm-border)] bg-[var(--sm-surface)] p-4 shadow-sm transition-colors duration-300">
+        <section className="rounded-[22px] border border-[var(--sm-border)] bg-[var(--sm-surface)] p-4 shadow-sm transition-colors duration-300">
           <TherapistWelcome surface="app" />
           <Link
             href="/clients?surface=app"
-            className="mt-4 flex min-h-12 items-center gap-3 rounded-2xl border border-[color:var(--sm-border)] bg-[var(--sm-surface-soft)] px-4 text-sm font-semibold text-[var(--sm-text-muted)] transition-colors duration-300"
+            className="mt-4 flex min-h-12 items-center gap-3 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-4 text-sm font-semibold text-[var(--sm-text-muted)] transition-colors duration-300"
           >
             <Search size={18} />
             Danışan kodu ara
@@ -177,12 +177,12 @@ export default function StarterPage() {
       </div>
 
       <div className="dna-web-only mx-auto max-w-7xl">
-        <section className="relative overflow-hidden rounded-[32px] border border-[color:var(--sm-border)] bg-[var(--sm-surface)] p-7 shadow-[var(--sm-shadow)] backdrop-blur-xl transition-colors duration-300 md:p-8">
-          <div className="absolute -right-24 -top-28 h-72 w-72 rounded-full bg-[var(--sm-welcome-halo-cyan)] blur-3xl" />
-          <div className="absolute right-20 top-0 h-64 w-64 rounded-full bg-[var(--sm-welcome-halo-violet)] blur-3xl" />
+        <section className="relative overflow-hidden rounded-[32px] border border-[var(--sm-border)] bg-[var(--sm-surface)] p-7 shadow-[var(--sm-shadow)] backdrop-blur-xl transition-colors duration-300 md:p-8">
+          <div className="sm-welcome-halo-cyan absolute -right-24 -top-28 h-72 w-72 rounded-full blur-3xl" />
+          <div className="sm-welcome-halo-violet absolute right-20 top-0 h-64 w-64 rounded-full blur-3xl" />
           <div className="relative grid gap-7 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-center">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-[color:var(--sm-border)] bg-[var(--sm-surface-soft)] px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-[var(--sm-text)] shadow-sm transition-colors duration-300">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-[var(--sm-text)] shadow-sm transition-colors duration-300">
                 <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-cyan-400 via-blue-600 to-violet-600 shadow-[0_0_0_5px_rgba(37,99,235,0.10)]" />
                 DNA Intelligence
               </div>
@@ -190,10 +190,7 @@ export default function StarterPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-              <div
-                className="rounded-2xl border border-[color:var(--sm-border)] p-4 transition-colors duration-300"
-                style={{ backgroundImage: "var(--sm-welcome-card-primary)" }}
-              >
+              <div className="sm-welcome-card-primary rounded-2xl border border-[var(--sm-border)] p-4 transition-colors duration-300">
                 <div className="flex items-center gap-3">
                   <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--sm-surface)] text-blue-600 shadow-sm">
                     <GraduationCap size={22} />
@@ -204,7 +201,7 @@ export default function StarterPage() {
                   </div>
                 </div>
               </div>
-              <div className="rounded-2xl border border-[color:var(--sm-border)] bg-[var(--sm-surface-soft)] p-4 shadow-sm transition-colors duration-300">
+              <div className="rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-4 shadow-sm transition-colors duration-300">
                 <div className="flex items-center gap-3">
                   <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--sm-surface)] text-cyan-600">
                     <Sparkles size={22} />
@@ -215,7 +212,7 @@ export default function StarterPage() {
                   </div>
                 </div>
               </div>
-              <div className="rounded-2xl border border-[color:var(--sm-border)] bg-[var(--sm-surface-soft)] p-4 shadow-sm transition-colors duration-300">
+              <div className="rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-4 shadow-sm transition-colors duration-300">
                 <div className="flex items-center gap-3">
                   <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--sm-surface)] text-violet-600">
                     <ClipboardCheck size={22} />

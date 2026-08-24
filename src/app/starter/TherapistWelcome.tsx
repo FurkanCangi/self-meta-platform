@@ -13,13 +13,7 @@ function Greeting({ name }: { name: string }) {
         Merhaba{name ? "," : ""}
       </span>
       {name ? (
-        <span
-          className="bg-clip-text text-transparent"
-          style={{
-            backgroundImage:
-              "linear-gradient(90deg, var(--sm-welcome-name-from), var(--sm-welcome-name-via), var(--sm-welcome-name-to))",
-          }}
-        >
+        <span className="sm-welcome-name">
           {name}
         </span>
       ) : null}
