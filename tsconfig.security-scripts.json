@@ -22,6 +22,7 @@
     "scripts/live-security-hardening-contract-tests.ts",
     "src/lib/owner/ownerSecurityCore.ts",
     "src/lib/therapists/directory.ts",
+    "src/lib/therapists/geocoding.ts",
     "src/lib/dna/reportLogger.ts"
   ],
   "exclude": [

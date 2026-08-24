@@ -5,6 +5,7 @@ export type TherapistDirectoryProfile = {
   profession: string
   title: string
   workplace: string
+  country: string
   city: string
   district: string
   publicPhone: string
@@ -15,6 +16,10 @@ export type TherapistDirectoryProfile = {
   publicListingEnabled: boolean
   publicationStatus: "pending" | "approved" | "hidden" | "rejected"
   updatedAt: string | null
+  latitude: number | null
+  longitude: number | null
+  locationPrecision: "district" | "city" | null
+  locationVerifiedAt: string | null
 }
 
 export type PublicTherapist = {
@@ -25,12 +30,16 @@ export type PublicTherapist = {
   profession: string
   title: string
   workplace: string
+  country: string
   city: string
   district: string
   phone: string
   email: string
   shortAddress: string
   specialties: string[]
+  latitude: number | null
+  longitude: number | null
+  locationPrecision: "district" | "city" | null
 }
 
 const MAX_TEXT_LENGTH = 220
@@ -44,8 +53,10 @@ export const DIRECTORY_REQUIRED_FIELD_LABELS: Record<string, string> = {
   lastName: "soyad",
   profession: "meslek",
   workplace: "kurum adı",
+  country: "ülke",
   city: "şehir",
   shortAddress: "adres",
+  location: "doğrulanabilir ülke/şehir/ilçe",
   specialties: "en az bir uzmanlık alanı",
 }
 
@@ -91,6 +102,7 @@ export function normalizeDirectoryInput(input: Record<string, unknown>) {
     profession: cleanText(input.profession),
     title: cleanText(input.title),
     workplace: cleanText(input.workplace),
+    country: cleanText(input.country),
     city: cleanText(input.city),
     district: cleanText(input.district),
     public_phone: cleanPhone(input.publicPhone),
@@ -107,6 +119,7 @@ export function getDirectoryPublicationMissingFields(input: ReturnType<typeof no
   if (!input.last_name) missing.push("lastName")
   if (!input.profession) missing.push("profession")
   if (!input.workplace) missing.push("workplace")
+  if (!input.country) missing.push("country")
   if (!input.city) missing.push("city")
   if (!input.short_address) missing.push("shortAddress")
   if (parseDirectorySpecialties(input.specialties).length === 0) missing.push("specialties")
@@ -121,6 +134,7 @@ export function mapDirectoryRow(row: any): TherapistDirectoryProfile {
     profession: String(row?.profession || ""),
     title: String(row?.title || ""),
     workplace: String(row?.workplace || ""),
+    country: String(row?.country || ""),
     city: String(row?.city || ""),
     district: String(row?.district || ""),
     publicPhone: String(row?.public_phone || ""),
@@ -131,6 +145,10 @@ export function mapDirectoryRow(row: any): TherapistDirectoryProfile {
     publicListingEnabled: Boolean(row?.public_listing_enabled),
     publicationStatus: (row?.publication_status || "pending") as TherapistDirectoryProfile["publicationStatus"],
     updatedAt: row?.updated_at ? String(row.updated_at) : null,
+    latitude: readCoordinate(row?.location_latitude, -90, 90),
+    longitude: readCoordinate(row?.location_longitude, -180, 180),
+    locationPrecision: row?.location_precision === "district" || row?.location_precision === "city" ? row.location_precision : null,
+    locationVerifiedAt: row?.location_verified_at ? String(row.location_verified_at) : null,
   }
 }
 
@@ -147,12 +165,16 @@ export function mapPublicTherapist(row: any): PublicTherapist {
     profession: String(row?.profession || "").trim(),
     title: String(row?.title || "").trim(),
     workplace: String(row?.workplace || "").trim(),
+    country: String(row?.country || "").trim(),
     city: String(row?.city || "").trim(),
     district: String(row?.district || "").trim(),
     phone: String(row?.public_phone || "").trim(),
     email: String(row?.public_email || "").trim(),
     shortAddress: String(row?.short_address || "").trim(),
     specialties,
+    latitude: readCoordinate(row?.location_latitude, -90, 90),
+    longitude: readCoordinate(row?.location_longitude, -180, 180),
+    locationPrecision: row?.location_precision === "district" || row?.location_precision === "city" ? row.location_precision : null,
   }
 }
 
@@ -162,8 +184,18 @@ export function isPublicTherapistComplete(therapist: PublicTherapist) {
       therapist.lastName &&
       therapist.profession &&
       therapist.workplace &&
+      therapist.country &&
       therapist.city &&
       therapist.shortAddress &&
-      therapist.specialties.length > 0,
+      therapist.specialties.length > 0 &&
+      therapist.latitude !== null &&
+      therapist.longitude !== null &&
+      therapist.locationPrecision,
   )
+}
+
+function readCoordinate(value: unknown, minimum: number, maximum: number) {
+  if (value === null || value === undefined || value === "") return null
+  const parsed = typeof value === "number" ? value : Number(String(value ?? ""))
+  return Number.isFinite(parsed) && parsed >= minimum && parsed <= maximum ? parsed : null
 }

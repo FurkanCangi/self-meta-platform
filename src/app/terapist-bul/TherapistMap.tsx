@@ -13,12 +13,14 @@ export type TherapistMapPoint = {
   fullName: string
   profession: string
   workplace: string
+  country: string
   city: string
   district: string
   shortAddress: string
   specialties: string[]
   latitude: number
   longitude: number
+  locationPrecision: "district" | "city"
   isExample: boolean
 }
 
@@ -39,12 +41,20 @@ function MapFocusController({ points, selectedId }: Pick<TherapistMapProps, "poi
   useEffect(() => {
     const selected = points.find((point) => point.id === selectedId)
     if (selected) {
-      map.flyTo([selected.latitude, selected.longitude], 9, { duration: 0.8 })
+      map.flyTo([selected.latitude, selected.longitude], selected.locationPrecision === "district" ? 12 : 10, {
+        duration: 0.8,
+      })
       return
     }
 
     if (points.length === 0) {
-      map.setView([39.05, 35.15], 5)
+      map.setView([20, 0], 2)
+      return
+    }
+
+    if (points.length === 1) {
+      const [point] = points
+      map.setView([point.latitude, point.longitude], point.locationPrecision === "district" ? 11 : 9)
       return
     }
 
@@ -52,7 +62,7 @@ function MapFocusController({ points, selectedId }: Pick<TherapistMapProps, "poi
     map.fitBounds(bounds, {
       animate: true,
       duration: 0.7,
-      maxZoom: points.length === 1 ? 8 : 6,
+      maxZoom: 9,
       padding: [54, 54],
     })
   }, [map, points, selectedId])
@@ -63,17 +73,12 @@ function MapFocusController({ points, selectedId }: Pick<TherapistMapProps, "poi
 export default function TherapistMap({ points, selectedId, onSelect }: TherapistMapProps) {
   return (
     <MapContainer
-      center={[39.05, 35.15]}
+      center={[20, 0]}
       className={styles.liveMap}
-      maxBounds={[
-        [34.2, 22.2],
-        [43.5, 48.4],
-      ]}
-      maxBoundsViscosity={0.72}
-      maxZoom={13}
-      minZoom={4}
+      maxZoom={16}
+      minZoom={2}
       scrollWheelZoom={false}
-      zoom={5}
+      zoom={2}
       zoomControl={false}
     >
       <TileLayer
@@ -104,7 +109,7 @@ export default function TherapistMap({ points, selectedId, onSelect }: Therapist
           >
             <Tooltip direction="top" offset={[0, -12]} opacity={1}>
               <strong>{point.fullName}</strong>
-              <span>{point.city}</span>
+              <span>{[point.district, point.city, point.country].filter(Boolean).join(" / ")}</span>
             </Tooltip>
             <Popup closeButton={false} className={styles.mapPopupShell} offset={[0, -8]}>
               <article className={styles.mapPopup}>
@@ -117,7 +122,7 @@ export default function TherapistMap({ points, selectedId, onSelect }: Therapist
                 </div>
                 <p>
                   <MapPin size={15} />
-                  {[point.shortAddress, [point.district, point.city].filter(Boolean).join(" / ")]
+                  {[point.shortAddress, [point.district, point.city, point.country].filter(Boolean).join(" / ")]
                     .filter(Boolean)
                     .join(" · ")}
                 </p>

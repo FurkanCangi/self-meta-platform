@@ -15,6 +15,7 @@ type TherapistProfile = {
   title: string
   profession: string
   workplace: string
+  country: string
   city: string
   district: string
   publicEmail: string
@@ -41,6 +42,7 @@ const defaultProfile: TherapistProfile = {
   title: "Uzm. Ergoterapist",
   profession: "Ergoterapist",
   workplace: "",
+  country: "Türkiye",
   city: "",
   district: "",
   publicEmail: "",
@@ -311,6 +313,7 @@ export default function ProfilePage() {
             <Field label="Unvan" value={profile.title} onChange={(v) => handleChange("title", v)} placeholder="Örn. Uzm. Ergoterapist" />
             <Field label="Meslek" value={profile.profession} onChange={(v) => handleChange("profession", v)} placeholder="Ergoterapist" />
             <Field label="Çalıştığı Kurum" value={profile.workplace} onChange={(v) => handleChange("workplace", v)} placeholder="Üniversite / Hastane / Klinik" />
+            <Field label="Ülke" value={profile.country} onChange={(v) => handleChange("country", v)} placeholder="Türkiye" />
             <Field label="Şehir" value={profile.city} onChange={(v) => handleChange("city", v)} placeholder="İstanbul" />
             <Field label="İlçe" value={profile.district} onChange={(v) => handleChange("district", v)} placeholder="Kadıköy" />
             <Field label="Public E-posta" value={profile.publicEmail} onChange={(v) => handleChange("publicEmail", v)} placeholder="mail@ornek.com" type="email" />
@@ -320,7 +323,7 @@ export default function ProfilePage() {
 
           <div className="mt-5 rounded-2xl border border-blue-100 bg-blue-50/50 px-5 py-4 text-sm leading-6 text-slate-700">
             Kurum adı, kısa adres ve uzmanlık alanlarınız <strong>Terapist Bul</strong> sayfasında aynen görünür.
-            Danışanların okuyacağı şekilde güncel ve açık yazın.
+            Danışanların okuyacağı şekilde güncel ve açık yazın. Harita konumu ülke, şehir ve ilçe bilgilerinden yaklaşık olarak doğrulanır.
           </div>
 
           <div className="mt-5">

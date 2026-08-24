@@ -6,7 +6,7 @@ import styles from "./page.module.css"
 
 export const metadata = {
   title: "Terapist Bul | DNA Intelligence",
-  description: "DNA eğitimini tamamlayan ve profilini yayımlamayı seçen uzmanları şehir ve uzmanlık alanına göre bulun.",
+  description: "DNA eğitimini tamamlayan ve profilini yayımlamayı seçen uzmanları konum ve uzmanlık alanına göre bulun.",
 }
 
 export default function TherapistDirectoryPage() {
@@ -18,13 +18,13 @@ export default function TherapistDirectoryPage() {
           <div className={styles.heroCopy}>
             <div className={styles.label}>DNA Uzman Ağı</div>
             <h1>Size uygun uzmanı haritada bulun.</h1>
-            <p>Şehir, meslek ve uzmanlık alanına göre arayın; uzmanların profil bilgilerini karşılaştırın.</p>
+            <p>Ülke, şehir, meslek ve uzmanlık alanına göre arayın; uzmanların profil bilgilerini karşılaştırın.</p>
           </div>
           <div className={styles.heroFacts} aria-label="Uzman dizini özellikleri">
             <span>
               <MapPinned size={20} />
               <strong>Haritada görün</strong>
-              Şehre göre arayın.
+              Türkiye ve yurt dışındaki doğrulanmış konumları inceleyin.
             </span>
             <span>
               <GraduationCap size={20} />

@@ -49,7 +49,7 @@ export default function TherapistDirectoryPreview() {
           </div>
           <h2>Eğitimi tamamlayan terapistleri bulun.</h2>
           <p>
-            Şehir, meslek ve uzmanlık alanına göre arama yapın. Listede yalnızca eğitimini tamamlayan ve bilgilerinin
+            Ülke, şehir, meslek ve uzmanlık alanına göre arama yapın. Listede yalnızca eğitimini tamamlayan ve bilgilerinin
             yayımlanmasına izin veren terapistler yer alır.
           </p>
 
@@ -93,7 +93,7 @@ export default function TherapistDirectoryPreview() {
                   <span>{therapist.title || therapist.profession}</span>
                   <small>
                     <MapPin size={14} />
-                    {[therapist.city, therapist.workplace].filter(Boolean).join(" · ")}
+                    {[therapist.city, therapist.country, therapist.workplace].filter(Boolean).join(" · ")}
                   </small>
                   <div>
                     {therapist.phone ? <Phone size={15} /> : null}

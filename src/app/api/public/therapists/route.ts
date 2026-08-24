@@ -31,10 +31,11 @@ export async function GET(request: Request) {
     const { data, error } = await admin
       .from("therapist_directory_profiles")
       .select(
-        "user_id, first_name, last_name, profession, title, workplace, city, district, public_phone, public_email, short_address, specialties",
+        "user_id, first_name, last_name, profession, title, workplace, country, city, district, public_phone, public_email, short_address, specialties, location_latitude, location_longitude, location_precision, location_verified_at",
       )
       .eq("public_listing_enabled", true)
       .eq("publication_status", "approved")
+      .not("location_verified_at", "is", null)
       .order("city", { ascending: true })
       .order("last_name", { ascending: true })
       .limit(500)

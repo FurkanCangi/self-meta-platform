@@ -4,6 +4,7 @@ import dynamic from "next/dynamic"
 import {
   Building2,
   Filter,
+  Globe2,
   LocateFixed,
   Mail,
   MapPin,
@@ -26,42 +27,6 @@ type DirectoryTherapist = PublicTherapist & {
   isExample: boolean
 }
 
-const defaultCities = [
-  "İstanbul",
-  "Ankara",
-  "İzmir",
-  "Bursa",
-  "Antalya",
-  "Adana",
-  "Gaziantep",
-  "Konya",
-  "Samsun",
-  "Trabzon",
-  "Diyarbakır",
-  "Erzurum",
-  "Kayseri",
-  "Eskişehir",
-  "Mersin",
-]
-
-const cityCoordinates: Record<string, [number, number]> = {
-  İstanbul: [41.0082, 28.9784],
-  Ankara: [39.9334, 32.8597],
-  İzmir: [38.4237, 27.1428],
-  Bursa: [40.195, 29.06],
-  Antalya: [36.8969, 30.7133],
-  Adana: [37.0001, 35.3213],
-  Gaziantep: [37.0662, 37.3833],
-  Konya: [37.8746, 32.4932],
-  Samsun: [41.2867, 36.33],
-  Trabzon: [41.0027, 39.7168],
-  Diyarbakır: [37.9144, 40.2306],
-  Erzurum: [39.9043, 41.2679],
-  Kayseri: [38.7205, 35.4826],
-  Eskişehir: [39.7767, 30.5206],
-  Mersin: [36.8121, 34.6415],
-}
-
 const demoTherapists: DirectoryTherapist[] = [
   {
     id: "demo-istanbul",
@@ -71,12 +36,16 @@ const demoTherapists: DirectoryTherapist[] = [
     profession: "Ergoterapist",
     title: "Uzm. Ergoterapist",
     workplace: "DNA Uygulama Ağı",
+    country: "Türkiye",
     city: "İstanbul",
     district: "Kadıköy",
     phone: "",
     email: "",
     shortAddress: "",
     specialties: ["Duyu bütünleme", "Öz düzenleme", "Pediatrik uygulama"],
+    latitude: 40.9917,
+    longitude: 29.0277,
+    locationPrecision: "district",
     isExample: true,
   },
   {
@@ -87,12 +56,16 @@ const demoTherapists: DirectoryTherapist[] = [
     profession: "Fizyoterapist",
     title: "Uzm. Fizyoterapist",
     workplace: "DNA Uygulama Ağı",
+    country: "Türkiye",
     city: "Ankara",
     district: "Çankaya",
     phone: "",
     email: "",
     shortAddress: "",
     specialties: ["Motor planlama", "Postüral kontrol", "Gelişimsel destek"],
+    latitude: 39.9179,
+    longitude: 32.8627,
+    locationPrecision: "district",
     isExample: true,
   },
   {
@@ -103,12 +76,16 @@ const demoTherapists: DirectoryTherapist[] = [
     profession: "Psikolojik Danışman",
     title: "Psikolojik Danışman",
     workplace: "DNA Uygulama Ağı",
+    country: "Türkiye",
     city: "İzmir",
     district: "Bornova",
     phone: "",
     email: "",
     shortAddress: "",
     specialties: ["Duygusal düzenleme", "Ebeveyn danışmanlığı", "Okul uyumu"],
+    latitude: 38.4622,
+    longitude: 27.221,
+    locationPrecision: "district",
     isExample: true,
   },
   {
@@ -119,12 +96,16 @@ const demoTherapists: DirectoryTherapist[] = [
     profession: "Çocuk Gelişim Uzmanı",
     title: "Çocuk Gelişim Uzmanı",
     workplace: "DNA Uygulama Ağı",
+    country: "Türkiye",
     city: "Bursa",
     district: "Nilüfer",
     phone: "",
     email: "",
     shortAddress: "",
     specialties: ["Erken çocukluk", "Gelişimsel izlem", "Aile rehberliği"],
+    latitude: 40.2137,
+    longitude: 28.9846,
+    locationPrecision: "district",
     isExample: true,
   },
   {
@@ -135,12 +116,16 @@ const demoTherapists: DirectoryTherapist[] = [
     profession: "Dil ve Konuşma Terapisti",
     title: "Dil ve Konuşma Terapisti",
     workplace: "DNA Uygulama Ağı",
+    country: "Türkiye",
     city: "Antalya",
     district: "Muratpaşa",
     phone: "",
     email: "",
     shortAddress: "",
     specialties: ["Dil gelişimi", "İletişim becerileri", "Sosyal katılım"],
+    latitude: 36.8841,
+    longitude: 30.7056,
+    locationPrecision: "district",
     isExample: true,
   },
 ]
@@ -149,22 +134,18 @@ function normalize(value: string) {
   return value.toLocaleLowerCase("tr-TR").trim()
 }
 
-function getCoordinates(city: string, index: number): [number, number] {
-  const base = cityCoordinates[city] || [39.05, 35.15]
-  const offset = ((index % 5) - 2) * 0.035
-  return [base[0] + offset, base[1] - offset]
-}
-
 function TherapistRow({
   therapist,
   selected,
   onLocate,
+  canLocate,
 }: {
   therapist: DirectoryTherapist
   selected: boolean
   onLocate: () => void
+  canLocate: boolean
 }) {
-  const cityLabel = [therapist.district, therapist.city].filter(Boolean).join(" / ")
+  const cityLabel = [therapist.district, therapist.city, therapist.country].filter(Boolean).join(" / ")
   const location = [therapist.shortAddress, cityLabel].filter(Boolean).join(" · ")
 
   return (
@@ -210,10 +191,12 @@ function TherapistRow({
       ) : null}
 
       <div className={styles.rowActions}>
-        <button type="button" onClick={onLocate} aria-label={`${therapist.fullName} haritada göster`}>
-          <LocateFixed size={16} />
-          Haritada göster
-        </button>
+        {canLocate ? (
+          <button type="button" onClick={onLocate} aria-label={`${therapist.fullName} haritada göster`}>
+            <LocateFixed size={16} />
+            Haritada göster
+          </button>
+        ) : null}
         {!therapist.isExample && therapist.phone ? (
           <a href={`tel:${therapist.phone.replace(/\s/g, "")}`} aria-label={`${therapist.fullName} telefon numarası`}>
             <Phone size={16} />
@@ -235,6 +218,7 @@ export default function TherapistDirectoryClient() {
   const [liveTherapists, setLiveTherapists] = useState<DirectoryTherapist[]>([])
   const [draftQuery, setDraftQuery] = useState("")
   const [query, setQuery] = useState("")
+  const [selectedCountry, setSelectedCountry] = useState("Tümü")
   const [selectedCity, setSelectedCity] = useState("Tümü")
   const [selectedProfession, setSelectedProfession] = useState("Tümü")
   const [selectedTherapistId, setSelectedTherapistId] = useState("")
@@ -273,10 +257,20 @@ export default function TherapistDirectoryClient() {
     [liveTherapists, usingExamples],
   )
 
-  const cities = useMemo(() => {
-    const allCities = new Set([...defaultCities, ...therapists.map((item) => item.city).filter(Boolean)])
-    return ["Tümü", ...Array.from(allCities).sort((a, b) => a.localeCompare(b, "tr"))]
+  const countries = useMemo(() => {
+    const allCountries = new Set(therapists.map((item) => item.country).filter(Boolean))
+    return ["Tümü", ...Array.from(allCountries).sort((a, b) => a.localeCompare(b, "tr"))]
   }, [therapists])
+
+  const cities = useMemo(() => {
+    const allCities = new Set(
+      therapists
+        .filter((item) => selectedCountry === "Tümü" || item.country === selectedCountry)
+        .map((item) => item.city)
+        .filter(Boolean),
+    )
+    return ["Tümü", ...Array.from(allCities).sort((a, b) => a.localeCompare(b, "tr"))]
+  }, [selectedCountry, therapists])
 
   const professions = useMemo(() => {
     return [
@@ -289,12 +283,12 @@ export default function TherapistDirectoryClient() {
 
   const cityCounts = useMemo(() => {
     return therapists.reduce<Record<string, number>>((acc, therapist) => {
-      if (therapist.city) {
+      if (therapist.city && (selectedCountry === "Tümü" || therapist.country === selectedCountry)) {
         acc[therapist.city] = (acc[therapist.city] || 0) + 1
       }
       return acc
     }, {})
-  }, [therapists])
+  }, [selectedCountry, therapists])
 
   const populatedCities = useMemo(
     () => Object.keys(cityCounts).sort((a, b) => a.localeCompare(b, "tr")),
@@ -304,6 +298,8 @@ export default function TherapistDirectoryClient() {
   const filtered = useMemo(() => {
     const q = normalize(query)
     return therapists.filter((therapist) => {
+      const countryMatch = selectedCountry === "Tümü" || therapist.country === selectedCountry
+      if (!countryMatch) return false
       const cityMatch = selectedCity === "Tümü" || therapist.city === selectedCity
       if (!cityMatch) return false
       const professionMatch =
@@ -319,6 +315,7 @@ export default function TherapistDirectoryClient() {
         therapist.title,
         therapist.workplace,
         therapist.shortAddress,
+        therapist.country,
         therapist.city,
         therapist.district,
         therapist.specialties.join(" "),
@@ -326,25 +323,32 @@ export default function TherapistDirectoryClient() {
         .map(normalize)
         .some((field) => field.includes(q))
     })
-  }, [query, selectedCity, selectedProfession, therapists])
+  }, [query, selectedCity, selectedCountry, selectedProfession, therapists])
 
   const mapPoints = useMemo<TherapistMapPoint[]>(
     () =>
-      filtered.map((therapist, index) => {
-        const [latitude, longitude] = getCoordinates(therapist.city, index)
-        return {
+      filtered.flatMap((therapist) => {
+        if (
+          therapist.latitude === null ||
+          therapist.longitude === null ||
+          !therapist.locationPrecision
+        ) return []
+
+        return [{
           id: therapist.id,
           fullName: therapist.fullName,
           profession: therapist.title || therapist.profession,
           workplace: therapist.workplace,
+          country: therapist.country,
           city: therapist.city,
           district: therapist.district,
           shortAddress: therapist.shortAddress,
           specialties: therapist.specialties,
-          latitude,
-          longitude,
+          latitude: therapist.latitude,
+          longitude: therapist.longitude,
+          locationPrecision: therapist.locationPrecision,
           isExample: therapist.isExample,
-        }
+        }]
       }),
     [filtered],
   )
@@ -353,6 +357,8 @@ export default function TherapistDirectoryClient() {
     () => new Set(filtered.map((therapist) => therapist.city).filter(Boolean)).size,
     [filtered],
   )
+
+  const mappableTherapistIds = useMemo(() => new Set(mapPoints.map((point) => point.id)), [mapPoints])
 
   const filteredProfessionCount = useMemo(
     () =>
@@ -379,6 +385,7 @@ export default function TherapistDirectoryClient() {
   function resetFilters() {
     setDraftQuery("")
     setQuery("")
+    setSelectedCountry("Tümü")
     setSelectedCity("Tümü")
     setSelectedProfession("Tümü")
     setSelectedTherapistId("")
@@ -409,6 +416,24 @@ export default function TherapistDirectoryClient() {
             placeholder="İsim, meslek, kurum veya uzmanlık ara"
             aria-label="Uzman ara"
           />
+        </label>
+        <label className={styles.selectBox}>
+          <Globe2 size={18} />
+          <select
+            value={selectedCountry}
+            onChange={(event) => {
+              setSelectedCountry(event.target.value)
+              setSelectedCity("Tümü")
+              setSelectedTherapistId("")
+            }}
+            aria-label="Ülke seç"
+          >
+            {countries.map((country) => (
+              <option key={country} value={country}>
+                {country === "Tümü" ? "Tüm ülkeler" : country}
+              </option>
+            ))}
+          </select>
         </label>
         <label className={styles.selectBox}>
           <MapPin size={18} />
@@ -462,7 +487,7 @@ export default function TherapistDirectoryClient() {
             setSelectedTherapistId("")
           }}
         >
-          Türkiye geneli <span>{therapists.length}</span>
+          {selectedCountry === "Tümü" ? "Tüm konumlar" : selectedCountry} <span>{therapists.filter((item) => selectedCountry === "Tümü" || item.country === selectedCountry).length}</span>
         </button>
         {populatedCities.map((city) => (
           <button
@@ -484,11 +509,15 @@ export default function TherapistDirectoryClient() {
           <div className={styles.mapTopbar}>
             <div>
               <span>{usingExamples ? "Örnek uzman haritası" : "Canlı uzman haritası"}</span>
-              <strong>{selectedCity === "Tümü" ? "Türkiye geneli" : selectedCity}</strong>
+              <strong>
+                {selectedCity !== "Tümü"
+                  ? [selectedCity, selectedCountry === "Tümü" ? "" : selectedCountry].filter(Boolean).join(" / ")
+                  : selectedCountry === "Tümü" ? "Tüm konumlar" : selectedCountry}
+              </strong>
             </div>
             <div className={styles.mapSummary}>
-              <span>{filtered.length} profil</span>
-              <small>Yaklaşık şehir merkezi</small>
+              <span>{mapPoints.length} harita konumu</span>
+              <small>Doğrulanmış yaklaşık ilçe/şehir merkezi</small>
             </div>
           </div>
           <div className={styles.mapViewport}>
@@ -535,6 +564,7 @@ export default function TherapistDirectoryClient() {
                   therapist={therapist}
                   key={therapist.id}
                   selected={selectedTherapistId === therapist.id}
+                  canLocate={mappableTherapistIds.has(therapist.id)}
                   onLocate={() => locateTherapist(therapist.id)}
                 />
               ))

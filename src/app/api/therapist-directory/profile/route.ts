@@ -13,6 +13,8 @@ import {
   MAX_DIRECTORY_SPECIALTY_LENGTH,
   normalizeDirectoryInput,
 } from "@/lib/therapists/directory"
+import { normalizeGeocodingText } from "@/lib/therapists/geocoding"
+import { resolveVerifiedTherapistLocation } from "@/lib/therapists/geocoding.server"
 
 const therapistDirectoryPayloadSchema = z
   .object({
@@ -21,6 +23,7 @@ const therapistDirectoryPayloadSchema = z
     profession: z.string().max(220).optional().nullable(),
     title: z.string().max(220).optional().nullable(),
     workplace: z.string().max(220).optional().nullable(),
+    country: z.string().max(220).optional().nullable(),
     city: z.string().max(220).optional().nullable(),
     district: z.string().max(220).optional().nullable(),
     publicPhone: z.string().max(80).optional().nullable(),
@@ -120,7 +123,9 @@ export async function PUT(request: Request) {
 
     const { data: existing, error: existingError } = await admin
       .from("therapist_directory_profiles")
-      .select("publication_status")
+      .select(
+        "publication_status, country, city, district, location_latitude, location_longitude, location_precision, location_provider, location_query_hash, location_verified_at",
+      )
       .eq("user_id", user.id)
       .maybeSingle()
 
@@ -132,6 +137,59 @@ export async function PUT(request: Request) {
         )
       }
       throw existingError
+    }
+
+    const locationUnchanged =
+      normalizeGeocodingText(existing?.country) === normalizeGeocodingText(input.country) &&
+      normalizeGeocodingText(existing?.city) === normalizeGeocodingText(input.city) &&
+      normalizeGeocodingText(existing?.district) === normalizeGeocodingText(input.district)
+    const hasStoredLocation =
+      Number.isFinite(existing?.location_latitude) &&
+      Number.isFinite(existing?.location_longitude) &&
+      (existing?.location_precision === "district" || existing?.location_precision === "city") &&
+      Boolean(existing?.location_verified_at)
+
+    let locationStatus: "verified" | "not_requested" | "not_found" | "deferred" | "provider_error" = "not_requested"
+    let locationFields = {
+      location_latitude: null as number | null,
+      location_longitude: null as number | null,
+      location_precision: null as "district" | "city" | null,
+      location_provider: null as string | null,
+      location_query_hash: null as string | null,
+      location_verified_at: null as string | null,
+    }
+
+    if (locationUnchanged && hasStoredLocation) {
+      locationStatus = "verified"
+      locationFields = {
+        location_latitude: existing.location_latitude,
+        location_longitude: existing.location_longitude,
+        location_precision: existing.location_precision,
+        location_provider: existing.location_provider,
+        location_query_hash: existing.location_query_hash,
+        location_verified_at: existing.location_verified_at,
+      }
+    } else if (input.public_listing_enabled && input.country && input.city) {
+      const resolution = await resolveVerifiedTherapistLocation(admin, {
+        country: input.country,
+        city: input.city,
+        district: input.district,
+      })
+      locationStatus = resolution.status
+      if (resolution.status === "verified") {
+        locationFields = {
+          location_latitude: resolution.location.latitude,
+          location_longitude: resolution.location.longitude,
+          location_precision: resolution.location.precision,
+          location_provider: resolution.provider,
+          location_query_hash: resolution.queryHash,
+          location_verified_at: new Date().toISOString(),
+        }
+      }
+    }
+
+    if (input.public_listing_enabled && locationStatus !== "verified") {
+      missingFields.push("location")
     }
 
     const ownerBlocked = existing?.publication_status === "hidden" || existing?.publication_status === "rejected"
@@ -149,6 +207,7 @@ export async function PUT(request: Request) {
         {
           user_id: user.id,
           ...input,
+          ...locationFields,
           publication_status: publicationStatus,
         },
         { onConflict: "user_id" },
@@ -173,6 +232,7 @@ export async function PUT(request: Request) {
         visible:
           input.public_listing_enabled && publicationStatus === "approved" && missingFields.length === 0,
         missingFields,
+        locationStatus,
       },
     })
   } catch (error) {

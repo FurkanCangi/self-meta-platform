@@ -114,7 +114,7 @@
 
 .filters{
   display:grid;
-  grid-template-columns:minmax(280px, 1fr) 210px 230px 108px 48px;
+  grid-template-columns:minmax(240px, 1fr) 170px 180px 210px 100px 48px;
   gap:10px;
   margin-top:0;
   padding:12px;
@@ -720,7 +720,7 @@
   }
 
   .filters{
-    grid-template-columns:minmax(260px, 1fr) 190px 210px 100px 48px;
+    grid-template-columns:minmax(220px, 1fr) repeat(3, minmax(145px, 180px)) 96px 48px;
   }
 
   .mapGrid{
@@ -795,7 +795,7 @@
 
   .resetButton{
     grid-column:2 / 3;
-    grid-row:4;
+    grid-row:5;
   }
 
   .searchButton{
