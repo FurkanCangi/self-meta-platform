@@ -96,11 +96,11 @@ export default function StarterPage() {
     <div className="relative px-4 py-5 md:px-6 md:py-7">
       <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(circle_at_14%_8%,rgba(0,200,215,0.13),transparent_32%),radial-gradient(circle_at_86%_14%,rgba(124,58,237,0.12),transparent_34%)]" />
       <div className="dna-app-only dna-app-page space-y-4">
-        <section className="rounded-[22px] border border-slate-200 bg-white p-4 shadow-sm">
+        <section className="rounded-[22px] border border-[color:var(--sm-border)] bg-[var(--sm-surface)] p-4 shadow-sm transition-colors duration-300">
           <TherapistWelcome surface="app" />
           <Link
             href="/clients?surface=app"
-            className="mt-4 flex min-h-12 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 px-4 text-sm font-semibold text-slate-500"
+            className="mt-4 flex min-h-12 items-center gap-3 rounded-2xl border border-[color:var(--sm-border)] bg-[var(--sm-surface-soft)] px-4 text-sm font-semibold text-[var(--sm-text-muted)] transition-colors duration-300"
           >
             <Search size={18} />
             Danışan kodu ara
@@ -177,12 +177,12 @@ export default function StarterPage() {
       </div>
 
       <div className="dna-web-only mx-auto max-w-7xl">
-        <section className="relative overflow-hidden rounded-[32px] border border-slate-200/80 bg-white/90 p-7 shadow-[0_28px_80px_rgba(7,27,58,0.08)] backdrop-blur-xl md:p-8">
-          <div className="absolute -right-24 -top-28 h-72 w-72 rounded-full bg-cyan-100/80 blur-3xl" />
-          <div className="absolute right-20 top-0 h-64 w-64 rounded-full bg-violet-100/80 blur-3xl" />
+        <section className="relative overflow-hidden rounded-[32px] border border-[color:var(--sm-border)] bg-[var(--sm-surface)] p-7 shadow-[var(--sm-shadow)] backdrop-blur-xl transition-colors duration-300 md:p-8">
+          <div className="absolute -right-24 -top-28 h-72 w-72 rounded-full bg-[var(--sm-welcome-halo-cyan)] blur-3xl" />
+          <div className="absolute right-20 top-0 h-64 w-64 rounded-full bg-[var(--sm-welcome-halo-violet)] blur-3xl" />
           <div className="relative grid gap-7 lg:grid-cols-[minmax(0,1fr)_420px] lg:items-center">
             <div>
-              <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/82 px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-blue-700 shadow-sm">
+              <div className="inline-flex items-center gap-2 rounded-full border border-[color:var(--sm-border)] bg-[var(--sm-surface-soft)] px-4 py-2 text-xs font-black uppercase tracking-[0.14em] text-[var(--sm-text)] shadow-sm transition-colors duration-300">
                 <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-r from-cyan-400 via-blue-600 to-violet-600 shadow-[0_0_0_5px_rgba(37,99,235,0.10)]" />
                 DNA Intelligence
               </div>
@@ -190,36 +190,39 @@ export default function StarterPage() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
-              <div className="rounded-2xl border border-blue-100 bg-gradient-to-r from-cyan-50 via-blue-50 to-violet-50 p-4">
+              <div
+                className="rounded-2xl border border-[color:var(--sm-border)] p-4 transition-colors duration-300"
+                style={{ backgroundImage: "var(--sm-welcome-card-primary)" }}
+              >
                 <div className="flex items-center gap-3">
-                  <div className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-blue-700 shadow-sm">
+                  <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--sm-surface)] text-blue-600 shadow-sm">
                     <GraduationCap size={22} />
                   </div>
                   <div>
-                    <div className="text-sm font-black text-[#071b3a]">Eğitim sonrası kullanım</div>
-                    <div className="mt-1 text-xs font-semibold text-slate-500">Değerlendirme ve rapor akışı</div>
+                    <div className="text-sm font-black text-[var(--sm-text)]">Eğitim sonrası kullanım</div>
+                    <div className="mt-1 text-xs font-semibold text-[var(--sm-text-muted)]">Değerlendirme ve rapor akışı</div>
                   </div>
                 </div>
               </div>
-              <div className="rounded-2xl border border-cyan-100 bg-white/78 p-4 shadow-sm">
+              <div className="rounded-2xl border border-[color:var(--sm-border)] bg-[var(--sm-surface-soft)] p-4 shadow-sm transition-colors duration-300">
                 <div className="flex items-center gap-3">
-                  <div className="grid h-11 w-11 place-items-center rounded-2xl bg-cyan-50 text-cyan-700">
+                  <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--sm-surface)] text-cyan-600">
                     <Sparkles size={22} />
                   </div>
                   <div>
-                    <div className="text-sm font-black text-[#071b3a]">Deterministik raporlama</div>
-                    <div className="mt-1 text-xs font-semibold text-slate-500">Terapist incelemesine açık rapor taslağı</div>
+                    <div className="text-sm font-black text-[var(--sm-text)]">Deterministik raporlama</div>
+                    <div className="mt-1 text-xs font-semibold text-[var(--sm-text-muted)]">Terapist incelemesine açık rapor taslağı</div>
                   </div>
                 </div>
               </div>
-              <div className="rounded-2xl border border-violet-100 bg-white/78 p-4 shadow-sm">
+              <div className="rounded-2xl border border-[color:var(--sm-border)] bg-[var(--sm-surface-soft)] p-4 shadow-sm transition-colors duration-300">
                 <div className="flex items-center gap-3">
-                  <div className="grid h-11 w-11 place-items-center rounded-2xl bg-violet-50 text-violet-700">
+                  <div className="grid h-11 w-11 place-items-center rounded-2xl bg-[var(--sm-surface)] text-violet-600">
                     <ClipboardCheck size={22} />
                   </div>
                   <div>
-                    <div className="text-sm font-black text-[#071b3a]">Vaka düzeni</div>
-                    <div className="mt-1 text-xs font-semibold text-slate-500">Danışan, skor ve takip kayıtları</div>
+                    <div className="text-sm font-black text-[var(--sm-text)]">Vaka düzeni</div>
+                    <div className="mt-1 text-xs font-semibold text-[var(--sm-text-muted)]">Danışan, skor ve takip kayıtları</div>
                   </div>
                 </div>
               </div>

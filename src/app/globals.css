@@ -9,6 +9,12 @@
   --sm-text-soft: #475569;
   --sm-text-muted: #64748b;
   --sm-shadow: 0 18px 38px rgba(15, 23, 42, 0.06);
+  --sm-welcome-name-from: #0891b2;
+  --sm-welcome-name-via: #2563eb;
+  --sm-welcome-name-to: #7c3aed;
+  --sm-welcome-halo-cyan: rgba(207, 250, 254, 0.8);
+  --sm-welcome-halo-violet: rgba(237, 233, 254, 0.8);
+  --sm-welcome-card-primary: linear-gradient(90deg, #ecfeff 0%, #eff6ff 50%, #f5f3ff 100%);
 }
 
 html[data-theme="dark"] {
@@ -20,6 +26,12 @@ html[data-theme="dark"] {
   --sm-text-soft: #dbeafe;
   --sm-text-muted: #9fb0c8;
   --sm-shadow: 0 24px 58px rgba(0, 0, 0, 0.42);
+  --sm-welcome-name-from: #67e8f9;
+  --sm-welcome-name-via: #93c5fd;
+  --sm-welcome-name-to: #c4b5fd;
+  --sm-welcome-halo-cyan: rgba(6, 182, 212, 0.14);
+  --sm-welcome-halo-violet: rgba(139, 92, 246, 0.14);
+  --sm-welcome-card-primary: linear-gradient(90deg, rgba(8, 51, 68, 0.72) 0%, rgba(23, 37, 84, 0.72) 50%, rgba(46, 16, 101, 0.66) 100%);
 }
 
 html, body {

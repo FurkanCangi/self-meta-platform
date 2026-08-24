@@ -151,16 +151,22 @@ export default function Sidebar({ toggle = true }: SidebarProps) {
               active={pathname === "/reports"}
             />
             <Item
-              href="/dna-asistani"
-              label="DNA Asistanı"
-              icon={<AiOutlineMessage />}
-              active={pathname === "/dna-asistani"}
-            />
-            <Item
               href="/report-packages"
               label="Rapor Paketleri"
               icon={<AiOutlineShoppingCart />}
               active={pathname === "/report-packages"}
+            />
+          </ul>
+
+          <div className="px-3 pb-2 pt-6 text-[12px] font-black uppercase tracking-[0.18em] text-slate-400">
+            DNA Intelligence
+          </div>
+          <ul className="space-y-1">
+            <Item
+              href="/dna-asistani"
+              label="DNA Asistanı"
+              icon={<AiOutlineMessage />}
+              active={pathname === "/dna-asistani"}
             />
           </ul>
 

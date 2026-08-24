@@ -43,6 +43,90 @@ final result: passed
 
 ---
 
+# Sidebar DNA Assistant Group QA — 2026-08-24
+
+## Scope
+
+- Component: `src/app/components/sidebar.tsx`
+- Source visual truth: `/var/folders/7j/kgq_1qrj27n39d0yjmkfh1_40000gn/T/TemporaryItems/NSIRD_screencaptureui_QPw4OY/Ekran Resmi 2026-08-24 11.23.43.png`
+- Browser-rendered implementation: `/tmp/dna-sidebar-group-qa-scrolled.png`
+- Full comparison evidence: `/tmp/dna-sidebar-group-comparison.png`
+- Source pixels: `3024 x 1964` at `2x`; normalized to `1512 x 982` CSS-equivalent pixels.
+- Implementation pixels and CSS viewport: `1512 x 982` at `1x`.
+- State: desktop sidebar, scrolled to show the clinical, DNA Intelligence, and account groups.
+
+## Findings
+
+- No P0, P1, or P2 mismatch remains in the requested navigation hierarchy.
+- `Rapor Paketleri` remains within `Klinik Değerlendirme` with the other clinical workflow links.
+- `DNA Intelligence` is now a separate heading immediately after the clinical group.
+- `DNA Asistanı` is the only navigation item in the new group; its route, icon, and active-state logic are unchanged.
+- Typography, spacing, icon treatment, and color tokens reuse the existing sidebar design, so no new theme-specific styling branch was introduced.
+- The browser console contained no error. The only warning was the pre-existing development LCP recommendation for the brand logo.
+
+## Fidelity Surfaces
+
+- Fonts and typography: existing heading and item styles preserved.
+- Spacing and layout rhythm: the new group uses the same `pt-6`, label padding, tracking, and list spacing as the surrounding sections.
+- Colors and visual tokens: existing sidebar heading and item colors preserved.
+- Image and icon fidelity: existing brand asset and `AiOutlineMessage` icon preserved; no replacement asset was introduced.
+- Copy and content: new heading is `DNA Intelligence`; link label remains `DNA Asistanı`.
+
+## Comparison History
+
+- Initial source grouped `DNA Asistanı` inside `Klinik Değerlendirme`.
+- Implementation moved the existing link below a dedicated `DNA Intelligence` heading while keeping clinical links together.
+- Post-fix browser evidence confirms the requested separation without overflow, clipping, or navigation loss.
+
+Focused-region evidence was sufficient because the requested change is isolated to the sidebar hierarchy; surrounding page content is intentionally not part of this comparison.
+
+final result: passed
+
+---
+
+# Starter Welcome Theme Contrast QA — 2026-08-24
+
+## Scope
+
+- Route/component: `/starter?surface=web`, `src/app/starter/TherapistWelcome.tsx`
+- Source visual truth: `/var/folders/7j/kgq_1qrj27n39d0yjmkfh1_40000gn/T/TemporaryItems/NSIRD_screencaptureui_nggmLi/Ekran Resmi 2026-08-24 11.18.34.png`
+- Light implementation screenshot: `.tmp/welcome-theme-qa/light.png`
+- Dark implementation screenshot: `.tmp/welcome-theme-qa/dark.png`
+- Combined comparison: `.tmp/welcome-theme-qa/comparison.png`
+- Source pixels: `3024 x 1964`
+- Implementation screenshots: `1440 x 1055`; browser CSS viewport `1440 x 900`, density `1x`
+- State: authenticated greeting content reproduced in a temporary local-only QA harness using the production component; the harness was removed after capture.
+
+## Finding And Iteration
+
+- **P1 — Theme source mismatch made “Merhaba,” nearly invisible:** The screenshot showed a light hero surface while `dark:` text utilities followed the OS/browser dark preference, producing a very pale heading and supporting copy.
+- **Fix:** Bound greeting text, hero surface, borders, shadows, halos, and supporting card colors to the application's existing `data-theme` CSS variables. Split the greeting into explicit label/name spans and gave the name gradient light/dark theme tokens.
+- **Post-fix evidence:** Light state computed heading `rgb(15, 23, 42)` on `rgb(255, 255, 255)`. Dark state computed heading `rgb(248, 250, 252)` on `rgb(16, 24, 39)`. Both states preserve `Merhaba, Furkan` without wrapping or clipping.
+
+## Required Fidelity Surfaces
+
+- **Typography:** Existing system font, heavy display weight, desktop scale, tracking, and copy hierarchy are preserved. The explicit `0.22em` label/name gap removes the visually weak raw-text transition.
+- **Spacing and layout rhythm:** Hero dimensions and surrounding card grid are unchanged. The greeting stays on one line at the tested desktop viewport and can wrap as one controlled inline group at narrower widths.
+- **Colors and tokens:** Light and dark output now follow `--sm-*` application theme variables instead of OS-driven Tailwind `dark:` behavior. The name uses cyan/blue/violet theme tokens in both modes.
+- **Image and icon quality:** No image, logo, or icon asset was changed.
+- **Copy and content:** `Merhaba, Furkan` and the supporting sentence are unchanged.
+
+## Verification
+
+- Source, light implementation, and dark implementation were inspected together in `.tmp/welcome-theme-qa/comparison.png`.
+- Focused heading cards were inspected separately because the requested change is limited to the greeting region.
+- Browser console errors and warnings: none.
+- Targeted TypeScript check: passed.
+- Webpack application compilation: passed; the repository-wide build later stopped in pre-existing `artifacts/` TypeScript files with invalid relative imports, outside this UI change.
+- `git diff --check`: passed.
+- Temporary local QA route and helper component: removed.
+
+No unresolved P0, P1, or P2 findings remain.
+
+final result: passed
+
+---
+
 # DNA Intelligence Page Design QA
 
 ## Scope
