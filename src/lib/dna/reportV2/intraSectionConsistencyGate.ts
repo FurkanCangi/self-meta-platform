@@ -231,8 +231,13 @@ export function auditIntraSectionConsistency(input: Readonly<{
       .filter((sentence) => domainMention(sentence, cluster.domain) && CROSS_EVIDENCE_RECONCILIATION.test(sentence))
       .map((sentence) => Object.freeze({ sectionId: section.sectionId, sentence })))
     const section5Matches = matches.filter((match) => match.sectionId === "section_5")
-    if (section5Matches.length >= 1 && matches.length === section5Matches.length) reconciliationSentenceCount += 1
-    else {
+    if (section5Matches.length >= 1) {
+      reconciliationSentenceCount += 1
+      duplicateReconciliationCount += Math.max(0, matches.length - section5Matches.length)
+      matches
+        .filter((match) => match.sectionId !== "section_5")
+        .forEach((match) => reconciliationSections.add(match.sectionId))
+    } else {
       crossEvidenceContradictionCount += 1
       matches.forEach((match) => reconciliationSections.add(match.sectionId))
       if (!matches.length) reconciliationSections.add("section_5")

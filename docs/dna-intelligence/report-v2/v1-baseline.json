@@ -1,7 +1,8 @@
 {
-  "capturedAt": "2026-08-11",
+  "capturedAt": "2026-08-24",
   "scoringVersion": "dna-polarity-v2",
-  "routeSha256": "31c83c66549a2c27d295673e60b666c1a166603c97d355e076b4252cab981740",
+  "productionReportContract": "jury-ready-candidate18-bold@1",
+  "routeSha256": "bc146d9b06fcfcec154d9c7c475c390256b98d2737db0d8f1694dee98039cb5d",
   "reportEngineSha256": "c3dbbc05b4e3f71134d292cb3c09df6d5944e5379eec2c21ad83df2d9b15e079",
   "legacy": [
     { "case": 1, "totalScore": 159, "globalLevel": "Atipik", "domainLevels": ["Riskli", "Riskli", "Atipik", "Atipik", "Riskli", "Riskli"], "reportSha256": "93ade0dc14e073749f4e139be70c3b2b97bae07a39371940b0db284c03504375" },

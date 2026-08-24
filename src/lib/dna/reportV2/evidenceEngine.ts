@@ -15,6 +15,8 @@ import type {
   FormulationId,
   StructuredExternalAssessment,
 } from "./contracts"
+import { extractCanonicalTherapistObservation } from "./canonicalCaseEvidence"
+import { extractCanonicalAnamnesisEvidence } from "../reportJury/canonicalAnamnesisEvidence"
 
 const DOMAIN_CANDIDATE: Record<DomainKey, FormulationId> = {
   physiological: "domain_physiological",
@@ -218,10 +220,42 @@ function anamnesisUnits(input: ReportInput): ClinicalEvidenceUnit[] {
   if (!text) return []
   const domains = domainsForText(text)
   const referral = extractLabel(text, [/başvuru sebebi/i, /birincil endişeler/i, /caregiver_concerns/i, /referral_reason/i])
-  const therapist = extractLabel(text, [/terapist yorum/i, /terapist gözlem/i, /therapist_comments/i, /clinical_observation/i])
+  const therapistObservation = extractCanonicalTherapistObservation(input)
+  const therapist = therapistObservation.normalizedText
   const strengths = extractLabel(text, [/çocuğun güçlü yanları/i, /güçlü yanlar/i, /strengths/i, /preserved_areas/i])
   const contexts = CONTEXT_PATTERNS.filter(([, pattern]) => pattern.test(text)).map(([label]) => label)
+  const canonicalFacts = extractCanonicalAnamnesisEvidence(input)
   const units: ClinicalEvidenceUnit[] = []
+
+  const sameContextNoun = (left: string | null, right: string | null) => {
+    if (!left || !right) return false
+    const normalize = (value: string) => value
+      .toLocaleLowerCase("tr-TR")
+      .replace(/[’']/gu, "")
+      .replace(/(?:[dt][ae])$/u, "")
+      .trim()
+    return normalize(left) === normalize(right)
+  }
+
+  const factSummary = (domain: DomainKey) => {
+    const fact = canonicalFacts.find((entry) => entry.domains.includes(domain) && ["DIFFICULTY", "MIXED"].includes(entry.direction))
+    if (!fact) return null
+    const task = fact.functional_context.task
+    const environment = fact.functional_context.environment
+    const setting = [environment, task && !sameContextNoun(environment, task) ? `${task} sırasında` : null].filter(Boolean).join(" ")
+    return setting
+      ? `Bakım veren, ${setting} ${DOMAIN_LABEL[domain]} ile ilişkili güçlük bildirmektedir.`
+      : `Bakım veren, ${DOMAIN_LABEL[domain]} ile ilişkili günlük işlev güçlüğü bildirmektedir.`
+  }
+
+  const supportedPerformance = canonicalFacts.find((entry) => ["PRESERVED", "MIXED"].includes(entry.direction)
+    && (entry.functional_context.support || entry.functional_context.outcome || entry.functional_context.task))
+  const contextualSummary = supportedPerformance
+    ? [
+        supportedPerformance.functional_context.support ? "görsel veya yapılandırılmış destek verildiğinde" : null,
+        supportedPerformance.functional_context.task ? `${supportedPerformance.functional_context.task} sırasında` : null,
+      ].filter(Boolean).join(" ")
+    : ""
 
   for (const domain of domains.slice(0, 4)) {
     const tags = candidateTagsForDomain(domain)
@@ -230,7 +264,7 @@ function anamnesisUnits(input: ReportInput): ClinicalEvidenceUnit[] {
       sourceType: "CAREGIVER_REPORT",
       domain,
       construct: domain,
-      finding: `${DOMAIN_LABEL[domain]} alanıyla ilişkili günlük işlev güçlüğü bakım veren anlatısında bildirilmektedir.`,
+      finding: factSummary(domain) ?? `${DOMAIN_LABEL[domain]} alanıyla ilişkili günlük işlev güçlüğü bakım veren anlatısında bildirilmektedir.`,
       direction: "SUPPORTS",
       strength: referral && DOMAIN_PATTERNS[domain].test(referral) ? 3 : 2,
       reliability: 2,
@@ -245,22 +279,23 @@ function anamnesisUnits(input: ReportInput): ClinicalEvidenceUnit[] {
 
   if (therapist) {
     const therapistDomains = domainsForText(therapist)
-    for (const domain of therapistDomains.length ? therapistDomains : domains.slice(0, 1)) {
+    const observationDomains: Array<DomainKey | null> = therapistDomains.length ? therapistDomains : domains.length ? domains.slice(0, 1) : [null]
+    for (const domain of observationDomains) {
       units.push(createUnit({
-        id: `evidence.observation.${domain}`,
+        id: `evidence.observation.${domain ?? "global"}`,
         sourceType: "THERAPIST_OBSERVATION",
         domain,
-        construct: domain,
-        finding: `${DOMAIN_LABEL[domain]} alanındaki performansın görev veya destek koşuluna göre değiştiği terapist gözleminde bildirilmiştir.`,
+        construct: domain ?? "functional_performance",
+        finding: domain ? `${DOMAIN_LABEL[domain]} alanındaki performansın görev veya destek koşuluna göre değiştiği terapist gözleminde bildirilmiştir.` : "Görev performansına ilişkin doğrudan terapist gözlemi bulunmaktadır; alan eşleştirmesi için ek gözlem gerekir.",
         direction: "SUPPORTS",
         strength: 2,
         reliability: 3,
         specificity: 3,
         context: CONTEXT_PATTERNS.filter(([, pattern]) => pattern.test(therapist)).map(([label]) => label),
-        supports: candidateTagsForDomain(domain),
+        supports: domain ? candidateTagsForDomain(domain) : [],
         contradicts: [],
         limits: [],
-        provenance: { sourceRef: "anamnesis.therapist_observation", ruleId: `report-v2.observation-domain.${domain}`, inputHash: stableHash(therapist) },
+        provenance: { sourceRef: therapistObservation.sourceRef, ruleId: `report-v2.observation-domain.${domain ?? "global"}`, inputHash: stableHash(therapist) },
       }))
     }
   }
@@ -272,7 +307,9 @@ function anamnesisUnits(input: ReportInput): ClinicalEvidenceUnit[] {
       sourceType: "PRESERVED_CAPACITY",
       domain: preservedDomains[0] ?? null,
       construct: preservedDomains[0] ?? "functional_capacity",
-      finding: "Yapılandırılmış veya desteklenen koşullarda korunmuş kapasite bildirilmektedir.",
+      finding: contextualSummary
+        ? `${contextualSummary[0]!.toLocaleUpperCase("tr-TR")}${contextualSummary.slice(1)} performansın sürdürülebildiği bildirilmektedir.`
+        : "Yapılandırılmış veya desteklenen koşullarda korunmuş kapasite bildirilmektedir.",
       direction: "LIMITS",
       strength: 2,
       reliability: 2,
@@ -291,7 +328,9 @@ function anamnesisUnits(input: ReportInput): ClinicalEvidenceUnit[] {
       sourceType: "CONTEXTUAL_EVIDENCE",
       domain: null,
       construct: "context",
-      finding: "Performansın görev, destek veya çevre koşullarına göre değişebildiğine ilişkin bağlamsal veri bulunmaktadır.",
+      finding: contextualSummary
+        ? `${contextualSummary[0]!.toLocaleUpperCase("tr-TR")}${contextualSummary.slice(1)} performans daha iyi olsa da diğer koşullarda güçlüğün belirginleşebildiği bildirilmektedir.`
+        : "Performansın görev, destek veya çevre koşullarına göre değişebildiğine ilişkin bağlamsal veri bulunmaktadır.",
       direction: "LIMITS",
       strength: 2,
       reliability: therapist ? 3 : 2,
@@ -339,9 +378,10 @@ function externalUnits(input: ReportInput, analysis: ExternalTestAnalysis): Clin
 
 function missingInformationUnits(input: ReportInput, external: ExternalTestAnalysis): ClinicalEvidenceUnit[] {
   const text = normalizedAnamnesis(input)
+  const therapistObservation = extractCanonicalTherapistObservation(input)
   const missing: Array<[string, string]> = []
   if (!text) missing.push(["anamnesis", "Anamnez bulunmadığı için bağlamsal yorum sınırlıdır."])
-  if (!/terapist yorum|terapist gözlem|therapist_comments|clinical_observation/i.test(text)) missing.push(["observation", "Terapist gözlemi bulunmadığı için doğal görev performansına genelleme sınırlıdır."])
+  if (!therapistObservation.present) missing.push(["observation", "Terapist gözlemi bulunmadığı için doğal görev performansına genelleme sınırlıdır."])
   if (!external.matches.length) missing.push(["external", "Yorumlanabilir dış değerlendirme bulunmadığı için bağımsız test yakınsaması değerlendirilemez."])
   return missing.map(([key, finding]) => createUnit({
     id: `evidence.missing.${key}`,

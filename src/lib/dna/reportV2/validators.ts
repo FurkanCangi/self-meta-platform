@@ -379,7 +379,8 @@ export function validateReportV2Realization(input: Readonly<{
     if (!claim.id.startsWith("claim.domain-interpretation.")) return false
     const scoreEvidence = claim.evidenceIds.map((id) => input.matrix.units.find((unit) => unit.id === id)).find((unit) => unit?.sourceType === "DNA_DOMAIN_SCORE")
     if (!scoreEvidence?.finding.includes("Tipik")) return false
-    const hasCaseSpecificDifficulty = claim.evidenceIds.map((id) => input.matrix.units.find((unit) => unit.id === id)).some((unit) => unit?.direction === "SUPPORTS" && ["CAREGIVER_REPORT", "THERAPIST_OBSERVATION", "EXTERNAL_ASSESSMENT"].includes(unit.sourceType))
+    const claimDomain = claim.id.slice("claim.domain-interpretation.".length)
+    const hasCaseSpecificDifficulty = input.matrix.units.some((unit) => unit.domain === claimDomain && unit.direction === "SUPPORTS" && ["CAREGIVER_REPORT", "THERAPIST_OBSERVATION", "EXTERNAL_ASSESSMENT"].includes(unit.sourceType))
     return !hasCaseSpecificDifficulty && /(?:değişebilir|zorlaşabilir|uzayabilir|desteğe duyarlı olabilir|güçleşebilir)/i.test(claim.text)
   }).length
   if (preservedDomainOverinterpretationCount) failures.push("PRESERVED_DOMAIN_OVERINTERPRETATION")

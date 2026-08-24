@@ -1,4 +1,8 @@
-import { normalizeClinicalReportText, splitClinicalReportSections } from "@/lib/dna/reportText"
+import {
+  extractFullBoldClinicalReportParagraphs,
+  normalizeClinicalReportText,
+  splitClinicalReportSections,
+} from "@/lib/dna/reportText"
 
 type Props = {
   text: string
@@ -16,6 +20,7 @@ function formatReportDate(value?: string | null) {
 export default function ClinicalReportView({ text, className = "", reportDate }: Props) {
   const normalized = normalizeClinicalReportText(text)
   const sections = splitClinicalReportSections(normalized)
+  const fullBoldLines = new Set(extractFullBoldClinicalReportParagraphs(text))
 
   if (!sections.length) {
     return (
@@ -55,6 +60,10 @@ export default function ClinicalReportView({ text, className = "", reportDate }:
                         <span className="dna-report-bullet-dot mt-[10px] h-1.5 w-1.5 shrink-0 rounded-full bg-slate-400" />
                         <span>{line.slice(2)}</span>
                       </div>
+                    ) : fullBoldLines.has(line) ? (
+                      <p key={`${section.heading}-${index}`} className="dna-report-decision text-slate-900">
+                        <strong className="font-bold">{line}</strong>
+                      </p>
                     ) : (
                       <p key={`${section.heading}-${index}`}>{line}</p>
                     )

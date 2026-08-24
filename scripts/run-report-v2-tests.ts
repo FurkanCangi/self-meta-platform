@@ -11,6 +11,8 @@ import { validateLockedReportPlan, validateReportV2Privacy, validateReportV2Real
 import { stableHash } from "../src/lib/dna/reportV2/evidenceEngine"
 import { auditReportKnowledgeCore } from "../src/lib/dna/reportV2/reportKnowledgeBridge"
 import { auditPlainClinicalRewriteRecord, latestMaterialityPipelineAssertion, plainClinicalLanguageDiagnostics } from "../src/lib/dna/reportV2/plainClinicalTurkish"
+import { auditFinalTurkishSurface } from "../src/lib/dna/reportV2/surfaceQa"
+import { extractCanonicalAnamnesisEvidence } from "../src/lib/dna/reportJury/canonicalAnamnesisEvidence"
 import { buildConsistencyNaturalLanguageCases, buildFreshReportV2Cases, buildPlainClinicalTurkishCases, buildPlainIntegrationQaCases, buildProductionReadinessCases, buildQualityConsolidationCases } from "./report-v2-cases"
 
 type LegacyFixture = {
@@ -236,7 +238,12 @@ async function main() {
   assert.ok(badPlainDiagnostics.abstractClinicalLanguageCount > 0)
   assert.equal(buildPlainClinicalTurkishCases().length, 30)
   const baseline = JSON.parse(fs.readFileSync(path.join(process.cwd(), "docs/dna-intelligence/report-v2/v1-baseline.json"), "utf8"))
-  assert.equal(sha256(fs.readFileSync(path.join(process.cwd(), "src/app/api/ai-report/route.ts"))), baseline.routeSha256, "production report route changed")
+  const productionRouteSource = fs.readFileSync(path.join(process.cwd(), "src/app/api/ai-report/route.ts"), "utf8")
+  assert.equal(sha256(productionRouteSource), baseline.routeSha256, "production report route changed")
+  assert.equal(baseline.productionReportContract, "jury-ready-candidate18-bold@1")
+  assert.match(productionRouteSource, /buildJuryReadyReport/)
+  assert.match(productionRouteSource, /applyFullBoldClinicalReportParagraphs/)
+  assert.doesNotMatch(productionRouteSource, /buildAdvancedReport/)
   assert.equal(sha256(fs.readFileSync(path.join(process.cwd(), "src/lib/dna/reportEngine.ts"))), baseline.reportEngineSha256, "V1 report engine changed")
   const reportV2Files = fs.readdirSync(path.join(process.cwd(), "src/lib/dna/reportV2")).filter((name) => name.endsWith(".ts"))
   const reportV2Sources = reportV2Files.map((name) => fs.readFileSync(path.join(process.cwd(), "src/lib/dna/reportV2", name), "utf8")).join("\n")
@@ -245,7 +252,7 @@ async function main() {
   assert.doesNotMatch(nonBridgeSources, /(?:from|import)\s+["'][^"']*\/chat\//, "Report V2 runtime imports Chat Box behavior")
   assert.match(bridgeSource, /import denseRuntimeJson from "\.\.\/chat\/catalog\/generated\/dense\/runtime\.json"/)
   assert.equal((bridgeSource.match(/(?:from|import)\s+["'][^"']*\/chat\//g) ?? []).length, 1, "Knowledge bridge must have exactly one read-only Chat Knowledge artifact import")
-  assert.doesNotMatch(fs.readFileSync(path.join(process.cwd(), "src/app/api/ai-report/route.ts"), "utf8"), /reportV2|REPORT_V2/, "production API imports Report V2")
+  assert.doesNotMatch(productionRouteSource, /reportV2|REPORT_V2/, "production API bypasses jury boundary")
   const lunaSource = fs.readFileSync(path.join(process.cwd(), "src/lib/dna/reportV2/lunaReportRealizer.server.ts"), "utf8")
   assert.match(lunaSource, /gpt-5\.6-luna/)
   assert.match(lunaSource, /store:\s*false/)
@@ -597,6 +604,141 @@ async function main() {
   assert.ok(finalSurfaceProbeValidation.failureCodes.includes("MORPHOLOGY_ERROR"))
   assert.ok(finalSurfaceProbeValidation.failureCodes.includes("PUNCTUATION_ERROR"))
   assert.ok(finalSurfaceProbeValidation.failureCodes.includes("SENTENCE_BOUNDARY_ERROR"))
+  const validLexicalLocative = Object.freeze({
+    ...freshResults[0].realization,
+    sections: Object.freeze(freshResults[0].realization.sections.map((section) => section.sectionId === "section_3"
+      ? Object.freeze({ ...section, text: `${section.text} Bakım veren, kantinde ve rutinde günlük yaşam güçlüğü bildirmektedir.` })
+      : section)),
+  })
+  const validLexicalLocativeSurface = auditFinalTurkishSurface(validLexicalLocative)
+  assert.equal(validLexicalLocativeSurface.morphologyErrors.some((error) => /kantinde|rutinde/iu.test(error)), false)
+  const failedOutcomeEvidence = extractCanonicalAnamnesisEvidence({
+    ...fresh[0].input,
+    clientCode: "GENERIC-FAILED-OUTCOME",
+    anamnez: "Aile görüşmesinde iki bilgi peş peşe verildiğinde ikinci bilgiyi karıştırıp yanlış kutuya koyuyor.",
+  })
+  assert.equal(failedOutcomeEvidence.length, 1)
+  assert.equal(failedOutcomeEvidence[0].direction, "DIFFICULTY")
+  assert.ok(failedOutcomeEvidence[0].functional_roles.includes("COMPLAINT"))
+  assert.equal(failedOutcomeEvidence[0].functional_roles.includes("PRESERVED_CAPACITY"), false)
+  const reversedOutcomeEvidence = extractCanonicalAnamnesisEvidence({
+    ...fresh[0].input,
+    clientCode: "GENERIC-REVERSED-OUTCOME",
+    anamnez: "Üç nesnenin yerini dinledikten sonra ikisini ters sıraya koyuyor.",
+  })
+  assert.equal(reversedOutcomeEvidence.length, 1)
+  assert.equal(reversedOutcomeEvidence[0].direction, "DIFFICULTY")
+  assert.equal(reversedOutcomeEvidence[0].functional_roles.includes("PRESERVED_CAPACITY"), false)
+  const negativeReturnEvidence = extractCanonicalAnamnesisEvidence({
+    ...fresh[0].input,
+    clientCode: "GENERIC-NEGATIVE-RETURN",
+    anamnez: "Öğretmen okulda doğum gününde balon patlayınca masanın altına girip oyuna dönmüyor.",
+  })
+  assert.equal(negativeReturnEvidence.length, 1)
+  assert.equal(negativeReturnEvidence[0].direction, "DIFFICULTY")
+  assert.ok(negativeReturnEvidence[0].functional_roles.includes("COMPLAINT"))
+  const anaphoricAbsenceEvidence = extractCanonicalAnamnesisEvidence({
+    ...fresh[0].input,
+    clientCode: "GENERIC-ANAPHORIC-ABSENCE",
+    anamnez: "Aile blender sesi duyunca kulaklarını kapatıyor. Aile aynı etkinlikte belirgin sorun görmediğini ekliyor.",
+  })
+  assert.equal(anaphoricAbsenceEvidence.length, 2)
+  assert.equal(anaphoricAbsenceEvidence[1].direction, "ABSENCE")
+  assert.deepEqual(anaphoricAbsenceEvidence[1].domains, ["sensory"])
+  assert.ok(anaphoricAbsenceEvidence[1].functional_roles.includes("CONTEXT"))
+  const broaderAnaphoricAbsence = extractCanonicalAnamnesisEvidence({
+    ...fresh[0].input,
+    clientCode: "GENERIC-BROADER-ANAPHORIC-ABSENCE",
+    anamnez: "Duyusal regülasyon alanında blender sesi duyunca kulaklarını kapatıyor. Aile aynı çalışmada belirgin sorun görmediğini ekliyor.",
+  })
+  assert.equal(broaderAnaphoricAbsence.length, 2)
+  assert.deepEqual(broaderAnaphoricAbsence[1].domains, ["sensory"])
+  assert.ok(broaderAnaphoricAbsence[1].functional_roles.includes("CONTEXT"))
+  const generalizedDomainEvidence = extractCanonicalAnamnesisEvidence({
+    ...fresh[0].input,
+    clientCode: "GENERIC-DOMAIN-VOCABULARY",
+    anamnez: "İki özellik birlikte söylendiğinde kartları hatalı kutuya yerleştiriyor. Sanat çalışmasında iki malzemeyi unutup projeyi yarıda bırakıyor. Öğleden sonra yorgunluğu arttığında montunu giyerken işi yarıda bırakıyor. Atölyede metal kutu düşünce sandalyenin arkasına çekiliyor.",
+  })
+  assert.deepEqual(generalizedDomainEvidence.map((fact) => fact.domains), [["cognitive"], ["executive"], ["physiological"], ["sensory"]])
+  const inflectedPreservedEvidence = extractCanonicalAnamnesisEvidence({
+    ...fresh[0].input,
+    clientCode: "GENERIC-INFLECTED-PRESERVED",
+    anamnez: "Dinlenmiş olduğu sabah kahvaltıyı tamamlayıp servise yetişiyor.",
+  })
+  assert.equal(inflectedPreservedEvidence.length, 1)
+  assert.equal(inflectedPreservedEvidence[0].direction, "PRESERVED")
+  assert.ok(inflectedPreservedEvidence[0].functional_roles.includes("PRESERVED_CAPACITY"))
+  assert.ok(inflectedPreservedEvidence[0].functional_roles.includes("OUTCOME"))
+  const generalizedMetadataEvidence = extractCanonicalAnamnesisEvidence({
+    ...fresh[0].input,
+    clientCode: "GENERIC-METADATA-NOISE",
+    anamnez: "Eski taslakta yalnız yürütücü işlev başlığı bulunuyor; gözlenebilir görev ya da davranış örneği eklenmemiş.",
+  })
+  assert.equal(generalizedMetadataEvidence.length, 0)
+  const generalizedArchiveMetadata = extractCanonicalAnamnesisEvidence({
+    ...fresh[0].input,
+    clientCode: "GENERIC-ARCHIVE-METADATA-NOISE",
+    anamnez: "Arşiv kağıdında yalnız bilişsel regülasyon etiketi bulunuyor; gözlenebilir işlev örneği yok.",
+  })
+  assert.equal(generalizedArchiveMetadata.length, 0)
+  const stepStoppingEvidence = extractCanonicalAnamnesisEvidence({
+    ...fresh[0].input,
+    clientCode: "GENERIC-STEP-STOPPING",
+    anamnez: "Yürütücü işlev alanında üç basamaklı giyinme planında ikinci adımdan sonra duruyor.",
+  })
+  assert.equal(stepStoppingEvidence.length, 1)
+  assert.equal(stepStoppingEvidence[0].direction, "DIFFICULTY")
+  assert.ok(stepStoppingEvidence[0].functional_roles.includes("COMPLAINT"))
+  const unexplainedDifferenceEvidence = extractCanonicalAnamnesisEvidence({
+    ...fresh[0].input,
+    clientCode: "GENERIC-UNEXPLAINED-DIFFERENCE",
+    anamnez: "Duyusal regülasyon alanında okulda zil çalınca koridora çıkıyor. İki ortam arasındaki ayrımın nedeni henüz açıklanamıyor.",
+  })
+  assert.equal(unexplainedDifferenceEvidence.length, 2)
+  assert.equal(unexplainedDifferenceEvidence[1].direction, "VAGUE")
+  assert.deepEqual(unexplainedDifferenceEvidence[1].domains, ["sensory"])
+  assert.ok(unexplainedDifferenceEvidence[1].functional_roles.includes("UNCERTAINTY"))
+  const directNeedRequestEvidence = extractCanonicalAnamnesisEvidence({
+    ...fresh[0].input,
+    clientCode: "GENERIC-DIRECT-NEED-REQUEST",
+    anamnez: "Interosepsiyon alanında beden molasında susadığını söyleyip su istiyor.",
+  })
+  assert.equal(directNeedRequestEvidence.length, 1)
+  assert.equal(directNeedRequestEvidence[0].direction, "PRESERVED")
+  assert.ok(directNeedRequestEvidence[0].functional_roles.includes("PRESERVED_CAPACITY"))
+  assert.ok(directNeedRequestEvidence[0].functional_roles.includes("OUTCOME"))
+  const nonPossessiveWaitingEvidence = extractCanonicalAnamnesisEvidence({
+    ...fresh[0].input,
+    clientCode: "GENERIC-NONPOSSESSIVE-WAITING",
+    anamnez: "Duyusal regülasyon alanında kulak tıkacı takınca koridordaki sırayı bekliyor.",
+  })
+  assert.equal(nonPossessiveWaitingEvidence.length, 1)
+  const waitingOutcome = nonPossessiveWaitingEvidence.find((fact) => fact.source_excerpt.includes("sırayı bekliyor"))
+  assert.equal(waitingOutcome?.direction, "PRESERVED")
+  assert.ok(waitingOutcome?.functional_roles.includes("PRESERVED_CAPACITY"))
+  assert.ok(waitingOutcome?.functional_roles.includes("OUTCOME"))
+  const morningExecutiveEvidence = extractCanonicalAnamnesisEvidence({
+    ...fresh[0].input,
+    clientCode: "GENERIC-MORNING-EXECUTIVE",
+    anamnez: "Yürütücü işlev alanında sabah işleri resimli listede sıralanınca rutini bitiriyor.",
+  })
+  assert.ok(morningExecutiveEvidence.every((fact) => fact.domains.includes("executive")))
+  assert.ok(morningExecutiveEvidence.some((fact) => fact.direction === "PRESERVED" && fact.functional_roles.includes("OUTCOME")))
+  const emotionalRuleChangeEvidence = extractCanonicalAnamnesisEvidence({
+    ...fresh[0].input,
+    clientCode: "GENERIC-EMOTIONAL-RULE-CHANGE",
+    anamnez: "Duygusal regülasyon alanında kural değişikliği iki seçenekle anlatılınca sakinleşiyor.",
+  })
+  assert.ok(emotionalRuleChangeEvidence.every((fact) => fact.domains.includes("emotional")))
+  assert.ok(emotionalRuleChangeEvidence.some((fact) => fact.direction === "PRESERVED" && fact.functional_roles.includes("OUTCOME")))
+  const bodyPlacementDifficultyEvidence = extractCanonicalAnamnesisEvidence({
+    ...fresh[0].input,
+    clientCode: "GENERIC-BODY-PLACEMENT-DIFFICULTY",
+    anamnez: "Fizyolojik regülasyon alanında çok yorgun olduğunda başını masaya koyuyor.",
+  })
+  assert.equal(bodyPlacementDifficultyEvidence.length, 1)
+  assert.equal(bodyPlacementDifficultyEvidence[0].direction, "DIFFICULTY")
+  assert.equal(bodyPlacementDifficultyEvidence[0].functional_roles.includes("PRESERVED_CAPACITY"), false)
   const section4SubstanceMissing = validateReportV2Realization({
     plan: freshResults[0].reportPlan,
     decisionPlan: freshResults[0].decisionPlan,

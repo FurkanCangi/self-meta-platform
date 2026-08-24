@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp/report-live-release",
+    "rootDir": ".",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "target": "ES2020",
+    "incremental": false,
+    "isolatedModules": false
+  },
+  "include": [
+    "scripts/fixtures/dna-report-jury-cases.ts",
+    "scripts/run-report-jury-readiness-tests.ts",
+    "scripts/run-report-surface-heading-compat-tests.ts",
+    "src/lib/dna/reportJury/**/*.ts",
+    "src/lib/dna/reportV2/**/*.ts"
+  ]
+}
