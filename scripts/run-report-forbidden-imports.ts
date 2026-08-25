@@ -12,6 +12,11 @@ const LEGACY_MODULES = [
   "ragSelector",
   "proRag",
 ]
+const REPORT_PROVIDER_MODULES = [
+  "lunaLayers.server",
+  "LunaJuryLanguageRealizer",
+  "LunaClinicalCritic",
+]
 const FORBIDDEN_TEXT_PATTERNS = [
   /\bfrom\s+["'][^"']*openai[^"']*["']/i,
   /\bnew\s+OpenAI\b/i,
@@ -99,6 +104,11 @@ async function main() {
     for (const legacy of LEGACY_MODULES) {
       if (new RegExp(`\\b${legacy}\\b`).test(source)) {
         failures.push(`${rel}: production graph içinde legacy AI/RAG referansı bulundu: ${legacy}`)
+      }
+    }
+    for (const providerModule of REPORT_PROVIDER_MODULES) {
+      if (source.includes(providerModule)) {
+        failures.push(`${rel}: production report graph içinde araştırma-only Luna referansı bulundu: ${providerModule}`)
       }
     }
     for (const pattern of FORBIDDEN_TEXT_PATTERNS) {

@@ -11,6 +11,7 @@
     "report:fixture": "tsc -p tsconfig.report-runner.json --outDir .tmp/report-runner-fixture && node .tmp/report-runner-fixture/scripts/run-dna-report.js",
     "report:quality": "tsc -p tsconfig.report-runner.json --outDir .tmp/report-runner-quality && node .tmp/report-runner-quality/scripts/run-report-quality-tests.js",
     "report:professor-five": "tsc -p tsconfig.report-runner.json --outDir .tmp/report-runner-professor-five && node .tmp/report-runner-professor-five/scripts/run-report-quality-tests.js --professor-five",
+    "report:zero-cost-language-hardening": "tsc -p tsconfig.report-live-release.json --outDir .tmp/report-zero-cost-language-hardening && node .tmp/report-zero-cost-language-hardening/scripts/run-report-zero-cost-language-hardening-tests.js",
     "report:audit": "tsc -p tsconfig.report-runner.json --outDir .tmp/report-runner-audit && node .tmp/report-runner-audit/scripts/run-report-deterministic-audit.js",
     "report:language-qa": "tsc -p tsconfig.report-runner.json --outDir .tmp/report-runner-language-qa && node .tmp/report-runner-language-qa/scripts/run-report-language-qa.js",
     "report:current-qa-summary": "tsc -p tsconfig.report-runner.json --outDir .tmp/report-runner-current-qa && node .tmp/report-runner-current-qa/scripts/run-report-current-qa-summary.js",

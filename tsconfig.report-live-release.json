@@ -13,6 +13,7 @@
   "include": [
     "scripts/fixtures/dna-report-jury-cases.ts",
     "scripts/run-report-jury-readiness-tests.ts",
+    "scripts/run-report-zero-cost-language-hardening-tests.ts",
     "scripts/run-report-surface-heading-compat-tests.ts",
     "src/lib/dna/reportJury/**/*.ts",
     "src/lib/dna/reportV2/**/*.ts"

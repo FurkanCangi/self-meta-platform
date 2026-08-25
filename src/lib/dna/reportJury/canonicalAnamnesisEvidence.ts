@@ -1,4 +1,5 @@
 import type { DomainKey, ReportInput } from "../reportEngine"
+import { normalizeTurkishClinicalText } from "../reportLanguageQuality"
 import type {
   AnamnesisDomainSupport,
   AnamnesisEvidenceDirection,
@@ -200,9 +201,14 @@ function functionalRoles(
 }
 
 function normalizedFact(clause: string): string {
-  const withoutLabel = clean(clause.replace(/^(?:başvuru sebeb[ıi]|başvuru|başvuru notu|reason for referral|referral_reason)\s*:\s*/iu, ""))
+  const withoutLabel = clean(clause.replace(
+    /^(?:başvuru sebeb[ıi]|başvuru|başvuru notu|reason for referral|referral_reason|parent_concerns_goals|parent concerns goals|strengths?|diagnosis|tan[ıi]|ad_soyad|client_code|age)\s*:\s*/iu,
+    "",
+  ))
   if (!withoutLabel) return ""
-  return /[.!?]$/u.test(withoutLabel) ? withoutLabel : `${withoutLabel}.`
+  const normalized = normalizeTurkishClinicalText(withoutLabel)
+    .replace(/\bkapasite korunurken\b/iu, "performans korunurken")
+  return /[.!?]$/u.test(normalized) ? normalized : `${normalized}.`
 }
 
 function stableFactKey(clause: string, index: number): string {
@@ -292,5 +298,6 @@ export function factSupportsDifficulty(fact: CanonicalAnamnesisEvidenceFact): bo
 }
 
 export function factSupportsPreservedCapacity(fact: CanonicalAnamnesisEvidenceFact): boolean {
-  return factEligibleForPreservedCapacity(fact)
+  if (!factEligibleForPreservedCapacity(fact)) return false
+  return fact.functional_roles.includes("OUTCOME") && Boolean(fact.functional_context.outcome)
 }

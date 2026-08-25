@@ -1,6 +1,7 @@
 import { analyzeExternalClinicalTests, findSupportedExternalTestByName, type ExternalTestCategory, type ExternalTestMatch } from "../externalTestRegistry"
 import { buildLiteratureAlignedSection, VERIFIED_LITERATURE_SOURCES } from "../literatureNote"
 import type { DomainKey, DomainResult, ReportInput } from "../reportEngine"
+import { normalizeTurkishClinicalText } from "../reportLanguageQuality"
 import { extractCanonicalTherapistObservation, type CanonicalTherapistObservation } from "../reportV2/canonicalCaseEvidence"
 import { runReportV2Shadow } from "../reportV2/runner"
 import type { ClinicalEvidenceUnit, FormulationId, ReportClaim } from "../reportV2/contracts"
@@ -207,7 +208,8 @@ function paragraph(
   supportingCaseFactIds: readonly string[] = [],
   supportingLiteratureIds: readonly string[] = [],
 ): JuryLockedParagraph {
-  const normalized = sentence(text)
+  const userFacingText = statementType === "literature_link" ? text : normalizeTurkishClinicalText(text)
+  const normalized = sentence(userFacingText)
   const factIds = unique(supportingCaseFactIds)
   const decisionIds = unique(claimIds.map((claimId) => `${envelope.case_id}.decision.${claimId}`))
   const sectionId = sectionIdForParagraph(id)
@@ -805,22 +807,23 @@ function buildCaseScopedEvidenceEnvelope(
     })),
   ]
   const anamnesisFacts = extractCanonicalAnamnesisEvidence(input)
-  const observationDomains = observation.present ? inferEvidenceDomains(observation.normalizedText) : []
+  const normalizedObservationText = normalizeTurkishClinicalText(observation.normalizedText)
+  const observationDomains = observation.present ? inferEvidenceDomains(normalizedObservationText) : []
   const observationFacts: CaseScopedEvidenceFact[] = observation.present ? (() => {
     const statement = naturalTherapistObservation(observation)
-    const epistemicStatus = inferEvidenceEpistemicStatus(observation.normalizedText)
+    const epistemicStatus = inferEvidenceEpistemicStatus(normalizedObservationText)
     return [Object.freeze({
       id: `${caseId}.fact.observation.primary`,
       case_id: caseId,
       source_type: "THERAPIST_OBSERVATION" as const,
       statement,
-      source_excerpt: observation.normalizedText,
+      source_excerpt: normalizedObservationText,
       domains: Object.freeze(observationDomains),
-      semantic_direction: inferEvidenceDirection(observation.normalizedText, epistemicStatus),
+      semantic_direction: inferEvidenceDirection(normalizedObservationText, epistemicStatus),
       epistemic_status: epistemicStatus,
       semantic_validity: "USABLE" as const,
-      semantic_context: inferSemanticContext(observation.normalizedText),
-      semantic_segments: buildEvidenceSemanticSegments(`${caseId}.fact.observation.primary`, observation.normalizedText),
+      semantic_context: inferSemanticContext(normalizedObservationText),
+      semantic_segments: buildEvidenceSemanticSegments(`${caseId}.fact.observation.primary`, normalizedObservationText),
       preserved_subcomponent: null,
     })]
   })() : []
@@ -1091,16 +1094,16 @@ function buildClinicalInsightPlan(input: ReportInput, profile: JuryPriorityProfi
     ? "Doğrudan gözlemde görev koşulları değiştiğinde performansın da değişmesi, kapasitenin yapılandırılmış ve daha yoğun koşullarda aynı düzeyde kullanılamadığını göstermektedir."
     : primaryCaregiverFact
     ? profile.primary_priority
-      ? `Bakım verenin aktardığı örnek, ${primary.toLocaleLowerCase("tr-TR")} bulgusunun kayıttaki günlük yaşam karşılığını sağlamaktadır.`
+      ? `Bakım verenin verdiği günlük yaşam örneği, ${primary.toLocaleLowerCase("tr-TR")} bulgusunun kayıtta hangi günlük yaşam durumu ve koşullarla birlikte yer aldığını göstermektedir.`
       : "Bakım verenin aktardığı örnek, korunmuş skor profiline eşlik eden bağlamsal performans değişimini açıklamaktadır."
     : caregiverFact
-    ? "Bakım verenin aktardığı örnek, günlük yaşamda görülen görev veya bağlam bilgisini sağlamaktadır; desteklemediği bir klinik alana bağlanmamıştır."
+    ? "Bakım verenin verdiği örnek yalnız bildirilen görev ve koşullar kapsamında değerlendirilmiştir."
     : directionalCaregiverFact
     ? "Bakım veren güçlük yönünde genel bir bildirimde bulunmuştur. Bu bildirim belirli bir görev, davranış veya bağlam örneği içermediği için puan örüntüsünün günlük yaşamdaki somut karşılığı olarak yorumlanmamıştır."
     : observation.present && observationSupportsPrimary
     ? "Doğrudan gözlem, ölçümde öne çıkan alanın görev sırasında nasıl göründüğüne ilişkin ek bilgi sağlamaktadır."
     : observation.present
-    ? "Doğrudan gözlem görev performansına ilişkin ek bilgi sağlamaktadır; gözlem metninin desteklemediği bir klinik alana bağlanmamıştır."
+    ? "Doğrudan gözlem yalnız gözlenen görev ve koşullar hakkında bilgi vermektedir."
     : "Alan puanlarının dağılımı, etkilenimin profil içinde seçici mi yoksa yaygın mı olduğunu göstermektedir."
   const crossDomain = profile.profile_breadth === "broad_multidomain"
     ? functional.has_task_specific_performance_example && functional.has_caregiver_difficulty_example
@@ -1168,11 +1171,11 @@ function buildClinicalInsightPlan(input: ReportInput, profile: JuryPriorityProfi
     : caregiverFact && observationFact && primaryCaregiverDifficultyFact && observationSupportsPrimary
     ? `${caseAnchor} Bakım veren bilgisi ile doğrudan gözlem birlikte değerlendirildiğinde, ${primary.toLocaleLowerCase("tr-TR")} bulgusunun görev ve bağlam yükü altında nasıl belirginleştiği anlaşılmaktadır.`
     : caregiverFact && observationFact
-    ? `${caseAnchor || caregiverFact.statement} Bakım veren bilgisi ile doğrudan gözlem, vaka içindeki görev ve bağlam bilgisini iki ayrı kaynaktan göstermektedir; bu bilgi desteklemediği bir klinik alana bağlanmamıştır.`
+    ? `${caseAnchor || caregiverFact.statement} Bakım veren anlatısı ile doğrudan gözlem farklı görev ve koşulları açıklamaktadır; sonuçlar aynı yöndeymiş gibi yorumlanmamıştır.`
     : caregiverFact && primaryCaregiverFact
     ? `${caregiverFact.statement} Bu günlük yaşam bilgisi, ${primary.toLocaleLowerCase("tr-TR")} alanındaki puan örüntüsünün vaka içindeki somut karşılığını göstermektedir.`
     : caregiverFact
-    ? `${caregiverFact.statement} Bu günlük yaşam bilgisi, puan dağılımına ek işlevsel bağlam sağlamaktadır; desteklemediği bir klinik alana bağlanmamıştır.`
+    ? `${caregiverFact.statement} Bakım verenin verdiği bilgi yalnız bildirilen günlük yaşam durumu kapsamında değerlendirilmiştir.`
     : directionalCaregiverFact
     ? `Bakım veren güçlük yönünde genel bir bildirimde bulunmuştur. Bildirim belirli bir görev, davranış veya bağlam örneği içermediği için ${primary.toLocaleLowerCase("tr-TR")} puan örüntüsünün günlük yaşamdaki somut karşılığı olarak kullanılmamıştır.`
     : `${primary} alanındaki skor ayrışması profilin merkezi klinik bulgusudur. Günlük yaşam örneği bulunmadığı için bu sonuç belirli bir davranış senaryosuna dönüştürülmemiştir.`
