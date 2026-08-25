@@ -40,6 +40,21 @@ function count(text: string, pattern: RegExp): number {
   return text.match(pattern)?.length ?? 0
 }
 
+function exactRepeatedSentenceCount(text: string): number {
+  const seen = new Set<string>()
+  let repeated = 0
+  const sentences = text
+    .replace(/^\d+\.\s+.+$/gmu, "")
+    .split(/(?<=[.!?])\s+|\n+/u)
+    .map((sentence) => sentence.toLocaleLowerCase("tr-TR").replace(/[^a-z0-9çğıöşü]+/gu, " ").trim())
+    .filter((sentence) => sentence.length >= 20)
+  for (const sentence of sentences) {
+    if (seen.has(sentence)) repeated += 1
+    else seen.add(sentence)
+  }
+  return repeated
+}
+
 function coreDecisionSnapshot(result: JuryReportResult) {
   return Object.freeze({
     overallClassification: result.overallClassification,
@@ -123,6 +138,7 @@ function assertSurface(id: string, result: JuryReportResult) {
   assert.equal(count(report, /^\*\*[^\n]+\*\*$/gmu), 3, `${id}: ürün bold yüzeyi`)
   assert.equal(count(result.finalReport, RAW_FIELD_LABEL), 0, `${id}: ham İngilizce alan etiketi`)
   assert.equal(count(result.finalReport, MECHANICAL_PROSE), 0, `${id}: mekanik sistem cümlesi`)
+  assert.equal(exactRepeatedSentenceCount(result.finalReport), 0, `${id}: tekrarlanan final cümlesi`)
   assert.equal(asciiIssue, false, `${id}: ASCII Türkçe kalite denetimi`)
   assert.equal(count(result.finalReport, BROAD_ASCII_TURKISH), 0, `${id}: geniş ASCII Türkçe denetimi`)
 }
@@ -170,6 +186,7 @@ async function main() {
       unsupportedAddition: 0,
       rawFieldLabels: 0,
       mechanicalProse: 0,
+      repeatedSentences: 0,
       asciiTurkishResidue: 0,
       semanticLeakage: 0,
       boldParagraphs: professorCases.reduce((sum, entry) => sum + firstResults.get(entry.id)!.validation.fullBoldParagraphCount, 0),
