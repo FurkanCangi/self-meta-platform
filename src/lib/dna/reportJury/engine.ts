@@ -415,7 +415,17 @@ function structuredExternalEvidence(input: ReportInput): Readonly<{ raw: readonl
       decision_relevant: externalDecisionRelevant(validity, direction),
     }))
   }
-  return Object.freeze({ raw: Object.freeze(mentions), evidence: Object.freeze(evidence) })
+  const deduplicatedEvidence: JuryExternalEvidence[] = []
+  const seenEvidence = new Set<string>()
+  for (const entry of evidence) {
+    const key = entry.category === "unrecognized"
+      ? `raw:${entry.test_name.toLocaleLowerCase("tr-TR")}|${entry.reported_result.toLocaleLowerCase("tr-TR")}|${entry.validity_status}|${entry.evidence_direction}|${entry.source_text.toLocaleLowerCase("tr-TR")}`
+      : `registry:${entry.id}`
+    if (seenEvidence.has(key)) continue
+    seenEvidence.add(key)
+    deduplicatedEvidence.push(entry)
+  }
+  return Object.freeze({ raw: Object.freeze(mentions), evidence: Object.freeze(deduplicatedEvidence) })
 }
 
 function hasMeaningfulAnamnesis(text: string): boolean {

@@ -17,6 +17,8 @@ import {
 
 const THERAPIST_OR_EXTERNAL_MARKER = /(?:terap[ıi]st\s+(?:yorumlar[ıi]?|yorumlari?|gözlemi?)|therapist_comments|clinical_observation|ek\s+klinik\s+test(?:\s*\/\s*bulgular)?|dış\s+test|external_clinical_findings)\s*[:=]?/iu
 const CAREGIVER_STRENGTH_MARKER = /(?:çocuğun\s+)?güçlü\s+yan(?:lar[ıi]?|[ıi])?\s*[:=]/giu
+const INTAKE_FORM_FIELD = /(?:^|\s)(ad[ıi]-soyad[ıi]|dan[ıi]şan\s+kodu|kay[ıi]t\s+tarihi|yaş\s+aral[ıi]ğ[ıi]|cinsiyet|kardeş\s+say[ıi]s[ıi]|kaç[ıi]nc[ıi]\s+çocuk|evde\s+kaç\s+kişi\s+kal[ıi]yor|çocuk\s+doğduğunda\s+annenin\s+yaş[ıi]|annenin\s+eğitim\s+düzeyi|annenin\s+mesleği\s*\/\s*çal[ıi]ş[ıi]yor\s+mu|annenin\s+çal[ıi]şma\s+saatleri|çal[ıi]ş[ıi]yorsa,?\s*çocuğa\s+kim\s+bak[ıi]yor|baban[ıi]n\s+eğitim\s+düzeyi|baban[ıi]n\s+mesleği|baban[ıi]n\s+çal[ıi]şma\s+saatleri|tan[ıi]|t[ıi]bbi\s+geçmiş|alerji\/epilepsi\/kronik\s+kab[ıi]zl[ıi]k-ishal\/kolik\s+ağr[ıi]\/nöbet|şu\s+an\s+ald[ıi]ğ[ıi]\s+tedavi\s+ve\s+terapiler|daha\s+önce\s+ald[ıi]ğ[ıi](?:\.\s*ama\s+b[ıi]rakt[ıi]ğ[ıi])?\s+tedaviler|medikal\s+tedaviler\s*\(ilaçlar\s+ve\s+saatleri\)|doğum\s+öncesi\s+hikâye(?:\s*\([^)]*\))?|doğum\s+hikayesi|doğum\s+sonras[ıi]\s+hikâye|düşük\s+doğum\s+hikayesi\s+var\s+m[ıi]|beslenme\s+şekli|sevdiği\s+yemekler|reddettiği\s+yemekler|sevdiği\s+oyuncaklar|çocuğun\s+güçlü\s+yanlar[ıi]|birincil\s+endişeler\/hedefler|ebeveyn\s+iletişim\s+bilgileri|başvuru\s+sebebi)\s*:/giu
+const REPORT_ELIGIBLE_INTAKE_FIELD = /^(?:beslenme\s+şekli|sevdiği\s+yemekler|reddettiği\s+yemekler|sevdiği\s+oyuncaklar|çocuğun\s+güçlü\s+yanlar[ıi]|birincil\s+endişeler\/hedefler|başvuru\s+sebebi)$/iu
 
 const DOMAIN_PATTERNS: Readonly<Record<DomainKey, RegExp>> = Object.freeze({
   physiological: /(?:\buyku|uykusuz|uyuduğ|uyand|uyuma|biriken\s+yorgunluk|dinlenmiş\s+gün|dinlenmis\s+gun|dinlenme(?:den|nin)?\s+(?:sonra|ardından)|dinlenme\s+sonrası|fizyolojik\s+regülasyon|sabah\s+kalk|nefes(?:i)?\s+hızlan|nefes(?:i)?\s+hizlan|başını\s+masaya|basini\s+masaya)/iu,
@@ -70,6 +72,22 @@ function clean(value: string): string {
   return value.replace(/\s+/gu, " ").replace(/^[\s:;|/=-]+|[\s;|/=-]+$/gu, "").trim()
 }
 
+function denseIntakeFormSegments(raw: string): string[] | null {
+  const matches = Array.from(raw.matchAll(INTAKE_FORM_FIELD))
+  if (matches.length < 5) return null
+  return matches.flatMap((match, index) => {
+    const label = clean(match[1] ?? "")
+    if (!REPORT_ELIGIBLE_INTAKE_FIELD.test(label)) return []
+    const valueStart = (match.index ?? 0) + match[0].length
+    const nextFieldStart = matches[index + 1]?.index ?? raw.length
+    const trailingText = raw.slice(valueStart, nextFieldStart)
+    const externalMarkerOffset = trailingText.search(THERAPIST_OR_EXTERNAL_MARKER)
+    const valueEnd = externalMarkerOffset >= 0 ? valueStart + externalMarkerOffset : nextFieldStart
+    const value = clean(raw.slice(valueStart, valueEnd))
+    return value ? [value] : []
+  })
+}
+
 function sourceSegments(input: ReportInput): string[] {
   if (!input.anamnez) return []
   if (typeof input.anamnez !== "string") {
@@ -78,6 +96,8 @@ function sourceSegments(input: ReportInput): string[] {
       .map(([key, value]) => `${key}: ${String(value).trim()}`)
   }
   const raw = input.anamnez
+  const denseFormSegments = denseIntakeFormSegments(raw)
+  if (denseFormSegments) return denseFormSegments
   const marker = THERAPIST_OR_EXTERNAL_MARKER.exec(raw)
   const primary = clean(marker ? raw.slice(0, marker.index) : raw)
   const strengths: string[] = []

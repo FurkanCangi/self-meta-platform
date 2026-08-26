@@ -11,7 +11,9 @@
     "isolatedModules": false
   },
   "include": [
+    "scripts/fixtures/dna-report-form-dump-case.ts",
     "scripts/fixtures/dna-report-jury-cases.ts",
+    "scripts/run-report-form-dump-regression-tests.ts",
     "scripts/run-report-jury-readiness-tests.ts",
     "scripts/run-report-zero-cost-language-hardening-tests.ts",
     "scripts/run-report-surface-heading-compat-tests.ts",
