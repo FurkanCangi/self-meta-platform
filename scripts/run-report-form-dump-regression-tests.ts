@@ -45,6 +45,19 @@ async function main() {
     assert.equal(result.validation.visibleFactualContradictionCount, 0)
     assert.equal(result.validation.unsupportedCausalityCount, 0)
 
+    const olderBandResult = await buildJuryReadyReport({
+      ...FORM_DUMP_DUPLICATE_EXTERNAL_INPUT,
+      ageMonths: 54,
+      answers: [...FORM_DUMP_DUPLICATE_EXTERNAL_INPUT.answers],
+      anamnez: `${FORM_DUMP_DUPLICATE_EXTERNAL_INPUT.anamnez} Rapor Yorumu İçin Klinik Anamnez ${FORM_DUMP_DUPLICATE_EXTERNAL_INPUT.anamnez}`,
+    })
+    assert.equal(olderBandResult.validation.pass, true, olderBandResult.validation.failureCodes.join(","))
+    assert.equal(olderBandResult.validation.genericTemplateFailureCount, 0)
+    assert.equal(olderBandResult.validation.fullBoldParagraphCount, 3)
+    assert.equal(olderBandResult.rawExternalTests.length, 20, "Tekrarlı canlı form provenance'i korunmalı")
+    assert.equal(olderBandResult.externalEvidence.length, 5, "Tekrarlı canlı form beş benzersiz dış teste indirgenmeli")
+    assert.equal(count(olderBandResult.finalReport, RAW_FORM_LABEL), 0)
+
     const meaningfulDenseForm = await buildJuryReadyReport({
       ...FORM_DUMP_DUPLICATE_EXTERNAL_INPUT,
       clientCode: "SYNTH-FORM-DUMP-MEANINGFUL",
@@ -72,6 +85,9 @@ async function main() {
       externalBoundaryParagraphs: count(result.finalReport, /klinik kararda kullanılmamıştır/giu),
       duplicateParagraphGroups,
       boldParagraphs: result.validation.fullBoldParagraphCount,
+      olderBandGenericBoldFailures: olderBandResult.validation.genericTemplateFailureCount,
+      olderBandRawExternalMentions: olderBandResult.rawExternalTests.length,
+      olderBandCanonicalExternalEvidence: olderBandResult.externalEvidence.length,
       meaningfulDenseFormFacts: meaningfulDenseForm.caseScopedEvidenceEnvelope.anamnesis_evidence.length,
       providerCalls,
       pass: true,

@@ -1215,7 +1215,7 @@ function buildClinicalInsightPlan(input: ReportInput, profile: JuryPriorityProfi
     conclusion,
   ])
   const firstFacts = unique([primaryScoreFact?.id, ...preservedScoreFacts.map((fact) => fact.id), caregiverFact?.id, directionalCaregiverFact?.id, observationFact?.id, externalFact(difficultyExternal)?.id, externalFact(preservedExternal)?.id].filter(Boolean) as string[])
-  const secondFacts = unique([...preservedScoreFacts.map((fact) => fact.id), ...usableCaregiverFacts.map((fact) => fact.id), directionalCaregiverFact?.id, caregiverPreservedFact?.id, observationFact?.id, externalFact(preservedExternal)?.id].filter(Boolean) as string[])
+  const secondFacts = unique([...affectedScoreFacts.map((fact) => fact.id), ...preservedScoreFacts.map((fact) => fact.id), ...usableCaregiverFacts.map((fact) => fact.id), directionalCaregiverFact?.id, caregiverPreservedFact?.id, observationFact?.id, externalFact(preservedExternal)?.id].filter(Boolean) as string[])
   const thirdFacts = unique([...affectedScoreFacts.map((fact) => fact.id), ...preservedScoreFacts.map((fact) => fact.id), ...usableCaregiverFacts.map((fact) => fact.id), directionalCaregiverFact?.id, caregiverPreservedFact?.id, observationFact?.id, externalFact(difficultyExternal)?.id, externalFact(preservedExternal)?.id].filter(Boolean) as string[])
   const decisionIds = Object.freeze([`${envelope.case_id}.decision.profile`, `${envelope.case_id}.decision.primary`, `${envelope.case_id}.decision.preserved`])
   return Object.freeze({
