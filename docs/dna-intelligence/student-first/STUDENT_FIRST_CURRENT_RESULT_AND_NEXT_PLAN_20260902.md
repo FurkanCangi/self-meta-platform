@@ -35,6 +35,7 @@ Current implementation update:
 - B1-Candidate1 Smoke8 / Student40 semantic contracts: 8/8 and 40/40 PASS;
 - typed request-to-runtime target crosswalk: 40/40 local PASS;
 - direct legacy S13 visible-answer handoff: structural FAIL; obligation-aware answer executor selected.
+- B1-R5E obligation-aware execution plan and bounded executor: 40/40 local PASS with mock realization; real visible prose not yet certified.
 
 ## Three-candidate portfolio
 
@@ -174,4 +175,4 @@ Only after Student40 passes, run in order and stop at the first failure:
 - no production/deployment before all required gates pass;
 - user-owned untracked files remain untouched and uncommitted.
 
-The immediate next engineering gate is `B1-R5E`, a candidate-only obligation-aware answer executor driven directly by the B1 contract. Visible Student40 must pass before the synthetic one-hour student simulation. The simulation replaces the unavailable human participant by user decision, but will be reported as synthetic rather than independent human validation.
+The immediate next gate is an immutable B1-R5E real-provider visible-answer preflight, followed by exact visible Student40 if it passes. Visible Student40 must pass before the synthetic one-hour student simulation. The simulation replaces the unavailable human participant by user decision, but will be reported as synthetic rather than independent human validation.

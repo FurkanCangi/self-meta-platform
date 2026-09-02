@@ -57,6 +57,11 @@ export {
   buildStudentS13ResolvedRequestHandoff,
   DNA_STUDENT_S13_HANDOFF_VERSION,
 } from "./runtimeBridge"
+export {
+  buildStudentAnswerExecutionPlan,
+  DNA_STUDENT_ANSWER_EXECUTION_PLAN_VERSION,
+  validateStudentAnswerExecutionPlan,
+} from "./answerExecution"
 
 export type {
   StudentAnswerObligation,
@@ -100,6 +105,10 @@ export type {
   StudentTargetCandidateSource,
 } from "./evidenceFirstRequest"
 export type { StudentS13ResolvedRequestHandoff } from "./runtimeBridge"
+export type {
+  StudentAnswerEvidenceClaim,
+  StudentAnswerExecutionPlan,
+} from "./answerExecution"
 export type {
   StudentDimensionDecision,
   StudentSemanticDimension,
