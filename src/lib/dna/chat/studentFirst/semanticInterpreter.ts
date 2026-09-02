@@ -15,7 +15,7 @@ import { DNA_STUDENT_TARGET_LEXICON, detectExplicitStudentTargetIds } from "./co
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 import { normalizeDnaChatText } from "../text"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@23" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@24" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",

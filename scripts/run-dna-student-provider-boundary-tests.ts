@@ -309,6 +309,10 @@ async function main() {
     detectExplicitStudentTargetIds("planlama dürtü kontrolü ve duygu düzenleme üçü ayrı ayrı nasıl yer alır"),
     ["planning", "inhibition", "emotion_regulation"],
   )
+  assert.deepEqual(detectExplicitStudentTargetIds("çocuk kendi kendine toparlanıp göreve dönüyor"), ["recovery"])
+  assert.deepEqual(detectExplicitStudentTargetIds("toparlanmasını nasıl destekleriz"), ["recovery"])
+  assert.deepEqual(detectExplicitStudentTargetIds("toparlanabilmesini açıklıyorum"), ["recovery"])
+  assert.deepEqual(detectExplicitStudentTargetIds("çocuk göreve dönüyor"), [], "behavior-only recovery wording must remain contextual")
   const missingExplicitComponent = {
     ...validFrame,
     semanticActs: { ...validFrame.semanticActs, define: false, case_reasoning: true },

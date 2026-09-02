@@ -18,6 +18,7 @@ export type TargetLexeme = Readonly<{
   id: string
   label: string
   aliases: readonly string[]
+  explicitStems?: readonly string[]
   contextAliases?: readonly string[]
 }>
 
@@ -46,6 +47,7 @@ export const DNA_STUDENT_TARGET_LEXICON: readonly TargetLexeme[] = Object.freeze
     id: "recovery",
     label: "toparlanma",
     aliases: ["toparlanma", "göreve dönme", "oyuna dönme"],
+    explicitStems: ["toparlan"],
     contextAliases: ["göreve dönme", "oyuna dönme"],
   },
 ])
@@ -88,6 +90,11 @@ export function detectExplicitStudentTargetIds(message: string): readonly string
       if (contextAliases.has(normalizedAlias)) continue
       const at = normalized.indexOf(normalizedAlias)
       if (at >= 0) hits.push({ id: entry.id, at, length: normalizedAlias.length })
+    }
+    for (const stem of entry.explicitStems ?? []) {
+      const normalizedStem = normalizeDnaChatText(stem).replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+      const match = normalized.match(new RegExp(`\\b${normalizedStem}[a-z0-9_]*\\b`, "u"))
+      if (match?.index !== undefined) hits.push({ id: entry.id, at: match.index, length: match[0].length })
     }
   }
   hits.sort((left, right) => left.at - right.at || right.length - left.length)
