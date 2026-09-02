@@ -1,7 +1,7 @@
 # DNA Chat Student-First — Phase 3 Architecture B1: evidence-first request core
 
 Date: 2026-09-02
-Status: **B1-R0/R1 LOCAL PASS / B1-R2 PENDING**
+Status: **B1-R0/R1/R2 LOCAL PASS / B1-R3 PENDING**
 
 ## Goal
 
@@ -127,6 +127,8 @@ Result on 2026-09-02: **PASS**. Student40 evidence-first diagnostic 40/40, targe
 - Preserve one bounded semantic repair and transport policy only for malformed transport, not semantic invention.
 
 Exit: provider-boundary tests prove that arbitrary added targets, referents, actions, and safety labels cannot cross the boundary.
+
+Result on 2026-09-02: **PASS locally.** Closed-slot attacks are rejected, deterministic requests make zero provider calls, bounded multi-referent ambiguity uses at most one choice plus one transport retry, and the evidence-first contract replay passes Student40 40/40. The new adapter is not connected to the product runtime and no real provider call was made.
 
 ### B1-R3 — student-language robustness, no paid calls
 

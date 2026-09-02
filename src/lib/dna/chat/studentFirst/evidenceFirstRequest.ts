@@ -1,14 +1,21 @@
 import { normalizeDnaChatText } from "../text"
 import type {
   StudentConversationAction,
+  StudentObservationScope,
   StudentConversationState,
   StudentPresentationRequest,
   StudentReferent,
+  StudentRequestContract,
   StudentSemanticTask,
+  StudentSummaryScope,
 } from "./contracts"
 import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
+import {
+  compileStudentRequestContract,
+  type StudentSemanticFrame,
+} from "./semanticInterpreter"
 
-export const DNA_STUDENT_EVIDENCE_FIRST_VERSION = "dna-student-evidence-first@1" as const
+export const DNA_STUDENT_EVIDENCE_FIRST_VERSION = "dna-student-evidence-first@2" as const
 
 export type StudentObservedTargetFact = Readonly<{
   targetId: string
@@ -41,6 +48,8 @@ export type StudentObservedRequestFacts = Readonly<{
   semanticTaskCandidates: readonly StudentSemanticTask[]
   conversationAction: StudentConversationAction
   presentation: StudentPresentationRequest
+  summaryExtras: Readonly<Pick<StudentSummaryScope, "unknown" | "observationFocus">>
+  observationExtras: StudentObservationScope
   referenceCues: StudentReferenceCues
   safetyIntent: StudentObservedSafetyIntent
 }>
@@ -58,6 +67,7 @@ export type StudentTargetCandidate = Readonly<{
   eligibilityReason:
     | "explicit_current_message"
     | "target_free_summary_history"
+    | "target_free_return_history"
     | "single_active_treatment_context"
     | "active_continuation"
     | "context_only"
@@ -83,6 +93,49 @@ export type StudentStateCandidateEnvelope = Readonly<{
   conversationAction: StudentConversationAction
   safetyIntent: StudentObservedSafetyIntent
 }>
+
+export const DNA_STUDENT_CLOSED_SLOT_FAILURE_CODES = Object.freeze([
+  "invalid_object",
+  "invalid_primary_task",
+  "invalid_focus_targets",
+  "focus_target_set_mismatch",
+  "invalid_referent",
+  "referent_choice_required",
+] as const)
+
+export type StudentClosedSlotFailureCode = typeof DNA_STUDENT_CLOSED_SLOT_FAILURE_CODES[number]
+
+export type StudentClosedSlotChoice = Readonly<{
+  primaryTask: StudentSemanticTask
+  focusTargetIds: readonly string[]
+  referentTurnId: string | null
+}>
+
+export type StudentClosedSlotValidationResult =
+  | Readonly<{ ok: true; choice: StudentClosedSlotChoice }>
+  | Readonly<{ ok: false; failureCode: StudentClosedSlotFailureCode }>
+
+export type StudentEvidenceFirstResolutionResult =
+  | Readonly<{
+      ok: true
+      facts: StudentObservedRequestFacts
+      envelope: StudentStateCandidateEnvelope
+      choice: StudentClosedSlotChoice
+      contract: StudentRequestContract
+    }>
+  | Readonly<{
+      ok: false
+      reason: "closed_slot_failure"
+      failureCode: StudentClosedSlotFailureCode
+      facts: StudentObservedRequestFacts
+      envelope: StudentStateCandidateEnvelope
+    }>
+  | Readonly<{
+      ok: false
+      reason: "diagnosis_contract_pending"
+      facts: StudentObservedRequestFacts
+      envelope: StudentStateCandidateEnvelope
+    }>
 
 const INFLECTION_SUFFIX = "(?:yi|ya|ye|ni|na|ne|nu|i|u|a|e|de|da|den|dan|in|un|nin|nun|la|le|yla|yle)?"
 const AMBIGUOUS_SINGLE_TOKEN_TARGETS = new Set(["attention"])
@@ -233,14 +286,14 @@ function conversationAction(message: string, hasHistory: boolean): StudentConver
 
 function presentation(message: string): StudentPresentationRequest {
   const normalized = normalizeDnaChatText(message)
-  const countMatch = normalized.match(/\b(iki|uc|dort|[2-4]) cumle\b/)
+  const countMatch = normalized.match(/\b(iki|uc|dort|[2-4]) cumle\w*\b/)
   const requestedSentenceCount = countMatch
     ? ({ iki: 2, uc: 3, dort: 4 } as Record<string, number>)[countMatch[1]!] ?? Number(countMatch[1])
     : null
   const exampleRequested = semanticTaskCandidates(message, 0).includes("example")
   const concreteExample = exampleRequested && /\b(?:cocuk|ogrenci|sinif|ders|ogretmen|oyun|gunluk)\w*\b/.test(normalized)
   return Object.freeze({
-    depth: /\b(?:kisa|kisaca|minicik|ozet|[2-4] cumle|iki cumle|uc cumle|dort cumle)\b/.test(normalized)
+    depth: /\b(?:kisa|kisaca|minicik|ozet|[2-4] cumle\w*|iki cumle\w*|uc cumle\w*|dort cumle\w*)\b/.test(normalized)
       ? "brief"
       : /\b(?:ayrintili|detayli|derin|biraz ac|daha ac)\b/.test(normalized) ? "deep" : "standard",
     language: /\b(?:sade|basit|ogrenci|akademik olma|akademik olmadan|akademik oldu|gunluk dil|duz anlat)\b/.test(normalized)
@@ -253,6 +306,25 @@ function presentation(message: string): StudentPresentationRequest {
     grouping: /\b(?:ayri ayri|her birini|ucunu ayri|ikisini ayri)\b/.test(normalized) ? "separate_each" : "integrated",
     requestedSentenceCount: Number.isFinite(requestedSentenceCount) ? requestedSentenceCount : null,
     preserveMeaning: /\b(?:yeniden soyle|tekrar anlat|daha basit|akademik oldu|akademik olmadan)\b/.test(normalized),
+  })
+}
+
+function summaryExtras(message: string, tasks: readonly StudentSemanticTask[]): StudentObservedRequestFacts["summaryExtras"] {
+  const normalized = normalizeDnaChatText(message)
+  const summary = tasks.includes("summarize")
+  return Object.freeze({
+    unknown: summary && /\b(?:neyi bilmiyoruz|bilmedigimiz|kesin degil|kesin soyleyem\w*|sinir)\b/.test(normalized),
+    observationFocus: summary && /\b(?:gozlem\w*|neye bak\w*)\b/.test(normalized),
+  })
+}
+
+function observationExtras(message: string, tasks: readonly StudentSemanticTask[]): StudentObservationScope {
+  const normalized = normalizeDnaChatText(message)
+  if (!tasks.includes("compare")) return Object.freeze({ singleObservationLimit: false, additionalContext: false })
+  const singleObservationLimit = /\b(?:tek gozlem|tek bir gozlem|sadece bu|kesin soyle|kesin diy|hangisi olabilir|niye kesin)\b/.test(normalized)
+  return Object.freeze({
+    singleObservationLimit,
+    additionalContext: singleObservationLimit && /\b(?:baska|neye bak|hangisi olabilir|neden kesin|niye kesin)\b/.test(normalized),
   })
 }
 
@@ -298,6 +370,8 @@ export function observeStudentRequestFacts(input: Readonly<{
     semanticTaskCandidates: tasks,
     conversationAction: conversationAction(input.message, input.state.semanticHistory.length > 0),
     presentation: presentation(input.message),
+    summaryExtras: summaryExtras(input.message, tasks),
+    observationExtras: observationExtras(input.message, tasks),
     referenceCues: referenceCues(input.message),
     safetyIntent: safetyIntent(input.message, tasks),
   })
@@ -381,6 +455,7 @@ export function buildStudentStateCandidateEnvelope(input: Readonly<{
   const explicitSet = new Set(input.facts.explicitTargetIds.filter((targetId) => !input.facts.rejectedTargetIds.includes(targetId)))
   const activeSet = new Set(input.state.activeTargetIds.filter((targetId) => !input.facts.rejectedTargetIds.includes(targetId)))
   const targetFreeSummary = input.facts.conversationAction === "summarize_session" && explicitSet.size === 0
+  const targetFreeReturn = input.facts.conversationAction === "return" && explicitSet.size === 0
   const singleActiveTreatment = input.facts.safetyIntent === "treatment_selection" && explicitSet.size === 0 && activeSet.size === 1
   const comparisonNeedsStateSide = input.facts.semanticTaskCandidates.includes("compare") && explicitSet.size < 2
   const targetCandidates = [...sources.entries()].map(([targetId, targetSources]): StudentTargetCandidate => {
@@ -388,12 +463,14 @@ export function buildStudentStateCandidateEnvelope(input: Readonly<{
     const contextOnly = targetSources.has("context_current_message") && !explicit
     const history = targetSources.has("semantic_history")
     const active = activeSet.has(targetId)
-    const focusEligible = explicit || (targetFreeSummary && history) || (singleActiveTreatment && active) || (comparisonNeedsStateSide && active) ||
+    const focusEligible = explicit || (targetFreeSummary && history) || (targetFreeReturn && history) || (singleActiveTreatment && active) || (comparisonNeedsStateSide && active) ||
       (!explicitSet.size && !targetFreeSummary && input.facts.safetyIntent !== "treatment_selection" && active)
     const eligibilityReason: StudentTargetCandidate["eligibilityReason"] = explicit
       ? "explicit_current_message"
       : targetFreeSummary && history
         ? "target_free_summary_history"
+        : targetFreeReturn && history
+          ? "target_free_return_history"
         : singleActiveTreatment && active
           ? "single_active_treatment_context"
           : focusEligible
@@ -419,5 +496,184 @@ export function buildStudentStateCandidateEnvelope(input: Readonly<{
     taskCandidates: input.facts.semanticTaskCandidates,
     conversationAction: input.facts.conversationAction,
     safetyIntent: input.facts.safetyIntent,
+  })
+}
+
+function sameSet(left: readonly string[], right: readonly string[]): boolean {
+  const a = unique(left).sort()
+  const b = unique(right).sort()
+  return a.length === b.length && a.every((value, index) => value === b[index])
+}
+
+export function resolveStudentEvidenceFirstPrimaryTask(facts: StudentObservedRequestFacts): StudentSemanticTask {
+  const tasks = new Set(facts.semanticTaskCandidates)
+  if (tasks.has("treatment_boundary")) return "treatment_boundary"
+  if (tasks.has("summarize")) return "summarize"
+  if (tasks.has("compare")) return "compare"
+  if (tasks.has("example")) return "example"
+  if (facts.presentation.grouping === "separate_each") return "explain"
+  for (const task of ["observe", "evidence", "case_reasoning", "define", "explain"] as const) {
+    if (tasks.has(task)) return task
+  }
+  return "explain"
+}
+
+export function buildDeterministicStudentClosedSlotChoice(input: Readonly<{
+  facts: StudentObservedRequestFacts
+  envelope: StudentStateCandidateEnvelope
+}>): StudentClosedSlotChoice | null {
+  if (input.envelope.referentCandidates.length > 1) return null
+  const referent = input.envelope.referentCandidates[0] ?? null
+  const focusTargetIds = input.facts.conversationAction === "return" && !input.facts.explicitTargetIds.length && referent
+    ? referent.targetIds
+    : input.envelope.allowedFocusTargetIds
+  return Object.freeze({
+    primaryTask: resolveStudentEvidenceFirstPrimaryTask(input.facts),
+    focusTargetIds: Object.freeze([...focusTargetIds]),
+    referentTurnId: referent?.turnId ?? null,
+  })
+}
+
+function closedSlotFailure(failureCode: StudentClosedSlotFailureCode): StudentClosedSlotValidationResult {
+  return Object.freeze({ ok: false, failureCode })
+}
+
+export function validateStudentClosedSlotChoice(
+  candidate: unknown,
+  facts: StudentObservedRequestFacts,
+  envelope: StudentStateCandidateEnvelope,
+): StudentClosedSlotValidationResult {
+  if (!candidate || typeof candidate !== "object" || Array.isArray(candidate)) return closedSlotFailure("invalid_object")
+  const row = candidate as Record<string, unknown>
+  const primaryTask = typeof row.primaryTask === "string" && facts.semanticTaskCandidates.includes(row.primaryTask as StudentSemanticTask)
+    ? row.primaryTask as StudentSemanticTask
+    : null
+  if (!primaryTask || primaryTask !== resolveStudentEvidenceFirstPrimaryTask(facts)) return closedSlotFailure("invalid_primary_task")
+  if (!Array.isArray(row.focusTargetIds) || row.focusTargetIds.some((targetId) => typeof targetId !== "string")) {
+    return closedSlotFailure("invalid_focus_targets")
+  }
+  const focusTargetIds = row.focusTargetIds as string[]
+  if (unique(focusTargetIds).length !== focusTargetIds.length ||
+    focusTargetIds.some((targetId) => !envelope.allowedFocusTargetIds.includes(targetId))) {
+    return closedSlotFailure("invalid_focus_targets")
+  }
+  const referentTurnId = row.referentTurnId === null
+    ? null
+    : typeof row.referentTurnId === "string" ? row.referentTurnId : undefined
+  if (referentTurnId === undefined || (referentTurnId !== null && !envelope.allowedReferentTurnIds.includes(referentTurnId))) {
+    return closedSlotFailure("invalid_referent")
+  }
+  if (envelope.referentCandidates.length > 1 && referentTurnId === null) return closedSlotFailure("referent_choice_required")
+  if (envelope.referentCandidates.length === 1 && referentTurnId !== envelope.referentCandidates[0]!.turnId) {
+    return closedSlotFailure("invalid_referent")
+  }
+  if (!envelope.referentCandidates.length && referentTurnId !== null) return closedSlotFailure("invalid_referent")
+  const referentCandidate = referentTurnId
+    ? envelope.referentCandidates.find((candidate) => candidate.turnId === referentTurnId) ?? null
+    : null
+  const requiredFocusTargetIds = facts.conversationAction === "return" && !facts.explicitTargetIds.length && referentCandidate
+    ? referentCandidate.targetIds
+    : envelope.allowedFocusTargetIds
+  if (!sameSet(focusTargetIds, requiredFocusTargetIds)) return closedSlotFailure("focus_target_set_mismatch")
+  return Object.freeze({
+    ok: true,
+    choice: Object.freeze({
+      primaryTask,
+      focusTargetIds: Object.freeze([...focusTargetIds]),
+      referentTurnId,
+    }),
+  })
+}
+
+export function studentClosedSlotChoiceSchema(
+  facts: StudentObservedRequestFacts,
+  envelope: StudentStateCandidateEnvelope,
+): Record<string, unknown> {
+  const ambiguousTargetFreeReturn = facts.conversationAction === "return" && !facts.explicitTargetIds.length && envelope.referentCandidates.length > 1
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: ["primaryTask", "focusTargetIds", "referentTurnId"],
+    properties: {
+      primaryTask: { type: "string", enum: [resolveStudentEvidenceFirstPrimaryTask(facts)] },
+      focusTargetIds: {
+        type: "array",
+        minItems: ambiguousTargetFreeReturn ? 1 : envelope.allowedFocusTargetIds.length,
+        maxItems: ambiguousTargetFreeReturn ? envelope.allowedFocusTargetIds.length : envelope.allowedFocusTargetIds.length,
+        items: { type: "string", enum: [...envelope.allowedFocusTargetIds] },
+      },
+      referentTurnId: envelope.allowedReferentTurnIds.length
+        ? { anyOf: [{ type: "string", enum: [...envelope.allowedReferentTurnIds] }, { type: "null" }] }
+        : { type: "null" },
+    },
+  }
+}
+
+function semanticActs(tasks: readonly StudentSemanticTask[]): StudentSemanticFrame["semanticActs"] {
+  const selected = new Set(tasks)
+  return Object.freeze({
+    define: selected.has("define"),
+    explain: selected.has("explain"),
+    compare: selected.has("compare"),
+    example: selected.has("example"),
+    case_reasoning: selected.has("case_reasoning"),
+    summarize: selected.has("summarize"),
+    observe: selected.has("observe"),
+    evidence: selected.has("evidence"),
+    treatment_boundary: selected.has("treatment_boundary"),
+  })
+}
+
+export function resolveStudentEvidenceFirstRequest(input: Readonly<{
+  turnId: string
+  message: string
+  state: StudentConversationState
+  choice?: unknown
+}>): StudentEvidenceFirstResolutionResult {
+  const facts = observeStudentRequestFacts(input)
+  const envelope = buildStudentStateCandidateEnvelope({ facts, state: input.state })
+  if (facts.safetyIntent === "diagnosis_request") return Object.freeze({
+    ok: false,
+    reason: "diagnosis_contract_pending",
+    facts,
+    envelope,
+  })
+  const deterministic = buildDeterministicStudentClosedSlotChoice({ facts, envelope })
+  if (!deterministic && input.choice === undefined) return Object.freeze({
+    ok: false,
+    reason: "closed_slot_failure",
+    failureCode: "referent_choice_required",
+    facts,
+    envelope,
+  })
+  const validation = validateStudentClosedSlotChoice(input.choice ?? deterministic, facts, envelope)
+  if (!validation.ok) return Object.freeze({
+    ok: false,
+    reason: "closed_slot_failure",
+    failureCode: validation.failureCode,
+    facts,
+    envelope,
+  })
+  const referentCandidate = validation.choice.referentTurnId
+    ? envelope.referentCandidates.find((row) => row.turnId === validation.choice.referentTurnId) ?? null
+    : null
+  const frame: StudentSemanticFrame = Object.freeze({
+    semanticActs: semanticActs(facts.semanticTaskCandidates),
+    conversationAction: facts.conversationAction,
+    focusTargetIds: validation.choice.focusTargetIds,
+    contextTargetIds: Object.freeze(facts.contextTargetIds.filter((targetId) => !validation.choice.focusTargetIds.includes(targetId))),
+    rejectedTargetIds: facts.rejectedTargetIds,
+    referentTurnId: validation.choice.referentTurnId,
+    referentRole: referentCandidate?.role ?? "none",
+    presentation: facts.presentation,
+    summaryExtras: facts.summaryExtras,
+    observationExtras: facts.observationExtras,
+  })
+  return Object.freeze({
+    ok: true,
+    facts,
+    envelope,
+    choice: validation.choice,
+    contract: compileStudentRequestContract(input.turnId, frame, input.state),
   })
 }

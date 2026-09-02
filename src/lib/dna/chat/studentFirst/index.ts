@@ -43,9 +43,15 @@ export {
   DNA_STUDENT_FIRST_REQUEST_VERSION,
 } from "./contracts"
 export {
+  buildDeterministicStudentClosedSlotChoice,
   buildStudentStateCandidateEnvelope,
+  DNA_STUDENT_CLOSED_SLOT_FAILURE_CODES,
   DNA_STUDENT_EVIDENCE_FIRST_VERSION,
   observeStudentRequestFacts,
+  resolveStudentEvidenceFirstPrimaryTask,
+  resolveStudentEvidenceFirstRequest,
+  studentClosedSlotChoiceSchema,
+  validateStudentClosedSlotChoice,
 } from "./evidenceFirstRequest"
 
 export type {
@@ -76,6 +82,10 @@ export type {
   StudentSemanticFrame,
 } from "./semanticInterpreter"
 export type {
+  StudentClosedSlotChoice,
+  StudentClosedSlotFailureCode,
+  StudentClosedSlotValidationResult,
+  StudentEvidenceFirstResolutionResult,
   StudentObservedRequestFacts,
   StudentObservedSafetyIntent,
   StudentObservedTargetFact,

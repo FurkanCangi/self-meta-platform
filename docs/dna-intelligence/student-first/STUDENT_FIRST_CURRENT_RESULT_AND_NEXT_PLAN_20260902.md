@@ -24,8 +24,11 @@ Current implementation update:
 
 - B1-R0 authority migration map: PASS;
 - B1-R1 observed facts and state candidate envelope: implemented;
+- B1-R2 closed-slot contract and separate provider adapter: implemented locally;
 - targeted evidence-first contrasts: PASS;
 - evidence-first Student40 diagnostic: 40/40, provider calls 0;
+- evidence-first compiled Student40 contracts: 40/40, zero critical errors;
+- closed-slot attack and mock provider-boundary gates: PASS;
 - existing Student40 oracle/mutations: 40/40 and 160/160;
 - runtime integration and online provider proof: not started.
 
@@ -120,7 +123,7 @@ The provider may resolve ambiguity, but it may not invent target IDs, referent I
 
 ### B1-R2 — closed-slot provider boundary
 
-Replace full-frame generation with provider choices among precomputed candidates. Reject invented IDs and fail closed on transport or invalid choices.
+**PASS locally.** A separate evidence-first server adapter now uses provider choices only for bounded multi-referent ambiguity. Invented IDs, omitted required targets, target/referent mismatch, and invalid choices fail closed. The product runtime has not been switched.
 
 ### B1-R3 — local student-language robustness
 
@@ -167,4 +170,4 @@ Only after Student40 passes, run in order and stop at the first failure:
 - no production/deployment before all required gates pass;
 - user-owned untracked files remain untouched and uncommitted.
 
-The immediate next engineering unit is now B1-R2: closed unresolved slots and out-of-envelope rejection. The synthetic one-hour student simulation replaces the unavailable human participant by user decision, but will be reported as synthetic rather than independent human validation.
+The immediate next engineering unit is now B1-R3: expanded metamorphic student-language robustness. The synthetic one-hour student simulation replaces the unavailable human participant by user decision, but will be reported as synthetic rather than independent human validation.
