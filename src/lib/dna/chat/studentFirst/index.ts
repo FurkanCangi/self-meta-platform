@@ -17,12 +17,13 @@ export {
 export type {
   StudentAnswerObligation,
   StudentAnswerObligationKind,
-  StudentConversationOperation,
+  StudentConversationAction,
   StudentConversationState,
   StudentConversationTurnSnapshot,
   StudentPresentationRequest,
   StudentReferent,
   StudentRequestContract,
+  StudentSemanticTask,
 } from "./contracts"
 export type {
   StudentDimensionDecision,

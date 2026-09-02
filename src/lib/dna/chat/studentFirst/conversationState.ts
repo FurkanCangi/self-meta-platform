@@ -4,12 +4,13 @@ import {
   DNA_STUDENT_FIRST_REQUEST_VERSION,
   type StudentAnswerObligation,
   type StudentAnswerObligationKind,
-  type StudentConversationOperation,
+  type StudentConversationAction,
   type StudentConversationState,
   type StudentConversationTurnSnapshot,
   type StudentPresentationRequest,
   type StudentReferent,
   type StudentRequestContract,
+  type StudentSemanticTask,
 } from "./contracts"
 
 type TargetLexeme = Readonly<{
@@ -77,20 +78,25 @@ function rejectedTargets(message: string, explicitTargets: readonly string[]): s
   })
 }
 
-function operationFor(message: string): StudentConversationOperation {
+function semanticTaskFor(message: string): StudentSemanticTask {
   const normalized = normalizeDnaChatText(message)
   if (/\b(?:hangi tedavi|hangi terapi|ne uygulayayim|seans plani|tedavi plani)\b/.test(normalized)) return "treatment_boundary"
   if (/\b(?:toparla|ozetle|ozet yap|konustugumuzu|konusmayi)\b/.test(normalized)) return "summarize"
-  if (/\b(?:ilk anlattigin|ilk konu|az onceki konu|geri donelim|donelim|basa donelim)\b/.test(normalized)) return "return"
-  if (/^(?:hayir|hayir |yok |yok,)|\b(?:sormuyorum|onu demiyorum|yanlis anladin|kastettigim)\b/.test(normalized)) return "repair"
-  if (/\b(?:daha basit|sade anlat|ogrenci arkadasina|akademik oldu|duz anlat|yeniden soyle)\b/.test(normalized)) return "simplify"
-  if (/\b(?:ornek|ornegi|mesela)\b/.test(normalized)) return "example"
-  if (/\b(?:ayni mi|farki|ayir|karsilastir|hangisi)\b/.test(normalized)) return "compare"
   if (/\b(?:tek gozlem|gozlemde|neye bak|nasil gozlemler)\b/.test(normalized)) return "observe"
   if (/\b(?:kanit|kaynak|calismalar|ne kadar guvenilir)\b/.test(normalized)) return "evidence"
+  if (/\b(?:ayni mi|ayni sey mi|farki|ayir|karsilastir|hangisi)\b/.test(normalized)) return "compare"
+  if (/\b(?:ornek|ornegi|mesela)\b/.test(normalized)) return "example"
   if (/\b(?:cocuk|ogrenci)\b/.test(normalized) && /\b(?:ne olabilir|ne dusun|diyebilir miyiz|kesin)\b/.test(normalized)) return "case_reasoning"
   if (/\b(?:ne demek|nedir|neydi|tam olarak ne)\b/.test(normalized)) return "define"
   return "explain"
+}
+
+function conversationActionFor(message: string, hasHistory: boolean): StudentConversationAction {
+  const normalized = normalizeDnaChatText(message)
+  if (/\b(?:toparla|ozetle|ozet yap|konustugumuzu|konusmayi)\b/.test(normalized)) return "summarize_session"
+  if (/\b(?:ilk anlattigin|ilk konu|az onceki konu|geri donelim|donelim|basa donelim)\b/.test(normalized)) return "return"
+  if (/^(?:hayir|yok)\b|\b(?:sormuyorum|onu demiyorum|yanlis anladin|kastettigim)\b/.test(normalized)) return "repair"
+  return hasHistory ? "continue" : "start"
 }
 
 function presentationFor(message: string): StudentPresentationRequest {
@@ -123,7 +129,7 @@ function historyReferent(
 ): StudentReferent {
   const normalized = normalizeDnaChatText(message)
   const isReturn = /\b(?:ilk anlattigin|ilk konu|az onceki konu|geri donelim|donelim|basa donelim)\b/.test(normalized)
-  const isReferential = /\b(?:bu|bunu|bunun|onu|o zaman|ayni sey|az onceki|dedigin|ornekte|cocukta|ikisinden|ikisini)\b/.test(normalized)
+  const isReferential = /\b(?:bu(?:nu|nun|nunla|nda|rada|na|ndan)?|onu|o zaman|ayni sey|az onceki|dedigin|ornekte|cocukta|ikisinden|ikisini)\b/.test(normalized)
   if (isReturn && state.semanticHistory.length) {
     const searchOrder = /\b(?:ilk|basa)\b/.test(normalized)
       ? [...state.semanticHistory]
@@ -156,7 +162,8 @@ function obligation(
 
 function obligationsFor(
   turnId: string,
-  operation: StudentConversationOperation,
+  semanticTask: StudentSemanticTask,
+  conversationAction: StudentConversationAction,
   targetIds: readonly string[],
   rejectedTargetIds: readonly string[],
   comparisonTargetIds: readonly string[],
@@ -167,28 +174,34 @@ function obligationsFor(
   const specs: Array<{ kind: StudentAnswerObligationKind; targets: readonly string[]; description: string }> = []
   const add = (kind: StudentAnswerObligationKind, targets: readonly string[], description: string) => specs.push({ kind, targets, description })
 
-  if (operation === "define") add("define_target", targetIds, "Hedef kavramı doğrudan tanımla")
-  if (operation === "compare") {
+  if (semanticTask === "define") add("define_target", targetIds, "Hedef kavramı doğrudan tanımla")
+  if (semanticTask === "compare") {
     add("distinguish_targets", comparisonTargetIds, "Karşılaştırılan kavramları birbirinden ayır")
     add("explain_relation", comparisonTargetIds, "Kavramların ilişkisini açıkla")
   }
-  if (operation === "example") {
+  if (semanticTask === "example") {
     add("give_concrete_example", targetIds, "İstenen bağlamda somut örnek ver")
     add("bind_example_to_target", targetIds, "Örneğin hedef kavramla bağını açıkla")
   }
-  if (operation === "repair" && rejectedTargetIds.length) {
+  if (conversationAction === "repair" && rejectedTargetIds.length) {
     add("honor_rejected_target", rejectedTargetIds, "Kullanıcının reddettiği hedefe geri dönme")
   }
-  if (operation === "return") add("use_history_anchor", targetIds, "Doğru geçmiş konuşma hedefini kullan")
-  if (operation === "simplify") add("preserve_target_while_simplifying", targetIds, "Aynı hedefi daha sade dille anlat")
+  if (conversationAction === "return") add("use_history_anchor", targetIds, "Doğru geçmiş konuşma hedefini kullan")
+  if (
+    presentation.language === "plain_student" &&
+    conversationAction !== "start" &&
+    /\b(?:daha basit|akademik oldu|akademik olmadan|yeniden soyle|tekrar anlat)\b/.test(normalizeDnaChatText(message))
+  ) {
+    add("preserve_target_while_simplifying", targetIds, "Aynı hedefi daha sade dille anlat")
+  }
   for (const targetId of componentTargetIds) {
     add("cover_requested_component", [targetId], `İstenen ${targetId} bileşenini ayrı karşıla`)
   }
-  if (operation === "case_reasoning" || operation === "observe") {
+  if (semanticTask === "case_reasoning" || semanticTask === "observe") {
     add("state_single_observation_limit", targetIds, "Tek gözlemden kesin sonuç çıkarma")
     add("name_additional_context", targetIds, "Gerekli ek bağlam veya gözlemi belirt")
   }
-  if (operation === "summarize") {
+  if (semanticTask === "summarize") {
     add("summarize_known", targetIds, "Konuşmada desteklenen bilgileri özetle")
     if (/\b(?:neyi bilmiyoruz|bilmedigimiz|kesin degil|sinir)\b/.test(normalizeDnaChatText(message))) {
       add("summarize_unknown", targetIds, "Bilinmeyen veya kesinleştirilemeyen noktaları özetle")
@@ -197,7 +210,7 @@ function obligationsFor(
       add("summarize_observation_focus", targetIds, "Gözlemde izlenecek noktaları özetle")
     }
   }
-  if (operation === "treatment_boundary") {
+  if (semanticTask === "treatment_boundary") {
     add("refuse_treatment_selection", targetIds, "Tedavi veya terapi seçimi yapma")
     add("offer_safe_assessment_frame", targetIds, "Güvenli genel değerlendirme çerçevesi sun")
   }
@@ -226,25 +239,32 @@ export function createEmptyStudentConversationState(): StudentConversationState 
 export function interpretStudentRequest(
   input: Readonly<{ turnId: string; message: string; state: StudentConversationState }>,
 ): StudentRequestContract {
-  const operation = operationFor(input.message)
+  const conversationAction = conversationActionFor(input.message, input.state.semanticHistory.length > 0)
   const explicitTargets = detectedTargets(input.message)
   const rejected = rejectedTargets(input.message, explicitTargets)
   const referent = historyReferent(input.message, input.state, explicitTargets)
+  const anchoredSnapshot = referent.turnId
+    ? input.state.semanticHistory.find((turn) => turn.turnId === referent.turnId) ?? null
+    : null
+  const detectedSemanticTask = semanticTaskFor(input.message)
+  const semanticTask = conversationAction === "return" && detectedSemanticTask === "explain" && anchoredSnapshot
+    ? anchoredSnapshot.semanticTask
+    : detectedSemanticTask
   const allowedExplicitTargets = explicitTargets.filter((target) => !rejected.includes(target))
   let targetIds = allowedExplicitTargets.length ? allowedExplicitTargets : [...referent.targetIds]
 
-  if (!targetIds.length && operation !== "treatment_boundary") targetIds = [...input.state.activeTargetIds]
+  if (!targetIds.length && semanticTask !== "treatment_boundary") targetIds = [...input.state.activeTargetIds]
 
-  if (operation === "summarize" && !allowedExplicitTargets.length && input.state.semanticHistory.length) {
+  if (conversationAction === "summarize_session" && !allowedExplicitTargets.length && input.state.semanticHistory.length) {
     targetIds = unique(input.state.semanticHistory.flatMap((turn) => turn.targetIds))
   }
 
   const normalized = normalizeDnaChatText(input.message)
-  let comparisonTargets = operation === "compare" ? [...targetIds] : []
-  if (operation === "compare" && comparisonTargets.length === 1 && input.state.activeTargetIds.length) {
+  let comparisonTargets = semanticTask === "compare" ? [...targetIds] : []
+  if (semanticTask === "compare" && comparisonTargets.length === 1 && input.state.activeTargetIds.length) {
     comparisonTargets = unique([...input.state.activeTargetIds, ...comparisonTargets])
   }
-  if (operation === "compare" && /\bikisini|ikisinden|ikisi\b/.test(normalized) && input.state.comparisonTargetIds.length === 2) {
+  if (semanticTask === "compare" && /\bikisini|ikisinden|ikisi\b/.test(normalized) && input.state.comparisonTargetIds.length === 2) {
     comparisonTargets = [...input.state.comparisonTargetIds]
   }
   if (comparisonTargets.length) targetIds = unique([...targetIds, ...comparisonTargets])
@@ -255,7 +275,8 @@ export function interpretStudentRequest(
   const presentation = presentationFor(input.message)
   const obligations = obligationsFor(
     input.turnId,
-    operation,
+    semanticTask,
+    conversationAction,
     targetIds,
     rejected,
     comparisonTargets,
@@ -264,18 +285,19 @@ export function interpretStudentRequest(
     input.message,
   )
 
-  const ambiguity = operation === "return" && referent.kind === "none"
+  const ambiguity = conversationAction === "return" && referent.kind === "none"
     ? "history_anchor_missing"
-    : operation === "compare" && comparisonTargets.length < 2
+    : semanticTask === "compare" && comparisonTargets.length < 2
       ? "comparison_side_missing"
-      : !targetIds.length && operation !== "treatment_boundary"
+      : !targetIds.length && semanticTask !== "treatment_boundary"
         ? "target_missing"
         : "none"
 
   return Object.freeze({
     version: DNA_STUDENT_FIRST_REQUEST_VERSION,
     turnId: input.turnId,
-    operation,
+    semanticTask,
+    conversationAction,
     targetIds: Object.freeze(unique(targetIds)),
     rejectedTargetIds: Object.freeze(unique(rejected)),
     comparisonTargetIds: Object.freeze(unique(comparisonTargets)),
@@ -284,9 +306,9 @@ export function interpretStudentRequest(
     presentation,
     obligations,
     ambiguity,
-    safetyIntent: operation === "treatment_boundary"
+    safetyIntent: semanticTask === "treatment_boundary"
       ? "treatment_selection"
-      : operation === "case_reasoning" || operation === "observe"
+      : semanticTask === "case_reasoning" || semanticTask === "observe"
         ? "case_interpretation"
         : "general_education",
   })
@@ -302,7 +324,7 @@ function summaryForHistory(history: readonly StudentConversationTurnSnapshot[]):
     const rejected = turn.rejectedTargetIds.length
       ? `; reddedilen ${turn.rejectedTargetIds.map(targetLabel).join(" + ")}`
       : ""
-    return `${turn.turnId}: ${turn.operation} — ${targets}${rejected}`
+    return `${turn.turnId}: ${turn.semanticTask}/${turn.conversationAction} — ${targets}${rejected}`
   }).join(" | ").slice(0, 480)
 }
 
@@ -312,12 +334,13 @@ export function applyStudentRequestContract(
 ): StudentConversationState {
   const snapshot: StudentConversationTurnSnapshot = Object.freeze({
     turnId: contract.turnId,
-    operation: contract.operation,
+    semanticTask: contract.semanticTask,
+    conversationAction: contract.conversationAction,
     targetIds: Object.freeze([...contract.targetIds]),
     rejectedTargetIds: Object.freeze([...contract.rejectedTargetIds]),
     comparisonTargetIds: Object.freeze([...contract.comparisonTargetIds]),
     presentation: contract.presentation,
-    semanticSummary: `${contract.operation}:${contract.targetIds.join(",")}`,
+    semanticSummary: `${contract.semanticTask}/${contract.conversationAction}:${contract.targetIds.join(",")}`,
   })
   const semanticHistory = Object.freeze([...state.semanticHistory, snapshot].slice(-8))
   return Object.freeze({

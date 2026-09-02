@@ -13,7 +13,8 @@ import {
 type SmokeExpectation = Readonly<{
   turnId: string
   message: string
-  operation: string
+  semanticTask: string
+  conversationAction: string
   targetIds: readonly string[]
   rejectedTargetIds?: readonly string[]
   comparisonTargetIds?: readonly string[]
@@ -26,7 +27,8 @@ const SMOKE8: readonly SmokeExpectation[] = Object.freeze([
   {
     turnId: "SMOKE8-T01",
     message: "hocam yürütücü işlevler tam ne demek öğrenci arkadaşına anlatır gibi söyler misin",
-    operation: "define",
+    semanticTask: "define",
+    conversationAction: "start",
     targetIds: ["executive_functions"],
     obligationKinds: ["define_target"],
     plainStudent: true,
@@ -34,7 +36,8 @@ const SMOKE8: readonly SmokeExpectation[] = Object.freeze([
   {
     turnId: "SMOKE8-T02",
     message: "dürtüyü durdurmak bununla aynı şey mi yoksa içindeki parçalardan biri mi",
-    operation: "compare",
+    semanticTask: "compare",
+    conversationAction: "continue",
     targetIds: ["executive_functions", "inhibition"],
     comparisonTargetIds: ["executive_functions", "inhibition"],
     referent: { kind: "active", turnId: "SMOKE8-T01" },
@@ -43,14 +46,16 @@ const SMOKE8: readonly SmokeExpectation[] = Object.freeze([
   {
     turnId: "SMOKE8-T03",
     message: "inhibisyon için derste sırasını bekleyemeyen bi çocuk üzerinden minicik örnek ver",
-    operation: "example",
+    semanticTask: "example",
+    conversationAction: "continue",
     targetIds: ["inhibition"],
     obligationKinds: ["give_concrete_example", "bind_example_to_target"],
   },
   {
     turnId: "SMOKE8-T04",
     message: "bu örnekte tek gözlemle inhibisyonu zayıf diyebilir miyim başka neye bakarım",
-    operation: "observe",
+    semanticTask: "observe",
+    conversationAction: "continue",
     targetIds: ["inhibition"],
     referent: { kind: "active", turnId: "SMOKE8-T03" },
     obligationKinds: ["state_single_observation_limit", "name_additional_context"],
@@ -58,24 +63,27 @@ const SMOKE8: readonly SmokeExpectation[] = Object.freeze([
   {
     turnId: "SMOKE8-T05",
     message: "yok inhibisyon kısmını sormuyorum yönergeyi aklında tutamaması çalışma belleği açısından ne demek",
-    operation: "repair",
+    semanticTask: "define",
+    conversationAction: "repair",
     targetIds: ["working_memory"],
     rejectedTargetIds: ["inhibition"],
-    obligationKinds: ["honor_rejected_target"],
+    obligationKinds: ["define_target", "honor_rejected_target"],
   },
   {
     turnId: "SMOKE8-T06",
     message: "ilk anlattığın yürütücü işlevlere dönelim çok akademik olmadan yeniden söyle",
-    operation: "return",
+    semanticTask: "define",
+    conversationAction: "return",
     targetIds: ["executive_functions"],
     referent: { kind: "history", turnId: "SMOKE8-T01" },
-    obligationKinds: ["use_history_anchor"],
+    obligationKinds: ["define_target", "use_history_anchor", "preserve_target_while_simplifying"],
     plainStudent: true,
   },
   {
     turnId: "SMOKE8-T07",
     message: "planlama ile çalışma belleğinin farkını bu sefer düz anlat",
-    operation: "compare",
+    semanticTask: "compare",
+    conversationAction: "continue",
     targetIds: ["planning", "working_memory"],
     comparisonTargetIds: ["planning", "working_memory"],
     obligationKinds: ["distinguish_targets", "explain_relation"],
@@ -84,7 +92,8 @@ const SMOKE8: readonly SmokeExpectation[] = Object.freeze([
   {
     turnId: "SMOKE8-T08",
     message: "şimdi konuştuklarımızı üç cümlede toparla neyi biliyoruz neyi bilmiyoruz gözlemde neye bakarım",
-    operation: "summarize",
+    semanticTask: "summarize",
+    conversationAction: "summarize_session",
     targetIds: ["executive_functions", "inhibition", "working_memory", "planning"],
     obligationKinds: ["summarize_known", "summarize_unknown", "summarize_observation_focus"],
   },
@@ -97,7 +106,8 @@ function sorted(values: readonly string[]): string[] {
 let state: StudentConversationState = createEmptyStudentConversationState()
 for (const expected of SMOKE8) {
   const contract = interpretStudentRequest({ turnId: expected.turnId, message: expected.message, state })
-  assert.equal(contract.operation, expected.operation, `${expected.turnId}: operation`)
+  assert.equal(contract.semanticTask, expected.semanticTask, `${expected.turnId}: semantic task`)
+  assert.equal(contract.conversationAction, expected.conversationAction, `${expected.turnId}: conversation action`)
   assert.deepEqual(sorted(contract.targetIds), sorted(expected.targetIds), `${expected.turnId}: targets`)
   assert.deepEqual(sorted(contract.rejectedTargetIds), sorted(expected.rejectedTargetIds ?? []), `${expected.turnId}: rejected targets`)
   assert.deepEqual(sorted(contract.comparisonTargetIds), sorted(expected.comparisonTargetIds ?? []), `${expected.turnId}: comparison targets`)

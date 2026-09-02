@@ -1,19 +1,23 @@
 export const DNA_STUDENT_FIRST_CONVERSATION_VERSION = "dna-student-conversation-state@1" as const
 export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@1" as const
 
-export type StudentConversationOperation =
+export type StudentSemanticTask =
   | "define"
   | "explain"
   | "compare"
   | "example"
   | "case_reasoning"
-  | "repair"
-  | "return"
-  | "simplify"
   | "summarize"
   | "observe"
   | "evidence"
   | "treatment_boundary"
+
+export type StudentConversationAction =
+  | "start"
+  | "continue"
+  | "repair"
+  | "return"
+  | "summarize_session"
 
 export type StudentPresentationRequest = Readonly<{
   depth: "brief" | "standard" | "deep"
@@ -57,7 +61,8 @@ export type StudentAnswerObligation = Readonly<{
 export type StudentRequestContract = Readonly<{
   version: typeof DNA_STUDENT_FIRST_REQUEST_VERSION
   turnId: string
-  operation: StudentConversationOperation
+  semanticTask: StudentSemanticTask
+  conversationAction: StudentConversationAction
   targetIds: readonly string[]
   rejectedTargetIds: readonly string[]
   comparisonTargetIds: readonly string[]
@@ -71,7 +76,8 @@ export type StudentRequestContract = Readonly<{
 
 export type StudentConversationTurnSnapshot = Readonly<{
   turnId: string
-  operation: StudentConversationOperation
+  semanticTask: StudentSemanticTask
+  conversationAction: StudentConversationAction
   targetIds: readonly string[]
   rejectedTargetIds: readonly string[]
   comparisonTargetIds: readonly string[]
