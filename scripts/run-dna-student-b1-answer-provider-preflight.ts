@@ -45,7 +45,10 @@ async function main() {
       if (SELECTED_TURNS.has(turn.turnId)) {
         const answer = await executeStudentAnswer({ question: turn.user, contract: resolved.contract })
         if (!answer.ok) {
-          const detail = answer.reason === "provider_failure" ? answer.failure.reason : answer.failureCodes.join(",")
+          const detail = answer.reason === "provider_failure"
+            ? [answer.failure.reason, answer.failure.httpStatus, answer.failure.apiErrorType, answer.failure.apiErrorCode]
+              .filter((value) => value !== null).join("/")
+            : answer.failureCodes.join(",")
           throw new Error(`${turn.turnId}:${answer.reason}:${detail}`)
         }
         assert.equal(answer.route, "provider_grounded", `${turn.turnId}: preflight must exercise provider route`)
