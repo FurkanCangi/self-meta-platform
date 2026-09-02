@@ -14,7 +14,7 @@ import {
 import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@11" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@12" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -52,6 +52,7 @@ export type StudentSemanticFrame = Readonly<{
   mentionedTargetIds: readonly string[]
   rejectedTargetIds: readonly string[]
   referentTurnId: string | null
+  referentRole: StudentReferent["role"]
   presentation: StudentPresentationRequest
   summaryExtras: Readonly<{ unknown: boolean; observationFocus: boolean }>
   observationExtras: StudentObservationScope
@@ -64,6 +65,7 @@ export const DNA_STUDENT_FRAME_FAILURE_CODES = Object.freeze([
   "invalid_mentioned_targets",
   "invalid_rejected_targets",
   "invalid_referent",
+  "invalid_referent_role",
   "invalid_presentation",
   "invalid_summary_extras",
   "invalid_observation_extras",
@@ -80,6 +82,7 @@ export type StudentFrameValidationResult =
 const TARGET_IDS = Object.freeze(DNA_STUDENT_TARGET_LEXICON.map((target) => target.id))
 const TARGET_ID_SET = new Set(TARGET_IDS)
 const ACTION_SET = new Set<string>(DNA_STUDENT_CONVERSATION_ACTIONS)
+const REFERENT_ROLE_SET = new Set<StudentReferent["role"]>(["none", "utterance", "case_entity"])
 
 function parseSemanticActs(value: unknown): StudentSemanticActs | null {
   if (!value || typeof value !== "object") return null
@@ -194,6 +197,10 @@ export function validateStudentSemanticFrameDetailed(
   if (!rejectedTargetIds) return frameFailure("invalid_rejected_targets")
   const referent = parseReferentTurnId(row.referentTurnId, state)
   if (!referent) return frameFailure("invalid_referent")
+  const referentRole = REFERENT_ROLE_SET.has(row.referentRole as StudentReferent["role"])
+    ? row.referentRole as StudentReferent["role"]
+    : null
+  if (!referentRole || (referent.turnId === null) !== (referentRole === "none")) return frameFailure("invalid_referent_role")
   const presentation = parsePresentation(row.presentation)
   if (!presentation) return frameFailure("invalid_presentation")
   const summaryExtras = parseSummaryExtras(row.summaryExtras)
@@ -219,6 +226,7 @@ export function validateStudentSemanticFrameDetailed(
       mentionedTargetIds: Object.freeze(mentionedTargetIds),
       rejectedTargetIds: Object.freeze(rejectedTargetIds),
       referentTurnId: referent.turnId,
+      referentRole,
       presentation,
       summaryExtras,
       observationExtras,
@@ -232,6 +240,21 @@ export function validateStudentSemanticFrame(
 ): StudentSemanticFrame | null {
   const result = validateStudentSemanticFrameDetailed(candidate, state)
   return result.ok ? result.frame : null
+}
+
+function resolveCaseEntityAnchor(turnId: string, state: StudentConversationState): string {
+  let currentTurnId = turnId
+  const visited = new Set<string>()
+  for (let depth = 0; depth < 8 && !visited.has(currentTurnId); depth += 1) {
+    visited.add(currentTurnId)
+    const snapshot = state.semanticHistory.find((turn) => turn.turnId === currentTurnId)
+    if (!snapshot || snapshot.semanticTask === "example") return currentTurnId
+    const parent = snapshot.referent
+    if (parent.role !== "case_entity" || parent.turnId === null) return currentTurnId
+    if (!state.semanticHistory.some((turn) => turn.turnId === parent.turnId)) return currentTurnId
+    currentTurnId = parent.turnId
+  }
+  return currentTurnId
 }
 
 export function compileStudentRequestContract(
@@ -260,16 +283,28 @@ export function compileStudentRequestContract(
       ? latestTurnId
       : null
   )
-  const referentSnapshot = effectiveReferentTurnId
-    ? state.semanticHistory.find((turn) => turn.turnId === effectiveReferentTurnId) ?? null
+  const inferredReferentRole: StudentReferent["role"] = effectiveReferentTurnId === null
+    ? "none"
+    : semanticTask === "case_reasoning" || semanticTask === "observe"
+      ? latestSnapshot?.semanticTask === "example" || latestSnapshot?.referent.role === "case_entity"
+        ? "case_entity"
+        : "utterance"
+      : "utterance"
+  const effectiveReferentRole = frame.referentTurnId === null ? inferredReferentRole : frame.referentRole
+  const resolvedReferentTurnId = effectiveReferentRole === "case_entity" && effectiveReferentTurnId
+    ? resolveCaseEntityAnchor(effectiveReferentTurnId, state)
+    : effectiveReferentTurnId
+  const referentSnapshot = resolvedReferentTurnId
+    ? state.semanticHistory.find((turn) => turn.turnId === resolvedReferentTurnId) ?? null
     : null
   const referent: StudentReferent = Object.freeze({
-    kind: effectiveReferentTurnId === null
+    kind: resolvedReferentTurnId === null
       ? "none"
-      : frame.conversationAction === "return" || effectiveReferentTurnId !== latestTurnId
+      : frame.conversationAction === "return" || resolvedReferentTurnId !== latestTurnId
         ? "history"
         : "active",
-    turnId: effectiveReferentTurnId,
+    role: resolvedReferentTurnId === null ? "none" : effectiveReferentRole,
+    turnId: resolvedReferentTurnId,
     targetIds: Object.freeze(referentSnapshot?.targetIds ?? []),
   })
   const mergedTargetIds = frame.conversationAction === "summarize_session"
@@ -349,7 +384,7 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
     additionalProperties: false,
     required: [
       "semanticActs", "conversationAction", "mentionedTargetIds", "rejectedTargetIds",
-      "referentTurnId", "presentation",
+      "referentTurnId", "referentRole", "presentation",
       "summaryExtras", "observationExtras",
     ],
     properties: {
@@ -365,6 +400,7 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
       referentTurnId: historyIds.length
         ? { anyOf: [{ type: "string", enum: historyIds }, { type: "null" }] }
         : { type: "null" },
+      referentRole: { type: "string", enum: ["none", "utterance", "case_entity"] },
       presentation: {
         type: "object",
         additionalProperties: false,
@@ -422,6 +458,10 @@ export function studentSemanticInterpreterContent(input: Readonly<{
         targetIds: turn.targetIds,
         rejectedTargetIds: turn.rejectedTargetIds,
         comparisonTargetIds: turn.comparisonTargetIds,
+        referent: {
+          turnId: turn.referent.turnId,
+          role: turn.referent.role,
+        },
       })),
     },
     allowedTargets: DNA_STUDENT_TARGET_LEXICON,
@@ -438,7 +478,7 @@ Her mesaj için üç bağımsız eksen çıkar:
 
 Tek bir semantic act seçmeye çalışma. Açıkça istenen her act true, istenmeyenler false olsun. “Ne demek / nedir / neyi ifade eder” define=true; aynı mesaj genel açıklama da gerektiriyorsa explain de true olabilir. Yerel resolver primary taskı seçecek. Sunum isteği semantic acts yerine geçmez. Örneğin “ne demek, öğrenci gibi anlat” define=true ve language=plain_student olur. Türkçe ekleri ve gündelik ifadeleri anlam düzeyinde yorumla; “tek gözlemle”, “bir kere görerek” ve “sadece bunu gördüm” gözlemden sonuç çıkarma sınırını soruyorsa observe=true olur.
 
-Yalnız allowedTargets içindeki ID'leri kullan. Yeni hedef uydurma. mentionedTargetIds yalnız mevcut kullanıcı mesajında açıkça adı geçen hedefleri içerir; referans verilen eski turun hedeflerini buraya kopyalama. Açık düzeltmede reddedilen hedefi rejectedTargetIds alanına koy. “Bu/bununla/bu örnekte/ilk anlattığın” gibi ifadeler önceki bir tura işaret ediyorsa yalnız o turun ID'sini referentTurnId alanına yaz; referans yoksa null kullan. Referansın none/active/history türünü ve hedeflerini yerel resolver state'ten türetecek. Oturum özetinde summarize=true ve conversationAction=summarize_session kullan; özet hedeflerini yerel resolver geçmişten türetecek.
+Yalnız allowedTargets içindeki ID'leri kullan. Yeni hedef uydurma. mentionedTargetIds yalnız mevcut kullanıcı mesajında açıkça adı geçen hedefleri içerir; referans verilen eski turun hedeflerini buraya kopyalama. Açık düzeltmede reddedilen hedefi rejectedTargetIds alanına koy. “Bu/bununla/bu örnekte/ilk anlattığın” gibi ifadeler önceki bir tura işaret ediyorsa o turun ID'sini referentTurnId alanına yaz; referans yoksa null kullan. referentRole=utterance, kullanıcı önceki açıklama/ifade/kavrama dönüyorsa kullanılır. referentRole=case_entity, kullanıcı önceki çocuk, öğrenci, vaka, davranış veya örnek varlığına dönüyorsa kullanılır; bu durumda en son yorum cümlesi yerine varlığın tanıtıldığı örnek turunu seçmeye çalış. Referans yoksa referentRole=none olmalıdır. Referansın active/history türünü, hedeflerini ve bağlı vaka zincirini yerel resolver state'ten türetecek. Oturum özetinde summarize=true ve conversationAction=summarize_session kullan; özet hedeflerini yerel resolver geçmişten türetecek.
 
 Nihai cevap yükümlülüğü seçme; onu yerel derleyici yapar. Yalnız semantik gerçekleri çıkar:
 - presentation.grouping yalnız kullanıcı birden fazla hedefin her birinin ayrı ele alınmasını açıkça istiyorsa separate_each olur. “X bunun parçası mı?” bir ilişki sorusudur ve grouping=integrated kalır.

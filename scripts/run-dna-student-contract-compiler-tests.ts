@@ -111,6 +111,7 @@ const startFrame = {
   mentionedTargetIds: ["executive_functions"],
   rejectedTargetIds: [],
   referentTurnId: null,
+  referentRole: "none",
   presentation: { ...base.presentation, grouping: "integrated" },
   summaryExtras: { unknown: false, observationFocus: false },
   observationExtras: { singleObservationLimit: false, additionalContext: false },
@@ -127,12 +128,13 @@ const integratedValidation = validateStudentSemanticFrameDetailed({
   conversationAction: "continue",
   mentionedTargetIds: ["inhibition"],
   referentTurnId: "GROUPING-T01",
+  referentRole: "utterance",
 }, activeState)
 if (!integratedValidation.ok) throw new Error(integratedValidation.failureCode)
 const integratedContract = compileStudentRequestContract("GROUPING-T02", integratedValidation.frame, activeState)
 assert.deepEqual(integratedContract.targetIds, ["executive_functions", "inhibition"])
 assert.deepEqual(integratedContract.comparisonTargetIds, ["executive_functions", "inhibition"])
-assert.deepEqual(integratedContract.referent, { kind: "active", turnId: "GROUPING-T01", targetIds: ["executive_functions"] })
+assert.deepEqual(integratedContract.referent, { kind: "active", role: "utterance", turnId: "GROUPING-T01", targetIds: ["executive_functions"] })
 assert.deepEqual(integratedContract.componentTargetIds, [])
 assert.deepEqual(integratedContract.obligations.map((row) => row.kind), ["distinguish_targets", "explain_relation"])
 const comparisonState = applyStudentRequestContract(activeState, integratedContract)
@@ -143,13 +145,14 @@ const returnValidation = validateStudentSemanticFrameDetailed({
   conversationAction: "return",
   mentionedTargetIds: ["executive_functions"],
   referentTurnId: "GROUPING-T01",
+  referentRole: "utterance",
   presentation: { ...base.presentation, language: "plain_student", preserveMeaning: true },
 }, comparisonState)
 if (!returnValidation.ok) throw new Error(returnValidation.failureCode)
 const returnContract = compileStudentRequestContract("GROUPING-T03", returnValidation.frame, comparisonState)
 assert.equal(returnContract.semanticTask, "define")
 assert.deepEqual(returnContract.targetIds, ["executive_functions"])
-assert.deepEqual(returnContract.referent, { kind: "history", turnId: "GROUPING-T01", targetIds: ["executive_functions"] })
+assert.deepEqual(returnContract.referent, { kind: "history", role: "utterance", turnId: "GROUPING-T01", targetIds: ["executive_functions"] })
 assert.deepEqual(returnContract.obligations.map((row) => row.kind), [
   "define_target",
   "use_history_anchor",
@@ -162,11 +165,12 @@ const retargetedReturnValidation = validateStudentSemanticFrameDetailed({
   conversationAction: "return",
   mentionedTargetIds: ["working_memory"],
   referentTurnId: "GROUPING-T01",
+  referentRole: "utterance",
 }, comparisonState)
 if (!retargetedReturnValidation.ok) throw new Error(retargetedReturnValidation.failureCode)
 const retargetedReturnContract = compileStudentRequestContract("GROUPING-T03B", retargetedReturnValidation.frame, comparisonState)
 assert.deepEqual(retargetedReturnContract.targetIds, ["working_memory"], "an explicit return target must not absorb the referent turn's semantic target")
-assert.deepEqual(retargetedReturnContract.referent, { kind: "history", turnId: "GROUPING-T01", targetIds: ["executive_functions"] })
+assert.deepEqual(retargetedReturnContract.referent, { kind: "history", role: "utterance", turnId: "GROUPING-T01", targetIds: ["executive_functions"] })
 
 const repairValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
@@ -203,6 +207,7 @@ const observeValidation = validateStudentSemanticFrameDetailed({
   conversationAction: "continue",
   mentionedTargetIds: ["inhibition"],
   referentTurnId: "GROUPING-T02",
+  referentRole: "case_entity",
   summaryExtras: { unknown: true, observationFocus: true },
   observationExtras: { singleObservationLimit: false, additionalContext: false },
 }, comparisonState)

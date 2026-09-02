@@ -157,6 +157,9 @@ function historyReferent(
   const normalized = normalizeDnaChatText(message)
   const isReturn = /\b(?:ilk anlattigin|ilk konu|az onceki konu|geri donelim|donelim|basa donelim)\b/.test(normalized)
   const isReferential = /\b(?:bu(?:nu|nun|nunla|nda|rada|na|ndan)?|onu|o zaman|ayni sey|az onceki|dedigin|ornekte|cocukta|ikisinden|ikisini)\b/.test(normalized)
+  const role: StudentReferent["role"] = /\b(?:cocuk|ogrenci|vaka|ornek|davranis)\b/.test(normalized)
+    ? "case_entity"
+    : "utterance"
   if (isReturn && state.semanticHistory.length) {
     const searchOrder = /\b(?:ilk|basa)\b/.test(normalized)
       ? [...state.semanticHistory]
@@ -166,22 +169,23 @@ function historyReferent(
       : searchOrder[0]
     return Object.freeze({
       kind: match ? "history" : "none",
+      role: match ? role : "none",
       turnId: match?.turnId ?? null,
       targetIds: Object.freeze(match?.targetIds ?? []),
     })
   }
   if (isReferential && state.semanticHistory.length) {
     const active = state.semanticHistory.at(-1)!
-    return Object.freeze({ kind: "active", turnId: active.turnId, targetIds: Object.freeze(active.targetIds) })
+    return Object.freeze({ kind: "active", role, turnId: active.turnId, targetIds: Object.freeze(active.targetIds) })
   }
-  return Object.freeze({ kind: "none", turnId: null, targetIds: Object.freeze([]) })
+  return Object.freeze({ kind: "none", role: "none", turnId: null, targetIds: Object.freeze([]) })
 }
 
 export function createEmptyStudentConversationState(): StudentConversationState {
   return Object.freeze({
     version: DNA_STUDENT_FIRST_CONVERSATION_VERSION,
     activeTargetIds: Object.freeze([]),
-    explicitReferent: Object.freeze({ kind: "none", turnId: null, targetIds: Object.freeze([]) }),
+    explicitReferent: Object.freeze({ kind: "none", role: "none", turnId: null, targetIds: Object.freeze([]) }),
     rejectedTargetIds: Object.freeze([]),
     comparisonTargetIds: Object.freeze([]),
     requestedPresentation: EMPTY_PRESENTATION,
@@ -298,6 +302,7 @@ export function applyStudentRequestContract(
     targetIds: Object.freeze([...contract.targetIds]),
     rejectedTargetIds: Object.freeze([...contract.rejectedTargetIds]),
     comparisonTargetIds: Object.freeze([...contract.comparisonTargetIds]),
+    referent: contract.referent,
     presentation: contract.presentation,
     summaryScope: contract.summaryScope,
     observationScope: contract.observationScope,

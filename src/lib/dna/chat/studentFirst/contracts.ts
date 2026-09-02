@@ -1,5 +1,5 @@
-export const DNA_STUDENT_FIRST_CONVERSATION_VERSION = "dna-student-conversation-state@2" as const
-export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@4" as const
+export const DNA_STUDENT_FIRST_CONVERSATION_VERSION = "dna-student-conversation-state@3" as const
+export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@5" as const
 
 export type StudentSemanticTask =
   | "define"
@@ -42,6 +42,7 @@ export type StudentObservationScope = Readonly<{
 
 export type StudentReferent = Readonly<{
   kind: "none" | "active" | "history"
+  role: "none" | "utterance" | "case_entity"
   turnId: string | null
   targetIds: readonly string[]
 }>
@@ -96,6 +97,7 @@ export type StudentConversationTurnSnapshot = Readonly<{
   targetIds: readonly string[]
   rejectedTargetIds: readonly string[]
   comparisonTargetIds: readonly string[]
+  referent: StudentReferent
   presentation: StudentPresentationRequest
   summaryScope: StudentSummaryScope
   observationScope: StudentObservationScope

@@ -26,7 +26,7 @@ type SmokeExpectation = Readonly<{
   rejectedTargetIds?: readonly string[]
   comparisonTargetIds?: readonly string[]
   componentTargetIds?: readonly string[]
-  referent?: Readonly<{ kind: string; turnId: string | null }>
+  referent?: Readonly<{ kind: string; role: string; turnId: string | null }>
   obligationKinds: readonly string[]
   plainStudent?: boolean
   requestedSentenceCount?: number
@@ -54,7 +54,7 @@ const SMOKE8: readonly SmokeExpectation[] = Object.freeze([
     conversationAction: "continue",
     targetIds: ["executive_functions", "inhibition"],
     comparisonTargetIds: ["executive_functions", "inhibition"],
-    referent: { kind: "active", turnId: "SMOKE8-T01" },
+    referent: { kind: "active", role: "utterance", turnId: "SMOKE8-T01" },
     obligationKinds: ["distinguish_targets", "explain_relation"],
   },
   {
@@ -72,7 +72,7 @@ const SMOKE8: readonly SmokeExpectation[] = Object.freeze([
     semanticTask: "observe",
     conversationAction: "continue",
     targetIds: ["inhibition"],
-    referent: { kind: "active", turnId: "SMOKE8-T03" },
+    referent: { kind: "active", role: "case_entity", turnId: "SMOKE8-T03" },
     obligationKinds: ["state_single_observation_limit", "name_additional_context"],
     observationScope: { singleObservationLimit: true, additionalContext: true },
   },
@@ -91,7 +91,7 @@ const SMOKE8: readonly SmokeExpectation[] = Object.freeze([
     semanticTask: "define",
     conversationAction: "return",
     targetIds: ["executive_functions"],
-    referent: { kind: "history", turnId: "SMOKE8-T01" },
+    referent: { kind: "history", role: "utterance", turnId: "SMOKE8-T01" },
     obligationKinds: ["define_target", "use_history_anchor", "preserve_target_while_simplifying"],
     plainStudent: true,
     preserveMeaning: true,
@@ -169,6 +169,7 @@ async function main() {
     assert.deepEqual(sorted(contract.obligations.map((item) => item.kind)), sorted(expected.obligationKinds), `${expected.turnId}: obligations`)
     if (expected.referent) {
       assert.equal(contract.referent.kind, expected.referent.kind, `${expected.turnId}: referent kind`)
+      assert.equal(contract.referent.role, expected.referent.role, `${expected.turnId}: referent role`)
       assert.equal(contract.referent.turnId, expected.referent.turnId, `${expected.turnId}: referent turn`)
     }
     if (expected.plainStudent) assert.equal(contract.presentation.language, "plain_student", `${expected.turnId}: plain language`)

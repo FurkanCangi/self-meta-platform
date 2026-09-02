@@ -192,6 +192,7 @@ async function main() {
     mentionedTargetIds: ["executive_functions"],
     rejectedTargetIds: [],
     referentTurnId: null,
+    referentRole: "none",
     presentation: { depth: "standard", language: "standard", format: "prose", example: "none", grouping: "integrated", requestedSentenceCount: null, preserveMeaning: false },
     summaryExtras: { unknown: false, observationFocus: false },
     observationExtras: { singleObservationLimit: false, additionalContext: false },

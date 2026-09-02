@@ -56,7 +56,7 @@ const matchingContract: StudentRequestContract = Object.freeze({
   rejectedTargetIds: Object.freeze([]),
   comparisonTargetIds: Object.freeze([]),
   componentTargetIds: Object.freeze([]),
-  referent: Object.freeze({ kind: "none", turnId: null, targetIds: Object.freeze([]) }),
+  referent: Object.freeze({ kind: "none", role: "none", turnId: null, targetIds: Object.freeze([]) }),
   presentation: Object.freeze({
     depth: "standard",
     language: "plain_student",

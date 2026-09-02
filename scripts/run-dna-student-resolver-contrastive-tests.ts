@@ -42,6 +42,7 @@ function frame(input: Partial<StudentSemanticFrame> & Pick<StudentSemanticFrame,
     mentionedTargetIds: Object.freeze([...(input.mentionedTargetIds ?? [])]),
     rejectedTargetIds: Object.freeze([...(input.rejectedTargetIds ?? [])]),
     referentTurnId: input.referentTurnId ?? null,
+    referentRole: input.referentRole ?? (input.referentTurnId ? "utterance" : "none"),
     presentation: Object.freeze({ ...presentation, ...(input.presentation ?? {}) }),
     summaryExtras: input.summaryExtras ?? Object.freeze({ unknown: false, observationFocus: false }),
     observationExtras: input.observationExtras ?? Object.freeze({ singleObservationLimit: false, additionalContext: false }),
@@ -98,7 +99,7 @@ const implicitExample = compileStudentRequestContract("RESOLVER-T06", frame({
   presentation: { ...presentation, example: "concrete" },
 }), state)
 assert.equal(implicitExample.semanticTask, "example")
-assert.deepEqual(implicitExample.referent, { kind: "active", turnId: "RESOLVER-T02", targetIds: ["executive_functions", "inhibition"] })
+assert.deepEqual(implicitExample.referent, { kind: "active", role: "utterance", turnId: "RESOLVER-T02", targetIds: ["executive_functions", "inhibition"] })
 assert.deepEqual(implicitExample.targetIds, ["executive_functions", "inhibition"])
 assert.deepEqual(kinds(implicitExample), ["give_concrete_example", "bind_example_to_target"])
 const exampleState = applyStudentRequestContract(state, implicitExample)
@@ -109,6 +110,7 @@ const compatibleObservation = compileStudentRequestContract("RESOLVER-T06B", fra
 }), exampleState)
 assert.deepEqual(compatibleObservation.referent, {
   kind: "active",
+  role: "case_entity",
   turnId: "RESOLVER-T06",
   targetIds: ["executive_functions", "inhibition"],
 }, "a repeated compatible target in a context-binding task must retain the latest behavior/example anchor")
@@ -120,6 +122,7 @@ const unrelatedObservation = compileStudentRequestContract("RESOLVER-T06C", fram
 }), exampleState)
 assert.deepEqual(unrelatedObservation.referent, {
   kind: "none",
+  role: "none",
   turnId: null,
   targetIds: [],
 }, "an unrelated new observation target must not inherit the latest referent")
@@ -130,14 +133,14 @@ const explicitExample = compileStudentRequestContract("RESOLVER-T07", frame({
   mentionedTargetIds: ["coregulation"],
   presentation: { ...presentation, example: "concrete" },
 }), state)
-assert.deepEqual(explicitExample.referent, { kind: "none", turnId: null, targetIds: [] }, "an explicit new example target must not inherit an unrelated referent")
+assert.deepEqual(explicitExample.referent, { kind: "none", role: "none", turnId: null, targetIds: [] }, "an explicit new example target must not inherit an unrelated referent")
 assert.deepEqual(explicitExample.targetIds, ["coregulation"])
 
 const implicitSimplification = compileStudentRequestContract("RESOLVER-T08", frame({
   semanticActs: acts("explain"),
   presentation: { ...presentation, language: "plain_student", preserveMeaning: true },
 }), state)
-assert.deepEqual(implicitSimplification.referent, { kind: "active", turnId: "RESOLVER-T02", targetIds: ["executive_functions", "inhibition"] })
+assert.deepEqual(implicitSimplification.referent, { kind: "active", role: "utterance", turnId: "RESOLVER-T02", targetIds: ["executive_functions", "inhibition"] })
 assert.deepEqual(implicitSimplification.targetIds, ["executive_functions", "inhibition"])
 assert.ok(kinds(implicitSimplification).includes("preserve_target_while_simplifying"))
 
@@ -194,14 +197,14 @@ const singleSideCompare = compileStudentRequestContract("COMPARE-T02", frame({
   semanticActs: acts("compare"),
   mentionedTargetIds: ["inhibition"],
 }), compareState)
-assert.deepEqual(singleSideCompare.referent, { kind: "active", turnId: "COMPARE-T01", targetIds: ["executive_functions"] })
+assert.deepEqual(singleSideCompare.referent, { kind: "active", role: "utterance", turnId: "COMPARE-T01", targetIds: ["executive_functions"] })
 assert.deepEqual(singleSideCompare.targetIds, ["executive_functions", "inhibition"], "one explicit comparison side must be completed from the latest referent")
 
 const completeOverlappingCompare = compileStudentRequestContract("COMPARE-T03", frame({
   semanticActs: acts("compare"),
   mentionedTargetIds: ["executive_functions", "inhibition"],
 }), compareState)
-assert.deepEqual(completeOverlappingCompare.referent, { kind: "active", turnId: "COMPARE-T01", targetIds: ["executive_functions"] })
+assert.deepEqual(completeOverlappingCompare.referent, { kind: "active", role: "utterance", turnId: "COMPARE-T01", targetIds: ["executive_functions"] })
 assert.deepEqual(completeOverlappingCompare.targetIds, ["executive_functions", "inhibition"], "a complete explicit pair must not be expanded by its conversational referent")
 
 let priorExtraState: StudentConversationState = createEmptyStudentConversationState()
@@ -215,14 +218,14 @@ const completePairWithPriorExtra = compileStudentRequestContract("COMPARE-T05", 
   semanticActs: acts("compare"),
   mentionedTargetIds: ["attention", "self_regulation"],
 }), priorExtraState)
-assert.deepEqual(completePairWithPriorExtra.referent, { kind: "active", turnId: "COMPARE-T04", targetIds: ["self_regulation", "self_control"] })
+assert.deepEqual(completePairWithPriorExtra.referent, { kind: "active", role: "utterance", turnId: "COMPARE-T04", targetIds: ["self_regulation", "self_control"] })
 assert.deepEqual(completePairWithPriorExtra.targetIds, ["attention", "self_regulation"], "a referent's unrequested extra target must not leak into a complete explicit pair")
 
 const unrelatedPair = compileStudentRequestContract("COMPARE-T06", frame({
   semanticActs: acts("compare"),
   mentionedTargetIds: ["arousal", "sensory_regulation"],
 }), compareState)
-assert.deepEqual(unrelatedPair.referent, { kind: "none", turnId: null, targetIds: [] }, "an unrelated complete comparison pair must not inherit old context")
+assert.deepEqual(unrelatedPair.referent, { kind: "none", role: "none", turnId: null, targetIds: [] }, "an unrelated complete comparison pair must not inherit old context")
 assert.deepEqual(unrelatedPair.targetIds, ["arousal", "sensory_regulation"])
 
 const retargetedCompareReturn = compileStudentRequestContract("RETURN-T01", frame({
@@ -233,6 +236,7 @@ const retargetedCompareReturn = compileStudentRequestContract("RETURN-T01", fram
 }), state)
 assert.deepEqual(retargetedCompareReturn.referent, {
   kind: "history",
+  role: "utterance",
   turnId: "RESOLVER-T02",
   targetIds: ["executive_functions", "inhibition"],
 })
@@ -245,10 +249,94 @@ const inheritedCompareReturn = compileStudentRequestContract("RETURN-T02", frame
 }), state)
 assert.deepEqual(inheritedCompareReturn.targetIds, ["executive_functions", "inhibition"], "a target-free return must inherit its referent targets")
 
+let entityState: StudentConversationState = createEmptyStudentConversationState()
+const entityDefinition = compileStudentRequestContract("ENTITY-T01", frame({
+  semanticActs: acts("define"),
+  conversationAction: "start",
+  mentionedTargetIds: ["inhibition"],
+}), entityState)
+entityState = applyStudentRequestContract(entityState, entityDefinition)
+const entityExample = compileStudentRequestContract("ENTITY-T02", frame({
+  semanticActs: acts("example"),
+  mentionedTargetIds: ["inhibition"],
+  referentTurnId: "ENTITY-T01",
+  referentRole: "utterance",
+  presentation: { ...presentation, example: "concrete" },
+}), entityState)
+entityState = applyStudentRequestContract(entityState, entityExample)
+const observationAboutEntity = compileStudentRequestContract("ENTITY-T03", frame({
+  semanticActs: acts("observe"),
+  mentionedTargetIds: ["inhibition"],
+  referentTurnId: "ENTITY-T02",
+  referentRole: "case_entity",
+}), entityState)
+entityState = applyStudentRequestContract(entityState, observationAboutEntity)
+assert.deepEqual(entityState.semanticHistory.at(-1)?.referent, {
+  kind: "active",
+  role: "case_entity",
+  turnId: "ENTITY-T02",
+  targetIds: ["inhibition"],
+}, "each history snapshot must preserve its resolved referent role and turn")
+
+const returnToEntity = compileStudentRequestContract("ENTITY-T04", frame({
+  semanticActs: acts("compare"),
+  conversationAction: "return",
+  mentionedTargetIds: ["working_memory"],
+  referentTurnId: "ENTITY-T03",
+  referentRole: "case_entity",
+}), entityState)
+assert.deepEqual(returnToEntity.referent, {
+  kind: "history",
+  role: "case_entity",
+  turnId: "ENTITY-T02",
+  targetIds: ["inhibition"],
+}, "returning to the child/example entity must follow the observation chain to its example anchor")
+assert.deepEqual(returnToEntity.targetIds, ["working_memory"])
+
+const returnToUtterance = compileStudentRequestContract("ENTITY-T05", frame({
+  semanticActs: acts("explain"),
+  conversationAction: "return",
+  mentionedTargetIds: ["working_memory"],
+  referentTurnId: "ENTITY-T03",
+  referentRole: "utterance",
+}), entityState)
+assert.deepEqual(returnToUtterance.referent, {
+  kind: "history",
+  role: "utterance",
+  turnId: "ENTITY-T03",
+  targetIds: ["inhibition"],
+}, "returning to the last statement must not collapse to the earlier entity anchor")
+
+const unrelatedEntityCase = compileStudentRequestContract("ENTITY-T06", frame({
+  semanticActs: acts("case_reasoning"),
+  mentionedTargetIds: ["coregulation"],
+}), entityState)
+assert.deepEqual(unrelatedEntityCase.referent, { kind: "none", role: "none", turnId: null, targetIds: [] })
+
+for (let index = 4; index <= 10; index += 1) {
+  const filler = compileStudentRequestContract(`ENTITY-T${String(index).padStart(2, "0")}`, frame({
+    semanticActs: acts("explain"),
+    mentionedTargetIds: [index % 2 === 0 ? "planning" : "working_memory"],
+  }), entityState)
+  entityState = applyStudentRequestContract(entityState, filler)
+}
+assert.equal(entityState.semanticHistory.length, 8, "semantic history must remain bounded to eight turns")
+assert.equal(entityState.semanticHistory.some((turn) => turn.turnId === "ENTITY-T02"), false)
+assert.equal(entityState.semanticHistory.some((turn) => turn.turnId === "ENTITY-T03"), true)
+const truncatedEntityReturn = compileStudentRequestContract("ENTITY-T11", frame({
+  semanticActs: acts("explain"),
+  conversationAction: "return",
+  mentionedTargetIds: ["working_memory"],
+  referentTurnId: "ENTITY-T03",
+  referentRole: "case_entity",
+}), entityState)
+assert.equal(truncatedEntityReturn.referent.turnId, "ENTITY-T03", "a truncated parent anchor must not create a dangling referent outside bounded history")
+assert.equal(JSON.stringify(entityState).includes("az önceki çocuğa dönelim"), false, "raw messages must not persist in state")
+
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_RESOLVER_CONTRASTIVE_LOCAL",
-  cases: 18,
+  cases: 25,
   compareOverContextualObserve: true,
   componentExplainOverContextualCase: true,
   pureObservationPreserved: true,
@@ -267,4 +355,11 @@ console.log(JSON.stringify({
   unrelatedComparisonPairNoReferentLeak: true,
   explicitReturnTargetPrecedesCompareUnion: true,
   targetFreeReturnInheritsReferent: true,
+  historySnapshotsPreserveReferentRole: true,
+  caseEntityChainCollapsesToExampleAnchor: true,
+  utteranceReturnDoesNotCollapse: true,
+  unrelatedCaseNoEntityLeak: true,
+  historyBoundedToEightTurns: true,
+  truncatedEntityChainNoDanglingPointer: true,
+  rawMessagesPersisted: 0,
 }, null, 2))
