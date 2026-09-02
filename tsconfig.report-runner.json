@@ -35,6 +35,7 @@
     "scripts/run-dna-student-provider-boundary-tests.ts",
     "scripts/run-dna-student-provider-preflight.ts",
     "scripts/run-dna-student-contract-compiler-tests.ts",
+    "scripts/run-dna-student-resolver-contrastive-tests.ts",
     "scripts/run-dna-student-development-adapter-tests.ts",
     "scripts/run-dna-student40-semantic.ts",
     "scripts/run-dna-student-fixture-integrity.ts",

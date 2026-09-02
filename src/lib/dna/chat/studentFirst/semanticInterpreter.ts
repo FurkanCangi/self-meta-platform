@@ -14,7 +14,7 @@ import {
 import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@6" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@7" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -91,23 +91,29 @@ function parseSemanticActs(value: unknown): StudentSemanticActs | null {
   ) as Record<StudentSemanticTask, boolean>)
 }
 
-const TASK_PRIORITY: readonly StudentSemanticTask[] = Object.freeze([
-  "treatment_boundary",
-  "summarize",
+const FALLBACK_TASK_PRIORITY: readonly StudentSemanticTask[] = Object.freeze([
   "observe",
   "evidence",
-  "compare",
-  "example",
   "case_reasoning",
   "define",
   "explain",
 ])
 
 export function resolveStudentSemanticTask(
-  frame: Pick<StudentSemanticFrame, "semanticActs" | "conversationAction" | "referentTurnId">,
+  frame: Pick<StudentSemanticFrame, "semanticActs" | "conversationAction" | "referentTurnId" | "presentation">,
   state: StudentConversationState,
 ): StudentSemanticTask {
-  const selected = TASK_PRIORITY.find((task) => frame.semanticActs[task]) ?? "explain"
+  const selected = frame.semanticActs.treatment_boundary
+    ? "treatment_boundary"
+    : frame.semanticActs.summarize
+      ? "summarize"
+      : frame.semanticActs.compare
+        ? "compare"
+        : frame.semanticActs.example
+          ? "example"
+          : frame.presentation.grouping === "separate_each"
+            ? "explain"
+            : FALLBACK_TASK_PRIORITY.find((task) => frame.semanticActs[task]) ?? "explain"
   const enabledActs = DNA_STUDENT_SEMANTIC_TASKS.filter((task) => frame.semanticActs[task])
   if (frame.conversationAction === "return" && selected === "explain" && enabledActs.length === 1 && frame.referentTurnId) {
     return state.semanticHistory.find((turn) => turn.turnId === frame.referentTurnId)?.semanticTask ?? selected
@@ -198,6 +204,7 @@ export function validateStudentSemanticFrameDetailed(
     semanticActs,
     conversationAction: row.conversationAction as StudentConversationAction,
     referentTurnId: referent.turnId,
+    presentation,
   }, state)
   if (row.conversationAction === "start" && state.semanticHistory.length) return frameFailure("conversation_state_mismatch")
   if (row.conversationAction !== "start" && !state.semanticHistory.length) return frameFailure("conversation_state_mismatch")
@@ -235,17 +242,22 @@ export function compileStudentRequestContract(
   const semanticTask = resolveStudentSemanticTask(frame, state)
   const unique = (values: readonly string[]) => [...new Set(values)]
   const allowedMentions = frame.mentionedTargetIds.filter((targetId) => !frame.rejectedTargetIds.includes(targetId))
-  const referentSnapshot = frame.referentTurnId
-    ? state.semanticHistory.find((turn) => turn.turnId === frame.referentTurnId) ?? null
-    : null
   const latestTurnId = state.semanticHistory.at(-1)?.turnId ?? null
+  const effectiveReferentTurnId = frame.referentTurnId ?? (
+    !allowedMentions.length && latestTurnId && (semanticTask === "example" || frame.presentation.preserveMeaning)
+      ? latestTurnId
+      : null
+  )
+  const referentSnapshot = effectiveReferentTurnId
+    ? state.semanticHistory.find((turn) => turn.turnId === effectiveReferentTurnId) ?? null
+    : null
   const referent: StudentReferent = Object.freeze({
-    kind: frame.referentTurnId === null
+    kind: effectiveReferentTurnId === null
       ? "none"
-      : frame.conversationAction === "return" || frame.referentTurnId !== latestTurnId
+      : frame.conversationAction === "return" || effectiveReferentTurnId !== latestTurnId
         ? "history"
         : "active",
-    turnId: frame.referentTurnId,
+    turnId: effectiveReferentTurnId,
     targetIds: Object.freeze(referentSnapshot?.targetIds ?? []),
   })
   const targetIds = frame.conversationAction === "summarize_session"
