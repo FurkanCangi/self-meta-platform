@@ -15,7 +15,7 @@ import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 import { normalizeDnaChatText } from "../text"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@17" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@18" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -309,9 +309,10 @@ export function compileStudentRequestContract(
       : "none",
   })
   const unique = (values: readonly string[]) => [...new Set(values)]
-  const allowedFocusTargets = frame.focusTargetIds.filter((targetId) => !frame.rejectedTargetIds.includes(targetId))
+  const currentRejectedTargetIds = Object.freeze(frame.conversationAction === "repair" ? [...frame.rejectedTargetIds] : [])
+  const allowedFocusTargets = frame.focusTargetIds.filter((targetId) => !currentRejectedTargetIds.includes(targetId))
   const contextTargetIds = Object.freeze(frame.contextTargetIds.filter((targetId) =>
-    !frame.rejectedTargetIds.includes(targetId) && !allowedFocusTargets.includes(targetId)))
+    !currentRejectedTargetIds.includes(targetId) && !allowedFocusTargets.includes(targetId)))
   const latestTurnId = state.semanticHistory.at(-1)?.turnId ?? null
   const latestSnapshot = state.semanticHistory.at(-1) ?? null
   const latestTargetIds = latestSnapshot?.targetIds ?? []
@@ -371,7 +372,7 @@ export function compileStudentRequestContract(
             : unique(state.activeTargetIds)
   const targetIds = frame.conversationAction === "summarize_session"
     ? mergedTargetIds
-    : mergedTargetIds.filter((targetId) => !frame.rejectedTargetIds.includes(targetId))
+    : mergedTargetIds.filter((targetId) => !currentRejectedTargetIds.includes(targetId))
   const comparisonTargetIds = semanticTask === "compare" ? targetIds : Object.freeze([])
   const componentTargetIds = semanticTask === "explain" && targetIds.length > 1 && presentation.grouping === "separate_each"
     ? targetIds
@@ -401,7 +402,7 @@ export function compileStudentRequestContract(
     conversationAction: frame.conversationAction,
     targetIds: Object.freeze(targetIds),
     contextTargetIds,
-    rejectedTargetIds: frame.rejectedTargetIds,
+    rejectedTargetIds: currentRejectedTargetIds,
     comparisonTargetIds: Object.freeze(comparisonTargetIds),
     componentTargetIds,
     referent,
@@ -413,6 +414,7 @@ export function compileStudentRequestContract(
       semanticTask,
       requestedSemanticTasks,
       targetIds,
+      rejectedTargetIds: currentRejectedTargetIds,
       comparisonTargetIds,
       componentTargetIds,
       summaryScope,
@@ -534,7 +536,7 @@ Tek bir semantic act seçmeye çalışma. Açıkça istenen her act true, istenm
 
 Bir örnek üretme veya bir kavramı örnekle gösterme açıkça isteniyorsa semanticActs.example=true kullan. “Bu örnekte”, “önceki örnek” veya “örnekteki çocuk” yalnız mevcut örneğe gönderme yapıyorsa ve yeni örnek istenmiyorsa semanticActs.example=false ve presentation.example=none kullan. presentation.example yalnız istenen örneğin kısa/somut sunum biçimini belirtir; kendi başına örnek isteği değildir.
 
-Yalnız allowedTargets içindeki ID'leri kullan. Yeni hedef uydurma. focusTargetIds yalnız mevcut isteğin cevapta doğrudan ele alınmasını istediği bilimsel kavramları içerir. Bir vaka veya örnek cümlesinde geçen fakat hakkında ayrıca açıklama/karşılaştırma istenmeyen davranış-kavram eşleşmelerini contextTargetIds alanına koy; bunlar cevap hedefi değildir. Örneğin eş düzenlemeyi örneklerken “çocuk göreve dönüyor” denmesi recovery kavramını otomatik olarak focus yapmaz. Referans verilen eski turun hedeflerini iki alana da kopyalama. Aynı ID iki rolde birden bulunamaz. Açık düzeltmede reddedilen hedefi rejectedTargetIds alanına koy. “Bu/bununla/bu örnekte/ilk anlattığın” gibi ifadeler önceki bir tura işaret ediyorsa o turun ID'sini referentTurnId alanına yaz; referans yoksa null kullan. referentRole=utterance, kullanıcı önceki açıklama/ifade/kavrama dönüyorsa kullanılır. referentRole=case_entity, kullanıcı önceki çocuk, öğrenci, vaka, davranış veya örnek varlığına dönüyorsa kullanılır; bu durumda en son yorum cümlesi yerine varlığın tanıtıldığı örnek turunu seçmeye çalış. Referans yoksa referentRole=none olmalıdır. Referansın active/history türünü, hedeflerini ve bağlı vaka zincirini yerel resolver state'ten türetecek. Oturum özetinde summarize=true ve conversationAction=summarize_session kullan; özet hedeflerini yerel resolver geçmişten türetecek.
+Yalnız allowedTargets içindeki ID'leri kullan. Yeni hedef uydurma. focusTargetIds yalnız mevcut isteğin cevapta doğrudan ele alınmasını istediği bilimsel kavramları içerir. Bir vaka veya örnek cümlesinde geçen fakat hakkında ayrıca açıklama/karşılaştırma istenmeyen davranış-kavram eşleşmelerini contextTargetIds alanına koy; bunlar cevap hedefi değildir. Örneğin eş düzenlemeyi örneklerken “çocuk göreve dönüyor” denmesi recovery kavramını otomatik olarak focus yapmaz. Referans verilen eski turun hedeflerini iki alana da kopyalama. Aynı ID iki rolde birden bulunamaz. rejectedTargetIds yalnız mevcut kullanıcı mesajında açıkça reddedilen hedefleri içerir ve yalnız conversationAction=repair iken dolu olabilir; state'teki eski reddedilmiş hedefleri özet, devam veya dönüş turuna kopyalama. “Bu/bununla/bu örnekte/ilk anlattığın” gibi ifadeler önceki bir tura işaret ediyorsa o turun ID'sini referentTurnId alanına yaz; referans yoksa null kullan. referentRole=utterance, kullanıcı önceki açıklama/ifade/kavrama dönüyorsa kullanılır. referentRole=case_entity, kullanıcı önceki çocuk, öğrenci, vaka, davranış veya örnek varlığına dönüyorsa kullanılır; bu durumda en son yorum cümlesi yerine varlığın tanıtıldığı örnek turunu seçmeye çalış. Referans yoksa referentRole=none olmalıdır. Referansın active/history türünü, hedeflerini ve bağlı vaka zincirini yerel resolver state'ten türetecek. Oturum özetinde summarize=true ve conversationAction=summarize_session kullan; özet hedeflerini yerel resolver geçmişten türetecek.
 
 Nihai cevap yükümlülüğü seçme; onu yerel derleyici yapar. Yalnız semantik gerçekleri çıkar:
 - presentation.grouping yalnız kullanıcı birden fazla hedefin her birinin ayrı ele alınmasını açıkça istiyorsa separate_each olur. “X bunun parçası mı?” bir ilişki sorusudur ve grouping=integrated kalır.

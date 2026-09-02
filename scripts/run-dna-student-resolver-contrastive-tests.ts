@@ -233,10 +233,31 @@ repairState = applyStudentRequestContract(repairState, repaired)
 const repairSummary = compileStudentRequestContract("REPAIR-T04", frame({
   semanticActs: acts("summarize"),
   conversationAction: "summarize_session",
+  rejectedTargetIds: ["attention"],
 }), repairState)
+assert.deepEqual(repairSummary.rejectedTargetIds, [], "historical rejection copied by a summary frame must not become a current-turn rejection")
 assert.ok(repairSummary.targetIds.includes("attention"), "current-turn rejection must not erase a historically discussed target from session summary")
 assert.ok(repairSummary.targetIds.includes("self_regulation"))
 assert.ok(repairSummary.targetIds.includes("recovery"))
+const summaryState = applyStudentRequestContract(repairState, repairSummary)
+assert.ok(summaryState.rejectedTargetIds.includes("attention"), "historical rejection memory must survive a summary turn")
+
+const noisyContinueRejection = compileStudentRequestContract("REPAIR-T05", frame({
+  semanticActs: acts("define"),
+  conversationAction: "continue",
+  focusTargetIds: ["recovery"],
+  rejectedTargetIds: ["attention"],
+}), repairState)
+assert.deepEqual(noisyContinueRejection.rejectedTargetIds, [], "continue cannot expose provider-carried historical rejection")
+
+const noisyReturnRejection = compileStudentRequestContract("REPAIR-T06", frame({
+  semanticActs: acts("define"),
+  conversationAction: "return",
+  focusTargetIds: ["self_regulation"],
+  rejectedTargetIds: ["attention"],
+  referentTurnId: "REPAIR-T01",
+}), repairState)
+assert.deepEqual(noisyReturnRejection.rejectedTargetIds, [], "return cannot expose provider-carried historical rejection")
 
 let compareState: StudentConversationState = createEmptyStudentConversationState()
 const compareStart = compileStudentRequestContract("COMPARE-T01", frame({
@@ -444,7 +465,7 @@ assert.equal(resolveStudentConversationAction({
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_RESOLVER_CONTRASTIVE_LOCAL",
-  cases: 39,
+  cases: 42,
   compareOverContextualObserve: true,
   componentExplainOverContextualCase: true,
   pureObservationPreserved: true,
@@ -461,6 +482,7 @@ console.log(JSON.stringify({
   treatmentBoundaryPriorityPreserved: true,
   rejectedTargetCannotReenterViaReferent: true,
   rejectedHistoricalTargetPreservedInSummary: true,
+  currentTurnRejectionIsRepairOnly: true,
   singleCompareSideCompletedFromReferent: true,
   completeOverlappingCompareAnchoredWithoutExpansion: true,
   priorExtraTargetCannotLeakIntoCompletePair: true,
