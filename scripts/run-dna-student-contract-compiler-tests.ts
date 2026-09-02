@@ -98,7 +98,7 @@ const startFrame = {
   conversationAction: "start",
   mentionedTargetIds: ["executive_functions"],
   rejectedTargetIds: [],
-  referent: { kind: "none", turnId: null },
+  referentTurnId: null,
   presentation: { ...base.presentation, grouping: "integrated" },
   summaryScope: base.summaryScope,
   observationScope: base.observationScope,
@@ -115,12 +115,13 @@ const integratedValidation = validateStudentSemanticFrameDetailed({
   semanticTask: "compare",
   conversationAction: "continue",
   mentionedTargetIds: ["inhibition"],
-  referent: { kind: "active", turnId: "GROUPING-T01" },
+  referentTurnId: "GROUPING-T01",
 }, activeState)
 if (!integratedValidation.ok) throw new Error(integratedValidation.failureCode)
 const integratedContract = compileStudentRequestContract("GROUPING-T02", integratedValidation.frame, activeState)
 assert.deepEqual(integratedContract.targetIds, ["executive_functions", "inhibition"])
 assert.deepEqual(integratedContract.comparisonTargetIds, ["executive_functions", "inhibition"])
+assert.deepEqual(integratedContract.referent, { kind: "active", turnId: "GROUPING-T01", targetIds: ["executive_functions"] })
 assert.deepEqual(integratedContract.componentTargetIds, [])
 assert.deepEqual(integratedContract.obligations.map((row) => row.kind), ["distinguish_targets", "explain_relation"])
 const comparisonState = applyStudentRequestContract(activeState, integratedContract)
@@ -130,12 +131,13 @@ const returnValidation = validateStudentSemanticFrameDetailed({
   semanticTask: "define",
   conversationAction: "return",
   mentionedTargetIds: ["executive_functions"],
-  referent: { kind: "history", turnId: "GROUPING-T01" },
+  referentTurnId: "GROUPING-T01",
   presentation: { ...base.presentation, language: "plain_student", preserveMeaning: true },
 }, comparisonState)
 if (!returnValidation.ok) throw new Error(returnValidation.failureCode)
 const returnContract = compileStudentRequestContract("GROUPING-T03", returnValidation.frame, comparisonState)
 assert.deepEqual(returnContract.targetIds, ["executive_functions"])
+assert.deepEqual(returnContract.referent, { kind: "history", turnId: "GROUPING-T01", targetIds: ["executive_functions"] })
 assert.deepEqual(returnContract.obligations.map((row) => row.kind), [
   "define_target",
   "use_history_anchor",

@@ -159,7 +159,7 @@ async function main() {
     conversationAction: "start",
     mentionedTargetIds: ["executive_functions"],
     rejectedTargetIds: [],
-    referent: { kind: "none", turnId: null },
+    referentTurnId: null,
     presentation: { depth: "standard", language: "standard", format: "prose", example: "none", grouping: "integrated", requestedSentenceCount: null, preserveMeaning: false },
     summaryScope: { known: false, unknown: false, observationFocus: false },
     observationScope: { singleObservationLimit: false, additionalContext: false },
