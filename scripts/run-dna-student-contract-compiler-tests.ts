@@ -139,6 +139,35 @@ assert.deepEqual(integratedContract.componentTargetIds, [])
 assert.deepEqual(integratedContract.obligations.map((row) => row.kind), ["distinguish_targets", "explain_relation"])
 const comparisonState = applyStudentRequestContract(activeState, integratedContract)
 
+const presentationOnlyValidation = validateStudentSemanticFrameDetailed({
+  ...startFrame,
+  semanticActs: semanticActs(),
+  conversationAction: "continue",
+  mentionedTargetIds: [],
+  referentTurnId: "GROUPING-T02",
+  referentRole: "utterance",
+  presentation: { ...base.presentation, language: "plain_student", preserveMeaning: true },
+}, comparisonState)
+if (!presentationOnlyValidation.ok) throw new Error(presentationOnlyValidation.failureCode)
+const presentationOnlyContract = compileStudentRequestContract("GROUPING-T02B", presentationOnlyValidation.frame, comparisonState)
+assert.equal(presentationOnlyContract.semanticTask, "compare", "presentation-only continuation must inherit its referenced scientific task")
+assert.deepEqual(presentationOnlyContract.targetIds, ["executive_functions", "inhibition"])
+assert.ok(presentationOnlyContract.obligations.map((row) => row.kind).includes("preserve_target_while_simplifying"))
+
+assert.deepEqual(validateStudentSemanticFrameDetailed({
+  ...startFrame,
+  semanticActs: semanticActs(),
+  conversationAction: "continue",
+  presentation: { ...base.presentation, preserveMeaning: false },
+}, comparisonState), { ok: false, failureCode: "invalid_semantic_acts" })
+
+assert.deepEqual(validateStudentSemanticFrameDetailed({
+  ...startFrame,
+  semanticActs: semanticActs(),
+  conversationAction: "start",
+  presentation: { ...base.presentation, preserveMeaning: true },
+}, emptyState), { ok: false, failureCode: "invalid_semantic_acts" })
+
 const returnValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
   semanticActs: semanticActs("explain"),
@@ -239,7 +268,7 @@ assert.deepEqual(separateContract.obligations.map((row) => row.kind), [
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_OBLIGATION_COMPILER_LOCAL",
-  cases: 15,
+  cases: 18,
   providerOwnsFinalObligations: false,
   deterministicCompilation: true,
   duplicateObligations: 0,
