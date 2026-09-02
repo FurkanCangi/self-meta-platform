@@ -11,7 +11,9 @@ import {
   validateStudentSemanticFrameDetailed,
 } from "../src/lib/dna/chat/studentFirst"
 import {
+  DNA_STUDENT_MAX_PROVIDER_CALLS_PER_TURN,
   DNA_STUDENT_MAX_PROVIDER_ATTEMPTS,
+  DNA_STUDENT_MAX_TRANSPORT_RETRIES_PER_TURN,
   interpretStudentRequestWithProvider,
 } from "../src/lib/dna/chat/studentFirst/semanticInterpreter.server"
 
@@ -227,7 +229,10 @@ async function main() {
   assert.equal(repaired.ok, true)
   assert.equal(repairSuccessSequence.calls(), DNA_STUDENT_MAX_PROVIDER_ATTEMPTS)
   assert.equal(repaired.provider.attempts, 2)
+  assert.equal(repaired.provider.semanticAttempts, 2)
+  assert.equal(repaired.provider.transportRetries, 0)
   assert.equal(repaired.provider.repairAttempted, true)
+  assert.equal(repaired.provider.usageComplete, true)
   assert.deepEqual(repaired.provider.usage, { inputTokens: 21, cachedInputTokens: 4, outputTokens: 5 })
 
   const repairFailureSequence = mockSequence([
@@ -245,8 +250,54 @@ async function main() {
   if (repairFailed.ok || repairFailed.reason !== "invalid_structured_output") throw new Error("expected bounded repair failure")
   assert.equal(repairFailed.failureCode, "invalid_semantic_acts")
   assert.equal(repairFailed.provider.attempts, 2)
+  assert.equal(repairFailed.provider.semanticAttempts, 2)
+  assert.equal(repairFailed.provider.transportRetries, 0)
   assert.deepEqual(repairFailed.provider.usage, { inputTokens: 15, cachedInputTokens: 0, outputTokens: 4 })
   assert.equal(repairFailureSequence.calls(), DNA_STUDENT_MAX_PROVIDER_ATTEMPTS, "a second invalid frame must hard-stop without a third call")
+
+  let transportRecoveryCalls = 0
+  const transportRecovered = await interpretStudentRequestWithProvider({
+    turnId: "TRANSPORT-BOUNDARY-T01",
+    message: "yürütücü işlevler ne demek",
+    state,
+    apiKey: "test-key-not-a-secret",
+    fetchImpl: (async () => {
+      transportRecoveryCalls += 1
+      if (transportRecoveryCalls === 1) throw new DOMException("aborted", "AbortError")
+      return new Response(JSON.stringify({
+        id: "resp_transport_recovered",
+        output_text: JSON.stringify(validFrame),
+        usage: { input_tokens: 12, output_tokens: 3 },
+      }), { status: 200, headers: { "content-type": "application/json" } })
+    }) as typeof fetch,
+  })
+  assert.equal(transportRecovered.ok, true)
+  assert.equal(transportRecoveryCalls, 2)
+  assert.equal(transportRecovered.provider.attempts, 2)
+  assert.equal(transportRecovered.provider.semanticAttempts, 1)
+  assert.equal(transportRecovered.provider.transportRetries, 1)
+  assert.equal(transportRecovered.provider.repairAttempted, false)
+  assert.equal(transportRecovered.provider.usageComplete, false, "an aborted request may have unreported provider usage")
+
+  let terminalTransportCalls = 0
+  const terminalTransportFailure = await interpretStudentRequestWithProvider({
+    turnId: "TRANSPORT-BOUNDARY-T02",
+    message: "yürütücü işlevler ne demek",
+    state,
+    apiKey: "test-key-not-a-secret",
+    fetchImpl: (async () => {
+      terminalTransportCalls += 1
+      throw new DOMException("aborted", "AbortError")
+    }) as typeof fetch,
+  })
+  assert.equal(terminalTransportFailure.ok, false)
+  if (terminalTransportFailure.ok || terminalTransportFailure.reason !== "provider_failure") throw new Error("expected bounded transport failure")
+  assert.equal(terminalTransportFailure.failure.reason, "timeout")
+  assert.equal(terminalTransportCalls, 2)
+  assert.equal(terminalTransportFailure.provider.attempts, 2)
+  assert.equal(terminalTransportFailure.provider.semanticAttempts, 1)
+  assert.equal(terminalTransportFailure.provider.transportRetries, DNA_STUDENT_MAX_TRANSPORT_RETRIES_PER_TURN)
+  assert.equal(terminalTransportFailure.provider.usageComplete, false)
 
   console.log(JSON.stringify({
     ok: true,
@@ -259,6 +310,10 @@ async function main() {
     providerOwnsFinalObligations: false,
     boundedStructuredRepair: true,
     maxProviderAttemptsPerTurn: DNA_STUDENT_MAX_PROVIDER_ATTEMPTS,
+    boundedTransportRetry: true,
+    maxTransportRetriesPerTurn: DNA_STUDENT_MAX_TRANSPORT_RETRIES_PER_TURN,
+    maxProviderCallsPerTurn: DNA_STUDENT_MAX_PROVIDER_CALLS_PER_TURN,
+    transportFailureUsageMarkedPartial: true,
     aggregateRepairUsage: true,
     rawProviderOutputReusedForRepair: false,
   }, null, 2))

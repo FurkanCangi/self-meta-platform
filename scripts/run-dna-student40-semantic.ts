@@ -17,6 +17,7 @@ import {
   type StudentRequestContract,
 } from "../src/lib/dna/chat/studentFirst"
 import {
+  DNA_STUDENT_MAX_PROVIDER_CALLS_PER_TURN,
   DNA_STUDENT_MAX_PROVIDER_ATTEMPTS,
   interpretStudentRequestWithProvider,
 } from "../src/lib/dna/chat/studentFirst/semanticInterpreter.server"
@@ -27,7 +28,7 @@ const FIXTURE_PATH = "scripts/dna-student-fixtures/STUDENT40_DEVELOPMENT.json"
 const EXPECTED_FIXTURE_SHA256 = "e8bf1368ea3f3ea5c09ba710a90c6e4f16a64e1d4f0388339c43c42b734f0a65"
 const TOTAL_EXPECTED_TURNS = 40
 const MINIMUM_FULL_PASS_TURNS = 36
-const MAX_PROVIDER_CALLS = TOTAL_EXPECTED_TURNS * DNA_STUDENT_MAX_PROVIDER_ATTEMPTS
+const MAX_PROVIDER_CALLS = TOTAL_EXPECTED_TURNS * DNA_STUDENT_MAX_PROVIDER_CALLS_PER_TURN
 const MAX_COST_MICROUSD = 200_000
 
 type Fixture = Readonly<{
@@ -106,6 +107,8 @@ async function main() {
   const latencies: number[] = []
   let providerCalls = 0
   let repairedTurns = 0
+  let transportRetries = 0
+  let partialUsageTurns = 0
   let stopReason: string | null = null
   let stoppedTurnId: string | null = null
 
@@ -119,6 +122,8 @@ async function main() {
       if ("provider" in interpreted) {
         providerCalls += interpreted.provider.attempts
         if (interpreted.provider.repairAttempted) repairedTurns += 1
+        transportRetries += interpreted.provider.transportRetries
+        if (!interpreted.provider.usageComplete) partialUsageTurns += 1
         usageRows.push(calculateDnaChatLunaUsage(interpreted.provider.usage))
         latencies.push(interpreted.provider.latencyMs)
         assert.ok(providerCalls <= MAX_PROVIDER_CALLS, "provider call cap exceeded")
@@ -182,7 +187,10 @@ async function main() {
       maxCostMicrousd: MAX_COST_MICROUSD,
       rawOutputLogged: false,
       repairedTurns,
-      maxAttemptsPerTurn: DNA_STUDENT_MAX_PROVIDER_ATTEMPTS,
+      transportRetries,
+      partialUsageTurns,
+      maxSemanticAttemptsPerTurn: DNA_STUDENT_MAX_PROVIDER_ATTEMPTS,
+      maxProviderCallsPerTurn: DNA_STUDENT_MAX_PROVIDER_CALLS_PER_TURN,
     },
     failures,
   }

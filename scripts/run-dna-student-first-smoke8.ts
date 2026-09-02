@@ -11,6 +11,7 @@ import {
   type StudentTurnAdjudication,
 } from "../src/lib/dna/chat/studentFirst"
 import {
+  DNA_STUDENT_MAX_PROVIDER_CALLS_PER_TURN,
   DNA_STUDENT_MAX_PROVIDER_ATTEMPTS,
   interpretStudentRequestWithProvider,
 } from "../src/lib/dna/chat/studentFirst/semanticInterpreter.server"
@@ -122,12 +123,14 @@ function sorted(values: readonly string[]): string[] {
   return [...values].sort()
 }
 
-const MAX_PROVIDER_CALLS = SMOKE8.length * DNA_STUDENT_MAX_PROVIDER_ATTEMPTS
+const MAX_PROVIDER_CALLS = SMOKE8.length * DNA_STUDENT_MAX_PROVIDER_CALLS_PER_TURN
 const MAX_COST_MICROUSD = 100_000
 const observedUsageRows: DnaChatLunaUsage[] = []
 const observedLatencies: number[] = []
 let observedProviderCalls = 0
 let observedRepairedTurns = 0
+let observedTransportRetries = 0
+let observedPartialUsageTurns = 0
 let observedCompletedContracts = 0
 
 async function main() {
@@ -145,6 +148,8 @@ async function main() {
     if ("provider" in interpreted) {
       observedProviderCalls += interpreted.provider.attempts
       if (interpreted.provider.repairAttempted) observedRepairedTurns += 1
+      observedTransportRetries += interpreted.provider.transportRetries
+      if (!interpreted.provider.usageComplete) observedPartialUsageTurns += 1
       observedUsageRows.push(calculateDnaChatLunaUsage(interpreted.provider.usage))
       observedLatencies.push(interpreted.provider.latencyMs)
       assert.ok(observedProviderCalls <= MAX_PROVIDER_CALLS, "provider call cap exceeded")
@@ -240,7 +245,10 @@ async function main() {
       averageLatencyMs: Math.round(observedLatencies.reduce((sum, value) => sum + value, 0) / observedLatencies.length),
       maxCostMicrousd: MAX_COST_MICROUSD,
       repairedTurns: observedRepairedTurns,
-      maxAttemptsPerTurn: DNA_STUDENT_MAX_PROVIDER_ATTEMPTS,
+      transportRetries: observedTransportRetries,
+      partialUsageTurns: observedPartialUsageTurns,
+      maxSemanticAttemptsPerTurn: DNA_STUDENT_MAX_PROVIDER_ATTEMPTS,
+      maxProviderCallsPerTurn: DNA_STUDENT_MAX_PROVIDER_CALLS_PER_TURN,
     },
     finalState: {
       activeTargetIds: state.activeTargetIds,

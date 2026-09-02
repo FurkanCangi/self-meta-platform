@@ -20,10 +20,15 @@ import {
 
 export const DNA_STUDENT_SEMANTIC_REQUEST_TIMEOUT_MS = 15_000
 export const DNA_STUDENT_MAX_PROVIDER_ATTEMPTS = 2
+export const DNA_STUDENT_MAX_TRANSPORT_RETRIES_PER_TURN = 1
+export const DNA_STUDENT_MAX_PROVIDER_CALLS_PER_TURN = 3
 
 export type StudentSemanticProviderEvidence = Readonly<{
   attempts: number
+  semanticAttempts: number
+  transportRetries: number
   repairAttempted: boolean
+  usageComplete: boolean
   responseId: string | null
   usage: DnaS13ProviderUsage
   latencyMs: number
@@ -50,12 +55,20 @@ export type StudentSemanticInterpreterResult =
     }>
 
 function aggregateProviderEvidence(
-  attempts: number,
+  input: Readonly<{
+    providerCalls: number
+    semanticAttempts: number
+    transportRetries: number
+    usageComplete: boolean
+  }>,
   rows: readonly Readonly<{ responseId: string | null; usage: DnaS13ProviderUsage; latencyMs: number }>[],
 ): StudentSemanticProviderEvidence {
   return Object.freeze({
-    attempts,
-    repairAttempted: attempts > 1,
+    attempts: input.providerCalls,
+    semanticAttempts: input.semanticAttempts,
+    transportRetries: input.transportRetries,
+    repairAttempted: input.semanticAttempts > 1,
+    usageComplete: input.usageComplete,
     responseId: rows.at(-1)?.responseId ?? null,
     usage: Object.freeze({
       inputTokens: rows.reduce((sum, row) => sum + row.usage.inputTokens, 0),
@@ -64,6 +77,10 @@ function aggregateProviderEvidence(
     }),
     latencyMs: rows.reduce((sum, row) => sum + row.latencyMs, 0),
   })
+}
+
+function retryableStudentTransportFailure(failure: DnaS13ProviderFailure): boolean {
+  return failure.reason === "timeout" || failure.reason === "network_error"
 }
 
 export async function interpretStudentRequestWithProvider(input: Readonly<{
@@ -78,25 +95,41 @@ export async function interpretStudentRequestWithProvider(input: Readonly<{
 
   const evidenceRows: Array<Readonly<{ responseId: string | null; usage: DnaS13ProviderUsage; latencyMs: number }>> = []
   let lastFailureCode: StudentFrameFailureCode | null = null
-  for (let attemptNumber = 1; attemptNumber <= DNA_STUDENT_MAX_PROVIDER_ATTEMPTS; attemptNumber += 1) {
-    const repairSuffix = attemptNumber === 1
+  let providerCalls = 0
+  let semanticAttempts = 0
+  let transportRetries = 0
+  let usageComplete = true
+  while (semanticAttempts < DNA_STUDENT_MAX_PROVIDER_ATTEMPTS && providerCalls < DNA_STUDENT_MAX_PROVIDER_CALLS_PER_TURN) {
+    semanticAttempts += 1
+    const repairSuffix = semanticAttempts === 1
       ? ""
       : `\n\nÖnceki yapı yerel doğrulamada ${lastFailureCode} koduyla reddedildi. Önceki çıktıyı görmeden, aynı kullanıcı isteğini yeniden yapılandır. En az bir semanticActs alanı true olmalı ve bütün alanlar talimatla tutarlı olmalı.`
-    const attempt = await requestDnaS13StructuredOutputDetailed({
-      name: "dna_student_semantic_frame",
-      schema: studentSemanticFrameSchema(input.state),
-      instructions: `${DNA_STUDENT_SEMANTIC_INTERPRETER_INSTRUCTIONS}${repairSuffix}`,
-      content: studentSemanticInterpreterContent(input),
-      maxOutputTokens: 650,
-      timeoutMs: DNA_STUDENT_SEMANTIC_REQUEST_TIMEOUT_MS,
-      apiKey: input.apiKey,
-      fetchImpl: input.fetchImpl,
-    })
+    let attempt
+    while (true) {
+      providerCalls += 1
+      attempt = await requestDnaS13StructuredOutputDetailed({
+        name: "dna_student_semantic_frame",
+        schema: studentSemanticFrameSchema(input.state),
+        instructions: `${DNA_STUDENT_SEMANTIC_INTERPRETER_INSTRUCTIONS}${repairSuffix}`,
+        content: studentSemanticInterpreterContent(input),
+        maxOutputTokens: 650,
+        timeoutMs: DNA_STUDENT_SEMANTIC_REQUEST_TIMEOUT_MS,
+        apiKey: input.apiKey,
+        fetchImpl: input.fetchImpl,
+      })
+      if (!attempt.ok && retryableStudentTransportFailure(attempt.failure)) usageComplete = false
+      const canRetryTransport = !attempt.ok &&
+        retryableStudentTransportFailure(attempt.failure) &&
+        transportRetries < DNA_STUDENT_MAX_TRANSPORT_RETRIES_PER_TURN &&
+        providerCalls < DNA_STUDENT_MAX_PROVIDER_CALLS_PER_TURN
+      if (!canRetryTransport) break
+      transportRetries += 1
+    }
     if (!attempt.ok) return Object.freeze({
       ok: false,
       reason: "provider_failure",
       failure: attempt.failure,
-      provider: aggregateProviderEvidence(attemptNumber, evidenceRows),
+      provider: aggregateProviderEvidence({ providerCalls, semanticAttempts, transportRetries, usageComplete }, evidenceRows),
     })
     evidenceRows.push(Object.freeze({
       responseId: attempt.result.responseId,
@@ -126,7 +159,7 @@ export async function interpretStudentRequestWithProvider(input: Readonly<{
     if (validation.ok) return Object.freeze({
       ok: true,
       contract: compileStudentRequestContract(input.turnId, validation.frame, input.state),
-      provider: aggregateProviderEvidence(attemptNumber, evidenceRows),
+      provider: aggregateProviderEvidence({ providerCalls, semanticAttempts, transportRetries, usageComplete }, evidenceRows),
     })
     lastFailureCode = validation.failureCode
   }
@@ -134,6 +167,6 @@ export async function interpretStudentRequestWithProvider(input: Readonly<{
     ok: false,
     reason: "invalid_structured_output",
     failureCode: lastFailureCode ?? "invalid_object",
-    provider: aggregateProviderEvidence(DNA_STUDENT_MAX_PROVIDER_ATTEMPTS, evidenceRows),
+    provider: aggregateProviderEvidence({ providerCalls, semanticAttempts, transportRetries, usageComplete }, evidenceRows),
   })
 }
