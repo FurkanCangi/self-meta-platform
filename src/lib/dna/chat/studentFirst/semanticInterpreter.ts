@@ -15,7 +15,7 @@ import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 import { normalizeDnaChatText } from "../text"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@19" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@20" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -113,6 +113,7 @@ export function groundStudentTargetRoles(input: Readonly<{
 }>): unknown {
   if (!input.candidate || typeof input.candidate !== "object" || !input.state.semanticHistory.length) return input.candidate
   const row = input.candidate as Record<string, unknown>
+  if (row.conversationAction !== "continue") return input.candidate
   const acts = row.semanticActs && typeof row.semanticActs === "object"
     ? row.semanticActs as Record<string, unknown>
     : null

@@ -257,6 +257,52 @@ async function main() {
     candidate: { ...inferredBehaviorFocus, semanticActs: { ...validFrame.semanticActs, define: false, compare: true, example: false } },
   }) as Record<string, unknown>
   assert.deepEqual(nonContextTaskFocus.focusTargetIds, ["inhibition"], "non-context tasks remain provider-interpreted")
+  const actionAwareFocusCases = Object.freeze([
+    Object.freeze({
+      action: "repair",
+      message: "yok dikkat tarafını sormuyorum kendi kendine toparlanıp göreve dönmesini öz düzenleme açısından soruyorum",
+      focusTargetIds: Object.freeze(["self_regulation", "recovery"]),
+      contextTargetIds: Object.freeze([]),
+      rejectedTargetIds: Object.freeze(["attention"]),
+    }),
+    Object.freeze({
+      action: "return",
+      message: "önceki toparlanma örneğine dön",
+      focusTargetIds: Object.freeze(["recovery"]),
+      contextTargetIds: Object.freeze([]),
+      rejectedTargetIds: Object.freeze([]),
+    }),
+    Object.freeze({
+      action: "start",
+      message: "arkadaşının sözünü kesen çocukla örnek ver",
+      focusTargetIds: Object.freeze(["inhibition"]),
+      contextTargetIds: Object.freeze([]),
+      rejectedTargetIds: Object.freeze([]),
+    }),
+    Object.freeze({
+      action: "summarize_session",
+      message: "konuşmayı toparlanma açısından özetle",
+      focusTargetIds: Object.freeze(["recovery"]),
+      contextTargetIds: Object.freeze([]),
+      rejectedTargetIds: Object.freeze([]),
+    }),
+  ])
+  for (const actionCase of actionAwareFocusCases) {
+    const candidate = {
+      ...inferredBehaviorFocus,
+      conversationAction: actionCase.action,
+      focusTargetIds: [...actionCase.focusTargetIds],
+      contextTargetIds: [...actionCase.contextTargetIds],
+      rejectedTargetIds: [...actionCase.rejectedTargetIds],
+    }
+    const grounded = groundStudentTargetRoles({
+      message: actionCase.message,
+      state: groundedState,
+      candidate,
+    }) as Record<string, unknown>
+    assert.deepEqual(grounded.focusTargetIds, candidate.focusTargetIds, `${actionCase.action} focus must remain provider-interpreted`)
+    assert.deepEqual(grounded.contextTargetIds, candidate.contextTargetIds, `${actionCase.action} context must remain provider-interpreted`)
+  }
   assert.equal(validateStudentSemanticFrame({ ...validFrame, summaryExtras: { unknown: "yes", observationFocus: false } }, state), null)
   assert.deepEqual(
     validateStudentSemanticFrameDetailed({ ...validFrame, semanticActs: Object.fromEntries(Object.keys(validFrame.semanticActs).map((key) => [key, false])) }, state),
@@ -362,6 +408,7 @@ async function main() {
     providerOwnsFinalObligations: false,
     targetRolesSeparated: true,
     focusPromotionGrounded: true,
+    focusGroundingActionMatrix: true,
     boundedStructuredRepair: true,
     maxProviderAttemptsPerTurn: DNA_STUDENT_MAX_PROVIDER_ATTEMPTS,
     boundedTransportRetry: true,
