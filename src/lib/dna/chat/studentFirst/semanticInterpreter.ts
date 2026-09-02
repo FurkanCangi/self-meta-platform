@@ -14,7 +14,7 @@ import {
 import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@5" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@6" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -24,6 +24,8 @@ export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
 export const DNA_STUDENT_CONVERSATION_ACTIONS = Object.freeze([
   "start", "continue", "repair", "return", "summarize_session",
 ] as const satisfies readonly StudentConversationAction[])
+
+export type StudentSemanticActs = Readonly<Record<StudentSemanticTask, boolean>>
 
 export const DNA_STUDENT_OBLIGATION_KINDS = Object.freeze([
   "define_target",
@@ -45,7 +47,7 @@ export const DNA_STUDENT_OBLIGATION_KINDS = Object.freeze([
 ] as const satisfies readonly StudentAnswerObligationKind[])
 
 export type StudentSemanticFrame = Readonly<{
-  semanticTask: StudentSemanticTask
+  semanticActs: StudentSemanticActs
   conversationAction: StudentConversationAction
   mentionedTargetIds: readonly string[]
   rejectedTargetIds: readonly string[]
@@ -53,24 +55,21 @@ export type StudentSemanticFrame = Readonly<{
   presentation: StudentPresentationRequest
   summaryExtras: Readonly<{ unknown: boolean; observationFocus: boolean }>
   observationExtras: StudentObservationScope
-  ambiguity: StudentRequestContract["ambiguity"]
-  safetyIntent: StudentRequestContract["safetyIntent"]
 }>
 
 export const DNA_STUDENT_FRAME_FAILURE_CODES = Object.freeze([
   "invalid_object",
-  "invalid_task_or_action",
+  "invalid_semantic_acts",
+  "invalid_conversation_action",
   "invalid_mentioned_targets",
   "invalid_rejected_targets",
   "invalid_referent",
   "invalid_presentation",
   "invalid_summary_extras",
   "invalid_observation_extras",
-  "invalid_ambiguity_or_safety",
   "conversation_state_mismatch",
   "return_referent_mismatch",
   "summary_task_mismatch",
-  "treatment_safety_mismatch",
 ] as const)
 
 export type StudentFrameFailureCode = typeof DNA_STUDENT_FRAME_FAILURE_CODES[number]
@@ -80,10 +79,41 @@ export type StudentFrameValidationResult =
 
 const TARGET_IDS = Object.freeze(DNA_STUDENT_TARGET_LEXICON.map((target) => target.id))
 const TARGET_ID_SET = new Set(TARGET_IDS)
-const TASK_SET = new Set<string>(DNA_STUDENT_SEMANTIC_TASKS)
 const ACTION_SET = new Set<string>(DNA_STUDENT_CONVERSATION_ACTIONS)
-const AMBIGUITIES = new Set(["none", "target_missing", "comparison_side_missing", "history_anchor_missing"])
-const SAFETY_INTENTS = new Set(["general_education", "case_interpretation", "treatment_selection"])
+
+function parseSemanticActs(value: unknown): StudentSemanticActs | null {
+  if (!value || typeof value !== "object") return null
+  const row = value as Record<string, unknown>
+  if (DNA_STUDENT_SEMANTIC_TASKS.some((task) => typeof row[task] !== "boolean")) return null
+  if (!DNA_STUDENT_SEMANTIC_TASKS.some((task) => row[task] === true)) return null
+  return Object.freeze(Object.fromEntries(
+    DNA_STUDENT_SEMANTIC_TASKS.map((task) => [task, row[task] as boolean]),
+  ) as Record<StudentSemanticTask, boolean>)
+}
+
+const TASK_PRIORITY: readonly StudentSemanticTask[] = Object.freeze([
+  "treatment_boundary",
+  "summarize",
+  "observe",
+  "evidence",
+  "compare",
+  "example",
+  "case_reasoning",
+  "define",
+  "explain",
+])
+
+export function resolveStudentSemanticTask(
+  frame: Pick<StudentSemanticFrame, "semanticActs" | "conversationAction" | "referentTurnId">,
+  state: StudentConversationState,
+): StudentSemanticTask {
+  const selected = TASK_PRIORITY.find((task) => frame.semanticActs[task]) ?? "explain"
+  const enabledActs = DNA_STUDENT_SEMANTIC_TASKS.filter((task) => frame.semanticActs[task])
+  if (frame.conversationAction === "return" && selected === "explain" && enabledActs.length === 1 && frame.referentTurnId) {
+    return state.semanticHistory.find((turn) => turn.turnId === frame.referentTurnId)?.semanticTask ?? selected
+  }
+  return selected
+}
 
 function uniqueStrings(
   value: unknown,
@@ -149,7 +179,9 @@ export function validateStudentSemanticFrameDetailed(
 ): StudentFrameValidationResult {
   if (!candidate || typeof candidate !== "object") return frameFailure("invalid_object")
   const row = candidate as Record<string, unknown>
-  if (!TASK_SET.has(String(row.semanticTask)) || !ACTION_SET.has(String(row.conversationAction))) return frameFailure("invalid_task_or_action")
+  const semanticActs = parseSemanticActs(row.semanticActs)
+  if (!semanticActs) return frameFailure("invalid_semantic_acts")
+  if (!ACTION_SET.has(String(row.conversationAction))) return frameFailure("invalid_conversation_action")
   const mentionedTargetIds = uniqueStrings(row.mentionedTargetIds, TARGET_ID_SET, 8)
   if (!mentionedTargetIds) return frameFailure("invalid_mentioned_targets")
   const rejectedTargetIds = uniqueStrings(row.rejectedTargetIds, TARGET_ID_SET, 8)
@@ -162,17 +194,20 @@ export function validateStudentSemanticFrameDetailed(
   if (!summaryExtras) return frameFailure("invalid_summary_extras")
   const observationExtras = parseObservationExtras(row.observationExtras)
   if (!observationExtras) return frameFailure("invalid_observation_extras")
-  if (!AMBIGUITIES.has(String(row.ambiguity)) || !SAFETY_INTENTS.has(String(row.safetyIntent))) return frameFailure("invalid_ambiguity_or_safety")
+  const semanticTask = resolveStudentSemanticTask({
+    semanticActs,
+    conversationAction: row.conversationAction as StudentConversationAction,
+    referentTurnId: referent.turnId,
+  }, state)
   if (row.conversationAction === "start" && state.semanticHistory.length) return frameFailure("conversation_state_mismatch")
   if (row.conversationAction !== "start" && !state.semanticHistory.length) return frameFailure("conversation_state_mismatch")
   if (row.conversationAction === "return" && referent.turnId === null) return frameFailure("return_referent_mismatch")
-  if (row.conversationAction === "summarize_session" && row.semanticTask !== "summarize") return frameFailure("summary_task_mismatch")
-  if (row.semanticTask === "treatment_boundary" && row.safetyIntent !== "treatment_selection") return frameFailure("treatment_safety_mismatch")
+  if (row.conversationAction === "summarize_session" && semanticTask !== "summarize") return frameFailure("summary_task_mismatch")
 
   return Object.freeze({
     ok: true,
     frame: Object.freeze({
-      semanticTask: row.semanticTask as StudentSemanticTask,
+      semanticActs,
       conversationAction: row.conversationAction as StudentConversationAction,
       mentionedTargetIds: Object.freeze(mentionedTargetIds),
       rejectedTargetIds: Object.freeze(rejectedTargetIds),
@@ -180,8 +215,6 @@ export function validateStudentSemanticFrameDetailed(
       presentation,
       summaryExtras,
       observationExtras,
-      ambiguity: row.ambiguity as StudentRequestContract["ambiguity"],
-      safetyIntent: row.safetyIntent as StudentRequestContract["safetyIntent"],
     }),
   })
 }
@@ -199,6 +232,7 @@ export function compileStudentRequestContract(
   frame: StudentSemanticFrame,
   state: StudentConversationState,
 ): StudentRequestContract {
+  const semanticTask = resolveStudentSemanticTask(frame, state)
   const unique = (values: readonly string[]) => [...new Set(values)]
   const allowedMentions = frame.mentionedTargetIds.filter((targetId) => !frame.rejectedTargetIds.includes(targetId))
   const referentSnapshot = frame.referentTurnId
@@ -216,7 +250,7 @@ export function compileStudentRequestContract(
   })
   const targetIds = frame.conversationAction === "summarize_session"
     ? unique(state.semanticHistory.flatMap((turn) => turn.targetIds))
-    : frame.semanticTask === "compare"
+    : semanticTask === "compare"
       ? unique([...referent.targetIds, ...allowedMentions])
       : frame.conversationAction === "return"
         ? unique([...referent.targetIds, ...allowedMentions])
@@ -225,31 +259,31 @@ export function compileStudentRequestContract(
           : referent.targetIds.length
             ? unique(referent.targetIds)
             : unique(state.activeTargetIds)
-  const comparisonTargetIds = frame.semanticTask === "compare" ? targetIds : Object.freeze([])
-  const componentTargetIds = frame.semanticTask === "explain" && targetIds.length > 1 && frame.presentation.grouping === "separate_each"
+  const comparisonTargetIds = semanticTask === "compare" ? targetIds : Object.freeze([])
+  const componentTargetIds = semanticTask === "explain" && targetIds.length > 1 && frame.presentation.grouping === "separate_each"
     ? targetIds
     : Object.freeze([])
   const summaryScope = Object.freeze({
-    known: frame.semanticTask === "summarize",
-    unknown: frame.semanticTask === "summarize" && frame.summaryExtras.unknown,
-    observationFocus: frame.semanticTask === "summarize" && frame.summaryExtras.observationFocus,
+    known: semanticTask === "summarize",
+    unknown: semanticTask === "summarize" && frame.summaryExtras.unknown,
+    observationFocus: semanticTask === "summarize" && frame.summaryExtras.observationFocus,
   })
-  const observationScope = frame.semanticTask === "observe" || frame.semanticTask === "case_reasoning"
+  const observationScope = semanticTask === "observe" || semanticTask === "case_reasoning"
     ? Object.freeze({ singleObservationLimit: true, additionalContext: true })
-    : frame.semanticTask === "compare"
+    : semanticTask === "compare"
       ? frame.observationExtras
       : Object.freeze({ singleObservationLimit: false, additionalContext: false })
   const ambiguity = frame.conversationAction === "return" && referent.kind !== "history"
     ? "history_anchor_missing"
-    : frame.semanticTask === "compare" && comparisonTargetIds.length < 2
+    : semanticTask === "compare" && comparisonTargetIds.length < 2
       ? "comparison_side_missing"
-      : !targetIds.length && frame.semanticTask !== "treatment_boundary"
+      : !targetIds.length && semanticTask !== "treatment_boundary"
         ? "target_missing"
-        : frame.ambiguity
+        : "none"
   return Object.freeze({
     version: DNA_STUDENT_FIRST_REQUEST_VERSION,
     turnId,
-    semanticTask: frame.semanticTask,
+    semanticTask,
     conversationAction: frame.conversationAction,
     targetIds: Object.freeze(targetIds),
     rejectedTargetIds: frame.rejectedTargetIds,
@@ -261,6 +295,7 @@ export function compileStudentRequestContract(
     observationScope,
     obligations: compileStudentAnswerObligations(turnId, {
       ...frame,
+      semanticTask,
       targetIds,
       comparisonTargetIds,
       componentTargetIds,
@@ -268,7 +303,11 @@ export function compileStudentRequestContract(
       observationScope,
     }),
     ambiguity,
-    safetyIntent: frame.safetyIntent,
+    safetyIntent: semanticTask === "treatment_boundary"
+      ? "treatment_selection"
+      : semanticTask === "observe" || semanticTask === "case_reasoning"
+        ? "case_interpretation"
+        : "general_education",
   })
 }
 
@@ -278,12 +317,17 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
     type: "object",
     additionalProperties: false,
     required: [
-      "semanticTask", "conversationAction", "mentionedTargetIds", "rejectedTargetIds",
+      "semanticActs", "conversationAction", "mentionedTargetIds", "rejectedTargetIds",
       "referentTurnId", "presentation",
-      "summaryExtras", "observationExtras", "ambiguity", "safetyIntent",
+      "summaryExtras", "observationExtras",
     ],
     properties: {
-      semanticTask: { type: "string", enum: [...DNA_STUDENT_SEMANTIC_TASKS] },
+      semanticActs: {
+        type: "object",
+        additionalProperties: false,
+        required: [...DNA_STUDENT_SEMANTIC_TASKS],
+        properties: Object.fromEntries(DNA_STUDENT_SEMANTIC_TASKS.map((task) => [task, { type: "boolean" }])),
+      },
       conversationAction: { type: "string", enum: [...DNA_STUDENT_CONVERSATION_ACTIONS] },
       mentionedTargetIds: { type: "array", minItems: 0, maxItems: 8, items: { type: "string", enum: [...TARGET_IDS] } },
       rejectedTargetIds: { type: "array", minItems: 0, maxItems: 8, items: { type: "string", enum: [...TARGET_IDS] } },
@@ -322,8 +366,6 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
           additionalContext: { type: "boolean" },
         },
       },
-      ambiguity: { type: "string", enum: [...AMBIGUITIES] },
-      safetyIntent: { type: "string", enum: [...SAFETY_INTENTS] },
     },
   }
 }
@@ -359,13 +401,13 @@ export const DNA_STUDENT_SEMANTIC_INTERPRETER_INSTRUCTIONS = `
 Sen yalnız Türkçe bilimsel öğrenci konuşmasını yapılandıran bir yorumlayıcısın. Cevap veya klinik öneri yazma.
 
 Her mesaj için üç bağımsız eksen çıkar:
-1. semanticTask: kullanıcının bilimsel olarak istediği iş (define, explain, compare, example, case_reasoning, summarize, observe, evidence, treatment_boundary),
+1. semanticActs: kullanıcının bilimsel olarak istediği işleri birbirinden bağımsız boolean olarak işaretle (define, explain, compare, example, case_reasoning, summarize, observe, evidence, treatment_boundary),
 2. conversationAction: konuşmadaki hareket (start, continue, repair, return, summarize_session),
 3. presentation: sade dil, uzunluk, biçim, örnek ve aynı anlamı koruyarak yeniden anlatma isteği.
 
-Sunum isteği semantik görevin yerine geçmez. Örneğin “ne demek, öğrenci gibi anlat” semanticTask=define ve language=plain_student olur. Türkçe ekleri ve gündelik ifadeleri anlam düzeyinde yorumla; “tek gözlemle”, “bir kere görerek” ve “sadece bunu gördüm” gözlemden sonuç çıkarma sınırını soruyorsa semanticTask=observe olur.
+Tek bir semantic act seçmeye çalışma. Açıkça istenen her act true, istenmeyenler false olsun. “Ne demek / nedir / neyi ifade eder” define=true; aynı mesaj genel açıklama da gerektiriyorsa explain de true olabilir. Yerel resolver primary taskı seçecek. Sunum isteği semantic acts yerine geçmez. Örneğin “ne demek, öğrenci gibi anlat” define=true ve language=plain_student olur. Türkçe ekleri ve gündelik ifadeleri anlam düzeyinde yorumla; “tek gözlemle”, “bir kere görerek” ve “sadece bunu gördüm” gözlemden sonuç çıkarma sınırını soruyorsa observe=true olur.
 
-Yalnız allowedTargets içindeki ID'leri kullan. Yeni hedef uydurma. mentionedTargetIds yalnız mevcut kullanıcı mesajında açıkça adı geçen hedefleri içerir; referans verilen eski turun hedeflerini buraya kopyalama. Açık düzeltmede reddedilen hedefi rejectedTargetIds alanına koy. “Bu/bununla/bu örnekte/ilk anlattığın” gibi ifadeler önceki bir tura işaret ediyorsa yalnız o turun ID'sini referentTurnId alanına yaz; referans yoksa null kullan. Referansın none/active/history türünü ve hedeflerini yerel resolver state'ten türetecek. Oturum özetinde semanticTask=summarize ve conversationAction=summarize_session kullan; özet hedeflerini yerel resolver geçmişten türetecek.
+Yalnız allowedTargets içindeki ID'leri kullan. Yeni hedef uydurma. mentionedTargetIds yalnız mevcut kullanıcı mesajında açıkça adı geçen hedefleri içerir; referans verilen eski turun hedeflerini buraya kopyalama. Açık düzeltmede reddedilen hedefi rejectedTargetIds alanına koy. “Bu/bununla/bu örnekte/ilk anlattığın” gibi ifadeler önceki bir tura işaret ediyorsa yalnız o turun ID'sini referentTurnId alanına yaz; referans yoksa null kullan. Referansın none/active/history türünü ve hedeflerini yerel resolver state'ten türetecek. Oturum özetinde summarize=true ve conversationAction=summarize_session kullan; özet hedeflerini yerel resolver geçmişten türetecek.
 
 Nihai cevap yükümlülüğü seçme; onu yerel derleyici yapar. Yalnız semantik gerçekleri çıkar:
 - presentation.grouping yalnız kullanıcı birden fazla hedefin her birinin ayrı ele alınmasını açıkça istiyorsa separate_each olur. “X bunun parçası mı?” bir ilişki sorusudur ve grouping=integrated kalır.

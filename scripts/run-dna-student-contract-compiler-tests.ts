@@ -92,9 +92,21 @@ assert.deepEqual(kinds({
   presentation: { ...base.presentation, example: "concrete" },
 }), ["give_concrete_example", "bind_example_to_target"], "example obligation must be deduplicated")
 
+const semanticActs = (...enabled: readonly string[]) => Object.freeze({
+  define: enabled.includes("define"),
+  explain: enabled.includes("explain"),
+  compare: enabled.includes("compare"),
+  example: enabled.includes("example"),
+  case_reasoning: enabled.includes("case_reasoning"),
+  summarize: enabled.includes("summarize"),
+  observe: enabled.includes("observe"),
+  evidence: enabled.includes("evidence"),
+  treatment_boundary: enabled.includes("treatment_boundary"),
+})
+
 const emptyState = createEmptyStudentConversationState()
 const startFrame = {
-  semanticTask: "define",
+  semanticActs: semanticActs("define", "explain"),
   conversationAction: "start",
   mentionedTargetIds: ["executive_functions"],
   rejectedTargetIds: [],
@@ -102,17 +114,16 @@ const startFrame = {
   presentation: { ...base.presentation, grouping: "integrated" },
   summaryExtras: { unknown: false, observationFocus: false },
   observationExtras: { singleObservationLimit: false, additionalContext: false },
-  ambiguity: "none",
-  safetyIntent: "general_education",
 }
 const startValidation = validateStudentSemanticFrameDetailed(startFrame, emptyState)
 if (!startValidation.ok) throw new Error(startValidation.failureCode)
 const startContract = compileStudentRequestContract("GROUPING-T01", startValidation.frame, emptyState)
+assert.equal(startContract.semanticTask, "define")
 const activeState = applyStudentRequestContract(emptyState, startContract)
 
 const integratedValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
-  semanticTask: "compare",
+  semanticActs: semanticActs("compare"),
   conversationAction: "continue",
   mentionedTargetIds: ["inhibition"],
   referentTurnId: "GROUPING-T01",
@@ -128,7 +139,7 @@ const comparisonState = applyStudentRequestContract(activeState, integratedContr
 
 const returnValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
-  semanticTask: "define",
+  semanticActs: semanticActs("explain"),
   conversationAction: "return",
   mentionedTargetIds: ["executive_functions"],
   referentTurnId: "GROUPING-T01",
@@ -136,6 +147,7 @@ const returnValidation = validateStudentSemanticFrameDetailed({
 }, comparisonState)
 if (!returnValidation.ok) throw new Error(returnValidation.failureCode)
 const returnContract = compileStudentRequestContract("GROUPING-T03", returnValidation.frame, comparisonState)
+assert.equal(returnContract.semanticTask, "define")
 assert.deepEqual(returnContract.targetIds, ["executive_functions"])
 assert.deepEqual(returnContract.referent, { kind: "history", turnId: "GROUPING-T01", targetIds: ["executive_functions"] })
 assert.deepEqual(returnContract.obligations.map((row) => row.kind), [
@@ -146,19 +158,20 @@ assert.deepEqual(returnContract.obligations.map((row) => row.kind), [
 
 const repairValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
-  semanticTask: "define",
+  semanticActs: semanticActs("define", "explain"),
   conversationAction: "repair",
   mentionedTargetIds: ["inhibition", "working_memory"],
   rejectedTargetIds: ["inhibition"],
 }, comparisonState)
 if (!repairValidation.ok) throw new Error(repairValidation.failureCode)
 const repairContract = compileStudentRequestContract("GROUPING-T04", repairValidation.frame, comparisonState)
+assert.equal(repairContract.semanticTask, "define")
 assert.deepEqual(repairContract.targetIds, ["working_memory"])
 assert.deepEqual(repairContract.obligations.map((row) => row.kind), ["define_target", "honor_rejected_target"])
 
 const summaryValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
-  semanticTask: "summarize",
+  semanticActs: semanticActs("summarize"),
   conversationAction: "summarize_session",
   mentionedTargetIds: [],
   summaryExtras: { unknown: true, observationFocus: true },
@@ -174,13 +187,12 @@ assert.deepEqual(summaryContract.obligations.map((row) => row.kind), [
 
 const observeValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
-  semanticTask: "observe",
+  semanticActs: semanticActs("observe", "case_reasoning"),
   conversationAction: "continue",
   mentionedTargetIds: ["inhibition"],
   referentTurnId: "GROUPING-T02",
   summaryExtras: { unknown: true, observationFocus: true },
   observationExtras: { singleObservationLimit: false, additionalContext: false },
-  safetyIntent: "case_interpretation",
 }, comparisonState)
 if (!observeValidation.ok) throw new Error(observeValidation.failureCode)
 const observeContract = compileStudentRequestContract("GROUPING-T06", observeValidation.frame, comparisonState)
@@ -193,7 +205,7 @@ assert.deepEqual(observeContract.obligations.map((row) => row.kind), [
 
 const separateValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
-  semanticTask: "explain",
+  semanticActs: semanticActs("explain"),
   mentionedTargetIds: ["planning", "inhibition", "emotion_regulation"],
   presentation: { ...base.presentation, grouping: "separate_each" },
 }, emptyState)

@@ -155,7 +155,17 @@ async function main() {
   assert.equal(hasKey(schema, "uniqueItems"), false, "student provider schema must stay within the known working subset")
   assert.equal(hasKey(schema, "obligationKinds"), false, "provider must not own final answer obligations")
   const validFrame = {
-    semanticTask: "define",
+    semanticActs: {
+      define: true,
+      explain: false,
+      compare: false,
+      example: false,
+      case_reasoning: false,
+      summarize: false,
+      observe: false,
+      evidence: false,
+      treatment_boundary: false,
+    },
     conversationAction: "start",
     mentionedTargetIds: ["executive_functions"],
     rejectedTargetIds: [],
@@ -163,8 +173,6 @@ async function main() {
     presentation: { depth: "standard", language: "standard", format: "prose", example: "none", grouping: "integrated", requestedSentenceCount: null, preserveMeaning: false },
     summaryExtras: { unknown: false, observationFocus: false },
     observationExtras: { singleObservationLimit: false, additionalContext: false },
-    ambiguity: "none",
-    safetyIntent: "general_education",
   }
   assert.ok(validateStudentSemanticFrame(validFrame, state))
   assert.equal(validateStudentSemanticFrame({ ...validFrame, mentionedTargetIds: ["executive_functions", "executive_functions"] }, state), null)
@@ -173,6 +181,10 @@ async function main() {
     { ok: false, failureCode: "invalid_mentioned_targets" },
   )
   assert.equal(validateStudentSemanticFrame({ ...validFrame, summaryExtras: { unknown: "yes", observationFocus: false } }, state), null)
+  assert.deepEqual(
+    validateStudentSemanticFrameDetailed({ ...validFrame, semanticActs: Object.fromEntries(Object.keys(validFrame.semanticActs).map((key) => [key, false])) }, state),
+    { ok: false, failureCode: "invalid_semantic_acts" },
+  )
 
   console.log(JSON.stringify({
     ok: true,
