@@ -30,40 +30,33 @@ const mockFetch: typeof fetch = async (_input, init) => {
   const request = JSON.parse(String(init?.body)) as { input: string }
   const content = JSON.parse(request.input) as {
     operation: string
-    activeTargets: readonly Readonly<{
-      targetId: string
-      title: string
-      visibleAliases: readonly string[]
-      lockedClaims: readonly Readonly<{ claimId: string }>[]
+    answerSlots: readonly Readonly<{
+      slotId: string
+      obligation: Readonly<{ id: string; kind: string }>
+      activeTargets: readonly Readonly<{
+        targetId: string
+        title: string
+        visibleAliases: readonly string[]
+        lockedClaims: readonly Readonly<{ claimId: string }>[]
+      }>[]
+      policyUnits: readonly Readonly<{ id: string }>[]
     }>[]
-    obligations: readonly Readonly<{ id: string; kind: string }>[]
-    policyUnits: readonly Readonly<{ id: string }>[]
     presentation: Readonly<{ requestedSentenceCount: number | null }>
   }
-  const labels = content.activeTargets.map((row) => row.visibleAliases[0]).join(", ")
-  const kinds = new Set(content.obligations.map((row) => row.kind))
-  const summaryAnswer = [
-    `${labels} konuşmada bildiğimiz başlıklardır.`,
-    ...(kinds.has("summarize_unknown") ? ["Bu açıklama tek başına bir öğrenci hakkında kesin sonuç vermez."] : []),
-    ...(kinds.has("summarize_observation_focus") ? ["Gözlemde farklı ortam ve görevlerde ne olduğuna bakılır."] : []),
-  ].join(" ")
-  const answer = content.operation === "summarize"
-    ? summaryAnswer
-    : kinds.has("give_concrete_example")
-      ? `${kinds.has("distinguish_targets") ? `${labels} aynı şey değildir. Aralarındaki ilişkiyi ayrı kapsamlarıyla ele alırız. ` : ""}Örneğin, ${labels} için kısa bir öğrenci durumu düşün. Bu örnek, ${labels} kavramıyla doğrudan bağ kurar.`
-      : kinds.has("distinguish_targets")
-        ? `${labels} aynı şey değildir. Aralarındaki ilişki, her kavramın kaynakta ayrı bir kapsamla açıklanmasıdır.`
-    : `${labels} için kaynak bilgisine dayalı, öğrenci dilinde kısa bir açıklama veriyorum. İstenen görev bu kavramları doğrudan ele alır.`
+  const slotText = (slot: (typeof content.answerSlots)[number]) => {
+    const labels = slot.activeTargets.map((row) => row.visibleAliases[0]).join(", ")
+    if (slot.obligation.kind === "distinguish_targets") return `${labels} aynı şey değildir.`
+    if (slot.obligation.kind === "explain_relation") return `${labels} arasındaki ilişki ayrı kapsamlarıyla açıklanır.`
+    if (slot.obligation.kind === "give_concrete_example") return `Örneğin, ${labels} için kısa bir öğrenci durumu düşün.`
+    if (slot.obligation.kind === "bind_example_to_target") return `Bu örnek ${labels} kavramıyla doğrudan bağ kurar.`
+    if (slot.obligation.kind === "summarize_known") return `${labels} konuşmada bildiğimiz başlıklardır.`
+    if (slot.obligation.kind === "summarize_unknown") return "Bu açıklama tek başına bir öğrenci hakkında kesin sonuç vermez."
+    if (slot.obligation.kind === "summarize_observation_focus") return "Gözlemde farklı ortam ve görevlerde ne olduğuna bakılır."
+    return `${labels} için kaynak bilgisine dayalı, öğrenci dilinde kısa bir açıklama veriyorum.`
+  }
   const value = {
-    blocks: [{
-      blockId: "b1",
-      text: answer,
-      targetIds: content.activeTargets.map((row) => row.targetId),
-      obligationIds: content.obligations.map((row) => row.id),
-      usedClaimIds: content.activeTargets.map((row) => row.lockedClaims[0]!.claimId),
-      usedPolicyUnitIds: content.policyUnits.map((row) => row.id),
-    }],
-    illustrationKind: content.obligations.some((row) => row.kind === "give_concrete_example")
+    blocks: Object.fromEntries(content.answerSlots.map((slot) => [slot.slotId, slotText(slot)])),
+    illustrationKind: content.answerSlots.some((slot) => slot.obligation.kind === "give_concrete_example")
       ? "user_supplied" : "none",
   }
   return new Response(JSON.stringify({
@@ -195,21 +188,15 @@ async function main() {
   const rejectedFetch: typeof fetch = async (_input, init) => {
     const request = JSON.parse(String(init?.body)) as { input: string }
     const content = JSON.parse(request.input) as {
-      activeTargets: readonly Readonly<{ targetId: string; lockedClaims: readonly Readonly<{ claimId: string }>[] }>[]
-      obligations: readonly Readonly<{ id: string }>[]
-      policyUnits: readonly Readonly<{ id: string }>[]
+      answerSlots: readonly Readonly<{ slotId: string }>[]
     }
     return new Response(JSON.stringify({
       id: "mock-rejected-response",
       output_text: JSON.stringify({
-        blocks: [{
-          blockId: "b1",
-          text: "Bu yeterince uzun cevap görünür hedef adını kasıtlı olarak içermiyor.",
-          targetIds: content.activeTargets.map((row) => row.targetId),
-          obligationIds: content.obligations.map((row) => row.id),
-          usedClaimIds: content.activeTargets.map((row) => row.lockedClaims[0]!.claimId),
-          usedPolicyUnitIds: content.policyUnits.map((row) => row.id),
-        }],
+        blocks: Object.fromEntries(content.answerSlots.map((slot) => [
+          slot.slotId,
+          "Bu yeterince uzun cevap görünür hedef adını kasıtlı olarak içermiyor.",
+        ])),
         illustrationKind: "none",
       }),
       usage: { input_tokens: 101, output_tokens: 51, input_tokens_details: { cached_tokens: 0 } },

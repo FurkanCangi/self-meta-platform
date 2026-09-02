@@ -12,7 +12,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@3" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@4" as const
 export const DNA_STUDENT_ANSWER_EXECUTOR_TIMEOUT_MS = 20_000
 export const DNA_STUDENT_ANSWER_EXECUTOR_MAX_PROVIDER_CALLS = 1
 
@@ -236,48 +236,55 @@ function localSafetyCandidate(plan: StudentAnswerExecutionPlan): StudentAnswerCa
   })], exampleStatement ? "hypothetical" : "none")
 }
 
+const POLICY_ID_BY_OBLIGATION_KIND: Readonly<Partial<Record<
+  StudentRequestContract["obligations"][number]["kind"],
+  string
+>>> = Object.freeze({
+  give_concrete_example: "policy.illustrative-scenario",
+  bind_example_to_target: "policy.example-target-binding",
+  state_single_observation_limit: "policy.single-observation-limit",
+  name_additional_context: "policy.additional-context",
+  refuse_treatment_selection: "policy.no-treatment-selection",
+  offer_safe_assessment_frame: "policy.safe-assessment-frame",
+})
+
+function slotMetadata(plan: StudentAnswerExecutionPlan, index: number) {
+  const obligation = plan.obligations[index]!
+  const explicitActiveTargets = obligation.targetIds.filter((targetId) => plan.activeTargetIds.includes(targetId))
+  const targetIds = explicitActiveTargets.length ? explicitActiveTargets : [...plan.activeTargetIds]
+  const usedClaimIds = targetIds.flatMap((targetId) => {
+    const evidence = plan.targetEvidence.find((row) => row.studentTargetId === targetId)
+    return evidence?.claims[0] ? [evidence.claims[0].claimId] : []
+  })
+  const policyId = POLICY_ID_BY_OBLIGATION_KIND[obligation.kind]
+  const usedPolicyUnitIds = policyId && plan.policyUnits.some((unit) => unit.id === policyId) ? [policyId] : []
+  return Object.freeze({
+    blockId: `b${index + 1}`,
+    targetIds: Object.freeze(unique(targetIds)),
+    obligationIds: Object.freeze([obligation.id]),
+    usedClaimIds: Object.freeze(unique(usedClaimIds)),
+    usedPolicyUnitIds: Object.freeze(usedPolicyUnitIds),
+  })
+}
+
 function answerSchema(plan: StudentAnswerExecutionPlan): Record<string, unknown> {
-  const targetIds = [...plan.activeTargetIds]
-  const obligationIds = plan.obligations.map((row) => row.id)
-  const claimIds = plan.targetEvidence.flatMap((row) => row.claims.map((claim) => claim.claimId))
-  const policyIds = plan.policyUnits.map((row) => row.id)
   const illustrationKinds = plan.obligations.some((row) => row.kind === "give_concrete_example")
     ? ["user_supplied", "hypothetical"] : ["none"]
-  const blockIds = Array.from({ length: 16 }, (_value, index) => `b${index + 1}`)
+  const slotIds = plan.obligations.map((_obligation, index) => `b${index + 1}`)
   return {
     type: "object",
     additionalProperties: false,
     required: ["blocks", "illustrationKind"],
     properties: {
       blocks: {
-        type: "array",
-        minItems: 1,
-        maxItems: 16,
-        items: {
-          type: "object",
-          additionalProperties: false,
-          required: ["blockId", "text", "targetIds", "obligationIds", "usedClaimIds", "usedPolicyUnitIds"],
-          properties: {
-            blockId: { type: "string", enum: blockIds },
-            text: { type: "string", minLength: 4, maxLength: 4_000 },
-            targetIds: {
-              type: "array", minItems: 0, maxItems: targetIds.length,
-              items: { type: "string", enum: targetIds },
-            },
-            obligationIds: {
-              type: "array", minItems: 1, maxItems: obligationIds.length,
-              items: { type: "string", enum: obligationIds },
-            },
-            usedClaimIds: {
-              type: "array", minItems: 0, maxItems: claimIds.length,
-              items: { type: "string", enum: claimIds },
-            },
-            usedPolicyUnitIds: {
-              type: "array", minItems: 0, maxItems: policyIds.length,
-              items: policyIds.length ? { type: "string", enum: policyIds } : { type: "string" },
-            },
-          },
-        },
+        type: "object",
+        additionalProperties: false,
+        required: slotIds,
+        properties: Object.fromEntries(slotIds.map((slotId) => [slotId, {
+          type: "string",
+          minLength: 4,
+          maxLength: 4_000,
+        }])),
       },
       illustrationKind: { type: "string", enum: illustrationKinds },
     },
@@ -291,49 +298,45 @@ function providerContent(input: Readonly<{
   return JSON.stringify({
     currentUserMessage: input.question,
     operation: input.plan.operation,
-    activeTargets: input.plan.targetEvidence.map((target) => ({
-      targetId: target.studentTargetId,
-      title: target.ownerBookTopicTitle,
-      visibleAliases: target.visibleAliases,
-      lockedClaims: target.claims,
-    })),
     rejectedTargetIds: input.plan.rejectedTargetIds,
-    obligations: input.plan.obligations,
-    policyUnits: input.plan.policyUnits,
+    answerSlots: input.plan.obligations.map((obligation, index) => {
+      const metadata = slotMetadata(input.plan, index)
+      return {
+        slotId: metadata.blockId,
+        obligation,
+        activeTargets: input.plan.targetEvidence
+          .filter((target) => metadata.targetIds.includes(target.studentTargetId))
+          .map((target) => ({
+            targetId: target.studentTargetId,
+            title: target.ownerBookTopicTitle,
+            visibleAliases: target.visibleAliases,
+            lockedClaims: target.claims,
+          })),
+        policyUnits: input.plan.policyUnits.filter((unit) => metadata.usedPolicyUnitIds.includes(unit.id)),
+      }
+    }),
     presentation: input.plan.presentation,
   })
 }
 
 const PROVIDER_INSTRUCTIONS = `
-Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır görünür cevap blokları yaz. Ayrı bir answer alanı yazma; sistem blokların text alanlarını sırayla birleştirerek son cevabı oluşturacak. Bir blok bir veya birkaç obligation görevini yerine getirebilir, fakat her obligationId tam bir blokta ve yalnız bir kez bulunmalıdır. Her activeTarget en az bir block.targetIds içinde yer almalı, visibleAliases adlarından biri o bloğun text alanında görünmeli ve aynı blok o hedefe ait en az bir lockedClaim kimliğini usedClaimIds içinde göstermelidir. Bilimsel içerikte yalnız lockedClaims içindeki cümleleri kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İstenen toplam cümle sayısını bütün blokların birleşiminde tam koru. Kimlikleri, şema alanlarını, kanıt yönetimini veya iç sistem dilini text alanlarına yazma. blockId değerlerini b1, b2 diye sırayla kullan. targetIds, obligationIds, usedClaimIds ve usedPolicyUnitIds yalnız bloğun text alanında gerçekten kullanılan öğeleri göstersin.
+Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır cevap metinleri yaz. Yalnız şemada hazır bulunan b1, b2 gibi metin kutularını ve illustrationKind alanını doldur; hedef, yükümlülük, kanıt, politika veya blok kimliği üretme. Her metin kutusu answerSlots içindeki aynı slotId görevini gerçekten yerine getirsin. Sistem kutuları sırayla birleştirerek son cevabı oluşturacak; bu yüzden kutular birlikte tek, akıcı ve tekrarsız bir cevap gibi okunmalıdır. Her slotun activeTargets bölümündeki her hedef için visibleAliases adlarından en az birini görünür metinde yaz. Bilimsel içerikte yalnız o slotun lockedClaims cümlelerini kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İstenen toplam cümle sayısını bütün kutuların birleşiminde tam koru. İç sistem dilini görünür metne yazma.
 `.trim()
 
-function parseCandidate(value: unknown): StudentAnswerCandidate | null {
+function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan): StudentAnswerCandidate | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null
   const row = value as Record<string, unknown>
-  const strings = (candidate: unknown) => Array.isArray(candidate)
-    && candidate.every((entry) => typeof entry === "string") ? candidate as string[] : null
-  const blocks = Array.isArray(row.blocks) ? row.blocks.flatMap((entry) => {
-    if (!entry || typeof entry !== "object" || Array.isArray(entry)) return []
-    const block = entry as Record<string, unknown>
-    const targetIds = strings(block.targetIds)
-    const obligationIds = strings(block.obligationIds)
-    const usedClaimIds = strings(block.usedClaimIds)
-    const usedPolicyUnitIds = strings(block.usedPolicyUnitIds)
-    if (typeof block.blockId !== "string" || typeof block.text !== "string" || !targetIds || !obligationIds
-      || !usedClaimIds || !usedPolicyUnitIds) return []
-    return [Object.freeze({
-      blockId: block.blockId,
-      text: block.text,
-      targetIds: Object.freeze(targetIds),
-      obligationIds: Object.freeze(obligationIds),
-      usedClaimIds: Object.freeze(usedClaimIds),
-      usedPolicyUnitIds: Object.freeze(usedPolicyUnitIds),
-    })]
-  }) : null
+  const textBySlot = row.blocks && typeof row.blocks === "object" && !Array.isArray(row.blocks)
+    ? row.blocks as Record<string, unknown> : null
   const illustrationKind = row.illustrationKind
-  if (!blocks || blocks.length !== (Array.isArray(row.blocks) ? row.blocks.length : 0)
-    || !["none", "user_supplied", "hypothetical"].includes(String(illustrationKind))) return null
+  if (!textBySlot || !["none", "user_supplied", "hypothetical"].includes(String(illustrationKind))) return null
+  const slotIds = plan.obligations.map((_obligation, index) => `b${index + 1}`)
+  if (!sameSet(Object.keys(textBySlot), slotIds)
+    || slotIds.some((slotId) => typeof textBySlot[slotId] !== "string")) return null
+  const blocks = slotIds.map((slotId, index) => Object.freeze({
+    ...slotMetadata(plan, index),
+    text: String(textBySlot[slotId]).trim(),
+  }))
   return composeCandidate(blocks, illustrationKind as StudentAnswerCandidate["illustrationKind"])
 }
 
@@ -393,7 +396,7 @@ export async function executeStudentAnswer(input: Readonly<{
       }),
     })
   }
-  const candidate = parseCandidate(attempt.result.value)
+  const candidate = parseCandidate(attempt.result.value, plan)
   const failureCodes = candidate ? validateStudentAnswerCandidate({ candidate, plan })
     : Object.freeze(["answer_missing" as const])
   const provider = Object.freeze({
