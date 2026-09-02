@@ -33,13 +33,14 @@ const mockFetch: typeof fetch = async (_input, init) => {
     activeTargets: readonly Readonly<{
       targetId: string
       title: string
+      visibleAliases: readonly string[]
       lockedClaims: readonly Readonly<{ claimId: string }>[]
     }>[]
     obligations: readonly Readonly<{ id: string; kind: string }>[]
     policyUnits: readonly Readonly<{ id: string }>[]
     presentation: Readonly<{ requestedSentenceCount: number | null }>
   }
-  const labels = content.activeTargets.map((row) => row.title.split(" · ").at(-1)).join(", ")
+  const labels = content.activeTargets.map((row) => row.visibleAliases[0]).join(", ")
   const kinds = new Set(content.obligations.map((row) => row.kind))
   const summaryAnswer = [
     `${labels} konuşmada bildiğimiz başlıklardır.`,

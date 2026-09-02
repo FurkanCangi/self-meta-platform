@@ -51,7 +51,10 @@ const TARGET_TO_OWNER_CROSSWALK: Readonly<Record<string, Readonly<{ query: strin
     expectedLeaf: "Duyusal Regülasyonun Self-Regülasyon İçindeki Yeri",
   }),
   sensory_modulation: Object.freeze({ query: "Duyusal Modülasyon", expectedLeaf: "Duyusal Modülasyon" }),
-  emotion_regulation: Object.freeze({ query: "Duygusal Regülasyon", expectedLeaf: "Duygusal Regülasyon" }),
+  emotion_regulation: Object.freeze({
+    query: "Duygunun Oluşumu ve Düzenlenmesi",
+    expectedLeaf: "Duygunun Oluşumu ve Düzenlenmesi",
+  }),
   interoception: Object.freeze({ query: "İnterosepsiyon Nedir?", expectedLeaf: "İnterosepsiyonun Tanımı" }),
   reactivity: Object.freeze({ query: "Reaktivite ve Regülasyon Ayrımı", expectedLeaf: "Reaktivite ve Regülasyon Ayrımı" }),
   recovery: Object.freeze({ query: "Reaktivite ve Toparlanma", expectedLeaf: "Reaktivite ve Toparlanma" }),

@@ -148,7 +148,7 @@ export function validateStudentAnswerCandidate(input: Readonly<{
 
 function localSafetyCandidate(plan: StudentAnswerExecutionPlan): StudentAnswerCandidate {
   const targetStatements = plan.targetEvidence.map((target) => {
-    const label = target.ownerBookTopicTitle.split(" · ").at(-1) ?? target.studentTargetId
+    const label = target.visibleAliases[0] ?? target.ownerBookTopicTitle.split(" · ").at(-1) ?? target.studentTargetId
     return `${label}: ${target.claims[0]!.text}`
   })
   const policyStatements = plan.policyUnits.map((unit) => unit.text)
