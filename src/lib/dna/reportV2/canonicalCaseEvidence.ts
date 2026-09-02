@@ -37,7 +37,7 @@ function observationIsUnavailable(rawText: string): boolean {
 export function extractCanonicalTherapistObservation(input: ReportInput | string): CanonicalTherapistObservation {
   const text = anamnesisText(input)
   const match = text.match(
-    /(?:terapist yorumlar[ıi]?|terapist gözlemi?|therapist_comments|clinical_observation)\s*:\s*([\s\S]*?)(?=\s*(?:(?:ek klinik test(?:\s*\/\s*bulgular)?|dış test|günlük (?:yaşam )?örnek(?:i|leri)?|çocuğun güçlü yanlar[ıi]?|güçlü yanlar[ıi]?|güçlü yan[ıi]?|başka bilgi|strengths|preserved_areas|başvuru sebebi)\s*[:=]?|$))/iu
+    /(?:(?:terapist yorumlar[ıi]?|terapist yorumu|terapist gözlemi?|therapist_comments|clinical_observation)\s*[:=]\s*|terapist yorumu\s+)([\s\S]*?)(?=\s*(?:(?:ek klinik test(?:\s*\/\s*bulgular)?|d[ıi]ş test|dis test|günlük (?:yaşam )?örnek(?:i|leri)?|çocuğun güçlü yanlar[ıi]?|güçlü yanlar[ıi]?|güçlü yan[ıi]?|başka bilgi|strengths|preserved_areas|başvuru sebebi|basvuru sebebi)\s*[:=]?|$))/iu
   )
   const rawText = clean(match?.[1] ?? "")
   const unavailable = observationIsUnavailable(rawText)

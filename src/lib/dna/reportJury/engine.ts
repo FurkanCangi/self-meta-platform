@@ -254,7 +254,7 @@ function paragraph(
 function testValidity(match: ExternalTestMatch, rawEvidenceText = ""): ExternalValidityStatus {
   const reported = `${match.reportedResult ?? ""} ${match.reportedInterpretation ?? ""} ${match.reportedNotes ?? ""} ${rawEvidenceText}`
   if (match.ageCompatible === false || /geçersiz|yorumlanamaz|invalid|çok eksik|form geçersiz/iu.test(reported)) return "invalid"
-  if (match.resultQuality === "missing_result" || /(?:puan|skor|sonuç)\s*(?:belirtilmedi|yok|verilmedi|eksik)|sonuç\s+bilgisi\s+eksik/iu.test(reported)) return "insufficient_information"
+  if (match.resultQuality === "missing_result" || /(?:puan|skor|sonuç)\s*(?:belirtilmedi|yok|verilmedi|eksik|yazılmamış|yazilmamis)|sonuç\s+bilgisi\s+eksik|yalnız\s+boş\s+kapak\s+sayfası|yalniz\s+bos\s+kapak\s+sayfasi/iu.test(reported)) return "insufficient_information"
   if (/formun yarısı boş|yarısı boş|kısmen eksik|sayı yazılmamış|puan(?:ı|lama)?\s*(?:yok|verilmemiş)|tamamlanmamış|acele doldur/iu.test(reported)) return "partially_interpretable"
   if (match.resultQuality === "ham_puan_only" || match.resultQuality === "qualitative_only" || match.ageCompatible == null || match.resultDirection === "unclear") return "partially_interpretable"
   if (match.resultQuality === "interpretable") return "valid"
@@ -264,7 +264,7 @@ function testValidity(match: ExternalTestMatch, rawEvidenceText = ""): ExternalV
 function evidenceDirection(match: ExternalTestMatch, validity: ExternalValidityStatus, rawEvidenceText = ""): ExternalEvidenceDirection {
   if (validity === "invalid" || validity === "insufficient_information") return "unusable"
   const text = `${match.reportedResult ?? ""} ${match.reportedInterpretation ?? ""} ${rawEvidenceText}`
-  const difficulty = /beklenen(?:den|in)\s+(?:çok|fazla|az|altında)|belirgin\s+(?:güçlük|zorlanma)|klinik\s+yüksek|\byüksek\b|\bdüşük\b|güçlük|zorlan|problem|risk/iu.test(text)
+  const difficulty = /beklenen(?:den|in)\s+(?:çok|daha\s+fazla|fazla|az|altında)|belirgin\s+(?:güçlük|zorlanma)|klinik\s+yüksek|\byüksek\b|\bdüşük\b|güçlük|zorlan|problem|risk/iu.test(text)
   const preserved = /yaşa uygun|beklenen\s+(?:aralık|düzey)|korunmuş|normal|tipik/iu.test(text)
   if (difficulty && preserved) return "mixed"
   if (difficulty) return "supports_difficulty"
@@ -305,7 +305,7 @@ function domainsForExternalText(text: string): DomainKey[] {
 }
 
 function directionForRawExternal(text: string): ExternalEvidenceDirection {
-  const difficulty = /beklenen(?:den|in)\s+(?:çok|fazla|az|altında)|yüksek|güçlük|zorlan|problem|belirgin|düşük|risk/iu.test(text)
+  const difficulty = /beklenen(?:den|in)\s+(?:çok|daha\s+fazla|fazla|az|altında)|yüksek|güçlük|zorlan|problem|belirgin|düşük|risk/iu.test(text)
   const preserved = /yaşa uygun|beklenen\s+(?:aralık|düzey)|korunmuş|normal|tipik/iu.test(text)
   if (difficulty && preserved) return "mixed"
   if (difficulty) return "supports_difficulty"
@@ -384,7 +384,7 @@ function structuredExternalEvidence(input: ReportInput): Readonly<{ raw: readonl
     }
     const rawText = `${mention.test_name} ${mention.reported_result} ${mention.reported_interpretation} ${mention.notes}`.trim()
     const invalid = mention.clearly_unparseable_noise || /geçersiz|yorumlanamaz|çok eksik/iu.test(rawText)
-    const explicitlyMissingResult = /(?:puan|skor|sonuç)\s*(?:belirtilmedi|yok|verilmedi|eksik)|sonuç\s+bilgisi\s+eksik/iu.test(rawText)
+    const explicitlyMissingResult = /(?:puan|skor|sonuç)\s*(?:belirtilmedi|yok|verilmedi|eksik|yazılmamış|yazilmamis)|sonuç\s+bilgisi\s+eksik|yalnız\s+boş\s+kapak\s+sayfası|yalniz\s+bos\s+kapak\s+sayfasi/iu.test(rawText)
     const insufficient = explicitlyMissingResult || (!mention.reported_result && !mention.reported_interpretation)
     const validity: ExternalValidityStatus = invalid ? "invalid" : insufficient ? "insufficient_information" : "partially_interpretable"
     const direction = validity === "invalid" || validity === "insufficient_information" ? "unusable" : directionForRawExternal(rawText)
@@ -412,7 +412,7 @@ function structuredExternalEvidence(input: ReportInput): Readonly<{ raw: readonl
         mention.reported_interpretation ? `Klinik yorum: ${mention.reported_interpretation}` : "",
         mention.notes ? `Not: ${mention.notes}` : "",
       ].filter(Boolean).join(" | "),
-      decision_relevant: externalDecisionRelevant(validity, direction),
+      decision_relevant: supportedDomains.length > 0 && externalDecisionRelevant(validity, direction),
     }))
   }
   const deduplicatedEvidence: JuryExternalEvidence[] = []
@@ -837,7 +837,11 @@ function buildCaseScopedEvidenceEnvelope(
     })]
   })() : []
   const externalFacts: CaseScopedEvidenceFact[] = external.map((entry) => {
-    const semanticValidity = canonicalValidityFromExternal(entry.validity_status)
+    const semanticValidity = entry.decision_relevant
+      ? canonicalValidityFromExternal(entry.validity_status)
+      : entry.validity_status === "invalid"
+      ? "INVALID" as const
+      : "INSUFFICIENT_INFORMATION" as const
     return Object.freeze({
       id: `${caseId}.fact.external.${factIdPart(entry.id)}`,
       case_id: caseId,
@@ -845,8 +849,8 @@ function buildCaseScopedEvidenceEnvelope(
       statement: `${entry.test_name}: ${entry.reported_result}.`,
       source_excerpt: entry.source_text,
       domains: Object.freeze(entry.supported_domain),
-      semantic_direction: canonicalDirectionFromExternal(entry.evidence_direction),
-      epistemic_status: canonicalEpistemicFromExternal(entry.validity_status, entry.source_text),
+      semantic_direction: entry.decision_relevant ? canonicalDirectionFromExternal(entry.evidence_direction) : "UNKNOWN" as const,
+      epistemic_status: entry.decision_relevant ? canonicalEpistemicFromExternal(entry.validity_status, entry.source_text) : "INVALID_OR_UNINTERPRETABLE" as const,
       semantic_validity: semanticValidity,
       semantic_context: inferSemanticContext(entry.source_text),
       preserved_subcomponent: externalPreservedSubcomponent(entry),
@@ -979,11 +983,23 @@ function relationNarrative(envelope: CaseScopedEvidenceEnvelope): Readonly<{ tex
   if (discrepant) {
     const left = factsById.get(discrepant.left_fact_id)
     const right = factsById.get(discrepant.right_fact_id)
+    const sourceLabel = (fact: CaseScopedEvidenceFact | undefined, sourceType: SourceEvidenceRelation["left_source_type"]): string => {
+      if (sourceType === "EXTERNAL_TEST") return fact?.statement.split(":")[0]?.trim() || "dış test sonucu"
+      if (sourceType === "THERAPIST_OBSERVATION") return "terapist gözlemi"
+      return "bakım veren anlatısı"
+    }
+    const directionLabel = (direction: SourceEvidenceRelation["left_direction"]): string => direction === "DIFFICULTY"
+      ? "güçlük"
+      : direction === "PRESERVED"
+      ? "korunmuş performans"
+      : direction === "MIXED"
+      ? "karma bulgu"
+      : "nötr bilgi"
     const relationText = discrepant.relation === "CONTEXTUAL_DISCREPANCY"
       ? "Bu iki kaynak farklı koşullarda aynı yönde sonuç vermemektedir; bağlam farkı klinik yorumda açık bir sınır olarak korunmuştur."
       : "Bu iki kaynak aynı yönde sonuç vermemektedir; bu ayrışma klinik yorumun kesinliğini ve kapsamını sınırlandırmaktadır."
     return Object.freeze({
-      text: `${left?.statement ?? "İlk bilgi kaynağı güçlük ya da korunmuş kapasite yönünde bilgi sağlamaktadır."} Buna karşılık ${right?.statement ?? "İkinci bilgi kaynağı farklı yönde bilgi sağlamaktadır."} ${relationText}`,
+      text: `${capitalizeFirst(sourceLabel(left, discrepant.left_source_type))} ${directionLabel(discrepant.left_direction)} yönünde bilgi vermektedir; buna karşılık ${sourceLabel(right, discrepant.right_source_type)} ${directionLabel(discrepant.right_direction)} yönünde sonuç vermektedir. ${relationText}`,
       factIds: Object.freeze([discrepant.left_fact_id, discrepant.right_fact_id]),
       relations: Object.freeze([discrepant]),
     })
@@ -1064,6 +1080,19 @@ function directDecisionSentence(profile: JuryPriorityProfile): string {
   return `Bulgular birden fazla self-regülasyon alanında güçlük bulunduğunu göstermektedir. ${primary} bu geniş dağılım içinde en belirgin alandır; diğer etkilenmiş alanlar da klinik kararın parçasıdır.`
 }
 
+function sentenceList(text: string): string[] {
+  return text
+    .split(/(?<=[.!?])\s+/u)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean)
+}
+
+function conciseDecisionEmphasis(text: string, prefer: "first" | "last" = "first"): string {
+  const sentences = sentenceList(text)
+  if (sentences.length <= 2) return text.trim()
+  return (prefer === "last" ? sentences.slice(-2) : sentences.slice(0, 2)).join(" ")
+}
+
 function buildClinicalInsightPlan(input: ReportInput, profile: JuryPriorityProfile, observation: CanonicalTherapistObservation, external: readonly JuryExternalEvidence[], dataQuality: ReportDataQuality, envelope: CaseScopedEvidenceEnvelope): ClinicalInsightPlan {
   const affected = profile.affected_domains.map((domain) => DOMAIN_LABELS[domain])
   const preserved = profile.preserved_domains.map((domain) => DOMAIN_LABELS[domain])
@@ -1115,7 +1144,7 @@ function buildClinicalInsightPlan(input: ReportInput, profile: JuryPriorityProfi
     : caregiverFact
     ? "Bakım verenin verdiği örnek yalnız bildirilen görev ve koşullar kapsamında değerlendirilmiştir."
     : directionalCaregiverFact
-    ? "Bakım veren güçlük yönünde genel bir bildirimde bulunmuştur. Bu bildirim belirli bir görev, davranış veya bağlam örneği içermediği için puan örüntüsünün günlük yaşamdaki somut karşılığı olarak yorumlanmamıştır."
+    ? "Genel bakım veren bildiriminde belirli bir görev, davranış veya bağlam örneği bulunmadığı için puan örüntüsü günlük yaşamda gözlenmiş bir güçlük olarak yorumlanmamıştır."
     : observation.present && observationSupportsPrimary
     ? "Doğrudan gözlem, ölçümde öne çıkan alanın görev sırasında nasıl göründüğüne ilişkin ek bilgi sağlamaktadır."
     : observation.present
@@ -1155,9 +1184,15 @@ function buildClinicalInsightPlan(input: ReportInput, profile: JuryPriorityProfi
   const cafeteriaInsight = cafeteriaInsightCandidate && candidateIsSemanticallyEntailed(cafeteriaInsightCandidate, narrativeFacts) ? cafeteriaInsightCandidate : null
   const instructionInsight = instructionInsightCandidate && candidateIsSemanticallyEntailed(instructionInsightCandidate, narrativeFacts) ? instructionInsightCandidate : null
   const journeyInsight = journeyInsightCandidate && candidateIsSemanticallyEntailed(journeyInsightCandidate, narrativeFacts) ? journeyInsightCandidate : null
-  const sparseInsight = dataQuality.status === "insufficient"
-    ? `${primary} profilin tek belirgin ayrışmasını oluşturmaktadır; diğer beş alanın beklenen aralıkta kalması, self-regülasyon güçlüğünün geniş bir çok alanlı örüntü göstermediğini ortaya koymaktadır. Klinik karar, ${primary.toLocaleLowerCase("tr-TR")} alanının profil içinde seçici biçimde ayrışmasına dayanmaktadır.`
-    : null
+  const sparseInsight = dataQuality.status !== "insufficient"
+    ? null
+    : profile.profile_breadth === "broad_multidomain"
+    ? `Altı alanın tamamı ölçümde güçlük yönünde ayrışmaktadır. ${primary} bu geniş dağılım içinde görece en belirgin alandır; somut günlük yaşam örneği bulunmadığı için diğer etkilenmiş alanlar dışlanmamıştır.`
+    : profile.profile_breadth === "focused_multidomain"
+    ? `${joinNatural(affected)} alanları ölçümde güçlük yönünde ayrışmaktadır. ${primary} en belirgin alan olsa da somut günlük yaşam örneği bulunmadığı için sonuç tek alanlı bir açıklamaya indirgenmemiştir.`
+    : profile.profile_breadth === "selective_single_domain"
+    ? `${primary} profilin tek belirgin ayrışmasını oluşturmaktadır; diğer beş alan yaş grubuna göre beklenen aralıktadır. Günlük yaşam örneği bulunmadığı için klinik yorum bu seçici skor dağılımıyla sınırlıdır.`
+    : "Altı alanın ölçüm sonuçları yaş grubuna göre beklenen aralıktadır. Somut günlük yaşam örneği bulunmadığı için bu kayıt üzerinden özgül bir işlev güçlüğü ileri sürülmemiştir."
   const caregiverDescribesEnvironmentalLoad = Boolean(caregiverFact && /(?:kalabalık|ses|gürült|uyaran|avm|hoparlör|blender|süpürge|kantin|yemekhane)/iu.test(caregiverFact.source_excerpt))
   const genericCaseInsight = caregiverFact && observationFact && profile.profile_breadth === "preserved" && functional.has_caregiver_difficulty_example && caregiverDescribesEnvironmentalLoad
     ? "Bakım verenin verdiği günlük yaşam örneği çevresel yükün arttığı durumu, doğrudan gözlem ise kayıt altındaki ayrı görevi açıklamaktadır. Her iki bilgi yalnız kendi görev ve koşulu içinde değerlendirilmiştir."
@@ -1174,7 +1209,7 @@ function buildClinicalInsightPlan(input: ReportInput, profile: JuryPriorityProfi
     : caregiverFact
     ? "Bakım verenin verdiği bilgi yalnız bildirilen günlük yaşam durumu kapsamında değerlendirilmiştir. Bu bilgi ile puan sonuçları arasında doğrudan bir ilişki kurulmamıştır."
     : directionalCaregiverFact
-    ? `Bakım veren güçlük yönünde genel bir bildirimde bulunmuştur. Bildirim belirli bir görev, davranış veya bağlam örneği içermediği için ${primary.toLocaleLowerCase("tr-TR")} puan örüntüsünün günlük yaşamdaki somut karşılığı olarak kullanılmamıştır.`
+    ? `Kayıtta güçlük yönünde genel bir bakım veren bildirimi vardır; belirli bir görev, davranış veya bağlam örneği bulunmadığı için bu bilgi ${primary.toLocaleLowerCase("tr-TR")} puan örüntüsünün günlük yaşamdaki somut karşılığı olarak kullanılmamıştır.`
     : `${primary} alanındaki skor ayrışması profilin merkezi klinik bulgusudur. Günlük yaşam örneği bulunmadığı için bu sonuç belirli bir davranış senaryosuna dönüştürülmemiştir.`
   const highestConclusion = cafeteriaInsight ?? instructionInsight ?? journeyInsight ?? sparseInsight ?? genericCaseInsight
   const superficialMiss = observationSupports.multiple
@@ -1210,9 +1245,9 @@ function buildClinicalInsightPlan(input: ReportInput, profile: JuryPriorityProfi
     : highestConclusion
   const formulationSynthesis = cafeteriaInsight ?? instructionInsight ?? journeyInsight ?? `${preservedCapacity} ${contextEffect}`
   const boldParagraphs = Object.freeze([
-    distinguishing,
-    formulationSynthesis,
-    conclusion,
+    conciseDecisionEmphasis(distinguishing),
+    conciseDecisionEmphasis(formulationSynthesis),
+    conciseDecisionEmphasis(conclusion, "last"),
   ])
   const firstFacts = unique([primaryScoreFact?.id, ...preservedScoreFacts.map((fact) => fact.id), caregiverFact?.id, directionalCaregiverFact?.id, observationFact?.id, externalFact(difficultyExternal)?.id, externalFact(preservedExternal)?.id].filter(Boolean) as string[])
   const secondFacts = unique([...affectedScoreFacts.map((fact) => fact.id), ...preservedScoreFacts.map((fact) => fact.id), ...usableCaregiverFacts.map((fact) => fact.id), directionalCaregiverFact?.id, caregiverPreservedFact?.id, observationFact?.id, externalFact(preservedExternal)?.id].filter(Boolean) as string[])
@@ -1310,7 +1345,7 @@ function buildLockedPlan(input: ReportInput, base: Awaited<ReturnType<typeof run
     const claim = claimById(base, `claim.domain-interpretation.${key}`)
     const sources = sourceLabelsForDomain(base, envelope, key)
     const meaning = dataQuality.status === "insufficient" && domain.level !== "Tipik"
-      ? "Skor bu alanda ölçüm düzeyinde ayrışma göstermektedir. Günlük yaşamdaki karşılığına ilişkin somut anamnez ve gözlem bulunmadığı için rapor bu sonucu gözlenmiş bir işlev kaybı olarak yorumlamamaktadır."
+      ? `${DOMAIN_LABELS[key]} skoru ölçüm düzeyinde güçlük yönünde ayrışmaktadır.`
       : domain.level === "Tipik"
       ? DOMAIN_PRESERVED[key]
       : `${DOMAIN_LABELS[key]} puanı bu alandaki klinik güçlüğü göstermektedir. Günlük yaşamdaki anlamı şu işlevlerle ilişkilidir: ${DOMAIN_FUNCTION[key]}`
@@ -1319,7 +1354,7 @@ function buildLockedPlan(input: ReportInput, base: Awaited<ReturnType<typeof run
       ? `${DOMAIN_LABELS[key]} bulgusu, bakım verenin aktardığı örnek ve doğrudan gözlemle birlikte ele alınmıştır.`
       : sources.includes("bakım veren anlatısı")
       ? `Bakım verenin aktardığı örnek, ${DOMAIN_LABELS[key].toLocaleLowerCase("tr-TR")} alanının günlük yaşamdaki karşılığına ilişkin ek bilgi sağlamaktadır.`
-      : sources.includes("bakım verenin genel bildirimi")
+      : sources.includes("bakım verenin genel bildirimi") && key === profile.primary_priority
       ? "Bakım veren güçlük yönünde genel bir bildirimde bulunmuştur. Belirli bir görev, davranış veya bağlam örneği verilmediği için bu bildirim alan puanının günlük yaşamdaki somut karşılığı olarak kullanılmamıştır."
       : sources.includes("terapist gözlemi")
       ? `Doğrudan gözlem, ${DOMAIN_LABELS[key].toLocaleLowerCase("tr-TR")} bulgusunun görev sırasında nasıl göründüğüne ilişkin ek bilgi sağlamaktadır.`
@@ -1336,7 +1371,7 @@ function buildLockedPlan(input: ReportInput, base: Awaited<ReturnType<typeof run
     const externalFactId = externalFactFor(entry)?.id
     if (!entry.decision_relevant) {
       const status = entry.validity_status === "invalid" ? "yorumlanamaz/geçersiz" : "yorum için gerekli bilgi yetersiz"
-      return p(`evidence.external.${entry.id}`, `${entry.test_name}: ${status}; klinik kararda kullanılmamıştır. Sonuç yönü klinik bulgu olarak aktarılmamıştır.`, [`evidence.external.${entry.id}`], ["external"], "normal", "boundary", externalFactId ? [externalFactId] : [])
+      return p(`evidence.external.${entry.id}`, `${entry.test_name}: ${status}; sonuç yönü klinik bulgu olarak aktarılmamış ve klinik kararda kullanılmamıştır.`, [`evidence.external.${entry.id}`], ["external"], "normal", "boundary", externalFactId ? [externalFactId] : [])
     }
     const direction = entry.evidence_direction === "supports_difficulty"
       ? "ilgili güçlük yönünde destek sağlar"
@@ -1357,15 +1392,24 @@ function buildLockedPlan(input: ReportInput, base: Awaited<ReturnType<typeof run
       : [p("evidence.caregiver-limited", "Bakım veren anlatısında günlük görev, ortam ve destek düzeyini birlikte gösteren somut bir örnek bulunmamaktadır. Bu nedenle işlevsel açıklama skor örüntüsünün sınırları içinde tutulmuştur.", [], ["profile"], "normal", "boundary")]),
     p("evidence.observation", `${naturalTherapistObservation(observation).replace(/^Terapist gözleminde/u, "Doğrudan klinik gözlemde")} ${observation.present && observation.shortObservation ? "Gözlemin kısa süresi, yorumun bu görev ve koşulla sınırlı tutulmasını gerektirmektedir." : observation.present ? "Gözlem, performansın görev yapısı ve çevre koşullarıyla birlikte anlaşılmasını sağlamaktadır." : "Klinik anlatı doğrudan gözlenmiş görev performansı içermemektedir."}`, observation.present ? base.evidenceMatrix.units.filter((unit) => unit.sourceType === "THERAPIST_OBSERVATION").map((unit) => unit.id) : [], ["profile"], "normal", observation.present ? "case_fact" : "boundary", envelope.therapist_observations.map((fact) => fact.id)),
   ]
+  const preservedCaseFactIds = unique([
+    ...envelope.dna_scores.filter((fact) => fact.semantic_direction === "PRESERVED").map((fact) => fact.id),
+    ...envelope.anamnesis_evidence.filter(factSupportsPreservedCapacity).map((fact) => fact.id),
+    ...envelope.therapist_observations.filter((fact) => factEligibleForPreservedCapacity(fact)).map((fact) => fact.id),
+    ...envelope.external_tests.filter((fact) => factEligibleForPreservedCapacity(fact)).map((fact) => fact.id),
+  ])
   const preservedParagraph = explanation.preserved_evidence.length
     ? [p("evidence.preserved", functional.has_preserved_capacity_in_action
       ? `Korunmuş veya dengeleyici alanlar ${preservedNames.join(", ") || "yapılandırılmış koşullarda bildirilen kapasite"} olarak belirlenmiştir. Bu alanlar, gözlenen ya da dış testte bildirilen kapasitenin hangi koşullarda kullanılabildiğini açıklamaktadır.`
-      : `Korunmuş veya dengeleyici alanlar ${preservedNames.join(", ") || "ölçüm profilindeki beklenen sonuçlar"} olarak belirlenmiştir. Bu dağılım, etkilenimin profil içindeki yaygınlığını sınırlandırmaktadır.`, base.decisionPlan.primaryFormulation?.preservedCapacityEvidenceIds ?? [], ["preserved"])]
+      : `Korunmuş veya dengeleyici alanlar ${preservedNames.join(", ") || "ölçüm profilindeki beklenen sonuçlar"} olarak belirlenmiştir. Bu dağılım, etkilenimin profil içindeki yaygınlığını sınırlandırmaktadır.`, base.decisionPlan.primaryFormulation?.preservedCapacityEvidenceIds ?? [], ["preserved"], "normal", "synthesis", preservedCaseFactIds)]
     : []
   const relationParagraphs = sourceRelationNarrative.factIds.length
     ? [p("evidence.relations", sourceRelationNarrative.text, base.decisionPlan.contradictoryEvidence, [], "normal", "synthesis", sourceRelationNarrative.factIds)]
     : []
-  sections.push(Object.freeze({ id: "evidence", heading: JURY_REPORT_HEADINGS[1], paragraphs: Object.freeze([...domainParagraphs, ...sourceParagraphs, ...externalParagraphs, ...preservedParagraph, ...relationParagraphs]) }))
+  const sparseFunctionalBoundary = dataQuality.status === "insufficient"
+    ? [p("evidence.sparse-boundary", "Günlük yaşamdaki karşılığa ilişkin somut anamnez veya gözlem bulunmadığından, rapor bu skorları gözlenmiş bir işlev kaybı olarak yorumlamamaktadır.", [], ["profile"], "normal", "boundary")]
+    : []
+  sections.push(Object.freeze({ id: "evidence", heading: JURY_REPORT_HEADINGS[1], paragraphs: Object.freeze([...domainParagraphs, ...sourceParagraphs, ...externalParagraphs, ...preservedParagraph, ...relationParagraphs, ...sparseFunctionalBoundary]) }))
 
   const formulationParagraphs: JuryLockedParagraph[] = []
   if (dataQuality.status === "insufficient") {
@@ -1407,7 +1451,9 @@ function buildLockedPlan(input: ReportInput, base: Awaited<ReturnType<typeof run
   formulationParagraphs.push(p("formulation.functional-integration", clinicalInsightPlan.cross_domain_interaction, [...base.decisionPlan.supportingEvidence, ...base.decisionPlan.contextualModifiers], ["profile"], "normal", "synthesis", clinicalInsightPlan.bold_paragraph_case_fact_ids[2]))
   formulationParagraphs.push(p("formulation.bold-synthesis", clinicalInsightPlan.candidate_bold_paragraphs[1], [...base.decisionPlan.preservedCapacity, ...base.decisionPlan.contextualModifiers], ["preserved"], "full_bold", "synthesis", clinicalInsightPlan.bold_paragraph_case_fact_ids[1]))
   const capacityContextText = `${clinicalInsightPlan.preserved_capacity} ${clinicalInsightPlan.context_or_time_effect}`
-  if (clinicalInsightPlan.candidate_bold_paragraphs[1] !== capacityContextText) formulationParagraphs.push(p("formulation.capacity-context", capacityContextText, [...base.decisionPlan.preservedCapacity, ...base.decisionPlan.contextualModifiers], ["preserved"], "normal", "synthesis", clinicalInsightPlan.bold_paragraph_case_fact_ids[1]))
+  const boldSynthesisSentences = new Set(sentenceList(clinicalInsightPlan.candidate_bold_paragraphs[1]))
+  const capacityContextRemainder = sentenceList(capacityContextText).filter((sentence) => !boldSynthesisSentences.has(sentence)).join(" ")
+  if (capacityContextRemainder) formulationParagraphs.push(p("formulation.capacity-context", capacityContextRemainder, [...base.decisionPlan.preservedCapacity, ...base.decisionPlan.contextualModifiers], ["preserved"], "normal", "synthesis", clinicalInsightPlan.bold_paragraph_case_fact_ids[1]))
   sections.push(Object.freeze({ id: "formulation", heading: JURY_REPORT_HEADINGS[2], paragraphs: Object.freeze(formulationParagraphs) }))
 
   const contradictoryExternal = external.filter((entry) => entry.decision_relevant && ["mixed", "neutral"].includes(entry.evidence_direction))
@@ -1834,7 +1880,10 @@ function validateRealization(plan: JuryLockedLanguagePlan, realization: JuryLang
   const defaultFurtherAssessmentCount = countMatches(clinicalBody, /(?:daha ayrıntılı değerlendirilmelidir|daha kapsamlı değerlendirme|daha ileri değerlendirme gereklidir|ayrıntılı değerlendirme yapılmalıdır)/giu)
   const boldParagraphs = plan.sections.flatMap((section) => section.paragraphs).filter((entry) => entry.emphasis === "full_bold")
   const fullBoldParagraphCount = boldParagraphs.length
-  const boldParagraphContractPass = fullBoldParagraphCount >= 2 && fullBoldParagraphCount <= 4 && boldParagraphs.every((entry) => entry.text.length >= 120 && entry.text.split(/(?<=[.!?])\s+/u).filter(Boolean).length >= 2)
+  const boldParagraphContractPass = fullBoldParagraphCount === 3 && boldParagraphs.every((entry) => {
+    const sentences = sentenceList(entry.text)
+    return entry.text.length >= 70 && entry.text.length <= 420 && sentences.length >= 1 && sentences.length <= 2
+  })
   const caseSpecificDeepInsightBoldCount = boldParagraphs.filter((entry) => {
     const facts = unique(entry.sentenceProvenance.flatMap((item) => item.supporting_case_fact_ids))
     const hasCaseSpecificSource = facts.some((factId) => /\.fact\.(?:anamnesis|observation|external)\./u.test(factId))
@@ -1843,7 +1892,7 @@ function validateRealization(plan: JuryLockedLanguagePlan, realization: JuryLang
     const hasProfileArchitecture = hasScoreFact
       && entry.text.includes(primaryLabel)
       && /(?:profil|dağılım|seçici|çok alanlı|korunmuş|öncelik|birlikte)/iu.test(entry.text)
-    return (hasCaseSpecificSource || hasProfileArchitecture) && entry.text.split(/(?<=[.!?])\s+/u).length >= 2
+    return (hasCaseSpecificSource || hasProfileArchitecture) && sentenceList(entry.text).length >= 1
   }).length
   const genericTemplateFailureCount = boldParagraphs.filter((entry) => !entry.sentenceProvenance.some((item) => item.supporting_case_fact_ids.length > 0)).length
   const majorHeadingCount = headings.length

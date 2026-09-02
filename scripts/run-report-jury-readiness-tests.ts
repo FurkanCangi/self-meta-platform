@@ -177,6 +177,50 @@ async function main() {
     assert.equal(result.validation.missingValidExternalEvidenceIds.length, 0)
   }
 
+  const invalidBoundaryAnswers = answersForJuryTotals([44, 24, 41, 42, 43, 44])
+  const invalidBoundaryScores = calculateAssessment(invalidBoundaryAnswers)
+  const invalidBoundary = await buildJuryReadyReport({
+    clientCode: "INVALID-EXTERNAL-BOUNDARY",
+    ageMonths: 69,
+    anamnez: "Başvuru sebebi: Bakım veren oyun alanında çocuklar bağırdığında ortamdan uzaklaşıyor. Ek klinik test / bulgular: Test 1: Test adı: SPM-2 | Puan / sonuç: yalnız boş kapak sayfası var | Klinik yorum: sonuç bilgisi yetersiz. Test 2: Test adı: bilinmeyen test | Puan / sonuç: yüksek gibi | Klinik yorum: form adı ve normu okunmuyor.",
+    answers: invalidBoundaryAnswers,
+    scores: { fizyolojik: invalidBoundaryScores.fizyolojik, duyusal: invalidBoundaryScores.duyusal, duygusal: invalidBoundaryScores.duygusal, bilissel: invalidBoundaryScores.bilissel, yurutucu: invalidBoundaryScores.yurutucu, intero: invalidBoundaryScores.intero, toplam: invalidBoundaryScores.toplam },
+  })
+  assert.equal(invalidBoundary.externalEvidence.filter((entry) => entry.decision_relevant).length, 0)
+  assert.equal(invalidBoundary.validation.invalidExternalEvidenceUsedIds.length, 0)
+  assert.match(invalidBoundary.finalReport, /Sensory Processing Measure, Second Edition \(SPM-2\).+klinik kararda kullanılmamıştır/iu)
+  assert.match(invalidBoundary.finalReport, /Bilinmeyen test.+klinik kararda kullanılmamıştır/iu)
+
+  const typoAnswers = answersForJuryTotals([42, 18, 43, 44, 27, 45])
+  const typoScores = calculateAssessment(typoAnswers)
+  const typoSurface = await buildJuryReadyReport({
+    clientCode: "TYPO-SOURCE-SEPARATION",
+    ageMonths: 54,
+    anamnez: "basvuru sebebı islak boya eline degdiginde uyaran sona erene kadar goreve donemiyor bazen de hic olmuyo??? terapist yorumu yazili uc adim verildiginde isi bitirebiliyor ama oda sessizdi dis test yok",
+    answers: typoAnswers,
+    scores: { fizyolojik: typoScores.fizyolojik, duyusal: typoScores.duyusal, duygusal: typoScores.duygusal, bilissel: typoScores.bilissel, yurutucu: typoScores.yurutucu, intero: typoScores.intero, toplam: typoScores.toplam },
+  })
+  assert.equal(typoSurface.therapistObservation.present, true)
+  assert.equal(typoSurface.caseScopedEvidenceEnvelope.anamnesis_evidence.some((fact) => /ıslak boya/iu.test(fact.statement)), true)
+  assert.equal(typoSurface.caseScopedEvidenceEnvelope.anamnesis_evidence.some((fact) => /^başvuru sebeb/iu.test(fact.statement)), false)
+  assert.equal(typoSurface.validation.pass, true, typoSurface.validation.failureCodes.join(","))
+
+  const broadSparseAnswers = answersForJuryTotals([23, 24, 25, 26, 27, 28])
+  const broadSparseScores = calculateAssessment(broadSparseAnswers)
+  const broadSparse = await buildJuryReadyReport({
+    clientCode: "BROAD-SPARSE-NO-FALSE-PRESERVATION",
+    ageMonths: 45,
+    anamnez: "Başvuru sebebi: bilgi yok. Terapist yorumları: gözlem yapılmadı. Dış test yok.",
+    answers: broadSparseAnswers,
+    scores: { fizyolojik: broadSparseScores.fizyolojik, duyusal: broadSparseScores.duyusal, duygusal: broadSparseScores.duygusal, bilissel: broadSparseScores.bilissel, yurutucu: broadSparseScores.yurutucu, intero: broadSparseScores.intero, toplam: broadSparseScores.toplam },
+  })
+  assert.equal(broadSparse.priorityProfile.profile_breadth, "broad_multidomain")
+  assert.doesNotMatch(broadSparse.finalReport, /diğer beş alan(?:ın)? (?:yaş grubuna göre )?beklenen/iu)
+  const boldDecisions = broadSparse.lockedLanguagePlan.sections.flatMap((section) => section.paragraphs).filter((paragraph) => paragraph.emphasis === "full_bold")
+  assert.equal(boldDecisions.length, 3)
+  assert.equal(boldDecisions.every((paragraph) => paragraph.sentenceProvenance.length >= 1 && paragraph.sentenceProvenance.length <= 2), true)
+  assert.equal(broadSparse.validation.pass, true, broadSparse.validation.failureCodes.join(","))
+
   const mixedExternalAnswers = answersForJuryTotals([41, 42, 41, 19, 41, 40])
   const mixedExternalScores = calculateAssessment(mixedExternalAnswers)
   const mixedExternal = await buildJuryReadyReport({
