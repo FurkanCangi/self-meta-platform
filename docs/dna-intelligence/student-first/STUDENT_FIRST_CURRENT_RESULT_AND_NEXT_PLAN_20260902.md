@@ -25,6 +25,7 @@ Current implementation update:
 - B1-R0 authority migration map: PASS;
 - B1-R1 observed facts and state candidate envelope: implemented;
 - B1-R2 closed-slot contract and separate provider adapter: implemented locally;
+- B1-R3 expanded student-language metamorphic suite: 79/79;
 - targeted evidence-first contrasts: PASS;
 - evidence-first Student40 diagnostic: 40/40, provider calls 0;
 - evidence-first compiled Student40 contracts: 40/40, zero critical errors;
@@ -127,7 +128,7 @@ The provider may resolve ambiguity, but it may not invent target IDs, referent I
 
 ### B1-R3 — local student-language robustness
 
-Require unchanged Student40 40/40, 100% critical mutations, zero behavior-context promotion, 100% out-of-envelope rejection, and all existing provider-boundary/resolver/obligation/action/fixture/measurement tests. No paid calls.
+**PASS.** Unchanged Student40 facts/contracts 40/40, metamorphic student-language suite 79/79, critical mutations 160/160, zero behavior-context promotion, out-of-envelope rejection, and all existing provider-boundary/resolver/obligation/action/fixture/measurement tests pass. No paid calls.
 
 ### B1-R4 — bounded online candidate
 
@@ -170,4 +171,4 @@ Only after Student40 passes, run in order and stop at the first failure:
 - no production/deployment before all required gates pass;
 - user-owned untracked files remain untouched and uncommitted.
 
-The immediate next engineering unit is now B1-R3: expanded metamorphic student-language robustness. The synthetic one-hour student simulation replaces the unavailable human participant by user decision, but will be reported as synthetic rather than independent human validation.
+The immediate next gate is the immutable `B1-Candidate1`: one real closed-choice provider preflight, exact Smoke8, then authoritative Student40 once. The synthetic one-hour student simulation replaces the unavailable human participant by user decision, but will be reported as synthetic rather than independent human validation.

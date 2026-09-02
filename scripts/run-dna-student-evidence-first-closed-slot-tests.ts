@@ -95,7 +95,7 @@ ambiguousState = append(ambiguousState, "B1-AMB-T01", "öz düzenleme ne demek")
 ambiguousState = append(ambiguousState, "B1-AMB-T02", "dikkat ne demek")
 const ambiguousFacts = observeStudentRequestFacts({
   turnId: "B1-AMB-T03",
-  message: "ilk konuya dönelim",
+  message: "konulardan birine geri dönelim",
   state: ambiguousState,
 })
 const ambiguousEnvelope = buildStudentStateCandidateEnvelope({ facts: ambiguousFacts, state: ambiguousState })
@@ -103,7 +103,7 @@ assert.equal(ambiguousEnvelope.referentCandidates.length, 2)
 assert.equal(buildDeterministicStudentClosedSlotChoice({ facts: ambiguousFacts, envelope: ambiguousEnvelope }), null)
 const ambiguousResolution = resolveStudentEvidenceFirstRequest({
   turnId: "B1-AMB-T03",
-  message: "ilk konuya dönelim",
+  message: "konulardan birine geri dönelim",
   state: ambiguousState,
 })
 assert.equal(ambiguousResolution.ok, false)
@@ -112,7 +112,7 @@ assert.equal(ambiguousResolution.failureCode, "referent_choice_required")
 
 const chosenResolution = resolveStudentEvidenceFirstRequest({
   turnId: "B1-AMB-T03",
-  message: "ilk konuya dönelim",
+  message: "konulardan birine geri dönelim",
   state: ambiguousState,
   choice: {
     primaryTask: "explain",
@@ -124,7 +124,7 @@ assert.equal(chosenResolution.ok, false, "target and referent choices must remai
 
 const coherentResolution = resolveStudentEvidenceFirstRequest({
   turnId: "B1-AMB-T03",
-  message: "ilk konuya dönelim",
+  message: "konulardan birine geri dönelim",
   state: ambiguousState,
   choice: {
     primaryTask: "explain",

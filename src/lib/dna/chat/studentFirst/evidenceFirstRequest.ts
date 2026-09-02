@@ -137,7 +137,7 @@ export type StudentEvidenceFirstResolutionResult =
       envelope: StudentStateCandidateEnvelope
     }>
 
-const INFLECTION_SUFFIX = "(?:yi|ya|ye|ni|na|ne|nu|i|u|a|e|de|da|den|dan|in|un|nin|nun|la|le|yla|yle)?"
+const INFLECTION_SUFFIX = "(?:sinden|sinde|sini|sina|sine|si|su|yi|ya|ye|ni|na|ne|nu|i|u|a|e|de|da|den|dan|in|un|nin|nun|la|le|yla|yle)?"
 const AMBIGUOUS_SINGLE_TOKEN_TARGETS = new Set(["attention"])
 const CONTEXT_STEMS: Readonly<Record<string, readonly string[]>> = Object.freeze({
   recovery: Object.freeze(["goreve don", "oyuna don"]),
@@ -170,6 +170,7 @@ function targetFacts(message: string): Readonly<{
   context: readonly StudentObservedTargetFact[]
 }> {
   const normalized = normalizeDnaChatText(message)
+    .replace(/\b(?:ko regulasyon|coregulasyon)(?=[a-z]*\b)/g, "es regulasyon")
   const explicit: StudentObservedTargetFact[] = []
   const context: StudentObservedTargetFact[] = []
   for (const entry of DNA_STUDENT_TARGET_LEXICON) {
@@ -178,7 +179,24 @@ function targetFacts(message: string): Readonly<{
       const normalizedAlias = normalizeDnaChatText(alias)
       const isContext = contextAliases.has(normalizedAlias)
       const allowInflection = !AMBIGUOUS_SINGLE_TOKEN_TARGETS.has(entry.id)
-      const match = aliasMatch(normalized, normalizedAlias, allowInflection)
+      const softenedAlias = allowInflection && normalizedAlias.endsWith("k")
+        ? `${normalizedAlias.slice(0, -1)}g`
+        : null
+      const infinitiveAlias = allowInflection && /(?:ma|me)$/u.test(normalizedAlias)
+        ? `${normalizedAlias}k`
+        : null
+      const attentionCaseMatch = entry.id === "attention" && normalizedAlias === "dikkat"
+        ? /(?:^| )(dikkati|dikkate|dikkatten)(?= |$)/u.exec(normalized)
+        : null
+      const attentionCaseStart = attentionCaseMatch?.index === undefined
+        ? null
+        : attentionCaseMatch.index + (attentionCaseMatch[0].startsWith(" ") ? 1 : 0)
+      const match = aliasMatch(normalized, normalizedAlias, allowInflection) ??
+        (softenedAlias ? aliasMatch(normalized, softenedAlias, true) : null) ??
+        (infinitiveAlias ? aliasMatch(normalized, infinitiveAlias, false) : null) ??
+        (attentionCaseMatch && attentionCaseStart !== null
+          ? Object.freeze({ start: attentionCaseStart, end: attentionCaseStart + attentionCaseMatch[1]!.length })
+          : null)
       if (!match) continue
       if (entry.id === "attention" && normalizedAlias === "dikkat" && /^ (?:et|cek)\w*\b/.test(normalized.slice(match.end))) continue
       const fact = Object.freeze({
@@ -262,10 +280,11 @@ function semanticTaskCandidates(message: string, explicitTargetCount: number): r
   add("summarize", /\b(?:toparla|ozetle|ozet yap|ozeti yap|ogrenci ozeti|ozet cikar|konustuklarimizi|konustugumuzu|konusmayi)\b/.test(normalized))
   add("evidence", /\b(?:kanit|kaynak|calismalar|ne kadar guvenilir)\b/.test(normalized))
   add("observe", /\b(?:tek gozlem|tek bir gozlem|gozlemde|neye bak|nasil gozlemler|baska neye)\b/.test(normalized))
-  add("compare", /\b(?:ayni mi|ayni sey mi|farki|ayir|karsilastir|hangisi|hangisine girer|ikisini de)\b/.test(normalized) ||
+  add("compare", /\b(?:ayni mi|ayni sey mi|farki\w*|ayir\w*|karsilastir\w*|hangisi|hangisine girer|ikisini de)\b/.test(normalized) ||
     (explicitTargetCount > 1 && /\bmi\b/.test(normalized)) ||
     (explicitTargetCount === 2 && /\bayni ornekte\b/.test(normalized)))
   const newExampleRequest = /\b(?:ornek ver|bir ornek ver|ornekle anlat|ornek gibi acikla|ornek uzerinden|ornegiyle bagla|ornekte ayri ayri goster)\b/.test(normalized) ||
+    /\borne\w* (?:anlat|acikla|goster|ver|bagla)\w*\b/.test(normalized) ||
     (/\b(?:ornek|mesela)\b/.test(normalized) && /\b(?:anlat|acikla|goster|ver|bagla)\b/.test(normalized))
   add("example", newExampleRequest)
   add("case_reasoning", /\b(?:diyebilir miyim|diyebilir miyiz|ne olabilir|ne dusun\w*|nasil dusun\w*|kesin soyle|zayif diyebilir|ilgili mi)\b/.test(normalized) &&
@@ -422,6 +441,7 @@ function referentCandidates(
       const targetCompatible = !facts.explicitTargetIds.length || facts.explicitTargetIds.some((targetId) => turn.targetIds.includes(targetId))
       if (targetCompatible) {
         add(turn.turnId, "utterance", "history_return", "explicit history-return cue")
+        if (facts.referenceCues.firstHistory) break
       }
     }
   } else if (facts.referenceCues.active || facts.referenceCues.caseEntity || facts.presentation.preserveMeaning) {

@@ -1,7 +1,7 @@
 # DNA Chat Student-First — Phase 3 Architecture B1: evidence-first request core
 
 Date: 2026-09-02
-Status: **B1-R0/R1/R2 LOCAL PASS / B1-R3 PENDING**
+Status: **B1-R0/R1/R2/R3 LOCAL PASS / B1-CANDIDATE1 READY**
 
 ## Goal
 
@@ -149,6 +149,8 @@ Exit:
 - 100% provider out-of-envelope rejection;
 - zero behavior-context promotion;
 - all existing provider-boundary, resolver, obligation, action, adapter, fixture, and measurement tests pass.
+
+Result on 2026-09-02: **PASS.** Metamorphic student-language suite 79/79, evidence-first Student40 facts/contracts 40/40, existing mutations 160/160, all critical failures zero, and full TypeScript compile PASS. Provider calls: 0. The exact post-commit SHA may proceed as `B1-Candidate1`.
 
 ### B1-R4 — one bounded online architecture candidate
 

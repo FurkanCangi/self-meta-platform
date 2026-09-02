@@ -53,7 +53,7 @@ let validCalls = 0
 let capturedSchema: unknown = null
 const valid = await interpretStudentRequestWithEvidenceFirstProvider({
   turnId: "B1-PROVIDER-A03",
-  message: "ilk konuya dönelim",
+  message: "konulardan birine geri dönelim",
   state: ambiguousState,
   apiKey: "test-key-not-a-secret",
   fetchImpl: (async (_url, init) => {
@@ -81,7 +81,7 @@ assert.equal(JSON.stringify(capturedSchema).includes("treatment_selection"), fal
 
 const incoherent = await interpretStudentRequestWithEvidenceFirstProvider({
   turnId: "B1-PROVIDER-A03",
-  message: "ilk konuya dönelim",
+  message: "konulardan birine geri dönelim",
   state: ambiguousState,
   apiKey: "test-key-not-a-secret",
   fetchImpl: (async () => new Response(JSON.stringify(providerPayload({
@@ -98,7 +98,7 @@ assert.equal(incoherent.provider.attempts, 1)
 let transportCalls = 0
 const transport = await interpretStudentRequestWithEvidenceFirstProvider({
   turnId: "B1-PROVIDER-A03",
-  message: "ilk konuya dönelim",
+  message: "konulardan birine geri dönelim",
   state: ambiguousState,
   apiKey: "test-key-not-a-secret",
   fetchImpl: (async () => {
