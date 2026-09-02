@@ -120,6 +120,9 @@ async function main() {
   assert.ok(validateStudentAnswerCandidate({
     candidate: { ...valid, addressedTargetIds: ["wrong_target"] }, plan,
   }).includes("target_coverage_mismatch"))
+  assert.ok(validateStudentAnswerCandidate({
+    candidate: { ...valid, usedClaimIds: [...valid.usedClaimIds, valid.usedClaimIds[0]!] }, plan,
+  }).includes("duplicate_contract_reference"))
 
   console.log(JSON.stringify({
     ok: true,
@@ -133,6 +136,7 @@ async function main() {
     invalidClaimRejected: true,
     missingObligationRejected: true,
     wrongTargetRejected: true,
+    duplicateReferenceRejected: true,
   }, null, 2))
 }
 

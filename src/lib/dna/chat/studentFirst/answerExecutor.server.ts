@@ -25,6 +25,7 @@ export const DNA_STUDENT_ANSWER_FAILURE_CODES = Object.freeze([
   "example_not_identified",
   "sentence_count_mismatch",
   "internal_contract_leak",
+  "duplicate_contract_reference",
 ] as const)
 
 export type StudentAnswerFailureCode = typeof DNA_STUDENT_ANSWER_FAILURE_CODES[number]
@@ -79,6 +80,10 @@ function sameSet(left: readonly string[], right: readonly string[]) {
   return a.length === b.length && a.every((value, index) => value === b[index])
 }
 
+function hasDuplicates(values: readonly string[]) {
+  return new Set(values).size !== values.length
+}
+
 function sentenceCount(answer: string) {
   return answer.split(/(?<=[.!?])\s+/u).map((value) => value.trim()).filter(Boolean).length
 }
@@ -93,6 +98,8 @@ export function validateStudentAnswerCandidate(input: Readonly<{
   if (typeof candidate.answer !== "string" || candidate.answer.trim().length < 20 || candidate.answer.length > 4_000) {
     failures.add("answer_missing")
   }
+  if ([candidate.addressedTargetIds, candidate.satisfiedObligationIds, candidate.usedClaimIds, candidate.usedPolicyUnitIds]
+    .some(hasDuplicates)) failures.add("duplicate_contract_reference")
   if (!sameSet(candidate.addressedTargetIds, plan.activeTargetIds)) failures.add("target_coverage_mismatch")
   if (!sameSet(candidate.satisfiedObligationIds, plan.obligations.map((row) => row.id))) {
     failures.add("obligation_coverage_mismatch")
@@ -148,19 +155,19 @@ function answerSchema(plan: StudentAnswerExecutionPlan): Record<string, unknown>
     properties: {
       answer: { type: "string", minLength: 20, maxLength: 4_000 },
       addressedTargetIds: {
-        type: "array", minItems: targetIds.length, maxItems: targetIds.length, uniqueItems: true,
+        type: "array", minItems: targetIds.length, maxItems: targetIds.length,
         items: { type: "string", enum: targetIds },
       },
       satisfiedObligationIds: {
-        type: "array", minItems: obligationIds.length, maxItems: obligationIds.length, uniqueItems: true,
+        type: "array", minItems: obligationIds.length, maxItems: obligationIds.length,
         items: { type: "string", enum: obligationIds },
       },
       usedClaimIds: {
-        type: "array", minItems: targetIds.length, maxItems: claimIds.length, uniqueItems: true,
+        type: "array", minItems: targetIds.length, maxItems: claimIds.length,
         items: { type: "string", enum: claimIds },
       },
       usedPolicyUnitIds: {
-        type: "array", minItems: policyIds.length, maxItems: policyIds.length, uniqueItems: true,
+        type: "array", minItems: policyIds.length, maxItems: policyIds.length,
         items: policyIds.length ? { type: "string", enum: policyIds } : { type: "string" },
       },
       illustrationKind: { type: "string", enum: illustrationKinds },
