@@ -180,7 +180,7 @@ Only after B1 passes Student40:
 
 Stop at the first failed gate. No threshold reduction, fixture/gold editing, easier replacement set, or production deployment is allowed.
 
-Current R5 status on 2026-09-03: Candidates 1 and 2 stopped on answer/support coupling. Typed-block Candidate 3 (`5bff276`) passed its targeted provider preflight but the exact Student40 run stopped at turn 2 because provider-authored metadata was duplicated. The synthetic student simulation remains blocked while the final provider-text-only slot simplification is evaluated.
+Current R5 status on 2026-09-03: Candidates 1–3 removed answer/support and metadata coupling failures. Text-slot Candidate 4 (`868da0f`) passed 17 visible Student40 turns, then stopped at `STUDENT40-C03-T02` because the provider omitted the visible co-regulation target name. The synthetic student simulation remains blocked while deterministic visible-target ownership is evaluated.
 
 The synthetic simulation replaces the unavailable human-student gate by user decision. It is a product-quality stress test, not evidence of independent human usability validation. Its prompts and judgments must be preserved separately from Student40 and Fresh Student60, and it cannot change their gold labels or thresholds.
 
