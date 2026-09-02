@@ -101,6 +101,29 @@ assert.equal(implicitExample.semanticTask, "example")
 assert.deepEqual(implicitExample.referent, { kind: "active", turnId: "RESOLVER-T02", targetIds: ["executive_functions", "inhibition"] })
 assert.deepEqual(implicitExample.targetIds, ["executive_functions", "inhibition"])
 assert.deepEqual(kinds(implicitExample), ["give_concrete_example", "bind_example_to_target"])
+const exampleState = applyStudentRequestContract(state, implicitExample)
+
+const compatibleObservation = compileStudentRequestContract("RESOLVER-T06B", frame({
+  semanticActs: acts("observe"),
+  mentionedTargetIds: ["inhibition"],
+}), exampleState)
+assert.deepEqual(compatibleObservation.referent, {
+  kind: "active",
+  turnId: "RESOLVER-T06",
+  targetIds: ["executive_functions", "inhibition"],
+}, "a repeated compatible target in a context-binding task must retain the latest behavior/example anchor")
+assert.deepEqual(compatibleObservation.targetIds, ["inhibition"])
+
+const unrelatedObservation = compileStudentRequestContract("RESOLVER-T06C", frame({
+  semanticActs: acts("observe"),
+  mentionedTargetIds: ["interoception"],
+}), exampleState)
+assert.deepEqual(unrelatedObservation.referent, {
+  kind: "none",
+  turnId: null,
+  targetIds: [],
+}, "an unrelated new observation target must not inherit the latest referent")
+assert.deepEqual(unrelatedObservation.targetIds, ["interoception"])
 
 const explicitExample = compileStudentRequestContract("RESOLVER-T07", frame({
   semanticActs: acts("example"),
@@ -130,12 +153,14 @@ assert.deepEqual(kinds(treatmentBoundary), ["refuse_treatment_selection", "offer
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_RESOLVER_CONTRASTIVE_LOCAL",
-  cases: 8,
+  cases: 10,
   compareOverContextualObserve: true,
   componentExplainOverContextualCase: true,
   pureObservationPreserved: true,
   pureCaseReasoningPreserved: true,
   implicitLatestExampleReferent: true,
+  compatibleObservationReferent: true,
+  unrelatedObservationNoReferentLeak: true,
   explicitNewTargetNoReferentLeak: true,
   implicitSimplificationReferent: true,
   treatmentBoundaryPriorityPreserved: true,

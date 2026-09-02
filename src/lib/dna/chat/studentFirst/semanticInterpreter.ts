@@ -14,7 +14,7 @@ import {
 import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@7" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@8" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -243,8 +243,14 @@ export function compileStudentRequestContract(
   const unique = (values: readonly string[]) => [...new Set(values)]
   const allowedMentions = frame.mentionedTargetIds.filter((targetId) => !frame.rejectedTargetIds.includes(targetId))
   const latestTurnId = state.semanticHistory.at(-1)?.turnId ?? null
+  const latestSnapshot = state.semanticHistory.at(-1) ?? null
+  const latestTargetIds = latestSnapshot?.targetIds ?? []
+  const contextBindingTask = semanticTask === "example" || semanticTask === "case_reasoning" || semanticTask === "observe"
+  const latestTargetsCompatible = Boolean(latestSnapshot) && (
+    !allowedMentions.length || allowedMentions.every((targetId) => latestTargetIds.includes(targetId))
+  )
   const effectiveReferentTurnId = frame.referentTurnId ?? (
-    !allowedMentions.length && latestTurnId && (semanticTask === "example" || frame.presentation.preserveMeaning)
+    latestTurnId && latestTargetsCompatible && (contextBindingTask || frame.presentation.preserveMeaning)
       ? latestTurnId
       : null
   )
