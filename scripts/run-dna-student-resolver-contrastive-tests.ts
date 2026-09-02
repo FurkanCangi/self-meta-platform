@@ -182,10 +182,53 @@ assert.ok(repairSummary.targetIds.includes("attention"), "current-turn rejection
 assert.ok(repairSummary.targetIds.includes("self_regulation"))
 assert.ok(repairSummary.targetIds.includes("recovery"))
 
+let compareState: StudentConversationState = createEmptyStudentConversationState()
+const compareStart = compileStudentRequestContract("COMPARE-T01", frame({
+  semanticActs: acts("define"),
+  conversationAction: "start",
+  mentionedTargetIds: ["executive_functions"],
+}), compareState)
+compareState = applyStudentRequestContract(compareState, compareStart)
+
+const singleSideCompare = compileStudentRequestContract("COMPARE-T02", frame({
+  semanticActs: acts("compare"),
+  mentionedTargetIds: ["inhibition"],
+}), compareState)
+assert.deepEqual(singleSideCompare.referent, { kind: "active", turnId: "COMPARE-T01", targetIds: ["executive_functions"] })
+assert.deepEqual(singleSideCompare.targetIds, ["executive_functions", "inhibition"], "one explicit comparison side must be completed from the latest referent")
+
+const completeOverlappingCompare = compileStudentRequestContract("COMPARE-T03", frame({
+  semanticActs: acts("compare"),
+  mentionedTargetIds: ["executive_functions", "inhibition"],
+}), compareState)
+assert.deepEqual(completeOverlappingCompare.referent, { kind: "active", turnId: "COMPARE-T01", targetIds: ["executive_functions"] })
+assert.deepEqual(completeOverlappingCompare.targetIds, ["executive_functions", "inhibition"], "a complete explicit pair must not be expanded by its conversational referent")
+
+let priorExtraState: StudentConversationState = createEmptyStudentConversationState()
+const priorExtra = compileStudentRequestContract("COMPARE-T04", frame({
+  semanticActs: acts("explain"),
+  conversationAction: "start",
+  mentionedTargetIds: ["self_regulation", "self_control"],
+}), priorExtraState)
+priorExtraState = applyStudentRequestContract(priorExtraState, priorExtra)
+const completePairWithPriorExtra = compileStudentRequestContract("COMPARE-T05", frame({
+  semanticActs: acts("compare"),
+  mentionedTargetIds: ["attention", "self_regulation"],
+}), priorExtraState)
+assert.deepEqual(completePairWithPriorExtra.referent, { kind: "active", turnId: "COMPARE-T04", targetIds: ["self_regulation", "self_control"] })
+assert.deepEqual(completePairWithPriorExtra.targetIds, ["attention", "self_regulation"], "a referent's unrequested extra target must not leak into a complete explicit pair")
+
+const unrelatedPair = compileStudentRequestContract("COMPARE-T06", frame({
+  semanticActs: acts("compare"),
+  mentionedTargetIds: ["arousal", "sensory_regulation"],
+}), compareState)
+assert.deepEqual(unrelatedPair.referent, { kind: "none", turnId: null, targetIds: [] }, "an unrelated complete comparison pair must not inherit old context")
+assert.deepEqual(unrelatedPair.targetIds, ["arousal", "sensory_regulation"])
+
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_RESOLVER_CONTRASTIVE_LOCAL",
-  cases: 12,
+  cases: 16,
   compareOverContextualObserve: true,
   componentExplainOverContextualCase: true,
   pureObservationPreserved: true,
@@ -198,4 +241,8 @@ console.log(JSON.stringify({
   treatmentBoundaryPriorityPreserved: true,
   rejectedTargetCannotReenterViaReferent: true,
   rejectedHistoricalTargetPreservedInSummary: true,
+  singleCompareSideCompletedFromReferent: true,
+  completeOverlappingCompareAnchoredWithoutExpansion: true,
+  priorExtraTargetCannotLeakIntoCompletePair: true,
+  unrelatedComparisonPairNoReferentLeak: true,
 }, null, 2))

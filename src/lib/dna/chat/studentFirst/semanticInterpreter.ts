@@ -14,7 +14,7 @@ import {
 import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@9" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@10" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -246,11 +246,17 @@ export function compileStudentRequestContract(
   const latestSnapshot = state.semanticHistory.at(-1) ?? null
   const latestTargetIds = latestSnapshot?.targetIds ?? []
   const contextBindingTask = semanticTask === "example" || semanticTask === "case_reasoning" || semanticTask === "observe"
-  const latestTargetsCompatible = Boolean(latestSnapshot) && (
+  const latestTargetsOverlap = allowedMentions.some((targetId) => latestTargetIds.includes(targetId))
+  const contextTargetsCompatible = Boolean(latestSnapshot) && (
     !allowedMentions.length || allowedMentions.every((targetId) => latestTargetIds.includes(targetId))
   )
+  const compareContextCompatible = Boolean(latestSnapshot) && semanticTask === "compare" && (
+    allowedMentions.length < 2 || latestTargetsOverlap
+  )
   const effectiveReferentTurnId = frame.referentTurnId ?? (
-    latestTurnId && latestTargetsCompatible && (contextBindingTask || frame.presentation.preserveMeaning)
+    latestTurnId && (
+      compareContextCompatible || (contextTargetsCompatible && (contextBindingTask || frame.presentation.preserveMeaning))
+    )
       ? latestTurnId
       : null
   )
@@ -269,7 +275,9 @@ export function compileStudentRequestContract(
   const mergedTargetIds = frame.conversationAction === "summarize_session"
     ? unique(state.semanticHistory.flatMap((turn) => turn.targetIds))
     : semanticTask === "compare"
-      ? unique([...referent.targetIds, ...allowedMentions])
+      ? allowedMentions.length >= 2
+        ? unique(allowedMentions)
+        : unique([...referent.targetIds, ...allowedMentions])
       : frame.conversationAction === "return"
         ? allowedMentions.length
           ? unique(allowedMentions)
