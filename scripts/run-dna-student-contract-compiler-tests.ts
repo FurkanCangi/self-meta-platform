@@ -138,6 +138,99 @@ assert.deepEqual(kinds({
   presentation: { ...base.presentation, language: "plain_student", preserveMeaning: true },
 }), ["preserve_target_while_simplifying"], "presentation-only continuation must not recreate content duties")
 
+const actionCompatibilityMatrix: readonly Readonly<{
+  name: string
+  input: StudentObligationCompilationInput
+  expected: readonly string[]
+}>[] = Object.freeze([
+  {
+    name: "start definition",
+    input: { ...base, requestedSemanticTasks: ["define", "explain"] },
+    expected: ["define_target"],
+  },
+  {
+    name: "continue presentation only",
+    input: {
+      ...base,
+      semanticTask: "compare",
+      requestedSemanticTasks: [],
+      conversationAction: "continue",
+      comparisonTargetIds: ["planning", "working_memory"],
+      presentation: { ...base.presentation, preserveMeaning: true },
+    },
+    expected: ["preserve_target_while_simplifying"],
+  },
+  {
+    name: "return and restate inherited definition",
+    input: {
+      ...base,
+      requestedSemanticTasks: [],
+      conversationAction: "return",
+      presentation: { ...base.presentation, preserveMeaning: true },
+    },
+    expected: ["define_target", "use_history_anchor", "preserve_target_while_simplifying"],
+  },
+  {
+    name: "repair replacement definition",
+    input: {
+      ...base,
+      requestedSemanticTasks: ["define", "explain"],
+      conversationAction: "repair",
+      rejectedTargetIds: ["inhibition"],
+    },
+    expected: ["define_target", "honor_rejected_target"],
+  },
+  {
+    name: "compare and example",
+    input: {
+      ...base,
+      semanticTask: "compare",
+      requestedSemanticTasks: ["compare", "example"],
+      conversationAction: "continue",
+      targetIds: ["planning", "working_memory"],
+      comparisonTargetIds: ["planning", "working_memory"],
+      presentation: { ...base.presentation, example: "concrete" },
+    },
+    expected: ["distinguish_targets", "explain_relation", "give_concrete_example", "bind_example_to_target"],
+  },
+  {
+    name: "observation and supporting explanation",
+    input: {
+      ...base,
+      semanticTask: "observe",
+      requestedSemanticTasks: ["explain", "observe"],
+      conversationAction: "continue",
+      observationScope: { singleObservationLimit: true, additionalContext: true },
+    },
+    expected: ["state_single_observation_limit", "name_additional_context"],
+  },
+  {
+    name: "terminal summary",
+    input: {
+      ...base,
+      semanticTask: "summarize",
+      requestedSemanticTasks: ["explain", "summarize"],
+      conversationAction: "summarize_session",
+      summaryScope: { known: true, unknown: true, observationFocus: true },
+    },
+    expected: ["summarize_known", "summarize_unknown", "summarize_observation_focus"],
+  },
+  {
+    name: "terminal treatment boundary",
+    input: {
+      ...base,
+      semanticTask: "treatment_boundary",
+      requestedSemanticTasks: ["explain", "treatment_boundary"],
+      conversationAction: "continue",
+    },
+    expected: ["refuse_treatment_selection", "offer_safe_assessment_frame"],
+  },
+])
+
+for (const row of actionCompatibilityMatrix) {
+  assert.deepEqual(kinds(row.input), row.expected, row.name)
+}
+
 const semanticActs = (...enabled: readonly string[]) => Object.freeze({
   define: enabled.includes("define"),
   explain: enabled.includes("explain"),
@@ -202,6 +295,26 @@ assert.equal(presentationOnlyContract.semanticTask, "compare", "presentation-onl
 assert.deepEqual(presentationOnlyContract.requestedSemanticTasks, [], "presentation-only continuation must not invent a scientific act")
 assert.deepEqual(presentationOnlyContract.targetIds, ["executive_functions", "inhibition"])
 assert.deepEqual(presentationOnlyContract.obligations.map((row) => row.kind), ["preserve_target_while_simplifying"])
+
+const presentationReturnValidation = validateStudentSemanticFrameDetailed({
+  ...startFrame,
+  semanticActs: semanticActs(),
+  conversationAction: "return",
+  focusTargetIds: [],
+  contextTargetIds: [],
+  referentTurnId: "GROUPING-T01",
+  referentRole: "utterance",
+  presentation: { ...base.presentation, language: "plain_student", preserveMeaning: true },
+}, comparisonState)
+if (!presentationReturnValidation.ok) throw new Error(presentationReturnValidation.failureCode)
+const presentationReturnContract = compileStudentRequestContract("GROUPING-T02C", presentationReturnValidation.frame, comparisonState)
+assert.equal(presentationReturnContract.semanticTask, "define")
+assert.deepEqual(presentationReturnContract.requestedSemanticTasks, [])
+assert.deepEqual(presentationReturnContract.obligations.map((row) => row.kind), [
+  "define_target",
+  "use_history_anchor",
+  "preserve_target_while_simplifying",
+])
 
 assert.deepEqual(validateStudentSemanticFrameDetailed({
   ...startFrame,
@@ -318,7 +431,8 @@ assert.deepEqual(separateContract.obligations.map((row) => row.kind), [
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_OBLIGATION_COMPILER_LOCAL",
-  cases: 24,
+  cases: 33,
+  actionCompatibilityMatrixCases: actionCompatibilityMatrix.length,
   providerOwnsFinalObligations: false,
   deterministicCompilation: true,
   duplicateObligations: 0,

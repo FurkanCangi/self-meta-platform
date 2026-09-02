@@ -8,7 +8,7 @@ import type {
   StudentSummaryScope,
 } from "./contracts"
 
-export const DNA_STUDENT_OBLIGATION_COMPILER_VERSION = "dna-student-obligation-compiler@3" as const
+export const DNA_STUDENT_OBLIGATION_COMPILER_VERSION = "dna-student-obligation-compiler@4" as const
 
 const OBLIGATION_DESCRIPTIONS: Readonly<Record<StudentAnswerObligationKind, string>> = Object.freeze({
   define_target: "Hedef kavramı doğrudan tanımla",
@@ -59,7 +59,7 @@ export function compileStudentAnswerObligations(
   const requestedTasks = new Set(input.requestedSemanticTasks)
   const treatmentBoundary = requestedTasks.has("treatment_boundary") || input.semanticTask === "treatment_boundary"
   const summary = requestedTasks.has("summarize") || input.semanticTask === "summarize"
-  const presentationOnly = requestedTasks.size === 0 && input.presentation.preserveMeaning
+  const presentationOnly = requestedTasks.size === 0 && input.presentation.preserveMeaning && input.conversationAction === "continue"
   if (!treatmentBoundary && !summary) {
     if (!presentationOnly && input.semanticTask === "compare") {
       add("distinguish_targets", input.comparisonTargetIds)
