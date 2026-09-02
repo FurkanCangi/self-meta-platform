@@ -70,7 +70,7 @@ export async function interpretStudentRequestWithProvider(input: Readonly<{
   })
   return Object.freeze({
     ok: true,
-    contract: compileStudentRequestContract(input.turnId, validation.frame),
+    contract: compileStudentRequestContract(input.turnId, validation.frame, input.state),
     provider: providerEvidence,
   })
 }

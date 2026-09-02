@@ -157,10 +157,9 @@ async function main() {
   const validFrame = {
     semanticTask: "define",
     conversationAction: "start",
-    targetIds: ["executive_functions"],
+    mentionedTargetIds: ["executive_functions"],
     rejectedTargetIds: [],
-    comparisonTargetIds: [],
-    referent: { kind: "none", turnId: null, targetIds: [] },
+    referent: { kind: "none", turnId: null },
     presentation: { depth: "standard", language: "standard", format: "prose", example: "none", grouping: "integrated", requestedSentenceCount: null, preserveMeaning: false },
     summaryScope: { known: false, unknown: false, observationFocus: false },
     observationScope: { singleObservationLimit: false, additionalContext: false },
@@ -168,10 +167,10 @@ async function main() {
     safetyIntent: "general_education",
   }
   assert.ok(validateStudentSemanticFrame(validFrame, state))
-  assert.equal(validateStudentSemanticFrame({ ...validFrame, targetIds: ["executive_functions", "executive_functions"] }, state), null)
+  assert.equal(validateStudentSemanticFrame({ ...validFrame, mentionedTargetIds: ["executive_functions", "executive_functions"] }, state), null)
   assert.deepEqual(
-    validateStudentSemanticFrameDetailed({ ...validFrame, targetIds: ["executive_functions", "executive_functions"] }, state),
-    { ok: false, failureCode: "invalid_targets" },
+    validateStudentSemanticFrameDetailed({ ...validFrame, mentionedTargetIds: ["executive_functions", "executive_functions"] }, state),
+    { ok: false, failureCode: "invalid_mentioned_targets" },
   )
   assert.equal(validateStudentSemanticFrame({ ...validFrame, summaryScope: { known: true, unknown: false, observationFocus: false } }, state), null)
 
