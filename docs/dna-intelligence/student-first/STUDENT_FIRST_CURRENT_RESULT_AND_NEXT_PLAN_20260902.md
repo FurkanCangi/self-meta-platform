@@ -20,6 +20,15 @@ Candidate 34 is the best depth result of this portfolio, but it is not promotabl
 
 Candidate 35 must not be created as a micro-patch. The selected replacement is **Architecture B1: deterministic evidence-first request core with bounded provider resolution**.
 
+Current implementation update:
+
+- B1-R0 authority migration map: PASS;
+- B1-R1 observed facts and state candidate envelope: implemented;
+- targeted evidence-first contrasts: PASS;
+- evidence-first Student40 diagnostic: 40/40, provider calls 0;
+- existing Student40 oracle/mutations: 40/40 and 160/160;
+- runtime integration and online provider proof: not started.
+
 ## Three-candidate portfolio
 
 | Candidate | Local oracle / mutations | Smoke8 | Student40 stop | Critical failure | Evidence cost |
@@ -103,11 +112,11 @@ The provider may resolve ambiguity, but it may not invent target IDs, referent I
 
 ### B1-R0 — freeze and migration map
 
-Freeze Candidate 34 evidence and map every existing semantic field to observed facts, state candidates, deterministic policy, unresolved slots, or final resolved contract. No behavior change and no provider calls.
+**PASS.** Candidate 34 evidence is frozen and every existing semantic field is mapped to observed facts, state candidates, deterministic policy, unresolved slots, or final resolved contract. No behavior change and no provider calls.
 
 ### B1-R1 — pure evidence modules
 
-Implement current-message fact extraction and the state candidate envelope. Add ordinary Turkish negative contrasts so words such as independence, attention, organization, motivation, or calmness cannot silently become scientific targets.
+**PASS.** Current-message fact extraction and the state candidate envelope are implemented. Ordinary Turkish negative contrasts prevent independence, attention, organization, motivation, calmness, or control wording from silently becoming scientific targets. The unchanged Student40 evidence-first diagnostic passes 40/40 locally.
 
 ### B1-R2 — closed-slot provider boundary
 
@@ -126,7 +135,7 @@ Run one immutable `B1-Candidate1`: health preflight, Smoke8 once, then Student40
 Only after Student40 passes, run in order and stop at the first failure:
 
 1. visible Student40 answers;
-2. realistic one-hour new-graduate occupational-therapy student conversation;
+2. one-hour synthetic new-graduate occupational-therapy student simulation conducted by Codex;
 3. Frozen Mini24;
 4. Fresh Student60;
 5. Scientific250;
@@ -158,4 +167,4 @@ Only after Student40 passes, run in order and stop at the first failure:
 - no production/deployment before all required gates pass;
 - user-owned untracked files remain untouched and uncommitted.
 
-The immediate next engineering unit is B1-R0/R1. Detailed design: `PHASE3_ARCHITECTURE_B1_EVIDENCE_FIRST_REQUEST_CORE.md`.
+The immediate next engineering unit is now B1-R2: closed unresolved slots and out-of-envelope rejection. The synthetic one-hour student simulation replaces the unavailable human participant by user decision, but will be reported as synthetic rather than independent human validation.

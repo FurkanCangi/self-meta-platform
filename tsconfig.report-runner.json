@@ -41,6 +41,8 @@
     "scripts/run-dna-student-fixture-integrity.ts",
     "scripts/run-dna-student-measurement-tests.ts",
     "scripts/run-dna-student-provider-frame-mutations.ts",
+    "scripts/run-dna-student-evidence-first-core-tests.ts",
+    "scripts/run-dna-student-evidence-first-student40-tests.ts",
     "scripts/run-dna-student-batch-failure-map.ts",
     "scripts/run-dna-chat-runtime-assurance-tests.ts",
     "scripts/run-dna-chat-case-e2e-tests.ts",

@@ -1,7 +1,7 @@
 # DNA Chat Student-First — Phase 3 Architecture B1: evidence-first request core
 
 Date: 2026-09-02
-Status: **SELECTED / DESIGN-READY / NOT IMPLEMENTED**
+Status: **B1-R0/R1 LOCAL PASS / B1-R2 PENDING**
 
 ## Goal
 
@@ -118,6 +118,8 @@ Exit: field-by-field migration map and explicit list of old provider-authoritati
 
 Exit: all existing local tests pass; target/referent candidate generation is deterministic and explainable.
 
+Result on 2026-09-02: **PASS**. Student40 evidence-first diagnostic 40/40, targeted negative/positive contrasts PASS, existing 160/160 provider-frame mutations and all local regressions unchanged. Provider calls: 0. Runtime integration: none.
+
 ### B1-R2 — closed-slot provider boundary
 
 - Replace full-frame generation with unresolved-slot choice.
@@ -163,7 +165,7 @@ If Student40 reaches at least 36/40 with zero target, referent, history, and saf
 Only after B1 passes Student40:
 
 1. visible answers for Student40;
-2. realistic one-hour new-graduate occupational-therapy student conversation;
+2. one-hour synthetic new-graduate occupational-therapy student simulation, conducted by Codex and explicitly labeled non-human;
 3. Frozen Mini24;
 4. Fresh Student60, opened blind at this point only;
 5. Scientific250;
@@ -173,6 +175,8 @@ Only after B1 passes Student40:
 9. controlled production release.
 
 Stop at the first failed gate. No threshold reduction, fixture/gold editing, easier replacement set, or production deployment is allowed.
+
+The synthetic simulation replaces the unavailable human-student gate by user decision. It is a product-quality stress test, not evidence of independent human usability validation. Its prompts and judgments must be preserved separately from Student40 and Fresh Student60, and it cannot change their gold labels or thresholds.
 
 ## Definition of done
 

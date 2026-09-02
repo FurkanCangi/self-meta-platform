@@ -42,6 +42,11 @@ export {
   DNA_STUDENT_FIRST_CONVERSATION_VERSION,
   DNA_STUDENT_FIRST_REQUEST_VERSION,
 } from "./contracts"
+export {
+  buildStudentStateCandidateEnvelope,
+  DNA_STUDENT_EVIDENCE_FIRST_VERSION,
+  observeStudentRequestFacts,
+} from "./evidenceFirstRequest"
 
 export type {
   StudentAnswerObligation,
@@ -70,6 +75,16 @@ export type {
   StudentFrameValidationResult,
   StudentSemanticFrame,
 } from "./semanticInterpreter"
+export type {
+  StudentObservedRequestFacts,
+  StudentObservedSafetyIntent,
+  StudentObservedTargetFact,
+  StudentReferenceCues,
+  StudentReferentCandidate,
+  StudentStateCandidateEnvelope,
+  StudentTargetCandidate,
+  StudentTargetCandidateSource,
+} from "./evidenceFirstRequest"
 export type {
   StudentDimensionDecision,
   StudentSemanticDimension,
