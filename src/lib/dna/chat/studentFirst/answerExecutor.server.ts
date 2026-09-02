@@ -5,6 +5,7 @@ import {
   type DnaS13ProviderFailure,
   type DnaS13ProviderUsage,
 } from "../s13/server"
+import { normalizeDnaChatText } from "../text"
 import type { StudentRequestContract } from "./contracts"
 import {
   buildStudentAnswerExecutionPlan,
@@ -26,6 +27,8 @@ export const DNA_STUDENT_ANSWER_FAILURE_CODES = Object.freeze([
   "sentence_count_mismatch",
   "internal_contract_leak",
   "duplicate_contract_reference",
+  "target_not_visible",
+  "obligation_not_visible",
 ] as const)
 
 export type StudentAnswerFailureCode = typeof DNA_STUDENT_ANSWER_FAILURE_CODES[number]
@@ -88,6 +91,21 @@ function sentenceCount(answer: string) {
   return answer.split(/(?<=[.!?])\s+/u).map((value) => value.trim()).filter(Boolean).length
 }
 
+function visibleObligation(kind: StudentRequestContract["obligations"][number]["kind"], normalized: string) {
+  if (kind === "distinguish_targets") return /\b(?:fark\w*|ayni\s+sey\w*\s+degil\w*|birbir\w*\s+(?:ayri|farkli)\w*)\b/u.test(normalized)
+  if (kind === "explain_relation") return /\b(?:iliski\w*|bagl\w*|bilesen\w*|icinde\w*|kapsa\w*)\b/u.test(normalized)
+  if (kind === "give_concrete_example") return /\b(?:ornek\w*|ornegin|mesela|varsay\w*|dusun\w*)\b/u.test(normalized)
+  if (kind === "bind_example_to_target") return /\b(?:bu\s+(?:ornek|durum)\w*|burada)\b/u.test(normalized)
+  if (kind === "state_single_observation_limit") return /\b(?:tek\s+(?:bir\s+)?(?:gozlem|davranis)|yalnizca\s+bu\s+durum)\b/u.test(normalized)
+    && /\b(?:yeterli\s+degil|karar\w*|kesin\w*|gostermez\w*|cikarilamaz\w*)\b/u.test(normalized)
+  if (kind === "name_additional_context") return /\b(?:farkli\s+(?:zaman|ortam|gorev)|oncesi\w*\s+(?:ve|ile)\s+sonrasi\w*|destek\w*\s+nasil\s+degis)\b/u.test(normalized)
+  if (kind === "summarize_unknown") return /\b(?:bilin\w*|kesin\w*|soyle\w*|cikarilamaz\w*|sonuc\w*\s+vermez)\b/u.test(normalized)
+  if (kind === "summarize_observation_focus") return /\bgozlem\w*\b/u.test(normalized)
+  if (kind === "refuse_treatment_selection") return /\b(?:terapi|tedavi)\w*\b.{0,80}\b(?:sec\w*|oner\w*|uygula\w*)\b/u.test(normalized)
+  if (kind === "offer_safe_assessment_frame") return /\b(?:degerlendirme\w*|farkli\s+ortam\w*|gozlem\w*)\b/u.test(normalized)
+  return true
+}
+
 export function validateStudentAnswerCandidate(input: Readonly<{
   candidate: StudentAnswerCandidate
   plan: StudentAnswerExecutionPlan
@@ -95,14 +113,20 @@ export function validateStudentAnswerCandidate(input: Readonly<{
   const failures = new Set<StudentAnswerFailureCode>()
   const candidate = input.candidate
   const plan = input.plan
+  const normalizedAnswer = normalizeDnaChatText(candidate.answer)
   if (typeof candidate.answer !== "string" || candidate.answer.trim().length < 20 || candidate.answer.length > 4_000) {
     failures.add("answer_missing")
   }
   if ([candidate.addressedTargetIds, candidate.satisfiedObligationIds, candidate.usedClaimIds, candidate.usedPolicyUnitIds]
     .some(hasDuplicates)) failures.add("duplicate_contract_reference")
   if (!sameSet(candidate.addressedTargetIds, plan.activeTargetIds)) failures.add("target_coverage_mismatch")
+  if (plan.targetEvidence.some((target) => !target.visibleAliases
+    .some((alias) => normalizedAnswer.includes(normalizeDnaChatText(alias))))) failures.add("target_not_visible")
   if (!sameSet(candidate.satisfiedObligationIds, plan.obligations.map((row) => row.id))) {
     failures.add("obligation_coverage_mismatch")
+  }
+  if (plan.obligations.some((obligation) => !visibleObligation(obligation.kind, normalizedAnswer))) {
+    failures.add("obligation_not_visible")
   }
   if (!sameSet(candidate.usedPolicyUnitIds, plan.policyUnits.map((row) => row.id))) failures.add("policy_coverage_mismatch")
   const allowedClaimIds = new Set(plan.targetEvidence.flatMap((row) => row.claims.map((claim) => claim.claimId)))
@@ -128,7 +152,13 @@ function localSafetyCandidate(plan: StudentAnswerExecutionPlan): StudentAnswerCa
     return `${label}: ${target.claims[0]!.text}`
   })
   const policyStatements = plan.policyUnits.map((unit) => unit.text)
-  const answer = [...targetStatements, ...policyStatements].join(" ")
+  const obligationKinds = new Set(plan.obligations.map((row) => row.kind))
+  const relationStatements = [
+    ...(obligationKinds.has("distinguish_targets") ? ["Bu kavramlar aynı şey değildir."] : []),
+    ...(obligationKinds.has("explain_relation")
+      ? ["Aralarındaki ilişkiyi kurarken her kavramı kendi kaynak bilgisiyle ayrı ele almak gerekir."] : []),
+  ]
+  const answer = [...relationStatements, ...targetStatements, ...policyStatements].join(" ")
   return Object.freeze({
     answer,
     addressedTargetIds: Object.freeze([...plan.activeTargetIds]),
@@ -185,6 +215,7 @@ function providerContent(input: Readonly<{
     activeTargets: input.plan.targetEvidence.map((target) => ({
       targetId: target.studentTargetId,
       title: target.ownerBookTopicTitle,
+      visibleAliases: target.visibleAliases,
       lockedClaims: target.claims,
     })),
     rejectedTargetIds: input.plan.rejectedTargetIds,
@@ -195,7 +226,7 @@ function providerContent(input: Readonly<{
 }
 
 const PROVIDER_INSTRUCTIONS = `
-Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır bir DNA Intelligence cevabı yaz. Bilimsel içerikte yalnız lockedClaims içindeki cümleleri kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. Her aktif hedefi karşıla ve her obligation görevini görünür cevapta gerçekten yerine getir. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İstenen cümle sayısı varsa tam olarak koru. Kimlikleri, şema alanlarını, kanıt yönetimini veya iç sistem dilini kullanıcıya yazma. usedClaimIds, usedPolicyUnitIds, addressedTargetIds ve satisfiedObligationIds yalnız gerçekten kullandığın öğeleri göstersin.
+Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır bir DNA Intelligence cevabı yaz. Bilimsel içerikte yalnız lockedClaims içindeki cümleleri kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. Her aktif hedefi karşıla ve her obligation görevini görünür cevapta gerçekten yerine getir. Her activeTarget için visibleAliases listesindeki adlardan en az birini cevap metninde açıkça yaz; yalnız JSON listesindeki addressedTargetIds beyanı yeterli değildir. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İstenen cümle sayısı varsa tam olarak koru. Kimlikleri, şema alanlarını, kanıt yönetimini veya iç sistem dilini kullanıcıya yazma. usedClaimIds, usedPolicyUnitIds, addressedTargetIds ve satisfiedObligationIds yalnız gerçekten kullandığın öğeleri göstersin.
 `.trim()
 
 function parseCandidate(value: unknown): StudentAnswerCandidate | null {

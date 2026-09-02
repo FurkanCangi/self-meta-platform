@@ -29,6 +29,7 @@ const mockFetch: typeof fetch = async (_input, init) => {
   mockCalls += 1
   const request = JSON.parse(String(init?.body)) as { input: string }
   const content = JSON.parse(request.input) as {
+    operation: string
     activeTargets: readonly Readonly<{
       targetId: string
       title: string
@@ -39,8 +40,18 @@ const mockFetch: typeof fetch = async (_input, init) => {
     presentation: Readonly<{ requestedSentenceCount: number | null }>
   }
   const labels = content.activeTargets.map((row) => row.title.split(" · ").at(-1)).join(", ")
-  const answer = content.presentation.requestedSentenceCount === 3
-    ? `${labels} konuşmada ele alınan başlıklardır. Bu açıklama tek başına bir öğrenci hakkında kesin sonuç vermez. Gözlemde farklı ortam ve görevlerde ne olduğuna bakılır.`
+  const kinds = new Set(content.obligations.map((row) => row.kind))
+  const summaryAnswer = [
+    `${labels} konuşmada bildiğimiz başlıklardır.`,
+    ...(kinds.has("summarize_unknown") ? ["Bu açıklama tek başına bir öğrenci hakkında kesin sonuç vermez."] : []),
+    ...(kinds.has("summarize_observation_focus") ? ["Gözlemde farklı ortam ve görevlerde ne olduğuna bakılır."] : []),
+  ].join(" ")
+  const answer = content.operation === "summarize"
+    ? summaryAnswer
+    : kinds.has("give_concrete_example")
+      ? `${kinds.has("distinguish_targets") ? `${labels} aynı şey değildir. Aralarındaki ilişkiyi ayrı kapsamlarıyla ele alırız. ` : ""}Örneğin, ${labels} için kısa bir öğrenci durumu düşün. Bu örnek, ${labels} kavramıyla doğrudan bağ kurar.`
+      : kinds.has("distinguish_targets")
+        ? `${labels} aynı şey değildir. Aralarındaki ilişki, her kavramın kaynakta ayrı bir kapsamla açıklanmasıdır.`
     : `${labels} için kaynak bilgisine dayalı, öğrenci dilinde kısa bir açıklama veriyorum. İstenen görev bu kavramları doğrudan ele alır.`
   const value = {
     answer,
@@ -74,7 +85,8 @@ async function main() {
         apiKey: "mock-api-key",
         fetchImpl: mockFetch,
       })
-      if (!result.ok) throw new Error(`${turn.turnId}: ${result.reason}`)
+      if (!result.ok) throw new Error(`${turn.turnId}: ${result.reason}:${result.reason === "candidate_invalid"
+        ? result.failureCodes.join(",") : result.failure.reason}`)
       assert.equal(result.ok, true, `${turn.turnId}: answer execution`)
       assert.ok(result.answer.trim().length >= 20, `${turn.turnId}: renderable answer`)
       assert.equal(result.provider.rawOutputStored, false, `${turn.turnId}: raw output storage`)
@@ -123,6 +135,9 @@ async function main() {
   assert.ok(validateStudentAnswerCandidate({
     candidate: { ...valid, usedClaimIds: [...valid.usedClaimIds, valid.usedClaimIds[0]!] }, plan,
   }).includes("duplicate_contract_reference"))
+  assert.ok(validateStudentAnswerCandidate({
+    candidate: { ...valid, answer: "Kaynakla sınırlı ancak hedef adı görünmeyen kısa açıklama." }, plan,
+  }).includes("target_not_visible"))
 
   console.log(JSON.stringify({
     ok: true,
@@ -137,6 +152,7 @@ async function main() {
     missingObligationRejected: true,
     wrongTargetRejected: true,
     duplicateReferenceRejected: true,
+    invisibleTargetRejected: true,
   }, null, 2))
 }
 

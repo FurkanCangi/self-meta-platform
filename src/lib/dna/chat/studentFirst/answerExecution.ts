@@ -31,6 +31,7 @@ export type StudentAnswerExecutionPlan = Readonly<{
     studentTargetId: string
     ownerBookTopicId: string
     ownerBookTopicTitle: string
+    visibleAliases: readonly string[]
     claims: readonly StudentAnswerEvidenceClaim[]
   }>[]
   obligations: StudentRequestContract["obligations"]
@@ -73,6 +74,25 @@ const POLICY_UNIT_BY_OBLIGATION: Readonly<Partial<Record<StudentAnswerObligation
   }),
 })
 
+const TARGET_VISIBLE_ALIASES: Readonly<Record<string, readonly string[]>> = Object.freeze({
+  self_regulation: Object.freeze(["self-regülasyon", "öz-düzenleme", "öz düzenleme"]),
+  self_control: Object.freeze(["öz-kontrol", "öz kontrol", "öz-denetim", "öz denetim"]),
+  attention: Object.freeze(["dikkat"]),
+  executive_functions: Object.freeze(["yürütücü işlev"]),
+  inhibition: Object.freeze(["inhibisyon", "dürtü kontrol"]),
+  working_memory: Object.freeze(["çalışma belleği"]),
+  planning: Object.freeze(["planlama"]),
+  cognitive_flexibility: Object.freeze(["bilişsel esneklik", "esneklik"]),
+  coregulation: Object.freeze(["ko-regülasyon", "eş düzenleme", "eş-düzenleme"]),
+  arousal: Object.freeze(["arousal", "uyarılma düzeyi"]),
+  sensory_regulation: Object.freeze(["duyusal düzenleme", "duyusal regülasyon"]),
+  sensory_modulation: Object.freeze(["duyusal modülasyon"]),
+  emotion_regulation: Object.freeze(["duygu düzenleme", "duygusal regülasyon"]),
+  interoception: Object.freeze(["interosepsiyon"]),
+  reactivity: Object.freeze(["reaktivite"]),
+  recovery: Object.freeze(["toparlanma"]),
+})
+
 function unique<T>(values: readonly T[]) {
   return [...new Set(values)]
 }
@@ -104,10 +124,13 @@ function evidenceForTarget(
       text: claim.text,
     }))
   if (!claims.length) throw new Error(`dna_student_answer_evidence_missing:${target.studentTargetId}`)
+  const visibleAliases = TARGET_VISIBLE_ALIASES[target.studentTargetId]
+  if (!visibleAliases?.length) throw new Error(`dna_student_answer_visible_alias_missing:${target.studentTargetId}`)
   return Object.freeze({
     studentTargetId: target.studentTargetId,
     ownerBookTopicId: target.ownerBookTopicId,
     ownerBookTopicTitle: target.ownerBookTopicTitle,
+    visibleAliases,
     claims: Object.freeze(claims),
   })
 }
@@ -192,6 +215,7 @@ export function validateStudentAnswerExecutionPlan(
     || plan.rejectedTargetTopics.some((row) => expectedRejectedTopicByTarget.get(row.studentTargetId) !== row.ownerBookTopicId)) return false
   for (const row of plan.targetEvidence) {
     if (expectedTopicByTarget.get(row.studentTargetId) !== row.ownerBookTopicId || !row.claims.length) return false
+    if (!row.visibleAliases.length || row.visibleAliases.some((alias) => !TARGET_VISIBLE_ALIASES[row.studentTargetId]?.includes(alias))) return false
     const allowedClaims = new Set(getDnaOwnerBookTopicClaims(row.ownerBookTopicId, true).map((claim) => claim.claimId))
     if (row.claims.some((claim) => !allowedClaims.has(claim.claimId))) return false
   }
