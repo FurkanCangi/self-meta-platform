@@ -2,16 +2,17 @@ import { normalizeDnaChatText } from "../text"
 import {
   DNA_STUDENT_FIRST_CONVERSATION_VERSION,
   DNA_STUDENT_FIRST_REQUEST_VERSION,
-  type StudentAnswerObligation,
-  type StudentAnswerObligationKind,
   type StudentConversationAction,
   type StudentConversationState,
   type StudentConversationTurnSnapshot,
+  type StudentObservationScope,
   type StudentPresentationRequest,
   type StudentReferent,
   type StudentRequestContract,
   type StudentSemanticTask,
+  type StudentSummaryScope,
 } from "./contracts"
+import { compileStudentAnswerObligations } from "./obligationCompiler"
 
 export type TargetLexeme = Readonly<{
   id: string
@@ -44,6 +45,7 @@ const EMPTY_PRESENTATION: StudentPresentationRequest = Object.freeze({
   format: "prose",
   example: "none",
   requestedSentenceCount: null,
+  preserveMeaning: false,
 })
 
 function unique(values: readonly string[]): string[] {
@@ -119,6 +121,29 @@ function presentationFor(message: string): StudentPresentationRequest {
         : "prose",
     example: concreteExample ? "concrete" : /\b(?:ornek|mesela)\b/.test(normalized) ? "brief" : "none",
     requestedSentenceCount: Number.isFinite(sentenceCount) ? sentenceCount : null,
+    preserveMeaning: /\b(?:yeniden soyle|tekrar anlat|daha basit|akademik oldu|akademik olmadan)\b/.test(normalized),
+  })
+}
+
+function summaryScopeFor(message: string, semanticTask: StudentSemanticTask): StudentSummaryScope {
+  if (semanticTask !== "summarize") return Object.freeze({ known: false, unknown: false, observationFocus: false })
+  const normalized = normalizeDnaChatText(message)
+  return Object.freeze({
+    known: true,
+    unknown: /\b(?:neyi bilmiyoruz|bilmedigimiz|kesin degil|sinir)\b/.test(normalized),
+    observationFocus: /\b(?:gozlem|neye bak)\b/.test(normalized),
+  })
+}
+
+function observationScopeFor(message: string, semanticTask: StudentSemanticTask): StudentObservationScope {
+  if (semanticTask === "case_reasoning" || semanticTask === "observe") {
+    return Object.freeze({ singleObservationLimit: true, additionalContext: true })
+  }
+  const normalized = normalizeDnaChatText(message)
+  const uncertainObservation = /\b(?:tek gozlem|sadece bu davranis|kesin soyle|diyebilir miyim|hangisi olabilir)\b/.test(normalized)
+  return Object.freeze({
+    singleObservationLimit: uncertainObservation,
+    additionalContext: uncertainObservation && /\b(?:baska|neye bak|hangisi olabilir|neden kesin)\b/.test(normalized),
   })
 }
 
@@ -148,78 +173,6 @@ function historyReferent(
     return Object.freeze({ kind: "active", turnId: active.turnId, targetIds: Object.freeze(active.targetIds) })
   }
   return Object.freeze({ kind: "none", turnId: null, targetIds: Object.freeze([]) })
-}
-
-function obligation(
-  turnId: string,
-  index: number,
-  kind: StudentAnswerObligationKind,
-  targetIds: readonly string[],
-  description: string,
-): StudentAnswerObligation {
-  return Object.freeze({ id: `${turnId}:o${index + 1}`, kind, targetIds: Object.freeze([...targetIds]), description })
-}
-
-function obligationsFor(
-  turnId: string,
-  semanticTask: StudentSemanticTask,
-  conversationAction: StudentConversationAction,
-  targetIds: readonly string[],
-  rejectedTargetIds: readonly string[],
-  comparisonTargetIds: readonly string[],
-  componentTargetIds: readonly string[],
-  presentation: StudentPresentationRequest,
-  message: string,
-): readonly StudentAnswerObligation[] {
-  const specs: Array<{ kind: StudentAnswerObligationKind; targets: readonly string[]; description: string }> = []
-  const add = (kind: StudentAnswerObligationKind, targets: readonly string[], description: string) => specs.push({ kind, targets, description })
-
-  if (semanticTask === "define") add("define_target", targetIds, "Hedef kavramı doğrudan tanımla")
-  if (semanticTask === "compare") {
-    add("distinguish_targets", comparisonTargetIds, "Karşılaştırılan kavramları birbirinden ayır")
-    add("explain_relation", comparisonTargetIds, "Kavramların ilişkisini açıkla")
-  }
-  if (semanticTask === "example") {
-    add("give_concrete_example", targetIds, "İstenen bağlamda somut örnek ver")
-    add("bind_example_to_target", targetIds, "Örneğin hedef kavramla bağını açıkla")
-  }
-  if (conversationAction === "repair" && rejectedTargetIds.length) {
-    add("honor_rejected_target", rejectedTargetIds, "Kullanıcının reddettiği hedefe geri dönme")
-  }
-  if (conversationAction === "return") add("use_history_anchor", targetIds, "Doğru geçmiş konuşma hedefini kullan")
-  if (
-    presentation.language === "plain_student" &&
-    conversationAction !== "start" &&
-    /\b(?:daha basit|akademik oldu|akademik olmadan|yeniden soyle|tekrar anlat)\b/.test(normalizeDnaChatText(message))
-  ) {
-    add("preserve_target_while_simplifying", targetIds, "Aynı hedefi daha sade dille anlat")
-  }
-  for (const targetId of componentTargetIds) {
-    add("cover_requested_component", [targetId], `İstenen ${targetId} bileşenini ayrı karşıla`)
-  }
-  if (semanticTask === "case_reasoning" || semanticTask === "observe") {
-    add("state_single_observation_limit", targetIds, "Tek gözlemden kesin sonuç çıkarma")
-    add("name_additional_context", targetIds, "Gerekli ek bağlam veya gözlemi belirt")
-  }
-  if (semanticTask === "summarize") {
-    add("summarize_known", targetIds, "Konuşmada desteklenen bilgileri özetle")
-    if (/\b(?:neyi bilmiyoruz|bilmedigimiz|kesin degil|sinir)\b/.test(normalizeDnaChatText(message))) {
-      add("summarize_unknown", targetIds, "Bilinmeyen veya kesinleştirilemeyen noktaları özetle")
-    }
-    if (/\b(?:gozlem|neye bak)\b/.test(normalizeDnaChatText(message))) {
-      add("summarize_observation_focus", targetIds, "Gözlemde izlenecek noktaları özetle")
-    }
-  }
-  if (semanticTask === "treatment_boundary") {
-    add("refuse_treatment_selection", targetIds, "Tedavi veya terapi seçimi yapma")
-    add("offer_safe_assessment_frame", targetIds, "Güvenli genel değerlendirme çerçevesi sun")
-  }
-  if (presentation.example !== "none" && !specs.some((spec) => spec.kind === "give_concrete_example")) {
-    add("give_concrete_example", targetIds, "İstenen kısa örneği ekle")
-  }
-  if (!specs.length) add("define_target", targetIds, "Kullanıcının hedefini doğrudan açıkla")
-
-  return Object.freeze(specs.map((spec, index) => obligation(turnId, index, spec.kind, spec.targets, spec.description)))
 }
 
 export function createEmptyStudentConversationState(): StudentConversationState {
@@ -273,17 +226,19 @@ export function interpretStudentRequest(
     ? [...targetIds]
     : []
   const presentation = presentationFor(input.message)
-  const obligations = obligationsFor(
-    input.turnId,
+  const summaryScope = summaryScopeFor(input.message, semanticTask)
+  const observationScope = observationScopeFor(input.message, semanticTask)
+  const obligations = compileStudentAnswerObligations(input.turnId, {
     semanticTask,
     conversationAction,
     targetIds,
-    rejected,
-    comparisonTargets,
+    rejectedTargetIds: rejected,
+    comparisonTargetIds: comparisonTargets,
     componentTargetIds,
     presentation,
-    input.message,
-  )
+    summaryScope,
+    observationScope,
+  })
 
   const ambiguity = conversationAction === "return" && referent.kind === "none"
     ? "history_anchor_missing"
@@ -304,6 +259,8 @@ export function interpretStudentRequest(
     componentTargetIds: Object.freeze(unique(componentTargetIds)),
     referent,
     presentation,
+    summaryScope,
+    observationScope,
     obligations,
     ambiguity,
     safetyIntent: semanticTask === "treatment_boundary"
@@ -340,6 +297,8 @@ export function applyStudentRequestContract(
     rejectedTargetIds: Object.freeze([...contract.rejectedTargetIds]),
     comparisonTargetIds: Object.freeze([...contract.comparisonTargetIds]),
     presentation: contract.presentation,
+    summaryScope: contract.summaryScope,
+    observationScope: contract.observationScope,
     semanticSummary: `${contract.semanticTask}/${contract.conversationAction}:${contract.targetIds.join(",")}`,
   })
   const semanticHistory = Object.freeze([...state.semanticHistory, snapshot].slice(-8))

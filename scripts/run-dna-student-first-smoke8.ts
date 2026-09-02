@@ -22,10 +22,15 @@ type SmokeExpectation = Readonly<{
   targetIds: readonly string[]
   rejectedTargetIds?: readonly string[]
   comparisonTargetIds?: readonly string[]
+  componentTargetIds?: readonly string[]
   referent?: Readonly<{ kind: string; turnId: string | null }>
   obligationKinds: readonly string[]
   plainStudent?: boolean
   requestedSentenceCount?: number
+  preserveMeaning?: boolean
+  example?: "none" | "brief" | "concrete"
+  summaryScope?: Readonly<{ known: boolean; unknown: boolean; observationFocus: boolean }>
+  observationScope?: Readonly<{ singleObservationLimit: boolean; additionalContext: boolean }>
 }>
 
 const SMOKE8: readonly SmokeExpectation[] = Object.freeze([
@@ -55,6 +60,7 @@ const SMOKE8: readonly SmokeExpectation[] = Object.freeze([
     conversationAction: "continue",
     targetIds: ["inhibition"],
     obligationKinds: ["give_concrete_example", "bind_example_to_target"],
+    example: "concrete",
   },
   {
     turnId: "SMOKE8-T04",
@@ -64,6 +70,7 @@ const SMOKE8: readonly SmokeExpectation[] = Object.freeze([
     targetIds: ["inhibition"],
     referent: { kind: "active", turnId: "SMOKE8-T03" },
     obligationKinds: ["state_single_observation_limit", "name_additional_context"],
+    observationScope: { singleObservationLimit: true, additionalContext: true },
   },
   {
     turnId: "SMOKE8-T05",
@@ -83,6 +90,7 @@ const SMOKE8: readonly SmokeExpectation[] = Object.freeze([
     referent: { kind: "history", turnId: "SMOKE8-T01" },
     obligationKinds: ["define_target", "use_history_anchor", "preserve_target_while_simplifying"],
     plainStudent: true,
+    preserveMeaning: true,
   },
   {
     turnId: "SMOKE8-T07",
@@ -102,6 +110,7 @@ const SMOKE8: readonly SmokeExpectation[] = Object.freeze([
     targetIds: ["executive_functions", "inhibition", "working_memory", "planning"],
     obligationKinds: ["summarize_known", "summarize_unknown", "summarize_observation_focus"],
     requestedSentenceCount: 3,
+    summaryScope: { known: true, unknown: true, observationFocus: true },
   },
 ])
 
@@ -111,18 +120,19 @@ function sorted(values: readonly string[]): string[] {
 
 const MAX_PROVIDER_CALLS = 8
 const MAX_COST_MICROUSD = 100_000
+const observedUsageRows: DnaChatLunaUsage[] = []
+const observedLatencies: number[] = []
+let observedProviderCalls = 0
+let observedCompletedContracts = 0
 
 async function main() {
   assert.ok(process.env.OPENAI_API_KEY?.trim(), "existing OPENAI_API_KEY is required")
   let state: StudentConversationState = createEmptyStudentConversationState()
-  const usageRows: DnaChatLunaUsage[] = []
-  const latencies: number[] = []
-  let providerCalls = 0
 
   for (const expected of SMOKE8) {
-    assert.ok(providerCalls < MAX_PROVIDER_CALLS, "provider call cap exceeded")
-    assert.ok(sumDnaChatLunaUsage(usageRows).costMicrousd <= MAX_COST_MICROUSD, "provider cost cap exceeded")
-    providerCalls += 1
+    assert.ok(observedProviderCalls < MAX_PROVIDER_CALLS, "provider call cap exceeded")
+    assert.ok(sumDnaChatLunaUsage(observedUsageRows).costMicrousd <= MAX_COST_MICROUSD, "provider cost cap exceeded")
+    observedProviderCalls += 1
     const interpreted = await interpretStudentRequestWithProvider({
       turnId: expected.turnId,
       message: expected.message,
@@ -135,14 +145,15 @@ async function main() {
       throw new Error(`${expected.turnId}: ${interpreted.reason}${detail}`)
     }
     const contract = interpreted.contract
-    usageRows.push(calculateDnaChatLunaUsage(interpreted.provider.usage))
-    latencies.push(interpreted.provider.latencyMs)
+    observedUsageRows.push(calculateDnaChatLunaUsage(interpreted.provider.usage))
+    observedLatencies.push(interpreted.provider.latencyMs)
 
     assert.equal(contract.semanticTask, expected.semanticTask, `${expected.turnId}: semantic task`)
     assert.equal(contract.conversationAction, expected.conversationAction, `${expected.turnId}: conversation action`)
     assert.deepEqual(sorted(contract.targetIds), sorted(expected.targetIds), `${expected.turnId}: targets`)
     assert.deepEqual(sorted(contract.rejectedTargetIds), sorted(expected.rejectedTargetIds ?? []), `${expected.turnId}: rejected targets`)
     assert.deepEqual(sorted(contract.comparisonTargetIds), sorted(expected.comparisonTargetIds ?? []), `${expected.turnId}: comparison targets`)
+    assert.deepEqual(sorted(contract.componentTargetIds), sorted(expected.componentTargetIds ?? []), `${expected.turnId}: component targets`)
     assert.equal(contract.ambiguity, "none", `${expected.turnId}: ambiguity`)
     assert.deepEqual(sorted(contract.obligations.map((item) => item.kind)), sorted(expected.obligationKinds), `${expected.turnId}: obligations`)
     if (expected.referent) {
@@ -153,9 +164,14 @@ async function main() {
     if (expected.requestedSentenceCount) {
       assert.equal(contract.presentation.requestedSentenceCount, expected.requestedSentenceCount, `${expected.turnId}: sentence count`)
     }
+    assert.equal(contract.presentation.preserveMeaning, expected.preserveMeaning ?? false, `${expected.turnId}: preserve meaning`)
+    assert.equal(contract.presentation.example, expected.example ?? "none", `${expected.turnId}: example presentation`)
+    assert.deepEqual(contract.summaryScope, expected.summaryScope ?? { known: false, unknown: false, observationFocus: false }, `${expected.turnId}: summary scope`)
+    assert.deepEqual(contract.observationScope, expected.observationScope ?? { singleObservationLimit: false, additionalContext: false }, `${expected.turnId}: observation scope`)
     state = applyStudentRequestContract(state, contract)
     assert.equal(state.unresolvedObligations.length, contract.obligations.length, `${expected.turnId}: unresolved obligations`)
     assert.doesNotMatch(JSON.stringify(state), new RegExp(expected.message.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "u"), `${expected.turnId}: raw message must not persist`)
+    observedCompletedContracts += 1
   }
 
   assert.equal(state.semanticHistory.length, 8)
@@ -195,7 +211,7 @@ async function main() {
   assert.equal(reverseInference.expectedTopicId, "cns.reverse_inference")
   assert.equal(reverseInference.evaluationScope, "supported_answerable")
 
-  const totalUsage = sumDnaChatLunaUsage(usageRows)
+  const totalUsage = sumDnaChatLunaUsage(observedUsageRows)
   assert.ok(totalUsage.costMicrousd <= MAX_COST_MICROUSD, "provider cost cap exceeded")
   console.log(JSON.stringify({
     ok: true,
@@ -206,9 +222,9 @@ async function main() {
     answeredExcludedFromQualityScore: true,
     benchmarkCatalogReconciliation: "benchmark.six-domains.s-020=>cns.reverse_inference",
     provider: {
-      calls: providerCalls,
+      calls: observedProviderCalls,
       usage: totalUsage,
-      averageLatencyMs: Math.round(latencies.reduce((sum, value) => sum + value, 0) / latencies.length),
+      averageLatencyMs: Math.round(observedLatencies.reduce((sum, value) => sum + value, 0) / observedLatencies.length),
       maxCostMicrousd: MAX_COST_MICROUSD,
     },
     finalState: {
@@ -220,6 +236,19 @@ async function main() {
 }
 
 void main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error))
+  console.error(JSON.stringify({
+    ok: false,
+    gate: "STUDENT_SMOKE8",
+    failure: error instanceof Error ? error.message : String(error),
+    completedContracts: observedCompletedContracts,
+    provider: {
+      calls: observedProviderCalls,
+      usage: sumDnaChatLunaUsage(observedUsageRows),
+      averageLatencyMs: observedLatencies.length
+        ? Math.round(observedLatencies.reduce((sum, value) => sum + value, 0) / observedLatencies.length)
+        : null,
+      maxCostMicrousd: MAX_COST_MICROUSD,
+    },
+  }, null, 2))
   process.exitCode = 1
 })

@@ -1,5 +1,5 @@
-export const DNA_STUDENT_FIRST_CONVERSATION_VERSION = "dna-student-conversation-state@1" as const
-export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@1" as const
+export const DNA_STUDENT_FIRST_CONVERSATION_VERSION = "dna-student-conversation-state@2" as const
+export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@2" as const
 
 export type StudentSemanticTask =
   | "define"
@@ -25,6 +25,18 @@ export type StudentPresentationRequest = Readonly<{
   format: "prose" | "bullets" | "table"
   example: "none" | "brief" | "concrete"
   requestedSentenceCount: number | null
+  preserveMeaning: boolean
+}>
+
+export type StudentSummaryScope = Readonly<{
+  known: boolean
+  unknown: boolean
+  observationFocus: boolean
+}>
+
+export type StudentObservationScope = Readonly<{
+  singleObservationLimit: boolean
+  additionalContext: boolean
 }>
 
 export type StudentReferent = Readonly<{
@@ -69,6 +81,8 @@ export type StudentRequestContract = Readonly<{
   componentTargetIds: readonly string[]
   referent: StudentReferent
   presentation: StudentPresentationRequest
+  summaryScope: StudentSummaryScope
+  observationScope: StudentObservationScope
   obligations: readonly StudentAnswerObligation[]
   ambiguity: "none" | "target_missing" | "comparison_side_missing" | "history_anchor_missing"
   safetyIntent: "general_education" | "case_interpretation" | "treatment_selection"
@@ -82,6 +96,8 @@ export type StudentConversationTurnSnapshot = Readonly<{
   rejectedTargetIds: readonly string[]
   comparisonTargetIds: readonly string[]
   presentation: StudentPresentationRequest
+  summaryScope: StudentSummaryScope
+  observationScope: StudentObservationScope
   semanticSummary: string
 }>
 

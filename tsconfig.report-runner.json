@@ -34,6 +34,7 @@
     "scripts/run-dna-student-first-smoke8.ts",
     "scripts/run-dna-student-provider-boundary-tests.ts",
     "scripts/run-dna-student-provider-preflight.ts",
+    "scripts/run-dna-student-contract-compiler-tests.ts",
     "scripts/run-dna-student-fixture-integrity.ts",
     "scripts/run-dna-student-measurement-tests.ts",
     "scripts/run-dna-chat-runtime-assurance-tests.ts",

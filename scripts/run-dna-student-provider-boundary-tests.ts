@@ -152,6 +152,7 @@ async function main() {
   const state = createEmptyStudentConversationState()
   const schema = studentSemanticFrameSchema(state)
   assert.equal(hasKey(schema, "uniqueItems"), false, "student provider schema must stay within the known working subset")
+  assert.equal(hasKey(schema, "obligationKinds"), false, "provider must not own final answer obligations")
   const validFrame = {
     semanticTask: "define",
     conversationAction: "start",
@@ -160,13 +161,16 @@ async function main() {
     comparisonTargetIds: [],
     componentTargetIds: [],
     referent: { kind: "none", turnId: null, targetIds: [] },
-    presentation: { depth: "standard", language: "standard", format: "prose", example: "none", requestedSentenceCount: null },
-    obligationKinds: ["define_target"],
+    presentation: { depth: "standard", language: "standard", format: "prose", example: "none", requestedSentenceCount: null, preserveMeaning: false },
+    summaryScope: { known: false, unknown: false, observationFocus: false },
+    observationScope: { singleObservationLimit: false, additionalContext: false },
     ambiguity: "none",
     safetyIntent: "general_education",
   }
   assert.ok(validateStudentSemanticFrame(validFrame, state))
   assert.equal(validateStudentSemanticFrame({ ...validFrame, targetIds: ["executive_functions", "executive_functions"] }, state), null)
+  assert.equal(validateStudentSemanticFrame({ ...validFrame, componentTargetIds: ["executive_functions"] }, state), null)
+  assert.equal(validateStudentSemanticFrame({ ...validFrame, summaryScope: { known: true, unknown: false, observationFocus: false } }, state), null)
 
   console.log(JSON.stringify({
     ok: true,
@@ -176,6 +180,7 @@ async function main() {
     legacyBehaviorPreserved: true,
     studentSchemaKnownSubset: true,
     runtimeUniquenessValidation: true,
+    providerOwnsFinalObligations: false,
   }, null, 2))
 }
 

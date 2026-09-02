@@ -1,19 +1,21 @@
 import type {
-  StudentAnswerObligation,
   StudentAnswerObligationKind,
   StudentConversationAction,
   StudentConversationState,
+  StudentObservationScope,
   StudentPresentationRequest,
   StudentReferent,
   StudentRequestContract,
   StudentSemanticTask,
+  StudentSummaryScope,
 } from "./contracts"
 import {
   DNA_STUDENT_FIRST_REQUEST_VERSION,
 } from "./contracts"
 import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
+import { compileStudentAnswerObligations } from "./obligationCompiler"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@1" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@2" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -52,7 +54,8 @@ type StudentSemanticFrame = Readonly<{
   componentTargetIds: readonly string[]
   referent: StudentReferent
   presentation: StudentPresentationRequest
-  obligationKinds: readonly StudentAnswerObligationKind[]
+  summaryScope: StudentSummaryScope
+  observationScope: StudentObservationScope
   ambiguity: StudentRequestContract["ambiguity"]
   safetyIntent: StudentRequestContract["safetyIntent"]
 }>
@@ -61,7 +64,6 @@ const TARGET_IDS = Object.freeze(DNA_STUDENT_TARGET_LEXICON.map((target) => targ
 const TARGET_ID_SET = new Set(TARGET_IDS)
 const TASK_SET = new Set<string>(DNA_STUDENT_SEMANTIC_TASKS)
 const ACTION_SET = new Set<string>(DNA_STUDENT_CONVERSATION_ACTIONS)
-const OBLIGATION_SET = new Set<string>(DNA_STUDENT_OBLIGATION_KINDS)
 const AMBIGUITIES = new Set(["none", "target_missing", "comparison_side_missing", "history_anchor_missing"])
 const SAFETY_INTENTS = new Set(["general_education", "case_interpretation", "treatment_selection"])
 
@@ -84,13 +86,29 @@ function parsePresentation(value: unknown): StudentPresentationRequest | null {
   if (!["prose", "bullets", "table"].includes(String(row.format))) return null
   if (!["none", "brief", "concrete"].includes(String(row.example))) return null
   if (row.requestedSentenceCount !== null && (!Number.isInteger(row.requestedSentenceCount) || Number(row.requestedSentenceCount) < 1 || Number(row.requestedSentenceCount) > 6)) return null
+  if (typeof row.preserveMeaning !== "boolean") return null
   return Object.freeze({
     depth: row.depth as StudentPresentationRequest["depth"],
     language: row.language as StudentPresentationRequest["language"],
     format: row.format as StudentPresentationRequest["format"],
     example: row.example as StudentPresentationRequest["example"],
     requestedSentenceCount: row.requestedSentenceCount as number | null,
+    preserveMeaning: row.preserveMeaning,
   })
+}
+
+function parseSummaryScope(value: unknown): StudentSummaryScope | null {
+  if (!value || typeof value !== "object") return null
+  const row = value as Record<string, unknown>
+  if (typeof row.known !== "boolean" || typeof row.unknown !== "boolean" || typeof row.observationFocus !== "boolean") return null
+  return Object.freeze({ known: row.known, unknown: row.unknown, observationFocus: row.observationFocus })
+}
+
+function parseObservationScope(value: unknown): StudentObservationScope | null {
+  if (!value || typeof value !== "object") return null
+  const row = value as Record<string, unknown>
+  if (typeof row.singleObservationLimit !== "boolean" || typeof row.additionalContext !== "boolean") return null
+  return Object.freeze({ singleObservationLimit: row.singleObservationLimit, additionalContext: row.additionalContext })
 }
 
 function parseReferent(value: unknown, state: StudentConversationState): StudentReferent | null {
@@ -109,61 +127,6 @@ function parseReferent(value: unknown, state: StudentConversationState): Student
   return Object.freeze({ kind: row.kind as StudentReferent["kind"], turnId, targetIds: Object.freeze(targetIds) })
 }
 
-function obligationTargets(kind: StudentAnswerObligationKind, frame: StudentSemanticFrame): readonly string[] {
-  if (kind === "honor_rejected_target") return frame.rejectedTargetIds
-  if (kind === "distinguish_targets" || kind === "explain_relation") return frame.comparisonTargetIds.length
-    ? frame.comparisonTargetIds
-    : frame.targetIds
-  if (kind === "cover_requested_component") return frame.componentTargetIds.length
-    ? frame.componentTargetIds
-    : frame.targetIds
-  return frame.targetIds
-}
-
-const OBLIGATION_DESCRIPTIONS: Readonly<Record<StudentAnswerObligationKind, string>> = Object.freeze({
-  define_target: "Hedef kavramı doğrudan tanımla",
-  distinguish_targets: "Karşılaştırılan kavramları birbirinden ayır",
-  explain_relation: "Kavramların ilişkisini açıkla",
-  give_concrete_example: "İstenen bağlamda somut örnek ver",
-  bind_example_to_target: "Örneğin hedef kavramla bağını açıkla",
-  honor_rejected_target: "Kullanıcının reddettiği hedefe geri dönme",
-  use_history_anchor: "Doğru geçmiş konuşma hedefini kullan",
-  preserve_target_while_simplifying: "Aynı hedefi daha sade dille anlat",
-  cover_requested_component: "İstenen bileşenlerin her birini ayrı karşıla",
-  state_single_observation_limit: "Tek gözlemden kesin sonuç çıkarma",
-  name_additional_context: "Gerekli ek bağlam veya gözlemi belirt",
-  summarize_known: "Konuşmada desteklenen bilgileri özetle",
-  summarize_unknown: "Bilinmeyen veya kesinleştirilemeyen noktaları özetle",
-  summarize_observation_focus: "Gözlemde izlenecek noktaları özetle",
-  refuse_treatment_selection: "Tedavi veya terapi seçimi yapma",
-  offer_safe_assessment_frame: "Güvenli genel değerlendirme çerçevesi sun",
-})
-
-function compileObligations(
-  turnId: string,
-  frame: StudentSemanticFrame,
-): readonly StudentAnswerObligation[] {
-  const obligations: StudentAnswerObligation[] = []
-  frame.obligationKinds.forEach((kind, index) => {
-    if (kind === "cover_requested_component" && frame.componentTargetIds.length > 1) {
-      frame.componentTargetIds.forEach((targetId, componentIndex) => obligations.push(Object.freeze({
-        id: `${turnId}:o${index + 1}.${componentIndex + 1}`,
-        kind,
-        targetIds: Object.freeze([targetId]),
-        description: `${OBLIGATION_DESCRIPTIONS[kind]}: ${targetId}`,
-      })))
-      return
-    }
-    obligations.push(Object.freeze({
-      id: `${turnId}:o${index + 1}`,
-      kind,
-      targetIds: Object.freeze([...obligationTargets(kind, frame)]),
-      description: OBLIGATION_DESCRIPTIONS[kind],
-    }))
-  })
-  return Object.freeze(obligations)
-}
-
 export function validateStudentSemanticFrame(
   candidate: unknown,
   state: StudentConversationState,
@@ -175,19 +138,23 @@ export function validateStudentSemanticFrame(
   const rejectedTargetIds = uniqueStrings(row.rejectedTargetIds, TARGET_ID_SET, 8)
   const comparisonTargetIds = uniqueStrings(row.comparisonTargetIds, TARGET_ID_SET, 4)
   const componentTargetIds = uniqueStrings(row.componentTargetIds, TARGET_ID_SET, 8)
-  const obligationKinds = uniqueStrings(row.obligationKinds, OBLIGATION_SET, 12) as StudentAnswerObligationKind[] | null
   const referent = parseReferent(row.referent, state)
   const presentation = parsePresentation(row.presentation)
-  if (!targetIds || !rejectedTargetIds || !comparisonTargetIds || !componentTargetIds || !obligationKinds || !referent || !presentation) return null
+  const summaryScope = parseSummaryScope(row.summaryScope)
+  const observationScope = parseObservationScope(row.observationScope)
+  if (!targetIds || !rejectedTargetIds || !comparisonTargetIds || !componentTargetIds || !referent || !presentation || !summaryScope || !observationScope) return null
   if (!AMBIGUITIES.has(String(row.ambiguity)) || !SAFETY_INTENTS.has(String(row.safetyIntent))) return null
   if (!targetIds.length && row.semanticTask !== "treatment_boundary") return null
   if (row.semanticTask === "compare" && comparisonTargetIds.length < 2) return null
+  if (componentTargetIds.length === 1) return null
   if (row.conversationAction === "start" && state.semanticHistory.length) return null
   if (row.conversationAction !== "start" && !state.semanticHistory.length) return null
   if (row.conversationAction === "return" && referent.kind !== "history") return null
   if (row.conversationAction === "summarize_session" && row.semanticTask !== "summarize") return null
   if (row.semanticTask === "treatment_boundary" && row.safetyIntent !== "treatment_selection") return null
-  if (!obligationKinds.length) return null
+  if (row.semanticTask === "summarize" && !summaryScope.known) return null
+  if (row.semanticTask !== "summarize" && (summaryScope.known || summaryScope.unknown || summaryScope.observationFocus)) return null
+  if ((row.semanticTask === "observe" || row.semanticTask === "case_reasoning") && (!observationScope.singleObservationLimit || !observationScope.additionalContext)) return null
 
   return Object.freeze({
     semanticTask: row.semanticTask as StudentSemanticTask,
@@ -198,7 +165,8 @@ export function validateStudentSemanticFrame(
     componentTargetIds: Object.freeze(componentTargetIds),
     referent,
     presentation,
-    obligationKinds: Object.freeze(obligationKinds),
+    summaryScope,
+    observationScope,
     ambiguity: row.ambiguity as StudentRequestContract["ambiguity"],
     safetyIntent: row.safetyIntent as StudentRequestContract["safetyIntent"],
   })
@@ -219,7 +187,9 @@ export function compileStudentRequestContract(
     componentTargetIds: frame.componentTargetIds,
     referent: frame.referent,
     presentation: frame.presentation,
-    obligations: compileObligations(turnId, frame),
+    summaryScope: frame.summaryScope,
+    observationScope: frame.observationScope,
+    obligations: compileStudentAnswerObligations(turnId, frame),
     ambiguity: frame.ambiguity,
     safetyIntent: frame.safetyIntent,
   })
@@ -233,7 +203,7 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
     required: [
       "semanticTask", "conversationAction", "targetIds", "rejectedTargetIds",
       "comparisonTargetIds", "componentTargetIds", "referent", "presentation",
-      "obligationKinds", "ambiguity", "safetyIntent",
+      "summaryScope", "observationScope", "ambiguity", "safetyIntent",
     ],
     properties: {
       semanticTask: { type: "string", enum: [...DNA_STUDENT_SEMANTIC_TASKS] },
@@ -257,16 +227,35 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
       presentation: {
         type: "object",
         additionalProperties: false,
-        required: ["depth", "language", "format", "example", "requestedSentenceCount"],
+        required: ["depth", "language", "format", "example", "requestedSentenceCount", "preserveMeaning"],
         properties: {
           depth: { type: "string", enum: ["brief", "standard", "deep"] },
           language: { type: "string", enum: ["plain_student", "standard"] },
           format: { type: "string", enum: ["prose", "bullets", "table"] },
           example: { type: "string", enum: ["none", "brief", "concrete"] },
           requestedSentenceCount: { anyOf: [{ type: "integer", minimum: 1, maximum: 6 }, { type: "null" }] },
+          preserveMeaning: { type: "boolean" },
         },
       },
-      obligationKinds: { type: "array", minItems: 1, maxItems: 12, items: { type: "string", enum: [...DNA_STUDENT_OBLIGATION_KINDS] } },
+      summaryScope: {
+        type: "object",
+        additionalProperties: false,
+        required: ["known", "unknown", "observationFocus"],
+        properties: {
+          known: { type: "boolean" },
+          unknown: { type: "boolean" },
+          observationFocus: { type: "boolean" },
+        },
+      },
+      observationScope: {
+        type: "object",
+        additionalProperties: false,
+        required: ["singleObservationLimit", "additionalContext"],
+        properties: {
+          singleObservationLimit: { type: "boolean" },
+          additionalContext: { type: "boolean" },
+        },
+      },
       ambiguity: { type: "string", enum: [...AMBIGUITIES] },
       safetyIntent: { type: "string", enum: [...SAFETY_INTENTS] },
     },
@@ -306,11 +295,15 @@ Sen yalnız Türkçe bilimsel öğrenci konuşmasını yapılandıran bir yoruml
 Her mesaj için üç bağımsız eksen çıkar:
 1. semanticTask: kullanıcının bilimsel olarak istediği iş (define, explain, compare, example, case_reasoning, summarize, observe, evidence, treatment_boundary),
 2. conversationAction: konuşmadaki hareket (start, continue, repair, return, summarize_session),
-3. presentation: sade dil, uzunluk, biçim ve örnek isteği.
+3. presentation: sade dil, uzunluk, biçim, örnek ve aynı anlamı koruyarak yeniden anlatma isteği.
 
 Sunum isteği semantik görevin yerine geçmez. Örneğin “ne demek, öğrenci gibi anlat” semanticTask=define ve language=plain_student olur. Türkçe ekleri ve gündelik ifadeleri anlam düzeyinde yorumla; “tek gözlemle”, “bir kere görerek” ve “sadece bunu gördüm” gözlemden sonuç çıkarma sınırını soruyorsa semanticTask=observe olur.
 
 Yalnız allowedTargets içindeki ID'leri kullan. Yeni hedef uydurma. Açık düzeltmede reddedilen hedefi rejectedTargetIds alanına koy. “İlk anlattığın” gibi dönüşlerde doğru history turnId'yi seç. Oturum özetinde semanticTask=summarize ve conversationAction=summarize_session kullan; konuşmadaki ilgili hedefleri kapsa.
 
-obligationKinds yalnız kullanıcının bu turda gerçekten istediği parçaları içersin. Örnek, karşılaştırma, tek gözlem sınırı, ek bağlam, düzeltme, geçmişe dönüş, sadeleştirme, bilinen/bilinmeyen ve gözlem özeti gibi istekleri kaybetme. Gereksiz yükümlülük ekleme.
+Nihai cevap yükümlülüğü seçme; onu yerel derleyici yapar. Yalnız semantik gerçekleri çıkar:
+- componentTargetIds yalnız kullanıcı iki veya daha fazla adı verilmiş bileşenin her birinin ayrı ele alınmasını istiyorsa dolu olsun. “X bunun parçası mı?” bir ilişki sorusudur; componentTargetIds boş kalır.
+- summaryScope yalnız özet turunda kullanıcının bilinenler, bilinmeyenler ve gözlem odağından hangilerini istediğini gösterir.
+- observationScope kullanıcının tek gözlem sınırı veya ek bağlam/gözlem ihtiyacını açıkça sorduğunu gösterir. observe ve case_reasoning görevlerinde ikisi de true olur.
+- presentation.preserveMeaning yalnız önceki hedefi aynı anlamı koruyarak yeniden/sade anlatmayı istiyorsa true olur. Sadece ilk kez sade anlatma isteğinde false olur.
 `.trim()
