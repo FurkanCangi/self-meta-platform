@@ -138,9 +138,9 @@ for (const row of EVIDENCE) {
 
 const obligationCompiler = readFileSync("src/lib/dna/chat/studentFirst/obligationCompiler.ts", "utf8")
 const contracts = readFileSync("src/lib/dna/chat/studentFirst/contracts.ts", "utf8")
-assert.ok(obligationCompiler.includes('input.presentation.example !== "none"'), "expected presentation-owned example obligation not found")
-assert.ok(obligationCompiler.includes("semanticTask: StudentSemanticTask"), "expected singular semantic task compiler input not found")
-assert.ok(!contracts.includes("requestedSemanticTasks"), "batch diagnosis must be updated: requested semantic tasks already persist")
+assert.ok(!obligationCompiler.includes('input.presentation.example !== "none"'), "presentation still owns an example content obligation")
+assert.ok(obligationCompiler.includes("requestedSemanticTasks: readonly StudentSemanticTask[]"), "obligation compiler does not consume all requested semantic tasks")
+assert.ok(contracts.includes("requestedSemanticTasks: readonly StudentSemanticTask[]"), "requested semantic tasks are not persisted in the contract and history")
 
 const student40FailureTurns = EVIDENCE.flatMap((row) => row.failureTurns).filter((turn) => turn.startsWith("STUDENT40-"))
 const failureTurnCounts = countBy(student40FailureTurns)
@@ -182,11 +182,16 @@ console.log(JSON.stringify({
     criticalSignals: criticalSignalCounts,
     reportedEvidenceCostMicrousd: totalEvidenceCostMicrousd,
   },
-  verifiedArchitectureGap: {
+  verifiedBaselineArchitectureGap: {
     semanticActsCollapsedBeforeObligationCompilation: true,
     presentationExampleCanCreateContentObligation: true,
     requestedSemanticTasksPersistedInContract: false,
     unchangedSmokePassedCandidate20ButFailedCandidate21BeforeTargetedTurn: true,
+  },
+  currentStructuralClosure: {
+    requestedSemanticTasksPersistedInContract: true,
+    obligationCompilerConsumesRequestedSemanticTasks: true,
+    presentationExampleCanCreateContentObligation: false,
   },
   selectedStructuralBoundary: {
     name: "semantic-acts-own-content-obligations",

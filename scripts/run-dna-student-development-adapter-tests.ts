@@ -51,6 +51,7 @@ const matchingContract: StudentRequestContract = Object.freeze({
   version: DNA_STUDENT_FIRST_REQUEST_VERSION,
   turnId: "ADAPTER-T01",
   semanticTask: "define",
+  requestedSemanticTasks: Object.freeze(["define"] as const),
   conversationAction: "start",
   targetIds: Object.freeze(["executive_functions"]),
   rejectedTargetIds: Object.freeze([]),

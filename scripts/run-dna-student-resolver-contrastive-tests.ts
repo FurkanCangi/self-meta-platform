@@ -79,6 +79,29 @@ const pureObservation = compileStudentRequestContract("RESOLVER-T03", frame({
 assert.equal(pureObservation.semanticTask, "observe", "observation-only requests must remain observation")
 assert.deepEqual(kinds(pureObservation), ["state_single_observation_limit", "name_additional_context"])
 
+const exampleReferenceObservation = compileStudentRequestContract("RESOLVER-T03B", frame({
+  semanticActs: acts("observe"),
+  mentionedTargetIds: ["inhibition"],
+  presentation: { ...presentation, example: "concrete" },
+}), state)
+assert.deepEqual(exampleReferenceObservation.requestedSemanticTasks, ["observe"])
+assert.equal(exampleReferenceObservation.presentation.example, "none", "mentioning an existing example must not request a new example")
+assert.deepEqual(kinds(exampleReferenceObservation), ["state_single_observation_limit", "name_additional_context"])
+
+const comparisonWithExample = compileStudentRequestContract("RESOLVER-T03C", frame({
+  semanticActs: acts("compare", "example"),
+  mentionedTargetIds: ["planning", "working_memory"],
+  presentation: { ...presentation, example: "concrete" },
+}), state)
+assert.equal(comparisonWithExample.semanticTask, "compare")
+assert.deepEqual(comparisonWithExample.requestedSemanticTasks, ["compare", "example"])
+assert.deepEqual(kinds(comparisonWithExample), [
+  "distinguish_targets",
+  "explain_relation",
+  "give_concrete_example",
+  "bind_example_to_target",
+])
+
 const componentExplanation = compileStudentRequestContract("RESOLVER-T04", frame({
   semanticActs: acts("case_reasoning"),
   mentionedTargetIds: ["planning", "inhibition", "emotion_regulation"],
@@ -392,10 +415,12 @@ assert.equal(resolveStudentConversationAction({
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_RESOLVER_CONTRASTIVE_LOCAL",
-  cases: 35,
+  cases: 37,
   compareOverContextualObserve: true,
   componentExplainOverContextualCase: true,
   pureObservationPreserved: true,
+  exampleReferenceDoesNotRequestNewExample: true,
+  compareAndExampleActsBothPreserved: true,
   pureCaseReasoningPreserved: true,
   implicitLatestExampleReferent: true,
   compatibleObservationReferent: true,

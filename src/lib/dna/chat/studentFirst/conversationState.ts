@@ -229,6 +229,10 @@ export function interpretStudentRequest(
   if (comparisonTargets.length) targetIds = unique([...targetIds, ...comparisonTargets])
 
   const presentation = presentationFor(input.message)
+  const requestedSemanticTasks = Object.freeze([semanticTask])
+  const normalizedPresentation: StudentPresentationRequest = semanticTask === "example"
+    ? presentation
+    : Object.freeze({ ...presentation, example: "none" })
   const componentTargetIds = semanticTask === "explain" && targetIds.length > 1 && presentation.grouping === "separate_each"
     ? [...targetIds]
     : []
@@ -236,12 +240,13 @@ export function interpretStudentRequest(
   const observationScope = observationScopeFor(input.message, semanticTask)
   const obligations = compileStudentAnswerObligations(input.turnId, {
     semanticTask,
+    requestedSemanticTasks,
     conversationAction,
     targetIds,
     rejectedTargetIds: rejected,
     comparisonTargetIds: comparisonTargets,
     componentTargetIds,
-    presentation,
+    presentation: normalizedPresentation,
     summaryScope,
     observationScope,
   })
@@ -258,13 +263,14 @@ export function interpretStudentRequest(
     version: DNA_STUDENT_FIRST_REQUEST_VERSION,
     turnId: input.turnId,
     semanticTask,
+    requestedSemanticTasks,
     conversationAction,
     targetIds: Object.freeze(unique(targetIds)),
     rejectedTargetIds: Object.freeze(unique(rejected)),
     comparisonTargetIds: Object.freeze(unique(comparisonTargets)),
     componentTargetIds: Object.freeze(unique(componentTargetIds)),
     referent,
-    presentation,
+    presentation: normalizedPresentation,
     summaryScope,
     observationScope,
     obligations,
@@ -298,6 +304,7 @@ export function applyStudentRequestContract(
   const snapshot: StudentConversationTurnSnapshot = Object.freeze({
     turnId: contract.turnId,
     semanticTask: contract.semanticTask,
+    requestedSemanticTasks: Object.freeze([...contract.requestedSemanticTasks]),
     conversationAction: contract.conversationAction,
     targetIds: Object.freeze([...contract.targetIds]),
     rejectedTargetIds: Object.freeze([...contract.rejectedTargetIds]),

@@ -11,6 +11,7 @@ import {
 
 const base: StudentObligationCompilationInput = Object.freeze({
   semanticTask: "define",
+  requestedSemanticTasks: Object.freeze(["define"] as const),
   conversationAction: "start",
   targetIds: Object.freeze(["executive_functions"]),
   rejectedTargetIds: Object.freeze([]),
@@ -38,6 +39,7 @@ assert.deepEqual(kinds(base), ["define_target"])
 assert.deepEqual(kinds({
   ...base,
   semanticTask: "compare",
+  requestedSemanticTasks: ["compare"],
   conversationAction: "continue",
   targetIds: ["executive_functions", "inhibition"],
   comparisonTargetIds: ["executive_functions", "inhibition"],
@@ -46,6 +48,7 @@ assert.deepEqual(kinds({
 assert.deepEqual(kinds({
   ...base,
   semanticTask: "define",
+  requestedSemanticTasks: ["define"],
   conversationAction: "return",
   presentation: { ...base.presentation, language: "plain_student", preserveMeaning: true },
 }), ["define_target", "use_history_anchor", "preserve_target_while_simplifying"])
@@ -53,6 +56,7 @@ assert.deepEqual(kinds({
 assert.deepEqual(kinds({
   ...base,
   semanticTask: "summarize",
+  requestedSemanticTasks: ["summarize"],
   conversationAction: "summarize_session",
   targetIds: ["executive_functions", "inhibition", "working_memory", "planning"],
   summaryScope: { known: true, unknown: true, observationFocus: true },
@@ -61,6 +65,7 @@ assert.deepEqual(kinds({
 assert.deepEqual(kinds({
   ...base,
   semanticTask: "compare",
+  requestedSemanticTasks: ["compare", "observe"],
   conversationAction: "continue",
   targetIds: ["arousal", "sensory_regulation"],
   comparisonTargetIds: ["arousal", "sensory_regulation"],
@@ -70,6 +75,7 @@ assert.deepEqual(kinds({
 assert.deepEqual(kinds({
   ...base,
   semanticTask: "explain",
+  requestedSemanticTasks: ["explain"],
   conversationAction: "continue",
   targetIds: ["planning", "inhibition", "emotion_regulation"],
   componentTargetIds: ["planning", "inhibition", "emotion_regulation"],
@@ -78,19 +84,30 @@ assert.deepEqual(kinds({
 assert.deepEqual(kinds({
   ...base,
   semanticTask: "compare",
+  requestedSemanticTasks: ["compare", "example"],
   conversationAction: "continue",
   targetIds: ["planning", "working_memory"],
   comparisonTargetIds: ["planning", "working_memory"],
   presentation: { ...base.presentation, example: "brief" },
-}), ["distinguish_targets", "explain_relation", "give_concrete_example"])
+}), ["distinguish_targets", "explain_relation", "give_concrete_example", "bind_example_to_target"])
 
 assert.deepEqual(kinds({
   ...base,
   semanticTask: "example",
+  requestedSemanticTasks: ["example"],
   conversationAction: "continue",
   targetIds: ["inhibition"],
   presentation: { ...base.presentation, example: "concrete" },
 }), ["give_concrete_example", "bind_example_to_target"], "example obligation must be deduplicated")
+
+assert.deepEqual(kinds({
+  ...base,
+  semanticTask: "observe",
+  requestedSemanticTasks: ["observe"],
+  conversationAction: "continue",
+  presentation: { ...base.presentation, example: "concrete" },
+  observationScope: { singleObservationLimit: true, additionalContext: true },
+}), ["state_single_observation_limit", "name_additional_context"], "a presentation facet must not invent a content obligation")
 
 const semanticActs = (...enabled: readonly string[]) => Object.freeze({
   define: enabled.includes("define"),
@@ -120,6 +137,7 @@ const startValidation = validateStudentSemanticFrameDetailed(startFrame, emptySt
 if (!startValidation.ok) throw new Error(startValidation.failureCode)
 const startContract = compileStudentRequestContract("GROUPING-T01", startValidation.frame, emptyState)
 assert.equal(startContract.semanticTask, "define")
+assert.deepEqual(startContract.requestedSemanticTasks, ["define", "explain"])
 const activeState = applyStudentRequestContract(emptyState, startContract)
 
 const integratedValidation = validateStudentSemanticFrameDetailed({
@@ -151,6 +169,7 @@ const presentationOnlyValidation = validateStudentSemanticFrameDetailed({
 if (!presentationOnlyValidation.ok) throw new Error(presentationOnlyValidation.failureCode)
 const presentationOnlyContract = compileStudentRequestContract("GROUPING-T02B", presentationOnlyValidation.frame, comparisonState)
 assert.equal(presentationOnlyContract.semanticTask, "compare", "presentation-only continuation must inherit its referenced scientific task")
+assert.deepEqual(presentationOnlyContract.requestedSemanticTasks, [], "presentation-only continuation must not invent a scientific act")
 assert.deepEqual(presentationOnlyContract.targetIds, ["executive_functions", "inhibition"])
 assert.ok(presentationOnlyContract.obligations.map((row) => row.kind).includes("preserve_target_while_simplifying"))
 
@@ -242,6 +261,7 @@ const observeValidation = validateStudentSemanticFrameDetailed({
 }, comparisonState)
 if (!observeValidation.ok) throw new Error(observeValidation.failureCode)
 const observeContract = compileStudentRequestContract("GROUPING-T06", observeValidation.frame, comparisonState)
+assert.deepEqual(observeContract.requestedSemanticTasks, ["case_reasoning", "observe"])
 assert.deepEqual(observeContract.summaryScope, { known: false, unknown: false, observationFocus: false })
 assert.deepEqual(observeContract.observationScope, { singleObservationLimit: true, additionalContext: true })
 assert.deepEqual(observeContract.obligations.map((row) => row.kind), [
@@ -268,7 +288,7 @@ assert.deepEqual(separateContract.obligations.map((row) => row.kind), [
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_OBLIGATION_COMPILER_LOCAL",
-  cases: 18,
+  cases: 20,
   providerOwnsFinalObligations: false,
   deterministicCompilation: true,
   duplicateObligations: 0,

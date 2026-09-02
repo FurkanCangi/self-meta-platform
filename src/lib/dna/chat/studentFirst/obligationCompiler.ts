@@ -8,7 +8,7 @@ import type {
   StudentSummaryScope,
 } from "./contracts"
 
-export const DNA_STUDENT_OBLIGATION_COMPILER_VERSION = "dna-student-obligation-compiler@1" as const
+export const DNA_STUDENT_OBLIGATION_COMPILER_VERSION = "dna-student-obligation-compiler@2" as const
 
 const OBLIGATION_DESCRIPTIONS: Readonly<Record<StudentAnswerObligationKind, string>> = Object.freeze({
   define_target: "Hedef kavramı doğrudan tanımla",
@@ -31,6 +31,7 @@ const OBLIGATION_DESCRIPTIONS: Readonly<Record<StudentAnswerObligationKind, stri
 
 export type StudentObligationCompilationInput = Readonly<{
   semanticTask: StudentSemanticTask
+  requestedSemanticTasks: readonly StudentSemanticTask[]
   conversationAction: StudentConversationAction
   targetIds: readonly string[]
   rejectedTargetIds: readonly string[]
@@ -55,23 +56,30 @@ export function compileStudentAnswerObligations(
     rows.push(Object.freeze({ kind, targetIds: Object.freeze(normalizedTargets) }))
   }
 
-  if (input.semanticTask === "define" || input.semanticTask === "explain") add("define_target", input.targetIds)
-  if (input.semanticTask === "compare") {
-    add("distinguish_targets", input.comparisonTargetIds)
-    add("explain_relation", input.comparisonTargetIds)
-  }
-  if (input.semanticTask === "example") {
-    add("give_concrete_example", input.targetIds)
-    add("bind_example_to_target", input.targetIds)
+  const requestedTasks = new Set(input.requestedSemanticTasks)
+  const treatmentBoundary = requestedTasks.has("treatment_boundary") || input.semanticTask === "treatment_boundary"
+  const summary = requestedTasks.has("summarize") || input.semanticTask === "summarize"
+  if (!treatmentBoundary && !summary) {
+    if (requestedTasks.has("compare") || input.semanticTask === "compare") {
+      add("distinguish_targets", input.comparisonTargetIds)
+      add("explain_relation", input.comparisonTargetIds)
+    }
+    if (requestedTasks.has("example") || input.semanticTask === "example") {
+      add("give_concrete_example", input.targetIds)
+      add("bind_example_to_target", input.targetIds)
+    }
+    const standaloneDefinition = (requestedTasks.has("define") || requestedTasks.has("explain") || input.semanticTask === "define" || input.semanticTask === "explain") &&
+      !requestedTasks.has("compare") && !requestedTasks.has("example")
+    if (standaloneDefinition) add("define_target", input.targetIds)
   }
   if (input.observationScope.singleObservationLimit) add("state_single_observation_limit", input.targetIds)
   if (input.observationScope.additionalContext) add("name_additional_context", input.targetIds)
-  if (input.semanticTask === "summarize") {
+  if (summary) {
     if (input.summaryScope.known) add("summarize_known", input.targetIds)
     if (input.summaryScope.unknown) add("summarize_unknown", input.targetIds)
     if (input.summaryScope.observationFocus) add("summarize_observation_focus", input.targetIds)
   }
-  if (input.semanticTask === "treatment_boundary") {
+  if (treatmentBoundary) {
     add("refuse_treatment_selection", input.targetIds)
     add("offer_safe_assessment_frame", input.targetIds)
   }
@@ -81,9 +89,6 @@ export function compileStudentAnswerObligations(
   if (input.conversationAction === "return") add("use_history_anchor", input.targetIds)
   if (input.presentation.preserveMeaning) add("preserve_target_while_simplifying", input.targetIds)
   for (const targetId of input.componentTargetIds) add("cover_requested_component", [targetId])
-  if (input.presentation.example !== "none" && input.semanticTask !== "example") {
-    add("give_concrete_example", input.targetIds)
-  }
   if (!rows.length) add("define_target", input.targetIds)
 
   return Object.freeze(rows.map((row, index) => Object.freeze({

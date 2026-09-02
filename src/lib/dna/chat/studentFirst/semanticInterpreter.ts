@@ -15,7 +15,7 @@ import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 import { normalizeDnaChatText } from "../text"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@15" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@16" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -294,6 +294,13 @@ export function compileStudentRequestContract(
   state: StudentConversationState,
 ): StudentRequestContract {
   const semanticTask = resolveStudentSemanticTask(frame, state)
+  const requestedSemanticTasks = Object.freeze(DNA_STUDENT_SEMANTIC_TASKS.filter((task) => frame.semanticActs[task]))
+  const presentation: StudentPresentationRequest = Object.freeze({
+    ...frame.presentation,
+    example: requestedSemanticTasks.includes("example")
+      ? frame.presentation.example === "none" ? "brief" : frame.presentation.example
+      : "none",
+  })
   const unique = (values: readonly string[]) => [...new Set(values)]
   const allowedMentions = frame.mentionedTargetIds.filter((targetId) => !frame.rejectedTargetIds.includes(targetId))
   const latestTurnId = state.semanticHistory.at(-1)?.turnId ?? null
@@ -309,7 +316,7 @@ export function compileStudentRequestContract(
   )
   const effectiveReferentTurnId = frame.referentTurnId ?? (
     latestTurnId && (
-      compareContextCompatible || (contextTargetsCompatible && (contextBindingTask || frame.presentation.preserveMeaning))
+      compareContextCompatible || (contextTargetsCompatible && (contextBindingTask || presentation.preserveMeaning))
     )
       ? latestTurnId
       : null
@@ -357,7 +364,7 @@ export function compileStudentRequestContract(
     ? mergedTargetIds
     : mergedTargetIds.filter((targetId) => !frame.rejectedTargetIds.includes(targetId))
   const comparisonTargetIds = semanticTask === "compare" ? targetIds : Object.freeze([])
-  const componentTargetIds = semanticTask === "explain" && targetIds.length > 1 && frame.presentation.grouping === "separate_each"
+  const componentTargetIds = semanticTask === "explain" && targetIds.length > 1 && presentation.grouping === "separate_each"
     ? targetIds
     : Object.freeze([])
   const summaryScope = Object.freeze({
@@ -381,23 +388,26 @@ export function compileStudentRequestContract(
     version: DNA_STUDENT_FIRST_REQUEST_VERSION,
     turnId,
     semanticTask,
+    requestedSemanticTasks,
     conversationAction: frame.conversationAction,
     targetIds: Object.freeze(targetIds),
     rejectedTargetIds: frame.rejectedTargetIds,
     comparisonTargetIds: Object.freeze(comparisonTargetIds),
     componentTargetIds,
     referent,
-    presentation: frame.presentation,
+    presentation,
     summaryScope,
     observationScope,
     obligations: compileStudentAnswerObligations(turnId, {
       ...frame,
       semanticTask,
+      requestedSemanticTasks,
       targetIds,
       comparisonTargetIds,
       componentTargetIds,
       summaryScope,
       observationScope,
+      presentation,
     }),
     ambiguity,
     safetyIntent: semanticTask === "treatment_boundary"
@@ -485,6 +495,7 @@ export function studentSemanticInterpreterContent(input: Readonly<{
       semanticHistory: input.state.semanticHistory.map((turn) => ({
         turnId: turn.turnId,
         semanticTask: turn.semanticTask,
+        requestedSemanticTasks: turn.requestedSemanticTasks,
         conversationAction: turn.conversationAction,
         targetIds: turn.targetIds,
         rejectedTargetIds: turn.rejectedTargetIds,
@@ -508,6 +519,8 @@ Her mesaj için üç bağımsız eksen çıkar:
 3. presentation: sade dil, uzunluk, biçim, örnek ve aynı anlamı koruyarak yeniden anlatma isteği.
 
 Tek bir semantic act seçmeye çalışma. Açıkça istenen her act true, istenmeyenler false olsun. “Ne demek / nedir / neyi ifade eder” define=true; aynı mesaj genel açıklama da gerektiriyorsa explain de true olabilir. Yerel resolver primary taskı seçecek. Sunum isteği semantic acts yerine geçmez. Örneğin “ne demek, öğrenci gibi anlat” define=true ve language=plain_student olur. Yalnız önceki cevabı aynı anlamı koruyarak daha sade/yeniden söyleme isteğinde yeni bilimsel görev yoksa bütün semanticActs false olabilir; bu durumda presentation.preserveMeaning=true ve önceki referans doğru verilmelidir. Türkçe ekleri ve gündelik ifadeleri anlam düzeyinde yorumla; “tek gözlemle”, “bir kere görerek” ve “sadece bunu gördüm” gözlemden sonuç çıkarma sınırını soruyorsa observe=true olur.
+
+Bir örnek üretme veya bir kavramı örnekle gösterme açıkça isteniyorsa semanticActs.example=true kullan. “Bu örnekte”, “önceki örnek” veya “örnekteki çocuk” yalnız mevcut örneğe gönderme yapıyorsa ve yeni örnek istenmiyorsa semanticActs.example=false ve presentation.example=none kullan. presentation.example yalnız istenen örneğin kısa/somut sunum biçimini belirtir; kendi başına örnek isteği değildir.
 
 Yalnız allowedTargets içindeki ID'leri kullan. Yeni hedef uydurma. mentionedTargetIds yalnız mevcut kullanıcı mesajında açıkça adı geçen hedefleri içerir; referans verilen eski turun hedeflerini buraya kopyalama. Açık düzeltmede reddedilen hedefi rejectedTargetIds alanına koy. “Bu/bununla/bu örnekte/ilk anlattığın” gibi ifadeler önceki bir tura işaret ediyorsa o turun ID'sini referentTurnId alanına yaz; referans yoksa null kullan. referentRole=utterance, kullanıcı önceki açıklama/ifade/kavrama dönüyorsa kullanılır. referentRole=case_entity, kullanıcı önceki çocuk, öğrenci, vaka, davranış veya örnek varlığına dönüyorsa kullanılır; bu durumda en son yorum cümlesi yerine varlığın tanıtıldığı örnek turunu seçmeye çalış. Referans yoksa referentRole=none olmalıdır. Referansın active/history türünü, hedeflerini ve bağlı vaka zincirini yerel resolver state'ten türetecek. Oturum özetinde summarize=true ve conversationAction=summarize_session kullan; özet hedeflerini yerel resolver geçmişten türetecek.
 
