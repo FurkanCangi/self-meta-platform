@@ -178,6 +178,9 @@ async function main() {
   const schema = studentSemanticFrameSchema(state)
   assert.equal(hasKey(schema, "uniqueItems"), false, "student provider schema must stay within the known working subset")
   assert.equal(hasKey(schema, "obligationKinds"), false, "provider must not own final answer obligations")
+  assert.equal(hasKey(schema, "mentionedTargetIds"), false, "flat target mentions must not remain in the provider schema")
+  assert.equal(hasKey(schema, "focusTargetIds"), true)
+  assert.equal(hasKey(schema, "contextTargetIds"), true)
   const validFrame = {
     semanticActs: {
       define: true,
@@ -191,7 +194,8 @@ async function main() {
       treatment_boundary: false,
     },
     conversationAction: "start",
-    mentionedTargetIds: ["executive_functions"],
+    focusTargetIds: ["executive_functions"],
+    contextTargetIds: [],
     rejectedTargetIds: [],
     referentTurnId: null,
     referentRole: "none",
@@ -200,10 +204,14 @@ async function main() {
     observationExtras: { singleObservationLimit: false, additionalContext: false },
   }
   assert.ok(validateStudentSemanticFrame(validFrame, state))
-  assert.equal(validateStudentSemanticFrame({ ...validFrame, mentionedTargetIds: ["executive_functions", "executive_functions"] }, state), null)
+  assert.equal(validateStudentSemanticFrame({ ...validFrame, focusTargetIds: ["executive_functions", "executive_functions"] }, state), null)
   assert.deepEqual(
-    validateStudentSemanticFrameDetailed({ ...validFrame, mentionedTargetIds: ["executive_functions", "executive_functions"] }, state),
-    { ok: false, failureCode: "invalid_mentioned_targets" },
+    validateStudentSemanticFrameDetailed({ ...validFrame, focusTargetIds: ["executive_functions", "executive_functions"] }, state),
+    { ok: false, failureCode: "invalid_focus_targets" },
+  )
+  assert.deepEqual(
+    validateStudentSemanticFrameDetailed({ ...validFrame, contextTargetIds: ["executive_functions"] }, state),
+    { ok: false, failureCode: "target_role_overlap" },
   )
   assert.equal(validateStudentSemanticFrame({ ...validFrame, summaryExtras: { unknown: "yes", observationFocus: false } }, state), null)
   assert.deepEqual(
@@ -308,6 +316,7 @@ async function main() {
     studentSchemaKnownSubset: true,
     runtimeUniquenessValidation: true,
     providerOwnsFinalObligations: false,
+    targetRolesSeparated: true,
     boundedStructuredRepair: true,
     maxProviderAttemptsPerTurn: DNA_STUDENT_MAX_PROVIDER_ATTEMPTS,
     boundedTransportRetry: true,

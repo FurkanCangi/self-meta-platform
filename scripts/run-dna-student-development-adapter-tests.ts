@@ -54,6 +54,7 @@ const matchingContract: StudentRequestContract = Object.freeze({
   requestedSemanticTasks: Object.freeze(["define"] as const),
   conversationAction: "start",
   targetIds: Object.freeze(["executive_functions"]),
+  contextTargetIds: Object.freeze([]),
   rejectedTargetIds: Object.freeze([]),
   comparisonTargetIds: Object.freeze([]),
   componentTargetIds: Object.freeze([]),

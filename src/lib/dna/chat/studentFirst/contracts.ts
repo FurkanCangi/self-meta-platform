@@ -1,5 +1,5 @@
-export const DNA_STUDENT_FIRST_CONVERSATION_VERSION = "dna-student-conversation-state@4" as const
-export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@6" as const
+export const DNA_STUDENT_FIRST_CONVERSATION_VERSION = "dna-student-conversation-state@5" as const
+export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@7" as const
 
 export type StudentSemanticTask =
   | "define"
@@ -79,6 +79,7 @@ export type StudentRequestContract = Readonly<{
   requestedSemanticTasks: readonly StudentSemanticTask[]
   conversationAction: StudentConversationAction
   targetIds: readonly string[]
+  contextTargetIds: readonly string[]
   rejectedTargetIds: readonly string[]
   comparisonTargetIds: readonly string[]
   componentTargetIds: readonly string[]
@@ -97,6 +98,7 @@ export type StudentConversationTurnSnapshot = Readonly<{
   requestedSemanticTasks: readonly StudentSemanticTask[]
   conversationAction: StudentConversationAction
   targetIds: readonly string[]
+  contextTargetIds: readonly string[]
   rejectedTargetIds: readonly string[]
   comparisonTargetIds: readonly string[]
   referent: StudentReferent

@@ -125,7 +125,8 @@ const emptyState = createEmptyStudentConversationState()
 const startFrame = {
   semanticActs: semanticActs("define", "explain"),
   conversationAction: "start",
-  mentionedTargetIds: ["executive_functions"],
+  focusTargetIds: ["executive_functions"],
+  contextTargetIds: [],
   rejectedTargetIds: [],
   referentTurnId: null,
   referentRole: "none",
@@ -144,7 +145,7 @@ const integratedValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
   semanticActs: semanticActs("compare"),
   conversationAction: "continue",
-  mentionedTargetIds: ["inhibition"],
+  focusTargetIds: ["inhibition"],
   referentTurnId: "GROUPING-T01",
   referentRole: "utterance",
 }, activeState)
@@ -161,7 +162,7 @@ const presentationOnlyValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
   semanticActs: semanticActs(),
   conversationAction: "continue",
-  mentionedTargetIds: [],
+  focusTargetIds: [],
   referentTurnId: "GROUPING-T02",
   referentRole: "utterance",
   presentation: { ...base.presentation, language: "plain_student", preserveMeaning: true },
@@ -191,7 +192,7 @@ const returnValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
   semanticActs: semanticActs("explain"),
   conversationAction: "return",
-  mentionedTargetIds: ["executive_functions"],
+  focusTargetIds: ["executive_functions"],
   referentTurnId: "GROUPING-T01",
   referentRole: "utterance",
   presentation: { ...base.presentation, language: "plain_student", preserveMeaning: true },
@@ -211,7 +212,7 @@ const retargetedReturnValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
   semanticActs: semanticActs("explain"),
   conversationAction: "return",
-  mentionedTargetIds: ["working_memory"],
+  focusTargetIds: ["working_memory"],
   referentTurnId: "GROUPING-T01",
   referentRole: "utterance",
 }, comparisonState)
@@ -224,7 +225,7 @@ const repairValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
   semanticActs: semanticActs("define", "explain"),
   conversationAction: "repair",
-  mentionedTargetIds: ["inhibition", "working_memory"],
+  focusTargetIds: ["inhibition", "working_memory"],
   rejectedTargetIds: ["inhibition"],
 }, comparisonState)
 if (!repairValidation.ok) throw new Error(repairValidation.failureCode)
@@ -237,7 +238,7 @@ const summaryValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
   semanticActs: semanticActs("summarize"),
   conversationAction: "summarize_session",
-  mentionedTargetIds: [],
+  focusTargetIds: [],
   summaryExtras: { unknown: true, observationFocus: true },
 }, comparisonState)
 if (!summaryValidation.ok) throw new Error(summaryValidation.failureCode)
@@ -253,7 +254,7 @@ const observeValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
   semanticActs: semanticActs("observe", "case_reasoning"),
   conversationAction: "continue",
-  mentionedTargetIds: ["inhibition"],
+  focusTargetIds: ["inhibition"],
   referentTurnId: "GROUPING-T02",
   referentRole: "case_entity",
   summaryExtras: { unknown: true, observationFocus: true },
@@ -272,7 +273,7 @@ assert.deepEqual(observeContract.obligations.map((row) => row.kind), [
 const separateValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
   semanticActs: semanticActs("explain"),
-  mentionedTargetIds: ["planning", "inhibition", "emotion_regulation"],
+  focusTargetIds: ["planning", "inhibition", "emotion_regulation"],
   presentation: { ...base.presentation, grouping: "separate_each" },
 }, emptyState)
 if (!separateValidation.ok) throw new Error(separateValidation.failureCode)

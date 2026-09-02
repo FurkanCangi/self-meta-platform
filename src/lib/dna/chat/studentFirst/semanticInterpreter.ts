@@ -15,7 +15,7 @@ import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 import { normalizeDnaChatText } from "../text"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@16" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@17" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -50,7 +50,8 @@ export const DNA_STUDENT_OBLIGATION_KINDS = Object.freeze([
 export type StudentSemanticFrame = Readonly<{
   semanticActs: StudentSemanticActs
   conversationAction: StudentConversationAction
-  mentionedTargetIds: readonly string[]
+  focusTargetIds: readonly string[]
+  contextTargetIds: readonly string[]
   rejectedTargetIds: readonly string[]
   referentTurnId: string | null
   referentRole: StudentReferent["role"]
@@ -63,7 +64,9 @@ export const DNA_STUDENT_FRAME_FAILURE_CODES = Object.freeze([
   "invalid_object",
   "invalid_semantic_acts",
   "invalid_conversation_action",
-  "invalid_mentioned_targets",
+  "invalid_focus_targets",
+  "invalid_context_targets",
+  "target_role_overlap",
   "invalid_rejected_targets",
   "invalid_referent",
   "invalid_referent_role",
@@ -215,8 +218,11 @@ export function validateStudentSemanticFrameDetailed(
   const semanticActs = parseSemanticActs(row.semanticActs)
   if (!semanticActs) return frameFailure("invalid_semantic_acts")
   if (!ACTION_SET.has(String(row.conversationAction))) return frameFailure("invalid_conversation_action")
-  const mentionedTargetIds = uniqueStrings(row.mentionedTargetIds, TARGET_ID_SET, 8)
-  if (!mentionedTargetIds) return frameFailure("invalid_mentioned_targets")
+  const focusTargetIds = uniqueStrings(row.focusTargetIds, TARGET_ID_SET, 8)
+  if (!focusTargetIds) return frameFailure("invalid_focus_targets")
+  const contextTargetIds = uniqueStrings(row.contextTargetIds, TARGET_ID_SET, 8)
+  if (!contextTargetIds) return frameFailure("invalid_context_targets")
+  if (focusTargetIds.some((targetId) => contextTargetIds.includes(targetId))) return frameFailure("target_role_overlap")
   const rejectedTargetIds = uniqueStrings(row.rejectedTargetIds, TARGET_ID_SET, 8)
   if (!rejectedTargetIds) return frameFailure("invalid_rejected_targets")
   const referent = parseReferentTurnId(row.referentTurnId, state)
@@ -254,7 +260,8 @@ export function validateStudentSemanticFrameDetailed(
     frame: Object.freeze({
       semanticActs,
       conversationAction: row.conversationAction as StudentConversationAction,
-      mentionedTargetIds: Object.freeze(mentionedTargetIds),
+      focusTargetIds: Object.freeze(focusTargetIds),
+      contextTargetIds: Object.freeze(contextTargetIds),
       rejectedTargetIds: Object.freeze(rejectedTargetIds),
       referentTurnId: referent.turnId,
       referentRole,
@@ -302,17 +309,19 @@ export function compileStudentRequestContract(
       : "none",
   })
   const unique = (values: readonly string[]) => [...new Set(values)]
-  const allowedMentions = frame.mentionedTargetIds.filter((targetId) => !frame.rejectedTargetIds.includes(targetId))
+  const allowedFocusTargets = frame.focusTargetIds.filter((targetId) => !frame.rejectedTargetIds.includes(targetId))
+  const contextTargetIds = Object.freeze(frame.contextTargetIds.filter((targetId) =>
+    !frame.rejectedTargetIds.includes(targetId) && !allowedFocusTargets.includes(targetId)))
   const latestTurnId = state.semanticHistory.at(-1)?.turnId ?? null
   const latestSnapshot = state.semanticHistory.at(-1) ?? null
   const latestTargetIds = latestSnapshot?.targetIds ?? []
   const contextBindingTask = semanticTask === "example" || semanticTask === "case_reasoning" || semanticTask === "observe"
-  const latestTargetsOverlap = allowedMentions.some((targetId) => latestTargetIds.includes(targetId))
+  const latestTargetsOverlap = allowedFocusTargets.some((targetId) => latestTargetIds.includes(targetId))
   const contextTargetsCompatible = Boolean(latestSnapshot) && (
-    !allowedMentions.length || allowedMentions.every((targetId) => latestTargetIds.includes(targetId))
+    !allowedFocusTargets.length || allowedFocusTargets.every((targetId) => latestTargetIds.includes(targetId))
   )
   const compareContextCompatible = Boolean(latestSnapshot) && semanticTask === "compare" && (
-    allowedMentions.length < 2 || latestTargetsOverlap
+    allowedFocusTargets.length < 2 || latestTargetsOverlap
   )
   const effectiveReferentTurnId = frame.referentTurnId ?? (
     latestTurnId && (
@@ -348,15 +357,15 @@ export function compileStudentRequestContract(
   const mergedTargetIds = frame.conversationAction === "summarize_session"
     ? unique(state.semanticHistory.flatMap((turn) => turn.targetIds))
     : frame.conversationAction === "return"
-        ? allowedMentions.length
-          ? unique(allowedMentions)
+        ? allowedFocusTargets.length
+          ? unique(allowedFocusTargets)
           : unique(referent.targetIds)
       : semanticTask === "compare"
-        ? allowedMentions.length >= 2
-          ? unique(allowedMentions)
-          : unique([...referent.targetIds, ...allowedMentions])
-        : allowedMentions.length
-          ? unique(allowedMentions)
+        ? allowedFocusTargets.length >= 2
+          ? unique(allowedFocusTargets)
+          : unique([...referent.targetIds, ...allowedFocusTargets])
+        : allowedFocusTargets.length
+          ? unique(allowedFocusTargets)
           : referent.targetIds.length
             ? unique(referent.targetIds)
             : unique(state.activeTargetIds)
@@ -391,6 +400,7 @@ export function compileStudentRequestContract(
     requestedSemanticTasks,
     conversationAction: frame.conversationAction,
     targetIds: Object.freeze(targetIds),
+    contextTargetIds,
     rejectedTargetIds: frame.rejectedTargetIds,
     comparisonTargetIds: Object.freeze(comparisonTargetIds),
     componentTargetIds,
@@ -424,7 +434,7 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
     type: "object",
     additionalProperties: false,
     required: [
-      "semanticActs", "conversationAction", "mentionedTargetIds", "rejectedTargetIds",
+      "semanticActs", "conversationAction", "focusTargetIds", "contextTargetIds", "rejectedTargetIds",
       "referentTurnId", "referentRole", "presentation",
       "summaryExtras", "observationExtras",
     ],
@@ -436,7 +446,8 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
         properties: Object.fromEntries(DNA_STUDENT_SEMANTIC_TASKS.map((task) => [task, { type: "boolean" }])),
       },
       conversationAction: { type: "string", enum: [...DNA_STUDENT_CONVERSATION_ACTIONS] },
-      mentionedTargetIds: { type: "array", minItems: 0, maxItems: 8, items: { type: "string", enum: [...TARGET_IDS] } },
+      focusTargetIds: { type: "array", minItems: 0, maxItems: 8, items: { type: "string", enum: [...TARGET_IDS] } },
+      contextTargetIds: { type: "array", minItems: 0, maxItems: 8, items: { type: "string", enum: [...TARGET_IDS] } },
       rejectedTargetIds: { type: "array", minItems: 0, maxItems: 8, items: { type: "string", enum: [...TARGET_IDS] } },
       referentTurnId: historyIds.length
         ? { anyOf: [{ type: "string", enum: historyIds }, { type: "null" }] }
@@ -498,6 +509,7 @@ export function studentSemanticInterpreterContent(input: Readonly<{
         requestedSemanticTasks: turn.requestedSemanticTasks,
         conversationAction: turn.conversationAction,
         targetIds: turn.targetIds,
+        contextTargetIds: turn.contextTargetIds,
         rejectedTargetIds: turn.rejectedTargetIds,
         comparisonTargetIds: turn.comparisonTargetIds,
         referent: {
@@ -522,7 +534,7 @@ Tek bir semantic act seçmeye çalışma. Açıkça istenen her act true, istenm
 
 Bir örnek üretme veya bir kavramı örnekle gösterme açıkça isteniyorsa semanticActs.example=true kullan. “Bu örnekte”, “önceki örnek” veya “örnekteki çocuk” yalnız mevcut örneğe gönderme yapıyorsa ve yeni örnek istenmiyorsa semanticActs.example=false ve presentation.example=none kullan. presentation.example yalnız istenen örneğin kısa/somut sunum biçimini belirtir; kendi başına örnek isteği değildir.
 
-Yalnız allowedTargets içindeki ID'leri kullan. Yeni hedef uydurma. mentionedTargetIds yalnız mevcut kullanıcı mesajında açıkça adı geçen hedefleri içerir; referans verilen eski turun hedeflerini buraya kopyalama. Açık düzeltmede reddedilen hedefi rejectedTargetIds alanına koy. “Bu/bununla/bu örnekte/ilk anlattığın” gibi ifadeler önceki bir tura işaret ediyorsa o turun ID'sini referentTurnId alanına yaz; referans yoksa null kullan. referentRole=utterance, kullanıcı önceki açıklama/ifade/kavrama dönüyorsa kullanılır. referentRole=case_entity, kullanıcı önceki çocuk, öğrenci, vaka, davranış veya örnek varlığına dönüyorsa kullanılır; bu durumda en son yorum cümlesi yerine varlığın tanıtıldığı örnek turunu seçmeye çalış. Referans yoksa referentRole=none olmalıdır. Referansın active/history türünü, hedeflerini ve bağlı vaka zincirini yerel resolver state'ten türetecek. Oturum özetinde summarize=true ve conversationAction=summarize_session kullan; özet hedeflerini yerel resolver geçmişten türetecek.
+Yalnız allowedTargets içindeki ID'leri kullan. Yeni hedef uydurma. focusTargetIds yalnız mevcut isteğin cevapta doğrudan ele alınmasını istediği bilimsel kavramları içerir. Bir vaka veya örnek cümlesinde geçen fakat hakkında ayrıca açıklama/karşılaştırma istenmeyen davranış-kavram eşleşmelerini contextTargetIds alanına koy; bunlar cevap hedefi değildir. Örneğin eş düzenlemeyi örneklerken “çocuk göreve dönüyor” denmesi recovery kavramını otomatik olarak focus yapmaz. Referans verilen eski turun hedeflerini iki alana da kopyalama. Aynı ID iki rolde birden bulunamaz. Açık düzeltmede reddedilen hedefi rejectedTargetIds alanına koy. “Bu/bununla/bu örnekte/ilk anlattığın” gibi ifadeler önceki bir tura işaret ediyorsa o turun ID'sini referentTurnId alanına yaz; referans yoksa null kullan. referentRole=utterance, kullanıcı önceki açıklama/ifade/kavrama dönüyorsa kullanılır. referentRole=case_entity, kullanıcı önceki çocuk, öğrenci, vaka, davranış veya örnek varlığına dönüyorsa kullanılır; bu durumda en son yorum cümlesi yerine varlığın tanıtıldığı örnek turunu seçmeye çalış. Referans yoksa referentRole=none olmalıdır. Referansın active/history türünü, hedeflerini ve bağlı vaka zincirini yerel resolver state'ten türetecek. Oturum özetinde summarize=true ve conversationAction=summarize_session kullan; özet hedeflerini yerel resolver geçmişten türetecek.
 
 Nihai cevap yükümlülüğü seçme; onu yerel derleyici yapar. Yalnız semantik gerçekleri çıkar:
 - presentation.grouping yalnız kullanıcı birden fazla hedefin her birinin ayrı ele alınmasını açıkça istiyorsa separate_each olur. “X bunun parçası mı?” bir ilişki sorusudur ve grouping=integrated kalır.

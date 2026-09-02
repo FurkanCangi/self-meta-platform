@@ -40,7 +40,8 @@ function frame(input: Partial<StudentSemanticFrame> & Pick<StudentSemanticFrame,
   return Object.freeze({
     semanticActs: input.semanticActs,
     conversationAction: input.conversationAction ?? "continue",
-    mentionedTargetIds: Object.freeze([...(input.mentionedTargetIds ?? [])]),
+    focusTargetIds: Object.freeze([...(input.focusTargetIds ?? [])]),
+    contextTargetIds: Object.freeze([...(input.contextTargetIds ?? [])]),
     rejectedTargetIds: Object.freeze([...(input.rejectedTargetIds ?? [])]),
     referentTurnId: input.referentTurnId ?? null,
     referentRole: input.referentRole ?? (input.referentTurnId ? "utterance" : "none"),
@@ -58,12 +59,12 @@ let state: StudentConversationState = createEmptyStudentConversationState()
 const start = compileStudentRequestContract("RESOLVER-T01", frame({
   semanticActs: acts("define", "explain"),
   conversationAction: "start",
-  mentionedTargetIds: ["executive_functions"],
+  focusTargetIds: ["executive_functions"],
 }), state)
 state = applyStudentRequestContract(state, start)
 const comparison = compileStudentRequestContract("RESOLVER-T02", frame({
   semanticActs: acts("compare", "observe"),
-  mentionedTargetIds: ["inhibition"],
+  focusTargetIds: ["inhibition"],
   referentTurnId: "RESOLVER-T01",
   observationExtras: { singleObservationLimit: true, additionalContext: true },
 }), state)
@@ -74,14 +75,14 @@ state = applyStudentRequestContract(state, comparison)
 
 const pureObservation = compileStudentRequestContract("RESOLVER-T03", frame({
   semanticActs: acts("observe"),
-  mentionedTargetIds: ["inhibition"],
+  focusTargetIds: ["inhibition"],
 }), state)
 assert.equal(pureObservation.semanticTask, "observe", "observation-only requests must remain observation")
 assert.deepEqual(kinds(pureObservation), ["state_single_observation_limit", "name_additional_context"])
 
 const exampleReferenceObservation = compileStudentRequestContract("RESOLVER-T03B", frame({
   semanticActs: acts("observe"),
-  mentionedTargetIds: ["inhibition"],
+  focusTargetIds: ["inhibition"],
   presentation: { ...presentation, example: "concrete" },
 }), state)
 assert.deepEqual(exampleReferenceObservation.requestedSemanticTasks, ["observe"])
@@ -90,7 +91,7 @@ assert.deepEqual(kinds(exampleReferenceObservation), ["state_single_observation_
 
 const comparisonWithExample = compileStudentRequestContract("RESOLVER-T03C", frame({
   semanticActs: acts("compare", "example"),
-  mentionedTargetIds: ["planning", "working_memory"],
+  focusTargetIds: ["planning", "working_memory"],
   presentation: { ...presentation, example: "concrete" },
 }), state)
 assert.equal(comparisonWithExample.semanticTask, "compare")
@@ -104,7 +105,7 @@ assert.deepEqual(kinds(comparisonWithExample), [
 
 const componentExplanation = compileStudentRequestContract("RESOLVER-T04", frame({
   semanticActs: acts("case_reasoning"),
-  mentionedTargetIds: ["planning", "inhibition", "emotion_regulation"],
+  focusTargetIds: ["planning", "inhibition", "emotion_regulation"],
   presentation: { ...presentation, grouping: "separate_each" },
 }), state)
 assert.equal(componentExplanation.semanticTask, "explain", "explicit component-wise grouping must outrank contextual case framing")
@@ -113,7 +114,7 @@ assert.deepEqual(kinds(componentExplanation), ["define_target", "cover_requested
 
 const pureCase = compileStudentRequestContract("RESOLVER-T05", frame({
   semanticActs: acts("case_reasoning"),
-  mentionedTargetIds: ["inhibition"],
+  focusTargetIds: ["inhibition"],
 }), state)
 assert.equal(pureCase.semanticTask, "case_reasoning", "case-only inference limits must remain case reasoning")
 assert.deepEqual(kinds(pureCase), ["state_single_observation_limit", "name_additional_context"])
@@ -130,7 +131,7 @@ const exampleState = applyStudentRequestContract(state, implicitExample)
 
 const compatibleObservation = compileStudentRequestContract("RESOLVER-T06B", frame({
   semanticActs: acts("observe"),
-  mentionedTargetIds: ["inhibition"],
+  focusTargetIds: ["inhibition"],
 }), exampleState)
 assert.deepEqual(compatibleObservation.referent, {
   kind: "active",
@@ -142,7 +143,7 @@ assert.deepEqual(compatibleObservation.targetIds, ["inhibition"])
 
 const unrelatedObservation = compileStudentRequestContract("RESOLVER-T06C", frame({
   semanticActs: acts("observe"),
-  mentionedTargetIds: ["interoception"],
+  focusTargetIds: ["interoception"],
 }), exampleState)
 assert.deepEqual(unrelatedObservation.referent, {
   kind: "none",
@@ -154,11 +155,39 @@ assert.deepEqual(unrelatedObservation.targetIds, ["interoception"])
 
 const explicitExample = compileStudentRequestContract("RESOLVER-T07", frame({
   semanticActs: acts("example"),
-  mentionedTargetIds: ["coregulation"],
+  focusTargetIds: ["coregulation"],
   presentation: { ...presentation, example: "concrete" },
 }), state)
 assert.deepEqual(explicitExample.referent, { kind: "none", role: "none", turnId: null, targetIds: [] }, "an explicit new example target must not inherit an unrelated referent")
 assert.deepEqual(explicitExample.targetIds, ["coregulation"])
+
+let targetRoleState = createEmptyStudentConversationState()
+const targetRoleAnchor = compileStudentRequestContract("TARGET-ROLE-T01", frame({
+  semanticActs: acts("define"),
+  conversationAction: "start",
+  focusTargetIds: ["coregulation"],
+}), targetRoleState)
+targetRoleState = applyStudentRequestContract(targetRoleState, targetRoleAnchor)
+const contextualRecoveryExample = compileStudentRequestContract("TARGET-ROLE-T02", frame({
+  semanticActs: acts("example"),
+  focusTargetIds: [],
+  contextTargetIds: ["recovery"],
+  presentation: { ...presentation, example: "concrete" },
+}), targetRoleState)
+assert.deepEqual(contextualRecoveryExample.targetIds, ["coregulation"], "case behavior context must not become an answer-driving target")
+assert.deepEqual(contextualRecoveryExample.contextTargetIds, ["recovery"])
+assert.deepEqual(contextualRecoveryExample.referent, {
+  kind: "active",
+  role: "utterance",
+  turnId: "TARGET-ROLE-T01",
+  targetIds: ["coregulation"],
+})
+const explicitRecoveryFocus = compileStudentRequestContract("TARGET-ROLE-T03", frame({
+  semanticActs: acts("define"),
+  focusTargetIds: ["recovery"],
+}), targetRoleState)
+assert.deepEqual(explicitRecoveryFocus.targetIds, ["recovery"], "an explicit recovery question must remain answer-driving")
+assert.deepEqual(explicitRecoveryFocus.contextTargetIds, [])
 
 const implicitSimplification = compileStudentRequestContract("RESOLVER-T08", frame({
   semanticActs: acts("explain"),
@@ -170,7 +199,7 @@ assert.ok(kinds(implicitSimplification).includes("preserve_target_while_simplify
 
 const treatmentBoundary = compileStudentRequestContract("RESOLVER-T09", frame({
   semanticActs: acts("treatment_boundary", "explain"),
-  mentionedTargetIds: ["interoception"],
+  focusTargetIds: ["interoception"],
   presentation: { ...presentation, grouping: "separate_each" },
 }), state)
 assert.equal(treatmentBoundary.semanticTask, "treatment_boundary", "treatment safety must outrank discourse presentation")
@@ -181,18 +210,18 @@ let repairState: StudentConversationState = createEmptyStudentConversationState(
 const repairStart = compileStudentRequestContract("REPAIR-T01", frame({
   semanticActs: acts("define"),
   conversationAction: "start",
-  mentionedTargetIds: ["self_regulation"],
+  focusTargetIds: ["self_regulation"],
 }), repairState)
 repairState = applyStudentRequestContract(repairState, repairStart)
 const repairComparison = compileStudentRequestContract("REPAIR-T02", frame({
   semanticActs: acts("compare"),
-  mentionedTargetIds: ["attention", "self_regulation"],
+  focusTargetIds: ["attention", "self_regulation"],
 }), repairState)
 repairState = applyStudentRequestContract(repairState, repairComparison)
 const repaired = compileStudentRequestContract("REPAIR-T03", frame({
   semanticActs: acts("compare"),
   conversationAction: "repair",
-  mentionedTargetIds: ["attention", "self_regulation", "recovery"],
+  focusTargetIds: ["attention", "self_regulation", "recovery"],
   rejectedTargetIds: ["attention"],
   referentTurnId: "REPAIR-T02",
 }), repairState)
@@ -213,20 +242,20 @@ let compareState: StudentConversationState = createEmptyStudentConversationState
 const compareStart = compileStudentRequestContract("COMPARE-T01", frame({
   semanticActs: acts("define"),
   conversationAction: "start",
-  mentionedTargetIds: ["executive_functions"],
+  focusTargetIds: ["executive_functions"],
 }), compareState)
 compareState = applyStudentRequestContract(compareState, compareStart)
 
 const singleSideCompare = compileStudentRequestContract("COMPARE-T02", frame({
   semanticActs: acts("compare"),
-  mentionedTargetIds: ["inhibition"],
+  focusTargetIds: ["inhibition"],
 }), compareState)
 assert.deepEqual(singleSideCompare.referent, { kind: "active", role: "utterance", turnId: "COMPARE-T01", targetIds: ["executive_functions"] })
 assert.deepEqual(singleSideCompare.targetIds, ["executive_functions", "inhibition"], "one explicit comparison side must be completed from the latest referent")
 
 const completeOverlappingCompare = compileStudentRequestContract("COMPARE-T03", frame({
   semanticActs: acts("compare"),
-  mentionedTargetIds: ["executive_functions", "inhibition"],
+  focusTargetIds: ["executive_functions", "inhibition"],
 }), compareState)
 assert.deepEqual(completeOverlappingCompare.referent, { kind: "active", role: "utterance", turnId: "COMPARE-T01", targetIds: ["executive_functions"] })
 assert.deepEqual(completeOverlappingCompare.targetIds, ["executive_functions", "inhibition"], "a complete explicit pair must not be expanded by its conversational referent")
@@ -235,19 +264,19 @@ let priorExtraState: StudentConversationState = createEmptyStudentConversationSt
 const priorExtra = compileStudentRequestContract("COMPARE-T04", frame({
   semanticActs: acts("explain"),
   conversationAction: "start",
-  mentionedTargetIds: ["self_regulation", "self_control"],
+  focusTargetIds: ["self_regulation", "self_control"],
 }), priorExtraState)
 priorExtraState = applyStudentRequestContract(priorExtraState, priorExtra)
 const completePairWithPriorExtra = compileStudentRequestContract("COMPARE-T05", frame({
   semanticActs: acts("compare"),
-  mentionedTargetIds: ["attention", "self_regulation"],
+  focusTargetIds: ["attention", "self_regulation"],
 }), priorExtraState)
 assert.deepEqual(completePairWithPriorExtra.referent, { kind: "active", role: "utterance", turnId: "COMPARE-T04", targetIds: ["self_regulation", "self_control"] })
 assert.deepEqual(completePairWithPriorExtra.targetIds, ["attention", "self_regulation"], "a referent's unrequested extra target must not leak into a complete explicit pair")
 
 const unrelatedPair = compileStudentRequestContract("COMPARE-T06", frame({
   semanticActs: acts("compare"),
-  mentionedTargetIds: ["arousal", "sensory_regulation"],
+  focusTargetIds: ["arousal", "sensory_regulation"],
 }), compareState)
 assert.deepEqual(unrelatedPair.referent, { kind: "none", role: "none", turnId: null, targetIds: [] }, "an unrelated complete comparison pair must not inherit old context")
 assert.deepEqual(unrelatedPair.targetIds, ["arousal", "sensory_regulation"])
@@ -255,7 +284,7 @@ assert.deepEqual(unrelatedPair.targetIds, ["arousal", "sensory_regulation"])
 const retargetedCompareReturn = compileStudentRequestContract("RETURN-T01", frame({
   semanticActs: acts("compare"),
   conversationAction: "return",
-  mentionedTargetIds: ["working_memory"],
+  focusTargetIds: ["working_memory"],
   referentTurnId: "RESOLVER-T02",
 }), state)
 assert.deepEqual(retargetedCompareReturn.referent, {
@@ -277,12 +306,12 @@ let entityState: StudentConversationState = createEmptyStudentConversationState(
 const entityDefinition = compileStudentRequestContract("ENTITY-T01", frame({
   semanticActs: acts("define"),
   conversationAction: "start",
-  mentionedTargetIds: ["inhibition"],
+  focusTargetIds: ["inhibition"],
 }), entityState)
 entityState = applyStudentRequestContract(entityState, entityDefinition)
 const entityExample = compileStudentRequestContract("ENTITY-T02", frame({
   semanticActs: acts("example"),
-  mentionedTargetIds: ["inhibition"],
+  focusTargetIds: ["inhibition"],
   referentTurnId: "ENTITY-T01",
   referentRole: "utterance",
   presentation: { ...presentation, example: "concrete" },
@@ -290,7 +319,7 @@ const entityExample = compileStudentRequestContract("ENTITY-T02", frame({
 entityState = applyStudentRequestContract(entityState, entityExample)
 const observationAboutEntity = compileStudentRequestContract("ENTITY-T03", frame({
   semanticActs: acts("observe"),
-  mentionedTargetIds: ["inhibition"],
+  focusTargetIds: ["inhibition"],
   referentTurnId: "ENTITY-T02",
   referentRole: "case_entity",
 }), entityState)
@@ -305,7 +334,7 @@ assert.deepEqual(entityState.semanticHistory.at(-1)?.referent, {
 const returnToEntity = compileStudentRequestContract("ENTITY-T04", frame({
   semanticActs: acts("compare"),
   conversationAction: "return",
-  mentionedTargetIds: ["working_memory"],
+  focusTargetIds: ["working_memory"],
   referentTurnId: "ENTITY-T03",
   referentRole: "case_entity",
 }), entityState)
@@ -320,7 +349,7 @@ assert.deepEqual(returnToEntity.targetIds, ["working_memory"])
 const returnToUtterance = compileStudentRequestContract("ENTITY-T05", frame({
   semanticActs: acts("explain"),
   conversationAction: "return",
-  mentionedTargetIds: ["working_memory"],
+  focusTargetIds: ["working_memory"],
   referentTurnId: "ENTITY-T03",
   referentRole: "utterance",
 }), entityState)
@@ -333,14 +362,14 @@ assert.deepEqual(returnToUtterance.referent, {
 
 const unrelatedEntityCase = compileStudentRequestContract("ENTITY-T06", frame({
   semanticActs: acts("case_reasoning"),
-  mentionedTargetIds: ["coregulation"],
+  focusTargetIds: ["coregulation"],
 }), entityState)
 assert.deepEqual(unrelatedEntityCase.referent, { kind: "none", role: "none", turnId: null, targetIds: [] })
 
 for (let index = 4; index <= 10; index += 1) {
   const filler = compileStudentRequestContract(`ENTITY-T${String(index).padStart(2, "0")}`, frame({
     semanticActs: acts("explain"),
-    mentionedTargetIds: [index % 2 === 0 ? "planning" : "working_memory"],
+    focusTargetIds: [index % 2 === 0 ? "planning" : "working_memory"],
   }), entityState)
   entityState = applyStudentRequestContract(entityState, filler)
 }
@@ -350,7 +379,7 @@ assert.equal(entityState.semanticHistory.some((turn) => turn.turnId === "ENTITY-
 const truncatedEntityReturn = compileStudentRequestContract("ENTITY-T11", frame({
   semanticActs: acts("explain"),
   conversationAction: "return",
-  mentionedTargetIds: ["working_memory"],
+  focusTargetIds: ["working_memory"],
   referentTurnId: "ENTITY-T03",
   referentRole: "case_entity",
 }), entityState)
@@ -415,7 +444,7 @@ assert.equal(resolveStudentConversationAction({
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_RESOLVER_CONTRASTIVE_LOCAL",
-  cases: 37,
+  cases: 39,
   compareOverContextualObserve: true,
   componentExplainOverContextualCase: true,
   pureObservationPreserved: true,
@@ -426,6 +455,8 @@ console.log(JSON.stringify({
   compatibleObservationReferent: true,
   unrelatedObservationNoReferentLeak: true,
   explicitNewTargetNoReferentLeak: true,
+  contextualBehaviorDoesNotBecomeFocus: true,
+  explicitBehaviorFocusPreserved: true,
   implicitSimplificationReferent: true,
   treatmentBoundaryPriorityPreserved: true,
   rejectedTargetCannotReenterViaReferent: true,
