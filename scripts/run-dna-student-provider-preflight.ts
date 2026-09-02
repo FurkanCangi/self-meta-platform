@@ -1,0 +1,64 @@
+import assert from "node:assert/strict"
+import dotenv from "dotenv"
+
+import { calculateDnaChatLunaUsage } from "../src/lib/dna/chat/lunaUsage"
+import { requestDnaS13StructuredOutputDetailed } from "../src/lib/dna/chat/s13/server"
+import {
+  createEmptyStudentConversationState,
+  DNA_STUDENT_SEMANTIC_INTERPRETER_INSTRUCTIONS,
+  studentSemanticFrameSchema,
+  studentSemanticInterpreterContent,
+  validateStudentSemanticFrame,
+} from "../src/lib/dna/chat/studentFirst"
+
+dotenv.config({ path: ".env.local", override: false, quiet: true })
+
+const MAX_CALLS = 1
+const MAX_COST_MICROUSD = 20_000
+
+async function main() {
+  assert.ok(process.env.OPENAI_API_KEY?.trim(), "existing OPENAI_API_KEY is required")
+  const state = createEmptyStudentConversationState()
+  let calls = 0
+  calls += 1
+  assert.ok(calls <= MAX_CALLS)
+  const attempt = await requestDnaS13StructuredOutputDetailed({
+    name: "dna_student_semantic_preflight",
+    schema: studentSemanticFrameSchema(state),
+    instructions: DNA_STUDENT_SEMANTIC_INTERPRETER_INSTRUCTIONS,
+    content: studentSemanticInterpreterContent({
+      turnId: "STUDENT-PROVIDER-PREFLIGHT-T01",
+      message: "yürütücü işlevler ne demek",
+      state,
+    }),
+    maxOutputTokens: 650,
+  })
+  if (!attempt.ok) {
+    console.error(JSON.stringify({ ok: false, gate: "STUDENT_PROVIDER_PREFLIGHT", calls, failure: attempt.failure }))
+    process.exitCode = 1
+    return
+  }
+  const frame = validateStudentSemanticFrame(attempt.result.value, state)
+  if (!frame) {
+    console.error(JSON.stringify({ ok: false, gate: "STUDENT_PROVIDER_PREFLIGHT", calls, failure: { reason: "invalid_structured_frame" } }))
+    process.exitCode = 1
+    return
+  }
+  const usage = calculateDnaChatLunaUsage(attempt.result.usage)
+  assert.ok(usage.costMicrousd <= MAX_COST_MICROUSD, "provider preflight cost cap exceeded")
+  console.log(JSON.stringify({
+    ok: true,
+    gate: "STUDENT_PROVIDER_PREFLIGHT",
+    calls,
+    structuredFrameValid: true,
+    rawOutputLogged: false,
+    usage,
+    latencyMs: Math.round(attempt.result.latencyMs),
+    maxCostMicrousd: MAX_COST_MICROUSD,
+  }, null, 2))
+}
+
+void main().catch((error) => {
+  console.error(error instanceof Error ? error.message : String(error))
+  process.exitCode = 1
+})

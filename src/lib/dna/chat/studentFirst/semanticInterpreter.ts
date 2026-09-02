@@ -238,10 +238,10 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
     properties: {
       semanticTask: { type: "string", enum: [...DNA_STUDENT_SEMANTIC_TASKS] },
       conversationAction: { type: "string", enum: [...DNA_STUDENT_CONVERSATION_ACTIONS] },
-      targetIds: { type: "array", minItems: 0, maxItems: 8, uniqueItems: true, items: { type: "string", enum: [...TARGET_IDS] } },
-      rejectedTargetIds: { type: "array", minItems: 0, maxItems: 8, uniqueItems: true, items: { type: "string", enum: [...TARGET_IDS] } },
-      comparisonTargetIds: { type: "array", minItems: 0, maxItems: 4, uniqueItems: true, items: { type: "string", enum: [...TARGET_IDS] } },
-      componentTargetIds: { type: "array", minItems: 0, maxItems: 8, uniqueItems: true, items: { type: "string", enum: [...TARGET_IDS] } },
+      targetIds: { type: "array", minItems: 0, maxItems: 8, items: { type: "string", enum: [...TARGET_IDS] } },
+      rejectedTargetIds: { type: "array", minItems: 0, maxItems: 8, items: { type: "string", enum: [...TARGET_IDS] } },
+      comparisonTargetIds: { type: "array", minItems: 0, maxItems: 4, items: { type: "string", enum: [...TARGET_IDS] } },
+      componentTargetIds: { type: "array", minItems: 0, maxItems: 8, items: { type: "string", enum: [...TARGET_IDS] } },
       referent: {
         type: "object",
         additionalProperties: false,
@@ -251,7 +251,7 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
           turnId: historyIds.length
             ? { anyOf: [{ type: "string", enum: historyIds }, { type: "null" }] }
             : { type: "null" },
-          targetIds: { type: "array", minItems: 0, maxItems: 8, uniqueItems: true, items: { type: "string", enum: [...TARGET_IDS] } },
+          targetIds: { type: "array", minItems: 0, maxItems: 8, items: { type: "string", enum: [...TARGET_IDS] } },
         },
       },
       presentation: {
@@ -266,7 +266,7 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
           requestedSentenceCount: { anyOf: [{ type: "integer", minimum: 1, maximum: 6 }, { type: "null" }] },
         },
       },
-      obligationKinds: { type: "array", minItems: 1, maxItems: 12, uniqueItems: true, items: { type: "string", enum: [...DNA_STUDENT_OBLIGATION_KINDS] } },
+      obligationKinds: { type: "array", minItems: 1, maxItems: 12, items: { type: "string", enum: [...DNA_STUDENT_OBLIGATION_KINDS] } },
       ambiguity: { type: "string", enum: [...AMBIGUITIES] },
       safetyIntent: { type: "string", enum: [...SAFETY_INTENTS] },
     },

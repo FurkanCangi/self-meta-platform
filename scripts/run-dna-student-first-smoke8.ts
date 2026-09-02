@@ -128,7 +128,12 @@ async function main() {
       message: expected.message,
       state,
     })
-    if (!interpreted.ok) throw new Error(`${expected.turnId}: ${interpreted.reason}`)
+    if (!interpreted.ok) {
+      const detail = interpreted.reason === "provider_failure"
+        ? `/${interpreted.failure.reason}/${interpreted.failure.httpStatus ?? "no_status"}/${interpreted.failure.apiErrorCode ?? interpreted.failure.apiErrorType ?? "no_code"}`
+        : ""
+      throw new Error(`${expected.turnId}: ${interpreted.reason}${detail}`)
+    }
     const contract = interpreted.contract
     usageRows.push(calculateDnaChatLunaUsage(interpreted.provider.usage))
     latencies.push(interpreted.provider.latencyMs)

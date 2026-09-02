@@ -43,6 +43,29 @@ export type DnaS13ProviderResult<T> = Readonly<{
   latencyMs: number
 }>
 
+export const DNA_S13_PROVIDER_FAILURE_REASONS = Object.freeze([
+  "missing_key",
+  "timeout",
+  "network_error",
+  "http_error",
+  "invalid_response_json",
+  "empty_output",
+  "invalid_output_json",
+] as const)
+
+export type DnaS13ProviderFailureReason = typeof DNA_S13_PROVIDER_FAILURE_REASONS[number]
+
+export type DnaS13ProviderFailure = Readonly<{
+  reason: DnaS13ProviderFailureReason
+  httpStatus: number | null
+  apiErrorType: string | null
+  apiErrorCode: string | null
+}>
+
+export type DnaS13ProviderAttempt<T> =
+  | Readonly<{ ok: true; result: DnaS13ProviderResult<T> }>
+  | Readonly<{ ok: false; failure: DnaS13ProviderFailure }>
+
 export type DnaS13TopicCandidate = Readonly<{
   topicId: string
   title: string
@@ -51,6 +74,33 @@ export type DnaS13TopicCandidate = Readonly<{
 }>
 
 type FetchLike = typeof fetch
+
+const SAFE_API_ERROR_ID = /^[a-zA-Z0-9_.:-]{1,80}$/
+
+function safeApiErrorId(value: unknown): string | null {
+  return typeof value === "string" && SAFE_API_ERROR_ID.test(value) ? value : null
+}
+
+function providerFailure(
+  reason: DnaS13ProviderFailureReason,
+  input: Partial<Pick<DnaS13ProviderFailure, "httpStatus" | "apiErrorType" | "apiErrorCode">> = {},
+): DnaS13ProviderFailure {
+  return Object.freeze({
+    reason,
+    httpStatus: Number.isInteger(input.httpStatus) ? Number(input.httpStatus) : null,
+    apiErrorType: safeApiErrorId(input.apiErrorType),
+    apiErrorCode: safeApiErrorId(input.apiErrorCode),
+  })
+}
+
+function providerApiError(payload: unknown): Pick<DnaS13ProviderFailure, "apiErrorType" | "apiErrorCode"> {
+  const row = payload && typeof payload === "object" ? payload as Record<string, unknown> : {}
+  const error = row.error && typeof row.error === "object" ? row.error as Record<string, unknown> : {}
+  return {
+    apiErrorType: safeApiErrorId(error.type),
+    apiErrorCode: safeApiErrorId(error.code),
+  }
+}
 
 function responseText(payload: unknown) {
   if (!payload || typeof payload !== "object") return null
@@ -83,7 +133,7 @@ function usage(payload: unknown): DnaS13ProviderUsage {
   })
 }
 
-export async function requestDnaS13StructuredOutput(input: Readonly<{
+export async function requestDnaS13StructuredOutputDetailed(input: Readonly<{
   name: string
   schema: Record<string, unknown>
   instructions: string
@@ -92,9 +142,9 @@ export async function requestDnaS13StructuredOutput(input: Readonly<{
   safetyIdentifier?: string | null
   apiKey?: string
   fetchImpl?: FetchLike
-}>): Promise<DnaS13ProviderResult<unknown> | null> {
+}>): Promise<DnaS13ProviderAttempt<unknown>> {
   const apiKey = input.apiKey?.trim() || process.env.OPENAI_API_KEY?.trim()
-  if (!apiKey) return null
+  if (!apiKey) return Object.freeze({ ok: false, failure: providerFailure("missing_key") })
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), DNA_S13_REQUEST_TIMEOUT_MS)
   const started = performance.now()
@@ -117,25 +167,62 @@ export async function requestDnaS13StructuredOutput(input: Readonly<{
       }),
       signal: controller.signal,
     })
-    if (!response.ok) return null
-    const payload = await response.json() as unknown
+    let payload: unknown
+    try {
+      payload = await response.json() as unknown
+    } catch {
+      return Object.freeze({
+        ok: false,
+        failure: providerFailure("invalid_response_json", { httpStatus: response.status }),
+      })
+    }
+    if (!response.ok) {
+      return Object.freeze({
+        ok: false,
+        failure: providerFailure("http_error", { httpStatus: response.status, ...providerApiError(payload) }),
+      })
+    }
     const text = responseText(payload)
-    if (!text) return null
+    if (!text) return Object.freeze({ ok: false, failure: providerFailure("empty_output", { httpStatus: response.status }) })
     let value: unknown
-    try { value = JSON.parse(text) as unknown } catch { return null }
+    try {
+      value = JSON.parse(text) as unknown
+    } catch {
+      return Object.freeze({ ok: false, failure: providerFailure("invalid_output_json", { httpStatus: response.status }) })
+    }
     const row = payload as Record<string, unknown>
     return Object.freeze({
-      value,
-      rawOutput: text,
-      responseId: typeof row.id === "string" ? row.id : null,
-      usage: usage(payload),
-      latencyMs: performance.now() - started,
+      ok: true,
+      result: Object.freeze({
+        value,
+        rawOutput: text,
+        responseId: typeof row.id === "string" ? row.id : null,
+        usage: usage(payload),
+        latencyMs: performance.now() - started,
+      }),
     })
-  } catch {
-    return null
+  } catch (error) {
+    return Object.freeze({
+      ok: false,
+      failure: providerFailure(error instanceof Error && error.name === "AbortError" ? "timeout" : "network_error"),
+    })
   } finally {
     clearTimeout(timeout)
   }
+}
+
+export async function requestDnaS13StructuredOutput(input: Readonly<{
+  name: string
+  schema: Record<string, unknown>
+  instructions: string
+  content: string
+  maxOutputTokens: number
+  safetyIdentifier?: string | null
+  apiKey?: string
+  fetchImpl?: FetchLike
+}>): Promise<DnaS13ProviderResult<unknown> | null> {
+  const attempt = await requestDnaS13StructuredOutputDetailed(input)
+  return attempt.ok ? attempt.result : null
 }
 
 function queryFrameSchema(topicIds: readonly string[]) {
