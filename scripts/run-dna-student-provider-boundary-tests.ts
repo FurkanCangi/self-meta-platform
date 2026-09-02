@@ -5,7 +5,10 @@ import {
   requestDnaS13StructuredOutputDetailed,
 } from "../src/lib/dna/chat/s13/server"
 import {
+  applyStudentRequestContract,
+  compileStudentRequestContract,
   createEmptyStudentConversationState,
+  groundStudentTargetRoles,
   studentSemanticFrameSchema,
   validateStudentSemanticFrame,
   validateStudentSemanticFrameDetailed,
@@ -213,6 +216,47 @@ async function main() {
     validateStudentSemanticFrameDetailed({ ...validFrame, contextTargetIds: ["executive_functions"] }, state),
     { ok: false, failureCode: "target_role_overlap" },
   )
+
+  const anchorValidation = validateStudentSemanticFrameDetailed(validFrame, state)
+  if (!anchorValidation.ok) throw new Error(anchorValidation.failureCode)
+  const anchorContract = compileStudentRequestContract("GROUND-T01", anchorValidation.frame, state)
+  const groundedState = applyStudentRequestContract(state, anchorContract)
+  const inferredBehaviorFocus = {
+    ...validFrame,
+    semanticActs: { ...validFrame.semanticActs, define: false, example: true },
+    conversationAction: "continue",
+    focusTargetIds: ["inhibition"],
+    contextTargetIds: [],
+    referentTurnId: "GROUND-T01",
+    referentRole: "utterance",
+    presentation: { ...validFrame.presentation, example: "concrete" },
+  }
+  const demotedBehaviorFocus = groundStudentTargetRoles({
+    message: "derste arkadaşının sözünü kesen bir çocukla kısa örnek ver",
+    state: groundedState,
+    candidate: inferredBehaviorFocus,
+  }) as Record<string, unknown>
+  assert.deepEqual(demotedBehaviorFocus.focusTargetIds, [])
+  assert.deepEqual(demotedBehaviorFocus.contextTargetIds, ["inhibition"])
+  const demotedValidation = validateStudentSemanticFrameDetailed(demotedBehaviorFocus, groundedState)
+  if (!demotedValidation.ok) throw new Error(demotedValidation.failureCode)
+  const demotedContract = compileStudentRequestContract("GROUND-T02", demotedValidation.frame, groundedState)
+  assert.deepEqual(demotedContract.targetIds, ["executive_functions"])
+  assert.deepEqual(demotedContract.contextTargetIds, ["inhibition"])
+  assert.equal(demotedContract.referent.turnId, "GROUND-T01")
+  const explicitScientificFocus = groundStudentTargetRoles({
+    message: "inhibisyon için derste kısa örnek ver",
+    state: groundedState,
+    candidate: inferredBehaviorFocus,
+  }) as Record<string, unknown>
+  assert.deepEqual(explicitScientificFocus.focusTargetIds, ["inhibition"])
+  assert.deepEqual(explicitScientificFocus.contextTargetIds, [])
+  const nonContextTaskFocus = groundStudentTargetRoles({
+    message: "dürtüyü durdurmak bununla aynı mı",
+    state: groundedState,
+    candidate: { ...inferredBehaviorFocus, semanticActs: { ...validFrame.semanticActs, define: false, compare: true, example: false } },
+  }) as Record<string, unknown>
+  assert.deepEqual(nonContextTaskFocus.focusTargetIds, ["inhibition"], "non-context tasks remain provider-interpreted")
   assert.equal(validateStudentSemanticFrame({ ...validFrame, summaryExtras: { unknown: "yes", observationFocus: false } }, state), null)
   assert.deepEqual(
     validateStudentSemanticFrameDetailed({ ...validFrame, semanticActs: Object.fromEntries(Object.keys(validFrame.semanticActs).map((key) => [key, false])) }, state),
@@ -317,6 +361,7 @@ async function main() {
     runtimeUniquenessValidation: true,
     providerOwnsFinalObligations: false,
     targetRolesSeparated: true,
+    focusPromotionGrounded: true,
     boundedStructuredRepair: true,
     maxProviderAttemptsPerTurn: DNA_STUDENT_MAX_PROVIDER_ATTEMPTS,
     boundedTransportRetry: true,

@@ -15,7 +15,7 @@ import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 import { normalizeDnaChatText } from "../text"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@18" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@19" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -104,6 +104,36 @@ export function resolveStudentConversationAction(input: Readonly<{
   if (/^(?:hayir|yok)\b/.test(normalized)) return "repair"
   if (!input.hasHistory) return "start"
   return input.providerAction === "start" ? "continue" : input.providerAction
+}
+
+export function groundStudentTargetRoles(input: Readonly<{
+  message: string
+  state: StudentConversationState
+  candidate: unknown
+}>): unknown {
+  if (!input.candidate || typeof input.candidate !== "object" || !input.state.semanticHistory.length) return input.candidate
+  const row = input.candidate as Record<string, unknown>
+  const acts = row.semanticActs && typeof row.semanticActs === "object"
+    ? row.semanticActs as Record<string, unknown>
+    : null
+  const contextBinding = acts?.example === true || acts?.case_reasoning === true || acts?.observe === true
+  if (!contextBinding || !Array.isArray(row.focusTargetIds) || !Array.isArray(row.contextTargetIds)) return input.candidate
+  if (row.focusTargetIds.some((targetId) => typeof targetId !== "string") || row.contextTargetIds.some((targetId) => typeof targetId !== "string")) {
+    return input.candidate
+  }
+  const normalizedMessage = normalizeDnaChatText(input.message)
+  const explicitlyNamedTargets = new Set(DNA_STUDENT_TARGET_LEXICON
+    .filter((target) => normalizedMessage.includes(normalizeDnaChatText(target.label)))
+    .map((target) => target.id))
+  const focusTargetIds = (row.focusTargetIds as string[]).filter((targetId) => explicitlyNamedTargets.has(targetId))
+  const demotedContextIds = (row.focusTargetIds as string[]).filter((targetId) => !explicitlyNamedTargets.has(targetId))
+  const contextTargetIds = [...new Set([...(row.contextTargetIds as string[]), ...demotedContextIds])]
+    .filter((targetId) => !focusTargetIds.includes(targetId))
+  return Object.freeze({
+    ...row,
+    focusTargetIds: Object.freeze(focusTargetIds),
+    contextTargetIds: Object.freeze(contextTargetIds),
+  })
 }
 
 function parseSemanticActs(value: unknown): StudentSemanticActs | null {

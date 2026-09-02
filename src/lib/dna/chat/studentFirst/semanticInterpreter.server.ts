@@ -13,6 +13,7 @@ import {
   DNA_STUDENT_SEMANTIC_INTERPRETER_INSTRUCTIONS,
   studentSemanticFrameSchema,
   studentSemanticInterpreterContent,
+  groundStudentTargetRoles,
   resolveStudentConversationAction,
   validateStudentSemanticFrameDetailed,
   type StudentFrameFailureCode,
@@ -144,7 +145,7 @@ export async function interpretStudentRequestWithProvider(input: Readonly<{
     const providerPresentation = providerRow?.presentation && typeof providerRow.presentation === "object"
       ? providerRow.presentation as Record<string, unknown>
       : null
-    const resolvedValue = providerRow && providerAction
+    const actionResolvedValue = providerRow && providerAction
       ? Object.freeze({
           ...providerRow,
           conversationAction: resolveStudentConversationAction({
@@ -155,6 +156,11 @@ export async function interpretStudentRequestWithProvider(input: Readonly<{
           }),
         })
       : providerValue
+    const resolvedValue = groundStudentTargetRoles({
+      message: input.message,
+      state: input.state,
+      candidate: actionResolvedValue,
+    })
     const validation = validateStudentSemanticFrameDetailed(resolvedValue, input.state)
     if (validation.ok) return Object.freeze({
       ok: true,
