@@ -363,6 +363,24 @@ async function main() {
     },
   }) as Record<string, unknown>
   assert.deepEqual(rejectedExplicitAlias.focusTargetIds, ["self_regulation"], "a rejected explicit alias must not re-enter focus")
+  const broadSummaryScope = groundStudentExplicitTargets({
+    message: "şimdi konuştuklarımızı üç cümlede özetle",
+    candidate: {
+      ...inferredBehaviorFocus,
+      conversationAction: "summarize_session",
+      focusTargetIds: ["planning", "inhibition"],
+    },
+  }) as Record<string, unknown>
+  assert.deepEqual(broadSummaryScope.focusTargetIds, [], "provider-carried focus must not scope a broad session summary")
+  const explicitSummaryScope = groundStudentExplicitTargets({
+    message: "yürütücü işlevler ve inhibisyonu özetle",
+    candidate: {
+      ...inferredBehaviorFocus,
+      conversationAction: "summarize_session",
+      focusTargetIds: ["working_memory"],
+    },
+  }) as Record<string, unknown>
+  assert.deepEqual(explicitSummaryScope.focusTargetIds, ["executive_functions", "inhibition"])
   assert.equal(validateStudentSemanticFrame({ ...validFrame, summaryExtras: { unknown: "yes", observationFocus: false } }, state), null)
   assert.deepEqual(
     validateStudentSemanticFrameDetailed({ ...validFrame, semanticActs: Object.fromEntries(Object.keys(validFrame.semanticActs).map((key) => [key, false])) }, state),

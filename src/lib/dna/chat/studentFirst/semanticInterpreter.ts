@@ -15,7 +15,7 @@ import { DNA_STUDENT_TARGET_LEXICON, detectExplicitStudentTargetIds } from "./co
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 import { normalizeDnaChatText } from "../text"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@24" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@25" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -148,10 +148,13 @@ export function groundStudentExplicitTargets(input: Readonly<{
     || row.contextTargetIds.some((targetId) => typeof targetId !== "string")
     || row.rejectedTargetIds.some((targetId) => typeof targetId !== "string")
   ) return input.candidate
-  const rejected = new Set(row.rejectedTargetIds as string[])
+  const rejected = new Set(row.conversationAction === "repair" ? row.rejectedTargetIds as string[] : [])
   const explicitTargets = detectExplicitStudentTargetIds(input.message).filter((targetId) => !rejected.has(targetId))
-  if (!explicitTargets.length) return input.candidate
-  const focusTargetIds = [...new Set([...(row.focusTargetIds as string[]), ...explicitTargets])]
+  const summary = row.conversationAction === "summarize_session"
+  if (!explicitTargets.length && !summary) return input.candidate
+  const focusTargetIds = summary
+    ? [...explicitTargets]
+    : [...new Set([...(row.focusTargetIds as string[]), ...explicitTargets])]
   const contextTargetIds = (row.contextTargetIds as string[]).filter((targetId) => !focusTargetIds.includes(targetId))
   return Object.freeze({
     ...row,

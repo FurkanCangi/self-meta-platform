@@ -58,6 +58,7 @@ type MutationFamily =
   | "single_act_only"
   | "omit_grouping"
   | "omit_example_presentation"
+  | "summary_focus_noise"
 
 type Mutation = Readonly<{
   family: MutationFamily
@@ -311,6 +312,13 @@ function mutationsFor(input: Readonly<{
       frame: withFrame(input.frame, { presentation: { ...input.frame.presentation, example: "none" } }),
     }))
   }
+  if (input.frame.conversationAction === "summarize_session" && input.state.activeTargetIds.length) {
+    rows.push(Object.freeze({
+      family: "summary_focus_noise",
+      detail: "copy_latest_active_targets",
+      frame: withFrame(input.frame, { focusTargetIds: input.state.activeTargetIds }),
+    }))
+  }
   return Object.freeze(rows)
 }
 
@@ -327,6 +335,7 @@ function main() {
     "target_order", "duplicate_target", "omit_explicit_target", "promote_context_behavior",
     "omit_referent", "copy_historical_rejection", "wrong_explicit_action", "single_act_only",
     "omit_grouping", "omit_example_presentation",
+    "summary_focus_noise",
   ].map((family) => [family, { total: 0, passed: 0, typedFailClosed: 0, failed: 0 } satisfies FamilyStats])) as Record<MutationFamily, FamilyStats>
   const failures: FailureRow[] = []
 
