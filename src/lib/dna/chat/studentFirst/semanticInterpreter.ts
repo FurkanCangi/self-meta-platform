@@ -13,8 +13,9 @@ import {
 } from "./contracts"
 import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
+import { normalizeDnaChatText } from "../text"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@12" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@13" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -83,6 +84,19 @@ const TARGET_IDS = Object.freeze(DNA_STUDENT_TARGET_LEXICON.map((target) => targ
 const TARGET_ID_SET = new Set(TARGET_IDS)
 const ACTION_SET = new Set<string>(DNA_STUDENT_CONVERSATION_ACTIONS)
 const REFERENT_ROLE_SET = new Set<StudentReferent["role"]>(["none", "utterance", "case_entity"])
+
+export function resolveStudentConversationAction(input: Readonly<{
+  message: string
+  providerAction: StudentConversationAction
+  hasHistory: boolean
+}>): StudentConversationAction {
+  const normalized = normalizeDnaChatText(input.message)
+  if (/\b(?:toparla|ozetle|ozet yap|konustuklarimizi|konustugumuzu|konusmayi)\b/.test(normalized)) return "summarize_session"
+  if (/\b(?:ilk anlattigin|ilk konu|az onceki konu|geri donelim|donelim|basa donelim)\b/.test(normalized)) return "return"
+  if (/^(?:hayir|yok)\b|\b(?:sormuyorum|onu demiyorum|yanlis anladin|kastettigim)\b/.test(normalized)) return "repair"
+  if (!input.hasHistory) return "start"
+  return input.providerAction === "start" ? "continue" : input.providerAction
+}
 
 function parseSemanticActs(value: unknown): StudentSemanticActs | null {
   if (!value || typeof value !== "object") return null

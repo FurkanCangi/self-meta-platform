@@ -29,6 +29,7 @@ export {
   DNA_STUDENT_SEMANTIC_TASKS,
   studentSemanticFrameSchema,
   studentSemanticInterpreterContent,
+  resolveStudentConversationAction,
   validateStudentSemanticFrame,
   validateStudentSemanticFrameDetailed,
 } from "./semanticInterpreter"

@@ -9,9 +9,11 @@ import {
 import type { StudentConversationState, StudentRequestContract } from "./contracts"
 import {
   compileStudentRequestContract,
+  DNA_STUDENT_CONVERSATION_ACTIONS,
   DNA_STUDENT_SEMANTIC_INTERPRETER_INSTRUCTIONS,
   studentSemanticFrameSchema,
   studentSemanticInterpreterContent,
+  resolveStudentConversationAction,
   validateStudentSemanticFrameDetailed,
   type StudentFrameFailureCode,
 } from "./semanticInterpreter"
@@ -101,7 +103,22 @@ export async function interpretStudentRequestWithProvider(input: Readonly<{
       usage: attempt.result.usage,
       latencyMs: attempt.result.latencyMs,
     }))
-    const validation = validateStudentSemanticFrameDetailed(attempt.result.value, input.state)
+    const providerValue = attempt.result.value
+    const providerRow = providerValue && typeof providerValue === "object" ? providerValue as Record<string, unknown> : null
+    const providerAction = providerRow && DNA_STUDENT_CONVERSATION_ACTIONS.includes(providerRow.conversationAction as never)
+      ? providerRow.conversationAction as StudentRequestContract["conversationAction"]
+      : null
+    const resolvedValue = providerRow && providerAction
+      ? Object.freeze({
+          ...providerRow,
+          conversationAction: resolveStudentConversationAction({
+            message: input.message,
+            providerAction,
+            hasHistory: input.state.semanticHistory.length > 0,
+          }),
+        })
+      : providerValue
+    const validation = validateStudentSemanticFrameDetailed(resolvedValue, input.state)
     if (validation.ok) return Object.freeze({
       ok: true,
       contract: compileStudentRequestContract(input.turnId, validation.frame, input.state),

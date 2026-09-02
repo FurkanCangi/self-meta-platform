@@ -4,6 +4,7 @@ import {
   applyStudentRequestContract,
   compileStudentRequestContract,
   createEmptyStudentConversationState,
+  resolveStudentConversationAction,
   type StudentConversationState,
   type StudentPresentationRequest,
   type StudentSemanticFrame,
@@ -333,10 +334,41 @@ const truncatedEntityReturn = compileStudentRequestContract("ENTITY-T11", frame(
 assert.equal(truncatedEntityReturn.referent.turnId, "ENTITY-T03", "a truncated parent anchor must not create a dangling referent outside bounded history")
 assert.equal(JSON.stringify(entityState).includes("az önceki çocuğa dönelim"), false, "raw messages must not persist in state")
 
+assert.equal(resolveStudentConversationAction({
+  message: "az önceki çocuğa dönelim yönergeyi aklında tutamaması çalışma belleğiyle mi ilgili",
+  providerAction: "continue",
+  hasHistory: true,
+}), "return")
+assert.equal(resolveStudentConversationAction({
+  message: "çocuk biraz dolaşıp sonra göreve dönüyor bunu nasıl düşünürüz",
+  providerAction: "continue",
+  hasHistory: true,
+}), "continue", "ordinary behavior wording must not be mistaken for a return command")
+assert.equal(resolveStudentConversationAction({
+  message: "yok dikkat kısmını sormuyorum öz düzenlemeyi soruyorum",
+  providerAction: "continue",
+  hasHistory: true,
+}), "repair")
+assert.equal(resolveStudentConversationAction({
+  message: "şimdi konuştuklarımızı üç cümlede toparla",
+  providerAction: "continue",
+  hasHistory: true,
+}), "summarize_session")
+assert.equal(resolveStudentConversationAction({
+  message: "planlama burada nasıl yer alır",
+  providerAction: "continue",
+  hasHistory: true,
+}), "continue")
+assert.equal(resolveStudentConversationAction({
+  message: "yürütücü işlevler ne demek",
+  providerAction: "continue",
+  hasHistory: false,
+}), "start", "an empty conversation must start even if the provider emits continue")
+
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_RESOLVER_CONTRASTIVE_LOCAL",
-  cases: 25,
+  cases: 31,
   compareOverContextualObserve: true,
   componentExplainOverContextualCase: true,
   pureObservationPreserved: true,
@@ -362,4 +394,10 @@ console.log(JSON.stringify({
   historyBoundedToEightTurns: true,
   truncatedEntityChainNoDanglingPointer: true,
   rawMessagesPersisted: 0,
+  explicitReturnCueOverridesProvider: true,
+  ordinaryBehaviorDoesNotFalseReturn: true,
+  explicitRepairCueOverridesProvider: true,
+  explicitSummaryCueOverridesProvider: true,
+  ordinaryContinuePreserved: true,
+  emptyStateForcesStart: true,
 }, null, 2))
