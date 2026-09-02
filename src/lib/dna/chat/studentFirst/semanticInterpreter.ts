@@ -14,7 +14,7 @@ import {
 import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@10" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@11" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -274,14 +274,14 @@ export function compileStudentRequestContract(
   })
   const mergedTargetIds = frame.conversationAction === "summarize_session"
     ? unique(state.semanticHistory.flatMap((turn) => turn.targetIds))
-    : semanticTask === "compare"
-      ? allowedMentions.length >= 2
-        ? unique(allowedMentions)
-        : unique([...referent.targetIds, ...allowedMentions])
-      : frame.conversationAction === "return"
+    : frame.conversationAction === "return"
         ? allowedMentions.length
           ? unique(allowedMentions)
           : unique(referent.targetIds)
+      : semanticTask === "compare"
+        ? allowedMentions.length >= 2
+          ? unique(allowedMentions)
+          : unique([...referent.targetIds, ...allowedMentions])
         : allowedMentions.length
           ? unique(allowedMentions)
           : referent.targetIds.length

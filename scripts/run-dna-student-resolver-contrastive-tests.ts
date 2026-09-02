@@ -225,10 +225,30 @@ const unrelatedPair = compileStudentRequestContract("COMPARE-T06", frame({
 assert.deepEqual(unrelatedPair.referent, { kind: "none", turnId: null, targetIds: [] }, "an unrelated complete comparison pair must not inherit old context")
 assert.deepEqual(unrelatedPair.targetIds, ["arousal", "sensory_regulation"])
 
+const retargetedCompareReturn = compileStudentRequestContract("RETURN-T01", frame({
+  semanticActs: acts("compare"),
+  conversationAction: "return",
+  mentionedTargetIds: ["working_memory"],
+  referentTurnId: "RESOLVER-T02",
+}), state)
+assert.deepEqual(retargetedCompareReturn.referent, {
+  kind: "history",
+  turnId: "RESOLVER-T02",
+  targetIds: ["executive_functions", "inhibition"],
+})
+assert.deepEqual(retargetedCompareReturn.targetIds, ["working_memory"], "an explicit return target must bind before comparison-side union")
+
+const inheritedCompareReturn = compileStudentRequestContract("RETURN-T02", frame({
+  semanticActs: acts("compare"),
+  conversationAction: "return",
+  referentTurnId: "RESOLVER-T02",
+}), state)
+assert.deepEqual(inheritedCompareReturn.targetIds, ["executive_functions", "inhibition"], "a target-free return must inherit its referent targets")
+
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_RESOLVER_CONTRASTIVE_LOCAL",
-  cases: 16,
+  cases: 18,
   compareOverContextualObserve: true,
   componentExplainOverContextualCase: true,
   pureObservationPreserved: true,
@@ -245,4 +265,6 @@ console.log(JSON.stringify({
   completeOverlappingCompareAnchoredWithoutExpansion: true,
   priorExtraTargetCannotLeakIntoCompletePair: true,
   unrelatedComparisonPairNoReferentLeak: true,
+  explicitReturnTargetPrecedesCompareUnion: true,
+  targetFreeReturnInheritsReferent: true,
 }, null, 2))
