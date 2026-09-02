@@ -45,13 +45,12 @@ export const DNA_STUDENT_OBLIGATION_KINDS = Object.freeze([
   "offer_safe_assessment_frame",
 ] as const satisfies readonly StudentAnswerObligationKind[])
 
-type StudentSemanticFrame = Readonly<{
+export type StudentSemanticFrame = Readonly<{
   semanticTask: StudentSemanticTask
   conversationAction: StudentConversationAction
   targetIds: readonly string[]
   rejectedTargetIds: readonly string[]
   comparisonTargetIds: readonly string[]
-  componentTargetIds: readonly string[]
   referent: StudentReferent
   presentation: StudentPresentationRequest
   summaryScope: StudentSummaryScope
@@ -59,6 +58,32 @@ type StudentSemanticFrame = Readonly<{
   ambiguity: StudentRequestContract["ambiguity"]
   safetyIntent: StudentRequestContract["safetyIntent"]
 }>
+
+export const DNA_STUDENT_FRAME_FAILURE_CODES = Object.freeze([
+  "invalid_object",
+  "invalid_task_or_action",
+  "invalid_targets",
+  "invalid_rejected_targets",
+  "invalid_comparison_targets",
+  "invalid_referent",
+  "invalid_presentation",
+  "invalid_summary_scope",
+  "invalid_observation_scope",
+  "invalid_ambiguity_or_safety",
+  "target_missing",
+  "comparison_side_missing",
+  "conversation_state_mismatch",
+  "return_referent_mismatch",
+  "summary_task_mismatch",
+  "treatment_safety_mismatch",
+  "summary_scope_mismatch",
+  "observation_scope_mismatch",
+] as const)
+
+export type StudentFrameFailureCode = typeof DNA_STUDENT_FRAME_FAILURE_CODES[number]
+export type StudentFrameValidationResult =
+  | Readonly<{ ok: true; frame: StudentSemanticFrame }>
+  | Readonly<{ ok: false; failureCode: StudentFrameFailureCode }>
 
 const TARGET_IDS = Object.freeze(DNA_STUDENT_TARGET_LEXICON.map((target) => target.id))
 const TARGET_ID_SET = new Set(TARGET_IDS)
@@ -85,6 +110,7 @@ function parsePresentation(value: unknown): StudentPresentationRequest | null {
   if (!["plain_student", "standard"].includes(String(row.language))) return null
   if (!["prose", "bullets", "table"].includes(String(row.format))) return null
   if (!["none", "brief", "concrete"].includes(String(row.example))) return null
+  if (!["integrated", "separate_each"].includes(String(row.grouping))) return null
   if (row.requestedSentenceCount !== null && (!Number.isInteger(row.requestedSentenceCount) || Number(row.requestedSentenceCount) < 1 || Number(row.requestedSentenceCount) > 6)) return null
   if (typeof row.preserveMeaning !== "boolean") return null
   return Object.freeze({
@@ -92,6 +118,7 @@ function parsePresentation(value: unknown): StudentPresentationRequest | null {
     language: row.language as StudentPresentationRequest["language"],
     format: row.format as StudentPresentationRequest["format"],
     example: row.example as StudentPresentationRequest["example"],
+    grouping: row.grouping as StudentPresentationRequest["grouping"],
     requestedSentenceCount: row.requestedSentenceCount as number | null,
     preserveMeaning: row.preserveMeaning,
   })
@@ -127,55 +154,76 @@ function parseReferent(value: unknown, state: StudentConversationState): Student
   return Object.freeze({ kind: row.kind as StudentReferent["kind"], turnId, targetIds: Object.freeze(targetIds) })
 }
 
+function frameFailure(failureCode: StudentFrameFailureCode): StudentFrameValidationResult {
+  return Object.freeze({ ok: false, failureCode })
+}
+
+export function validateStudentSemanticFrameDetailed(
+  candidate: unknown,
+  state: StudentConversationState,
+): StudentFrameValidationResult {
+  if (!candidate || typeof candidate !== "object") return frameFailure("invalid_object")
+  const row = candidate as Record<string, unknown>
+  if (!TASK_SET.has(String(row.semanticTask)) || !ACTION_SET.has(String(row.conversationAction))) return frameFailure("invalid_task_or_action")
+  const targetIds = uniqueStrings(row.targetIds, TARGET_ID_SET, 8)
+  if (!targetIds) return frameFailure("invalid_targets")
+  const rejectedTargetIds = uniqueStrings(row.rejectedTargetIds, TARGET_ID_SET, 8)
+  if (!rejectedTargetIds) return frameFailure("invalid_rejected_targets")
+  const comparisonTargetIds = uniqueStrings(row.comparisonTargetIds, TARGET_ID_SET, 4)
+  if (!comparisonTargetIds) return frameFailure("invalid_comparison_targets")
+  const referent = parseReferent(row.referent, state)
+  if (!referent) return frameFailure("invalid_referent")
+  const presentation = parsePresentation(row.presentation)
+  if (!presentation) return frameFailure("invalid_presentation")
+  const summaryScope = parseSummaryScope(row.summaryScope)
+  if (!summaryScope) return frameFailure("invalid_summary_scope")
+  const observationScope = parseObservationScope(row.observationScope)
+  if (!observationScope) return frameFailure("invalid_observation_scope")
+  if (!AMBIGUITIES.has(String(row.ambiguity)) || !SAFETY_INTENTS.has(String(row.safetyIntent))) return frameFailure("invalid_ambiguity_or_safety")
+  if (!targetIds.length && row.semanticTask !== "treatment_boundary") return frameFailure("target_missing")
+  if (row.semanticTask === "compare" && comparisonTargetIds.length < 2) return frameFailure("comparison_side_missing")
+  if (row.conversationAction === "start" && state.semanticHistory.length) return frameFailure("conversation_state_mismatch")
+  if (row.conversationAction !== "start" && !state.semanticHistory.length) return frameFailure("conversation_state_mismatch")
+  if (row.conversationAction === "return" && referent.kind !== "history") return frameFailure("return_referent_mismatch")
+  if (row.conversationAction === "summarize_session" && row.semanticTask !== "summarize") return frameFailure("summary_task_mismatch")
+  if (row.semanticTask === "treatment_boundary" && row.safetyIntent !== "treatment_selection") return frameFailure("treatment_safety_mismatch")
+  if (row.semanticTask === "summarize" && !summaryScope.known) return frameFailure("summary_scope_mismatch")
+  if (row.semanticTask !== "summarize" && (summaryScope.known || summaryScope.unknown || summaryScope.observationFocus)) return frameFailure("summary_scope_mismatch")
+  if ((row.semanticTask === "observe" || row.semanticTask === "case_reasoning") && (!observationScope.singleObservationLimit || !observationScope.additionalContext)) return frameFailure("observation_scope_mismatch")
+
+  return Object.freeze({
+    ok: true,
+    frame: Object.freeze({
+      semanticTask: row.semanticTask as StudentSemanticTask,
+      conversationAction: row.conversationAction as StudentConversationAction,
+      targetIds: Object.freeze(targetIds),
+      rejectedTargetIds: Object.freeze(rejectedTargetIds),
+      comparisonTargetIds: Object.freeze(comparisonTargetIds),
+      referent,
+      presentation,
+      summaryScope,
+      observationScope,
+      ambiguity: row.ambiguity as StudentRequestContract["ambiguity"],
+      safetyIntent: row.safetyIntent as StudentRequestContract["safetyIntent"],
+    }),
+  })
+}
+
 export function validateStudentSemanticFrame(
   candidate: unknown,
   state: StudentConversationState,
 ): StudentSemanticFrame | null {
-  if (!candidate || typeof candidate !== "object") return null
-  const row = candidate as Record<string, unknown>
-  if (!TASK_SET.has(String(row.semanticTask)) || !ACTION_SET.has(String(row.conversationAction))) return null
-  const targetIds = uniqueStrings(row.targetIds, TARGET_ID_SET, 8)
-  const rejectedTargetIds = uniqueStrings(row.rejectedTargetIds, TARGET_ID_SET, 8)
-  const comparisonTargetIds = uniqueStrings(row.comparisonTargetIds, TARGET_ID_SET, 4)
-  const componentTargetIds = uniqueStrings(row.componentTargetIds, TARGET_ID_SET, 8)
-  const referent = parseReferent(row.referent, state)
-  const presentation = parsePresentation(row.presentation)
-  const summaryScope = parseSummaryScope(row.summaryScope)
-  const observationScope = parseObservationScope(row.observationScope)
-  if (!targetIds || !rejectedTargetIds || !comparisonTargetIds || !componentTargetIds || !referent || !presentation || !summaryScope || !observationScope) return null
-  if (!AMBIGUITIES.has(String(row.ambiguity)) || !SAFETY_INTENTS.has(String(row.safetyIntent))) return null
-  if (!targetIds.length && row.semanticTask !== "treatment_boundary") return null
-  if (row.semanticTask === "compare" && comparisonTargetIds.length < 2) return null
-  if (componentTargetIds.length === 1) return null
-  if (row.conversationAction === "start" && state.semanticHistory.length) return null
-  if (row.conversationAction !== "start" && !state.semanticHistory.length) return null
-  if (row.conversationAction === "return" && referent.kind !== "history") return null
-  if (row.conversationAction === "summarize_session" && row.semanticTask !== "summarize") return null
-  if (row.semanticTask === "treatment_boundary" && row.safetyIntent !== "treatment_selection") return null
-  if (row.semanticTask === "summarize" && !summaryScope.known) return null
-  if (row.semanticTask !== "summarize" && (summaryScope.known || summaryScope.unknown || summaryScope.observationFocus)) return null
-  if ((row.semanticTask === "observe" || row.semanticTask === "case_reasoning") && (!observationScope.singleObservationLimit || !observationScope.additionalContext)) return null
-
-  return Object.freeze({
-    semanticTask: row.semanticTask as StudentSemanticTask,
-    conversationAction: row.conversationAction as StudentConversationAction,
-    targetIds: Object.freeze(targetIds),
-    rejectedTargetIds: Object.freeze(rejectedTargetIds),
-    comparisonTargetIds: Object.freeze(comparisonTargetIds),
-    componentTargetIds: Object.freeze(componentTargetIds),
-    referent,
-    presentation,
-    summaryScope,
-    observationScope,
-    ambiguity: row.ambiguity as StudentRequestContract["ambiguity"],
-    safetyIntent: row.safetyIntent as StudentRequestContract["safetyIntent"],
-  })
+  const result = validateStudentSemanticFrameDetailed(candidate, state)
+  return result.ok ? result.frame : null
 }
 
 export function compileStudentRequestContract(
   turnId: string,
   frame: StudentSemanticFrame,
 ): StudentRequestContract {
+  const componentTargetIds = frame.semanticTask === "explain" && frame.targetIds.length > 1 && frame.presentation.grouping === "separate_each"
+    ? frame.targetIds
+    : Object.freeze([])
   return Object.freeze({
     version: DNA_STUDENT_FIRST_REQUEST_VERSION,
     turnId,
@@ -184,12 +232,12 @@ export function compileStudentRequestContract(
     targetIds: frame.targetIds,
     rejectedTargetIds: frame.rejectedTargetIds,
     comparisonTargetIds: frame.comparisonTargetIds,
-    componentTargetIds: frame.componentTargetIds,
+    componentTargetIds,
     referent: frame.referent,
     presentation: frame.presentation,
     summaryScope: frame.summaryScope,
     observationScope: frame.observationScope,
-    obligations: compileStudentAnswerObligations(turnId, frame),
+    obligations: compileStudentAnswerObligations(turnId, { ...frame, componentTargetIds }),
     ambiguity: frame.ambiguity,
     safetyIntent: frame.safetyIntent,
   })
@@ -202,7 +250,7 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
     additionalProperties: false,
     required: [
       "semanticTask", "conversationAction", "targetIds", "rejectedTargetIds",
-      "comparisonTargetIds", "componentTargetIds", "referent", "presentation",
+      "comparisonTargetIds", "referent", "presentation",
       "summaryScope", "observationScope", "ambiguity", "safetyIntent",
     ],
     properties: {
@@ -211,7 +259,6 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
       targetIds: { type: "array", minItems: 0, maxItems: 8, items: { type: "string", enum: [...TARGET_IDS] } },
       rejectedTargetIds: { type: "array", minItems: 0, maxItems: 8, items: { type: "string", enum: [...TARGET_IDS] } },
       comparisonTargetIds: { type: "array", minItems: 0, maxItems: 4, items: { type: "string", enum: [...TARGET_IDS] } },
-      componentTargetIds: { type: "array", minItems: 0, maxItems: 8, items: { type: "string", enum: [...TARGET_IDS] } },
       referent: {
         type: "object",
         additionalProperties: false,
@@ -227,12 +274,13 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
       presentation: {
         type: "object",
         additionalProperties: false,
-        required: ["depth", "language", "format", "example", "requestedSentenceCount", "preserveMeaning"],
+        required: ["depth", "language", "format", "example", "grouping", "requestedSentenceCount", "preserveMeaning"],
         properties: {
           depth: { type: "string", enum: ["brief", "standard", "deep"] },
           language: { type: "string", enum: ["plain_student", "standard"] },
           format: { type: "string", enum: ["prose", "bullets", "table"] },
           example: { type: "string", enum: ["none", "brief", "concrete"] },
+          grouping: { type: "string", enum: ["integrated", "separate_each"] },
           requestedSentenceCount: { anyOf: [{ type: "integer", minimum: 1, maximum: 6 }, { type: "null" }] },
           preserveMeaning: { type: "boolean" },
         },
@@ -302,7 +350,7 @@ Sunum isteği semantik görevin yerine geçmez. Örneğin “ne demek, öğrenci
 Yalnız allowedTargets içindeki ID'leri kullan. Yeni hedef uydurma. Açık düzeltmede reddedilen hedefi rejectedTargetIds alanına koy. “İlk anlattığın” gibi dönüşlerde doğru history turnId'yi seç. Oturum özetinde semanticTask=summarize ve conversationAction=summarize_session kullan; konuşmadaki ilgili hedefleri kapsa.
 
 Nihai cevap yükümlülüğü seçme; onu yerel derleyici yapar. Yalnız semantik gerçekleri çıkar:
-- componentTargetIds yalnız kullanıcı iki veya daha fazla adı verilmiş bileşenin her birinin ayrı ele alınmasını istiyorsa dolu olsun. “X bunun parçası mı?” bir ilişki sorusudur; componentTargetIds boş kalır.
+- presentation.grouping yalnız kullanıcı birden fazla hedefin her birinin ayrı ele alınmasını açıkça istiyorsa separate_each olur. “X bunun parçası mı?” bir ilişki sorusudur ve grouping=integrated kalır.
 - summaryScope yalnız özet turunda kullanıcının bilinenler, bilinmeyenler ve gözlem odağından hangilerini istediğini gösterir.
 - observationScope kullanıcının tek gözlem sınırı veya ek bağlam/gözlem ihtiyacını açıkça sorduğunu gösterir. observe ve case_reasoning görevlerinde ikisi de true olur.
 - presentation.preserveMeaning yalnız önceki hedefi aynı anlamı koruyarak yeniden/sade anlatmayı istiyorsa true olur. Sadece ilk kez sade anlatma isteğinde false olur.

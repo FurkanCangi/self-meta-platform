@@ -24,6 +24,7 @@ export type StudentPresentationRequest = Readonly<{
   language: "plain_student" | "standard"
   format: "prose" | "bullets" | "table"
   example: "none" | "brief" | "concrete"
+  grouping: "integrated" | "separate_each"
   requestedSentenceCount: number | null
   preserveMeaning: boolean
 }>

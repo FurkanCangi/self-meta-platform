@@ -44,6 +44,7 @@ const EMPTY_PRESENTATION: StudentPresentationRequest = Object.freeze({
   language: "standard",
   format: "prose",
   example: "none",
+  grouping: "integrated",
   requestedSentenceCount: null,
   preserveMeaning: false,
 })
@@ -120,6 +121,7 @@ function presentationFor(message: string): StudentPresentationRequest {
         ? "bullets"
         : "prose",
     example: concreteExample ? "concrete" : /\b(?:ornek|mesela)\b/.test(normalized) ? "brief" : "none",
+    grouping: /\b(?:ayri ayri|her birini|ucunu ayri|ikisini ayri)\b/.test(normalized) ? "separate_each" : "integrated",
     requestedSentenceCount: Number.isFinite(sentenceCount) ? sentenceCount : null,
     preserveMeaning: /\b(?:yeniden soyle|tekrar anlat|daha basit|akademik oldu|akademik olmadan)\b/.test(normalized),
   })
@@ -222,10 +224,10 @@ export function interpretStudentRequest(
   }
   if (comparisonTargets.length) targetIds = unique([...targetIds, ...comparisonTargets])
 
-  const componentTargetIds = targetIds.length > 1 && /\b(?:ayri ayri|ucunu|ikisini|bilesen)\b/.test(normalized)
+  const presentation = presentationFor(input.message)
+  const componentTargetIds = semanticTask === "explain" && targetIds.length > 1 && presentation.grouping === "separate_each"
     ? [...targetIds]
     : []
-  const presentation = presentationFor(input.message)
   const summaryScope = summaryScopeFor(input.message, semanticTask)
   const observationScope = observationScopeFor(input.message, semanticTask)
   const obligations = compileStudentAnswerObligations(input.turnId, {

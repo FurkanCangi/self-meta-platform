@@ -15,6 +15,7 @@ export {
 } from "./obligationCompiler"
 export {
   compileStudentRequestContract,
+  DNA_STUDENT_FRAME_FAILURE_CODES,
   DNA_STUDENT_CONVERSATION_ACTIONS,
   DNA_STUDENT_OBLIGATION_KINDS,
   DNA_STUDENT_SEMANTIC_INTERPRETER_INSTRUCTIONS,
@@ -23,6 +24,7 @@ export {
   studentSemanticFrameSchema,
   studentSemanticInterpreterContent,
   validateStudentSemanticFrame,
+  validateStudentSemanticFrameDetailed,
 } from "./semanticInterpreter"
 export {
   DNA_STUDENT_FIRST_CONVERSATION_VERSION,
@@ -43,6 +45,11 @@ export type {
   StudentSummaryScope,
 } from "./contracts"
 export type { StudentObligationCompilationInput } from "./obligationCompiler"
+export type {
+  StudentFrameFailureCode,
+  StudentFrameValidationResult,
+  StudentSemanticFrame,
+} from "./semanticInterpreter"
 export type {
   StudentDimensionDecision,
   StudentSemanticDimension,

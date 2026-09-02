@@ -12,20 +12,29 @@ import {
   DNA_STUDENT_SEMANTIC_INTERPRETER_INSTRUCTIONS,
   studentSemanticFrameSchema,
   studentSemanticInterpreterContent,
-  validateStudentSemanticFrame,
+  validateStudentSemanticFrameDetailed,
+  type StudentFrameFailureCode,
 } from "./semanticInterpreter"
+
+type StudentSemanticProviderEvidence = Readonly<{
+  responseId: string | null
+  usage: DnaS13ProviderUsage
+  latencyMs: number
+}>
 
 export type StudentSemanticInterpreterResult =
   | Readonly<{
       ok: true
       contract: StudentRequestContract
-      provider: Readonly<{
-        responseId: string | null
-        usage: DnaS13ProviderUsage
-        latencyMs: number
-      }>
+      provider: StudentSemanticProviderEvidence
     }>
-  | Readonly<{ ok: false; reason: "safety_blocked" | "invalid_structured_output" }>
+  | Readonly<{ ok: false; reason: "safety_blocked" }>
+  | Readonly<{
+      ok: false
+      reason: "invalid_structured_output"
+      failureCode: StudentFrameFailureCode
+      provider: StudentSemanticProviderEvidence
+    }>
   | Readonly<{ ok: false; reason: "provider_failure"; failure: DnaS13ProviderFailure }>
 
 export async function interpretStudentRequestWithProvider(input: Readonly<{
@@ -47,15 +56,21 @@ export async function interpretStudentRequestWithProvider(input: Readonly<{
   })
   if (!attempt.ok) return Object.freeze({ ok: false, reason: "provider_failure", failure: attempt.failure })
   const provider = attempt.result
-  const frame = validateStudentSemanticFrame(provider.value, input.state)
-  if (!frame) return Object.freeze({ ok: false, reason: "invalid_structured_output" })
+  const providerEvidence = Object.freeze({
+    responseId: provider.responseId,
+    usage: provider.usage,
+    latencyMs: provider.latencyMs,
+  })
+  const validation = validateStudentSemanticFrameDetailed(provider.value, input.state)
+  if (!validation.ok) return Object.freeze({
+    ok: false,
+    reason: "invalid_structured_output",
+    failureCode: validation.failureCode,
+    provider: providerEvidence,
+  })
   return Object.freeze({
     ok: true,
-    contract: compileStudentRequestContract(input.turnId, frame),
-    provider: Object.freeze({
-      responseId: provider.responseId,
-      usage: provider.usage,
-      latencyMs: provider.latencyMs,
-    }),
+    contract: compileStudentRequestContract(input.turnId, validation.frame),
+    provider: providerEvidence,
   })
 }

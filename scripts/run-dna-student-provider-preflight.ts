@@ -8,7 +8,7 @@ import {
   DNA_STUDENT_SEMANTIC_INTERPRETER_INSTRUCTIONS,
   studentSemanticFrameSchema,
   studentSemanticInterpreterContent,
-  validateStudentSemanticFrame,
+  validateStudentSemanticFrameDetailed,
 } from "../src/lib/dna/chat/studentFirst"
 
 dotenv.config({ path: ".env.local", override: false, quiet: true })
@@ -38,9 +38,16 @@ async function main() {
     process.exitCode = 1
     return
   }
-  const frame = validateStudentSemanticFrame(attempt.result.value, state)
-  if (!frame) {
-    console.error(JSON.stringify({ ok: false, gate: "STUDENT_PROVIDER_PREFLIGHT", calls, failure: { reason: "invalid_structured_frame" } }))
+  const validation = validateStudentSemanticFrameDetailed(attempt.result.value, state)
+  if (!validation.ok) {
+    console.error(JSON.stringify({
+      ok: false,
+      gate: "STUDENT_PROVIDER_PREFLIGHT",
+      calls,
+      failure: { reason: "invalid_structured_frame", failureCode: validation.failureCode },
+      usage: calculateDnaChatLunaUsage(attempt.result.usage),
+      latencyMs: Math.round(attempt.result.latencyMs),
+    }))
     process.exitCode = 1
     return
   }

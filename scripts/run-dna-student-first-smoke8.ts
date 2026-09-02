@@ -29,6 +29,7 @@ type SmokeExpectation = Readonly<{
   requestedSentenceCount?: number
   preserveMeaning?: boolean
   example?: "none" | "brief" | "concrete"
+  grouping?: "integrated" | "separate_each"
   summaryScope?: Readonly<{ known: boolean; unknown: boolean; observationFocus: boolean }>
   observationScope?: Readonly<{ singleObservationLimit: boolean; additionalContext: boolean }>
 }>
@@ -139,9 +140,15 @@ async function main() {
       state,
     })
     if (!interpreted.ok) {
+      if (interpreted.reason === "invalid_structured_output") {
+        observedUsageRows.push(calculateDnaChatLunaUsage(interpreted.provider.usage))
+        observedLatencies.push(interpreted.provider.latencyMs)
+      }
       const detail = interpreted.reason === "provider_failure"
         ? `/${interpreted.failure.reason}/${interpreted.failure.httpStatus ?? "no_status"}/${interpreted.failure.apiErrorCode ?? interpreted.failure.apiErrorType ?? "no_code"}`
-        : ""
+        : interpreted.reason === "invalid_structured_output"
+          ? `/${interpreted.failureCode}`
+          : ""
       throw new Error(`${expected.turnId}: ${interpreted.reason}${detail}`)
     }
     const contract = interpreted.contract
@@ -166,6 +173,7 @@ async function main() {
     }
     assert.equal(contract.presentation.preserveMeaning, expected.preserveMeaning ?? false, `${expected.turnId}: preserve meaning`)
     assert.equal(contract.presentation.example, expected.example ?? "none", `${expected.turnId}: example presentation`)
+    assert.equal(contract.presentation.grouping, expected.grouping ?? "integrated", `${expected.turnId}: grouping`)
     assert.deepEqual(contract.summaryScope, expected.summaryScope ?? { known: false, unknown: false, observationFocus: false }, `${expected.turnId}: summary scope`)
     assert.deepEqual(contract.observationScope, expected.observationScope ?? { singleObservationLimit: false, additionalContext: false }, `${expected.turnId}: observation scope`)
     state = applyStudentRequestContract(state, contract)

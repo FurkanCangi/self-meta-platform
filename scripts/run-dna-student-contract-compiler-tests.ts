@@ -1,7 +1,10 @@
 import assert from "node:assert/strict"
 
 import {
+  compileStudentRequestContract,
   compileStudentAnswerObligations,
+  createEmptyStudentConversationState,
+  validateStudentSemanticFrameDetailed,
   type StudentObligationCompilationInput,
 } from "../src/lib/dna/chat/studentFirst"
 
@@ -17,6 +20,7 @@ const base: StudentObligationCompilationInput = Object.freeze({
     language: "standard",
     format: "prose",
     example: "none",
+    grouping: "integrated",
     requestedSentenceCount: null,
     preserveMeaning: false,
   }),
@@ -87,10 +91,47 @@ assert.deepEqual(kinds({
   presentation: { ...base.presentation, example: "concrete" },
 }), ["give_concrete_example", "bind_example_to_target"], "example obligation must be deduplicated")
 
+const emptyState = createEmptyStudentConversationState()
+const frameBase = {
+  semanticTask: "compare",
+  conversationAction: "start",
+  targetIds: ["executive_functions", "inhibition"],
+  rejectedTargetIds: [],
+  comparisonTargetIds: ["executive_functions", "inhibition"],
+  referent: { kind: "none", turnId: null, targetIds: [] },
+  presentation: { ...base.presentation, grouping: "integrated" },
+  summaryScope: base.summaryScope,
+  observationScope: base.observationScope,
+  ambiguity: "none",
+  safetyIntent: "general_education",
+}
+const integratedValidation = validateStudentSemanticFrameDetailed(frameBase, emptyState)
+if (!integratedValidation.ok) throw new Error(integratedValidation.failureCode)
+const integratedContract = compileStudentRequestContract("GROUPING-T01", integratedValidation.frame)
+assert.deepEqual(integratedContract.componentTargetIds, [])
+assert.deepEqual(integratedContract.obligations.map((row) => row.kind), ["distinguish_targets", "explain_relation"])
+
+const separateValidation = validateStudentSemanticFrameDetailed({
+  ...frameBase,
+  semanticTask: "explain",
+  comparisonTargetIds: [],
+  targetIds: ["planning", "inhibition", "emotion_regulation"],
+  presentation: { ...base.presentation, grouping: "separate_each" },
+}, emptyState)
+if (!separateValidation.ok) throw new Error(separateValidation.failureCode)
+const separateContract = compileStudentRequestContract("GROUPING-T02", separateValidation.frame)
+assert.deepEqual(separateContract.componentTargetIds, ["planning", "inhibition", "emotion_regulation"])
+assert.deepEqual(separateContract.obligations.map((row) => row.kind), [
+  "define_target",
+  "cover_requested_component",
+  "cover_requested_component",
+  "cover_requested_component",
+])
+
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_OBLIGATION_COMPILER_LOCAL",
-  cases: 7,
+  cases: 9,
   providerOwnsFinalObligations: false,
   deterministicCompilation: true,
   duplicateObligations: 0,
