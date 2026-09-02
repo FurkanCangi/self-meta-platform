@@ -153,6 +153,43 @@ assert.deepEqual(unrelatedObservation.referent, {
 }, "an unrelated new observation target must not inherit the latest referent")
 assert.deepEqual(unrelatedObservation.targetIds, ["interoception"])
 
+const compatibleExplanationContinuation = compileStudentRequestContract("RESOLVER-T06D", frame({
+  semanticActs: acts("explain"),
+  focusTargetIds: ["inhibition"],
+}), exampleState)
+assert.deepEqual(compatibleExplanationContinuation.referent, {
+  kind: "active",
+  role: "utterance",
+  turnId: "RESOLVER-T06",
+  targetIds: ["executive_functions", "inhibition"],
+}, "a same-target explanatory continuation must retain the immediately previous utterance")
+assert.deepEqual(compatibleExplanationContinuation.targetIds, ["inhibition"])
+
+const unrelatedExplanation = compileStudentRequestContract("RESOLVER-T06E", frame({
+  semanticActs: acts("explain"),
+  focusTargetIds: ["interoception"],
+}), exampleState)
+assert.deepEqual(unrelatedExplanation.referent, {
+  kind: "none",
+  role: "none",
+  turnId: null,
+  targetIds: [],
+}, "an unrelated explanation must not inherit the latest utterance")
+
+const compatibleRepairExplanation = compileStudentRequestContract("RESOLVER-T06F", frame({
+  semanticActs: acts("explain"),
+  conversationAction: "repair",
+  focusTargetIds: ["inhibition"],
+}), exampleState)
+assert.equal(compatibleRepairExplanation.referent.turnId, null, "repair must not receive an inferred continue referent")
+
+const compatibleStartExplanation = compileStudentRequestContract("RESOLVER-T06G", frame({
+  semanticActs: acts("explain"),
+  conversationAction: "start",
+  focusTargetIds: ["inhibition"],
+}), exampleState)
+assert.equal(compatibleStartExplanation.referent.turnId, null, "start must not receive an inferred continue referent")
+
 const explicitExample = compileStudentRequestContract("RESOLVER-T07", frame({
   semanticActs: acts("example"),
   focusTargetIds: ["coregulation"],
@@ -465,7 +502,7 @@ assert.equal(resolveStudentConversationAction({
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_RESOLVER_CONTRASTIVE_LOCAL",
-  cases: 42,
+  cases: 46,
   compareOverContextualObserve: true,
   componentExplainOverContextualCase: true,
   pureObservationPreserved: true,
@@ -475,6 +512,9 @@ console.log(JSON.stringify({
   implicitLatestExampleReferent: true,
   compatibleObservationReferent: true,
   unrelatedObservationNoReferentLeak: true,
+  compatibleExplanationContinuationReferent: true,
+  unrelatedExplanationNoReferentLeak: true,
+  explanationContinuationActionBounded: true,
   explicitNewTargetNoReferentLeak: true,
   contextualBehaviorDoesNotBecomeFocus: true,
   explicitBehaviorFocusPreserved: true,

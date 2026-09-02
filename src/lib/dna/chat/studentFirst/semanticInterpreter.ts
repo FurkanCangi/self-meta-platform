@@ -15,7 +15,7 @@ import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 import { normalizeDnaChatText } from "../text"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@20" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@21" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -355,9 +355,16 @@ export function compileStudentRequestContract(
   const compareContextCompatible = Boolean(latestSnapshot) && semanticTask === "compare" && (
     allowedFocusTargets.length < 2 || latestTargetsOverlap
   )
+  const explanationContinuationCompatible = Boolean(latestSnapshot)
+    && frame.conversationAction === "continue"
+    && semanticTask === "explain"
+    && allowedFocusTargets.length > 0
+    && allowedFocusTargets.every((targetId) => latestTargetIds.includes(targetId))
   const effectiveReferentTurnId = frame.referentTurnId ?? (
     latestTurnId && (
-      compareContextCompatible || (contextTargetsCompatible && (contextBindingTask || presentation.preserveMeaning))
+      compareContextCompatible
+      || explanationContinuationCompatible
+      || (contextTargetsCompatible && (contextBindingTask || presentation.preserveMeaning))
     )
       ? latestTurnId
       : null
