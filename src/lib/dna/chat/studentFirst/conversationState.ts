@@ -18,6 +18,7 @@ export type TargetLexeme = Readonly<{
   id: string
   label: string
   aliases: readonly string[]
+  contextAliases?: readonly string[]
 }>
 
 export const DNA_STUDENT_TARGET_LEXICON: readonly TargetLexeme[] = Object.freeze([
@@ -26,7 +27,12 @@ export const DNA_STUDENT_TARGET_LEXICON: readonly TargetLexeme[] = Object.freeze
   { id: "attention", label: "dikkat", aliases: ["dikkat", "odaklanma"] },
   { id: "executive_functions", label: "yürütücü işlevler", aliases: ["yürütücü işlev", "yürütücü işlevler", "yönetici işlev"] },
   { id: "inhibition", label: "inhibisyon", aliases: ["inhibisyon", "ketleme", "ketleyici kontrol", "dürtü kontrolü", "dürtüyü durdurma"] },
-  { id: "working_memory", label: "çalışma belleği", aliases: ["çalışma belleği", "yönergeyi aklında tutma", "akılda tutma"] },
+  {
+    id: "working_memory",
+    label: "çalışma belleği",
+    aliases: ["çalışma belleği", "yönergeyi aklında tutma", "akılda tutma"],
+    contextAliases: ["yönergeyi aklında tutma", "akılda tutma"],
+  },
   { id: "planning", label: "planlama", aliases: ["planlama", "plan yapma"] },
   { id: "cognitive_flexibility", label: "bilişsel esneklik", aliases: ["bilişsel esneklik", "esnek düşünme"] },
   { id: "coregulation", label: "eş düzenleme", aliases: ["eş düzenleme", "eş-düzenleme", "ko-regülasyon", "ko regülasyon"] },
@@ -36,7 +42,12 @@ export const DNA_STUDENT_TARGET_LEXICON: readonly TargetLexeme[] = Object.freeze
   { id: "emotion_regulation", label: "duygu düzenleme", aliases: ["duygu düzenleme", "duygusal düzenleme", "duygu regülasyonu"] },
   { id: "interoception", label: "interosepsiyon", aliases: ["interosepsiyon", "beden sinyali", "bedensel sinyal", "iç duyum"] },
   { id: "reactivity", label: "reaktivite", aliases: ["reaktivite", "tepkisellik"] },
-  { id: "recovery", label: "toparlanma", aliases: ["toparlanma", "göreve dönme", "oyuna dönme"] },
+  {
+    id: "recovery",
+    label: "toparlanma",
+    aliases: ["toparlanma", "göreve dönme", "oyuna dönme"],
+    contextAliases: ["göreve dönme", "oyuna dönme"],
+  },
 ])
 
 const EMPTY_PRESENTATION: StudentPresentationRequest = Object.freeze({
@@ -65,6 +76,36 @@ function detectedTargets(message: string): string[] {
   }
   hits.sort((left, right) => left.at - right.at || right.length - left.length)
   return unique(hits.map((hit) => hit.id))
+}
+
+export function detectExplicitStudentTargetIds(message: string): readonly string[] {
+  const normalized = normalizeDnaChatText(message)
+  const hits: Array<{ id: string; at: number; length: number }> = []
+  for (const entry of DNA_STUDENT_TARGET_LEXICON) {
+    const contextAliases = new Set((entry.contextAliases ?? []).map((alias) => normalizeDnaChatText(alias)))
+    for (const alias of entry.aliases) {
+      const normalizedAlias = normalizeDnaChatText(alias)
+      if (contextAliases.has(normalizedAlias)) continue
+      const at = normalized.indexOf(normalizedAlias)
+      if (at >= 0) hits.push({ id: entry.id, at, length: normalizedAlias.length })
+    }
+  }
+  hits.sort((left, right) => left.at - right.at || right.length - left.length)
+  return Object.freeze(unique(hits.map((hit) => hit.id)))
+}
+
+export function detectContextStudentTargetIds(message: string): readonly string[] {
+  const normalized = normalizeDnaChatText(message)
+  const hits: Array<{ id: string; at: number; length: number }> = []
+  for (const entry of DNA_STUDENT_TARGET_LEXICON) {
+    for (const alias of entry.contextAliases ?? []) {
+      const normalizedAlias = normalizeDnaChatText(alias)
+      const at = normalized.indexOf(normalizedAlias)
+      if (at >= 0) hits.push({ id: entry.id, at, length: normalizedAlias.length })
+    }
+  }
+  hits.sort((left, right) => left.at - right.at || right.length - left.length)
+  return Object.freeze(unique(hits.map((hit) => hit.id)))
 }
 
 function rejectedTargets(message: string, explicitTargets: readonly string[]): string[] {

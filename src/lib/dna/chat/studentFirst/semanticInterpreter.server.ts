@@ -13,6 +13,8 @@ import {
   DNA_STUDENT_SEMANTIC_INTERPRETER_INSTRUCTIONS,
   studentSemanticFrameSchema,
   studentSemanticInterpreterContent,
+  groundStudentExplicitTargets,
+  groundStudentRequestIntent,
   groundStudentTargetRoles,
   resolveStudentConversationAction,
   validateStudentSemanticFrameDetailed,
@@ -156,10 +158,19 @@ export async function interpretStudentRequestWithProvider(input: Readonly<{
           }),
         })
       : providerValue
+    const explicitGroundedValue = groundStudentExplicitTargets({
+      message: input.message,
+      candidate: actionResolvedValue,
+    })
+    const intentGroundedValue = groundStudentRequestIntent({
+      message: input.message,
+      state: input.state,
+      candidate: explicitGroundedValue,
+    })
     const resolvedValue = groundStudentTargetRoles({
       message: input.message,
       state: input.state,
-      candidate: actionResolvedValue,
+      candidate: intentGroundedValue,
     })
     const validation = validateStudentSemanticFrameDetailed(resolvedValue, input.state)
     if (validation.ok) return Object.freeze({

@@ -11,11 +11,11 @@ import type {
 import {
   DNA_STUDENT_FIRST_REQUEST_VERSION,
 } from "./contracts"
-import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
+import { DNA_STUDENT_TARGET_LEXICON, detectExplicitStudentTargetIds } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 import { normalizeDnaChatText } from "../text"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@21" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@23" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -95,9 +95,9 @@ export function resolveStudentConversationAction(input: Readonly<{
   preserveMeaning?: boolean
 }>): StudentConversationAction {
   const normalized = normalizeDnaChatText(input.message)
-  if (/\b(?:toparla|ozetle|ozet yap|konustuklarimizi|konustugumuzu|konusmayi)\b/.test(normalized)) return "summarize_session"
+  if (/\b(?:toparla|ozetle|ozet\w* (?:yap|cikar)|konustuklarimizi|konustugumuzu|konusmayi)\b/.test(normalized)) return "summarize_session"
   if (/\b(?:ilk anlattigin|ilk konu|az onceki konu|geri donelim|donelim|basa donelim)\b/.test(normalized)) return "return"
-  const explicitContentRepair = /\b(?:sormuyorum|onu demiyorum|yanlis anladin|kastettigim)\b/.test(normalized)
+  const explicitContentRepair = /\b(?:sormuyorum|onu demiyorum|yanlis anladin|kastettigim|(?:kismi|tarafi) birak)\b/.test(normalized)
   if (explicitContentRepair) return "repair"
   const styleOnlyPreserve = Boolean(input.preserveMeaning) || /\b(?:akademik oldu|cok akademik|yeniden soyle|tekrar anlat|daha basit|ogrenci arkadasina anlat)\b/.test(normalized)
   if (styleOnlyPreserve && input.hasHistory) return "continue"
@@ -122,10 +122,7 @@ export function groundStudentTargetRoles(input: Readonly<{
   if (row.focusTargetIds.some((targetId) => typeof targetId !== "string") || row.contextTargetIds.some((targetId) => typeof targetId !== "string")) {
     return input.candidate
   }
-  const normalizedMessage = normalizeDnaChatText(input.message)
-  const explicitlyNamedTargets = new Set(DNA_STUDENT_TARGET_LEXICON
-    .filter((target) => normalizedMessage.includes(normalizeDnaChatText(target.label)))
-    .map((target) => target.id))
+  const explicitlyNamedTargets = new Set(detectExplicitStudentTargetIds(input.message))
   const focusTargetIds = (row.focusTargetIds as string[]).filter((targetId) => explicitlyNamedTargets.has(targetId))
   const demotedContextIds = (row.focusTargetIds as string[]).filter((targetId) => !explicitlyNamedTargets.has(targetId))
   const contextTargetIds = [...new Set([...(row.contextTargetIds as string[]), ...demotedContextIds])]
@@ -134,6 +131,107 @@ export function groundStudentTargetRoles(input: Readonly<{
     ...row,
     focusTargetIds: Object.freeze(focusTargetIds),
     contextTargetIds: Object.freeze(contextTargetIds),
+  })
+}
+
+export function groundStudentExplicitTargets(input: Readonly<{
+  message: string
+  candidate: unknown
+}>): unknown {
+  if (!input.candidate || typeof input.candidate !== "object") return input.candidate
+  const row = input.candidate as Record<string, unknown>
+  if (!Array.isArray(row.focusTargetIds) || !Array.isArray(row.contextTargetIds) || !Array.isArray(row.rejectedTargetIds)) {
+    return input.candidate
+  }
+  if (
+    row.focusTargetIds.some((targetId) => typeof targetId !== "string")
+    || row.contextTargetIds.some((targetId) => typeof targetId !== "string")
+    || row.rejectedTargetIds.some((targetId) => typeof targetId !== "string")
+  ) return input.candidate
+  const rejected = new Set(row.rejectedTargetIds as string[])
+  const explicitTargets = detectExplicitStudentTargetIds(input.message).filter((targetId) => !rejected.has(targetId))
+  if (!explicitTargets.length) return input.candidate
+  const focusTargetIds = [...new Set([...(row.focusTargetIds as string[]), ...explicitTargets])]
+  const contextTargetIds = (row.contextTargetIds as string[]).filter((targetId) => !focusTargetIds.includes(targetId))
+  return Object.freeze({
+    ...row,
+    focusTargetIds: Object.freeze(focusTargetIds),
+    contextTargetIds: Object.freeze(contextTargetIds),
+  })
+}
+
+export function groundStudentRequestIntent(input: Readonly<{
+  message: string
+  state: StudentConversationState
+  candidate: unknown
+}>): unknown {
+  if (!input.candidate || typeof input.candidate !== "object") return input.candidate
+  const row = input.candidate as Record<string, unknown>
+  if (!row.semanticActs || typeof row.semanticActs !== "object" || !row.presentation || typeof row.presentation !== "object") {
+    return input.candidate
+  }
+  if (!Array.isArray(row.focusTargetIds)) return input.candidate
+  const acts = row.semanticActs as Record<string, unknown>
+  const presentation = row.presentation as Record<string, unknown>
+  if (DNA_STUDENT_SEMANTIC_TASKS.some((task) => typeof acts[task] !== "boolean")) return input.candidate
+  const requiredPresentationKeys = ["depth", "language", "format", "example", "grouping", "requestedSentenceCount", "preserveMeaning"]
+  if (requiredPresentationKeys.some((key) => !(key in presentation))) return input.candidate
+
+  const normalized = normalizeDnaChatText(input.message)
+  const groupingRequested = /\b(?:ayri ayri|her birini|ucunu ayri|ikisini ayri)\b/.test(normalized)
+  const exampleRequested = /\b(?:ornek ver|bir ornek ver|ornekle anlat|ornek gibi acikla|ornek uzerinden|ornegiyle bagla)\b/.test(normalized)
+    || (/\bayni ornekte\b/.test(normalized) && /\b(?:goster|anlat|acikla|ayir)\b/.test(normalized))
+  const concreteExampleContext = /\b(?:cocuk|ogrenci|sinif|ders|ogretmen|oyun|gunluk)\w*\b/.test(normalized)
+  const semanticActs = Object.freeze({
+    ...acts,
+    example: acts.example === true || exampleRequested,
+  })
+  const groundedPresentation = Object.freeze({
+    ...presentation,
+    grouping: groupingRequested ? "separate_each" : presentation.grouping,
+    example: semanticActs.example === true
+      ? concreteExampleContext
+        ? "concrete"
+        : presentation.example === "none" ? "brief" : presentation.example
+      : presentation.example,
+  })
+
+  let referentTurnId = typeof row.referentTurnId === "string" ? row.referentTurnId : null
+  let referentRole = row.referentRole
+  const latest = input.state.semanticHistory.at(-1) ?? null
+  if (!referentTurnId && latest) {
+    const focusTargetIds = (row.focusTargetIds as unknown[]).filter((targetId): targetId is string => typeof targetId === "string")
+    const compatibleWithLatest = !focusTargetIds.length || focusTargetIds.every((targetId) => latest.targetIds.includes(targetId))
+    const entityCue = /\b(?:cocuk|cocug|ogrenci|vaka|davranis|ornek)\w*\b/.test(normalized)
+    if (row.conversationAction === "return") {
+      const firstCue = /\b(?:ilk|basa)\b/.test(normalized)
+      const entityAnchor = entityCue
+        ? [...input.state.semanticHistory].reverse().find((turn) => turn.semanticTask === "example") ?? null
+        : null
+      const compatibleHistory = (firstCue ? [...input.state.semanticHistory] : [...input.state.semanticHistory].reverse())
+        .find((turn) => !focusTargetIds.length || focusTargetIds.some((targetId) => turn.targetIds.includes(targetId))) ?? null
+      const anchor = entityAnchor ?? compatibleHistory
+      if (anchor) {
+        referentTurnId = anchor.turnId
+        referentRole = entityAnchor ? "case_entity" : "utterance"
+      }
+    } else {
+      const contextBinding = semanticActs.example === true || acts.case_reasoning === true || acts.observe === true
+      if (row.conversationAction === "continue" && compatibleWithLatest && (contextBinding || presentation.preserveMeaning === true)) {
+        referentTurnId = latest.turnId
+        referentRole = entityCue && (latest.semanticTask === "example" || latest.referent.role === "case_entity")
+          ? "case_entity"
+          : "utterance"
+      }
+    }
+  }
+
+  return Object.freeze({
+    ...row,
+    semanticActs,
+    presentation: groundedPresentation,
+    referentTurnId,
+    referentRole: referentTurnId ? referentRole : "none",
   })
 }
 
@@ -394,7 +492,9 @@ export function compileStudentRequestContract(
     targetIds: Object.freeze(referentSnapshot?.targetIds ?? []),
   })
   const mergedTargetIds = frame.conversationAction === "summarize_session"
-    ? unique(state.semanticHistory.flatMap((turn) => turn.targetIds))
+    ? allowedFocusTargets.length
+      ? unique(allowedFocusTargets)
+      : unique(state.semanticHistory.flatMap((turn) => turn.targetIds))
     : frame.conversationAction === "return"
         ? allowedFocusTargets.length
           ? unique(allowedFocusTargets)

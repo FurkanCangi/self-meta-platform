@@ -254,6 +254,7 @@
     "chat:student:student40": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-student40 && NODE_PATH=./node_modules/next/dist/compiled node --conditions=react-server .tmp/dna-student40/scripts/run-dna-student40-semantic.js",
     "chat:student:fixtures:verify": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-student-fixtures && node .tmp/dna-student-fixtures/scripts/run-dna-student-fixture-integrity.js",
     "chat:student:measurement:test": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-student-measurement && node .tmp/dna-student-measurement/scripts/run-dna-student-measurement-tests.js",
+    "chat:student:mutation:test": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-student-mutation && node .tmp/dna-student-mutation/scripts/run-dna-student-provider-frame-mutations.js",
     "chat:student:batch-diagnostic": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-student-batch-diagnostic && node .tmp/dna-student-batch-diagnostic/scripts/run-dna-student-batch-failure-map.js",
     "chat:assurance": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-chat-assurance && node .tmp/dna-chat-assurance/scripts/run-dna-chat-runtime-assurance-tests.js",
     "chat:case-e2e": "tsc -p tsconfig.report-runner.json --outDir .tmp/dna-case-e2e && node .tmp/dna-case-e2e/scripts/run-dna-chat-case-e2e-tests.js",

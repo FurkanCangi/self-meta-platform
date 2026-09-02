@@ -8,6 +8,8 @@ import {
   applyStudentRequestContract,
   compileStudentRequestContract,
   createEmptyStudentConversationState,
+  detectExplicitStudentTargetIds,
+  groundStudentExplicitTargets,
   groundStudentTargetRoles,
   studentSemanticFrameSchema,
   validateStudentSemanticFrame,
@@ -303,6 +305,60 @@ async function main() {
     assert.deepEqual(grounded.focusTargetIds, candidate.focusTargetIds, `${actionCase.action} focus must remain provider-interpreted`)
     assert.deepEqual(grounded.contextTargetIds, candidate.contextTargetIds, `${actionCase.action} context must remain provider-interpreted`)
   }
+  assert.deepEqual(
+    detectExplicitStudentTargetIds("planlama dürtü kontrolü ve duygu düzenleme üçü ayrı ayrı nasıl yer alır"),
+    ["planning", "inhibition", "emotion_regulation"],
+  )
+  const missingExplicitComponent = {
+    ...validFrame,
+    semanticActs: { ...validFrame.semanticActs, define: false, case_reasoning: true },
+    conversationAction: "continue",
+    focusTargetIds: ["planning", "emotion_regulation"],
+    contextTargetIds: [],
+    presentation: { ...validFrame.presentation, grouping: "separate_each" },
+  }
+  const explicitComponentGrounded = groundStudentExplicitTargets({
+    message: "planlama dürtü kontrolü ve duygu düzenleme bu durumda üçü ayrı ayrı nasıl yer alır",
+    candidate: missingExplicitComponent,
+  }) as Record<string, unknown>
+  assert.deepEqual(explicitComponentGrounded.focusTargetIds, ["planning", "emotion_regulation", "inhibition"])
+  const completedComponentRoles = groundStudentTargetRoles({
+    message: "planlama dürtü kontrolü ve duygu düzenleme bu durumda üçü ayrı ayrı nasıl yer alır",
+    state: groundedState,
+    candidate: explicitComponentGrounded,
+  }) as Record<string, unknown>
+  assert.deepEqual(completedComponentRoles.focusTargetIds, ["planning", "emotion_regulation", "inhibition"])
+  const componentValidation = validateStudentSemanticFrameDetailed(completedComponentRoles, groundedState)
+  if (!componentValidation.ok) throw new Error(componentValidation.failureCode)
+  const completedComponentContract = compileStudentRequestContract("GROUND-T03", componentValidation.frame, groundedState)
+  assert.deepEqual(new Set(completedComponentContract.targetIds), new Set(["planning", "inhibition", "emotion_regulation"]))
+  assert.equal(completedComponentContract.componentTargetIds.length, 3)
+
+  const behaviorOnlyContext = groundStudentExplicitTargets({
+    message: "öğretmen bekleyince çocuk göreve dönüyor bunu örnek gibi açıkla",
+    candidate: { ...inferredBehaviorFocus, focusTargetIds: ["coregulation"], contextTargetIds: [] },
+  }) as Record<string, unknown>
+  assert.deepEqual(behaviorOnlyContext.focusTargetIds, ["coregulation"], "behavior-only recovery alias must not become answer focus")
+  const explicitAliasExample = groundStudentExplicitTargets({
+    message: "dürtü kontrolü için derste kısa örnek ver",
+    candidate: { ...inferredBehaviorFocus, focusTargetIds: [], contextTargetIds: [] },
+  })
+  const explicitAliasRoles = groundStudentTargetRoles({
+    message: "dürtü kontrolü için derste kısa örnek ver",
+    state: groundedState,
+    candidate: explicitAliasExample,
+  }) as Record<string, unknown>
+  assert.deepEqual(explicitAliasRoles.focusTargetIds, ["inhibition"], "an explicit scientific alias must survive context-role grounding")
+  const rejectedExplicitAlias = groundStudentExplicitTargets({
+    message: "yok dikkat tarafını sormuyorum öz düzenleme açısından soruyorum",
+    candidate: {
+      ...inferredBehaviorFocus,
+      conversationAction: "repair",
+      focusTargetIds: ["self_regulation"],
+      rejectedTargetIds: ["attention"],
+    },
+  }) as Record<string, unknown>
+  assert.deepEqual(rejectedExplicitAlias.focusTargetIds, ["self_regulation"], "a rejected explicit alias must not re-enter focus")
   assert.equal(validateStudentSemanticFrame({ ...validFrame, summaryExtras: { unknown: "yes", observationFocus: false } }, state), null)
   assert.deepEqual(
     validateStudentSemanticFrameDetailed({ ...validFrame, semanticActs: Object.fromEntries(Object.keys(validFrame.semanticActs).map((key) => [key, false])) }, state),
@@ -409,6 +465,8 @@ async function main() {
     targetRolesSeparated: true,
     focusPromotionGrounded: true,
     focusGroundingActionMatrix: true,
+    explicitScientificAliasGrounding: true,
+    behaviorOnlyAliasesRemainContext: true,
     boundedStructuredRepair: true,
     maxProviderAttemptsPerTurn: DNA_STUDENT_MAX_PROVIDER_ATTEMPTS,
     boundedTransportRetry: true,

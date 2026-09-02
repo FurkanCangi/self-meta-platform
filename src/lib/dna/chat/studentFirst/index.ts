@@ -1,6 +1,8 @@
 export {
   applyStudentRequestContract,
   createEmptyStudentConversationState,
+  detectContextStudentTargetIds,
+  detectExplicitStudentTargetIds,
   interpretStudentRequest,
   resolveStudentObligations,
 } from "./conversationState"
@@ -29,6 +31,8 @@ export {
   DNA_STUDENT_SEMANTIC_TASKS,
   studentSemanticFrameSchema,
   studentSemanticInterpreterContent,
+  groundStudentExplicitTargets,
+  groundStudentRequestIntent,
   groundStudentTargetRoles,
   resolveStudentConversationAction,
   validateStudentSemanticFrame,
