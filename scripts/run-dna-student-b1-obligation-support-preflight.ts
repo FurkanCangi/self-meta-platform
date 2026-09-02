@@ -49,28 +49,40 @@ async function main() {
 
   const execution = await executeStudentAnswer({ question: compare.user, contract: comparisonResolution.contract })
   if (!execution.ok) {
-    throw new Error(`${execution.reason}:${execution.reason === "candidate_invalid"
-      ? execution.failureCodes.join(",") : execution.failure.reason}`)
+    const usage = calculateDnaChatLunaUsage(execution.provider.usage)
+    console.log(JSON.stringify({
+      ok: false,
+      gate: "STUDENT_B1_TYPED_BLOCK_PREFLIGHT",
+      turnId: compare.turnId,
+      failure: execution.reason,
+      detail: execution.reason === "candidate_invalid" ? execution.failureCodes : execution.failure.reason,
+      providerCalls: execution.provider.calls,
+      rawOutputsStored: 0,
+      usage,
+      maxCostMicrousd: MAX_COST_MICROUSD,
+    }, null, 2))
+    process.exitCode = 1
+    return
   }
   assert.equal(execution.route, "provider_grounded")
   assert.equal(execution.provider.calls, 1)
   assert.equal(execution.provider.rawOutputStored, false)
   assert.deepEqual(
-    [...execution.candidate.obligationSupport.map((row) => row.obligationId)].sort(),
+    [...execution.candidate.blocks.flatMap((block) => block.obligationIds)].sort(),
     [...comparisonResolution.contract.obligations.map((row) => row.id)].sort(),
   )
-  assert.ok(execution.candidate.obligationSupport.every((row) => execution.answer.includes(row.visibleText)))
+  assert.equal(execution.answer, execution.candidate.blocks.map((block) => block.text).join(" "))
   const usage = calculateDnaChatLunaUsage(execution.provider.usage)
   assert.ok(usage.costMicrousd <= MAX_COST_MICROUSD)
 
   console.log(JSON.stringify({
     ok: true,
-    gate: "STUDENT_B1_OBLIGATION_SUPPORT_PREFLIGHT",
+    gate: "STUDENT_B1_TYPED_BLOCK_PREFLIGHT",
     turnId: compare.turnId,
     targetIds: comparisonResolution.contract.targetIds,
     obligationKinds: comparisonResolution.contract.obligations.map((row) => row.kind),
     answer: execution.answer,
-    obligationSupport: execution.candidate.obligationSupport,
+    blocks: execution.candidate.blocks,
     providerCalls: execution.provider.calls,
     rawOutputsStored: 0,
     usage,
@@ -81,7 +93,7 @@ async function main() {
 void main().catch((error) => {
   console.error(JSON.stringify({
     ok: false,
-    gate: "STUDENT_B1_OBLIGATION_SUPPORT_PREFLIGHT",
+    gate: "STUDENT_B1_TYPED_BLOCK_PREFLIGHT",
     failure: error instanceof Error ? error.message : String(error),
   }))
   process.exitCode = 1

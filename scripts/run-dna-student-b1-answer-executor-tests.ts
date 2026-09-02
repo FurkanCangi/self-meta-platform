@@ -55,11 +55,14 @@ const mockFetch: typeof fetch = async (_input, init) => {
         ? `${labels} aynı şey değildir. Aralarındaki ilişki, her kavramın kaynakta ayrı bir kapsamla açıklanmasıdır.`
     : `${labels} için kaynak bilgisine dayalı, öğrenci dilinde kısa bir açıklama veriyorum. İstenen görev bu kavramları doğrudan ele alır.`
   const value = {
-    answer,
-    addressedTargetIds: content.activeTargets.map((row) => row.targetId),
-    obligationSupport: content.obligations.map((row) => ({ obligationId: row.id, visibleText: answer })),
-    usedClaimIds: content.activeTargets.map((row) => row.lockedClaims[0]!.claimId),
-    usedPolicyUnitIds: content.policyUnits.map((row) => row.id),
+    blocks: [{
+      blockId: "b1",
+      text: answer,
+      targetIds: content.activeTargets.map((row) => row.targetId),
+      obligationIds: content.obligations.map((row) => row.id),
+      usedClaimIds: content.activeTargets.map((row) => row.lockedClaims[0]!.claimId),
+      usedPolicyUnitIds: content.policyUnits.map((row) => row.id),
+    }],
     illustrationKind: content.obligations.some((row) => row.kind === "give_concrete_example")
       ? "user_supplied" : "none",
   }
@@ -115,50 +118,116 @@ async function main() {
   })
   if (!firstResolution.ok) throw new Error("first contract missing")
   const plan = buildStudentAnswerExecutionPlan({ question: first.user, contract: firstResolution.contract })
+  const validAnswer = "Self-regülasyon için kaynakla sınırlı kısa açıklama."
+  const validBlock = {
+    blockId: "b1",
+    text: validAnswer,
+    targetIds: [...plan.activeTargetIds],
+    obligationIds: plan.obligations.map((row) => row.id),
+    usedClaimIds: plan.targetEvidence.map((row) => row.claims[0]!.claimId),
+    usedPolicyUnitIds: plan.policyUnits.map((row) => row.id),
+  }
   const valid = {
-    answer: "Self-regülasyon için kaynakla sınırlı kısa açıklama.",
+    answer: validAnswer,
+    blocks: [validBlock],
     addressedTargetIds: [...plan.activeTargetIds],
-    obligationSupport: plan.obligations.map((row) => ({
-      obligationId: row.id,
-      visibleText: "Self-regülasyon için kaynakla sınırlı kısa açıklama.",
-    })),
+    addressedObligationIds: plan.obligations.map((row) => row.id),
     usedClaimIds: plan.targetEvidence.map((row) => row.claims[0]!.claimId),
     usedPolicyUnitIds: plan.policyUnits.map((row) => row.id),
     illustrationKind: "none" as const,
   }
   assert.deepEqual(validateStudentAnswerCandidate({ candidate: valid, plan }), [])
   assert.ok(validateStudentAnswerCandidate({
-    candidate: { ...valid, usedClaimIds: [...valid.usedClaimIds, "invented.claim"] }, plan,
+    candidate: {
+      ...valid,
+      blocks: [{ ...validBlock, usedClaimIds: [...validBlock.usedClaimIds, "invented.claim"] }],
+      usedClaimIds: [...valid.usedClaimIds, "invented.claim"],
+    }, plan,
   }).includes("claim_outside_locked_evidence"))
   assert.ok(validateStudentAnswerCandidate({
-    candidate: { ...valid, obligationSupport: [] }, plan,
+    candidate: {
+      ...valid,
+      blocks: [{ ...validBlock, obligationIds: [] }],
+      addressedObligationIds: [],
+    }, plan,
   }).includes("obligation_coverage_mismatch"))
   assert.ok(validateStudentAnswerCandidate({
-    candidate: { ...valid, addressedTargetIds: ["wrong_target"] }, plan,
+    candidate: {
+      ...valid,
+      blocks: [{ ...validBlock, targetIds: ["wrong_target"] }],
+      addressedTargetIds: ["wrong_target"],
+    }, plan,
   }).includes("target_coverage_mismatch"))
   assert.ok(validateStudentAnswerCandidate({
-    candidate: { ...valid, usedClaimIds: [...valid.usedClaimIds, valid.usedClaimIds[0]!] }, plan,
+    candidate: {
+      ...valid,
+      blocks: [{ ...validBlock, usedClaimIds: [...validBlock.usedClaimIds, validBlock.usedClaimIds[0]!] }],
+    }, plan,
   }).includes("duplicate_contract_reference"))
   assert.ok(validateStudentAnswerCandidate({
-    candidate: { ...valid, answer: "Kaynakla sınırlı ancak hedef adı görünmeyen kısa açıklama." }, plan,
+    candidate: {
+      ...valid,
+      answer: "Kaynakla sınırlı ancak hedef adı görünmeyen kısa açıklama.",
+      blocks: [{ ...validBlock, text: "Kaynakla sınırlı ancak hedef adı görünmeyen kısa açıklama." }],
+    }, plan,
   }).includes("target_not_visible"))
   assert.ok(validateStudentAnswerCandidate({
     candidate: {
       ...valid,
-      obligationSupport: valid.obligationSupport.map((row, index) => index === 0
-        ? { ...row, visibleText: "Bu metin görünür cevapta yok." } : row),
+      blocks: [{ ...validBlock, targetIds: [] }],
+      addressedTargetIds: [],
     },
     plan,
   }).includes("obligation_not_visible"))
-  if (valid.obligationSupport.length) {
+  if (valid.addressedObligationIds.length) {
     assert.ok(validateStudentAnswerCandidate({
       candidate: {
         ...valid,
-        obligationSupport: [...valid.obligationSupport, valid.obligationSupport[0]!],
+        blocks: [{
+          ...validBlock,
+          obligationIds: [...validBlock.obligationIds, validBlock.obligationIds[0]!],
+        }],
       },
       plan,
     }).includes("duplicate_contract_reference"))
   }
+
+  const rejectedFetch: typeof fetch = async (_input, init) => {
+    const request = JSON.parse(String(init?.body)) as { input: string }
+    const content = JSON.parse(request.input) as {
+      activeTargets: readonly Readonly<{ targetId: string; lockedClaims: readonly Readonly<{ claimId: string }>[] }>[]
+      obligations: readonly Readonly<{ id: string }>[]
+      policyUnits: readonly Readonly<{ id: string }>[]
+    }
+    return new Response(JSON.stringify({
+      id: "mock-rejected-response",
+      output_text: JSON.stringify({
+        blocks: [{
+          blockId: "b1",
+          text: "Bu yeterince uzun cevap görünür hedef adını kasıtlı olarak içermiyor.",
+          targetIds: content.activeTargets.map((row) => row.targetId),
+          obligationIds: content.obligations.map((row) => row.id),
+          usedClaimIds: content.activeTargets.map((row) => row.lockedClaims[0]!.claimId),
+          usedPolicyUnitIds: content.policyUnits.map((row) => row.id),
+        }],
+        illustrationKind: "none",
+      }),
+      usage: { input_tokens: 101, output_tokens: 51, input_tokens_details: { cached_tokens: 0 } },
+    }), { status: 200, headers: { "Content-Type": "application/json" } })
+  }
+  const rejected = await executeStudentAnswer({
+    question: first.user,
+    contract: firstResolution.contract,
+    apiKey: "mock-api-key",
+    fetchImpl: rejectedFetch,
+  })
+  assert.equal(rejected.ok, false)
+  if (rejected.ok) throw new Error("invalid provider candidate unexpectedly accepted")
+  assert.equal(rejected.reason, "candidate_invalid")
+  assert.equal(rejected.provider.calls, 1)
+  assert.equal(rejected.provider.usage.inputTokens, 101)
+  assert.equal(rejected.provider.usage.outputTokens, 51)
+  assert.equal(rejected.provider.rawOutputStored, false)
 
   console.log(JSON.stringify({
     ok: true,
@@ -174,8 +243,9 @@ async function main() {
     wrongTargetRejected: true,
     duplicateReferenceRejected: true,
     invisibleTargetRejected: true,
-    invisibleObligationSupportRejected: true,
-    duplicateObligationSupportRejected: true,
+    unboundObligationBlockRejected: true,
+    duplicateObligationBlockReferenceRejected: true,
+    rejectedCandidateTelemetryPreserved: true,
   }, null, 2))
 }
 

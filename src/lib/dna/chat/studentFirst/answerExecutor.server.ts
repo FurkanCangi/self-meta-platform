@@ -12,7 +12,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@2" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@3" as const
 export const DNA_STUDENT_ANSWER_EXECUTOR_TIMEOUT_MS = 20_000
 export const DNA_STUDENT_ANSWER_EXECUTOR_MAX_PROVIDER_CALLS = 1
 
@@ -33,13 +33,20 @@ export const DNA_STUDENT_ANSWER_FAILURE_CODES = Object.freeze([
 
 export type StudentAnswerFailureCode = typeof DNA_STUDENT_ANSWER_FAILURE_CODES[number]
 
+export type StudentAnswerBlock = Readonly<{
+  blockId: string
+  text: string
+  targetIds: readonly string[]
+  obligationIds: readonly string[]
+  usedClaimIds: readonly string[]
+  usedPolicyUnitIds: readonly string[]
+}>
+
 export type StudentAnswerCandidate = Readonly<{
   answer: string
+  blocks: readonly StudentAnswerBlock[]
   addressedTargetIds: readonly string[]
-  obligationSupport: readonly Readonly<{
-    obligationId: string
-    visibleText: string
-  }>[]
+  addressedObligationIds: readonly string[]
   usedClaimIds: readonly string[]
   usedPolicyUnitIds: readonly string[]
   illustrationKind: "none" | "user_supplied" | "hypothetical"
@@ -105,6 +112,7 @@ function sentenceCount(answer: string) {
 }
 
 function visibleObligation(kind: StudentRequestContract["obligations"][number]["kind"], normalized: string) {
+  if (kind === "give_concrete_example") return /\b(?:ornek\w*|ornegin|mesela|varsay\w*|dusun\w*)\b/u.test(normalized)
   if (kind === "state_single_observation_limit") return /\b(?:tek\s+(?:bir\s+)?(?:gozlem|davranis)|yalnizca\s+bu\s+durum)\b/u.test(normalized)
     && /\b(?:yeterli\s+degil|karar\w*|kesin\w*|gostermez\w*|cikarilamaz\w*)\b/u.test(normalized)
   if (kind === "name_additional_context") return /\b(?:farkli\s+(?:zaman|ortam|gorev)|oncesi\w*\s+(?:ve|ile)\s+sonrasi\w*|destek\w*\s+nasil\s+degis)\b/u.test(normalized)
@@ -123,35 +131,48 @@ export function validateStudentAnswerCandidate(input: Readonly<{
   const candidate = input.candidate
   const plan = input.plan
   const normalizedAnswer = normalizeDnaChatText(candidate.answer)
-  if (typeof candidate.answer !== "string" || candidate.answer.trim().length < 20 || candidate.answer.length > 4_000) {
+  const composedAnswer = candidate.blocks.map((block) => block.text.trim()).join(" ")
+  if (typeof candidate.answer !== "string" || candidate.answer !== composedAnswer
+    || candidate.answer.trim().length < 20 || candidate.answer.length > 4_000
+    || candidate.blocks.length < 1 || candidate.blocks.length > 16) {
     failures.add("answer_missing")
   }
-  const obligationSupportIds = candidate.obligationSupport.map((row) => row.obligationId)
-  if ([candidate.addressedTargetIds, obligationSupportIds, candidate.usedClaimIds, candidate.usedPolicyUnitIds]
-    .some(hasDuplicates)) failures.add("duplicate_contract_reference")
+  const blockIds = candidate.blocks.map((block) => block.blockId)
+  const flattenedTargetIds = candidate.blocks.flatMap((block) => block.targetIds)
+  const flattenedObligationIds = candidate.blocks.flatMap((block) => block.obligationIds)
+  const flattenedClaimIds = candidate.blocks.flatMap((block) => block.usedClaimIds)
+  const flattenedPolicyIds = candidate.blocks.flatMap((block) => block.usedPolicyUnitIds)
+  if (hasDuplicates(blockIds) || hasDuplicates(flattenedObligationIds)
+    || candidate.blocks.some((block) => [block.targetIds, block.obligationIds, block.usedClaimIds, block.usedPolicyUnitIds]
+      .some(hasDuplicates))) failures.add("duplicate_contract_reference")
+  if (!sameSet(candidate.addressedTargetIds, unique(flattenedTargetIds))
+    || !sameSet(candidate.addressedObligationIds, flattenedObligationIds)
+    || !sameSet(candidate.usedClaimIds, unique(flattenedClaimIds))
+    || !sameSet(candidate.usedPolicyUnitIds, unique(flattenedPolicyIds))) failures.add("duplicate_contract_reference")
   if (!sameSet(candidate.addressedTargetIds, plan.activeTargetIds)) failures.add("target_coverage_mismatch")
+  if (flattenedTargetIds.some((targetId) => !plan.activeTargetIds.includes(targetId))) {
+    failures.add("target_coverage_mismatch")
+  }
   if (plan.targetEvidence.some((target) => !target.visibleAliases
     .some((alias) => normalizedAnswer.includes(normalizeDnaChatText(alias))))) failures.add("target_not_visible")
-  if (!sameSet(obligationSupportIds, plan.obligations.map((row) => row.id))) {
+  if (!sameSet(flattenedObligationIds, plan.obligations.map((row) => row.id))) {
     failures.add("obligation_coverage_mismatch")
   }
-  if (candidate.obligationSupport.some((support) => {
-    const visibleText = support.visibleText.trim()
-    return visibleText.length < 4 || visibleText.length > 1_000 || !candidate.answer.includes(visibleText)
-  })) {
-    failures.add("obligation_not_visible")
-  }
   for (const obligation of plan.obligations) {
-    const support = candidate.obligationSupport.find((row) => row.obligationId === obligation.id)
-    if (support && !visibleObligation(obligation.kind, normalizeDnaChatText(support.visibleText))) {
+    const block = candidate.blocks.find((candidateBlock) => candidateBlock.obligationIds.includes(obligation.id))
+    const activeObligationTargets = obligation.targetIds.filter((targetId) => plan.activeTargetIds.includes(targetId))
+    if (!block || block.text.trim().length < 4 || block.text.length > 4_000
+      || activeObligationTargets.some((targetId) => !block.targetIds.includes(targetId))
+      || !visibleObligation(obligation.kind, normalizeDnaChatText(block.text))) {
       failures.add("obligation_not_visible")
     }
   }
   if (!sameSet(candidate.usedPolicyUnitIds, plan.policyUnits.map((row) => row.id))) failures.add("policy_coverage_mismatch")
   const allowedClaimIds = new Set(plan.targetEvidence.flatMap((row) => row.claims.map((claim) => claim.claimId)))
-  if (candidate.usedClaimIds.some((claimId) => !allowedClaimIds.has(claimId))) failures.add("claim_outside_locked_evidence")
+  if (flattenedClaimIds.some((claimId) => !allowedClaimIds.has(claimId))) failures.add("claim_outside_locked_evidence")
   for (const target of plan.targetEvidence) {
-    if (!target.claims.some((claim) => candidate.usedClaimIds.includes(claim.claimId))) {
+    const targetBlocks = candidate.blocks.filter((block) => block.targetIds.includes(target.studentTargetId))
+    if (!targetBlocks.some((block) => target.claims.some((claim) => block.usedClaimIds.includes(claim.claimId)))) {
       failures.add("target_without_locked_claim")
     }
   }
@@ -163,6 +184,29 @@ export function validateStudentAnswerCandidate(input: Readonly<{
   if (INTERNAL_LANGUAGE.test(candidate.answer)
     || candidate.usedClaimIds.some((claimId) => candidate.answer.includes(claimId))) failures.add("internal_contract_leak")
   return Object.freeze([...failures])
+}
+
+function composeCandidate(
+  blocks: readonly StudentAnswerBlock[],
+  illustrationKind: StudentAnswerCandidate["illustrationKind"],
+): StudentAnswerCandidate {
+  const frozenBlocks = Object.freeze(blocks.map((block) => Object.freeze({
+    blockId: block.blockId,
+    text: block.text.trim(),
+    targetIds: Object.freeze([...block.targetIds]),
+    obligationIds: Object.freeze([...block.obligationIds]),
+    usedClaimIds: Object.freeze([...block.usedClaimIds]),
+    usedPolicyUnitIds: Object.freeze([...block.usedPolicyUnitIds]),
+  })))
+  return Object.freeze({
+    answer: frozenBlocks.map((block) => block.text).join(" "),
+    blocks: frozenBlocks,
+    addressedTargetIds: Object.freeze(unique(frozenBlocks.flatMap((block) => block.targetIds))),
+    addressedObligationIds: Object.freeze(unique(frozenBlocks.flatMap((block) => block.obligationIds))),
+    usedClaimIds: Object.freeze(unique(frozenBlocks.flatMap((block) => block.usedClaimIds))),
+    usedPolicyUnitIds: Object.freeze(unique(frozenBlocks.flatMap((block) => block.usedPolicyUnitIds))),
+    illustrationKind,
+  })
 }
 
 function localSafetyCandidate(plan: StudentAnswerExecutionPlan): StudentAnswerCandidate {
@@ -178,28 +222,18 @@ function localSafetyCandidate(plan: StudentAnswerExecutionPlan): StudentAnswerCa
     ...(obligationKinds.has("distinguish_targets") ? [distinguishStatement] : []),
     ...(obligationKinds.has("explain_relation") ? [relationStatement] : []),
   ]
-  const answer = [...relationStatements, ...targetStatements, ...policyStatements].join(" ")
-  const policyTextById = new Map(plan.policyUnits.map((unit) => [unit.id, unit.text]))
-  const supportText = (kind: StudentRequestContract["obligations"][number]["kind"]) => {
-    if (kind === "distinguish_targets") return distinguishStatement
-    if (kind === "explain_relation") return relationStatement
-    if (kind === "state_single_observation_limit") return policyTextById.get("policy.single-observation-limit") ?? answer
-    if (kind === "name_additional_context") return policyTextById.get("policy.additional-context") ?? answer
-    if (kind === "refuse_treatment_selection") return policyTextById.get("policy.no-treatment-selection") ?? answer
-    if (kind === "offer_safe_assessment_frame") return policyTextById.get("policy.safe-assessment-frame") ?? answer
-    return answer
-  }
-  return Object.freeze({
-    answer,
-    addressedTargetIds: Object.freeze([...plan.activeTargetIds]),
-    obligationSupport: Object.freeze(plan.obligations.map((obligation) => Object.freeze({
-      obligationId: obligation.id,
-      visibleText: supportText(obligation.kind),
-    }))),
+  const exampleStatement = obligationKinds.has("give_concrete_example")
+    ? "Örneğin, bu kavramları yalnız açıklayıcı varsayımsal bir durumda düşünebiliriz." : null
+  const text = [...relationStatements, ...targetStatements, ...policyStatements, ...(exampleStatement ? [exampleStatement] : [])]
+    .join(" ")
+  return composeCandidate([Object.freeze({
+    blockId: "b1",
+    text,
+    targetIds: Object.freeze([...plan.activeTargetIds]),
+    obligationIds: Object.freeze(plan.obligations.map((obligation) => obligation.id)),
     usedClaimIds: Object.freeze(plan.targetEvidence.map((row) => row.claims[0]!.claimId)),
     usedPolicyUnitIds: Object.freeze(plan.policyUnits.map((row) => row.id)),
-    illustrationKind: "none",
-  })
+  })], exampleStatement ? "hypothetical" : "none")
 }
 
 function answerSchema(plan: StudentAnswerExecutionPlan): Record<string, unknown> {
@@ -209,37 +243,41 @@ function answerSchema(plan: StudentAnswerExecutionPlan): Record<string, unknown>
   const policyIds = plan.policyUnits.map((row) => row.id)
   const illustrationKinds = plan.obligations.some((row) => row.kind === "give_concrete_example")
     ? ["user_supplied", "hypothetical"] : ["none"]
+  const blockIds = Array.from({ length: 16 }, (_value, index) => `b${index + 1}`)
   return {
     type: "object",
     additionalProperties: false,
-    required: [
-      "answer", "addressedTargetIds", "obligationSupport", "usedClaimIds", "usedPolicyUnitIds", "illustrationKind",
-    ],
+    required: ["blocks", "illustrationKind"],
     properties: {
-      answer: { type: "string", minLength: 20, maxLength: 4_000 },
-      addressedTargetIds: {
-        type: "array", minItems: targetIds.length, maxItems: targetIds.length,
-        items: { type: "string", enum: targetIds },
-      },
-      obligationSupport: {
-        type: "array", minItems: obligationIds.length, maxItems: obligationIds.length,
+      blocks: {
+        type: "array",
+        minItems: 1,
+        maxItems: 16,
         items: {
           type: "object",
           additionalProperties: false,
-          required: ["obligationId", "visibleText"],
+          required: ["blockId", "text", "targetIds", "obligationIds", "usedClaimIds", "usedPolicyUnitIds"],
           properties: {
-            obligationId: { type: "string", enum: obligationIds },
-            visibleText: { type: "string", minLength: 4, maxLength: 1_000 },
+            blockId: { type: "string", enum: blockIds },
+            text: { type: "string", minLength: 4, maxLength: 4_000 },
+            targetIds: {
+              type: "array", minItems: 0, maxItems: targetIds.length,
+              items: { type: "string", enum: targetIds },
+            },
+            obligationIds: {
+              type: "array", minItems: 1, maxItems: obligationIds.length,
+              items: { type: "string", enum: obligationIds },
+            },
+            usedClaimIds: {
+              type: "array", minItems: 0, maxItems: claimIds.length,
+              items: { type: "string", enum: claimIds },
+            },
+            usedPolicyUnitIds: {
+              type: "array", minItems: 0, maxItems: policyIds.length,
+              items: policyIds.length ? { type: "string", enum: policyIds } : { type: "string" },
+            },
           },
         },
-      },
-      usedClaimIds: {
-        type: "array", minItems: targetIds.length, maxItems: claimIds.length,
-        items: { type: "string", enum: claimIds },
-      },
-      usedPolicyUnitIds: {
-        type: "array", minItems: policyIds.length, maxItems: policyIds.length,
-        items: policyIds.length ? { type: "string", enum: policyIds } : { type: "string" },
       },
       illustrationKind: { type: "string", enum: illustrationKinds },
     },
@@ -267,7 +305,7 @@ function providerContent(input: Readonly<{
 }
 
 const PROVIDER_INSTRUCTIONS = `
-Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır bir DNA Intelligence cevabı yaz. Bilimsel içerikte yalnız lockedClaims içindeki cümleleri kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. Her aktif hedefi karşıla ve her obligation görevini görünür cevapta gerçekten yerine getir. Her activeTarget için visibleAliases listesindeki adlardan en az birini cevap metninde açıkça yaz; yalnız JSON listesindeki addressedTargetIds beyanı yeterli değildir. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İstenen cümle sayısı varsa tam olarak koru. Kimlikleri, şema alanlarını, kanıt yönetimini veya iç sistem dilini kullanıcıya yazma. Her obligation için obligationSupport içine cevap metninden görevi gerçekten gerçekleştiren kısa ve birebir bir alıntı koy; görünür cevapta bulunmayan veya görevi açıklamayan metni destek olarak yazma. usedClaimIds, usedPolicyUnitIds ve addressedTargetIds yalnız gerçekten kullandığın öğeleri göstersin.
+Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır görünür cevap blokları yaz. Ayrı bir answer alanı yazma; sistem blokların text alanlarını sırayla birleştirerek son cevabı oluşturacak. Bir blok bir veya birkaç obligation görevini yerine getirebilir, fakat her obligationId tam bir blokta ve yalnız bir kez bulunmalıdır. Her activeTarget en az bir block.targetIds içinde yer almalı, visibleAliases adlarından biri o bloğun text alanında görünmeli ve aynı blok o hedefe ait en az bir lockedClaim kimliğini usedClaimIds içinde göstermelidir. Bilimsel içerikte yalnız lockedClaims içindeki cümleleri kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İstenen toplam cümle sayısını bütün blokların birleşiminde tam koru. Kimlikleri, şema alanlarını, kanıt yönetimini veya iç sistem dilini text alanlarına yazma. blockId değerlerini b1, b2 diye sırayla kullan. targetIds, obligationIds, usedClaimIds ve usedPolicyUnitIds yalnız bloğun text alanında gerçekten kullanılan öğeleri göstersin.
 `.trim()
 
 function parseCandidate(value: unknown): StudentAnswerCandidate | null {
@@ -275,27 +313,28 @@ function parseCandidate(value: unknown): StudentAnswerCandidate | null {
   const row = value as Record<string, unknown>
   const strings = (candidate: unknown) => Array.isArray(candidate)
     && candidate.every((entry) => typeof entry === "string") ? candidate as string[] : null
-  const addressedTargetIds = strings(row.addressedTargetIds)
-  const usedClaimIds = strings(row.usedClaimIds)
-  const usedPolicyUnitIds = strings(row.usedPolicyUnitIds)
-  const obligationSupport = Array.isArray(row.obligationSupport) ? row.obligationSupport.flatMap((entry) => {
+  const blocks = Array.isArray(row.blocks) ? row.blocks.flatMap((entry) => {
     if (!entry || typeof entry !== "object" || Array.isArray(entry)) return []
-    const support = entry as Record<string, unknown>
-    return typeof support.obligationId === "string" && typeof support.visibleText === "string"
-      ? [{ obligationId: support.obligationId, visibleText: support.visibleText.trim() }]
-      : []
+    const block = entry as Record<string, unknown>
+    const targetIds = strings(block.targetIds)
+    const obligationIds = strings(block.obligationIds)
+    const usedClaimIds = strings(block.usedClaimIds)
+    const usedPolicyUnitIds = strings(block.usedPolicyUnitIds)
+    if (typeof block.blockId !== "string" || typeof block.text !== "string" || !targetIds || !obligationIds
+      || !usedClaimIds || !usedPolicyUnitIds) return []
+    return [Object.freeze({
+      blockId: block.blockId,
+      text: block.text,
+      targetIds: Object.freeze(targetIds),
+      obligationIds: Object.freeze(obligationIds),
+      usedClaimIds: Object.freeze(usedClaimIds),
+      usedPolicyUnitIds: Object.freeze(usedPolicyUnitIds),
+    })]
   }) : null
   const illustrationKind = row.illustrationKind
-  if (typeof row.answer !== "string" || !addressedTargetIds || !obligationSupport || !usedClaimIds
-    || !usedPolicyUnitIds || !["none", "user_supplied", "hypothetical"].includes(String(illustrationKind))) return null
-  return Object.freeze({
-    answer: row.answer.trim(),
-    addressedTargetIds: Object.freeze(addressedTargetIds),
-    obligationSupport: Object.freeze(obligationSupport.map((support) => Object.freeze(support))),
-    usedClaimIds: Object.freeze(usedClaimIds),
-    usedPolicyUnitIds: Object.freeze(usedPolicyUnitIds),
-    illustrationKind: illustrationKind as StudentAnswerCandidate["illustrationKind"],
-  })
+  if (!blocks || blocks.length !== (Array.isArray(row.blocks) ? row.blocks.length : 0)
+    || !["none", "user_supplied", "hypothetical"].includes(String(illustrationKind))) return null
+  return composeCandidate(blocks, illustrationKind as StudentAnswerCandidate["illustrationKind"])
 }
 
 export async function executeStudentAnswer(input: Readonly<{
