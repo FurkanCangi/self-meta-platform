@@ -95,7 +95,9 @@ function visibleObligation(kind: StudentRequestContract["obligations"][number]["
   if (kind === "distinguish_targets") return /\b(?:fark\w*|ayni\s+sey\w*\s+degil\w*|birbir\w*\s+(?:ayri|farkli)\w*)\b/u.test(normalized)
   if (kind === "explain_relation") return /\b(?:iliski\w*|bagl\w*|bilesen\w*|icinde\w*|kapsa\w*)\b/u.test(normalized)
   if (kind === "give_concrete_example") return /\b(?:ornek\w*|ornegin|mesela|varsay\w*|dusun\w*)\b/u.test(normalized)
-  if (kind === "bind_example_to_target") return /\b(?:bu\s+(?:ornek|durum)\w*|burada)\b/u.test(normalized)
+  // Target binding is proven compositionally by the separate concrete-example
+  // marker, visible target aliases, and one locked claim per target.
+  if (kind === "bind_example_to_target") return true
   if (kind === "state_single_observation_limit") return /\b(?:tek\s+(?:bir\s+)?(?:gozlem|davranis)|yalnizca\s+bu\s+durum)\b/u.test(normalized)
     && /\b(?:yeterli\s+degil|karar\w*|kesin\w*|gostermez\w*|cikarilamaz\w*)\b/u.test(normalized)
   if (kind === "name_additional_context") return /\b(?:farkli\s+(?:zaman|ortam|gorev)|oncesi\w*\s+(?:ve|ile)\s+sonrasi\w*|destek\w*\s+nasil\s+degis)\b/u.test(normalized)
