@@ -364,11 +364,35 @@ assert.equal(resolveStudentConversationAction({
   providerAction: "continue",
   hasHistory: false,
 }), "start", "an empty conversation must start even if the provider emits continue")
+assert.equal(resolveStudentConversationAction({
+  message: "çok akademik oldu bunu öğrenci arkadaşına anlatır gibi yeniden söyle",
+  providerAction: "repair",
+  hasHistory: true,
+  preserveMeaning: true,
+}), "continue", "presentation-only correction must not become semantic repair")
+assert.equal(resolveStudentConversationAction({
+  message: "yok bunu daha basit söyle",
+  providerAction: "repair",
+  hasHistory: true,
+  preserveMeaning: true,
+}), "continue", "a style-only yok cue must remain continuation")
+assert.equal(resolveStudentConversationAction({
+  message: "yok dikkat kısmını sormuyorum çalışma belleğini daha sade anlat",
+  providerAction: "continue",
+  hasHistory: true,
+  preserveMeaning: true,
+}), "repair", "explicit semantic target rejection must remain repair even with a style request")
+assert.equal(resolveStudentConversationAction({
+  message: "ilk anlattığına dönelim daha basit söyle",
+  providerAction: "repair",
+  hasHistory: true,
+  preserveMeaning: true,
+}), "return", "explicit return must outrank presentation-only continuation")
 
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_RESOLVER_CONTRASTIVE_LOCAL",
-  cases: 31,
+  cases: 35,
   compareOverContextualObserve: true,
   componentExplainOverContextualCase: true,
   pureObservationPreserved: true,
@@ -400,4 +424,8 @@ console.log(JSON.stringify({
   explicitSummaryCueOverridesProvider: true,
   ordinaryContinuePreserved: true,
   emptyStateForcesStart: true,
+  presentationOnlyCorrectionContinues: true,
+  styleOnlyNoCueContinues: true,
+  semanticRejectionStillRepairs: true,
+  returnStillOutranksStyle: true,
 }, null, 2))

@@ -15,7 +15,7 @@ import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 import { normalizeDnaChatText } from "../text"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@14" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@15" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -89,11 +89,16 @@ export function resolveStudentConversationAction(input: Readonly<{
   message: string
   providerAction: StudentConversationAction
   hasHistory: boolean
+  preserveMeaning?: boolean
 }>): StudentConversationAction {
   const normalized = normalizeDnaChatText(input.message)
   if (/\b(?:toparla|ozetle|ozet yap|konustuklarimizi|konustugumuzu|konusmayi)\b/.test(normalized)) return "summarize_session"
   if (/\b(?:ilk anlattigin|ilk konu|az onceki konu|geri donelim|donelim|basa donelim)\b/.test(normalized)) return "return"
-  if (/^(?:hayir|yok)\b|\b(?:sormuyorum|onu demiyorum|yanlis anladin|kastettigim)\b/.test(normalized)) return "repair"
+  const explicitContentRepair = /\b(?:sormuyorum|onu demiyorum|yanlis anladin|kastettigim)\b/.test(normalized)
+  if (explicitContentRepair) return "repair"
+  const styleOnlyPreserve = Boolean(input.preserveMeaning) || /\b(?:akademik oldu|cok akademik|yeniden soyle|tekrar anlat|daha basit|ogrenci arkadasina anlat)\b/.test(normalized)
+  if (styleOnlyPreserve && input.hasHistory) return "continue"
+  if (/^(?:hayir|yok)\b/.test(normalized)) return "repair"
   if (!input.hasHistory) return "start"
   return input.providerAction === "start" ? "continue" : input.providerAction
 }

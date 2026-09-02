@@ -108,6 +108,9 @@ export async function interpretStudentRequestWithProvider(input: Readonly<{
     const providerAction = providerRow && DNA_STUDENT_CONVERSATION_ACTIONS.includes(providerRow.conversationAction as never)
       ? providerRow.conversationAction as StudentRequestContract["conversationAction"]
       : null
+    const providerPresentation = providerRow?.presentation && typeof providerRow.presentation === "object"
+      ? providerRow.presentation as Record<string, unknown>
+      : null
     const resolvedValue = providerRow && providerAction
       ? Object.freeze({
           ...providerRow,
@@ -115,6 +118,7 @@ export async function interpretStudentRequestWithProvider(input: Readonly<{
             message: input.message,
             providerAction,
             hasHistory: input.state.semanticHistory.length > 0,
+            preserveMeaning: providerPresentation?.preserveMeaning === true,
           }),
         })
       : providerValue
