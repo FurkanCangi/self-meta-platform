@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "dna-student-measurement-manifest@1",
+  "createdAt": "2026-09-02T00:00:00.000Z",
+  "naturalMini24": {
+    "mutationAllowed": false,
+    "fixtureSha256": "9f146c18fe4cccf2a54aa4fa4aecd038dfecff3aee81e751f2308e6ea3845adc",
+    "goldSha256": "2a54904a77979b381948d7815f832013720b127a4199989087b9e3183723bc50"
+  },
+  "student40": {
+    "file": "STUDENT40_DEVELOPMENT.json",
+    "sha256": "e8bf1368ea3f3ea5c09ba710a90c6e4f16a64e1d4f0388339c43c42b734f0a65",
+    "conversations": 5,
+    "turns": 40,
+    "role": "open_development",
+    "certificationEligible": false
+  },
+  "freshStudent60": {
+    "fixtureFile": "FRESH_STUDENT60_HOLDOUT.fixture.json",
+    "fixtureSha256": "e5717247d2709480dff7346d663cb51bf4f09d900fab814796e85e1e19734743",
+    "goldFile": "FRESH_STUDENT60_HOLDOUT.gold.sealed.json",
+    "goldSha256": "027e9becb6db92e008e45dcee1cd5565b451b2c9be8f679a96cb789feb180bc2",
+    "conversations": 6,
+    "turns": 60,
+    "role": "sealed_holdout",
+    "openedAt": null,
+    "evaluated": false,
+    "openingCondition": "Student40 full semantic pass >= 36/40 with zero wrong target, referent, history, or unsafe output"
+  }
+}

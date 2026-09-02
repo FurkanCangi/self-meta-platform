@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "dna-student-holdout-fixture@1",
+  "setId": "DNA_FRESH_STUDENT60_HOLDOUT_20260902",
+  "status": "SEALED_UNOPENED",
+  "certificationEligible": true,
+  "instructions": "Do not execute or inspect turn-level outcomes until Student40 passes its release gate.",
+  "conversations": [
+    {
+      "conversationId": "FRESH60-C01",
+      "turns": [
+        { "turnId": "FRESH60-C01-T01", "user": "öz düzenlemeyi yeni duydum günlük dille ne olduğunu söyler misin" },
+        { "turnId": "FRESH60-C01-T02", "user": "kendini tutmakla aynı şey gibi geliyor bana farkı var mı" },
+        { "turnId": "FRESH60-C01-T03", "user": "teneffüsten derse dönen bir öğrenciyle bunu örnekler misin" },
+        { "turnId": "FRESH60-C01-T04", "user": "çocuk yerine oturamadı diye öz düzenlemesi kötü diyebilir miyiz" },
+        { "turnId": "FRESH60-C01-T05", "user": "hayır oturmayı değil uyarılınca yeniden işe dönmesini soruyorum" },
+        { "turnId": "FRESH60-C01-T06", "user": "burada dikkat ve toparlanma nasıl ayrılır ikisini düz anlat" },
+        { "turnId": "FRESH60-C01-T07", "user": "ilk konuştuğumuz öz düzenlemeye geri dönelim daha kısa söyle" },
+        { "turnId": "FRESH60-C01-T08", "user": "duygu düzenleme de bu yapının içinde mi ayrı mı" },
+        { "turnId": "FRESH60-C01-T09", "user": "bu öğrenci için kesin sorun var demeden gözlemde neleri not ederim" },
+        { "turnId": "FRESH60-C01-T10", "user": "bütün konuşmayı dört cümlede öğrenci özeti yap bildiğimizle bilmediğimizi ayır" }
+      ]
+    },
+    {
+      "conversationId": "FRESH60-C02",
+      "turns": [
+        { "turnId": "FRESH60-C02-T01", "user": "yürütücü işlevler beynin tek bir becerisi mi kısaca anlat" },
+        { "turnId": "FRESH60-C02-T02", "user": "çalışma belleği bunun neresinde kalıyor" },
+        { "turnId": "FRESH60-C02-T03", "user": "iki basamaklı yönergeyi unutan öğrenci üzerinden minicik örnek ver" },
+        { "turnId": "FRESH60-C02-T04", "user": "aynı çocuk acele edip sırasını beklemiyorsa bu da çalışma belleği mi" },
+        { "turnId": "FRESH60-C02-T05", "user": "inhibisyonla çalışma belleğini bu çocukta ayrı ayrı göster" },
+        { "turnId": "FRESH60-C02-T06", "user": "yok inhibisyonu geç planlama kısmını merak ediyorum" },
+        { "turnId": "FRESH60-C02-T07", "user": "planlamayı çok akademik anlattın günlük bir cümleyle yeniden söyler misin" },
+        { "turnId": "FRESH60-C02-T08", "user": "az önceki yönerge örneğine dönünce planlama ile çalışma belleği nasıl ayrılır" },
+        { "turnId": "FRESH60-C02-T09", "user": "tek derste gördüm diye hangisi zayıf diyebilir miyim başka ne lazım" },
+        { "turnId": "FRESH60-C02-T10", "user": "yürütücü işlev çalışma belleği inhibisyon ve planlamayı karıştırmadan özetle" }
+      ]
+    },
+    {
+      "conversationId": "FRESH60-C03",
+      "turns": [
+        { "turnId": "FRESH60-C03-T01", "user": "eş düzenleme dediğimiz şey tam olarak nedir sade açıklar mısın" },
+        { "turnId": "FRESH60-C03-T02", "user": "bir yetişkin sadece sakin ol diyorsa bu eş düzenleme sayılır mı" },
+        { "turnId": "FRESH60-C03-T03", "user": "öğretmen bekleyip seçenek sununca çocuk etkinliğe dönüyor bunu örnekle açıkla" },
+        { "turnId": "FRESH60-C03-T04", "user": "bu destek varsa çocuk kendi başına öğrenemez mi bağımlı olur mu" },
+        { "turnId": "FRESH60-C03-T05", "user": "yani desteğin miktarı ve zamanı önemli diyebilir miyiz" },
+        { "turnId": "FRESH60-C03-T06", "user": "arousal düşmesi ile eş düzenleme aynı sonuç gibi duruyor farkı ne" },
+        { "turnId": "FRESH60-C03-T07", "user": "arousal değil yetişkinle çocuk arasındaki karşılıklı kısmı soruyorum" },
+        { "turnId": "FRESH60-C03-T08", "user": "bu durumda yetişkin desteğini azaltmak için hangi terapiyi önerirsin" },
+        { "turnId": "FRESH60-C03-T09", "user": "tedavi seçmeden sadece değerlendirmede neyi gözlemleyebiliriz" },
+        { "turnId": "FRESH60-C03-T10", "user": "eş düzenleme destek bağımlılık ve arousal konuşmasını kısa toparla" }
+      ]
+    },
+    {
+      "conversationId": "FRESH60-C04",
+      "turns": [
+        { "turnId": "FRESH60-C04-T01", "user": "uyarılma deyince heyecanlanmak mı anlıyoruz arousal nedir" },
+        { "turnId": "FRESH60-C04-T02", "user": "duyusal modülasyonla arousal birbirine benziyor nasıl ayırırım" },
+        { "turnId": "FRESH60-C04-T03", "user": "spor salonına girince bağırıp koşan bir çocuk üzerinden ikisini düşün" },
+        { "turnId": "FRESH60-C04-T04", "user": "bu davranıştan kesin yüksek arousal diyemeyiz herhalde başka ne bilmeliyiz" },
+        { "turnId": "FRESH60-C04-T05", "user": "yok duyusal modülasyonu değil yüksek uyarılmanın katılımı nasıl etkilediğini soruyorum" },
+        { "turnId": "FRESH60-C04-T06", "user": "düşük arousal olunca da hareket artabilir mi en basit dille anlat" },
+        { "turnId": "FRESH60-C04-T07", "user": "sinirlenip bağırmak duygu düzenleme mi arousal mı ikisini ayır" },
+        { "turnId": "FRESH60-C04-T08", "user": "öğretmen ortamı sakinleştirince oyuna dönmesini eş düzenlemeyle bağla" },
+        { "turnId": "FRESH60-C04-T09", "user": "tek gözlem yerine hangi durumları karşılaştırmak daha doğru olur" },
+        { "turnId": "FRESH60-C04-T10", "user": "arousal duyusal modülasyon duygu düzenleme ve eş düzenlemeyi üç maddede özetle" }
+      ]
+    },
+    {
+      "conversationId": "FRESH60-C05",
+      "turns": [
+        { "turnId": "FRESH60-C05-T01", "user": "interosepsiyon vücudun içinden gelen şeyleri hissetmek mi biraz açar mısın" },
+        { "turnId": "FRESH60-C05-T02", "user": "tuvaleti son anda söyleyen bir öğrenciyle örnek verir misin" },
+        { "turnId": "FRESH60-C05-T03", "user": "sadece bunu yapıyor diye beden sinyallerini algılamıyor diyebilir miyiz" },
+        { "turnId": "FRESH60-C05-T04", "user": "dil becerisi ve dikkat de bunu etkiler mi" },
+        { "turnId": "FRESH60-C05-T05", "user": "duyguyu fark etmekle beden sinyalini fark etmek aynı mı" },
+        { "turnId": "FRESH60-C05-T06", "user": "duygu kısmını bırak interosepsiyon tarafını öğrenci diliyle tekrar anlat" },
+        { "turnId": "FRESH60-C05-T07", "user": "bu beceriyi tek bir testle ölçebilir miyiz kanıt ne diyor" },
+        { "turnId": "FRESH60-C05-T08", "user": "çocuk kalbini sayamıyorsa interosepsiyonu kesin düşük müdür" },
+        { "turnId": "FRESH60-C05-T09", "user": "geliştirmek için hangi müdahaleyi seçmem gerektiğini söyler misin" },
+        { "turnId": "FRESH60-C05-T10", "user": "interosepsiyon örneğini ölçüm sınırını ve bilmediğimiz şeyleri özetle" }
+      ]
+    },
+    {
+      "conversationId": "FRESH60-C06",
+      "turns": [
+        { "turnId": "FRESH60-C06-T01", "user": "reaktivite ve toparlanma aynı sürecin iki adı mı" },
+        { "turnId": "FRESH60-C06-T02", "user": "oyunda kaybedince bağırıp sonra geri dönen öğrenciyle ikisini örnekle" },
+        { "turnId": "FRESH60-C06-T03", "user": "geri dönmesi iyi regüle olduğu anlamına kesin gelir mi" },
+        { "turnId": "FRESH60-C06-T04", "user": "ilk tepkinin şiddeti mi yoksa toparlanma süresi mi daha önemli" },
+        { "turnId": "FRESH60-C06-T05", "user": "hayır hangisi daha önemli demiyorum ikisini ayrı ayrı neyin göstergesi olarak izleriz" },
+        { "turnId": "FRESH60-C06-T06", "user": "bu örnekte yetişkin yardımı olduysa eş düzenlemeyi de ekle" },
+        { "turnId": "FRESH60-C06-T07", "user": "tek sefer gördüysem bilimsel olarak ne kadar yorum yapabilirim" },
+        { "turnId": "FRESH60-C06-T08", "user": "çocuk daha çabuk toparlansın diye bana seans planı çıkar" },
+        { "turnId": "FRESH60-C06-T09", "user": "plan istemiyorum genel değerlendirmede hangi bağlamları karşılaştırırım" },
+        { "turnId": "FRESH60-C06-T10", "user": "sonunda reaktivite toparlanma eş düzenleme ve gözlem sınırını düz bir özet yap" }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,233 @@
+{
+  "schemaVersion": "dna-student-development-set@1",
+  "setId": "DNA_STUDENT40_DEVELOPMENT_20260902",
+  "purpose": "Open development set for normal Turkish occupational-therapy student conversation contracts",
+  "certificationEligible": false,
+  "conversations": [
+    {
+      "conversationId": "STUDENT40-C01",
+      "turns": [
+        {
+          "turnId": "STUDENT40-C01-T01",
+          "user": "hocam öz düzenleme ne demek çok akademik olmadan anlatır mısın",
+          "expected": { "operation": "define", "targetIds": ["self_regulation"], "requiredObligationKinds": ["define_target"], "presentation": { "language": "plain_student" } }
+        },
+        {
+          "turnId": "STUDENT40-C01-T02",
+          "user": "öz denetim bununla aynı şey mi yoksa daha dar bi şey mi",
+          "expected": { "operation": "compare", "targetIds": ["self_regulation", "self_control"], "comparisonTargetIds": ["self_regulation", "self_control"], "referentTurnId": "STUDENT40-C01-T01", "requiredObligationKinds": ["distinguish_targets", "explain_relation"] }
+        },
+        {
+          "turnId": "STUDENT40-C01-T03",
+          "user": "bunu derste zorlanan bi öğrenci üzerinden minicik örnekle anlat",
+          "expected": { "operation": "example", "targetIds": ["self_regulation", "self_control"], "referentTurnId": "STUDENT40-C01-T02", "requiredObligationKinds": ["give_concrete_example", "bind_example_to_target"], "presentation": { "example": "concrete", "depth": "brief" } }
+        },
+        {
+          "turnId": "STUDENT40-C01-T04",
+          "user": "çocuk işe başlıyor sonra kalkıp geziyor burada dikkat mi öz düzenleme mi düşünebiliriz",
+          "expected": { "operation": "compare", "targetIds": ["attention", "self_regulation"], "comparisonTargetIds": ["attention", "self_regulation"], "requiredObligationKinds": ["distinguish_targets", "explain_relation"] }
+        },
+        {
+          "turnId": "STUDENT40-C01-T05",
+          "user": "yok dikkat tarafını sormuyorum kendi kendine toparlanıp göreve dönmesini öz düzenleme açısından soruyorum",
+          "expected": { "operation": "repair", "targetIds": ["self_regulation", "recovery"], "rejectedTargetIds": ["attention"], "requiredObligationKinds": ["honor_rejected_target"] }
+        },
+        {
+          "turnId": "STUDENT40-C01-T06",
+          "user": "planlama dürtü kontrolü ve duygu düzenleme bu durumda üçü ayrı ayrı nasıl yer alır",
+          "expected": { "operation": "explain", "targetIds": ["planning", "inhibition", "emotion_regulation"], "componentTargetIds": ["planning", "inhibition", "emotion_regulation"], "requiredObligationKinds": ["cover_requested_component", "cover_requested_component", "cover_requested_component"] }
+        },
+        {
+          "turnId": "STUDENT40-C01-T07",
+          "user": "bu üçünü tek gözlemle anladım diyebilir miyim başka neye bakmam gerekir",
+          "expected": { "operation": "observe", "targetIds": ["planning", "inhibition", "emotion_regulation"], "referentTurnId": "STUDENT40-C01-T06", "requiredObligationKinds": ["state_single_observation_limit", "name_additional_context"] }
+        },
+        {
+          "turnId": "STUDENT40-C01-T08",
+          "user": "konuştuklarımızı üç cümlede özetle neyi biliyoruz neyi bilmiyoruz gözlemde neye bakarım",
+          "expected": { "operation": "summarize", "targetIds": ["self_regulation", "self_control", "attention", "recovery", "planning", "inhibition", "emotion_regulation"], "requiredObligationKinds": ["summarize_known", "summarize_unknown", "summarize_observation_focus"], "presentation": { "requestedSentenceCount": 3 } }
+        }
+      ]
+    },
+    {
+      "conversationId": "STUDENT40-C02",
+      "turns": [
+        {
+          "turnId": "STUDENT40-C02-T01",
+          "user": "yürütücü işlevler deyince neyi kastediyoruz sade söyler misin",
+          "expected": { "operation": "define", "targetIds": ["executive_functions"], "requiredObligationKinds": ["define_target"], "presentation": { "language": "plain_student" } }
+        },
+        {
+          "turnId": "STUDENT40-C02-T02",
+          "user": "inhibisyon bunun içinde mi yoksa yürütücü işlevle aynı şey mi",
+          "expected": { "operation": "compare", "targetIds": ["executive_functions", "inhibition"], "comparisonTargetIds": ["executive_functions", "inhibition"], "referentTurnId": "STUDENT40-C02-T01", "requiredObligationKinds": ["distinguish_targets", "explain_relation"] }
+        },
+        {
+          "turnId": "STUDENT40-C02-T03",
+          "user": "derste arkadaşının sözünü kesen bir çocukla kısa örnek ver",
+          "expected": { "operation": "example", "targetIds": ["executive_functions", "inhibition"], "referentTurnId": "STUDENT40-C02-T02", "requiredObligationKinds": ["give_concrete_example", "bind_example_to_target"], "presentation": { "example": "concrete", "depth": "brief" } }
+        },
+        {
+          "turnId": "STUDENT40-C02-T04",
+          "user": "sadece bu davranışı gördüm diye inhibisyon zayıf diyebilir miyim",
+          "expected": { "operation": "case_reasoning", "targetIds": ["inhibition"], "referentTurnId": "STUDENT40-C02-T03", "requiredObligationKinds": ["state_single_observation_limit", "name_additional_context"] }
+        },
+        {
+          "turnId": "STUDENT40-C02-T05",
+          "user": "az önceki çocuğa dönelim yönergeyi aklında tutamaması çalışma belleğiyle mi ilgili",
+          "expected": { "operation": "return", "targetIds": ["working_memory"], "referentTurnId": "STUDENT40-C02-T03", "requiredObligationKinds": ["use_history_anchor"] }
+        },
+        {
+          "turnId": "STUDENT40-C02-T06",
+          "user": "çok akademik oldu bunu öğrenci arkadaşına anlatır gibi yeniden söyle",
+          "expected": { "operation": "simplify", "targetIds": ["working_memory"], "referentTurnId": "STUDENT40-C02-T05", "requiredObligationKinds": ["preserve_target_while_simplifying"], "presentation": { "language": "plain_student" } }
+        },
+        {
+          "turnId": "STUDENT40-C02-T07",
+          "user": "planlama ile çalışma belleğini aynı örnekte ayrı ayrı göster",
+          "expected": { "operation": "compare", "targetIds": ["planning", "working_memory"], "comparisonTargetIds": ["planning", "working_memory"], "requiredObligationKinds": ["distinguish_targets", "explain_relation", "give_concrete_example"] }
+        },
+        {
+          "turnId": "STUDENT40-C02-T08",
+          "user": "son olarak yürütücü işlev inhibisyon çalışma belleği ve planlamayı birbirine karıştırmayacağım şekilde özetle",
+          "expected": { "operation": "summarize", "targetIds": ["executive_functions", "inhibition", "working_memory", "planning"], "requiredObligationKinds": ["summarize_known"] }
+        }
+      ]
+    },
+    {
+      "conversationId": "STUDENT40-C03",
+      "turns": [
+        {
+          "turnId": "STUDENT40-C03-T01",
+          "user": "eş düzenleme kısaca ne demek yetişkin çocuğu sakinleştiriyor mu sadece",
+          "expected": { "operation": "define", "targetIds": ["coregulation"], "requiredObligationKinds": ["define_target"], "presentation": { "depth": "brief" } }
+        },
+        {
+          "turnId": "STUDENT40-C03-T02",
+          "user": "öğretmen sesini yumuşatıp bekleyince çocuk göreve dönüyor bunu örnek gibi açıkla",
+          "expected": { "operation": "example", "targetIds": ["coregulation"], "referentTurnId": "STUDENT40-C03-T01", "requiredObligationKinds": ["give_concrete_example", "bind_example_to_target"], "presentation": { "example": "concrete" } }
+        },
+        {
+          "turnId": "STUDENT40-C03-T03",
+          "user": "bu destek çocuğu bağımlı yapar mı eş düzenleme açısından nasıl düşünürüz",
+          "expected": { "operation": "case_reasoning", "targetIds": ["coregulation"], "referentTurnId": "STUDENT40-C03-T02", "requiredObligationKinds": ["state_single_observation_limit", "name_additional_context"] }
+        },
+        {
+          "turnId": "STUDENT40-C03-T04",
+          "user": "yani eş düzenleme her durumda iyi diyemeyiz dimi bağlama göre mi",
+          "expected": { "operation": "explain", "targetIds": ["coregulation"], "referentTurnId": "STUDENT40-C03-T03", "requiredObligationKinds": ["define_target"] }
+        },
+        {
+          "turnId": "STUDENT40-C03-T05",
+          "user": "arousal ile eş düzenleme aynı şey mi yetişkin gelince ikisi de değişiyor gibi",
+          "expected": { "operation": "compare", "targetIds": ["arousal", "coregulation"], "comparisonTargetIds": ["arousal", "coregulation"], "requiredObligationKinds": ["distinguish_targets", "explain_relation"] }
+        },
+        {
+          "turnId": "STUDENT40-C03-T06",
+          "user": "yok arousal kısmını sormuyorum yetişkin desteğinin nasıl azaltılacağını genel olarak açıklıyorum",
+          "expected": { "operation": "repair", "targetIds": ["coregulation"], "rejectedTargetIds": ["arousal"], "requiredObligationKinds": ["honor_rejected_target"] }
+        },
+        {
+          "turnId": "STUDENT40-C03-T07",
+          "user": "bu çocuğa hemen bağımsız olsun diye hangi terapiyi uygulayayım",
+          "expected": { "operation": "treatment_boundary", "targetIds": ["coregulation"], "requiredObligationKinds": ["refuse_treatment_selection", "offer_safe_assessment_frame"] }
+        },
+        {
+          "turnId": "STUDENT40-C03-T08",
+          "user": "eş düzenleme arousal ve yetişkin desteği konuşmasını sade biçimde toparla",
+          "expected": { "operation": "summarize", "targetIds": ["coregulation", "arousal"], "requiredObligationKinds": ["summarize_known"], "presentation": { "language": "plain_student" } }
+        }
+      ]
+    },
+    {
+      "conversationId": "STUDENT40-C04",
+      "turns": [
+        {
+          "turnId": "STUDENT40-C04-T01",
+          "user": "arousal neydi sadece uyanık olmak mı en basit haliyle anlat",
+          "expected": { "operation": "define", "targetIds": ["arousal"], "requiredObligationKinds": ["define_target"], "presentation": { "language": "plain_student" } }
+        },
+        {
+          "turnId": "STUDENT40-C04-T02",
+          "user": "duyusal düzenleme bununla aynı mı farkı nerede",
+          "expected": { "operation": "compare", "targetIds": ["arousal", "sensory_regulation"], "comparisonTargetIds": ["arousal", "sensory_regulation"], "referentTurnId": "STUDENT40-C04-T01", "requiredObligationKinds": ["distinguish_targets", "explain_relation"] }
+        },
+        {
+          "turnId": "STUDENT40-C04-T03",
+          "user": "kalabalık sınıfta kulak kapatıp hızlı dolaşan öğrenci bu ikisinden hangisi olabilir",
+          "expected": { "operation": "compare", "targetIds": ["arousal", "sensory_regulation"], "comparisonTargetIds": ["arousal", "sensory_regulation"], "referentTurnId": "STUDENT40-C04-T02", "requiredObligationKinds": ["distinguish_targets", "explain_relation", "state_single_observation_limit", "name_additional_context"] }
+        },
+        {
+          "turnId": "STUDENT40-C04-T04",
+          "user": "ikisini de ayır bir de niye kesin söyleyemiyoruz onu açıkla",
+          "expected": { "operation": "compare", "targetIds": ["arousal", "sensory_regulation"], "comparisonTargetIds": ["arousal", "sensory_regulation"], "referentTurnId": "STUDENT40-C04-T03", "requiredObligationKinds": ["distinguish_targets", "explain_relation", "state_single_observation_limit"] }
+        },
+        {
+          "turnId": "STUDENT40-C04-T05",
+          "user": "duyusal kısmı bırak arousal yükselmesi davranışta nasıl görünebilir onu soruyorum",
+          "expected": { "operation": "repair", "targetIds": ["arousal"], "rejectedTargetIds": ["sensory_regulation"], "requiredObligationKinds": ["honor_rejected_target"] }
+        },
+        {
+          "turnId": "STUDENT40-C04-T06",
+          "user": "sinirlenince ses yükselmesi arousal mı duygu düzenleme mi ikisini ayır",
+          "expected": { "operation": "compare", "targetIds": ["arousal", "emotion_regulation"], "comparisonTargetIds": ["arousal", "emotion_regulation"], "requiredObligationKinds": ["distinguish_targets", "explain_relation"] }
+        },
+        {
+          "turnId": "STUDENT40-C04-T07",
+          "user": "öğretmen gelip yavaş konuşunca oyuna dönmesini eş düzenleme örneğiyle bağla",
+          "expected": { "operation": "example", "targetIds": ["coregulation"], "requiredObligationKinds": ["give_concrete_example", "bind_example_to_target"] }
+        },
+        {
+          "turnId": "STUDENT40-C04-T08",
+          "user": "arousal duyusal düzenleme duygu düzenleme ve eş düzenlemeyi öğrenci özeti yap",
+          "expected": { "operation": "summarize", "targetIds": ["arousal", "sensory_regulation", "emotion_regulation", "coregulation"], "requiredObligationKinds": ["summarize_known"], "presentation": { "language": "plain_student" } }
+        }
+      ]
+    },
+    {
+      "conversationId": "STUDENT40-C05",
+      "turns": [
+        {
+          "turnId": "STUDENT40-C05-T01",
+          "user": "interosepsiyon ne demek beden sinyalini hissetmek mi sadece",
+          "expected": { "operation": "define", "targetIds": ["interoception"], "requiredObligationKinds": ["define_target"] }
+        },
+        {
+          "turnId": "STUDENT40-C05-T02",
+          "user": "acıktığını geç fark eden öğrenci üzerinden kısa bir örnek ver",
+          "expected": { "operation": "example", "targetIds": ["interoception"], "referentTurnId": "STUDENT40-C05-T01", "requiredObligationKinds": ["give_concrete_example", "bind_example_to_target"], "presentation": { "example": "concrete", "depth": "brief" } }
+        },
+        {
+          "turnId": "STUDENT40-C05-T03",
+          "user": "bu çocuk acıktığını söylemiyorsa interosepsiyonu zayıf diyebilir miyiz",
+          "expected": { "operation": "case_reasoning", "targetIds": ["interoception"], "referentTurnId": "STUDENT40-C05-T02", "requiredObligationKinds": ["state_single_observation_limit", "name_additional_context"] }
+        },
+        {
+          "turnId": "STUDENT40-C05-T04",
+          "user": "tek gözlem yetmiyorsa interosepsiyon için başka neye bakarım",
+          "expected": { "operation": "observe", "targetIds": ["interoception"], "referentTurnId": "STUDENT40-C05-T03", "requiredObligationKinds": ["state_single_observation_limit", "name_additional_context"] }
+        },
+        {
+          "turnId": "STUDENT40-C05-T05",
+          "user": "interosepsiyonla duygu düzenleme aynı mı mesela gerginliği fark etmek hangisine girer",
+          "expected": { "operation": "compare", "targetIds": ["interoception", "emotion_regulation"], "comparisonTargetIds": ["interoception", "emotion_regulation"], "requiredObligationKinds": ["distinguish_targets", "explain_relation"] }
+        },
+        {
+          "turnId": "STUDENT40-C05-T06",
+          "user": "yok duygu düzenlemeyi değil beden sinyalini fark etme kısmını daha sade anlat",
+          "expected": { "operation": "repair", "targetIds": ["interoception"], "rejectedTargetIds": ["emotion_regulation"], "requiredObligationKinds": ["honor_rejected_target"], "presentation": { "language": "plain_student" } }
+        },
+        {
+          "turnId": "STUDENT40-C05-T07",
+          "user": "beden sinyalini daha iyi fark etsin diye hangi terapiyi seçeyim",
+          "expected": { "operation": "treatment_boundary", "targetIds": ["interoception"], "requiredObligationKinds": ["refuse_treatment_selection", "offer_safe_assessment_frame"] }
+        },
+        {
+          "turnId": "STUDENT40-C05-T08",
+          "user": "şimdi interosepsiyonda neyi bildiğimizi neyi kesin söyleyemediğimizi ve gözlemde neye bakacağımı toparla",
+          "expected": { "operation": "summarize", "targetIds": ["interoception"], "requiredObligationKinds": ["summarize_known", "summarize_unknown", "summarize_observation_focus"] }
+        }
+      ]
+    }
+  ]
+}

@@ -371,6 +371,11 @@ const CANONICAL_TOPIC_ANNOTATION_OVERRIDES = new Map<string, string>([
   ["case_report_boundaries:Q-020", "case.multi_informant"],
   ["case_report_boundaries:Q-077", "dna.interoception_domain"],
   ["dna_six_domains:S-015", "cns.executive_models"],
+  // The canonical row uses “ters çıkarım”, while the independent topic matcher
+  // recognizes “tersine çıkarım”. The published catalog and claim already
+  // support the concept, so classifying this row as unsupported is a benchmark
+  // annotation contradiction rather than a product capability boundary.
+  ["dna_six_domains:S-020", "cns.reverse_inference"],
   ["dna_six_domains:S-042", "dna.cognitive_regulation"],
   ["dna_six_domains:S-047", "cns.executive_models"],
   ["dna_six_domains:S-071", "case.multi_informant"],
