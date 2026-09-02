@@ -13,13 +13,13 @@ import {
   type StudentSemanticTask,
 } from "./contracts"
 
-type TargetLexeme = Readonly<{
+export type TargetLexeme = Readonly<{
   id: string
   label: string
   aliases: readonly string[]
 }>
 
-const TARGET_LEXICON: readonly TargetLexeme[] = Object.freeze([
+export const DNA_STUDENT_TARGET_LEXICON: readonly TargetLexeme[] = Object.freeze([
   { id: "self_regulation", label: "öz düzenleme", aliases: ["öz düzenleme", "öz-düzenleme", "self regülasyon", "self-regülasyon"] },
   { id: "self_control", label: "öz denetim", aliases: ["öz denetim", "öz-denetim", "öz kontrol", "self kontrol"] },
   { id: "attention", label: "dikkat", aliases: ["dikkat", "odaklanma"] },
@@ -53,7 +53,7 @@ function unique(values: readonly string[]): string[] {
 function detectedTargets(message: string): string[] {
   const normalized = normalizeDnaChatText(message)
   const hits: Array<{ id: string; at: number; length: number }> = []
-  for (const entry of TARGET_LEXICON) {
+  for (const entry of DNA_STUDENT_TARGET_LEXICON) {
     for (const alias of entry.aliases) {
       const normalizedAlias = normalizeDnaChatText(alias)
       const at = normalized.indexOf(normalizedAlias)
@@ -67,7 +67,7 @@ function detectedTargets(message: string): string[] {
 function rejectedTargets(message: string, explicitTargets: readonly string[]): string[] {
   const normalized = normalizeDnaChatText(message)
   return explicitTargets.filter((targetId) => {
-    const target = TARGET_LEXICON.find((entry) => entry.id === targetId)
+    const target = DNA_STUDENT_TARGET_LEXICON.find((entry) => entry.id === targetId)
     return target?.aliases.some((alias) => {
       const label = normalizeDnaChatText(alias)
       return normalized.includes(`${label} degil`) ||
@@ -315,7 +315,7 @@ export function interpretStudentRequest(
 }
 
 function targetLabel(targetId: string): string {
-  return TARGET_LEXICON.find((target) => target.id === targetId)?.label ?? targetId
+  return DNA_STUDENT_TARGET_LEXICON.find((target) => target.id === targetId)?.label ?? targetId
 }
 
 function summaryForHistory(history: readonly StudentConversationTurnSnapshot[]): string {
