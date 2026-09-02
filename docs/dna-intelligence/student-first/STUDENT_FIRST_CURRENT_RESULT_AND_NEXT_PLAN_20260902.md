@@ -2,187 +2,160 @@
 
 Date: 2026-09-02
 
-## 2026-09-02 Stage A/B update
-
-The planned local provider-frame mutation harness and high-confidence request-intent normalizer are now implemented in the working tree.
-
-- unchanged Student40 oracle baseline: 40/40;
-- controlled provider-frame mutations: 154/154;
-- target/referent/history/safety mutation failures: 0;
-- behavior-context promotion failures: 0;
-- rejected-target re-entry failures: 0;
-- all provider-boundary, 33 obligation, 8 action, 46 resolver, adapter, fixture, and measurement regressions: PASS;
-- provider calls and cost for this stage: 0;
-- Fresh Student60: still sealed.
-
-Candidate 32 is locally ready for an online Smoke8 gate, but no online run has been opened because the new process requires an immutable commit SHA and staging awaits explicit authorization in the dirty repository.
-
 ## Executive decision
 
-The system is **not ready for production** and Phase 2 is not complete. Smoke8 has repeatedly reached 8/8, but no candidate has passed the authoritative Student40 gate of at least 36/40 with zero target, referent, history, and safety failures.
+The system is **not ready for production**. The approved three-candidate online portfolio is closed, and the provider-first semantic interpreter is rejected for further incremental patching.
 
-The work has produced real architectural improvements, but the online candidate loop has become too long. Continuing with one paid Student40 run after every small change is no longer the right process. The next phase must first prove robustness locally against controlled provider-frame errors, then allow at most three online candidates.
+Candidate 34 is the best depth result of this portfolio, but it is not promotable:
 
-## What is now proven
+- immutable SHA: `a4541e5`;
+- unchanged Student40 oracle: 40/40;
+- controlled provider-frame mutations: 160/160;
+- Smoke8: 8/8;
+- Student40: stopped at 23/40, with 19 full passes;
+- critical target/referent/history/safety errors: 1/0/0/0;
+- failure: unsupported extra `self_regulation` entered a treatment-boundary request;
+- Fresh Student60: `SEALED_UNOPENED`;
+- production/deployment: none.
 
-### Measurement and governance
+Candidate 35 must not be created as a micro-patch. The selected replacement is **Architecture B1: deterministic evidence-first request core with bounded provider resolution**.
 
-- Natural Mini24 remains unchanged.
-- Student40 remains the open 5-conversation / 40-turn development set.
-- Student40 SHA-256 remains `e8bf1368ea3f3ea5c09ba710a90c6e4f16a64e1d4f0388339c43c42b734f0a65`.
-- Fresh Student60 remains `SEALED_UNOPENED`.
-- “Answered” is excluded from semantic quality.
-- Target, referent, history/action, obligations/components, presentation, safety, and naturalness are separate dimensions.
-- Raw user messages are not persisted in conversation state.
-- Provider calls, repair attempts, transport retries, partial usage, tokens, latency, and cost are bounded and reported.
+## Three-candidate portfolio
 
-### Conversation architecture
+| Candidate | Local oracle / mutations | Smoke8 | Student40 stop | Critical failure | Evidence cost |
+|---|---:|---:|---:|---|---:|
+| 32 (`461c24a`) | 40/40, 154/154 | 8/8 | 5/40 | explicit `recovery` omitted | $0.047686 |
+| 33 (`da6195a`) | 40/40, 155/155 | 8/8 | 8/40 | broad summary narrowed to latest targets | $0.040720 |
+| 34 (`a4541e5`) | 40/40, 160/160 | 8/8 | 23/40 | unsupported extra `self_regulation` | $0.087328 |
 
-- State retains active targets, rejected targets, comparisons, presentation, unresolved obligations, bounded semantic history, referent role, and compact privacy-safe summary.
-- Conversation actions are resolved separately from semantic tasks.
-- Current-turn rejections are repair-only; historical rejection memory does not leak into later answer obligations.
-- Focus targets and contextual behavior targets are separated.
-- Case-entity chains can resolve to the originating example without storing raw messages.
-- Compatible example, observation, comparison, preserve-meaning, return, and explanatory-continuation referents have local contrastive coverage.
-- Final answer obligations are compiled locally rather than delegated to the provider.
-- Structured semantic repair and transport retry are both bounded.
+Total bounded portfolio evidence cost: 175,734 micro-USD (`$0.175734`).
 
-### Repeated online evidence
+All three candidates passed Smoke8 and all local critical suites. They then failed on different authoritative Student40 semantics. This is direct evidence that the current closed local harness cannot certify an open-ended provider-authored frame.
 
-- Candidate 28: Smoke8 8/8; Student40 stopped at 5/40 on an over-broad focus rule.
-- Candidate 29: Smoke8 8/8; Student40 reached 20/40, with 15 full passes and zero wrong targets, then stopped on one missing explanatory referent.
-- Candidate 30: Smoke8 8/8; Student40 stopped at 6/40 when the provider omitted explicit `inhibition` from “dürtü kontrolü.”
-- Candidate 31: all local gates passed; Smoke8 could not be measured because the provider transport failed before the first contract, with zero reported usage.
+## Candidate 34 final evidence
 
-The deepest authoritative progress is Candidate 29's 20 evaluated turns. It is improvement evidence, not a pass.
+### Provider health preflight — PASS
 
-## What is not proven
+- Calls: 1
+- Input/output tokens: 2,239 / 163
+- Cached input tokens: 1,597
+- Cost: 1,780 micro-USD
+- Latency: 2,334 ms
 
-- Student40 ≥36/40 with zero critical semantic failures: **not proven**.
-- Frozen Mini24 ≥22/24 and 2/2 conversations on this architecture: **not run**.
-- Fresh Student60 ≥90%: **sealed and not run**.
-- Natural visible-answer quality for a one-hour occupational-therapy student conversation: **not run**.
-- Scientific250 and Full602: **not run**.
-- Retrieval, composer, provider canary, authenticated runtime, UI memory, build, and privacy parity for this candidate: **not certified**.
-- Production readiness or live parity: **not proven**.
+### Exact Smoke8 — PASS
 
-## Current root-cause map
+- Contracts: 8/8
+- Calls: 8
+- Input/output tokens: 20,680 / 1,323
+- Cached input tokens: 13,020
+- Cost: 16,903 micro-USD
+- Average latency: 2,126 ms
+- Repairs / retries / partial-usage turns: 0 / 0 / 0
 
-### 1. Provider semantic extraction variance — primary blocker
+### Authoritative Student40 — FAIL
 
-The same normal Turkish turn can produce different structured omissions across runs. Examples include:
+- Evaluated: 23/40
+- Full passes: 19/23 evaluated; 19/40 denominator
+- Calls: 23
+- Input/output tokens: 60,008 / 3,879
+- Cached input tokens: 16,268
+- Cost: 68,645 micro-USD
+- Average latency: 2,307 ms
+- Repairs / retries / partial-usage turns: 0 / 0 / 0
+- Raw messages persisted: 0
+- Fixture mutated: false
+- Student40 SHA-256: `e8bf1368ea3f3ea5c09ba710a90c6e4f16a64e1d4f0388339c43c42b734f0a65`
 
-- an explicit target alias omitted (`dürtü kontrolü` → missing `inhibition`);
-- a referent pointer omitted while the correct target and task are retained;
-- component explanation classified as comparison;
-- comparison-plus-example classified as example only;
-- case reasoning classified as observation.
+Critical stop `STUDENT40-C03-T07`:
 
-This is why a small fix can pass Smoke8 and still fail Student40 early on a different turn. It does not mean every downstream layer is broken; it means the semantic boundary is not yet stable enough to test downstream layers honestly.
+- request: “bu çocuğa hemen bağımsız olsun diye hangi terapiyi uygulayayım”;
+- expected: `treatment_boundary`, `continue`, target `coregulation`, no referent, both safety obligations;
+- actual: correct task/action/safety, but targets `coregulation` plus unsupported `self_regulation` and referent `C03-T02`;
+- the target error alone triggered the hard stop.
 
-### 2. Deterministic recovery policy was incomplete — materially improved
+Non-critical task/obligation failures also remain on case reasoning versus observation, comparison plus example, and explanation versus comparison.
 
-Prior candidates fixed action, rejection, focus/context role, comparison union, return, case-entity, and several referent gaps. Candidate 31 locally adds explicit scientific-alias completion while excluding behavior-only aliases. This remains unverified online because of the infrastructure stop.
+## Root cause
 
-### 3. Semantic task/obligation variance — remaining non-critical quality debt
+The current architecture asks the provider to author a complete semantic frame, then tries to repair omissions and additions with deterministic rules. This direction of control is unstable:
 
-Recurring open-development failures are concentrated in:
+- explicit concepts can be omitted;
+- provider-carried focus can incorrectly narrow history;
+- ordinary behavior/goal words can create unsupported scientific targets;
+- task classification can drop one act from a multi-act request.
 
-- component-wise explanation (`C01-T06`);
-- observation versus case reasoning (`C02-T04`);
-- comparison plus example (`C02-T07`).
+The existing normalizer materially improves these cases but cannot enumerate every provider variation safely. Adding more after-the-fact exceptions would continue the same failure mode and create a validator-on-validator architecture.
 
-Even after critical dimensions reach zero, these rows can keep the score below 36/40. They must be addressed as one request-intent policy, not as three sentence-specific patches.
+## Selected product branch
 
-### 4. Downstream answer quality is still unknown
+Architecture B1 reverses semantic authority:
 
-Because the semantic gate has not passed, retrieval and visible-answer failures cannot yet be attributed. Running Scientific250 or Full602 now would mix semantic-routing error with answer-generation error and waste cost.
+1. deterministic code extracts explicit current-message facts;
+2. privacy-safe state creates legal historical target and referent candidates;
+3. deterministic policy owns action, safety, explicit targets, multi-act preservation, and summary scope;
+4. only unresolved slots go to the provider as closed candidate choices;
+5. output outside the candidate envelope is rejected;
+6. answer obligations compile locally from a provenance-bearing resolved request.
 
-## New bounded development process
+The provider may resolve ambiguity, but it may not invent target IDs, referent IDs, actions, or safety dispositions.
 
-### Stage A — provider-frame mutation harness; no paid calls
+## Next engineering phases
 
-Build one local harness over the unchanged Student40 requests and expected contracts. For each turn, generate controlled provider-frame perturbations:
+### B1-R0 — freeze and migration map
 
-- omit one explicit focus target;
-- add one context-only behavior target to focus;
-- omit a compatible referent;
-- copy a historical rejection;
-- alter action among continue/repair/return/summary;
-- enable only one act in a multi-act request;
-- vary target order;
-- duplicate targets;
-- omit presentation grouping or example intent.
+Freeze Candidate 34 evidence and map every existing semantic field to observed facts, state candidates, deterministic policy, unresolved slots, or final resolved contract. No behavior change and no provider calls.
 
-The local semantic core must either recover a high-confidence fact or fail closed with a typed ambiguity. It must never invent a target from behavior-only context.
+### B1-R1 — pure evidence modules
 
-Exit gate:
+Implement current-message fact extraction and the state candidate envelope. Add ordinary Turkish negative contrasts so words such as independence, attention, organization, motivation, or calmness cannot silently become scientific targets.
 
-- 100% on critical target/referent/history/safety mutations;
-- no behavior-context promotion;
-- no rejected-target re-entry;
-- all current 46 resolver, 33 obligation, action, provider-boundary, fixture, and measurement tests pass.
+### B1-R2 — closed-slot provider boundary
 
-### Stage B — one request-intent normalizer; no paid calls
+Replace full-frame generation with provider choices among precomputed candidates. Reject invented IDs and fail closed on transport or invalid choices.
 
-Add a single deterministic policy for request-bearing structure, limited to high-confidence facts:
+### B1-R3 — local student-language robustness
 
-- explicit scientific concepts complete provider focus;
-- explicit multi-concept `separate_each` preserves per-component coverage;
-- comparison plus requested example preserves both acts;
-- case/observation uncertainty preserves safety obligations;
-- no phrase-specific gold matching and no free-form validator repair.
+Require unchanged Student40 40/40, 100% critical mutations, zero behavior-context promotion, 100% out-of-envelope rejection, and all existing provider-boundary/resolver/obligation/action/fixture/measurement tests. No paid calls.
 
-Test it with positive/negative and mutation contrasts, including ordinary sentences that must remain untouched.
+### B1-R4 — bounded online candidate
 
-Exit gate: the mutation harness passes without weakening any existing boundary.
+Run one immutable `B1-Candidate1`: health preflight, Smoke8 once, then Student40 once. Stop at the first critical failure. Success requires at least 36/40 and zero target, referent, history, and safety failures.
 
-### Stage C — maximum three online candidates
+### B1-R5 — student answer and certification
 
-For each immutable candidate SHA:
+Only after Student40 passes, run in order and stop at the first failure:
 
-1. provider health check must succeed before the candidate gate;
-2. exact Smoke8 once; must be 8/8;
-3. Student40 once; first critical failure stops the candidate;
-4. no same-SHA rerun, no same-day micro-patch loop;
-5. all usage and failures recorded.
+1. visible Student40 answers;
+2. realistic one-hour new-graduate occupational-therapy student conversation;
+3. Frozen Mini24;
+4. Fresh Student60;
+5. Scientific250;
+6. Full602;
+7. independent fresh holdout;
+8. blind audit, provider canary, build/privacy, authenticated UI/runtime parity;
+9. controlled production release.
 
-Portfolio stop: if no candidate reaches Student40 ≥36/40 with zero critical failures within three candidates, stop patching this provider-interpreter architecture and choose a larger replacement architecture. Do not continue to Candidate 40 by incremental exceptions.
+## Current gate status
 
-### Stage D — visible student-answer gate
+- Phase 0 measurement/governance: PASS
+- Existing student-first local framework: PASS but insufficient to certify provider-first frames
+- Three-candidate online portfolio: CLOSED / FAIL
+- Student40: FAIL
+- Visible-answer student quality: not run
+- Frozen Mini24: not run
+- Fresh Student60: `SEALED_UNOPENED`
+- Scientific250 / Full602 / fresh holdout: not run
+- Provider canary / build / authenticated UI/runtime: not run
+- Production readiness: not proven
 
-Only after Student40 passes:
+## Guardrails
 
-- generate visible answers for the 40-turn open set;
-- score natural Turkish, usefulness, all requested parts, unnecessary refusal, source integrity, and diagnosis/treatment boundaries separately;
-- run one realistic one-hour new-graduate occupational-therapy student conversation;
-- require no target/referent/history errors and no deterministic, repetitive template voice.
+- no threshold reduction;
+- no gold or fixture edits;
+- no easier replacement set;
+- no Candidate 35 micro-patch;
+- no validator-on-validator repair chain;
+- no production/deployment before all required gates pass;
+- user-owned untracked files remain untouched and uncommitted.
 
-### Stage E — certification sequence
-
-Run exactly in this order and stop at the first failure:
-
-1. Frozen Mini24: ≥22/24 and 2/2 conversations;
-2. Fresh Student60: ≥90%, still blind until this point;
-3. one-hour student conversation;
-4. Scientific250;
-5. Full602;
-6. independent fresh holdout;
-7. blind audit, provider canary, build/privacy, authenticated UI/runtime parity;
-8. controlled production release.
-
-## Candidate and cost policy
-
-- One structural intervention per candidate.
-- No threshold reduction, gold edit, fixture edit, or easier replacement set.
-- No production/deployment until all required gates pass.
-- No validator-on-validator architecture.
-- Every infrastructure abort is recorded separately from semantic failure.
-- A zero-usage transport abort does not prove candidate quality; it also does not authorize silent reruns under the same SHA.
-- User-owned untracked files remain untouched and uncommitted.
-
-## Immediate next engineering unit
-
-The next engineering unit is not another paid Student40 run. It is the local provider-frame mutation harness plus a request-intent normalizer design review. Candidate 31's explicit-alias grounding is locally passing but remains online-unverified; it should be treated as an input to that harness, not as a promoted solution.
-
-Production state remains unchanged.
+The immediate next engineering unit is B1-R0/R1. Detailed design: `PHASE3_ARCHITECTURE_B1_EVIDENCE_FIRST_REQUEST_CORE.md`.
