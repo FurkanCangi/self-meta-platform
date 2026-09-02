@@ -57,7 +57,7 @@ const mockFetch: typeof fetch = async (_input, init) => {
   const value = {
     answer,
     addressedTargetIds: content.activeTargets.map((row) => row.targetId),
-    satisfiedObligationIds: content.obligations.map((row) => row.id),
+    obligationSupport: content.obligations.map((row) => ({ obligationId: row.id, visibleText: answer })),
     usedClaimIds: content.activeTargets.map((row) => row.lockedClaims[0]!.claimId),
     usedPolicyUnitIds: content.policyUnits.map((row) => row.id),
     illustrationKind: content.obligations.some((row) => row.kind === "give_concrete_example")
@@ -118,7 +118,10 @@ async function main() {
   const valid = {
     answer: "Self-regülasyon için kaynakla sınırlı kısa açıklama.",
     addressedTargetIds: [...plan.activeTargetIds],
-    satisfiedObligationIds: plan.obligations.map((row) => row.id),
+    obligationSupport: plan.obligations.map((row) => ({
+      obligationId: row.id,
+      visibleText: "Self-regülasyon için kaynakla sınırlı kısa açıklama.",
+    })),
     usedClaimIds: plan.targetEvidence.map((row) => row.claims[0]!.claimId),
     usedPolicyUnitIds: plan.policyUnits.map((row) => row.id),
     illustrationKind: "none" as const,
@@ -128,7 +131,7 @@ async function main() {
     candidate: { ...valid, usedClaimIds: [...valid.usedClaimIds, "invented.claim"] }, plan,
   }).includes("claim_outside_locked_evidence"))
   assert.ok(validateStudentAnswerCandidate({
-    candidate: { ...valid, satisfiedObligationIds: [] }, plan,
+    candidate: { ...valid, obligationSupport: [] }, plan,
   }).includes("obligation_coverage_mismatch"))
   assert.ok(validateStudentAnswerCandidate({
     candidate: { ...valid, addressedTargetIds: ["wrong_target"] }, plan,
@@ -139,6 +142,23 @@ async function main() {
   assert.ok(validateStudentAnswerCandidate({
     candidate: { ...valid, answer: "Kaynakla sınırlı ancak hedef adı görünmeyen kısa açıklama." }, plan,
   }).includes("target_not_visible"))
+  assert.ok(validateStudentAnswerCandidate({
+    candidate: {
+      ...valid,
+      obligationSupport: valid.obligationSupport.map((row, index) => index === 0
+        ? { ...row, visibleText: "Bu metin görünür cevapta yok." } : row),
+    },
+    plan,
+  }).includes("obligation_not_visible"))
+  if (valid.obligationSupport.length) {
+    assert.ok(validateStudentAnswerCandidate({
+      candidate: {
+        ...valid,
+        obligationSupport: [...valid.obligationSupport, valid.obligationSupport[0]!],
+      },
+      plan,
+    }).includes("duplicate_contract_reference"))
+  }
 
   console.log(JSON.stringify({
     ok: true,
@@ -154,6 +174,8 @@ async function main() {
     wrongTargetRejected: true,
     duplicateReferenceRejected: true,
     invisibleTargetRejected: true,
+    invisibleObligationSupportRejected: true,
+    duplicateObligationSupportRejected: true,
   }, null, 2))
 }
 

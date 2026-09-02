@@ -219,6 +219,8 @@ async function main() {
       if (!resolved.ok) throw new Error(`${turn.turnId}:request_contract:${resolved.reason}`)
       const execution = await executeStudentAnswer({ question: turn.user, contract: resolved.contract })
       evaluatedTurns += 1
+      composerCalls += execution.provider.calls
+      usage = addUsage(usage, execution.provider.usage)
       if (!execution.ok) {
         firstFailure = {
           turnId: turn.turnId,
@@ -228,8 +230,6 @@ async function main() {
         }
         break outer
       }
-      composerCalls += execution.provider.calls
-      usage = addUsage(usage, execution.provider.usage)
       const judged = await judge({
         question: turn.user,
         answer: execution.answer,
