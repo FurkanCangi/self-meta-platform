@@ -185,7 +185,7 @@ async function main() {
     }).includes("duplicate_contract_reference"))
   }
 
-  const rejectedFetch: typeof fetch = async (_input, init) => {
+  const targetlessFetch: typeof fetch = async (_input, init) => {
     const request = JSON.parse(String(init?.body)) as { input: string }
     const content = JSON.parse(request.input) as {
       answerSlots: readonly Readonly<{ slotId: string }>[]
@@ -196,6 +196,31 @@ async function main() {
         blocks: Object.fromEntries(content.answerSlots.map((slot) => [
           slot.slotId,
           "Bu yeterince uzun cevap görünür hedef adını kasıtlı olarak içermiyor.",
+        ])),
+        illustrationKind: "none",
+      }),
+      usage: { input_tokens: 101, output_tokens: 51, input_tokens_details: { cached_tokens: 0 } },
+    }), { status: 200, headers: { "Content-Type": "application/json" } })
+  }
+  const targetless = await executeStudentAnswer({
+    question: first.user,
+    contract: firstResolution.contract,
+    apiKey: "mock-api-key",
+    fetchImpl: targetlessFetch,
+  })
+  assert.equal(targetless.ok, true)
+  if (!targetless.ok) throw new Error("deterministic target prefix failed")
+  assert.match(targetless.answer, /^self-regülasyon açısından:/iu)
+
+  const rejectedFetch: typeof fetch = async (_input, init) => {
+    const request = JSON.parse(String(init?.body)) as { input: string }
+    const content = JSON.parse(request.input) as { answerSlots: readonly Readonly<{ slotId: string }>[] }
+    return new Response(JSON.stringify({
+      id: "mock-rejected-response",
+      output_text: JSON.stringify({
+        blocks: Object.fromEntries(content.answerSlots.map((slot) => [
+          slot.slotId,
+          "Bu schema ifadesi iç sistem dilini görünür cevaba kasıtlı olarak sızdırıyor.",
         ])),
         illustrationKind: "none",
       }),
@@ -232,6 +257,7 @@ async function main() {
     invisibleTargetRejected: true,
     unboundObligationBlockRejected: true,
     duplicateObligationBlockReferenceRejected: true,
+    deterministicTargetPrefix: true,
     rejectedCandidateTelemetryPreserved: true,
   }, null, 2))
 }

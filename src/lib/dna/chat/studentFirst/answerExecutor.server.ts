@@ -12,7 +12,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@4" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@5" as const
 export const DNA_STUDENT_ANSWER_EXECUTOR_TIMEOUT_MS = 20_000
 export const DNA_STUDENT_ANSWER_EXECUTOR_MAX_PROVIDER_CALLS = 1
 
@@ -319,6 +319,16 @@ function providerContent(input: Readonly<{
   })
 }
 
+function visibleTargetPrefix(plan: StudentAnswerExecutionPlan) {
+  const labels = unique(plan.targetEvidence.map((target) => target.visibleAliases[0]).filter(Boolean))
+  const phrase = labels.length <= 1
+    ? labels[0] ?? "Konu"
+    : labels.length === 2
+      ? `${labels[0]} ve ${labels[1]}`
+      : `${labels.slice(0, -1).join(", ")} ve ${labels.at(-1)}`
+  return `${phrase} açısından:`
+}
+
 const PROVIDER_INSTRUCTIONS = `
 Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır cevap metinleri yaz. Yalnız şemada hazır bulunan b1, b2 gibi metin kutularını ve illustrationKind alanını doldur; hedef, yükümlülük, kanıt, politika veya blok kimliği üretme. Her metin kutusu answerSlots içindeki aynı slotId görevini gerçekten yerine getirsin. Sistem kutuları sırayla birleştirerek son cevabı oluşturacak; bu yüzden kutular birlikte tek, akıcı ve tekrarsız bir cevap gibi okunmalıdır. Her slotun activeTargets bölümündeki her hedef için visibleAliases adlarından en az birini görünür metinde yaz. Bilimsel içerikte yalnız o slotun lockedClaims cümlelerini kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İstenen toplam cümle sayısını bütün kutuların birleşiminde tam koru. İç sistem dilini görünür metne yazma.
 `.trim()
@@ -335,7 +345,9 @@ function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan): Stude
     || slotIds.some((slotId) => typeof textBySlot[slotId] !== "string")) return null
   const blocks = slotIds.map((slotId, index) => Object.freeze({
     ...slotMetadata(plan, index),
-    text: String(textBySlot[slotId]).trim(),
+    text: index === 0
+      ? `${visibleTargetPrefix(plan)} ${String(textBySlot[slotId]).trim()}`
+      : String(textBySlot[slotId]).trim(),
   }))
   return composeCandidate(blocks, illustrationKind as StudentAnswerCandidate["illustrationKind"])
 }
