@@ -150,10 +150,42 @@ assert.equal(treatmentBoundary.semanticTask, "treatment_boundary", "treatment sa
 assert.equal(treatmentBoundary.safetyIntent, "treatment_selection")
 assert.deepEqual(kinds(treatmentBoundary), ["refuse_treatment_selection", "offer_safe_assessment_frame"])
 
+let repairState: StudentConversationState = createEmptyStudentConversationState()
+const repairStart = compileStudentRequestContract("REPAIR-T01", frame({
+  semanticActs: acts("define"),
+  conversationAction: "start",
+  mentionedTargetIds: ["self_regulation"],
+}), repairState)
+repairState = applyStudentRequestContract(repairState, repairStart)
+const repairComparison = compileStudentRequestContract("REPAIR-T02", frame({
+  semanticActs: acts("compare"),
+  mentionedTargetIds: ["attention", "self_regulation"],
+}), repairState)
+repairState = applyStudentRequestContract(repairState, repairComparison)
+const repaired = compileStudentRequestContract("REPAIR-T03", frame({
+  semanticActs: acts("compare"),
+  conversationAction: "repair",
+  mentionedTargetIds: ["attention", "self_regulation", "recovery"],
+  rejectedTargetIds: ["attention"],
+  referentTurnId: "REPAIR-T02",
+}), repairState)
+assert.deepEqual(repaired.targetIds, ["self_regulation", "recovery"], "a rejected target must not re-enter through referent union")
+assert.deepEqual(repaired.comparisonTargetIds, ["self_regulation", "recovery"])
+assert.ok(kinds(repaired).includes("honor_rejected_target"))
+repairState = applyStudentRequestContract(repairState, repaired)
+
+const repairSummary = compileStudentRequestContract("REPAIR-T04", frame({
+  semanticActs: acts("summarize"),
+  conversationAction: "summarize_session",
+}), repairState)
+assert.ok(repairSummary.targetIds.includes("attention"), "current-turn rejection must not erase a historically discussed target from session summary")
+assert.ok(repairSummary.targetIds.includes("self_regulation"))
+assert.ok(repairSummary.targetIds.includes("recovery"))
+
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_RESOLVER_CONTRASTIVE_LOCAL",
-  cases: 10,
+  cases: 12,
   compareOverContextualObserve: true,
   componentExplainOverContextualCase: true,
   pureObservationPreserved: true,
@@ -164,4 +196,6 @@ console.log(JSON.stringify({
   explicitNewTargetNoReferentLeak: true,
   implicitSimplificationReferent: true,
   treatmentBoundaryPriorityPreserved: true,
+  rejectedTargetCannotReenterViaReferent: true,
+  rejectedHistoricalTargetPreservedInSummary: true,
 }, null, 2))

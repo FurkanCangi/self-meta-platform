@@ -14,7 +14,7 @@ import {
 import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@8" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@9" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -266,7 +266,7 @@ export function compileStudentRequestContract(
     turnId: effectiveReferentTurnId,
     targetIds: Object.freeze(referentSnapshot?.targetIds ?? []),
   })
-  const targetIds = frame.conversationAction === "summarize_session"
+  const mergedTargetIds = frame.conversationAction === "summarize_session"
     ? unique(state.semanticHistory.flatMap((turn) => turn.targetIds))
     : semanticTask === "compare"
       ? unique([...referent.targetIds, ...allowedMentions])
@@ -279,6 +279,9 @@ export function compileStudentRequestContract(
           : referent.targetIds.length
             ? unique(referent.targetIds)
             : unique(state.activeTargetIds)
+  const targetIds = frame.conversationAction === "summarize_session"
+    ? mergedTargetIds
+    : mergedTargetIds.filter((targetId) => !frame.rejectedTargetIds.includes(targetId))
   const comparisonTargetIds = semanticTask === "compare" ? targetIds : Object.freeze([])
   const componentTargetIds = semanticTask === "explain" && targetIds.length > 1 && frame.presentation.grouping === "separate_each"
     ? targetIds
