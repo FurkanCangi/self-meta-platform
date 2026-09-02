@@ -253,7 +253,9 @@ export function compileStudentRequestContract(
     : semanticTask === "compare"
       ? unique([...referent.targetIds, ...allowedMentions])
       : frame.conversationAction === "return"
-        ? unique([...referent.targetIds, ...allowedMentions])
+        ? allowedMentions.length
+          ? unique(allowedMentions)
+          : unique(referent.targetIds)
         : allowedMentions.length
           ? unique(allowedMentions)
           : referent.targetIds.length

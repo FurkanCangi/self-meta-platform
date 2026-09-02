@@ -10,6 +10,7 @@ import {
   studentSemanticInterpreterContent,
   validateStudentSemanticFrameDetailed,
 } from "../src/lib/dna/chat/studentFirst"
+import { DNA_STUDENT_SEMANTIC_REQUEST_TIMEOUT_MS } from "../src/lib/dna/chat/studentFirst/semanticInterpreter.server"
 
 dotenv.config({ path: ".env.local", override: false, quiet: true })
 
@@ -32,6 +33,7 @@ async function main() {
       state,
     }),
     maxOutputTokens: 650,
+    timeoutMs: DNA_STUDENT_SEMANTIC_REQUEST_TIMEOUT_MS,
   })
   if (!attempt.ok) {
     console.error(JSON.stringify({ ok: false, gate: "STUDENT_PROVIDER_PREFLIGHT", calls, failure: attempt.failure }))
@@ -62,6 +64,7 @@ async function main() {
     usage,
     latencyMs: Math.round(attempt.result.latencyMs),
     maxCostMicrousd: MAX_COST_MICROUSD,
+    timeoutMs: DNA_STUDENT_SEMANTIC_REQUEST_TIMEOUT_MS,
   }, null, 2))
 }
 

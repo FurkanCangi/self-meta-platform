@@ -16,6 +16,8 @@ import {
   type StudentFrameFailureCode,
 } from "./semanticInterpreter"
 
+export const DNA_STUDENT_SEMANTIC_REQUEST_TIMEOUT_MS = 15_000
+
 type StudentSemanticProviderEvidence = Readonly<{
   responseId: string | null
   usage: DnaS13ProviderUsage
@@ -52,6 +54,7 @@ export async function interpretStudentRequestWithProvider(input: Readonly<{
     instructions: DNA_STUDENT_SEMANTIC_INTERPRETER_INSTRUCTIONS,
     content: studentSemanticInterpreterContent(input),
     maxOutputTokens: 650,
+    timeoutMs: DNA_STUDENT_SEMANTIC_REQUEST_TIMEOUT_MS,
     apiKey: input.apiKey,
   })
   if (!attempt.ok) return Object.freeze({ ok: false, reason: "provider_failure", failure: attempt.failure })

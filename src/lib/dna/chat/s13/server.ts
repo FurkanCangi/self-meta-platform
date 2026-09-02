@@ -142,11 +142,15 @@ export async function requestDnaS13StructuredOutputDetailed(input: Readonly<{
   safetyIdentifier?: string | null
   apiKey?: string
   fetchImpl?: FetchLike
+  timeoutMs?: number
 }>): Promise<DnaS13ProviderAttempt<unknown>> {
   const apiKey = input.apiKey?.trim() || process.env.OPENAI_API_KEY?.trim()
   if (!apiKey) return Object.freeze({ ok: false, failure: providerFailure("missing_key") })
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), DNA_S13_REQUEST_TIMEOUT_MS)
+  const timeoutMs = Number.isFinite(input.timeoutMs) && Number(input.timeoutMs) > 0
+    ? Math.min(Math.round(Number(input.timeoutMs)), 30_000)
+    : DNA_S13_REQUEST_TIMEOUT_MS
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
   const started = performance.now()
   try {
     const response = await (input.fetchImpl ?? fetch)(OPENAI_RESPONSES_URL, {

@@ -5,6 +5,12 @@ export {
   resolveStudentObligations,
 } from "./conversationState"
 export {
+  adaptStudentDevelopmentExpectation,
+  assessStudentDevelopmentContract,
+  DNA_STUDENT_DEVELOPMENT_ADAPTER_VERSION,
+  scoreStudentDevelopmentContracts,
+} from "./developmentAdapter"
+export {
   DNA_STUDENT_MEASUREMENT_VERSION,
   scoreStudentSet,
   scoreStudentTurn,
@@ -45,6 +51,14 @@ export type {
   StudentSummaryScope,
 } from "./contracts"
 export type { StudentObligationCompilationInput } from "./obligationCompiler"
+export type {
+  StudentContractAssessment,
+  StudentContractDecision,
+  StudentContractSetScore,
+  StudentDevelopmentExpectation,
+  StudentLegacyExpectation,
+  StudentLegacyOperation,
+} from "./developmentAdapter"
 export type {
   StudentFrameFailureCode,
   StudentFrameValidationResult,

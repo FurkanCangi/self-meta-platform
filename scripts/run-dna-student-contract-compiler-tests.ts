@@ -156,6 +156,18 @@ assert.deepEqual(returnContract.obligations.map((row) => row.kind), [
   "preserve_target_while_simplifying",
 ])
 
+const retargetedReturnValidation = validateStudentSemanticFrameDetailed({
+  ...startFrame,
+  semanticActs: semanticActs("explain"),
+  conversationAction: "return",
+  mentionedTargetIds: ["working_memory"],
+  referentTurnId: "GROUPING-T01",
+}, comparisonState)
+if (!retargetedReturnValidation.ok) throw new Error(retargetedReturnValidation.failureCode)
+const retargetedReturnContract = compileStudentRequestContract("GROUPING-T03B", retargetedReturnValidation.frame, comparisonState)
+assert.deepEqual(retargetedReturnContract.targetIds, ["working_memory"], "an explicit return target must not absorb the referent turn's semantic target")
+assert.deepEqual(retargetedReturnContract.referent, { kind: "history", turnId: "GROUPING-T01", targetIds: ["executive_functions"] })
+
 const repairValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
   semanticActs: semanticActs("define", "explain"),
@@ -222,7 +234,7 @@ assert.deepEqual(separateContract.obligations.map((row) => row.kind), [
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_OBLIGATION_COMPILER_LOCAL",
-  cases: 14,
+  cases: 15,
   providerOwnsFinalObligations: false,
   deterministicCompilation: true,
   duplicateObligations: 0,
