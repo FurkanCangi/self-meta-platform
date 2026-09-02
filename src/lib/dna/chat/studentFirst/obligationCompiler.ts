@@ -8,7 +8,7 @@ import type {
   StudentSummaryScope,
 } from "./contracts"
 
-export const DNA_STUDENT_OBLIGATION_COMPILER_VERSION = "dna-student-obligation-compiler@2" as const
+export const DNA_STUDENT_OBLIGATION_COMPILER_VERSION = "dna-student-obligation-compiler@3" as const
 
 const OBLIGATION_DESCRIPTIONS: Readonly<Record<StudentAnswerObligationKind, string>> = Object.freeze({
   define_target: "Hedef kavramı doğrudan tanımla",
@@ -59,18 +59,19 @@ export function compileStudentAnswerObligations(
   const requestedTasks = new Set(input.requestedSemanticTasks)
   const treatmentBoundary = requestedTasks.has("treatment_boundary") || input.semanticTask === "treatment_boundary"
   const summary = requestedTasks.has("summarize") || input.semanticTask === "summarize"
+  const presentationOnly = requestedTasks.size === 0 && input.presentation.preserveMeaning
   if (!treatmentBoundary && !summary) {
-    if (requestedTasks.has("compare") || input.semanticTask === "compare") {
+    if (!presentationOnly && input.semanticTask === "compare") {
       add("distinguish_targets", input.comparisonTargetIds)
       add("explain_relation", input.comparisonTargetIds)
     }
-    if (requestedTasks.has("example") || input.semanticTask === "example") {
+    if (!presentationOnly && (input.semanticTask === "example" || requestedTasks.has("example"))) {
       add("give_concrete_example", input.targetIds)
       add("bind_example_to_target", input.targetIds)
     }
-    const standaloneDefinition = (requestedTasks.has("define") || requestedTasks.has("explain") || input.semanticTask === "define" || input.semanticTask === "explain") &&
-      !requestedTasks.has("compare") && !requestedTasks.has("example")
-    if (standaloneDefinition) add("define_target", input.targetIds)
+    if (!presentationOnly && (input.semanticTask === "define" || input.semanticTask === "explain")) {
+      add("define_target", input.targetIds)
+    }
   }
   if (input.observationScope.singleObservationLimit) add("state_single_observation_limit", input.targetIds)
   if (input.observationScope.additionalContext) add("name_additional_context", input.targetIds)

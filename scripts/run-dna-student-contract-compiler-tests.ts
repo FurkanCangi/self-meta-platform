@@ -38,6 +38,11 @@ assert.deepEqual(kinds(base), ["define_target"])
 
 assert.deepEqual(kinds({
   ...base,
+  requestedSemanticTasks: ["define", "explain"],
+}), ["define_target"], "co-occurring definition and explanation acts must compile one compatible duty")
+
+assert.deepEqual(kinds({
+  ...base,
   semanticTask: "compare",
   requestedSemanticTasks: ["compare"],
   conversationAction: "continue",
@@ -103,11 +108,35 @@ assert.deepEqual(kinds({
 assert.deepEqual(kinds({
   ...base,
   semanticTask: "observe",
-  requestedSemanticTasks: ["observe"],
+  requestedSemanticTasks: ["explain", "observe"],
   conversationAction: "continue",
   presentation: { ...base.presentation, example: "concrete" },
   observationScope: { singleObservationLimit: true, additionalContext: true },
-}), ["state_single_observation_limit", "name_additional_context"], "a presentation facet must not invent a content obligation")
+}), ["state_single_observation_limit", "name_additional_context"], "a generic explanation act or presentation facet must not expand an observation-primary duty")
+
+assert.deepEqual(kinds({
+  ...base,
+  semanticTask: "summarize",
+  requestedSemanticTasks: ["explain", "summarize"],
+  conversationAction: "summarize_session",
+  summaryScope: { known: true, unknown: false, observationFocus: false },
+}), ["summarize_known"], "summary must remain a terminal obligation family")
+
+assert.deepEqual(kinds({
+  ...base,
+  semanticTask: "treatment_boundary",
+  requestedSemanticTasks: ["explain", "treatment_boundary"],
+}), ["refuse_treatment_selection", "offer_safe_assessment_frame"], "treatment boundary must remain a terminal obligation family")
+
+assert.deepEqual(kinds({
+  ...base,
+  semanticTask: "compare",
+  requestedSemanticTasks: [],
+  conversationAction: "continue",
+  targetIds: ["planning", "working_memory"],
+  comparisonTargetIds: ["planning", "working_memory"],
+  presentation: { ...base.presentation, language: "plain_student", preserveMeaning: true },
+}), ["preserve_target_while_simplifying"], "presentation-only continuation must not recreate content duties")
 
 const semanticActs = (...enabled: readonly string[]) => Object.freeze({
   define: enabled.includes("define"),
@@ -172,7 +201,7 @@ const presentationOnlyContract = compileStudentRequestContract("GROUPING-T02B", 
 assert.equal(presentationOnlyContract.semanticTask, "compare", "presentation-only continuation must inherit its referenced scientific task")
 assert.deepEqual(presentationOnlyContract.requestedSemanticTasks, [], "presentation-only continuation must not invent a scientific act")
 assert.deepEqual(presentationOnlyContract.targetIds, ["executive_functions", "inhibition"])
-assert.ok(presentationOnlyContract.obligations.map((row) => row.kind).includes("preserve_target_while_simplifying"))
+assert.deepEqual(presentationOnlyContract.obligations.map((row) => row.kind), ["preserve_target_while_simplifying"])
 
 assert.deepEqual(validateStudentSemanticFrameDetailed({
   ...startFrame,
@@ -289,7 +318,7 @@ assert.deepEqual(separateContract.obligations.map((row) => row.kind), [
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_OBLIGATION_COMPILER_LOCAL",
-  cases: 20,
+  cases: 24,
   providerOwnsFinalObligations: false,
   deterministicCompilation: true,
   duplicateObligations: 0,

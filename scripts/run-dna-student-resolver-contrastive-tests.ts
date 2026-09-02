@@ -81,11 +81,11 @@ assert.equal(pureObservation.semanticTask, "observe", "observation-only requests
 assert.deepEqual(kinds(pureObservation), ["state_single_observation_limit", "name_additional_context"])
 
 const exampleReferenceObservation = compileStudentRequestContract("RESOLVER-T03B", frame({
-  semanticActs: acts("observe"),
+  semanticActs: acts("explain", "observe"),
   focusTargetIds: ["inhibition"],
   presentation: { ...presentation, example: "concrete" },
 }), state)
-assert.deepEqual(exampleReferenceObservation.requestedSemanticTasks, ["observe"])
+assert.deepEqual(exampleReferenceObservation.requestedSemanticTasks, ["explain", "observe"])
 assert.equal(exampleReferenceObservation.presentation.example, "none", "mentioning an existing example must not request a new example")
 assert.deepEqual(kinds(exampleReferenceObservation), ["state_single_observation_limit", "name_additional_context"])
 
