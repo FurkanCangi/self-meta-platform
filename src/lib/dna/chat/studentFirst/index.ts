@@ -53,6 +53,10 @@ export {
   studentClosedSlotChoiceSchema,
   validateStudentClosedSlotChoice,
 } from "./evidenceFirstRequest"
+export {
+  buildStudentS13ResolvedRequestHandoff,
+  DNA_STUDENT_S13_HANDOFF_VERSION,
+} from "./runtimeBridge"
 
 export type {
   StudentAnswerObligation,
@@ -95,6 +99,7 @@ export type {
   StudentTargetCandidate,
   StudentTargetCandidateSource,
 } from "./evidenceFirstRequest"
+export type { StudentS13ResolvedRequestHandoff } from "./runtimeBridge"
 export type {
   StudentDimensionDecision,
   StudentSemanticDimension,

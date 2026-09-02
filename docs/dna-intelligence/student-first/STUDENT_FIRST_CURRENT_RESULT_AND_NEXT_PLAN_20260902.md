@@ -31,7 +31,10 @@ Current implementation update:
 - evidence-first compiled Student40 contracts: 40/40, zero critical errors;
 - closed-slot attack and mock provider-boundary gates: PASS;
 - existing Student40 oracle/mutations: 40/40 and 160/160;
-- runtime integration and online provider proof: not started.
+- B1-Candidate1 provider preflight: PASS with one closed-choice call;
+- B1-Candidate1 Smoke8 / Student40 semantic contracts: 8/8 and 40/40 PASS;
+- typed request-to-runtime target crosswalk: 40/40 local PASS;
+- direct legacy S13 visible-answer handoff: structural FAIL; obligation-aware answer executor selected.
 
 ## Three-candidate portfolio
 
@@ -132,7 +135,7 @@ The provider may resolve ambiguity, but it may not invent target IDs, referent I
 
 ### B1-R4 — bounded online candidate
 
-Run one immutable `B1-Candidate1`: health preflight, Smoke8 once, then Student40 once. Stop at the first critical failure. Success requires at least 36/40 and zero target, referent, history, and safety failures.
+**PASS for semantic request contracts.** Immutable `B1-Candidate1` (`e8d6abe`) passed the provider health preflight, Smoke8 8/8, and authoritative Student40 40/40 with zero target, referent, history, and safety failures. This does not certify visible answers.
 
 ### B1-R5 — student answer and certification
 
@@ -153,8 +156,8 @@ Only after Student40 passes, run in order and stop at the first failure:
 - Phase 0 measurement/governance: PASS
 - Existing student-first local framework: PASS but insufficient to certify provider-first frames
 - Three-candidate online portfolio: CLOSED / FAIL
-- Student40: FAIL
-- Visible-answer student quality: not run
+- Student40 semantic contracts: PASS 40/40
+- Visible-answer student quality: FAIL at direct legacy S13 handoff; new executor required
 - Frozen Mini24: not run
 - Fresh Student60: `SEALED_UNOPENED`
 - Scientific250 / Full602 / fresh holdout: not run
@@ -171,4 +174,4 @@ Only after Student40 passes, run in order and stop at the first failure:
 - no production/deployment before all required gates pass;
 - user-owned untracked files remain untouched and uncommitted.
 
-The immediate next gate is the immutable `B1-Candidate1`: one real closed-choice provider preflight, exact Smoke8, then authoritative Student40 once. The synthetic one-hour student simulation replaces the unavailable human participant by user decision, but will be reported as synthetic rather than independent human validation.
+The immediate next engineering gate is `B1-R5E`, a candidate-only obligation-aware answer executor driven directly by the B1 contract. Visible Student40 must pass before the synthetic one-hour student simulation. The simulation replaces the unavailable human participant by user decision, but will be reported as synthetic rather than independent human validation.

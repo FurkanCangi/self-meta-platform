@@ -221,7 +221,7 @@ const SELF_LEARNING_PATTERNS = [
 const SELF_LEARNING_TARGET_PATTERN =
   /\b(?:bu(?:nu|nlar\w*)?|bu\s+(?:bilgi\w*|metin\w*|kitab\w*|belge\w*|dokuman\w*|icerig\w*|mesaj\w*|dosya\w*)|gonderdig\w*\s+(?:metin\w*|bilgi\w*|belge\w*|dokuman\w*)|soyledik\w*|dokuman\w*|sohbet\w*|mesaj\w*)\b/
 const SELF_LEARNING_ACTION_PATTERN =
-  /\b(?:ogren\w*|ogret\w*|ezberle\w*|icsellestir\w*|dogru\s+kabul\s+et\w*|hafiza\w*\s+al\w*|bundan\s+sonra\s+temel\s+al\w*|belleg\w*\s+(?:ekle\w*|kaydet\w*)|bilgi\s+banka\w*\s+dahil\s+et\w*|katalog\w*\s+(?:ekle\w*|kaydet\w*|degistir\w*)|model\s+egitim\w*\s+ekle\w*|sonraki\s+yanit\w*\s+kullan\w*|butun\s+cevap\w*\s+kullan\w*|sistem\w*\s+entegre\w*)\b/
+  /\b(?:ogren(?!ci)\w*|ogret(?!men)\w*|ezberle\w*|icsellestir\w*|dogru\s+kabul\s+et\w*|hafiza\w*\s+al\w*|bundan\s+sonra\s+temel\s+al\w*|belleg\w*\s+(?:ekle\w*|kaydet\w*)|bilgi\s+banka\w*\s+dahil\s+et\w*|katalog\w*\s+(?:ekle\w*|kaydet\w*|degistir\w*)|model\s+egitim\w*\s+ekle\w*|sonraki\s+yanit\w*\s+kullan\w*|butun\s+cevap\w*\s+kullan\w*|sistem\w*\s+entegre\w*)\b/
 
 function isCompositionalSelfLearningRequest(normalized: string): boolean {
   return SELF_LEARNING_TARGET_PATTERN.test(normalized) && SELF_LEARNING_ACTION_PATTERN.test(normalized)
@@ -530,7 +530,7 @@ function isCompositionalPrognosisRequest(normalized: string): boolean {
 const PROMPT_OR_INSTRUCTION_TARGET_PATTERN =
   /\b(?:yonerge\w*|talimat\w*|kural\w*|gelistirici\s+mesaj\w*|sistem\s+(?:mesaj\w*|prompt\w*|baglam\w*)|guvenlik\s+filtre\w*|admin\s+mod\w*)\b/
 const INSTRUCTION_OVERRIDE_PATTERN =
-  /\b(?:gecersiz\s+say\w*|yok\s+say\w*|yokmus\s+gibi|unut\w*|atla\w*|sinir\w*\s+kaldir\w*|yalniz\s+benim\s+talimat\w*|aynen\s+kopyala\w*|disa(?:ri)?\s+aktar\w*|ilk\s+on\s+satir\w*|gizli\w*)\b/
+  /\b(?:gecersiz\s+say\w*|yok\s+say\w*|yokmus\s+gibi|unut(?:un(?:uz)?|ulsun|mayi|up)?|atla\w*|sinir\w*\s+kaldir\w*|yalniz\s+benim\s+talimat\w*|aynen\s+kopyala\w*|disa(?:ri)?\s+aktar\w*|ilk\s+on\s+satir\w*|gizli\w*)\b/
 const INTERNAL_REASONING_REQUEST_PATTERN =
   /\b(?:chain\s+of\s+thought|reasoning\s+adim\w*|reasoning\s+iz\w*|ic\s+dusunce\s+zincir\w*|dusunme\s+iz\w*|karar\s+verirken\s+kullandig\w*\s+ic\s+dusunce)\b/
 

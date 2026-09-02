@@ -27,6 +27,7 @@ import {
 import {
   resolveDnaS13ConversationContext,
   resolveDnaS13NamedTopicSurfaces,
+  type DnaS13ResolvedUserQuery,
 } from "../conversationContext"
 import {
   dnaS13HasPresentationModifier,
@@ -375,6 +376,11 @@ export async function runDnaS13LimitedRolloutMessage(input: Readonly<{
   realizer?: Realizer
   /** Candidate-only release switch. Omitted means the existing behavior stays enabled. */
   simplifyExperimentalEnabled?: boolean
+  /** Candidate-only typed handoff. Omitted keeps the existing production routing path. */
+  resolvedRequestHandoff?: Readonly<{
+    contextResolution: DnaS13ResolvedUserQuery
+    pragmaticTaskFrame: DnaS13PragmaticTaskFrame
+  }>
   technicalObserver?: (evidence: DnaS13LimitedTechnicalEvidence) => void
 }>): Promise<DnaS13LimitedRunnerResult> {
   const startedAt = performance.now()
@@ -439,8 +445,8 @@ export async function runDnaS13LimitedRolloutMessage(input: Readonly<{
     privacyAllowed: true,
     state,
   })
-  const contextResolution = preliminaryContextResolution
-  const namedTargets = resolveDnaS13NamedTopicSurfaces(
+  const contextResolution = input.resolvedRequestHandoff?.contextResolution ?? preliminaryContextResolution
+  const namedTargets = input.resolvedRequestHandoff ? Object.freeze([]) : resolveDnaS13NamedTopicSurfaces(
     input.question,
     state?.lastEligibleTopicIds ?? [],
     8,
@@ -452,7 +458,7 @@ export async function runDnaS13LimitedRolloutMessage(input: Readonly<{
       polarity: target.polarity,
     })),
   )
-  const initialPragmaticTask = resolveDnaS13PragmaticTask({
+  const initialPragmaticTask = input.resolvedRequestHandoff?.pragmaticTaskFrame ?? resolveDnaS13PragmaticTask({
     question: input.question,
     responseDepth: contextResolution.responseDepth,
     correction: contextResolution.correction,
@@ -475,14 +481,16 @@ export async function runDnaS13LimitedRolloutMessage(input: Readonly<{
       pragmaticTaskFrame: initialPragmaticTask,
     }), performance.now() - retrievalStartedAt)
   }
-  const split = comparisonRequested && contextResolution.targetTopicIds.length >= 2
+  const split = input.resolvedRequestHandoff
+    ? { questions: contextResolution.retrievalQuestions, exceedsLimit: false }
+    : comparisonRequested && contextResolution.targetTopicIds.length >= 2
     ? { questions: contextResolution.retrievalQuestions, exceedsLimit: false }
     : parsedComparison
       ? { questions: parsedComparison, exceedsLimit: false }
       : contextResolution.targetTopicIds.length
       ? { questions: contextResolution.retrievalQuestions, exceedsLimit: false }
       : splitDnaV3Subquestions(input.question)
-  const questions = split.questions.slice(0, 2)
+  const questions = split.questions.slice(0, input.resolvedRequestHandoff ? 8 : 2)
   const matches = questions.map((subquestion, index) => {
     const targetTopicId = contextResolution.targetTopicIds[index]
     return targetTopicId
@@ -499,7 +507,7 @@ export async function runDnaS13LimitedRolloutMessage(input: Readonly<{
     ...resolvedMatches.filter((match) => !initialPragmaticTargets.some((target) => target.topicId === match.topicId))
       .map((match) => Object.freeze({ topicId: match.topicId, surface: match.topic, polarity: "ACTIVE_TARGET" as const })),
   ])
-  const resolvedPragmaticTaskFrame = resolveDnaS13PragmaticTask({
+  const resolvedPragmaticTaskFrame = input.resolvedRequestHandoff?.pragmaticTaskFrame ?? resolveDnaS13PragmaticTask({
     question: input.question,
     responseDepth: contextResolution.responseDepth,
     correction: contextResolution.correction,
@@ -565,7 +573,9 @@ export async function runDnaS13LimitedRolloutMessage(input: Readonly<{
       correction,
       comparisonTargetTopicIds,
       answerabilityHint: "supported" as const,
-      requestedFacets: comparisonRequested
+      requestedFacets: input.resolvedRequestHandoff
+        ? pragmaticTaskFrame.requestedFacets
+        : comparisonRequested
         ? pragmaticTaskFrame.requestedFacets
         : resolvedMatches.length > 1 || contextResolution.intraTurnCoreferenceCount
           ? subquestionTask.requestedFacets : pragmaticTaskFrame.requestedFacets,
