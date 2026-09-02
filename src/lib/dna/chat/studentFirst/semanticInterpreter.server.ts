@@ -17,8 +17,11 @@ import {
 } from "./semanticInterpreter"
 
 export const DNA_STUDENT_SEMANTIC_REQUEST_TIMEOUT_MS = 15_000
+export const DNA_STUDENT_MAX_PROVIDER_ATTEMPTS = 2
 
-type StudentSemanticProviderEvidence = Readonly<{
+export type StudentSemanticProviderEvidence = Readonly<{
+  attempts: number
+  repairAttempted: boolean
   responseId: string | null
   usage: DnaS13ProviderUsage
   latencyMs: number
@@ -37,43 +40,79 @@ export type StudentSemanticInterpreterResult =
       failureCode: StudentFrameFailureCode
       provider: StudentSemanticProviderEvidence
     }>
-  | Readonly<{ ok: false; reason: "provider_failure"; failure: DnaS13ProviderFailure }>
+  | Readonly<{
+      ok: false
+      reason: "provider_failure"
+      failure: DnaS13ProviderFailure
+      provider: StudentSemanticProviderEvidence
+    }>
+
+function aggregateProviderEvidence(
+  attempts: number,
+  rows: readonly Readonly<{ responseId: string | null; usage: DnaS13ProviderUsage; latencyMs: number }>[],
+): StudentSemanticProviderEvidence {
+  return Object.freeze({
+    attempts,
+    repairAttempted: attempts > 1,
+    responseId: rows.at(-1)?.responseId ?? null,
+    usage: Object.freeze({
+      inputTokens: rows.reduce((sum, row) => sum + row.usage.inputTokens, 0),
+      cachedInputTokens: rows.reduce((sum, row) => sum + row.usage.cachedInputTokens, 0),
+      outputTokens: rows.reduce((sum, row) => sum + row.usage.outputTokens, 0),
+    }),
+    latencyMs: rows.reduce((sum, row) => sum + row.latencyMs, 0),
+  })
+}
 
 export async function interpretStudentRequestWithProvider(input: Readonly<{
   turnId: string
   message: string
   state: StudentConversationState
   apiKey?: string
+  fetchImpl?: typeof fetch
 }>): Promise<StudentSemanticInterpreterResult> {
   const safety = inspectDnaChatSafety(input.message)
   if (safety.blocked && safety.category === "privacy") return Object.freeze({ ok: false, reason: "safety_blocked" })
 
-  const attempt = await requestDnaS13StructuredOutputDetailed({
-    name: "dna_student_semantic_frame",
-    schema: studentSemanticFrameSchema(input.state),
-    instructions: DNA_STUDENT_SEMANTIC_INTERPRETER_INSTRUCTIONS,
-    content: studentSemanticInterpreterContent(input),
-    maxOutputTokens: 650,
-    timeoutMs: DNA_STUDENT_SEMANTIC_REQUEST_TIMEOUT_MS,
-    apiKey: input.apiKey,
-  })
-  if (!attempt.ok) return Object.freeze({ ok: false, reason: "provider_failure", failure: attempt.failure })
-  const provider = attempt.result
-  const providerEvidence = Object.freeze({
-    responseId: provider.responseId,
-    usage: provider.usage,
-    latencyMs: provider.latencyMs,
-  })
-  const validation = validateStudentSemanticFrameDetailed(provider.value, input.state)
-  if (!validation.ok) return Object.freeze({
+  const evidenceRows: Array<Readonly<{ responseId: string | null; usage: DnaS13ProviderUsage; latencyMs: number }>> = []
+  let lastFailureCode: StudentFrameFailureCode | null = null
+  for (let attemptNumber = 1; attemptNumber <= DNA_STUDENT_MAX_PROVIDER_ATTEMPTS; attemptNumber += 1) {
+    const repairSuffix = attemptNumber === 1
+      ? ""
+      : `\n\nÖnceki yapı yerel doğrulamada ${lastFailureCode} koduyla reddedildi. Önceki çıktıyı görmeden, aynı kullanıcı isteğini yeniden yapılandır. En az bir semanticActs alanı true olmalı ve bütün alanlar talimatla tutarlı olmalı.`
+    const attempt = await requestDnaS13StructuredOutputDetailed({
+      name: "dna_student_semantic_frame",
+      schema: studentSemanticFrameSchema(input.state),
+      instructions: `${DNA_STUDENT_SEMANTIC_INTERPRETER_INSTRUCTIONS}${repairSuffix}`,
+      content: studentSemanticInterpreterContent(input),
+      maxOutputTokens: 650,
+      timeoutMs: DNA_STUDENT_SEMANTIC_REQUEST_TIMEOUT_MS,
+      apiKey: input.apiKey,
+      fetchImpl: input.fetchImpl,
+    })
+    if (!attempt.ok) return Object.freeze({
+      ok: false,
+      reason: "provider_failure",
+      failure: attempt.failure,
+      provider: aggregateProviderEvidence(attemptNumber, evidenceRows),
+    })
+    evidenceRows.push(Object.freeze({
+      responseId: attempt.result.responseId,
+      usage: attempt.result.usage,
+      latencyMs: attempt.result.latencyMs,
+    }))
+    const validation = validateStudentSemanticFrameDetailed(attempt.result.value, input.state)
+    if (validation.ok) return Object.freeze({
+      ok: true,
+      contract: compileStudentRequestContract(input.turnId, validation.frame, input.state),
+      provider: aggregateProviderEvidence(attemptNumber, evidenceRows),
+    })
+    lastFailureCode = validation.failureCode
+  }
+  return Object.freeze({
     ok: false,
     reason: "invalid_structured_output",
-    failureCode: validation.failureCode,
-    provider: providerEvidence,
-  })
-  return Object.freeze({
-    ok: true,
-    contract: compileStudentRequestContract(input.turnId, validation.frame, input.state),
-    provider: providerEvidence,
+    failureCode: lastFailureCode ?? "invalid_object",
+    provider: aggregateProviderEvidence(DNA_STUDENT_MAX_PROVIDER_ATTEMPTS, evidenceRows),
   })
 }

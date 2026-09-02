@@ -10,6 +10,10 @@ import {
   validateStudentSemanticFrame,
   validateStudentSemanticFrameDetailed,
 } from "../src/lib/dna/chat/studentFirst"
+import {
+  DNA_STUDENT_MAX_PROVIDER_ATTEMPTS,
+  interpretStudentRequestWithProvider,
+} from "../src/lib/dna/chat/studentFirst/semanticInterpreter.server"
 
 const base = Object.freeze({
   name: "dna_provider_boundary_test",
@@ -30,6 +34,24 @@ function mockResponse(payload: unknown, status = 200): typeof fetch {
     typeof payload === "string" ? payload : JSON.stringify(payload),
     { status, headers: { "content-type": "application/json" } },
   )) as typeof fetch
+}
+
+function mockSequence(rows: readonly Readonly<{ payload: unknown; status?: number }>[]): Readonly<{
+  fetchImpl: typeof fetch
+  calls: () => number
+}> {
+  let index = 0
+  return Object.freeze({
+    fetchImpl: (async () => {
+      const row = rows[index++]
+      if (!row) throw new Error("unexpected mock provider call")
+      return new Response(JSON.stringify(row.payload), {
+        status: row.status ?? 200,
+        headers: { "content-type": "application/json" },
+      })
+    }) as typeof fetch,
+    calls: () => index,
+  })
 }
 
 function hasKey(value: unknown, key: string): boolean {
@@ -186,6 +208,45 @@ async function main() {
     { ok: false, failureCode: "invalid_semantic_acts" },
   )
 
+  const emptyActsFrame = {
+    ...validFrame,
+    semanticActs: Object.fromEntries(Object.keys(validFrame.semanticActs).map((key) => [key, false])),
+  }
+  const repairSuccessSequence = mockSequence([
+    { payload: { id: "resp_repair_1", output_text: JSON.stringify(emptyActsFrame), usage: { input_tokens: 10, output_tokens: 2 } } },
+    { payload: { id: "resp_repair_2", output_text: JSON.stringify(validFrame), usage: { input_tokens: 11, output_tokens: 3, input_tokens_details: { cached_tokens: 4 } } } },
+  ])
+  const repaired = await interpretStudentRequestWithProvider({
+    turnId: "REPAIR-BOUNDARY-T01",
+    message: "yürütücü işlevler ne demek",
+    state,
+    apiKey: "test-key-not-a-secret",
+    fetchImpl: repairSuccessSequence.fetchImpl,
+  })
+  assert.equal(repaired.ok, true)
+  assert.equal(repairSuccessSequence.calls(), DNA_STUDENT_MAX_PROVIDER_ATTEMPTS)
+  assert.equal(repaired.provider.attempts, 2)
+  assert.equal(repaired.provider.repairAttempted, true)
+  assert.deepEqual(repaired.provider.usage, { inputTokens: 21, cachedInputTokens: 4, outputTokens: 5 })
+
+  const repairFailureSequence = mockSequence([
+    { payload: { id: "resp_repair_fail_1", output_text: JSON.stringify(emptyActsFrame), usage: { input_tokens: 7, output_tokens: 2 } } },
+    { payload: { id: "resp_repair_fail_2", output_text: JSON.stringify(emptyActsFrame), usage: { input_tokens: 8, output_tokens: 2 } } },
+  ])
+  const repairFailed = await interpretStudentRequestWithProvider({
+    turnId: "REPAIR-BOUNDARY-T02",
+    message: "yürütücü işlevler ne demek",
+    state,
+    apiKey: "test-key-not-a-secret",
+    fetchImpl: repairFailureSequence.fetchImpl,
+  })
+  assert.equal(repairFailed.ok, false)
+  if (repairFailed.ok || repairFailed.reason !== "invalid_structured_output") throw new Error("expected bounded repair failure")
+  assert.equal(repairFailed.failureCode, "invalid_semantic_acts")
+  assert.equal(repairFailed.provider.attempts, 2)
+  assert.deepEqual(repairFailed.provider.usage, { inputTokens: 15, cachedInputTokens: 0, outputTokens: 4 })
+  assert.equal(repairFailureSequence.calls(), DNA_STUDENT_MAX_PROVIDER_ATTEMPTS, "a second invalid frame must hard-stop without a third call")
+
   console.log(JSON.stringify({
     ok: true,
     gate: "STUDENT_PROVIDER_BOUNDARY_LOCAL",
@@ -195,6 +256,10 @@ async function main() {
     studentSchemaKnownSubset: true,
     runtimeUniquenessValidation: true,
     providerOwnsFinalObligations: false,
+    boundedStructuredRepair: true,
+    maxProviderAttemptsPerTurn: DNA_STUDENT_MAX_PROVIDER_ATTEMPTS,
+    aggregateRepairUsage: true,
+    rawProviderOutputReusedForRepair: false,
   }, null, 2))
 }
 

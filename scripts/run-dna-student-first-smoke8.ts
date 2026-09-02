@@ -10,7 +10,10 @@ import {
   type StudentConversationState,
   type StudentTurnAdjudication,
 } from "../src/lib/dna/chat/studentFirst"
-import { interpretStudentRequestWithProvider } from "../src/lib/dna/chat/studentFirst/semanticInterpreter.server"
+import {
+  DNA_STUDENT_MAX_PROVIDER_ATTEMPTS,
+  interpretStudentRequestWithProvider,
+} from "../src/lib/dna/chat/studentFirst/semanticInterpreter.server"
 
 dotenv.config({ path: ".env.local", override: false, quiet: true })
 
@@ -119,11 +122,12 @@ function sorted(values: readonly string[]): string[] {
   return [...values].sort()
 }
 
-const MAX_PROVIDER_CALLS = 8
+const MAX_PROVIDER_CALLS = SMOKE8.length * DNA_STUDENT_MAX_PROVIDER_ATTEMPTS
 const MAX_COST_MICROUSD = 100_000
 const observedUsageRows: DnaChatLunaUsage[] = []
 const observedLatencies: number[] = []
 let observedProviderCalls = 0
+let observedRepairedTurns = 0
 let observedCompletedContracts = 0
 
 async function main() {
@@ -133,17 +137,19 @@ async function main() {
   for (const expected of SMOKE8) {
     assert.ok(observedProviderCalls < MAX_PROVIDER_CALLS, "provider call cap exceeded")
     assert.ok(sumDnaChatLunaUsage(observedUsageRows).costMicrousd <= MAX_COST_MICROUSD, "provider cost cap exceeded")
-    observedProviderCalls += 1
     const interpreted = await interpretStudentRequestWithProvider({
       turnId: expected.turnId,
       message: expected.message,
       state,
     })
+    if ("provider" in interpreted) {
+      observedProviderCalls += interpreted.provider.attempts
+      if (interpreted.provider.repairAttempted) observedRepairedTurns += 1
+      observedUsageRows.push(calculateDnaChatLunaUsage(interpreted.provider.usage))
+      observedLatencies.push(interpreted.provider.latencyMs)
+      assert.ok(observedProviderCalls <= MAX_PROVIDER_CALLS, "provider call cap exceeded")
+    }
     if (!interpreted.ok) {
-      if (interpreted.reason === "invalid_structured_output") {
-        observedUsageRows.push(calculateDnaChatLunaUsage(interpreted.provider.usage))
-        observedLatencies.push(interpreted.provider.latencyMs)
-      }
       const detail = interpreted.reason === "provider_failure"
         ? `/${interpreted.failure.reason}/${interpreted.failure.httpStatus ?? "no_status"}/${interpreted.failure.apiErrorCode ?? interpreted.failure.apiErrorType ?? "no_code"}`
         : interpreted.reason === "invalid_structured_output"
@@ -152,8 +158,6 @@ async function main() {
       throw new Error(`${expected.turnId}: ${interpreted.reason}${detail}`)
     }
     const contract = interpreted.contract
-    observedUsageRows.push(calculateDnaChatLunaUsage(interpreted.provider.usage))
-    observedLatencies.push(interpreted.provider.latencyMs)
 
     assert.equal(contract.semanticTask, expected.semanticTask, `${expected.turnId}: semantic task`)
     assert.equal(contract.conversationAction, expected.conversationAction, `${expected.turnId}: conversation action`)
@@ -234,6 +238,8 @@ async function main() {
       usage: totalUsage,
       averageLatencyMs: Math.round(observedLatencies.reduce((sum, value) => sum + value, 0) / observedLatencies.length),
       maxCostMicrousd: MAX_COST_MICROUSD,
+      repairedTurns: observedRepairedTurns,
+      maxAttemptsPerTurn: DNA_STUDENT_MAX_PROVIDER_ATTEMPTS,
     },
     finalState: {
       activeTargetIds: state.activeTargetIds,
