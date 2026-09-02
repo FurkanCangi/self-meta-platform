@@ -100,8 +100,8 @@ const startFrame = {
   rejectedTargetIds: [],
   referentTurnId: null,
   presentation: { ...base.presentation, grouping: "integrated" },
-  summaryScope: base.summaryScope,
-  observationScope: base.observationScope,
+  summaryExtras: { unknown: false, observationFocus: false },
+  observationExtras: { singleObservationLimit: false, additionalContext: false },
   ambiguity: "none",
   safetyIntent: "general_education",
 }
@@ -161,7 +161,7 @@ const summaryValidation = validateStudentSemanticFrameDetailed({
   semanticTask: "summarize",
   conversationAction: "summarize_session",
   mentionedTargetIds: [],
-  summaryScope: { known: true, unknown: true, observationFocus: true },
+  summaryExtras: { unknown: true, observationFocus: true },
 }, comparisonState)
 if (!summaryValidation.ok) throw new Error(summaryValidation.failureCode)
 const summaryContract = compileStudentRequestContract("GROUPING-T05", summaryValidation.frame, comparisonState)
@@ -172,6 +172,25 @@ assert.deepEqual(summaryContract.obligations.map((row) => row.kind), [
   "summarize_observation_focus",
 ])
 
+const observeValidation = validateStudentSemanticFrameDetailed({
+  ...startFrame,
+  semanticTask: "observe",
+  conversationAction: "continue",
+  mentionedTargetIds: ["inhibition"],
+  referentTurnId: "GROUPING-T02",
+  summaryExtras: { unknown: true, observationFocus: true },
+  observationExtras: { singleObservationLimit: false, additionalContext: false },
+  safetyIntent: "case_interpretation",
+}, comparisonState)
+if (!observeValidation.ok) throw new Error(observeValidation.failureCode)
+const observeContract = compileStudentRequestContract("GROUPING-T06", observeValidation.frame, comparisonState)
+assert.deepEqual(observeContract.summaryScope, { known: false, unknown: false, observationFocus: false })
+assert.deepEqual(observeContract.observationScope, { singleObservationLimit: true, additionalContext: true })
+assert.deepEqual(observeContract.obligations.map((row) => row.kind), [
+  "state_single_observation_limit",
+  "name_additional_context",
+])
+
 const separateValidation = validateStudentSemanticFrameDetailed({
   ...startFrame,
   semanticTask: "explain",
@@ -179,7 +198,7 @@ const separateValidation = validateStudentSemanticFrameDetailed({
   presentation: { ...base.presentation, grouping: "separate_each" },
 }, emptyState)
 if (!separateValidation.ok) throw new Error(separateValidation.failureCode)
-const separateContract = compileStudentRequestContract("GROUPING-T06", separateValidation.frame, emptyState)
+const separateContract = compileStudentRequestContract("GROUPING-T07", separateValidation.frame, emptyState)
 assert.deepEqual(separateContract.componentTargetIds, ["planning", "inhibition", "emotion_regulation"])
 assert.deepEqual(separateContract.obligations.map((row) => row.kind), [
   "define_target",
@@ -191,7 +210,7 @@ assert.deepEqual(separateContract.obligations.map((row) => row.kind), [
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_OBLIGATION_COMPILER_LOCAL",
-  cases: 13,
+  cases: 14,
   providerOwnsFinalObligations: false,
   deterministicCompilation: true,
   duplicateObligations: 0,

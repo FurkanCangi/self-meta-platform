@@ -161,8 +161,8 @@ async function main() {
     rejectedTargetIds: [],
     referentTurnId: null,
     presentation: { depth: "standard", language: "standard", format: "prose", example: "none", grouping: "integrated", requestedSentenceCount: null, preserveMeaning: false },
-    summaryScope: { known: false, unknown: false, observationFocus: false },
-    observationScope: { singleObservationLimit: false, additionalContext: false },
+    summaryExtras: { unknown: false, observationFocus: false },
+    observationExtras: { singleObservationLimit: false, additionalContext: false },
     ambiguity: "none",
     safetyIntent: "general_education",
   }
@@ -172,7 +172,7 @@ async function main() {
     validateStudentSemanticFrameDetailed({ ...validFrame, mentionedTargetIds: ["executive_functions", "executive_functions"] }, state),
     { ok: false, failureCode: "invalid_mentioned_targets" },
   )
-  assert.equal(validateStudentSemanticFrame({ ...validFrame, summaryScope: { known: true, unknown: false, observationFocus: false } }, state), null)
+  assert.equal(validateStudentSemanticFrame({ ...validFrame, summaryExtras: { unknown: "yes", observationFocus: false } }, state), null)
 
   console.log(JSON.stringify({
     ok: true,

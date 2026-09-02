@@ -7,7 +7,6 @@ import type {
   StudentReferent,
   StudentRequestContract,
   StudentSemanticTask,
-  StudentSummaryScope,
 } from "./contracts"
 import {
   DNA_STUDENT_FIRST_REQUEST_VERSION,
@@ -15,7 +14,7 @@ import {
 import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@4" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@5" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -52,8 +51,8 @@ export type StudentSemanticFrame = Readonly<{
   rejectedTargetIds: readonly string[]
   referentTurnId: string | null
   presentation: StudentPresentationRequest
-  summaryScope: StudentSummaryScope
-  observationScope: StudentObservationScope
+  summaryExtras: Readonly<{ unknown: boolean; observationFocus: boolean }>
+  observationExtras: StudentObservationScope
   ambiguity: StudentRequestContract["ambiguity"]
   safetyIntent: StudentRequestContract["safetyIntent"]
 }>
@@ -65,15 +64,13 @@ export const DNA_STUDENT_FRAME_FAILURE_CODES = Object.freeze([
   "invalid_rejected_targets",
   "invalid_referent",
   "invalid_presentation",
-  "invalid_summary_scope",
-  "invalid_observation_scope",
+  "invalid_summary_extras",
+  "invalid_observation_extras",
   "invalid_ambiguity_or_safety",
   "conversation_state_mismatch",
   "return_referent_mismatch",
   "summary_task_mismatch",
   "treatment_safety_mismatch",
-  "summary_scope_mismatch",
-  "observation_scope_mismatch",
 ] as const)
 
 export type StudentFrameFailureCode = typeof DNA_STUDENT_FRAME_FAILURE_CODES[number]
@@ -120,14 +117,14 @@ function parsePresentation(value: unknown): StudentPresentationRequest | null {
   })
 }
 
-function parseSummaryScope(value: unknown): StudentSummaryScope | null {
+function parseSummaryExtras(value: unknown): StudentSemanticFrame["summaryExtras"] | null {
   if (!value || typeof value !== "object") return null
   const row = value as Record<string, unknown>
-  if (typeof row.known !== "boolean" || typeof row.unknown !== "boolean" || typeof row.observationFocus !== "boolean") return null
-  return Object.freeze({ known: row.known, unknown: row.unknown, observationFocus: row.observationFocus })
+  if (typeof row.unknown !== "boolean" || typeof row.observationFocus !== "boolean") return null
+  return Object.freeze({ unknown: row.unknown, observationFocus: row.observationFocus })
 }
 
-function parseObservationScope(value: unknown): StudentObservationScope | null {
+function parseObservationExtras(value: unknown): StudentObservationScope | null {
   if (!value || typeof value !== "object") return null
   const row = value as Record<string, unknown>
   if (typeof row.singleObservationLimit !== "boolean" || typeof row.additionalContext !== "boolean") return null
@@ -161,19 +158,16 @@ export function validateStudentSemanticFrameDetailed(
   if (!referent) return frameFailure("invalid_referent")
   const presentation = parsePresentation(row.presentation)
   if (!presentation) return frameFailure("invalid_presentation")
-  const summaryScope = parseSummaryScope(row.summaryScope)
-  if (!summaryScope) return frameFailure("invalid_summary_scope")
-  const observationScope = parseObservationScope(row.observationScope)
-  if (!observationScope) return frameFailure("invalid_observation_scope")
+  const summaryExtras = parseSummaryExtras(row.summaryExtras)
+  if (!summaryExtras) return frameFailure("invalid_summary_extras")
+  const observationExtras = parseObservationExtras(row.observationExtras)
+  if (!observationExtras) return frameFailure("invalid_observation_extras")
   if (!AMBIGUITIES.has(String(row.ambiguity)) || !SAFETY_INTENTS.has(String(row.safetyIntent))) return frameFailure("invalid_ambiguity_or_safety")
   if (row.conversationAction === "start" && state.semanticHistory.length) return frameFailure("conversation_state_mismatch")
   if (row.conversationAction !== "start" && !state.semanticHistory.length) return frameFailure("conversation_state_mismatch")
   if (row.conversationAction === "return" && referent.turnId === null) return frameFailure("return_referent_mismatch")
   if (row.conversationAction === "summarize_session" && row.semanticTask !== "summarize") return frameFailure("summary_task_mismatch")
   if (row.semanticTask === "treatment_boundary" && row.safetyIntent !== "treatment_selection") return frameFailure("treatment_safety_mismatch")
-  if (row.semanticTask === "summarize" && !summaryScope.known) return frameFailure("summary_scope_mismatch")
-  if (row.semanticTask !== "summarize" && (summaryScope.known || summaryScope.unknown || summaryScope.observationFocus)) return frameFailure("summary_scope_mismatch")
-  if ((row.semanticTask === "observe" || row.semanticTask === "case_reasoning") && (!observationScope.singleObservationLimit || !observationScope.additionalContext)) return frameFailure("observation_scope_mismatch")
 
   return Object.freeze({
     ok: true,
@@ -184,8 +178,8 @@ export function validateStudentSemanticFrameDetailed(
       rejectedTargetIds: Object.freeze(rejectedTargetIds),
       referentTurnId: referent.turnId,
       presentation,
-      summaryScope,
-      observationScope,
+      summaryExtras,
+      observationExtras,
       ambiguity: row.ambiguity as StudentRequestContract["ambiguity"],
       safetyIntent: row.safetyIntent as StudentRequestContract["safetyIntent"],
     }),
@@ -235,6 +229,16 @@ export function compileStudentRequestContract(
   const componentTargetIds = frame.semanticTask === "explain" && targetIds.length > 1 && frame.presentation.grouping === "separate_each"
     ? targetIds
     : Object.freeze([])
+  const summaryScope = Object.freeze({
+    known: frame.semanticTask === "summarize",
+    unknown: frame.semanticTask === "summarize" && frame.summaryExtras.unknown,
+    observationFocus: frame.semanticTask === "summarize" && frame.summaryExtras.observationFocus,
+  })
+  const observationScope = frame.semanticTask === "observe" || frame.semanticTask === "case_reasoning"
+    ? Object.freeze({ singleObservationLimit: true, additionalContext: true })
+    : frame.semanticTask === "compare"
+      ? frame.observationExtras
+      : Object.freeze({ singleObservationLimit: false, additionalContext: false })
   const ambiguity = frame.conversationAction === "return" && referent.kind !== "history"
     ? "history_anchor_missing"
     : frame.semanticTask === "compare" && comparisonTargetIds.length < 2
@@ -253,13 +257,15 @@ export function compileStudentRequestContract(
     componentTargetIds,
     referent,
     presentation: frame.presentation,
-    summaryScope: frame.summaryScope,
-    observationScope: frame.observationScope,
+    summaryScope,
+    observationScope,
     obligations: compileStudentAnswerObligations(turnId, {
       ...frame,
       targetIds,
       comparisonTargetIds,
       componentTargetIds,
+      summaryScope,
+      observationScope,
     }),
     ambiguity,
     safetyIntent: frame.safetyIntent,
@@ -274,7 +280,7 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
     required: [
       "semanticTask", "conversationAction", "mentionedTargetIds", "rejectedTargetIds",
       "referentTurnId", "presentation",
-      "summaryScope", "observationScope", "ambiguity", "safetyIntent",
+      "summaryExtras", "observationExtras", "ambiguity", "safetyIntent",
     ],
     properties: {
       semanticTask: { type: "string", enum: [...DNA_STUDENT_SEMANTIC_TASKS] },
@@ -298,17 +304,16 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
           preserveMeaning: { type: "boolean" },
         },
       },
-      summaryScope: {
+      summaryExtras: {
         type: "object",
         additionalProperties: false,
-        required: ["known", "unknown", "observationFocus"],
+        required: ["unknown", "observationFocus"],
         properties: {
-          known: { type: "boolean" },
           unknown: { type: "boolean" },
           observationFocus: { type: "boolean" },
         },
       },
-      observationScope: {
+      observationExtras: {
         type: "object",
         additionalProperties: false,
         required: ["singleObservationLimit", "additionalContext"],
@@ -364,7 +369,7 @@ Yalnız allowedTargets içindeki ID'leri kullan. Yeni hedef uydurma. mentionedTa
 
 Nihai cevap yükümlülüğü seçme; onu yerel derleyici yapar. Yalnız semantik gerçekleri çıkar:
 - presentation.grouping yalnız kullanıcı birden fazla hedefin her birinin ayrı ele alınmasını açıkça istiyorsa separate_each olur. “X bunun parçası mı?” bir ilişki sorusudur ve grouping=integrated kalır.
-- summaryScope yalnız özet turunda kullanıcının bilinenler, bilinmeyenler ve gözlem odağından hangilerini istediğini gösterir.
-- observationScope kullanıcının tek gözlem sınırı veya ek bağlam/gözlem ihtiyacını açıkça sorduğunu gösterir. observe ve case_reasoning görevlerinde ikisi de true olur.
+- summaryExtras yalnız summarize görevinde bilinmeyenleri ve gözlem odağını ayrıca isteyip istemediğini gösterir. Bilinenleri özetleme summarize görevinden yerelde otomatik gelir. Başka görevlerde bu alanları false kullan.
+- observationExtras yalnız compare gibi başka bir görev içinde tek gözlem sınırı veya ek bağlam ayrıca isteniyorsa kullanılır. observe ve case_reasoning görevlerinin temel gözlem yükümlülükleri yerelde otomatik gelir; bu görevlerde extras false kalabilir.
 - presentation.preserveMeaning yalnız önceki hedefi aynı anlamı koruyarak yeniden/sade anlatmayı istiyorsa true olur. Sadece ilk kez sade anlatma isteğinde false olur.
 `.trim()
