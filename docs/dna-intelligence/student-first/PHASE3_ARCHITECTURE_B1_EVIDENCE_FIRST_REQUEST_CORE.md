@@ -180,6 +180,8 @@ Only after B1 passes Student40:
 
 Stop at the first failed gate. No threshold reduction, fixture/gold editing, easier replacement set, or production deployment is allowed.
 
+Current R5 status on 2026-09-02: the three-turn real-provider visible-answer preflight passed on `c4fb644`. The unchanged visible Student40 gate is next and remains the authority for opening the synthetic student simulation.
+
 The synthetic simulation replaces the unavailable human-student gate by user decision. It is a product-quality stress test, not evidence of independent human usability validation. Its prompts and judgments must be preserved separately from Student40 and Fresh Student60, and it cannot change their gold labels or thresholds.
 
 ## Definition of done

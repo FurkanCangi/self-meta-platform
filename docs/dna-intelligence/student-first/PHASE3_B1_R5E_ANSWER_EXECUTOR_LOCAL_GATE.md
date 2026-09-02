@@ -1,7 +1,7 @@
 # DNA Chat Student-First — B1-R5E answer executor local gate
 
 Date: 2026-09-02
-Status: **LOCAL PASS / online visible preflight not yet run**
+Status: **LOCAL PASS / online visible preflight PASS / full visible Student40 pending**
 
 ## Structural change
 
@@ -43,6 +43,8 @@ Existing B1 semantic gates remain green:
 
 ## What this does not prove
 
-The mock provider checks transport, closed schema, evidence membership, target coverage, and obligation coverage. It does not prove that natural visible prose truly executes every obligation or avoids a wrong-but-true answer. The next immutable candidate must therefore run a small real-provider visible-answer preflight before the exact visible Student40 gate.
+The mock provider checks transport, closed schema, evidence membership, target coverage, and obligation coverage. It does not prove that natural visible prose truly executes every obligation or avoids a wrong-but-true answer.
+
+The bounded three-turn real-provider preflight subsequently passed on candidate `c4fb644`: 3/3 turns, one provider request per turn, 3,755 input tokens, 2,802 cached input tokens, 942 output tokens, 6,886 micro-USD, and zero raw outputs stored. The exact visible Student40 gate remains pending.
 
 No product route, production configuration, deployment, frozen fixture, gold, or threshold was changed.

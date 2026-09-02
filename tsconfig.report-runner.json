@@ -55,6 +55,7 @@
     "scripts/run-dna-student-b1-answer-execution-plan-tests.ts",
     "scripts/run-dna-student-b1-answer-executor-tests.ts",
     "scripts/run-dna-student-b1-answer-provider-preflight.ts",
+    "scripts/run-dna-student-b1-visible-student40.ts",
     "scripts/run-dna-student-batch-failure-map.ts",
     "scripts/run-dna-chat-runtime-assurance-tests.ts",
     "scripts/run-dna-chat-case-e2e-tests.ts",
