@@ -35,7 +35,8 @@ Current implementation update:
 - B1-Candidate1 Smoke8 / Student40 semantic contracts: 8/8 and 40/40 PASS;
 - typed request-to-runtime target crosswalk: 40/40 local PASS;
 - direct legacy S13 visible-answer handoff: structural FAIL; obligation-aware answer executor selected.
-- B1-R5E obligation-aware execution plan and bounded executor: 40/40 local PASS with mock realization; real visible prose not yet certified.
+- B1-R5E Candidate 7 (`0d52675`) adds a versioned shared-scenario contract and passes all local gates plus the exact T07 provider preflight.
+- Exact visible Student40: FAIL at turn 3/40 (`STUDENT40-C01-T03`, `candidate_invalid / obligation_not_visible`); later gates remain closed.
 
 ## Three-candidate portfolio
 
@@ -175,4 +176,6 @@ Only after Student40 passes, run in order and stop at the first failure:
 - no production/deployment before all required gates pass;
 - user-owned untracked files remain untouched and uncommitted.
 
-The immediate next gate is an immutable B1-R5E real-provider visible-answer preflight, followed by exact visible Student40 if it passes. Visible Student40 must pass before the synthetic one-hour student simulation. The simulation replaces the unavailable human participant by user decision, but will be reported as synthetic rather than independent human validation.
+Candidate 7 completed its immutable preflight and exact visible Student40 attempt. The targeted shared-scenario defect is fixed, but the global candidate failed at turn 3 because example visibility still depends on provider-chosen lexical markers in a designated block. Candidate 7 must not be rerun. The next architecture decision must replace that lexical authority with a deterministic typed composition boundary; only a new immutable candidate that passes visible Student40 may open the synthetic one-hour student simulation. The simulation replaces the unavailable human participant by user decision, but will be reported as synthetic rather than independent human validation.
+
+Separately, the legacy S13 visible-handoff diagnostic cannot represent B1 turns with more than two active topics in its limited-rollout telemetry schema. This later runtime-parity mismatch must be reconciled before canary/build/UI certification, but it was not patched inside the Candidate 7 one-intervention boundary.
