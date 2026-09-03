@@ -109,7 +109,6 @@ const TURKISH_ASCII_WORD_REPLACEMENTS: Record<string, string> = {
   duzene: "düzene",
   duzey: "düzey",
   esdegeri: "eşdeğeri",
-  etkinlige: "etkinliğe",
   etkinliginde: "etkinliğinde",
   etkinligine: "etkinliğine",
   frustrasyona: "engellenme karşısındaki zorlanmaya",
@@ -163,7 +162,6 @@ const TURKISH_ASCII_WORD_REPLACEMENTS: Record<string, string> = {
   ozellikle: "özellikle",
   pasiflesme: "pasifleşme",
   sakinlesmek: "sakinleşmek",
-  sessizdi: "sessizdi",
   secme: "seçme",
   sinir: "sınır",
   sinirda: "sınırda",
@@ -190,7 +188,6 @@ const TURKISH_ASCII_WORD_REPLACEMENTS: Record<string, string> = {
   surdurebiliyor: "sürdürebiliyor",
   surdurulebilir: "sürdürülebilir",
   tamamlamayi: "tamamlamayı",
-  bitirebiliyor: "bitirebiliyor",
   temasi: "teması",
   tutarli: "tutarlı",
   tutarlilik: "tutarlılık",
@@ -424,6 +421,48 @@ const TURKISH_ASCII_WORD_REPLACEMENTS: Record<string, string> = {
   bagimsizlikta: "bağımsızlıkta",
   "oz-denetim": "öz denetim",
   bandinda: "bandında",
+  asamaya: "aşamaya",
+  arkadasi: "arkadaşı",
+  baska: "başka",
+  basladigi: "başladığı",
+  bilmio: "bilmiyor",
+  canta: "çanta",
+  disarida: "dışarıda",
+  degistirirken: "değiştirirken",
+  duzenleyemedigi: "düzenleyemediği",
+  etkinlige: "etkinliğe",
+  etmiyo: "etmiyor",
+  gecemiyor: "geçemiyor",
+  geciyor: "geçiyor",
+  gerginligi: "gerginliği",
+  gorevin: "görevin",
+  gorevinde: "görevinde",
+  gunde: "günde",
+  hazirlanirken: "hazırlanırken",
+  hazirlarken: "hazırlarken",
+  hatirlamasi: "hatırlaması",
+  huzursuzlasip: "huzursuzlaşıp",
+  isi: "işi",
+  istemediginde: "istemediğinde",
+  istendiginde: "istendiğinde",
+  koymasi: "koyması",
+  kaciyo: "kaçıyor",
+  "degıl": "değil",
+  sevmiyo: "sevmiyor",
+  "bişi": "bir şey",
+  olmuyo: "olmuyor",
+  olaylari: "olayları",
+  onceki: "önceki",
+  sakinlesme: "sakinleşme",
+  secenek: "seçenek",
+  sicak: "sıcak",
+  siraya: "sıraya",
+  yapcagini: "yapacağını",
+  yapcagını: "yapacağını",
+  ucuruyor: "uçuruyor",
+  tamamlayamiyor: "tamamlayamıyor",
+  yorgunlugunu: "yorgunluğunu",
+  zorlanip: "zorlanıp",
 };
 
 const TURKISH_ASCII_WORD_PATTERN_SOURCE = `(?<![\\p{L}\\p{N}_])(?:${Object.keys(TURKISH_ASCII_WORD_REPLACEMENTS)
@@ -868,6 +907,13 @@ export function normalizeTurkishClinicalText(text: unknown): string {
   const value = String(text || "");
   if (!value) return "";
   return replaceTurkishAsciiWords(applyReplacements(value, TURKISH_ASCII_REPLACEMENTS))
+    .replace(/yönerge\s+follow\s+etmiyor\s+denmiş/giu, "yönergeyi takip etmediği bildirilmiş")
+    .replace(/\b(\d+)\s*step\b/giu, "$1 basamak")
+    .replace(/\b(\d+)\.\s*yi\s+uçuruyor\b/giu, "$1. basamağı atlıyor")
+    .replace(/\bstarts\s+but\s+no\s+finish\b/giu, "göreve başlıyor ancak tamamlamıyor")
+    .replace(/(\d+\.\s*basamağı atlıyor)\s+(göreve başlıyor)/giu, "$1; $2")
+    .replace(/([\p{L}\p{N}-]+)\s*=\s*kötü(?=\s|$|[.,;!?])/giu, "$1 ile ilişkili güçlük bildiriliyor")
+    .replace(/\bhiç\s+(?:bir\s+)?şey\s+yok\b/giu, "herhangi bir güçlük görülmüyor")
     .replace(/[ \t]{2,}/g, " ")
     .replace(/[ \t]+\n/g, "\n")
     .replace(/\n[ \t]+/g, "\n")

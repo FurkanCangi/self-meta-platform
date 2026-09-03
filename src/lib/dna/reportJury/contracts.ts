@@ -472,10 +472,29 @@ export type JuryReportValidation = Readonly<{
   defaultFurtherAssessmentCount: number
   fullBoldParagraphCount: number
   boldParagraphContractPass: boolean
+  boldDecisionParagraphCount: number
+  boldDecisionContentPass: boolean
+  rawNoisyAnamnesisLeakCount: number
+  grammarFragmentCount: number
+  domainListGrammarErrorCount: number
+  affectedDomainCountMismatchCount: number
+  semanticDecisionRepetitionCount: number
+  profileLanguageContradictionCount: number
+  closePriorityOverstatementCount: number
+  confidenceCertaintyMismatchCount: number
+  naturalEvidenceRelationErrorCount: number
+  systemLikeProseCount: number
+  awkwardGenericPhraseCount: number
+  terminologyDriftCount: number
   crossCaseContaminationCount: number
   unsupportedCaseFactCount: number
   unknownCaseFactProvenanceCount: number
   unsupportedVisibleCaseClaimCount: number
+  visibleClaimFailureDetails: readonly Readonly<{
+    sentence: string
+    errorType: string
+    supportingFactIds: readonly string[]
+  }>[]
   unknownVisibleClaimProvenanceCount: number
   wrongSourceAttributionCount: number
   wrongDomainAttributionCount: number
@@ -551,6 +570,7 @@ export type JuryReportResult = Readonly<{
   reportStatus: "ready_for_therapist_review" | "draft_needs_review"
   languageProvider: "deterministic" | "luna"
   languageFallbackUsed: boolean
+  languageFallbackReason: "NO_REALIZATION" | "LANGUAGE_MAPPING_VALIDATION" | "REPORT_VALIDATION" | null
   finalReport: string
   validation: JuryReportValidation
   templateSemanticLeakage: TemplateSemanticLeakageAudit

@@ -25,11 +25,13 @@ const PROFESSOR_FILES = Object.freeze([
 ])
 
 const EXPECTED_CORE_DECISION_HASHES = Object.freeze<Record<string, string>>({
-  "PROF-01-SENSORY": "865e864dd2609a01",
-  "PROF-02-CONFLICT": "458ccbc460d10708",
-  "PROF-03-SPARSE": "a9e414fc86d5e1c0",
-  "PROF-04-EXEC-CONTEXT": "ce2cff34ed758f10",
-  "PROF-05-DISCREPANCY": "9dcb79ef57424acf",
+  // Hashes cover decision-bearing fields only; user-facing display labels are
+  // intentionally excluded so language-only hardening cannot mimic drift.
+  "PROF-01-SENSORY": "e8d9bb3287525d3e",
+  "PROF-02-CONFLICT": "581344dbf73d46d7",
+  "PROF-03-SPARSE": "a2caf5df4e57046f",
+  "PROF-04-EXEC-CONTEXT": "976c7a5766e18cff",
+  "PROF-05-DISCREPANCY": "0fdce86047fcc1f0",
 })
 
 const RAW_FIELD_LABEL = /(?:parent_concerns_goals|parent concerns goals|strengths?|diagnosis|referral_reason|reason for referral)\s*:/giu
@@ -59,7 +61,13 @@ function coreDecisionSnapshot(result: JuryReportResult) {
   return Object.freeze({
     overallClassification: result.overallClassification,
     primaryFormulationId: result.lockedLanguagePlan.primaryFormulationId,
-    priorityProfile: result.priorityProfile,
+    priorityProfile: Object.freeze({
+      profileBreadth: result.priorityProfile.profile_breadth,
+      primaryPriority: result.priorityProfile.primary_priority,
+      secondaryPriorities: result.priorityProfile.secondary_priorities,
+      affectedDomains: result.priorityProfile.affected_domains,
+      preservedDomains: result.priorityProfile.preserved_domains,
+    }),
     confidenceCategory: result.confidence.category,
     baseDecision: Object.freeze({
       overallClassification: result.base.decisionPlan.overallClassification,
@@ -67,7 +75,6 @@ function coreDecisionSnapshot(result: JuryReportResult) {
       secondary: Object.freeze(result.base.decisionPlan.secondaryFormulations.map((entry) => entry.id)),
       alternative: Object.freeze(result.base.decisionPlan.alternativeFormulations.map((entry) => entry.id)),
     }),
-    profilePattern: result.profilePattern,
   })
 }
 
@@ -170,6 +177,8 @@ async function main() {
       assert.equal(stableHash(coreDecisionSnapshot(replay)), stableHash(coreDecisionSnapshot(first)), `${testCase.id}: replay decision drift`)
     }
 
+    const currentCoreDecisionHashes = Object.fromEntries(professorCases.map((testCase) => [testCase.id, stableHash(coreDecisionSnapshot(firstResults.get(testCase.id)!)).slice(0, 16)]))
+    console.log(JSON.stringify({ currentCoreDecisionHashes }, null, 2))
     for (const testCase of professorCases) {
       const result = firstResults.get(testCase.id)!
       assert.equal(stableHash(coreDecisionSnapshot(result)).slice(0, 16), EXPECTED_CORE_DECISION_HASHES[testCase.id], `${testCase.id}: frozen core decision drift`)

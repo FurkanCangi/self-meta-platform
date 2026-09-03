@@ -54,13 +54,23 @@ async function main() {
     assert.equal(result.validation.missingValidExternalEvidenceIds.length, 0)
     assert.equal(result.languageProvider, "deterministic")
     assert.equal(result.languageFallbackUsed, false)
-    assert.ok(result.validation.wordCount >= 900, `${testCase.id}: severe content-loss guard`)
+    // Tekrar cümleleri içerik sayılmaz; semantik kapsam kapıları sıfırken 800 kelime
+    // gerçek klinik ayrıntının yanlışlıkla budanmasına karşı yeterli alt sınırdır.
+    assert.ok(result.validation.wordCount >= 800, `${testCase.id}: severe content-loss guard`)
+    assert.equal(result.validation.rawNoisyAnamnesisLeakCount, 0, `${testCase.id}: raw noisy anamnesis`)
+    assert.equal(result.validation.grammarFragmentCount, 0, `${testCase.id}: grammar fragment`)
+    assert.equal(result.validation.domainListGrammarErrorCount, 0, `${testCase.id}: domain-list grammar`)
+    assert.equal(result.validation.affectedDomainCountMismatchCount, 0, `${testCase.id}: affected-domain count`)
+    assert.equal(result.validation.semanticDecisionRepetitionCount, 0, `${testCase.id}: semantic decision repetition`)
+    assert.equal(result.validation.profileLanguageContradictionCount, 0, `${testCase.id}: profile language contradiction`)
+    assert.equal(result.validation.closePriorityOverstatementCount, 0, `${testCase.id}: close-priority overstatement`)
+    assert.equal(result.validation.boldDecisionContentPass, true, `${testCase.id}: bold decision content`)
     assert.ok(result.literature.referenceCount >= 5 && result.literature.referenceCount <= 10, `${testCase.id}: literature density`)
     assert.equal(result.literature.domainSpecific, true, `${testCase.id}: domain-specific literature`)
     results.push(result)
   }
   const averageWordCount = results.reduce((sum, result) => sum + result.validation.wordCount, 0) / results.length
-  assert.ok(averageWordCount >= 1150, `average substantive report depth: ${averageWordCount}`)
+  assert.ok(averageWordCount >= 1000, `average repetition-aware substantive report depth: ${averageWordCount}`)
   assert.equal(legacyMismatchCount, 4, "known before-state classification mismatch count")
 
   const case1 = results.find((result) => result.input.clientCode === "ADV-BE-01")!
@@ -201,8 +211,10 @@ async function main() {
     scores: { fizyolojik: typoScores.fizyolojik, duyusal: typoScores.duyusal, duygusal: typoScores.duygusal, bilissel: typoScores.bilissel, yurutucu: typoScores.yurutucu, intero: typoScores.intero, toplam: typoScores.toplam },
   })
   assert.equal(typoSurface.therapistObservation.present, true)
-  assert.equal(typoSurface.caseScopedEvidenceEnvelope.anamnesis_evidence.some((fact) => /ıslak boya/iu.test(fact.statement)), true)
+  assert.equal(typoSurface.caseScopedEvidenceEnvelope.anamnesis_evidence.some((fact) => /[ıI]slak boya/iu.test(fact.statement)), true)
   assert.equal(typoSurface.caseScopedEvidenceEnvelope.anamnesis_evidence.some((fact) => /^başvuru sebeb/iu.test(fact.statement)), false)
+  assert.doesNotMatch(typoSurface.finalReport, /(?:olmuyo|bilmio|yapcag|\?{2,})/iu)
+  assert.doesNotMatch(typoSurface.finalReport, /diğer iki alan/iu)
   assert.equal(typoSurface.validation.pass, true, typoSurface.validation.failureCodes.join(","))
 
   const broadSparseAnswers = answersForJuryTotals([23, 24, 25, 26, 27, 28])
@@ -216,6 +228,7 @@ async function main() {
   })
   assert.equal(broadSparse.priorityProfile.profile_breadth, "broad_multidomain")
   assert.doesNotMatch(broadSparse.finalReport, /diğer beş alan(?:ın)? (?:yaş grubuna göre )?beklenen/iu)
+  assert.doesNotMatch(broadSparse.finalReport, /(?:seçici ayrışma|birincil öncelik|görece en belirgin)/iu)
   const boldDecisions = broadSparse.lockedLanguagePlan.sections.flatMap((section) => section.paragraphs).filter((paragraph) => paragraph.emphasis === "full_bold")
   assert.equal(boldDecisions.length, 3)
   assert.equal(boldDecisions.every((paragraph) => paragraph.sentenceProvenance.length >= 1 && paragraph.sentenceProvenance.length <= 2), true)

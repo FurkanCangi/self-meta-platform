@@ -132,7 +132,10 @@ function splitClauses(segment: string): string[] {
     const outcome = clean(conditional[2])
     const hasSupport = SUPPORT_PATTERN.test(support)
     const hasIndependentOutcome = PRESERVED_PATTERN.test(outcome) || PRESERVED_SUPPLEMENTAL_PATTERN.test(outcome) || DIFFICULTY_PATTERN.test(outcome) || DIFFICULTY_SUPPLEMENTAL_PATTERN.test(outcome) || ABSENCE_PATTERN.test(outcome)
-    return hasSupport && hasIndependentOutcome ? [support, outcome] : [piece]
+    // Koşul ile sonucu iki ayrı görünür cümleye bölmek, "...verildiğinde."
+    // biçiminde yarım cümle üretiyordu. Tek kanıt atomunda birlikte tutulmaları
+    // hem anlamı hem de kaynak kapsamını korur.
+    return hasSupport && hasIndependentOutcome ? [clean(`${support} ${outcome}`)] : [piece]
   })
 }
 
@@ -228,6 +231,13 @@ function normalizedFact(clause: string): string {
   if (!withoutLabel) return ""
   const normalized = normalizeTurkishClinicalText(withoutLabel)
     .replace(/\bkapasite korunurken\b/iu, "performans korunurken")
+    .replace(/\s+bazen\s+de\s+hiç\s+olmuyor\s*[?!….]*/giu, ". Bakım veren bu güçlüğün bazı koşullarda görülmediğini de bildiriyor.")
+    .replace(/^günlük rutine daha düzenli katılım\s*[.!?]*$/iu, "Günlük rutine daha düzenli katıldığı bildiriliyor.")
+    .replace(/[!?]{2,}/gu, ".")
+    .replace(/\.{2,}/gu, ".")
+    .replace(/\s+([.,;:!?])/gu, "$1")
+    .replace(/(^|(?<!\d)[.!?]\s+)([a-zçğıöşü])/gu, (_match, boundary: string, first: string) => `${boundary}${first.toLocaleUpperCase("tr-TR")}`)
+    .trim()
   return /[.!?]$/u.test(normalized) ? normalized : `${normalized}.`
 }
 
