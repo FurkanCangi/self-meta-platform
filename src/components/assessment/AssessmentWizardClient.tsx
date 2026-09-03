@@ -34,6 +34,12 @@ type ClientInfo = {
   ageMonths: number | null
 }
 
+type ClientOption = {
+  id: string
+  code: string
+  hasReport: boolean
+}
+
 type DeterministicReportResult = {
   report: string
   reportId: string | null
@@ -188,6 +194,12 @@ export default function AssessmentWizardClient() {
   const [answers, setAnswers] = useState<number[]>(Array(questions.length).fill(3))
   const [page, setPage] = useState(0)
   const [clientInfo, setClientInfo] = useState<ClientInfo | null>(null)
+  const [availableClients, setAvailableClients] = useState<ClientOption[]>([])
+  const [selectedClientId, setSelectedClientId] = useState("")
+  const [loadingClientList, setLoadingClientList] = useState(
+    () => !clientCode.trim() && !clientIdParam.trim(),
+  )
+  const [clientListError, setClientListError] = useState<string | null>(null)
   const activeDraftKeyRef = useRef("")
   const draftHydratedRef = useRef(false)
 
@@ -199,7 +211,9 @@ export default function AssessmentWizardClient() {
     }
   }, [clientInfo])
 
-  const [loadingClient, setLoadingClient] = useState(true)
+  const [loadingClient, setLoadingClient] = useState(
+    () => Boolean(clientCode.trim() || clientIdParam.trim()),
+  )
   const [clientError, setClientError] = useState<string | null>(null)
   const [reportReady, setReportReady] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -210,7 +224,7 @@ export default function AssessmentWizardClient() {
   useEffect(() => {
     setClientInfo(null)
     setClientError(null)
-    setLoadingClient(true)
+    setLoadingClient(Boolean(clientCode.trim() || clientIdParam.trim()))
     setReportLocked(false)
     setReportLockReason("")
     setReportReady(false)
@@ -233,7 +247,7 @@ export default function AssessmentWizardClient() {
       if (!normalizedClientCode && !normalizedClientId) {
         if (!mounted) return
         setClientInfo(null)
-        setClientError("Önce danışan seçilmelidir. Danışan Listesi üzerinden “Skor Gir” ile ilerleyin.")
+        setClientError(null)
         setLoadingClient(false)
         return
       }
@@ -283,6 +297,77 @@ export default function AssessmentWizardClient() {
       mounted = false
     }
   }, [clientCode, clientIdParam])
+
+  useEffect(() => {
+    if (clientCode.trim() || clientIdParam.trim()) {
+      setAvailableClients([])
+      setSelectedClientId("")
+      setClientListError(null)
+      setLoadingClientList(false)
+      return
+    }
+
+    let mounted = true
+
+    async function loadAvailableClients() {
+      setLoadingClientList(true)
+      setClientListError(null)
+
+      try {
+        const response = await fetch("/api/app/clinical-workspace", { cache: "no-store" })
+        const payload = await response.json().catch(() => null)
+
+        if (!mounted) return
+
+        if (response.status === 401) {
+          router.replace(appSurface ? "/app-login?surface=app" : "/app-login")
+          return
+        }
+
+        if (!response.ok || payload?.ok === false) {
+          throw new Error("client_list_failed")
+        }
+
+        const rawRows: unknown[] = Array.isArray(payload?.clients) ? payload.clients : []
+        const rows: ClientOption[] = rawRows
+          .map((value): ClientOption | null => {
+            const row = value && typeof value === "object"
+              ? value as Record<string, unknown>
+              : {}
+            const id = String(row?.id || "").trim()
+            const code = String(row?.code || "").trim()
+            if (!id || !code || code === "—") return null
+
+            return {
+              id,
+              code,
+              hasReport: Boolean(row?.hasReport),
+            }
+          })
+          .filter((row: ClientOption | null): row is ClientOption => Boolean(row))
+
+        setAvailableClients(rows)
+        setSelectedClientId((current) => {
+          if (rows.some((row) => row.id === current)) return current
+          return rows.find((row) => !row.hasReport)?.id || rows[0]?.id || ""
+        })
+      } catch {
+        if (mounted) {
+          setAvailableClients([])
+          setSelectedClientId("")
+          setClientListError("Danışan listesi alınamadı. Lütfen sayfayı yenileyip tekrar deneyin.")
+        }
+      } finally {
+        if (mounted) setLoadingClientList(false)
+      }
+    }
+
+    void loadAvailableClients()
+
+    return () => {
+      mounted = false
+    }
+  }, [appSurface, clientCode, clientIdParam, router])
 
   const totalPages = Math.ceil(questions.length / perPage)
   const start = page * perPage
@@ -524,6 +609,24 @@ export default function AssessmentWizardClient() {
 
 
   const hasSelectedClient = Boolean(clientInfo)
+  const selectedClientOption =
+    availableClients.find((client) => client.id === selectedClientId) || null
+
+  function openSelectedClient() {
+    if (!selectedClientOption) return
+
+    const query = new URLSearchParams({
+      client: selectedClientOption.code,
+      client_id: selectedClientOption.id,
+    })
+
+    if (selectedClientOption.hasReport) {
+      router.push(withSurface(`/reports?${query.toString()}`))
+      return
+    }
+
+    router.push(withSurface(`/assessments?${query.toString()}`))
+  }
 
   if (!loadingClient && !hasSelectedClient) {
     return (
@@ -541,9 +644,71 @@ export default function AssessmentWizardClient() {
             Terapist değerlendirmesi için 6 alanda toplam 60 soru bulunur. Varsayılan seçim “Bazen” olarak gelir.
           </p>
 
-          <div className="mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-base font-medium text-rose-600">
-            Önce danışan seçilmelidir. Danışan Listesi üzerinden “Skor Gir” ile ilerleyin.
+          <div className="mt-6 rounded-2xl border border-blue-100 bg-blue-50 px-5 py-5">
+            <h2 className="text-lg font-bold text-slate-900">Skor girilecek danışanı seçin</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-600">
+              Kayıtlı danışanlarınızdan birini seçerek değerlendirmeye doğrudan bu ekrandan başlayabilirsiniz.
+            </p>
+
+            {loadingClientList ? (
+              <div className="mt-4 rounded-xl border border-blue-100 bg-white px-4 py-3 text-sm text-slate-600">
+                Danışanlar yükleniyor...
+              </div>
+            ) : clientListError ? (
+              <div className="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+                {clientListError}
+              </div>
+            ) : availableClients.length === 0 ? (
+              <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+                <p className="text-sm font-semibold text-slate-800">Henüz kayıtlı danışan bulunmuyor.</p>
+                <button
+                  type="button"
+                  onClick={() => router.push(withSurface("/clients/new"))}
+                  className="mt-3 inline-flex w-full items-center justify-center rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-700 md:w-auto"
+                >
+                  Yeni danışan ekle
+                </button>
+              </div>
+            ) : (
+              <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+                <label className="block">
+                  <span className="mb-2 block text-sm font-bold text-slate-700">Danışan</span>
+                  <select
+                    value={selectedClientId}
+                    onChange={(event) => setSelectedClientId(event.target.value)}
+                    className="h-12 w-full rounded-xl border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-800 outline-none transition focus:border-blue-500 focus:ring-4 focus:ring-blue-100"
+                  >
+                    {availableClients.map((client) => (
+                      <option key={client.id} value={client.id}>
+                        {client.code} {client.hasReport ? "— Rapor oluşturuldu" : "— Skor girişi hazır"}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+
+                <button
+                  type="button"
+                  onClick={openSelectedClient}
+                  disabled={!selectedClientOption}
+                  className="inline-flex h-12 w-full items-center justify-center rounded-xl bg-blue-600 px-5 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50 md:w-auto"
+                >
+                  {selectedClientOption?.hasReport ? "Raporu görüntüle" : "Skor girişine başla"}
+                </button>
+
+                <p className="text-xs leading-5 text-slate-500 md:col-span-2">
+                  Raporu daha önce oluşturulan danışanlarda yeni skor girişi açılmaz; mevcut rapora yönlendirilirsiniz.
+                </p>
+              </div>
+            )}
           </div>
+
+          <button
+            type="button"
+            onClick={() => router.push(withSurface("/clients"))}
+            className="mt-4 inline-flex items-center justify-center rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 transition hover:bg-slate-50"
+          >
+            Danışan listesine git
+          </button>
         </div>
       </div>
     )
