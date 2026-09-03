@@ -341,9 +341,9 @@ function parseObservationExtras(value: unknown): StudentObservationScope | null 
   return Object.freeze({
     singleObservationLimit: row.singleObservationLimit,
     additionalContext: row.additionalContext,
-    multiplePlausibleExplanations: row.multiplePlausibleExplanations === true,
-    contextualJudgment: row.contextualJudgment === true,
-    withinTargetStateContrast: row.withinTargetStateContrast === true,
+    ...(row.multiplePlausibleExplanations === true ? { multiplePlausibleExplanations: true as const } : {}),
+    ...(row.contextualJudgment === true ? { contextualJudgment: true as const } : {}),
+    ...(row.withinTargetStateContrast === true ? { withinTargetStateContrast: true as const } : {}),
   })
 }
 

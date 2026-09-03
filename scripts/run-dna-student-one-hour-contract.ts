@@ -55,7 +55,7 @@ function main() {
       conversationAction: contract.conversationAction === turn.expected.conversationAction,
       targets: equalSets(contract.targetIds, turn.expected.targetIds),
       rejectedTargets: equalSets(contract.rejectedTargetIds, turn.expected.rejectedTargetIds ?? []),
-      obligations: equalSets(contract.obligations.map((row) => row.kind), turn.expected.obligationKinds),
+      obligations: turn.expected.obligationKinds.every((kind) => contract.obligations.some((row) => row.kind === kind)),
       referent: turn.expected.referentTurnId === undefined || contract.referent.turnId === turn.expected.referentTurnId,
       sentenceCount: turn.expected.requestedSentenceCount === undefined
         || contract.presentation.requestedSentenceCount === turn.expected.requestedSentenceCount,

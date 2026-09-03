@@ -314,7 +314,11 @@ function semanticTaskCandidates(message: string, explicitTargetCount: number): r
   const caseQuestion = /\b(?:diyebilir miyim|diyebilir miyiz|ne olabilir|ne dusun\w*|nasil dusun\w*|kesin soyle|zayif diyebilir|ilgili mi|iyi mi kotu mu|bu ne simdi|hangisi)\b/.test(normalized)
     || (/\bne demek\b/.test(normalized) && /\bgorevi birak\w*\b/.test(normalized))
   const caseScene = /\b(?:cocu(?:k|g)\w*|ogrenci\w*|vaka\w*|davranis\w*|sadece bu|gorevi birak\w*|sinirlen\w*|ses\w* yuksel\w*)\b/.test(normalized)
-  add("case_reasoning", caseQuestion && (caseScene || /\biyi mi kotu mu\b/.test(normalized)))
+  add("case_reasoning", caseQuestion && (
+    caseScene
+    || /\biyi mi kotu mu\b/.test(normalized)
+    || (explicitTargetCount > 0 && tasks.includes("observe"))
+  ))
   add("define", /\b(?:ne demek|nedir|neydi|tam olarak ne|neyi kastediyoruz|neyi ifade eder)\b/.test(normalized))
   add("explain", /\b(?:anlat|acikla|nasil dusun\w*|nasil yer al\w*|ne anlama gelir|baglama gore|bunun icinde mi)\b/.test(normalized))
   if (!tasks.length) tasks.push("explain")
@@ -370,31 +374,31 @@ function observationExtras(message: string, tasks: readonly StudentSemanticTask[
   const normalized = normalizeDnaChatText(message)
   const multiplePlausibleExplanations = tasks.includes("case_reasoning")
   const contextualJudgment = /\biyi mi kotu mu\b/.test(normalized)
+    || /\b(?:iyi|kotu) diyebilir\w*\b/.test(normalized)
   const withinTargetStateContrast = tasks.includes("compare")
     && /\b(?:dusuk|az)\b.{0,40}\b(?:yuksek|cok)\b/u.test(normalized)
+  const signals = Object.freeze({
+    ...(multiplePlausibleExplanations ? { multiplePlausibleExplanations: true as const } : {}),
+    ...(contextualJudgment ? { contextualJudgment: true as const } : {}),
+    ...(withinTargetStateContrast ? { withinTargetStateContrast: true as const } : {}),
+  })
   if (tasks.includes("observe") || tasks.includes("case_reasoning")) {
     return Object.freeze({
       singleObservationLimit: true,
       additionalContext: true,
-      multiplePlausibleExplanations,
-      contextualJudgment,
-      withinTargetStateContrast,
+      ...signals,
     })
   }
   if (!tasks.includes("compare")) return Object.freeze({
     singleObservationLimit: false,
     additionalContext: false,
-    multiplePlausibleExplanations,
-    contextualJudgment,
-    withinTargetStateContrast,
+    ...signals,
   })
   const singleObservationLimit = /\b(?:tek (?:bir )?gozlem\w*|sadece bu|kesin soyle|kesin diy|hangisi olabilir|ne dusun\w*|neden kesin|niye kesin)\b/.test(normalized)
   return Object.freeze({
     singleObservationLimit,
     additionalContext: singleObservationLimit && /\b(?:baska|neye bak|hangisi olabilir|ne dusun\w*|neden kesin|niye kesin)\b/.test(normalized),
-    multiplePlausibleExplanations,
-    contextualJudgment,
-    withinTargetStateContrast,
+    ...signals,
   })
 }
 
