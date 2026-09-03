@@ -1,4 +1,5 @@
 import { getDnaOwnerBookTopicClaims } from "../ownerBookRuntime"
+import { normalizeDnaChatText } from "../text"
 import type { StudentAnswerObligationKind, StudentRequestContract } from "./contracts"
 import {
   buildStudentS13ResolvedRequestHandoff,
@@ -12,6 +13,7 @@ export type StudentAnswerEvidenceClaim = Readonly<{
   passageId: string
   sourceId: string
   text: string
+  role: "target" | "context" | "contrast"
 }>
 
 export type StudentAnswerExecutionPlan = Readonly<{
@@ -110,22 +112,46 @@ function maximumClaims(contract: StudentRequestContract) {
   return 3
 }
 
+export function classifyStudentAnswerEvidenceClaimRole(
+  text: string,
+  topicTitle: string,
+  visibleAliases: readonly string[],
+) {
+  const normalizedText = normalizeDnaChatText(text)
+  const normalizedAliases = visibleAliases.map(normalizeDnaChatText)
+  if (normalizedAliases.some((alias) => normalizedText.includes(alias))) return "target" as const
+  const leaf = topicTitle.split(" · ").at(-1) ?? topicTitle
+  const contrastLabels = leaf.split(/\s+ve\s+/iu)
+    .map((label) => normalizeDnaChatText(label))
+    .filter((label) => label.length >= 4 && !normalizedAliases.some((alias) => label.includes(alias) || alias.includes(label)))
+  if (contrastLabels.some((label) => normalizedText.includes(label))) return "contrast" as const
+  return "context" as const
+}
+
 function evidenceForTarget(
   target: StudentS13ResolvedRequestHandoff["crosswalk"][number],
   contract: StudentRequestContract,
 ) {
-  const claims = getDnaOwnerBookTopicClaims(target.ownerBookTopicId, true)
+  const visibleAliases = TARGET_VISIBLE_ALIASES[target.studentTargetId]
+  if (!visibleAliases?.length) throw new Error(`dna_student_answer_visible_alias_missing:${target.studentTargetId}`)
+  const rankedClaims = getDnaOwnerBookTopicClaims(target.ownerBookTopicId, true)
     .filter((claim) => claim.text.trim().length > 0)
-    .slice(0, maximumClaims(contract))
     .map((claim) => Object.freeze({
       claimId: claim.claimId,
       passageId: claim.passageId,
       sourceId: claim.sourceId,
       text: claim.text,
+      role: classifyStudentAnswerEvidenceClaimRole(claim.text, target.ownerBookTopicTitle, visibleAliases),
     }))
+    .sort((left, right) => {
+      const rank = { target: 0, context: 1, contrast: 2 } as const
+      return rank[left.role] - rank[right.role]
+    })
+  const claims = rankedClaims.slice(0, maximumClaims(contract))
   if (!claims.length) throw new Error(`dna_student_answer_evidence_missing:${target.studentTargetId}`)
-  const visibleAliases = TARGET_VISIBLE_ALIASES[target.studentTargetId]
-  if (!visibleAliases?.length) throw new Error(`dna_student_answer_visible_alias_missing:${target.studentTargetId}`)
+  if (!claims.some((claim) => claim.role !== "contrast")) {
+    throw new Error(`dna_student_answer_non_contrast_evidence_missing:${target.studentTargetId}`)
+  }
   return Object.freeze({
     studentTargetId: target.studentTargetId,
     ownerBookTopicId: target.ownerBookTopicId,
@@ -218,6 +244,14 @@ export function validateStudentAnswerExecutionPlan(
     if (!row.visibleAliases.length || row.visibleAliases.some((alias) => !TARGET_VISIBLE_ALIASES[row.studentTargetId]?.includes(alias))) return false
     const allowedClaims = new Set(getDnaOwnerBookTopicClaims(row.ownerBookTopicId, true).map((claim) => claim.claimId))
     if (row.claims.some((claim) => !allowedClaims.has(claim.claimId))) return false
+    if (!row.claims.some((claim) => claim.role !== "contrast")) return false
+    if (row.claims.some((claim) => claim.role !== classifyStudentAnswerEvidenceClaimRole(
+      claim.text,
+      row.ownerBookTopicTitle,
+      row.visibleAliases,
+    ))) {
+      return false
+    }
   }
   if (!sameSet(plan.obligations.map((row) => row.id), contract.obligations.map((row) => row.id))) return false
   for (const obligation of contract.obligations) {

@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs"
 import {
   applyStudentRequestContract,
   buildStudentAnswerExecutionPlan,
+  classifyStudentAnswerEvidenceClaimRole,
   createEmptyStudentConversationState,
   resolveStudentEvidenceFirstRequest,
   validateStudentAnswerExecutionPlan,
@@ -39,6 +40,8 @@ for (const conversation of fixture.conversations) {
     assert.equal(plan.targetEvidence.some((row) => plan.rejectedTargetIds.includes(row.studentTargetId)), false,
       `${turn.turnId}: rejected target evidence`)
     assert.equal(plan.targetEvidence.every((row) => row.claims.length > 0), true, `${turn.turnId}: source evidence`)
+    assert.equal(plan.targetEvidence.every((row) => row.claims.some((claim) => claim.role !== "contrast")), true,
+      `${turn.turnId}: non-contrast target evidence`)
     assert.equal(plan.rawQuestionStored, false, `${turn.turnId}: raw question storage`)
     if (plan.executionRoute === "provider_grounded") providerGrounded += 1
     else localSafetyBoundary += 1
@@ -65,6 +68,18 @@ assert.equal(plans, 40)
 assert.ok(providerGrounded > 0, "general educational answers must retain a grounded provider route")
 assert.ok(localSafetyBoundary > 0, "case and treatment boundaries must remain local")
 assert.equal(maximumTargets, 7)
+const workingMemoryContrastTagged = classifyStudentAnswerEvidenceClaimRole(
+  "Bir telefon numarasını birkaç saniye akılda tutmak kısa süreli bellek örneğidir.",
+  "Çalışma Belleği · Çalışma Belleği ve Kısa Süreli Bellek",
+  ["çalışma belleği"],
+) === "contrast"
+const workingMemoryTargetAvailable = classifyStudentAnswerEvidenceClaimRole(
+  "Çalışma belleği ise bu bilginin korunurken aynı zamanda işlenmesini veya güncellenmesini içerir.",
+  "Çalışma Belleği · Çalışma Belleği ve Kısa Süreli Bellek",
+  ["çalışma belleği"],
+) === "target"
+assert.equal(workingMemoryContrastTagged, true)
+assert.equal(workingMemoryTargetAvailable, true)
 
 console.log(JSON.stringify({
   ok: true,
@@ -75,5 +90,7 @@ console.log(JSON.stringify({
   maximumTargets,
   missingEvidenceMutationsRejected: plans,
   missingObligationMutationsRejected: plans,
+  workingMemoryContrastTagged,
+  workingMemoryTargetAvailable,
   providerCalls: 0,
 }, null, 2))

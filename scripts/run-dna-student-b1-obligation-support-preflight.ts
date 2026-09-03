@@ -29,31 +29,36 @@ async function main() {
   const bytes = readFileSync(FIXTURE_PATH)
   assert.equal(createHash("sha256").update(bytes).digest("hex"), EXPECTED_FIXTURE_SHA256)
   const fixture = JSON.parse(bytes.toString("utf8")) as Fixture
-  const conversation = fixture.conversations.find((row) => row.conversationId === "STUDENT40-C03")
+  const conversation = fixture.conversations.find((row) => row.conversationId === "STUDENT40-C02")
   assert.ok(conversation)
-  const first = conversation.turns.find((row) => row.turnId === "STUDENT40-C03-T01")
-  const example = conversation.turns.find((row) => row.turnId === "STUDENT40-C03-T02")
-  assert.ok(first && example)
-
   let state = createEmptyStudentConversationState()
-  const firstResolution = resolveStudentEvidenceFirstRequest({ turnId: first.turnId, message: first.user, state })
-  if (!firstResolution.ok) throw new Error(`first_request_contract:${firstResolution.reason}`)
-  state = applyStudentRequestContract(state, firstResolution.contract)
-
-  const exampleResolution = resolveStudentEvidenceFirstRequest({ turnId: example.turnId, message: example.user, state })
-  if (!exampleResolution.ok) throw new Error(`example_request_contract:${exampleResolution.reason}`)
-  assert.deepEqual(exampleResolution.contract.obligations.map((row) => row.kind), [
+  let target: (typeof conversation.turns)[number] | null = null
+  let targetResolution: ReturnType<typeof resolveStudentEvidenceFirstRequest> | null = null
+  for (const turn of conversation.turns) {
+    const resolution = resolveStudentEvidenceFirstRequest({ turnId: turn.turnId, message: turn.user, state })
+    if (!resolution.ok) throw new Error(`request_contract:${turn.turnId}:${resolution.reason}`)
+    if (turn.turnId === "STUDENT40-C02-T07") {
+      target = turn
+      targetResolution = resolution
+      break
+    }
+    state = applyStudentRequestContract(state, resolution.contract)
+  }
+  assert.ok(target && targetResolution?.ok)
+  assert.deepEqual(targetResolution.contract.obligations.map((row) => row.kind), [
+    "distinguish_targets",
+    "explain_relation",
     "give_concrete_example",
     "bind_example_to_target",
   ])
 
-  const execution = await executeStudentAnswer({ question: example.user, contract: exampleResolution.contract })
+  const execution = await executeStudentAnswer({ question: target.user, contract: targetResolution.contract })
   if (!execution.ok) {
     const usage = calculateDnaChatLunaUsage(execution.provider.usage)
     console.log(JSON.stringify({
       ok: false,
-      gate: "STUDENT_B1_TARGET_PREFIX_PREFLIGHT",
-      turnId: example.turnId,
+      gate: "STUDENT_B1_EVIDENCE_ROLE_PREFLIGHT",
+      turnId: target.turnId,
       failure: execution.reason,
       detail: execution.reason === "candidate_invalid" ? execution.failureCodes : execution.failure.reason,
       providerCalls: execution.provider.calls,
@@ -69,19 +74,27 @@ async function main() {
   assert.equal(execution.provider.rawOutputStored, false)
   assert.deepEqual(
     [...execution.candidate.blocks.flatMap((block) => block.obligationIds)].sort(),
-    [...exampleResolution.contract.obligations.map((row) => row.id)].sort(),
+    [...targetResolution.contract.obligations.map((row) => row.id)].sort(),
   )
   assert.equal(execution.answer, execution.candidate.blocks.map((block) => block.text).join(" "))
-  assert.match(execution.answer, /^(?:ko-regülasyon|eş düzenleme|eş-düzenleme) açısından:/iu)
+  assert.match(execution.answer, /^planlama ve çalışma belleği açısından:/iu)
+  assert.doesNotMatch(execution.answer, /telefon numara/iu)
+  const contrastClaimIds = new Set(execution.plan.targetEvidence.flatMap((evidence) =>
+    evidence.claims.filter((claim) => claim.role === "contrast").map((claim) => claim.claimId)))
+  const exampleObligationIds = new Set(execution.plan.obligations
+    .filter((obligation) => ["give_concrete_example", "bind_example_to_target"].includes(obligation.kind))
+    .map((obligation) => obligation.id))
+  assert.equal(execution.candidate.blocks.filter((block) => block.obligationIds.some((id) => exampleObligationIds.has(id)))
+    .some((block) => block.usedClaimIds.some((id) => contrastClaimIds.has(id))), false)
   const usage = calculateDnaChatLunaUsage(execution.provider.usage)
   assert.ok(usage.costMicrousd <= MAX_COST_MICROUSD)
 
   console.log(JSON.stringify({
     ok: true,
-    gate: "STUDENT_B1_TARGET_PREFIX_PREFLIGHT",
-    turnId: example.turnId,
-    targetIds: exampleResolution.contract.targetIds,
-    obligationKinds: exampleResolution.contract.obligations.map((row) => row.kind),
+    gate: "STUDENT_B1_EVIDENCE_ROLE_PREFLIGHT",
+    turnId: target.turnId,
+    targetIds: targetResolution.contract.targetIds,
+    obligationKinds: targetResolution.contract.obligations.map((row) => row.kind),
     answer: execution.answer,
     blocks: execution.candidate.blocks,
     providerCalls: execution.provider.calls,
@@ -94,7 +107,7 @@ async function main() {
 void main().catch((error) => {
   console.error(JSON.stringify({
     ok: false,
-    gate: "STUDENT_B1_TARGET_PREFIX_PREFLIGHT",
+    gate: "STUDENT_B1_EVIDENCE_ROLE_PREFLIGHT",
     failure: error instanceof Error ? error.message : String(error),
   }))
   process.exitCode = 1

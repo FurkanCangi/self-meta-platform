@@ -12,7 +12,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@5" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@6" as const
 export const DNA_STUDENT_ANSWER_EXECUTOR_TIMEOUT_MS = 20_000
 export const DNA_STUDENT_ANSWER_EXECUTOR_MAX_PROVIDER_CALLS = 1
 
@@ -22,6 +22,7 @@ export const DNA_STUDENT_ANSWER_FAILURE_CODES = Object.freeze([
   "obligation_coverage_mismatch",
   "policy_coverage_mismatch",
   "claim_outside_locked_evidence",
+  "contrast_claim_used_as_target",
   "target_without_locked_claim",
   "example_not_identified",
   "sentence_count_mismatch",
@@ -166,6 +167,13 @@ export function validateStudentAnswerCandidate(input: Readonly<{
       || !visibleObligation(obligation.kind, normalizeDnaChatText(block.text))) {
       failures.add("obligation_not_visible")
     }
+    if (block && ["give_concrete_example", "bind_example_to_target"].includes(obligation.kind)) {
+      const contrastClaimIds = new Set(plan.targetEvidence.flatMap((target) =>
+        target.claims.filter((claim) => claim.role === "contrast").map((claim) => claim.claimId)))
+      if (block.usedClaimIds.some((claimId) => contrastClaimIds.has(claimId))) {
+        failures.add("contrast_claim_used_as_target")
+      }
+    }
   }
   if (!sameSet(candidate.usedPolicyUnitIds, plan.policyUnits.map((row) => row.id))) failures.add("policy_coverage_mismatch")
   const allowedClaimIds = new Set(plan.targetEvidence.flatMap((row) => row.claims.map((claim) => claim.claimId)))
@@ -212,7 +220,8 @@ function composeCandidate(
 function localSafetyCandidate(plan: StudentAnswerExecutionPlan): StudentAnswerCandidate {
   const targetStatements = plan.targetEvidence.map((target) => {
     const label = target.visibleAliases[0] ?? target.ownerBookTopicTitle.split(" · ").at(-1) ?? target.studentTargetId
-    return `${label}: ${target.claims[0]!.text}`
+    const claim = target.claims.find((candidate) => candidate.role !== "contrast") ?? target.claims[0]!
+    return `${label}: ${claim.text}`
   })
   const policyStatements = plan.policyUnits.map((unit) => unit.text)
   const obligationKinds = new Set(plan.obligations.map((row) => row.kind))
@@ -231,7 +240,8 @@ function localSafetyCandidate(plan: StudentAnswerExecutionPlan): StudentAnswerCa
     text,
     targetIds: Object.freeze([...plan.activeTargetIds]),
     obligationIds: Object.freeze(plan.obligations.map((obligation) => obligation.id)),
-    usedClaimIds: Object.freeze(plan.targetEvidence.map((row) => row.claims[0]!.claimId)),
+    usedClaimIds: Object.freeze(plan.targetEvidence.map((row) =>
+      (row.claims.find((candidate) => candidate.role !== "contrast") ?? row.claims[0]!).claimId)),
     usedPolicyUnitIds: Object.freeze(plan.policyUnits.map((row) => row.id)),
   })], exampleStatement ? "hypothetical" : "none")
 }
@@ -254,7 +264,8 @@ function slotMetadata(plan: StudentAnswerExecutionPlan, index: number) {
   const targetIds = explicitActiveTargets.length ? explicitActiveTargets : [...plan.activeTargetIds]
   const usedClaimIds = targetIds.flatMap((targetId) => {
     const evidence = plan.targetEvidence.find((row) => row.studentTargetId === targetId)
-    return evidence?.claims[0] ? [evidence.claims[0].claimId] : []
+    const claim = evidence?.claims.find((candidate) => candidate.role !== "contrast")
+    return claim ? [claim.claimId] : []
   })
   const policyId = POLICY_ID_BY_OBLIGATION_KIND[obligation.kind]
   const usedPolicyUnitIds = policyId && plan.policyUnits.some((unit) => unit.id === policyId) ? [policyId] : []
@@ -310,7 +321,9 @@ function providerContent(input: Readonly<{
             targetId: target.studentTargetId,
             title: target.ownerBookTopicTitle,
             visibleAliases: target.visibleAliases,
-            lockedClaims: target.claims,
+            lockedClaims: ["give_concrete_example", "bind_example_to_target"].includes(obligation.kind)
+              ? target.claims.filter((claim) => claim.role !== "contrast")
+              : target.claims,
           })),
         policyUnits: input.plan.policyUnits.filter((unit) => metadata.usedPolicyUnitIds.includes(unit.id)),
       }
@@ -330,7 +343,7 @@ function visibleTargetPrefix(plan: StudentAnswerExecutionPlan) {
 }
 
 const PROVIDER_INSTRUCTIONS = `
-Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır cevap metinleri yaz. Yalnız şemada hazır bulunan b1, b2 gibi metin kutularını ve illustrationKind alanını doldur; hedef, yükümlülük, kanıt, politika veya blok kimliği üretme. Her metin kutusu answerSlots içindeki aynı slotId görevini gerçekten yerine getirsin. Sistem kutuları sırayla birleştirerek son cevabı oluşturacak; bu yüzden kutular birlikte tek, akıcı ve tekrarsız bir cevap gibi okunmalıdır. Her slotun activeTargets bölümündeki her hedef için visibleAliases adlarından en az birini görünür metinde yaz. Bilimsel içerikte yalnız o slotun lockedClaims cümlelerini kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İstenen toplam cümle sayısını bütün kutuların birleşiminde tam koru. İç sistem dilini görünür metne yazma.
+Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır cevap metinleri yaz. Yalnız şemada hazır bulunan b1, b2 gibi metin kutularını ve illustrationKind alanını doldur; hedef, yükümlülük, kanıt, politika veya blok kimliği üretme. Her metin kutusu answerSlots içindeki aynı slotId görevini gerçekten yerine getirsin. Sistem kutuları sırayla birleştirerek son cevabı oluşturacak; bu yüzden kutular birlikte tek, akıcı ve tekrarsız bir cevap gibi okunmalıdır. Her slotun activeTargets bölümündeki her hedef için visibleAliases adlarından en az birini görünür metinde yaz. Bilimsel içerikte yalnız o slotun lockedClaims cümlelerini kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. role=contrast olan cümle başka bir kavramın karşıt bilgisidir; onu aktif hedefin tanımı, özelliği veya örneği gibi kullanma. Örnek ve örnek-bağlama slotlarına contrast cümlesi zaten verilmez. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İstenen toplam cümle sayısını bütün kutuların birleşiminde tam koru. İç sistem dilini görünür metne yazma.
 `.trim()
 
 function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan): StudentAnswerCandidate | null {

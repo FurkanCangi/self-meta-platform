@@ -185,6 +185,55 @@ async function main() {
     }).includes("duplicate_contract_reference"))
   }
 
+  const comparisonConversation = fixture.conversations.find((row) => row.turns.some((turn) =>
+    turn.turnId === "STUDENT40-C02-T07"))!
+  let comparisonState: StudentConversationState = createEmptyStudentConversationState()
+  let comparisonPlan: ReturnType<typeof buildStudentAnswerExecutionPlan> | null = null
+  for (const turn of comparisonConversation.turns) {
+    const resolution = resolveStudentEvidenceFirstRequest({ turnId: turn.turnId, message: turn.user, state: comparisonState })
+    if (!resolution.ok) throw new Error(`comparison role fixture:${turn.turnId}`)
+    if (turn.turnId === "STUDENT40-C02-T07") {
+      comparisonPlan = buildStudentAnswerExecutionPlan({ question: turn.user, contract: resolution.contract })
+      break
+    }
+    comparisonState = applyStudentRequestContract(comparisonState, resolution.contract)
+  }
+  assert.ok(comparisonPlan)
+  const contrastClaim = {
+    claimId: "owner.unit:2252:233bda4b4086",
+    passageId: "owner-book:paragraph:1576:b5f656d684:sentence:1",
+    sourceId: "book.self-regulation.owner-current",
+    text: "Bir telefon numarasını birkaç saniye akılda tutmak kısa süreli bellek örneğidir.",
+    role: "contrast" as const,
+  }
+  const comparisonPlanWithContrast = {
+    ...comparisonPlan,
+    targetEvidence: comparisonPlan.targetEvidence.map((row) => row.studentTargetId === "working_memory"
+      ? { ...row, claims: [...row.claims, contrastClaim] }
+      : row),
+  }
+  const planningClaim = comparisonPlanWithContrast.targetEvidence.find((row) => row.studentTargetId === "planning")!
+    .claims.find((claim) => claim.role !== "contrast")!
+  const contrastAnswer = "Planlama ve çalışma belleği açısından: Örneğin iki kavramı aynı durumda ayrı ele alırız."
+  const contrastCandidate = {
+    answer: contrastAnswer,
+    blocks: [{
+      blockId: "b1",
+      text: contrastAnswer,
+      targetIds: [...comparisonPlanWithContrast.activeTargetIds],
+      obligationIds: comparisonPlanWithContrast.obligations.map((row) => row.id),
+      usedClaimIds: [planningClaim.claimId, contrastClaim.claimId],
+      usedPolicyUnitIds: comparisonPlanWithContrast.policyUnits.map((row) => row.id),
+    }],
+    addressedTargetIds: [...comparisonPlanWithContrast.activeTargetIds],
+    addressedObligationIds: comparisonPlanWithContrast.obligations.map((row) => row.id),
+    usedClaimIds: [planningClaim.claimId, contrastClaim.claimId],
+    usedPolicyUnitIds: comparisonPlanWithContrast.policyUnits.map((row) => row.id),
+    illustrationKind: "hypothetical" as const,
+  }
+  assert.ok(validateStudentAnswerCandidate({ candidate: contrastCandidate, plan: comparisonPlanWithContrast })
+    .includes("contrast_claim_used_as_target"))
+
   const targetlessFetch: typeof fetch = async (_input, init) => {
     const request = JSON.parse(String(init?.body)) as { input: string }
     const content = JSON.parse(request.input) as {
@@ -258,6 +307,7 @@ async function main() {
     unboundObligationBlockRejected: true,
     duplicateObligationBlockReferenceRejected: true,
     deterministicTargetPrefix: true,
+    contrastClaimTargetBindingRejected: true,
     rejectedCandidateTelemetryPreserved: true,
   }, null, 2))
 }

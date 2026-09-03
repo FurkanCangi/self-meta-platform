@@ -59,6 +59,7 @@ export {
 } from "./runtimeBridge"
 export {
   buildStudentAnswerExecutionPlan,
+  classifyStudentAnswerEvidenceClaimRole,
   DNA_STUDENT_ANSWER_EXECUTION_PLAN_VERSION,
   validateStudentAnswerExecutionPlan,
 } from "./answerExecution"
