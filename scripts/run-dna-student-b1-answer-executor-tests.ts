@@ -32,6 +32,7 @@ const mockFetch: typeof fetch = async (_input, init) => {
     operation: string
     answerSlots: readonly Readonly<{
       slotId: string
+      slotKind: "content" | "example"
       obligations: readonly Readonly<{ id: string; kind: string }>[]
       activeTargets: readonly Readonly<{
         targetId: string
@@ -46,10 +47,10 @@ const mockFetch: typeof fetch = async (_input, init) => {
   const slotText = (slot: (typeof content.answerSlots)[number]) => {
     const labels = slot.activeTargets.map((row) => row.visibleAliases[0]).join(", ")
     const kinds = new Set(slot.obligations.map((obligation) => obligation.kind))
-    if (kinds.has("use_shared_scenario")) return `Örneğin tek bir sınıf görevinde öğrenci ${labels} becerilerini aynı durum içinde ayrı ayrı kullanır.`
+    if (kinds.has("use_shared_scenario")) return `Tek bir sınıf görevinde öğrenci ${labels} becerilerini aynı durum içinde ayrı ayrı kullanır.`
     if (kinds.has("distinguish_targets")) return `${labels} aynı şey değildir.`
     if (kinds.has("explain_relation")) return `${labels} arasındaki ilişki ayrı kapsamlarıyla açıklanır.`
-    if (kinds.has("give_concrete_example")) return `Örneğin, ${labels} için kısa bir öğrenci durumu düşün.`
+    if (kinds.has("give_concrete_example")) return `${labels} için kısa bir öğrenci durumu anlatılır.`
     if (kinds.has("bind_example_to_target")) return `Bu örnek ${labels} kavramıyla doğrudan bağ kurar.`
     if (kinds.has("summarize_known")) return `${labels} konuşmada bildiğimiz başlıklardır.`
     if (kinds.has("summarize_unknown")) return "Bu açıklama tek başına bir öğrenci hakkında kesin sonuç vermez."
@@ -92,6 +93,12 @@ async function main() {
       assert.equal(result.provider.rawOutputStored, false, `${turn.turnId}: raw output storage`)
       assert.equal(validateStudentAnswerCandidate({ candidate: result.candidate, plan: result.plan }).length, 0,
         `${turn.turnId}: final candidate validation`)
+      for (const block of result.candidate.blocks) {
+        const containsExampleDuty = result.plan.obligations.some((obligation) =>
+          obligation.kind === "give_concrete_example" && block.obligationIds.includes(obligation.id))
+        assert.equal(block.blockKind, containsExampleDuty ? "example" : "content", `${turn.turnId}: typed block kind`)
+        if (containsExampleDuty) assert.match(block.text, /Örnek:/u, `${turn.turnId}: deterministic example label`)
+      }
       if (turn.turnId === "STUDENT40-C02-T07") {
         const sharedIds = result.plan.obligations
           .filter((obligation) => ["give_concrete_example", "bind_example_to_target", "use_shared_scenario"].includes(obligation.kind))
@@ -129,6 +136,7 @@ async function main() {
   const validAnswer = "Self-regülasyon için kaynakla sınırlı kısa açıklama."
   const validBlock = {
     blockId: "b1",
+    blockKind: "content" as const,
     text: validAnswer,
     targetIds: [...plan.activeTargetIds],
     obligationIds: plan.obligations.map((row) => row.id),
@@ -229,11 +237,12 @@ async function main() {
   }
   const planningClaim = comparisonPlanWithContrast.targetEvidence.find((row) => row.studentTargetId === "planning")!
     .claims.find((claim) => claim.role !== "contrast")!
-  const contrastAnswer = "Planlama ve çalışma belleği açısından: Örneğin iki kavramı aynı durumda ayrı ele alırız."
+  const contrastAnswer = "Planlama ve çalışma belleği açısından: Örnek: İki kavramı aynı durumda ayrı ele alırız."
   const contrastCandidate = {
     answer: contrastAnswer,
     blocks: [{
       blockId: "b1",
+      blockKind: "example" as const,
       text: contrastAnswer,
       targetIds: [...comparisonPlanWithContrast.activeTargetIds],
       obligationIds: comparisonPlanWithContrast.obligations.map((row) => row.id),
@@ -251,6 +260,7 @@ async function main() {
   const sharedScenarioObligation = comparisonPlanWithContrast.obligations.find((row) => row.kind === "use_shared_scenario")!
   const splitScenarioBlock = {
     blockId: "b2",
+    blockKind: "content" as const,
     text: "Aynı senaryo ikinci bir blokta ayrıca ele alınıyor.",
     targetIds: [...comparisonPlanWithContrast.activeTargetIds],
     obligationIds: [sharedScenarioObligation.id],
@@ -270,6 +280,22 @@ async function main() {
     },
     plan: comparisonPlanWithContrast,
   }).includes("shared_scenario_block_mismatch"))
+  assert.ok(validateStudentAnswerCandidate({
+    candidate: {
+      ...contrastCandidate,
+      blocks: [{ ...contrastCandidate.blocks[0]!, blockKind: "content" as const }],
+    },
+    plan: comparisonPlanWithContrast,
+  }).includes("example_block_role_mismatch"))
+  const unlabeledExampleText = contrastCandidate.blocks[0]!.text.replace("Örnek: ", "")
+  assert.ok(validateStudentAnswerCandidate({
+    candidate: {
+      ...contrastCandidate,
+      answer: unlabeledExampleText,
+      blocks: [{ ...contrastCandidate.blocks[0]!, text: unlabeledExampleText }],
+    },
+    plan: comparisonPlanWithContrast,
+  }).includes("example_block_role_mismatch"))
 
   const targetlessFetch: typeof fetch = async (_input, init) => {
     const request = JSON.parse(String(init?.body)) as { input: string }
@@ -347,6 +373,8 @@ async function main() {
     contrastClaimTargetBindingRejected: true,
     sharedScenarioGrouped,
     splitSharedScenarioRejected: true,
+    wrongExampleBlockRoleRejected: true,
+    missingDeterministicExampleLabelRejected: true,
     rejectedCandidateTelemetryPreserved: true,
   }, null, 2))
 }

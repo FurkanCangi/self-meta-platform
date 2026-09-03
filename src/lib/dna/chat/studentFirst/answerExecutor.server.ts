@@ -12,7 +12,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@7" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@8" as const
 export const DNA_STUDENT_ANSWER_EXECUTOR_TIMEOUT_MS = 20_000
 export const DNA_STUDENT_ANSWER_EXECUTOR_MAX_PROVIDER_CALLS = 1
 
@@ -31,12 +31,14 @@ export const DNA_STUDENT_ANSWER_FAILURE_CODES = Object.freeze([
   "target_not_visible",
   "obligation_not_visible",
   "shared_scenario_block_mismatch",
+  "example_block_role_mismatch",
 ] as const)
 
 export type StudentAnswerFailureCode = typeof DNA_STUDENT_ANSWER_FAILURE_CODES[number]
 
 export type StudentAnswerBlock = Readonly<{
   blockId: string
+  blockKind: "content" | "example"
   text: string
   targetIds: readonly string[]
   obligationIds: readonly string[]
@@ -114,7 +116,6 @@ function sentenceCount(answer: string) {
 }
 
 function visibleObligation(kind: StudentRequestContract["obligations"][number]["kind"], normalized: string) {
-  if (kind === "give_concrete_example") return /\b(?:ornek\w*|ornegin|mesela|varsay\w*|dusun\w*)\b/u.test(normalized)
   if (kind === "state_single_observation_limit") return /\b(?:tek\s+(?:bir\s+)?(?:gozlem|davranis)|yalnizca\s+bu\s+durum)\b/u.test(normalized)
     && /\b(?:yeterli\s+degil|karar\w*|kesin\w*|gostermez\w*|cikarilamaz\w*)\b/u.test(normalized)
   if (kind === "name_additional_context") return /\b(?:farkli\s+(?:zaman|ortam|gorev)|oncesi\w*\s+(?:ve|ile)\s+sonrasi\w*|destek\w*\s+nasil\s+degis)\b/u.test(normalized)
@@ -160,6 +161,12 @@ export function validateStudentAnswerCandidate(input: Readonly<{
   if (!sameSet(flattenedObligationIds, plan.obligations.map((row) => row.id))) {
     failures.add("obligation_coverage_mismatch")
   }
+  for (const block of candidate.blocks) {
+    const blockObligations = plan.obligations.filter((obligation) => block.obligationIds.includes(obligation.id))
+    const expectedKind: StudentAnswerBlock["blockKind"] = blockObligations
+      .some((obligation) => obligation.kind === "give_concrete_example") ? "example" : "content"
+    if (block.blockKind !== expectedKind) failures.add("example_block_role_mismatch")
+  }
   for (const obligation of plan.obligations) {
     const block = candidate.blocks.find((candidateBlock) => candidateBlock.obligationIds.includes(obligation.id))
     const activeObligationTargets = obligation.targetIds.filter((targetId) => plan.activeTargetIds.includes(targetId))
@@ -167,6 +174,10 @@ export function validateStudentAnswerCandidate(input: Readonly<{
       || activeObligationTargets.some((targetId) => !block.targetIds.includes(targetId))
       || !visibleObligation(obligation.kind, normalizeDnaChatText(block.text))) {
       failures.add("obligation_not_visible")
+    }
+    if (obligation.kind === "give_concrete_example"
+      && (!block || block.blockKind !== "example" || !block.text.includes("Örnek:"))) {
+      failures.add("example_block_role_mismatch")
     }
     if (block && ["give_concrete_example", "bind_example_to_target"].includes(obligation.kind)) {
       const contrastClaimIds = new Set(plan.targetEvidence.flatMap((target) =>
@@ -214,6 +225,7 @@ function composeCandidate(
 ): StudentAnswerCandidate {
   const frozenBlocks = Object.freeze(blocks.map((block) => Object.freeze({
     blockId: block.blockId,
+    blockKind: block.blockKind,
     text: block.text.trim(),
     targetIds: Object.freeze([...block.targetIds]),
     obligationIds: Object.freeze([...block.obligationIds]),
@@ -246,11 +258,12 @@ function localSafetyCandidate(plan: StudentAnswerExecutionPlan): StudentAnswerCa
     ...(obligationKinds.has("explain_relation") ? [relationStatement] : []),
   ]
   const exampleStatement = obligationKinds.has("give_concrete_example")
-    ? "Örneğin, bu kavramları yalnız açıklayıcı varsayımsal bir durumda düşünebiliriz." : null
+    ? "Örnek: Bu kavramları yalnız açıklayıcı varsayımsal bir durumda düşünebiliriz." : null
   const text = [...relationStatements, ...targetStatements, ...policyStatements, ...(exampleStatement ? [exampleStatement] : [])]
     .join(" ")
   return composeCandidate([Object.freeze({
     blockId: "b1",
+    blockKind: exampleStatement ? "example" : "content",
     text,
     targetIds: Object.freeze([...plan.activeTargetIds]),
     obligationIds: Object.freeze(plan.obligations.map((obligation) => obligation.id)),
@@ -274,6 +287,7 @@ const POLICY_ID_BY_OBLIGATION_KIND: Readonly<Partial<Record<
 
 type StudentAnswerSlotMetadata = Readonly<{
   blockId: string
+  blockKind: StudentAnswerBlock["blockKind"]
   targetIds: readonly string[]
   obligationIds: readonly string[]
   usedClaimIds: readonly string[]
@@ -303,6 +317,7 @@ function slotMetadataForObligations(
   })
   return Object.freeze({
     blockId: `b${blockIndex + 1}`,
+    blockKind: obligations.some((obligation) => obligation.kind === "give_concrete_example") ? "example" : "content",
     targetIds: Object.freeze(unique(targetIds)),
     obligationIds: Object.freeze(obligations.map((obligation) => obligation.id)),
     usedClaimIds: Object.freeze(unique(usedClaimIds)),
@@ -364,6 +379,7 @@ function providerContent(input: Readonly<{
       const exampleSlot = obligations.some((obligation) => SHARED_EXAMPLE_KINDS.includes(obligation.kind))
       return {
         slotId: metadata.blockId,
+        slotKind: metadata.blockKind,
         obligations,
         activeTargets: input.plan.targetEvidence
           .filter((target) => metadata.targetIds.includes(target.studentTargetId))
@@ -393,7 +409,7 @@ function visibleTargetPrefix(plan: StudentAnswerExecutionPlan) {
 }
 
 const PROVIDER_INSTRUCTIONS = `
-Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır cevap metinleri yaz. Yalnız şemada hazır bulunan b1, b2 gibi metin kutularını ve illustrationKind alanını doldur; hedef, yükümlülük, kanıt, politika veya blok kimliği üretme. Her metin kutusu answerSlots içindeki aynı slotId görevlerinin tamamını gerçekten yerine getirsin. Sistem kutuları sırayla birleştirerek son cevabı oluşturacak; bu yüzden kutular birlikte tek, akıcı ve tekrarsız bir cevap gibi okunmalıdır. Bir slotun obligations listesinde use_shared_scenario varsa yalnız tek bir ortak somut durum kullan; bütün aktif hedefleri bu aynı durumun içinde ayrı ayrı göster ve ikinci, ilgisiz bir örneğe geçme. Her slotun activeTargets bölümündeki her hedef için visibleAliases adlarından en az birini görünür metinde yaz. Bilimsel içerikte yalnız o slotun lockedClaims cümlelerini kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. role=contrast olan cümle başka bir kavramın karşıt bilgisidir; onu aktif hedefin tanımı, özelliği veya örneği gibi kullanma. Örnek ve örnek-bağlama slotlarına contrast cümlesi zaten verilmez. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İstenen toplam cümle sayısını bütün kutuların birleşiminde tam koru. İç sistem dilini görünür metne yazma.
+Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır cevap metinleri yaz. Yalnız şemada hazır bulunan b1, b2 gibi metin kutularını ve illustrationKind alanını doldur; hedef, yükümlülük, kanıt, politika veya blok kimliği üretme. Her metin kutusu answerSlots içindeki aynı slotId görevlerinin tamamını gerçekten yerine getirsin. Sistem kutuları sırayla birleştirerek son cevabı oluşturacak; bu yüzden kutular birlikte tek, akıcı ve tekrarsız bir cevap gibi okunmalıdır. slotKind=example olan kutunun görünür “Örnek:” etiketini sistem ekleyecek; bu kutuyu ayrıca “Örnek:” veya “Örneğin” diye başlatma, doğrudan durumu anlat. Bir slotun obligations listesinde use_shared_scenario varsa yalnız tek bir ortak somut durum kullan; bütün aktif hedefleri bu aynı durumun içinde ayrı ayrı göster ve ikinci, ilgisiz bir örneğe geçme. Her slotun activeTargets bölümündeki her hedef için visibleAliases adlarından en az birini görünür metinde yaz. Bilimsel içerikte yalnız o slotun lockedClaims cümlelerini kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. role=contrast olan cümle başka bir kavramın karşıt bilgisidir; onu aktif hedefin tanımı, özelliği veya örneği gibi kullanma. Örnek ve örnek-bağlama slotlarına contrast cümlesi zaten verilmez. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İstenen toplam cümle sayısını bütün kutuların birleşiminde tam koru. İç sistem dilini görünür metne yazma.
 `.trim()
 
 function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan): StudentAnswerCandidate | null {
@@ -407,12 +423,16 @@ function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan): Stude
   const slotIds = slots.map((slot) => slot.blockId)
   if (!sameSet(Object.keys(textBySlot), slotIds)
     || slotIds.some((slotId) => typeof textBySlot[slotId] !== "string")) return null
-  const blocks = slots.map((slot, index) => Object.freeze({
-    ...slot,
-    text: index === 0
-      ? `${visibleTargetPrefix(plan)} ${String(textBySlot[slot.blockId]).trim()}`
-      : String(textBySlot[slot.blockId]).trim(),
-  }))
+  const blocks = slots.map((slot, index) => {
+    const prefixes = [
+      ...(index === 0 ? [visibleTargetPrefix(plan)] : []),
+      ...(slot.blockKind === "example" ? ["Örnek:"] : []),
+    ]
+    return Object.freeze({
+      ...slot,
+      text: [...prefixes, String(textBySlot[slot.blockId]).trim()].join(" "),
+    })
+  })
   return composeCandidate(blocks, illustrationKind as StudentAnswerCandidate["illustrationKind"])
 }
 
