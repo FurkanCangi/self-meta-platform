@@ -487,6 +487,14 @@ export type JuryReportValidation = Readonly<{
   systemLikeProseCount: number
   awkwardGenericPhraseCount: number
   terminologyDriftCount: number
+  falseMissingFunctionalExampleCount: number
+  typicalTotalDomainClarificationOmissionCount: number
+  internalReasoningLanguageCount: number
+  familyFacingJargonCount: number
+  functionalPriorityOmissionCount: number
+  lowConfidenceBoldCalibrationFailureCount: number
+  sectionThreeFourRepeatedSentenceCount: number
+  literatureBoilerplateCount: number
   crossCaseContaminationCount: number
   unsupportedCaseFactCount: number
   unknownCaseFactProvenanceCount: number

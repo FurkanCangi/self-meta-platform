@@ -13,6 +13,7 @@
     "report:professor-five": "tsc -p tsconfig.report-runner.json --outDir .tmp/report-runner-professor-five && node .tmp/report-runner-professor-five/scripts/run-report-quality-tests.js --professor-five",
     "report:zero-cost-language-hardening": "tsc -p tsconfig.report-live-release.json --outDir .tmp/report-zero-cost-language-hardening && node .tmp/report-zero-cost-language-hardening/scripts/run-report-zero-cost-language-hardening-tests.js",
     "report:form-dump-regression": "tsc -p tsconfig.report-live-release.json --outDir .tmp/report-form-dump-regression && node .tmp/report-form-dump-regression/scripts/run-report-form-dump-regression-tests.js",
+    "report:final-polish-1000": "tsc -p tsconfig.report-live-release.json --outDir .tmp/report-final-polish-1000 && node .tmp/report-final-polish-1000/scripts/run-report-final-polish-1000.js",
     "report:product-surface": "tsc -p tsconfig.report-live-release.json --outDir .tmp/report-product-surface && node .tmp/report-product-surface/scripts/run-report-product-surface-integration.js",
     "report:audit": "tsc -p tsconfig.report-runner.json --outDir .tmp/report-runner-audit && node .tmp/report-runner-audit/scripts/run-report-deterministic-audit.js",
     "report:language-qa": "tsc -p tsconfig.report-runner.json --outDir .tmp/report-runner-language-qa && node .tmp/report-runner-language-qa/scripts/run-report-language-qa.js",

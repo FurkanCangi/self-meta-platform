@@ -17,6 +17,7 @@
     "scripts/run-report-jury-readiness-tests.ts",
     "scripts/run-report-human-readability-acceptance.ts",
     "scripts/run-report-final-closure-200.ts",
+    "scripts/run-report-final-polish-1000.ts",
     "scripts/run-report-mega100-human-replay.ts",
     "scripts/run-report-product-surface-integration.ts",
     "scripts/run-report-zero-cost-language-hardening-tests.ts",

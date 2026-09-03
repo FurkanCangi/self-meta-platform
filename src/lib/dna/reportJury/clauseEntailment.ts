@@ -31,7 +31,7 @@ export type SemanticRequirement = Readonly<{
 // current-case fact before it can appear in visible text.
 export const TEMPLATE_SEMANTIC_REQUIREMENTS: readonly SemanticRequirement[] = Object.freeze([
   { id: "game_ending", category: "context", visible: /oyun(?:un)?\s+bitiş|oyun\s+bit|oyuncak(?:ların)?\s+toplan/iu, evidence: /oyun(?:un)?\s+bitiş|oyun\s+bit|oyuncak(?:ların)?\s+toplan/iu },
-  { id: "transition", category: "context", visible: /\bgeçiş(?:te|i|ler| sırasında)?\b/iu, evidence: /\bgeçiş(?:te|i|ler| sırasında)?\b/iu },
+  { id: "transition", category: "context", visible: /(?:^|[^\p{L}])geçiş(?:te|i|ler| sırasında)?(?=$|[^\p{L}])/iu, evidence: /(?:^|[^\p{L}])geçiş(?:te|i|ler| sırasında)?(?=$|[^\p{L}])/iu },
   { id: "home_context", category: "context", visible: /\bevde\b|\bev ortam/iu, evidence: /\bevde\b|\bev ortam/iu },
   { id: "school_context", category: "context", visible: /\bokulda\b|\bokul ortam/iu, evidence: /\bokulda\b|\bokul ortam/iu },
   { id: "clinic_context", category: "context", visible: /\bklinik(?:te| ortam)/iu, evidence: /\bklinik(?:te| ortam)/iu },
@@ -58,7 +58,7 @@ export const TEMPLATE_SEMANTIC_REQUIREMENTS: readonly SemanticRequirement[] = Ob
   { id: "shopping_mall", category: "context", visible: /\bAVM\b/iu, evidence: /\bAVM\b/iu },
   { id: "long_journey", category: "context", visible: /uzun\s+yolculuk/iu, evidence: /uzun\s+yolculuk/iu },
   { id: "dressing", category: "task", visible: /giyinme|gömle(?:k|ği)|düğme/iu, evidence: /giyinme|gömle(?:k|ği)|düğme/iu },
-  { id: "backpack", category: "task", visible: /çanta\s+hazırla/iu, evidence: /çanta\s+hazırla/iu },
+  { id: "backpack", category: "task", visible: /çanta(?:sını|yı)?\s+hazırla/iu, evidence: /çanta(?:sını|yı)?\s+hazırla/iu },
   { id: "three_steps", category: "task", visible: /(?:üç|3)\s+basamak/iu, evidence: /(?:üç|3)\s+basamak/iu },
   { id: "money_transaction", category: "task", visible: /para\s+işlemi/iu, evidence: /para\s+işlemi/iu },
   { id: "tray_use", category: "task", visible: /tepsi\s+kullan/iu, evidence: /tepsi\s+kullan/iu },
@@ -127,7 +127,8 @@ export function evaluateSentenceEntailment(input: EvaluateSentenceInput): readon
   const results = clauses.map((clause, index) => {
     const genericProfileImplication = (input.decisionIds?.length ?? 0) > 0
       && /(?:zorlaşabilir|gerekebilir|değişebilir|beklenen aralık|ölçüm koşullarında)/iu.test(clause)
-    const required = genericProfileImplication ? [] : TEMPLATE_SEMANTIC_REQUIREMENTS.filter((requirement) => requirement.visible.test(clause))
+    const semanticTemplateExempt = input.statementType === "boundary" || input.statementType === "literature_link"
+    const required = genericProfileImplication || semanticTemplateExempt ? [] : TEMPLATE_SEMANTIC_REQUIREMENTS.filter((requirement) => requirement.visible.test(clause))
     const supported = required.filter((requirement) => requirement.evidence.test(factText))
     const missing = required.filter((requirement) => !supported.includes(requirement))
     const directFact = input.facts.find((fact) => normalize(fact.statement) === normalize(clause) || normalize(fact.source_excerpt) === normalize(clause))
