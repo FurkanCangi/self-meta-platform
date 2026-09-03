@@ -58,7 +58,12 @@ const mockFetch: typeof fetch = async (_input, init) => {
     return `${labels} için kaynak bilgisine dayalı, öğrenci dilinde kısa bir açıklama veriyorum.`
   }
   const value = {
-    blocks: Object.fromEntries(content.answerSlots.map((slot) => [slot.slotId, slotText(slot)])),
+    blocks: Object.fromEntries(content.answerSlots.map((slot) => [
+      slot.slotId,
+      content.presentation.requestedSentenceCount === null
+        ? slotText(slot)
+        : `${slotText(slot)} Sağlayıcının fazladan yazdığı ikinci cümle?`,
+    ])),
     illustrationKind: content.answerSlots.some((slot) => slot.obligations.some((obligation) => obligation.kind === "give_concrete_example"))
       ? "user_supplied" : "none",
   }
@@ -76,6 +81,7 @@ async function main() {
   let sharedScenarioGrouped = false
   let providerExampleCueDeduplicated = false
   let missingProviderExampleCueLabeled = false
+  let requestedSentenceCountNormalized = false
   for (const conversation of fixture.conversations) {
     let state: StudentConversationState = createEmptyStudentConversationState()
     for (const turn of conversation.turns) {
@@ -117,6 +123,13 @@ async function main() {
         assert.deepEqual([...sharedBlocks[0]!.obligationIds].sort(), [...sharedIds].sort())
         sharedScenarioGrouped = true
       }
+      if (turn.turnId === "STUDENT40-C01-T08") {
+        assert.equal(result.plan.presentation.requestedSentenceCount, 3)
+        assert.equal(result.candidate.blocks.length, 3)
+        assert.equal(result.answer.split(/(?<=[.!?])\s+/u).filter(Boolean).length, 3)
+        assert.doesNotMatch(result.answer, /ikinci cümle\?/u)
+        requestedSentenceCountNormalized = true
+      }
       if (result.route === "provider_grounded") {
         providerAnswers += 1
         assert.equal(result.provider.calls, 1, `${turn.turnId}: bounded provider call`)
@@ -133,6 +146,7 @@ async function main() {
   assert.equal(sharedScenarioGrouped, true)
   assert.equal(providerExampleCueDeduplicated, true)
   assert.equal(missingProviderExampleCueLabeled, true)
+  assert.equal(requestedSentenceCountNormalized, true)
 
   const first = fixture.conversations[0]!.turns[0]!
   const firstResolution = resolveStudentEvidenceFirstRequest({
@@ -386,6 +400,7 @@ async function main() {
     missingDeterministicExampleLabelRejected: true,
     providerExampleCueDeduplicated,
     missingProviderExampleCueLabeled,
+    requestedSentenceCountNormalized,
     rejectedCandidateTelemetryPreserved: true,
   }, null, 2))
 }

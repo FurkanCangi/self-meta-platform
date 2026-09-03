@@ -12,7 +12,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@9" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@10" as const
 export const DNA_STUDENT_ANSWER_EXECUTOR_TIMEOUT_MS = 20_000
 export const DNA_STUDENT_ANSWER_EXECUTOR_MAX_PROVIDER_CALLS = 1
 
@@ -325,21 +325,34 @@ function slotMetadataForObligations(
   })
 }
 
-function answerSlotMetadata(plan: StudentAnswerExecutionPlan): readonly StudentAnswerSlotMetadata[] {
+function answerObligationGroups(plan: StudentAnswerExecutionPlan): readonly StudentAnswerExecutionPlan["obligations"][] {
   const sharedScenarioRequired = plan.obligations.some((obligation) => obligation.kind === "use_shared_scenario")
-  const slots: StudentAnswerSlotMetadata[] = []
+  const groups: StudentAnswerExecutionPlan["obligations"][] = []
   let sharedExampleAdded = false
   for (const obligation of plan.obligations) {
     if (sharedScenarioRequired && SHARED_EXAMPLE_KINDS.includes(obligation.kind)) {
       if (sharedExampleAdded) continue
       sharedExampleAdded = true
-      const grouped = plan.obligations.filter((row) => SHARED_EXAMPLE_KINDS.includes(row.kind))
-      slots.push(slotMetadataForObligations(plan, grouped, slots.length))
+      groups.push(Object.freeze(plan.obligations.filter((row) => SHARED_EXAMPLE_KINDS.includes(row.kind))))
       continue
     }
-    slots.push(slotMetadataForObligations(plan, [obligation], slots.length))
+    groups.push(Object.freeze([obligation]))
   }
-  return Object.freeze(slots)
+  const requestedSentenceCount = plan.presentation.requestedSentenceCount
+  if (requestedSentenceCount === null) return Object.freeze(groups)
+  const sentenceGroups: StudentAnswerExecutionPlan["obligations"][] = Array.from(
+    { length: requestedSentenceCount }, () => Object.freeze([]),
+  )
+  for (const [index, group] of groups.entries()) {
+    const sentenceIndex = Math.min(index, requestedSentenceCount - 1)
+    sentenceGroups[sentenceIndex] = Object.freeze([...sentenceGroups[sentenceIndex]!, ...group])
+  }
+  return Object.freeze(sentenceGroups)
+}
+
+function answerSlotMetadata(plan: StudentAnswerExecutionPlan): readonly StudentAnswerSlotMetadata[] {
+  return Object.freeze(answerObligationGroups(plan).map((obligations, index) =>
+    slotMetadataForObligations(plan, obligations, index)))
 }
 
 function answerSchema(plan: StudentAnswerExecutionPlan): Record<string, unknown> {
@@ -412,8 +425,16 @@ function withoutProviderExampleLead(text: string) {
   return text.replace(/^(?:örnek\s*:?\s*|örneğin\s*,?\s*|mesela\s*,?\s*)/iu, "").trim()
 }
 
+function asSingleSentenceFragment(text: string) {
+  return text
+    .replace(/\s+/gu, " ")
+    .replace(/[.!?]+(?=\s|$)/gu, "; ")
+    .replace(/(?:;\s*)+$/u, "")
+    .trim()
+}
+
 const PROVIDER_INSTRUCTIONS = `
-Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır cevap metinleri yaz. Yalnız şemada hazır bulunan b1, b2 gibi metin kutularını ve illustrationKind alanını doldur; hedef, yükümlülük, kanıt, politika veya blok kimliği üretme. Her metin kutusu answerSlots içindeki aynı slotId görevlerinin tamamını gerçekten yerine getirsin. Sistem kutuları sırayla birleştirerek son cevabı oluşturacak; bu yüzden kutular birlikte tek, akıcı ve tekrarsız bir cevap gibi okunmalıdır. slotKind=example olan kutunun görünür “Örnek:” etiketini sistem ekleyecek; bu kutuyu ayrıca “Örnek:” veya “Örneğin” diye başlatma, doğrudan durumu anlat. Bir slotun obligations listesinde use_shared_scenario varsa yalnız tek bir ortak somut durum kullan; bütün aktif hedefleri bu aynı durumun içinde ayrı ayrı göster ve ikinci, ilgisiz bir örneğe geçme. Her slotun activeTargets bölümündeki her hedef için visibleAliases adlarından en az birini görünür metinde yaz. Bilimsel içerikte yalnız o slotun lockedClaims cümlelerini kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. role=contrast olan cümle başka bir kavramın karşıt bilgisidir; onu aktif hedefin tanımı, özelliği veya örneği gibi kullanma. Örnek ve örnek-bağlama slotlarına contrast cümlesi zaten verilmez. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İstenen toplam cümle sayısını bütün kutuların birleşiminde tam koru. İç sistem dilini görünür metne yazma.
+Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır cevap metinleri yaz. Yalnız şemada hazır bulunan b1, b2 gibi metin kutularını ve illustrationKind alanını doldur; hedef, yükümlülük, kanıt, politika veya blok kimliği üretme. Her metin kutusu answerSlots içindeki aynı slotId görevlerinin tamamını gerçekten yerine getirsin. Sistem kutuları sırayla birleştirerek son cevabı oluşturacak; bu yüzden kutular birlikte tek, akıcı ve tekrarsız bir cevap gibi okunmalıdır. presentation.requestedSentenceCount doluysa sistem tam o sayı kadar kutu verir; her kutuya yalnız tek cümlelik içerik yaz ve nokta, soru işareti veya ünlemle bitirme, sonlandırmayı sistem yapacak. slotKind=example olan kutunun görünür “Örnek:” etiketini sistem ekleyecek; bu kutuyu ayrıca “Örnek:” veya “Örneğin” diye başlatma, doğrudan durumu anlat. Bir slotun obligations listesinde use_shared_scenario varsa yalnız tek bir ortak somut durum kullan; bütün aktif hedefleri bu aynı durumun içinde ayrı ayrı göster ve ikinci, ilgisiz bir örneğe geçme. Her slotun activeTargets bölümündeki her hedef için visibleAliases adlarından en az birini görünür metinde yaz. Bilimsel içerikte yalnız o slotun lockedClaims cümlelerini kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. role=contrast olan cümle başka bir kavramın karşıt bilgisidir; onu aktif hedefin tanımı, özelliği veya örneği gibi kullanma. Örnek ve örnek-bağlama slotlarına contrast cümlesi zaten verilmez. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İç sistem dilini görünür metne yazma.
 `.trim()
 
 function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan): StudentAnswerCandidate | null {
@@ -429,7 +450,10 @@ function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan): Stude
     || slotIds.some((slotId) => typeof textBySlot[slotId] !== "string")) return null
   const providerTextBySlot = Object.fromEntries(slots.map((slot) => {
     const rawText = String(textBySlot[slot.blockId]).trim()
-    return [slot.blockId, slot.blockKind === "example" ? withoutProviderExampleLead(rawText) : rawText]
+    const withoutExampleLead = slot.blockKind === "example" ? withoutProviderExampleLead(rawText) : rawText
+    return [slot.blockId, plan.presentation.requestedSentenceCount === null
+      ? withoutExampleLead
+      : asSingleSentenceFragment(withoutExampleLead)]
   }))
   if (slots.some((slot) => providerTextBySlot[slot.blockId]!.length < 4)) return null
   const blocks = slots.map((slot, index) => {
@@ -439,7 +463,7 @@ function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan): Stude
     ]
     return Object.freeze({
       ...slot,
-      text: [...prefixes, providerTextBySlot[slot.blockId]!].join(" "),
+      text: `${[...prefixes, providerTextBySlot[slot.blockId]!].join(" ")}${plan.presentation.requestedSentenceCount === null ? "" : "."}`,
     })
   })
   return composeCandidate(blocks, illustrationKind as StudentAnswerCandidate["illustrationKind"])
