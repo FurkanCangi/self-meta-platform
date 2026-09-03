@@ -12,7 +12,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@10" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@11" as const
 export const DNA_STUDENT_ANSWER_EXECUTOR_TIMEOUT_MS = 20_000
 export const DNA_STUDENT_ANSWER_EXECUTOR_MAX_PROVIDER_CALLS = 1
 
@@ -298,6 +298,10 @@ const SHARED_EXAMPLE_KINDS: readonly StudentRequestContract["obligations"][numbe
   "give_concrete_example", "bind_example_to_target", "use_shared_scenario",
 ])
 
+const COMPOSITION_CONTROL_KINDS: readonly StudentRequestContract["obligations"][number]["kind"][] = Object.freeze([
+  "honor_rejected_target", "use_history_anchor", "preserve_target_while_simplifying",
+])
+
 function slotMetadataForObligations(
   plan: StudentAnswerExecutionPlan,
   obligations: StudentAnswerExecutionPlan["obligations"],
@@ -327,16 +331,22 @@ function slotMetadataForObligations(
 
 function answerObligationGroups(plan: StudentAnswerExecutionPlan): readonly StudentAnswerExecutionPlan["obligations"][] {
   const sharedScenarioRequired = plan.obligations.some((obligation) => obligation.kind === "use_shared_scenario")
+  const contentObligations = plan.obligations.filter((obligation) => !COMPOSITION_CONTROL_KINDS.includes(obligation.kind))
+  const controlObligations = plan.obligations.filter((obligation) => COMPOSITION_CONTROL_KINDS.includes(obligation.kind))
   const groups: StudentAnswerExecutionPlan["obligations"][] = []
   let sharedExampleAdded = false
-  for (const obligation of plan.obligations) {
+  for (const obligation of contentObligations) {
     if (sharedScenarioRequired && SHARED_EXAMPLE_KINDS.includes(obligation.kind)) {
       if (sharedExampleAdded) continue
       sharedExampleAdded = true
-      groups.push(Object.freeze(plan.obligations.filter((row) => SHARED_EXAMPLE_KINDS.includes(row.kind))))
+      groups.push(Object.freeze(contentObligations.filter((row) => SHARED_EXAMPLE_KINDS.includes(row.kind))))
       continue
     }
     groups.push(Object.freeze([obligation]))
+  }
+  if (controlObligations.length) {
+    if (groups.length) groups[0] = Object.freeze([...groups[0]!, ...controlObligations])
+    else groups.push(Object.freeze([...controlObligations]))
   }
   const requestedSentenceCount = plan.presentation.requestedSentenceCount
   if (requestedSentenceCount === null) return Object.freeze(groups)

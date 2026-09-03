@@ -82,6 +82,7 @@ async function main() {
   let providerExampleCueDeduplicated = false
   let missingProviderExampleCueLabeled = false
   let requestedSentenceCountNormalized = false
+  let compositionControlsGrouped = false
   for (const conversation of fixture.conversations) {
     let state: StudentConversationState = createEmptyStudentConversationState()
     for (const turn of conversation.turns) {
@@ -130,6 +131,15 @@ async function main() {
         assert.doesNotMatch(result.answer, /ikinci cümle\?/u)
         requestedSentenceCountNormalized = true
       }
+      if (turn.turnId === "STUDENT40-C02-T06") {
+        assert.equal(result.plan.obligations.some((row) => row.kind === "preserve_target_while_simplifying"), true)
+        assert.equal(result.candidate.blocks.length, 1)
+        assert.deepEqual(
+          [...result.candidate.blocks[0]!.obligationIds].sort(),
+          result.plan.obligations.map((row) => row.id).sort(),
+        )
+        compositionControlsGrouped = true
+      }
       if (result.route === "provider_grounded") {
         providerAnswers += 1
         assert.equal(result.provider.calls, 1, `${turn.turnId}: bounded provider call`)
@@ -147,6 +157,7 @@ async function main() {
   assert.equal(providerExampleCueDeduplicated, true)
   assert.equal(missingProviderExampleCueLabeled, true)
   assert.equal(requestedSentenceCountNormalized, true)
+  assert.equal(compositionControlsGrouped, true)
 
   const first = fixture.conversations[0]!.turns[0]!
   const firstResolution = resolveStudentEvidenceFirstRequest({
@@ -401,6 +412,7 @@ async function main() {
     providerExampleCueDeduplicated,
     missingProviderExampleCueLabeled,
     requestedSentenceCountNormalized,
+    compositionControlsGrouped,
     rejectedCandidateTelemetryPreserved: true,
   }, null, 2))
 }
