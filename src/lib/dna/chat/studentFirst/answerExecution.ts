@@ -7,7 +7,7 @@ import {
   type StudentS13ResolvedRequestHandoff,
 } from "./runtimeBridge"
 
-export const DNA_STUDENT_ANSWER_EXECUTION_PLAN_VERSION = "dna-student-answer-execution-plan@3" as const
+export const DNA_STUDENT_ANSWER_EXECUTION_PLAN_VERSION = "dna-student-answer-execution-plan@4" as const
 
 export type StudentAnswerEvidenceClaim = Readonly<{
   claimId: string
@@ -71,6 +71,10 @@ const POLICY_UNIT_BY_OBLIGATION: Readonly<Partial<Record<StudentAnswerObligation
     id: "policy.example-target-binding",
     text: "Örneğin hedef kavramla bağı yalnız kilitli kaynak bilgisinden kurulabilir.",
   }),
+  state_context_dependency: Object.freeze({
+    id: "policy.context-dependent-participation",
+    text: "Düşük veya yüksek düzeyin katılıma etkisi bağlama bağlıdır; kişinin özellikleri, görevin gereği ve ortam birlikte değerlendirilir.",
+  }),
   state_single_observation_limit: Object.freeze({
     id: "policy.single-observation-limit",
     text: "Tek bir davranış veya gözlem, bir kapasitenin güçlü ya da zayıf olduğuna karar vermek için yeterli değildir.",
@@ -98,7 +102,7 @@ const POLICY_UNIT_BY_OBLIGATION: Readonly<Partial<Record<StudentAnswerObligation
 })
 
 const TARGET_VISIBLE_ALIASES: Readonly<Record<string, readonly string[]>> = Object.freeze({
-  self_regulation: Object.freeze(["self-regülasyon", "öz-düzenleme", "öz düzenleme"]),
+  self_regulation: Object.freeze(["öz düzenleme", "öz-düzenleme", "self-regülasyon"]),
   self_control: Object.freeze(["öz-kontrol", "öz kontrol", "öz-denetim", "öz denetim"]),
   attention: Object.freeze(["dikkat"]),
   executive_functions: Object.freeze(["yürütücü işlev"]),
@@ -185,8 +189,6 @@ function evidenceForTarget(
 function localSafetyBoundary(contract: StudentRequestContract) {
   return contract.safetyIntent !== "general_education"
     || contract.obligations.some((obligation) => [
-      "state_single_observation_limit",
-      "name_additional_context",
       "refuse_treatment_selection",
       "offer_safe_assessment_frame",
     ].includes(obligation.kind))
@@ -210,6 +212,7 @@ export function buildStudentAnswerExecutionPlan(input: Readonly<{
   })
   const local = localSafetyBoundary(input.contract)
   const historyAnchorRequired = input.contract.obligations.some((obligation) => obligation.kind === "use_history_anchor")
+    || Boolean(input.contract.referentCaseContext?.eventIds.length)
   const referentCaseContext = input.contract.referentCaseContext?.eventIds.length
     ? Object.freeze({
         eventIds: Object.freeze([...input.contract.referentCaseContext.eventIds]),
@@ -275,6 +278,7 @@ export function validateStudentAnswerExecutionPlan(
     || plan.providerMayReceiveTransientQuestion !== (expectedRoute === "provider_grounded")) return false
   if (!sameSet(plan.targetEvidence.map((row) => row.studentTargetId), contract.targetIds)) return false
   const historyAnchorRequired = contract.obligations.some((obligation) => obligation.kind === "use_history_anchor")
+    || Boolean(contract.referentCaseContext?.eventIds.length)
   if (historyAnchorRequired !== (plan.historyAnchor !== null)) return false
   if (plan.historyAnchor && (
     plan.historyAnchor.turnId !== contract.referent.turnId

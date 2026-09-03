@@ -12,7 +12,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@15" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@22" as const
 export const DNA_STUDENT_ANSWER_EXECUTOR_TIMEOUT_MS = 20_000
 export const DNA_STUDENT_ANSWER_EXECUTOR_MAX_PROVIDER_CALLS = 1
 
@@ -124,6 +124,9 @@ function visibleObligation(kind: StudentRequestContract["obligations"][number]["
   if (kind === "avoid_context_free_judgment") return /\biyi\s+(?:veya|ya da)\s+kotu\b/u.test(normalized)
     && /\b(?:baglam|islev)\w*\b/u.test(normalized)
   if (kind === "contrast_target_states") return /\bdusuk\w*\b/u.test(normalized) && /\byuksek\w*\b/u.test(normalized)
+  if (kind === "state_context_dependency") return /\bkatilim\w*\b/u.test(normalized)
+    && (/\bbaglam\w*\b/u.test(normalized)
+      || (/\bkisi\w*\b/u.test(normalized) && /\bgorev\w*\b/u.test(normalized) && /\bortam\w*\b/u.test(normalized)))
   if (kind === "summarize_unknown") return /\b(?:bilin\w*|kesin\w*|soyle\w*|cikarilamaz\w*|sonuc\w*\s+vermez)\b/u.test(normalized)
   if (kind === "summarize_observation_focus") return /\bgozlem\w*\b/u.test(normalized)
   if (kind === "refuse_treatment_selection") return /\b(?:terapi|tedavi)\w*\b.{0,80}\b(?:sec\w*|oner\w*|uygula\w*)\b/u.test(normalized)
@@ -252,6 +255,64 @@ function hasEveryTarget(plan: StudentAnswerExecutionPlan, targetIds: readonly st
   return targetIds.every((targetId) => plan.activeTargetIds.includes(targetId))
 }
 
+type LocalCaseTargetProjection = Readonly<{
+  text: string
+  usedClaimIds: readonly string[]
+}>
+
+function localCaseTargetProjection(
+  target: StudentAnswerExecutionPlan["targetEvidence"][number],
+): LocalCaseTargetProjection {
+  if (target.studentTargetId === "self_regulation") {
+    const claim = target.claims.find((candidate) => candidate.text.includes("dikkatini ve davranışlarını"))
+    if (claim) return Object.freeze({
+      text: "Öz düzenlemede çocuğun dikkatini ve davranışını bulunduğu duruma göre ayarlamasına bakılır.",
+      usedClaimIds: Object.freeze([claim.claimId]),
+    })
+  }
+  if (target.studentTargetId === "attention") {
+    const claim = target.claims.find((candidate) => candidate.text.includes("amaç doğrultusunda sürdürülmesi"))
+    if (claim) return Object.freeze({
+      text: "Dikkatte ise odağın amaç doğrultusunda sürdürülmesine bakılır.",
+      usedClaimIds: Object.freeze([claim.claimId]),
+    })
+  }
+  if (target.studentTargetId === "emotion_regulation") {
+    const claim = target.claims.find((candidate) => candidate.text.includes("tek bir anda ortaya çıkmadığını"))
+    if (claim) return Object.freeze({
+      text: "Duygu düzenlemede ise, duygusal tepkinin tek bir anda değil süreç içinde nasıl oluştuğuna bakılır.",
+      usedClaimIds: Object.freeze([claim.claimId]),
+    })
+  }
+  if (target.studentTargetId === "arousal") {
+    const claim = target.claims.find((candidate) => candidate.text.includes("genel aktivasyon"))
+    if (claim) return Object.freeze({
+      text: "Arousal açısından kişinin genel aktivasyon düzeyine ve çevresel bilgiye yanıt verebilirliğine bakılır.",
+      usedClaimIds: Object.freeze([claim.claimId]),
+    })
+  }
+  if (target.studentTargetId === "sensory_regulation") {
+    const claim = target.claims.find((candidate) => candidate.text.includes("bedeninden ve çevresinden gelen duyusal bilgiyi"))
+    if (claim) return Object.freeze({
+      text: "Duyusal düzenlemede çocuğun bedeninden ve çevreden gelen duyusal bilgiyi fark edip etkinliğe uygun bir yanıt oluşturmasına bakılır.",
+      usedClaimIds: Object.freeze([claim.claimId]),
+    })
+  }
+  if (target.studentTargetId === "coregulation") {
+    const claim = target.claims.find((candidate) => candidate.text.includes("diğerinin duygusal ve fizyolojik durumunu"))
+    if (claim) return Object.freeze({
+      text: "Eş düzenlemede ise öğretmenin desteğinin çocuğun duygusal ve bedensel durumunu düzenlemeye nasıl katkı sağladığına bakılır.",
+      usedClaimIds: Object.freeze([claim.claimId]),
+    })
+  }
+  const label = target.visibleAliases[0] ?? target.ownerBookTopicTitle.split(" · ").at(-1) ?? target.studentTargetId
+  const claim = target.claims.find((candidate) => candidate.role !== "contrast") ?? target.claims[0]!
+  return Object.freeze({
+    text: `${label} açısından bu gözlemde bakılan nokta şudur: ${claim.text}`,
+    usedClaimIds: Object.freeze([claim.claimId]),
+  })
+}
+
 function localCaseObservationStatement(
   question: string,
   plan: StudentAnswerExecutionPlan,
@@ -269,7 +330,8 @@ function localCaseObservationStatement(
   const hasRecovery = /\btoparla\w*.{0,40}\bdon\w*\b/u.test(normalized)
   const hasTaskBreak = /\b(?:gorev|is)\w*.{0,45}\b(?:birak|kalk|gez)\w*\b/u.test(normalized)
   const hasAdultSupport = /\b(?:ogretmen|yetiskin)\w*\b/u.test(normalized)
-    && /\b(?:yavas\w*|yumusat\w*|sakin\w*|yan\w*|destek\w*)\b/u.test(normalized)
+    && (/\b(?:yavas\w*|yumusat\w*|sakin\w*|yan(?:ina|inda)\w*|destek\w*)\b/u.test(normalized)
+      || /\bgel\w*.{0,40}\b(?:duzel|sakinles|don)\w*\b/u.test(normalized))
   const hasActivityReturn = /\b(?:oyun|gorev|etkinlik)\w*.{0,24}\bdon\w*\b/u.test(normalized)
     || /\b(?:sakinles|duzel)\w*\b/u.test(normalized)
   const hasEnvironmentLoad = /\b(?:kalabalik|sesli|gurultu|ortam)\w*\b/u.test(normalized)
@@ -284,6 +346,10 @@ function localCaseObservationStatement(
   }
   if (hasEveryTarget(plan, ["self_regulation", "attention"]) && hasTaskBreak) {
     return "Göreve başladıktan sonra görevden kopma ve sınıfta dolaşma, öz-düzenleme ile dikkati sürdürme açısından ayrı ayrı değerlendirilebilecek bir gözlemdir."
+  }
+  if (hasEveryTarget(plan, ["arousal", "sensory_regulation", "coregulation"])
+    && (hasEnvironmentLoad || hasMovementRise || hasAdultSupport)) {
+    return "Sesli ortamda çocuğun hareketinin değişmesi ve öğretmen geldikten sonra davranışın düzelmesi; duyusal düzenleme, arousal ve eş düzenleme açısından ayrı ayrı ele alınabilecek bir gözlemdir."
   }
   if (hasEveryTarget(plan, ["coregulation"]) && hasAdultSupport && hasActivityReturn) {
     return "Yetişkinin sakin desteğinden sonra çocuğun etkinliğe dönebilmesi, eş düzenleme açısından dış desteğin düzenlenmeye eşlik ettiği somut bir örnek olarak düşünülebilir."
@@ -301,6 +367,14 @@ function localCaseObservationStatement(
   if (hasAdultSupport && hasActivityReturn) {
     const labels = plan.targetEvidence.map((target) => target.visibleAliases[0]).filter(Boolean).join(" ve ")
     return `Yetişkin desteğinden sonra sakinleşip etkinliğe dönme, ${labels} açısından desteğin öncesi ve sonrasını birlikte değerlendirmeyi gerektiren bir gözlemdir.`
+  }
+  const referentEventLabels = plan.historyAnchor?.caseContext?.eventLabels ?? []
+  if (hasHistoryReferent && referentEventLabels.length) {
+    const eventPhrase = referentEventLabels.length === 1
+      ? referentEventLabels[0]!
+      : `${referentEventLabels.slice(0, -1).join(", ")} ve ${referentEventLabels.at(-1)}`
+    const labels = plan.targetEvidence.map((target) => target.visibleAliases[0]).filter(Boolean).join(" ve ")
+    return `Önceki örnekte ${eventPhrase} birlikte görülmüştü. Bu olay dizisi, ${labels} açısından işlevi ve bağlamı korunarak değerlendirilmelidir.`
   }
   if (hasEnvironmentLoad || hasVoiceRise || hasMovementRise || hasTaskBreak || hasRecovery) {
     const labels = plan.targetEvidence.map((target) => target.visibleAliases[0]).filter(Boolean).join(" ve ")
@@ -323,6 +397,7 @@ function localSafetyCandidate(
     const claim = target.claims.find((candidate) => candidate.role !== "contrast") ?? target.claims[0]!
     return `${label}: ${claim.text}`
   })
+  const caseTargetProjections = plan.targetEvidence.map(localCaseTargetProjection)
   const policyStatements = plan.policyUnits.map((unit) => unit.text)
   const obligationKinds = new Set(plan.obligations.map((row) => row.kind))
   const distinguishStatement = "Bu kavramlar aynı şey değildir."
@@ -337,8 +412,22 @@ function localSafetyCandidate(
   const renderedCaseStatement = caseStatement && obligationKinds.has("give_concrete_example")
     ? `Örnek: ${caseStatement}`
     : caseStatement
+  const targetSpecificCaseExplanationRequired = obligationKinds.has("distinguish_targets")
+    || obligationKinds.has("explain_relation")
+    || (plan.operation === "case_reasoning" && plan.activeTargetIds.length > 1)
+  const caseStatementAlreadyDistinguishes = Boolean(caseStatement
+    && /\bbirbirinden\s+ayir\w*\b/u.test(normalizeDnaChatText(caseStatement)))
   const contentStatements = caseStatement
-    ? [renderedCaseStatement!, ...policyStatements]
+    ? [
+        renderedCaseStatement!,
+        ...(targetSpecificCaseExplanationRequired
+          ? [
+              ...(obligationKinds.has("distinguish_targets") && !caseStatementAlreadyDistinguishes
+                ? [distinguishStatement] : []),
+              ...caseTargetProjections.map((projection) => projection.text),
+            ] : []),
+        ...policyStatements,
+      ]
     : [...relationStatements, ...targetStatements, ...policyStatements, ...(exampleStatement ? [exampleStatement] : [])]
   const text = contentStatements
     .join(" ")
@@ -348,8 +437,10 @@ function localSafetyCandidate(
     text,
     targetIds: Object.freeze([...plan.activeTargetIds]),
     obligationIds: Object.freeze(plan.obligations.map((obligation) => obligation.id)),
-    usedClaimIds: Object.freeze(plan.targetEvidence.map((row) =>
-      (row.claims.find((candidate) => candidate.role !== "contrast") ?? row.claims[0]!).claimId)),
+    usedClaimIds: Object.freeze(targetSpecificCaseExplanationRequired && caseStatement
+      ? unique(caseTargetProjections.flatMap((projection) => projection.usedClaimIds))
+      : plan.targetEvidence.map((row) =>
+        (row.claims.find((candidate) => candidate.role !== "contrast") ?? row.claims[0]!).claimId)),
     usedPolicyUnitIds: Object.freeze(plan.policyUnits.map((row) => row.id)),
   })], exampleStatement ? (caseStatement ? "user_supplied" : "hypothetical") : "none")
 }
@@ -363,6 +454,7 @@ const POLICY_ID_BY_OBLIGATION_KIND: Readonly<Partial<Record<
   state_single_observation_limit: "policy.single-observation-limit",
   name_additional_context: "policy.additional-context",
   name_multiple_plausible_explanations: "policy.multiple-plausible-explanations",
+  state_context_dependency: "policy.context-dependent-participation",
   avoid_context_free_judgment: "policy.contextual-judgment",
   refuse_treatment_selection: "policy.no-treatment-selection",
   offer_safe_assessment_frame: "policy.safe-assessment-frame",
@@ -383,6 +475,16 @@ const SHARED_EXAMPLE_KINDS: readonly StudentRequestContract["obligations"][numbe
 
 const COMPOSITION_CONTROL_KINDS: readonly StudentRequestContract["obligations"][number]["kind"][] = Object.freeze([
   "honor_rejected_target", "use_history_anchor", "preserve_target_while_simplifying",
+])
+
+const DETERMINISTIC_POLICY_KINDS: readonly StudentRequestContract["obligations"][number]["kind"][] = Object.freeze([
+  "state_single_observation_limit",
+  "name_additional_context",
+  "name_multiple_plausible_explanations",
+  "avoid_context_free_judgment",
+  "state_context_dependency",
+  "refuse_treatment_selection",
+  "offer_safe_assessment_frame",
 ])
 
 function slotMetadataForObligations(
@@ -533,8 +635,22 @@ function asSingleSentenceFragment(text: string) {
     .trim()
 }
 
+function naturalizeProviderStudentProse(text: string) {
+  const normalizedTerms = text
+    .replace(/\bself[- ]regülasyon\b/giu, (value) => /^[A-Zİ]/u.test(value) ? "Öz düzenleme" : "öz düzenleme")
+    .replace(/belirli bir bölüme işlem kaynağı ayırmaktır/giu, "belirli bir bölüme odaklanmaktır")
+    .replace(/belirli bir bölüme işlem kaynağı ayırma sürecidir/giu, "belirli bir bölüme odaklanma sürecidir")
+  const withMissingBoundaries = normalizedTerms.replace(
+    /(\b[\p{L}]+(?:dır|dir|dur|dür|tır|tir|tur|tür))\s+(?=(?:Öz düzenleme|Dikkat|Öz-kontrol|Öz denetim|Arousal|Uyarılma|Duyusal|Eş düzenleme|Ko-regülasyon|Planlama|İnhibisyon|Duygu düzenleme|Çalışma belleği|Yürütücü)\b)/gu,
+    "$1. ",
+  )
+  return /[.!?]$/u.test(withMissingBoundaries.trim())
+    ? withMissingBoundaries.trim()
+    : `${withMissingBoundaries.trim()}.`
+}
+
 const PROVIDER_INSTRUCTIONS = `
-  Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır cevap metinleri yaz. Yalnız şemada hazır bulunan b1, b2 gibi metin kutularını ve illustrationKind alanını doldur; hedef, yükümlülük, kanıt, politika veya blok kimliği üretme. Her metin kutusu answerSlots içindeki aynı slotId görevlerinin tamamını gerçekten yerine getirsin. Sistem kutuları sırayla birleştirerek son cevabı oluşturacak; bu yüzden kutular birlikte tek, akıcı ve tekrarsız bir cevap gibi okunmalıdır. presentation.requestedSentenceCount boşsa her kutuyu doğal cümle sonu noktalamasıyla tamamla. presentation.requestedSentenceCount doluysa sistem tam o sayı kadar kutu verir; her kutuya yalnız tek cümlelik içerik yaz ve nokta, soru işareti veya ünlemle bitirme, sonlandırmayı sistem yapacak. historyAnchor doluysa önceki ham mesajı görmediğini unutma. historyAnchor.caseContext boşsa yalnız targetLabels ve currentUserMessage içindeki referans sözünü kullanarak “bu durumda” veya “önceki ... durumunda” gibi görünür bir bağ kur. historyAnchor.caseContext doluysa eventLabels geçmiş olaydan kullanılmasına izin verilen tek somut olay dizisidir. caseBinding.requiredForEveryActiveTarget=true olan her kutuda tanımı yalnız sıralama; kutudaki her activeTargets hedefinin bu aynı olay dizisinin hangi bölümünü anlamaya yardım ettiğini, en az bir eventLabels ifadesini görünür kullanarak ve kesin kişisel sonuç çıkarmadan açıkla. Çok parçalı istekte tüm hedefler aynı olay dizisine bağlanmalıdır; ilk kutuda genel bir geçmiş atfı yapmak tek başına yeterli değildir. Verilmeyen kişi, ortam, neden, duygu veya davranış ayrıntısını uydurma. slotKind=example olan kutunun görünür “Örnek:” etiketini sistem ekleyecek; bu kutuyu ayrıca “Örnek:” veya “Örneğin” diye başlatma, doğrudan durumu anlat. Bir slotun obligations listesinde use_shared_scenario varsa yalnız tek bir ortak somut durum kullan; bütün aktif hedefleri bu aynı durumun içinde ayrı ayrı göster ve ikinci, ilgisiz bir örneğe geçme. Her slotun activeTargets bölümündeki her hedef için visibleAliases adlarından en az birini görünür metinde yaz. Bilimsel içerikte yalnız o slotun lockedClaims cümlelerini kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. role=contrast olan cümle başka bir kavramın karşıt bilgisidir; onu aktif hedefin tanımı, özelliği veya örneği gibi kullanma. Örnek ve örnek-bağlama slotlarına contrast cümlesi zaten verilmez. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İç sistem dilini görünür metne yazma.
+  Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır cevap metinleri yaz. Yalnız şemada hazır bulunan b1, b2 gibi metin kutularını ve illustrationKind alanını doldur; hedef, yükümlülük, kanıt, politika veya blok kimliği üretme. Her metin kutusu answerSlots içindeki aynı slotId görevlerinin tamamını gerçekten yerine getirsin. Sistem kutuları sırayla birleştirerek son cevabı oluşturacak; bu yüzden kutular birlikte tek, akıcı ve tekrarsız bir cevap gibi okunmalıdır. Kaynak cümlelerini ve parantez içi atıfları aynen kopyalama; anlamı değiştirmeden kısa, günlük Türkçeyle yeniden söyle ve visibleAliases içinde Türkçe karşılık varsa onu tercih et. “İşlem kaynağı ayırma” gibi teknik bir ifadeyi, yeni bilgi eklemeden “odaklanma” gibi öğrenci dilindeki karşılığıyla anlat. Her yeni düşünceyi görünür noktalama ile ayır. presentation.requestedSentenceCount boşsa her kutuyu doğal cümle sonu noktalamasıyla tamamla. presentation.requestedSentenceCount doluysa sistem tam o sayı kadar kutu verir; her kutuya yalnız tek cümlelik içerik yaz ve nokta, soru işareti veya ünlemle bitirme, sonlandırmayı sistem yapacak. historyAnchor doluysa önceki ham mesajı görmediğini unutma. historyAnchor.caseContext boşsa yalnız targetLabels ve currentUserMessage içindeki referans sözünü kullanarak “bu durumda” veya “önceki ... durumunda” gibi görünür bir bağ kur. historyAnchor.caseContext doluysa eventLabels geçmiş olaydan kullanılmasına izin verilen tek somut olay dizisidir. caseBinding.requiredForEveryActiveTarget=true olan her kutuda tanımı yalnız sıralama; kutudaki her activeTargets hedefinin bu aynı olay dizisinin hangi bölümünü anlamaya yardım ettiğini, en az bir eventLabels ifadesini görünür kullanarak ve kesin kişisel sonuç çıkarmadan açıkla. Çok parçalı istekte tüm hedefler aynı olay dizisine bağlanmalıdır; ilk kutuda genel bir geçmiş atfı yapmak tek başına yeterli değildir. Verilmeyen kişi, ortam, neden, duygu veya davranış ayrıntısını uydurma. slotKind=example olan kutunun görünür “Örnek:” etiketini sistem ekleyecek; bu kutuyu ayrıca “Örnek:” veya “Örneğin” diye başlatma, doğrudan durumu anlat. Bir slotun obligations listesinde use_shared_scenario varsa yalnız tek bir ortak somut durum kullan; bütün aktif hedefleri bu aynı durumun içinde ayrı ayrı göster ve ikinci, ilgisiz bir örneğe geçme. Her slotun activeTargets bölümündeki her hedef için visibleAliases adlarından en az birini görünür metinde yaz. Bilimsel içerikte yalnız o slotun lockedClaims cümlelerini kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. role=contrast olan cümle başka bir kavramın karşıt bilgisidir; onu aktif hedefin tanımı, özelliği veya örneği gibi kullanma. Örnek ve örnek-bağlama slotlarına contrast cümlesi zaten verilmez. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İç sistem dilini görünür metne yazma.
 `.trim()
 
 function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan): StudentAnswerCandidate | null {
@@ -549,10 +665,18 @@ function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan): Stude
   if (!sameSet(Object.keys(textBySlot), slotIds)
     || slotIds.some((slotId) => typeof textBySlot[slotId] !== "string")) return null
   const providerTextBySlot = Object.fromEntries(slots.map((slot) => {
-    const rawText = String(textBySlot[slot.blockId]).trim()
+    const slotObligations = plan.obligations.filter((obligation) => slot.obligationIds.includes(obligation.id))
+    const deterministicPolicyText = slotObligations.length > 0
+      && slotObligations.every((obligation) => DETERMINISTIC_POLICY_KINDS.includes(obligation.kind))
+      ? plan.policyUnits
+        .filter((unit) => slot.usedPolicyUnitIds.includes(unit.id))
+        .map((unit) => unit.text)
+        .join(" ")
+      : null
+    const rawText = (deterministicPolicyText || String(textBySlot[slot.blockId])).trim()
     const withoutExampleLead = slot.blockKind === "example" ? withoutProviderExampleLead(rawText) : rawText
     return [slot.blockId, plan.presentation.requestedSentenceCount === null
-      ? withoutExampleLead
+      ? naturalizeProviderStudentProse(withoutExampleLead)
       : asSingleSentenceFragment(withoutExampleLead)]
   }))
   if (slots.some((slot) => providerTextBySlot[slot.blockId]!.length < 4)) return null

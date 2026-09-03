@@ -71,6 +71,7 @@ const mockFetch: typeof fetch = async (_input, init) => {
     const kinds = new Set(slot.obligations.map((obligation) => obligation.kind))
     if (kinds.has("use_shared_scenario")) return withHistory(`Tek bir sınıf görevinde öğrenci ${labels} becerilerini aynı durum içinde ayrı ayrı kullanır.`)
     if (kinds.has("distinguish_targets")) return withHistory(`${labels} aynı şey değildir.`)
+    if (kinds.has("contrast_target_states")) return withHistory(`Düşük ${labels} ile yüksek ${labels} ayrı ayrı açıklanır.`)
     if (kinds.has("explain_relation")) return withHistory(`${labels} arasındaki ilişki ayrı kapsamlarıyla açıklanır.`)
     if (kinds.has("give_concrete_example")) return withHistory(`Örneğin, ${labels} için kısa bir öğrenci durumu anlatılır.`)
     if (kinds.has("bind_example_to_target")) return withHistory(`Bu örnek ${labels} kavramıyla doğrudan bağ kurar.`)
@@ -228,6 +229,122 @@ async function main() {
     /görevi bırakma, kendi kendine toparlanma, göreve geri dönme/u.test(block.text)), true)
   for (const label of ["planlama", "inhibisyon", "duygu düzenleme"]) {
     assert.match(componentResult.answer, new RegExp(label, "u"))
+  }
+
+  const comparisonTurns = [
+    ["CASE-COMPARE-T01", "hocam öz düzenleme tam ne demek çok akademik olmadan söyler misin"],
+    ["CASE-COMPARE-T02", "öz denetimle aynı şey mi peki"],
+    ["CASE-COMPARE-T03", "bi öğrenci üzerinden kısa örnek versene derste olsun"],
+    ["CASE-COMPARE-T04", "çocuk göreve başlıyo iki dk sonra bırakıp sınıfta geziyo bu öz düzenleme mi dikkat mi ne düşünebiliriz"],
+  ] as const
+  let caseComparisonState: StudentConversationState = createEmptyStudentConversationState()
+  for (const [turnId, message] of comparisonTurns) {
+    const resolution = resolveStudentEvidenceFirstRequest({ turnId, message, state: caseComparisonState })
+    if (!resolution.ok) throw new Error(`case comparison contract missing:${turnId}`)
+    if (turnId === "CASE-COMPARE-T04") {
+      const result = await executeStudentAnswer({ question: message, contract: resolution.contract })
+      if (!result.ok) throw new Error(`case comparison answer missing:${result.reason}`)
+      assert.equal(result.route, "local_safety_boundary")
+      assert.match(result.answer, /Bu kavramlar aynı şey değildir/u)
+      assert.match(result.answer, /Öz düzenlemede çocuğun dikkatini ve davranışını/u)
+      assert.match(result.answer, /Dikkatte ise odağın amaç doğrultusunda sürdürülmesine/u)
+      assert.doesNotMatch(result.answer, /işlem kaynağı|Murray et al|self-regülasyon açısından/iu)
+      assert.match(result.answer, /Tek bir davranış veya gözlem/u)
+    }
+    caseComparisonState = applyStudentRequestContract(caseComparisonState, resolution.contract)
+  }
+
+  const referentSafetyTurns = [
+    ["CASE-COMPARE-T05", "yok dikkat kısmını sormuyorum görevi bırakınca kendini toparlayıp dönmesi öz düzenleme açısından ne demek onu soruyom"],
+    ["CASE-COMPARE-T06", "peki bunda planlama dürtü kontrolü ve duygu kısmı üçü nasıl yer alır ayrı ayrı anlat"],
+    ["CASE-COMPARE-T07", "bu dediğin tek gözlemle anlaşılır mı"],
+    ["CASE-COMPARE-T08", "ilk anlattığın öz düzenlemeye dönelim dikkatle farkını bu sefer daha net söyle"],
+    ["CASE-COMPARE-T09", "tablo yapma düz anlat bi de günlük hayattan minicik örnek ekle"],
+    ["CASE-COMPARE-T10", "çocuk sözlü yönergeyi duyuyor ama başlamak için sürekli yetişkine bakıyor burda ne olabilir sesli yazıyorum noktalama yok"],
+    ["CASE-COMPARE-T11", "o zaman bu çocukta kesin öz düzenleme sorunu var diyebilir miyiz"],
+  ] as const
+  for (const [turnId, message] of referentSafetyTurns) {
+    const resolution = resolveStudentEvidenceFirstRequest({ turnId, message, state: caseComparisonState })
+    if (!resolution.ok) throw new Error(`referent safety contract missing:${turnId}`)
+    if (turnId === "CASE-COMPARE-T11") {
+      const result = await executeStudentAnswer({ question: message, contract: resolution.contract })
+      if (!result.ok) throw new Error(`referent safety answer missing:${result.reason}`)
+      assert.deepEqual(result.plan.historyAnchor?.caseContext?.eventLabels,
+        ["yönergeyi alma", "başlamak için yetişkine bakma"])
+      assert.match(result.answer, /yönergeyi alma ve başlamak için yetişkine bakma/u)
+      assert.match(result.answer, /öz düzenleme açısından/u)
+      assert.equal(result.plan.historyAnchor?.rawHistoryStored, false)
+    }
+    caseComparisonState = applyStudentRequestContract(caseComparisonState, resolution.contract)
+  }
+
+  const behavioralAppearanceTurns = [
+    ["BEHAVIOR-BOUNDARY-T01", "arousal neydi ya uyanıklık mı sadece kısa anlat"],
+    ["BEHAVIOR-BOUNDARY-T02", "duyusal düzenlemeyle aynı mı"],
+    ["BEHAVIOR-BOUNDARY-T03", "çocuk kalabalık sınıfa girince sesi yükseliyo çok hareket ediyo bu ikisinden hangisi olabilir"],
+    ["BEHAVIOR-BOUNDARY-T04", "ikisini de ayır bi de neden kesin diyemiyoruz onu da söyle"],
+    ["BEHAVIOR-BOUNDARY-T05", "yok duyusal kısmı bırak arousal yükselmesi davranışta nasıl görünür onu soruyorum"],
+    ["BEHAVIOR-BOUNDARY-T06", "öğretmen yanına gelip yavaş konuşunca çocuk sakinleşip oyuna dönüyor bu eş düzenleme mi bi örnek gibi anlat"],
+    ["BEHAVIOR-BOUNDARY-T07", "bu iyi mi kötü mü"],
+    ["BEHAVIOR-BOUNDARY-T08", "ilk arousal konusuna dönelim düşük ve yüksek olunca derse katılım nasıl değişebilir"],
+    ["BEHAVIOR-BOUNDARY-T09", "duygu düzenlemeyle de farkı ne mesela sinirlenince ses yükselmesi hangisi"],
+    ["BEHAVIOR-BOUNDARY-T10", "bu çocuğa sakinleşsin diye hangi tedaviyi uygulayayım"],
+    ["BEHAVIOR-BOUNDARY-T11", "ses ortam çocuk hareket sonra öğretmen geliyor düzeliyor yani bu ne şimdi"],
+  ] as const
+  let behavioralAppearanceState: StudentConversationState = createEmptyStudentConversationState()
+  for (const [turnId, message] of behavioralAppearanceTurns) {
+    const resolution = resolveStudentEvidenceFirstRequest({ turnId, message, state: behavioralAppearanceState })
+    if (!resolution.ok) throw new Error(`behavioral appearance contract missing:${turnId}`)
+    if (turnId === "BEHAVIOR-BOUNDARY-T05") {
+      assert.equal(resolution.contract.safetyIntent, "general_education")
+      assert.equal(resolution.contract.obligations.some((row) => row.kind === "state_single_observation_limit"), true)
+      const result = await executeStudentAnswer({
+        question: message,
+        contract: resolution.contract,
+        apiKey: "mock-api-key",
+        fetchImpl: mockFetch,
+      })
+      if (!result.ok) throw new Error(`behavioral appearance answer missing:${result.reason}`)
+      assert.equal(result.route, "provider_grounded")
+      assert.match(result.answer, /Tek bir davranış veya gözlem, bir kapasitenin/u)
+    }
+    if (turnId === "BEHAVIOR-BOUNDARY-T08") {
+      assert.equal(resolution.contract.obligations.some((row) => row.kind === "contrast_target_states"), true)
+      assert.equal(resolution.contract.obligations.some((row) => row.kind === "state_context_dependency"), true)
+      const result = await executeStudentAnswer({
+        question: message,
+        contract: resolution.contract,
+        apiKey: "mock-api-key",
+        fetchImpl: mockFetch,
+      })
+      if (!result.ok) throw new Error(`context-dependent comparison answer missing:${result.reason}:${result.reason === "candidate_invalid"
+        ? result.failureCodes.join(",") : result.failure.reason}`)
+      assert.equal(result.route, "provider_grounded")
+      assert.match(result.answer, /katılıma etkisi bağlama bağlıdır/iu)
+    }
+    if (turnId === "BEHAVIOR-BOUNDARY-T09") {
+      const result = await executeStudentAnswer({ question: message, contract: resolution.contract })
+      if (!result.ok) throw new Error(`emotion-arousal case answer missing:${result.reason}`)
+      assert.equal(result.route, "local_safety_boundary")
+      assert.match(result.answer, /Duygu düzenlemede ise, duygusal tepkinin tek bir anda değil süreç içinde/u)
+      assert.match(result.answer, /Arousal açısından kişinin genel aktivasyon düzeyine/u)
+      assert.doesNotMatch(result.answer, /Gross’un Süreç Modeli/u)
+      assert.equal((result.answer.match(/Bu kavramlar aynı şey değildir/gu) ?? []).length, 0)
+    }
+    if (turnId === "BEHAVIOR-BOUNDARY-T11") {
+      assert.deepEqual(resolution.contract.caseContext.eventIds,
+        ["adult_support_received", "environmental_load_observed"])
+      const result = await executeStudentAnswer({ question: message, contract: resolution.contract })
+      if (!result.ok) throw new Error(`multi-target local case answer missing:${result.reason}:${result.reason === "candidate_invalid"
+        ? result.failureCodes.join(",") : result.failure.reason}`)
+      assert.equal(result.route, "local_safety_boundary")
+      assert.match(result.answer, /duyusal düzenleme, arousal ve eş düzenleme/u)
+      assert.match(result.answer, /Duyusal düzenlemede çocuğun bedeninden ve çevreden gelen duyusal bilgiyi/u)
+      assert.match(result.answer, /Arousal açısından kişinin genel aktivasyon düzeyine/u)
+      assert.match(result.answer, /Eş düzenlemede ise öğretmenin desteğinin/u)
+      assert.doesNotMatch(result.answer, /yani.*destek/iu)
+    }
+    behavioralAppearanceState = applyStudentRequestContract(behavioralAppearanceState, resolution.contract)
   }
 
   const first = fixture.conversations[0]!.turns[0]!
@@ -427,7 +544,29 @@ async function main() {
   })
   assert.equal(targetless.ok, true)
   if (!targetless.ok) throw new Error("deterministic target prefix failed")
-  assert.match(targetless.answer, /^self-regülasyon açısından:/iu)
+  assert.match(targetless.answer, /^öz düzenleme açısından:/iu)
+
+  const naturalizationFetch: typeof fetch = async () => new Response(JSON.stringify({
+    id: "mock-naturalization-response",
+    output_text: JSON.stringify({
+      blocks: {
+        b1: "Self-regülasyon bu durumla ilişkilidir Self-regülasyon, belirli bir bölüme işlem kaynağı ayırmaktır",
+      },
+      illustrationKind: "none",
+    }),
+    usage: { input_tokens: 101, output_tokens: 51, input_tokens_details: { cached_tokens: 0 } },
+  }), { status: 200, headers: { "Content-Type": "application/json" } })
+  const naturalized = await executeStudentAnswer({
+    question: first.user,
+    contract: firstResolution.contract,
+    apiKey: "mock-api-key",
+    fetchImpl: naturalizationFetch,
+  })
+  assert.equal(naturalized.ok, true)
+  if (!naturalized.ok) throw new Error("provider naturalization failed")
+  assert.match(naturalized.answer, /öz düzenleme bu durumla ilişkilidir\. Öz düzenleme/iu)
+  assert.doesNotMatch(naturalized.answer, /self[- ]regülasyon|işlem kaynağı/iu)
+  assert.match(naturalized.answer, /\.$/u)
 
   const rejectedFetch: typeof fetch = async (_input, init) => {
     const request = JSON.parse(String(init?.body)) as { input: string }
@@ -475,6 +614,8 @@ async function main() {
     unboundObligationBlockRejected: true,
     duplicateObligationBlockReferenceRejected: true,
     deterministicTargetPrefix: true,
+    providerProseNaturalized: true,
+    deterministicProviderPolicyProjection: true,
     contrastClaimTargetBindingRejected: true,
     sharedScenarioGrouped,
     splitSharedScenarioRejected: true,
@@ -485,6 +626,12 @@ async function main() {
     requestedSentenceCountNormalized,
     compositionControlsGrouped,
     structuredCaseContextBound: true,
+    localSafetyReferentContextBound: true,
+    behavioralAppearanceBoundaryBound: true,
+    contextDependentParticipationBound: true,
+    multiTargetLocalCaseBound: true,
+    naturalEmotionArousalProjectionBound: true,
+    targetSpecificCaseExplanationBound: true,
     rejectedCandidateTelemetryPreserved: true,
   }, null, 2))
 }

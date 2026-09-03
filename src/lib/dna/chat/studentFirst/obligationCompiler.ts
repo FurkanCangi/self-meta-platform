@@ -8,12 +8,13 @@ import type {
   StudentSummaryScope,
 } from "./contracts"
 
-export const DNA_STUDENT_OBLIGATION_COMPILER_VERSION = "dna-student-obligation-compiler@7" as const
+export const DNA_STUDENT_OBLIGATION_COMPILER_VERSION = "dna-student-obligation-compiler@8" as const
 
 const OBLIGATION_DESCRIPTIONS: Readonly<Record<StudentAnswerObligationKind, string>> = Object.freeze({
   define_target: "Hedef kavramı doğrudan tanımla",
   distinguish_targets: "Karşılaştırılan kavramları birbirinden ayır",
   contrast_target_states: "Aynı hedefin istenen düşük ve yüksek durumlarını karşılaştır",
+  state_context_dependency: "Katılımın kişi, görev ve ortam bağlamına bağlı olduğunu belirt",
   explain_relation: "Kavramların ilişkisini açıkla",
   give_concrete_example: "İstenen bağlamda somut örnek ver",
   bind_example_to_target: "Örneğin hedef kavramla bağını açıkla",
@@ -69,6 +70,7 @@ export function compileStudentAnswerObligations(
     if (!presentationOnly && input.semanticTask === "compare") {
       if (input.observationScope.withinTargetStateContrast) {
         add("contrast_target_states", input.comparisonTargetIds)
+        add("state_context_dependency", input.comparisonTargetIds)
       } else {
         add("distinguish_targets", input.comparisonTargetIds)
         add("explain_relation", input.comparisonTargetIds)

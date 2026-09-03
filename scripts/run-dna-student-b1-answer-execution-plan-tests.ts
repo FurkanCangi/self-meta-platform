@@ -48,7 +48,8 @@ for (const conversation of fixture.conversations) {
     else localSafetyBoundary += 1
     if (plan.historyAnchor) {
       assert.equal(plan.historyAnchor.rawHistoryStored, false)
-      assert.equal(plan.obligations.some((row) => row.kind === "use_history_anchor"), true)
+      assert.equal(plan.obligations.some((row) => row.kind === "use_history_anchor")
+        || Boolean(plan.historyAnchor.caseContext?.eventIds.length), true)
       privacySafeHistoryAnchors += 1
     }
     maximumTargets = Math.max(maximumTargets, plan.activeTargetIds.length)

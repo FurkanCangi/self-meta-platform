@@ -17,7 +17,7 @@ import {
   type StudentSemanticFrame,
 } from "./semanticInterpreter"
 
-export const DNA_STUDENT_EVIDENCE_FIRST_VERSION = "dna-student-evidence-first@4" as const
+export const DNA_STUDENT_EVIDENCE_FIRST_VERSION = "dna-student-evidence-first@5" as const
 
 export type StudentObservedTargetFact = Readonly<{
   targetId: string
@@ -392,6 +392,12 @@ function observationExtras(message: string, tasks: readonly StudentSemanticTask[
       ...signals,
     })
   }
+  const behavioralAppearance = /\bdavranis\w*.{0,48}\b(?:nasil\s+gorun|neye\s+benze|gorunumu)\w*\b/u.test(normalized)
+  if (behavioralAppearance) return Object.freeze({
+    singleObservationLimit: true,
+    additionalContext: false,
+    ...signals,
+  })
   if (!tasks.includes("compare")) return Object.freeze({
     singleObservationLimit: false,
     additionalContext: false,

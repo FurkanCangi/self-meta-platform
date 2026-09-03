@@ -17,7 +17,7 @@ import { compileStudentAnswerObligations } from "./obligationCompiler"
 import { EMPTY_STUDENT_CASE_CONTEXT } from "./caseContext"
 import { normalizeDnaChatText } from "../text"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@27" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@28" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -34,6 +34,7 @@ export const DNA_STUDENT_OBLIGATION_KINDS = Object.freeze([
   "define_target",
   "distinguish_targets",
   "contrast_target_states",
+  "state_context_dependency",
   "explain_relation",
   "give_concrete_example",
   "bind_example_to_target",
@@ -557,6 +558,8 @@ export function compileStudentRequestContract(
         additionalContext: true,
       })
     : semanticTask === "compare"
+      || ((semanticTask === "define" || semanticTask === "explain")
+        && frame.observationExtras.singleObservationLimit)
       ? frame.observationExtras
       : Object.freeze({ singleObservationLimit: false, additionalContext: false })
   const ambiguity = frame.conversationAction === "return" && referent.kind !== "history"
@@ -600,7 +603,7 @@ export function compileStudentRequestContract(
     safetyIntent: semanticTask === "treatment_boundary"
       ? "treatment_selection"
       : semanticTask === "observe" || semanticTask === "case_reasoning"
-        || (semanticTask !== "summarize" && (
+        || (semanticTask === "compare" && (
           requestedSemanticTasks.includes("observe") || requestedSemanticTasks.includes("case_reasoning")
           || observationScope.singleObservationLimit
         ))

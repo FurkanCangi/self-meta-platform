@@ -81,6 +81,17 @@ assert.deepEqual(kinds({
 
 assert.deepEqual(kinds({
   ...base,
+  semanticTask: "compare",
+  requestedSemanticTasks: ["compare"],
+  conversationAction: "return",
+  targetIds: ["arousal"],
+  comparisonTargetIds: ["arousal"],
+  historyAnchorRequired: true,
+  observationScope: { singleObservationLimit: false, additionalContext: false, withinTargetStateContrast: true },
+}), ["contrast_target_states", "state_context_dependency", "use_history_anchor"])
+
+assert.deepEqual(kinds({
+  ...base,
   semanticTask: "explain",
   requestedSemanticTasks: ["explain"],
   conversationAction: "continue",

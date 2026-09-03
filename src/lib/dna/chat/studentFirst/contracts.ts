@@ -1,5 +1,5 @@
 export const DNA_STUDENT_FIRST_CONVERSATION_VERSION = "dna-student-conversation-state@8" as const
-export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@19" as const
+export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@20" as const
 
 export type StudentSemanticTask =
   | "define"
@@ -72,6 +72,7 @@ export type StudentAnswerObligationKind =
   | "define_target"
   | "distinguish_targets"
   | "contrast_target_states"
+  | "state_context_dependency"
   | "explain_relation"
   | "give_concrete_example"
   | "bind_example_to_target"

@@ -66,7 +66,7 @@ const EXPECTED_CONTRACTS: Readonly<Record<string, ExpectedContract>> = Object.fr
   "NMINI-C02-T05": { task: "explain", targetIds: ["arousal"], rejectedTargetIds: ["sensory_regulation"], obligationKinds: ["honor_rejected_target"] },
   "NMINI-C02-T06": { task: "example", targetIds: ["coregulation"], obligationKinds: ["give_concrete_example", "bind_example_to_target"] },
   "NMINI-C02-T07": { task: "case_reasoning", targetIds: ["coregulation"], referentTurnId: "NMINI-C02-T06", obligationKinds: ["avoid_context_free_judgment", "name_additional_context"] },
-  "NMINI-C02-T08": { task: "compare", targetIds: ["arousal"], referentTurnId: "NMINI-C02-T01", obligationKinds: ["contrast_target_states", "use_history_anchor"] },
+  "NMINI-C02-T08": { task: "compare", targetIds: ["arousal"], referentTurnId: "NMINI-C02-T01", obligationKinds: ["contrast_target_states", "state_context_dependency", "use_history_anchor"] },
   "NMINI-C02-T09": { task: "compare", targetIds: ["arousal", "emotion_regulation"], obligationKinds: ["state_single_observation_limit", "name_additional_context", "name_multiple_plausible_explanations"] },
   "NMINI-C02-T10": { task: "treatment_boundary", targetIds: ["arousal", "emotion_regulation"], obligationKinds: ["refuse_treatment_selection", "offer_safe_assessment_frame"] },
   "NMINI-C02-T11": { task: "case_reasoning", targetIds: ["arousal", "sensory_regulation", "coregulation"], obligationKinds: ["state_single_observation_limit", "name_additional_context", "name_multiple_plausible_explanations"] },
