@@ -57,6 +57,7 @@ const EMPTY_PRESENTATION: StudentPresentationRequest = Object.freeze({
   language: "standard",
   format: "prose",
   example: "none",
+  exampleScope: "independent",
   grouping: "integrated",
   requestedSentenceCount: null,
   preserveMeaning: false,
@@ -160,6 +161,8 @@ function presentationFor(message: string): StudentPresentationRequest {
   const brief = /\b(?:kisa|kisaca|minicik|ozet|[2-4] cumle|iki cumle|uc cumle|dort cumle)\b/.test(normalized)
   const deep = /\b(?:ayrintili|detayli|derin|biraz ac|daha ac)\b/.test(normalized)
   const concreteExample = /\b(?:cocuk|ogrenci|sinif|ders|oyun|gunluk hayat)\b/.test(normalized) && /\b(?:ornek|mesela)\b/.test(normalized)
+  const sharedExample = /\b(?:ayni|ortak)\s+(?:ornek|senaryo)\w*\b/.test(normalized)
+    || /\btek\s+(?:bir\s+)?(?:ornek|senaryo)\w*(?:\s+(?:icinde|uzerinden))?\b/.test(normalized)
   return Object.freeze({
     depth: brief ? "brief" : deep ? "deep" : "standard",
     language: plain ? "plain_student" : "standard",
@@ -169,6 +172,7 @@ function presentationFor(message: string): StudentPresentationRequest {
         ? "bullets"
         : "prose",
     example: concreteExample ? "concrete" : /\b(?:ornek|mesela)\b/.test(normalized) ? "brief" : "none",
+    exampleScope: sharedExample ? "shared" : "independent",
     grouping: /\b(?:ayri ayri|her birini|ucunu ayri|ikisini ayri)\b/.test(normalized) ? "separate_each" : "integrated",
     requestedSentenceCount: Number.isFinite(sentenceCount) ? sentenceCount : null,
     preserveMeaning: /\b(?:yeniden soyle|tekrar anlat|daha basit|akademik oldu|akademik olmadan)\b/.test(normalized),
@@ -280,7 +284,7 @@ export function interpretStudentRequest(
   const requestedSemanticTasks = Object.freeze([semanticTask])
   const normalizedPresentation: StudentPresentationRequest = semanticTask === "example"
     ? presentation
-    : Object.freeze({ ...presentation, example: "none" })
+    : Object.freeze({ ...presentation, example: "none", exampleScope: "independent" })
   const componentTargetIds = semanticTask === "explain" && targetIds.length > 1 && presentation.grouping === "separate_each"
     ? [...targetIds]
     : []

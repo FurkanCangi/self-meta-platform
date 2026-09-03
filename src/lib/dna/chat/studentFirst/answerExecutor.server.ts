@@ -12,7 +12,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@6" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@7" as const
 export const DNA_STUDENT_ANSWER_EXECUTOR_TIMEOUT_MS = 20_000
 export const DNA_STUDENT_ANSWER_EXECUTOR_MAX_PROVIDER_CALLS = 1
 
@@ -30,6 +30,7 @@ export const DNA_STUDENT_ANSWER_FAILURE_CODES = Object.freeze([
   "duplicate_contract_reference",
   "target_not_visible",
   "obligation_not_visible",
+  "shared_scenario_block_mismatch",
 ] as const)
 
 export type StudentAnswerFailureCode = typeof DNA_STUDENT_ANSWER_FAILURE_CODES[number]
@@ -175,6 +176,19 @@ export function validateStudentAnswerCandidate(input: Readonly<{
       }
     }
   }
+  const sharedScenario = plan.obligations.find((row) => row.kind === "use_shared_scenario")
+  if (sharedScenario) {
+    const sharedKinds: readonly StudentRequestContract["obligations"][number]["kind"][] = [
+      "give_concrete_example", "bind_example_to_target", "use_shared_scenario",
+    ]
+    const exampleObligationIds = plan.obligations
+      .filter((row) => sharedKinds.includes(row.kind))
+      .map((row) => row.id)
+    const blockIdsForSharedExample = exampleObligationIds.map((obligationId) =>
+      candidate.blocks.find((block) => block.obligationIds.includes(obligationId))?.blockId ?? null)
+    if (blockIdsForSharedExample.some((blockId) => blockId === null)
+      || new Set(blockIdsForSharedExample).size !== 1) failures.add("shared_scenario_block_mismatch")
+  }
   if (!sameSet(candidate.usedPolicyUnitIds, plan.policyUnits.map((row) => row.id))) failures.add("policy_coverage_mismatch")
   const allowedClaimIds = new Set(plan.targetEvidence.flatMap((row) => row.claims.map((claim) => claim.claimId)))
   if (flattenedClaimIds.some((claimId) => !allowedClaimIds.has(claimId))) failures.add("claim_outside_locked_evidence")
@@ -258,30 +272,65 @@ const POLICY_ID_BY_OBLIGATION_KIND: Readonly<Partial<Record<
   offer_safe_assessment_frame: "policy.safe-assessment-frame",
 })
 
-function slotMetadata(plan: StudentAnswerExecutionPlan, index: number) {
-  const obligation = plan.obligations[index]!
-  const explicitActiveTargets = obligation.targetIds.filter((targetId) => plan.activeTargetIds.includes(targetId))
+type StudentAnswerSlotMetadata = Readonly<{
+  blockId: string
+  targetIds: readonly string[]
+  obligationIds: readonly string[]
+  usedClaimIds: readonly string[]
+  usedPolicyUnitIds: readonly string[]
+}>
+
+const SHARED_EXAMPLE_KINDS: readonly StudentRequestContract["obligations"][number]["kind"][] = Object.freeze([
+  "give_concrete_example", "bind_example_to_target", "use_shared_scenario",
+])
+
+function slotMetadataForObligations(
+  plan: StudentAnswerExecutionPlan,
+  obligations: StudentAnswerExecutionPlan["obligations"],
+  blockIndex: number,
+): StudentAnswerSlotMetadata {
+  const explicitActiveTargets = obligations.flatMap((obligation) =>
+    obligation.targetIds.filter((targetId) => plan.activeTargetIds.includes(targetId)))
   const targetIds = explicitActiveTargets.length ? explicitActiveTargets : [...plan.activeTargetIds]
   const usedClaimIds = targetIds.flatMap((targetId) => {
     const evidence = plan.targetEvidence.find((row) => row.studentTargetId === targetId)
     const claim = evidence?.claims.find((candidate) => candidate.role !== "contrast")
     return claim ? [claim.claimId] : []
   })
-  const policyId = POLICY_ID_BY_OBLIGATION_KIND[obligation.kind]
-  const usedPolicyUnitIds = policyId && plan.policyUnits.some((unit) => unit.id === policyId) ? [policyId] : []
-  return Object.freeze({
-    blockId: `b${index + 1}`,
-    targetIds: Object.freeze(unique(targetIds)),
-    obligationIds: Object.freeze([obligation.id]),
-    usedClaimIds: Object.freeze(unique(usedClaimIds)),
-    usedPolicyUnitIds: Object.freeze(usedPolicyUnitIds),
+  const usedPolicyUnitIds = obligations.flatMap((obligation) => {
+    const policyId = POLICY_ID_BY_OBLIGATION_KIND[obligation.kind]
+    return policyId && plan.policyUnits.some((unit) => unit.id === policyId) ? [policyId] : []
   })
+  return Object.freeze({
+    blockId: `b${blockIndex + 1}`,
+    targetIds: Object.freeze(unique(targetIds)),
+    obligationIds: Object.freeze(obligations.map((obligation) => obligation.id)),
+    usedClaimIds: Object.freeze(unique(usedClaimIds)),
+    usedPolicyUnitIds: Object.freeze(unique(usedPolicyUnitIds)),
+  })
+}
+
+function answerSlotMetadata(plan: StudentAnswerExecutionPlan): readonly StudentAnswerSlotMetadata[] {
+  const sharedScenarioRequired = plan.obligations.some((obligation) => obligation.kind === "use_shared_scenario")
+  const slots: StudentAnswerSlotMetadata[] = []
+  let sharedExampleAdded = false
+  for (const obligation of plan.obligations) {
+    if (sharedScenarioRequired && SHARED_EXAMPLE_KINDS.includes(obligation.kind)) {
+      if (sharedExampleAdded) continue
+      sharedExampleAdded = true
+      const grouped = plan.obligations.filter((row) => SHARED_EXAMPLE_KINDS.includes(row.kind))
+      slots.push(slotMetadataForObligations(plan, grouped, slots.length))
+      continue
+    }
+    slots.push(slotMetadataForObligations(plan, [obligation], slots.length))
+  }
+  return Object.freeze(slots)
 }
 
 function answerSchema(plan: StudentAnswerExecutionPlan): Record<string, unknown> {
   const illustrationKinds = plan.obligations.some((row) => row.kind === "give_concrete_example")
     ? ["user_supplied", "hypothetical"] : ["none"]
-  const slotIds = plan.obligations.map((_obligation, index) => `b${index + 1}`)
+  const slotIds = answerSlotMetadata(plan).map((slot) => slot.blockId)
   return {
     type: "object",
     additionalProperties: false,
@@ -310,18 +359,19 @@ function providerContent(input: Readonly<{
     currentUserMessage: input.question,
     operation: input.plan.operation,
     rejectedTargetIds: input.plan.rejectedTargetIds,
-    answerSlots: input.plan.obligations.map((obligation, index) => {
-      const metadata = slotMetadata(input.plan, index)
+    answerSlots: answerSlotMetadata(input.plan).map((metadata) => {
+      const obligations = input.plan.obligations.filter((obligation) => metadata.obligationIds.includes(obligation.id))
+      const exampleSlot = obligations.some((obligation) => SHARED_EXAMPLE_KINDS.includes(obligation.kind))
       return {
         slotId: metadata.blockId,
-        obligation,
+        obligations,
         activeTargets: input.plan.targetEvidence
           .filter((target) => metadata.targetIds.includes(target.studentTargetId))
           .map((target) => ({
             targetId: target.studentTargetId,
             title: target.ownerBookTopicTitle,
             visibleAliases: target.visibleAliases,
-            lockedClaims: ["give_concrete_example", "bind_example_to_target"].includes(obligation.kind)
+            lockedClaims: exampleSlot
               ? target.claims.filter((claim) => claim.role !== "contrast")
               : target.claims,
           })),
@@ -343,7 +393,7 @@ function visibleTargetPrefix(plan: StudentAnswerExecutionPlan) {
 }
 
 const PROVIDER_INSTRUCTIONS = `
-Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır cevap metinleri yaz. Yalnız şemada hazır bulunan b1, b2 gibi metin kutularını ve illustrationKind alanını doldur; hedef, yükümlülük, kanıt, politika veya blok kimliği üretme. Her metin kutusu answerSlots içindeki aynı slotId görevini gerçekten yerine getirsin. Sistem kutuları sırayla birleştirerek son cevabı oluşturacak; bu yüzden kutular birlikte tek, akıcı ve tekrarsız bir cevap gibi okunmalıdır. Her slotun activeTargets bölümündeki her hedef için visibleAliases adlarından en az birini görünür metinde yaz. Bilimsel içerikte yalnız o slotun lockedClaims cümlelerini kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. role=contrast olan cümle başka bir kavramın karşıt bilgisidir; onu aktif hedefin tanımı, özelliği veya örneği gibi kullanma. Örnek ve örnek-bağlama slotlarına contrast cümlesi zaten verilmez. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İstenen toplam cümle sayısını bütün kutuların birleşiminde tam koru. İç sistem dilini görünür metne yazma.
+Türkçe konuşan yeni mezun bir ergoterapi öğrencisine, doğal ve kolay anlaşılır cevap metinleri yaz. Yalnız şemada hazır bulunan b1, b2 gibi metin kutularını ve illustrationKind alanını doldur; hedef, yükümlülük, kanıt, politika veya blok kimliği üretme. Her metin kutusu answerSlots içindeki aynı slotId görevlerinin tamamını gerçekten yerine getirsin. Sistem kutuları sırayla birleştirerek son cevabı oluşturacak; bu yüzden kutular birlikte tek, akıcı ve tekrarsız bir cevap gibi okunmalıdır. Bir slotun obligations listesinde use_shared_scenario varsa yalnız tek bir ortak somut durum kullan; bütün aktif hedefleri bu aynı durumun içinde ayrı ayrı göster ve ikinci, ilgisiz bir örneğe geçme. Her slotun activeTargets bölümündeki her hedef için visibleAliases adlarından en az birini görünür metinde yaz. Bilimsel içerikte yalnız o slotun lockedClaims cümlelerini kullan; yeni neden, mekanizma, tanı, ilişki, terapi veya kesinlik ekleme. role=contrast olan cümle başka bir kavramın karşıt bilgisidir; onu aktif hedefin tanımı, özelliği veya örneği gibi kullanma. Örnek ve örnek-bağlama slotlarına contrast cümlesi zaten verilmez. RejectedTargetIds içindeki kavramı cevap odağına geri getirme. Kullanıcının mesajındaki durum yalnız örnek sunma görevi varsa, kimliksiz ve açıkça örnek olarak kullanılabilir; bu durum bilimsel kanıt veya kişiye özgü sonuç değildir. İstenen toplam cümle sayısını bütün kutuların birleşiminde tam koru. İç sistem dilini görünür metne yazma.
 `.trim()
 
 function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan): StudentAnswerCandidate | null {
@@ -353,14 +403,15 @@ function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan): Stude
     ? row.blocks as Record<string, unknown> : null
   const illustrationKind = row.illustrationKind
   if (!textBySlot || !["none", "user_supplied", "hypothetical"].includes(String(illustrationKind))) return null
-  const slotIds = plan.obligations.map((_obligation, index) => `b${index + 1}`)
+  const slots = answerSlotMetadata(plan)
+  const slotIds = slots.map((slot) => slot.blockId)
   if (!sameSet(Object.keys(textBySlot), slotIds)
     || slotIds.some((slotId) => typeof textBySlot[slotId] !== "string")) return null
-  const blocks = slotIds.map((slotId, index) => Object.freeze({
-    ...slotMetadata(plan, index),
+  const blocks = slots.map((slot, index) => Object.freeze({
+    ...slot,
     text: index === 0
-      ? `${visibleTargetPrefix(plan)} ${String(textBySlot[slotId]).trim()}`
-      : String(textBySlot[slotId]).trim(),
+      ? `${visibleTargetPrefix(plan)} ${String(textBySlot[slot.blockId]).trim()}`
+      : String(textBySlot[slot.blockId]).trim(),
   }))
   return composeCandidate(blocks, illustrationKind as StudentAnswerCandidate["illustrationKind"])
 }

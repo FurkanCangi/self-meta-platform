@@ -1,5 +1,5 @@
-export const DNA_STUDENT_FIRST_CONVERSATION_VERSION = "dna-student-conversation-state@5" as const
-export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@15" as const
+export const DNA_STUDENT_FIRST_CONVERSATION_VERSION = "dna-student-conversation-state@6" as const
+export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@16" as const
 
 export type StudentSemanticTask =
   | "define"
@@ -24,6 +24,7 @@ export type StudentPresentationRequest = Readonly<{
   language: "plain_student" | "standard"
   format: "prose" | "bullets" | "table"
   example: "none" | "brief" | "concrete"
+  exampleScope: "independent" | "shared"
   grouping: "integrated" | "separate_each"
   requestedSentenceCount: number | null
   preserveMeaning: boolean
@@ -53,6 +54,7 @@ export type StudentAnswerObligationKind =
   | "explain_relation"
   | "give_concrete_example"
   | "bind_example_to_target"
+  | "use_shared_scenario"
   | "honor_rejected_target"
   | "use_history_anchor"
   | "preserve_target_while_simplifying"

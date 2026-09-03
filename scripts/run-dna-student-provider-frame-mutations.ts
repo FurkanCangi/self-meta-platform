@@ -93,6 +93,7 @@ const DEFAULT_PRESENTATION: StudentPresentationRequest = Object.freeze({
   language: "standard",
   format: "prose",
   example: "none",
+  exampleScope: "independent",
   grouping: "integrated",
   requestedSentenceCount: null,
   preserveMeaning: false,

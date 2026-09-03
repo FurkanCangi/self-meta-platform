@@ -15,7 +15,7 @@ import {
   type StudentSemanticFrame,
 } from "./semanticInterpreter"
 
-export const DNA_STUDENT_EVIDENCE_FIRST_VERSION = "dna-student-evidence-first@2" as const
+export const DNA_STUDENT_EVIDENCE_FIRST_VERSION = "dna-student-evidence-first@3" as const
 
 export type StudentObservedTargetFact = Readonly<{
   targetId: string
@@ -311,6 +311,8 @@ function presentation(message: string): StudentPresentationRequest {
     : null
   const exampleRequested = semanticTaskCandidates(message, 0).includes("example")
   const concreteExample = exampleRequested && /\b(?:cocuk|ogrenci|sinif|ders|ogretmen|oyun|gunluk)\w*\b/.test(normalized)
+  const sharedExample = /\b(?:ayni|ortak)\s+(?:ornek|senaryo)\w*\b/.test(normalized)
+    || /\btek\s+(?:bir\s+)?(?:ornek|senaryo)\w*(?:\s+(?:icinde|uzerinden))?\b/.test(normalized)
   return Object.freeze({
     depth: /\b(?:kisa|kisaca|minicik|ozet|[2-4] cumle\w*|iki cumle\w*|uc cumle\w*|dort cumle\w*)\b/.test(normalized)
       ? "brief"
@@ -322,6 +324,7 @@ function presentation(message: string): StudentPresentationRequest {
       ? "table"
       : /\b(?:madde madde|maddelerle)\b/.test(normalized) ? "bullets" : "prose",
     example: exampleRequested ? concreteExample ? "concrete" : "brief" : "none",
+    exampleScope: sharedExample ? "shared" : "independent",
     grouping: /\b(?:ayri ayri|her birini|ucunu ayri|ikisini ayri)\b/.test(normalized) ? "separate_each" : "integrated",
     requestedSentenceCount: Number.isFinite(requestedSentenceCount) ? requestedSentenceCount : null,
     preserveMeaning: /\b(?:yeniden soyle|tekrar anlat|daha basit|akademik oldu|akademik olmadan)\b/.test(normalized),

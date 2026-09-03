@@ -149,6 +149,9 @@ for (const [index, [message, targets]] of multiActMessages.entries()) {
   for (const kind of ["distinguish_targets", "explain_relation", "give_concrete_example", "bind_example_to_target"] as const) {
     assert.equal(kinds.includes(kind), true, `${message}: missing ${kind}`)
   }
+  const sharedRequested = /aynı örnekte/u.test(message)
+  assert.equal(result.contract.presentation.exampleScope, sharedRequested ? "shared" : "independent", message)
+  assert.equal(kinds.includes("use_shared_scenario"), sharedRequested, `${message}: shared scenario obligation mismatch`)
 }
 
 let summaryState = createEmptyStudentConversationState()

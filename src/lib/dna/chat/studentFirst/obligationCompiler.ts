@@ -8,7 +8,7 @@ import type {
   StudentSummaryScope,
 } from "./contracts"
 
-export const DNA_STUDENT_OBLIGATION_COMPILER_VERSION = "dna-student-obligation-compiler@4" as const
+export const DNA_STUDENT_OBLIGATION_COMPILER_VERSION = "dna-student-obligation-compiler@5" as const
 
 const OBLIGATION_DESCRIPTIONS: Readonly<Record<StudentAnswerObligationKind, string>> = Object.freeze({
   define_target: "Hedef kavramı doğrudan tanımla",
@@ -16,6 +16,7 @@ const OBLIGATION_DESCRIPTIONS: Readonly<Record<StudentAnswerObligationKind, stri
   explain_relation: "Kavramların ilişkisini açıkla",
   give_concrete_example: "İstenen bağlamda somut örnek ver",
   bind_example_to_target: "Örneğin hedef kavramla bağını açıkla",
+  use_shared_scenario: "Bütün hedefleri tek ortak senaryoda ayrı ayrı göster",
   honor_rejected_target: "Kullanıcının reddettiği hedefe geri dönme",
   use_history_anchor: "Doğru geçmiş konuşma hedefini kullan",
   preserve_target_while_simplifying: "Aynı hedefi daha sade dille anlat",
@@ -68,6 +69,7 @@ export function compileStudentAnswerObligations(
     if (!presentationOnly && (input.semanticTask === "example" || requestedTasks.has("example"))) {
       add("give_concrete_example", input.targetIds)
       add("bind_example_to_target", input.targetIds)
+      if (input.presentation.exampleScope === "shared") add("use_shared_scenario", input.targetIds)
     }
     if (!presentationOnly && (input.semanticTask === "define" || input.semanticTask === "explain")) {
       add("define_target", input.targetIds)

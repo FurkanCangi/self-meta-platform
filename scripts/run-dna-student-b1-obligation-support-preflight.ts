@@ -50,14 +50,16 @@ async function main() {
     "explain_relation",
     "give_concrete_example",
     "bind_example_to_target",
+    "use_shared_scenario",
   ])
+  assert.equal(targetResolution.contract.presentation.exampleScope, "shared")
 
   const execution = await executeStudentAnswer({ question: target.user, contract: targetResolution.contract })
   if (!execution.ok) {
     const usage = calculateDnaChatLunaUsage(execution.provider.usage)
     console.log(JSON.stringify({
       ok: false,
-      gate: "STUDENT_B1_EVIDENCE_ROLE_PREFLIGHT",
+      gate: "STUDENT_B1_SHARED_SCENARIO_PREFLIGHT",
       turnId: target.turnId,
       failure: execution.reason,
       detail: execution.reason === "candidate_invalid" ? execution.failureCodes : execution.failure.reason,
@@ -82,16 +84,19 @@ async function main() {
   const contrastClaimIds = new Set(execution.plan.targetEvidence.flatMap((evidence) =>
     evidence.claims.filter((claim) => claim.role === "contrast").map((claim) => claim.claimId)))
   const exampleObligationIds = new Set(execution.plan.obligations
-    .filter((obligation) => ["give_concrete_example", "bind_example_to_target"].includes(obligation.kind))
+    .filter((obligation) => ["give_concrete_example", "bind_example_to_target", "use_shared_scenario"].includes(obligation.kind))
     .map((obligation) => obligation.id))
-  assert.equal(execution.candidate.blocks.filter((block) => block.obligationIds.some((id) => exampleObligationIds.has(id)))
-    .some((block) => block.usedClaimIds.some((id) => contrastClaimIds.has(id))), false)
+  const exampleBlocks = execution.candidate.blocks.filter((block) =>
+    block.obligationIds.some((id) => exampleObligationIds.has(id)))
+  assert.equal(exampleBlocks.length, 1)
+  assert.deepEqual([...exampleBlocks[0]!.obligationIds].sort(), [...exampleObligationIds].sort())
+  assert.equal(exampleBlocks.some((block) => block.usedClaimIds.some((id) => contrastClaimIds.has(id))), false)
   const usage = calculateDnaChatLunaUsage(execution.provider.usage)
   assert.ok(usage.costMicrousd <= MAX_COST_MICROUSD)
 
   console.log(JSON.stringify({
     ok: true,
-    gate: "STUDENT_B1_EVIDENCE_ROLE_PREFLIGHT",
+    gate: "STUDENT_B1_SHARED_SCENARIO_PREFLIGHT",
     turnId: target.turnId,
     targetIds: targetResolution.contract.targetIds,
     obligationKinds: targetResolution.contract.obligations.map((row) => row.kind),
@@ -107,7 +112,7 @@ async function main() {
 void main().catch((error) => {
   console.error(JSON.stringify({
     ok: false,
-    gate: "STUDENT_B1_EVIDENCE_ROLE_PREFLIGHT",
+    gate: "STUDENT_B1_SHARED_SCENARIO_PREFLIGHT",
     failure: error instanceof Error ? error.message : String(error),
   }))
   process.exitCode = 1

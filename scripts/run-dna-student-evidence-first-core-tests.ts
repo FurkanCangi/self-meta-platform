@@ -67,6 +67,7 @@ assert.equal(compareAndExample.semanticTaskCandidates.includes("compare"), true)
 assert.equal(compareAndExample.semanticTaskCandidates.includes("example"), true)
 assert.equal(compareAndExample.presentation.grouping, "separate_each")
 assert.equal(compareAndExample.presentation.example, "brief")
+assert.equal(compareAndExample.presentation.exampleScope, "shared")
 
 let treatmentState = createEmptyStudentConversationState()
 treatmentState = append(treatmentState, "B1-TREAT-T01", "eş düzenleme ne demek")

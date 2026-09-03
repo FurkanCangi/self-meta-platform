@@ -15,7 +15,7 @@ import { DNA_STUDENT_TARGET_LEXICON, detectExplicitStudentTargetIds } from "./co
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 import { normalizeDnaChatText } from "../text"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@25" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@26" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -34,6 +34,7 @@ export const DNA_STUDENT_OBLIGATION_KINDS = Object.freeze([
   "explain_relation",
   "give_concrete_example",
   "bind_example_to_target",
+  "use_shared_scenario",
   "honor_rejected_target",
   "use_history_anchor",
   "preserve_target_while_simplifying",
@@ -177,11 +178,13 @@ export function groundStudentRequestIntent(input: Readonly<{
   const acts = row.semanticActs as Record<string, unknown>
   const presentation = row.presentation as Record<string, unknown>
   if (DNA_STUDENT_SEMANTIC_TASKS.some((task) => typeof acts[task] !== "boolean")) return input.candidate
-  const requiredPresentationKeys = ["depth", "language", "format", "example", "grouping", "requestedSentenceCount", "preserveMeaning"]
+  const requiredPresentationKeys = ["depth", "language", "format", "example", "exampleScope", "grouping", "requestedSentenceCount", "preserveMeaning"]
   if (requiredPresentationKeys.some((key) => !(key in presentation))) return input.candidate
 
   const normalized = normalizeDnaChatText(input.message)
   const groupingRequested = /\b(?:ayri ayri|her birini|ucunu ayri|ikisini ayri)\b/.test(normalized)
+  const sharedExample = /\b(?:ayni|ortak)\s+(?:ornek|senaryo)\w*\b/.test(normalized)
+    || /\btek\s+(?:bir\s+)?(?:ornek|senaryo)\w*(?:\s+(?:icinde|uzerinden))?\b/.test(normalized)
   const exampleRequested = /\b(?:ornek ver|bir ornek ver|ornekle anlat|ornek gibi acikla|ornek uzerinden|ornegiyle bagla)\b/.test(normalized)
     || (/\bayni ornekte\b/.test(normalized) && /\b(?:goster|anlat|acikla|ayir)\b/.test(normalized))
   const concreteExampleContext = /\b(?:cocuk|ogrenci|sinif|ders|ogretmen|oyun|gunluk)\w*\b/.test(normalized)
@@ -192,6 +195,7 @@ export function groundStudentRequestIntent(input: Readonly<{
   const groundedPresentation = Object.freeze({
     ...presentation,
     grouping: groupingRequested ? "separate_each" : presentation.grouping,
+    exampleScope: sharedExample ? "shared" : presentation.exampleScope,
     example: semanticActs.example === true
       ? concreteExampleContext
         ? "concrete"
@@ -301,6 +305,7 @@ function parsePresentation(value: unknown): StudentPresentationRequest | null {
   if (!["plain_student", "standard"].includes(String(row.language))) return null
   if (!["prose", "bullets", "table"].includes(String(row.format))) return null
   if (!["none", "brief", "concrete"].includes(String(row.example))) return null
+  if (!["independent", "shared"].includes(String(row.exampleScope))) return null
   if (!["integrated", "separate_each"].includes(String(row.grouping))) return null
   if (row.requestedSentenceCount !== null && (!Number.isInteger(row.requestedSentenceCount) || Number(row.requestedSentenceCount) < 1 || Number(row.requestedSentenceCount) > 6)) return null
   if (typeof row.preserveMeaning !== "boolean") return null
@@ -309,6 +314,7 @@ function parsePresentation(value: unknown): StudentPresentationRequest | null {
     language: row.language as StudentPresentationRequest["language"],
     format: row.format as StudentPresentationRequest["format"],
     example: row.example as StudentPresentationRequest["example"],
+    exampleScope: row.exampleScope as StudentPresentationRequest["exampleScope"],
     grouping: row.grouping as StudentPresentationRequest["grouping"],
     requestedSentenceCount: row.requestedSentenceCount as number | null,
     preserveMeaning: row.preserveMeaning,
@@ -439,6 +445,7 @@ export function compileStudentRequestContract(
     example: requestedSemanticTasks.includes("example")
       ? frame.presentation.example === "none" ? "brief" : frame.presentation.example
       : "none",
+    exampleScope: requestedSemanticTasks.includes("example") ? frame.presentation.exampleScope : "independent",
   })
   const unique = (values: readonly string[]) => [...new Set(values)]
   const currentRejectedTargetIds = Object.freeze(frame.conversationAction === "repair" ? [...frame.rejectedTargetIds] : [])
@@ -599,12 +606,13 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
       presentation: {
         type: "object",
         additionalProperties: false,
-        required: ["depth", "language", "format", "example", "grouping", "requestedSentenceCount", "preserveMeaning"],
+        required: ["depth", "language", "format", "example", "exampleScope", "grouping", "requestedSentenceCount", "preserveMeaning"],
         properties: {
           depth: { type: "string", enum: ["brief", "standard", "deep"] },
           language: { type: "string", enum: ["plain_student", "standard"] },
           format: { type: "string", enum: ["prose", "bullets", "table"] },
           example: { type: "string", enum: ["none", "brief", "concrete"] },
+          exampleScope: { type: "string", enum: ["independent", "shared"] },
           grouping: { type: "string", enum: ["integrated", "separate_each"] },
           requestedSentenceCount: { anyOf: [{ type: "integer", minimum: 1, maximum: 6 }, { type: "null" }] },
           preserveMeaning: { type: "boolean" },
@@ -671,11 +679,12 @@ Sen yalnız Türkçe bilimsel öğrenci konuşmasını yapılandıran bir yoruml
 Her mesaj için üç bağımsız eksen çıkar:
 1. semanticActs: kullanıcının bilimsel olarak istediği işleri birbirinden bağımsız boolean olarak işaretle (define, explain, compare, example, case_reasoning, summarize, observe, evidence, treatment_boundary),
 2. conversationAction: konuşmadaki hareket (start, continue, repair, return, summarize_session),
-3. presentation: sade dil, uzunluk, biçim, örnek ve aynı anlamı koruyarak yeniden anlatma isteği.
+3. presentation: sade dil, uzunluk, biçim, örnek, örneğin ortak senaryo kapsamı ve aynı anlamı koruyarak yeniden anlatma isteği.
 
 Tek bir semantic act seçmeye çalışma. Açıkça istenen her act true, istenmeyenler false olsun. “Ne demek / nedir / neyi ifade eder” define=true; aynı mesaj genel açıklama da gerektiriyorsa explain de true olabilir. Yerel resolver primary taskı seçecek. Sunum isteği semantic acts yerine geçmez. Örneğin “ne demek, öğrenci gibi anlat” define=true ve language=plain_student olur. Yalnız önceki cevabı aynı anlamı koruyarak daha sade/yeniden söyleme isteğinde yeni bilimsel görev yoksa bütün semanticActs false olabilir; bu durumda presentation.preserveMeaning=true ve önceki referans doğru verilmelidir. Türkçe ekleri ve gündelik ifadeleri anlam düzeyinde yorumla; “tek gözlemle”, “bir kere görerek” ve “sadece bunu gördüm” gözlemden sonuç çıkarma sınırını soruyorsa observe=true olur.
 
 Bir örnek üretme veya bir kavramı örnekle gösterme açıkça isteniyorsa semanticActs.example=true kullan. “Bu örnekte”, “önceki örnek” veya “örnekteki çocuk” yalnız mevcut örneğe gönderme yapıyorsa ve yeni örnek istenmiyorsa semanticActs.example=false ve presentation.example=none kullan. presentation.example yalnız istenen örneğin kısa/somut sunum biçimini belirtir; kendi başına örnek isteği değildir.
+Kullanıcı “aynı örnekte”, “tek bir örnek içinde” veya “ortak bir senaryoda” birden fazla hedefi göstermeyi istiyorsa presentation.exampleScope=shared kullan. Bunun dışındaki örnek isteklerinde independent kullan.
 
 Yalnız allowedTargets içindeki ID'leri kullan. Yeni hedef uydurma. focusTargetIds yalnız mevcut isteğin cevapta doğrudan ele alınmasını istediği bilimsel kavramları içerir. Bir vaka veya örnek cümlesinde geçen fakat hakkında ayrıca açıklama/karşılaştırma istenmeyen davranış-kavram eşleşmelerini contextTargetIds alanına koy; bunlar cevap hedefi değildir. Örneğin eş düzenlemeyi örneklerken “çocuk göreve dönüyor” denmesi recovery kavramını otomatik olarak focus yapmaz. Referans verilen eski turun hedeflerini iki alana da kopyalama. Aynı ID iki rolde birden bulunamaz. rejectedTargetIds yalnız mevcut kullanıcı mesajında açıkça reddedilen hedefleri içerir ve yalnız conversationAction=repair iken dolu olabilir; state'teki eski reddedilmiş hedefleri özet, devam veya dönüş turuna kopyalama. “Bu/bununla/bu örnekte/ilk anlattığın” gibi ifadeler önceki bir tura işaret ediyorsa o turun ID'sini referentTurnId alanına yaz; referans yoksa null kullan. referentRole=utterance, kullanıcı önceki açıklama/ifade/kavrama dönüyorsa kullanılır. referentRole=case_entity, kullanıcı önceki çocuk, öğrenci, vaka, davranış veya örnek varlığına dönüyorsa kullanılır; bu durumda en son yorum cümlesi yerine varlığın tanıtıldığı örnek turunu seçmeye çalış. Referans yoksa referentRole=none olmalıdır. Referansın active/history türünü, hedeflerini ve bağlı vaka zincirini yerel resolver state'ten türetecek. Oturum özetinde summarize=true ve conversationAction=summarize_session kullan; özet hedeflerini yerel resolver geçmişten türetecek.
 

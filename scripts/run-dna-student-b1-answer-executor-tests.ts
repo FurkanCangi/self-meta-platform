@@ -32,7 +32,7 @@ const mockFetch: typeof fetch = async (_input, init) => {
     operation: string
     answerSlots: readonly Readonly<{
       slotId: string
-      obligation: Readonly<{ id: string; kind: string }>
+      obligations: readonly Readonly<{ id: string; kind: string }>[]
       activeTargets: readonly Readonly<{
         targetId: string
         title: string
@@ -45,18 +45,20 @@ const mockFetch: typeof fetch = async (_input, init) => {
   }
   const slotText = (slot: (typeof content.answerSlots)[number]) => {
     const labels = slot.activeTargets.map((row) => row.visibleAliases[0]).join(", ")
-    if (slot.obligation.kind === "distinguish_targets") return `${labels} aynı şey değildir.`
-    if (slot.obligation.kind === "explain_relation") return `${labels} arasındaki ilişki ayrı kapsamlarıyla açıklanır.`
-    if (slot.obligation.kind === "give_concrete_example") return `Örneğin, ${labels} için kısa bir öğrenci durumu düşün.`
-    if (slot.obligation.kind === "bind_example_to_target") return `Bu örnek ${labels} kavramıyla doğrudan bağ kurar.`
-    if (slot.obligation.kind === "summarize_known") return `${labels} konuşmada bildiğimiz başlıklardır.`
-    if (slot.obligation.kind === "summarize_unknown") return "Bu açıklama tek başına bir öğrenci hakkında kesin sonuç vermez."
-    if (slot.obligation.kind === "summarize_observation_focus") return "Gözlemde farklı ortam ve görevlerde ne olduğuna bakılır."
+    const kinds = new Set(slot.obligations.map((obligation) => obligation.kind))
+    if (kinds.has("use_shared_scenario")) return `Örneğin tek bir sınıf görevinde öğrenci ${labels} becerilerini aynı durum içinde ayrı ayrı kullanır.`
+    if (kinds.has("distinguish_targets")) return `${labels} aynı şey değildir.`
+    if (kinds.has("explain_relation")) return `${labels} arasındaki ilişki ayrı kapsamlarıyla açıklanır.`
+    if (kinds.has("give_concrete_example")) return `Örneğin, ${labels} için kısa bir öğrenci durumu düşün.`
+    if (kinds.has("bind_example_to_target")) return `Bu örnek ${labels} kavramıyla doğrudan bağ kurar.`
+    if (kinds.has("summarize_known")) return `${labels} konuşmada bildiğimiz başlıklardır.`
+    if (kinds.has("summarize_unknown")) return "Bu açıklama tek başına bir öğrenci hakkında kesin sonuç vermez."
+    if (kinds.has("summarize_observation_focus")) return "Gözlemde farklı ortam ve görevlerde ne olduğuna bakılır."
     return `${labels} için kaynak bilgisine dayalı, öğrenci dilinde kısa bir açıklama veriyorum.`
   }
   const value = {
     blocks: Object.fromEntries(content.answerSlots.map((slot) => [slot.slotId, slotText(slot)])),
-    illustrationKind: content.answerSlots.some((slot) => slot.obligation.kind === "give_concrete_example")
+    illustrationKind: content.answerSlots.some((slot) => slot.obligations.some((obligation) => obligation.kind === "give_concrete_example"))
       ? "user_supplied" : "none",
   }
   return new Response(JSON.stringify({
@@ -70,6 +72,7 @@ async function main() {
   let turns = 0
   let providerAnswers = 0
   let localSafetyAnswers = 0
+  let sharedScenarioGrouped = false
   for (const conversation of fixture.conversations) {
     let state: StudentConversationState = createEmptyStudentConversationState()
     for (const turn of conversation.turns) {
@@ -89,6 +92,17 @@ async function main() {
       assert.equal(result.provider.rawOutputStored, false, `${turn.turnId}: raw output storage`)
       assert.equal(validateStudentAnswerCandidate({ candidate: result.candidate, plan: result.plan }).length, 0,
         `${turn.turnId}: final candidate validation`)
+      if (turn.turnId === "STUDENT40-C02-T07") {
+        const sharedIds = result.plan.obligations
+          .filter((obligation) => ["give_concrete_example", "bind_example_to_target", "use_shared_scenario"].includes(obligation.kind))
+          .map((obligation) => obligation.id)
+        assert.equal(sharedIds.length, 3)
+        const sharedBlocks = result.candidate.blocks.filter((block) =>
+          block.obligationIds.some((obligationId) => sharedIds.includes(obligationId)))
+        assert.equal(sharedBlocks.length, 1, "shared scenario duties must compile into one text block")
+        assert.deepEqual([...sharedBlocks[0]!.obligationIds].sort(), [...sharedIds].sort())
+        sharedScenarioGrouped = true
+      }
       if (result.route === "provider_grounded") {
         providerAnswers += 1
         assert.equal(result.provider.calls, 1, `${turn.turnId}: bounded provider call`)
@@ -102,6 +116,7 @@ async function main() {
   }
   assert.equal(turns, 40)
   assert.equal(mockCalls, providerAnswers)
+  assert.equal(sharedScenarioGrouped, true)
 
   const first = fixture.conversations[0]!.turns[0]!
   const firstResolution = resolveStudentEvidenceFirstRequest({
@@ -233,6 +248,28 @@ async function main() {
   }
   assert.ok(validateStudentAnswerCandidate({ candidate: contrastCandidate, plan: comparisonPlanWithContrast })
     .includes("contrast_claim_used_as_target"))
+  const sharedScenarioObligation = comparisonPlanWithContrast.obligations.find((row) => row.kind === "use_shared_scenario")!
+  const splitScenarioBlock = {
+    blockId: "b2",
+    text: "Aynı senaryo ikinci bir blokta ayrıca ele alınıyor.",
+    targetIds: [...comparisonPlanWithContrast.activeTargetIds],
+    obligationIds: [sharedScenarioObligation.id],
+    usedClaimIds: [],
+    usedPolicyUnitIds: [],
+  }
+  const splitScenarioFirstBlock = {
+    ...contrastCandidate.blocks[0]!,
+    obligationIds: contrastCandidate.blocks[0]!.obligationIds.filter((id) => id !== sharedScenarioObligation.id),
+  }
+  const splitScenarioAnswer = `${splitScenarioFirstBlock.text} ${splitScenarioBlock.text}`
+  assert.ok(validateStudentAnswerCandidate({
+    candidate: {
+      ...contrastCandidate,
+      answer: splitScenarioAnswer,
+      blocks: [splitScenarioFirstBlock, splitScenarioBlock],
+    },
+    plan: comparisonPlanWithContrast,
+  }).includes("shared_scenario_block_mismatch"))
 
   const targetlessFetch: typeof fetch = async (_input, init) => {
     const request = JSON.parse(String(init?.body)) as { input: string }
@@ -308,6 +345,8 @@ async function main() {
     duplicateObligationBlockReferenceRejected: true,
     deterministicTargetPrefix: true,
     contrastClaimTargetBindingRejected: true,
+    sharedScenarioGrouped,
+    splitSharedScenarioRejected: true,
     rejectedCandidateTelemetryPreserved: true,
   }, null, 2))
 }

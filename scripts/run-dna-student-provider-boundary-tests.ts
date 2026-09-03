@@ -204,7 +204,7 @@ async function main() {
     rejectedTargetIds: [],
     referentTurnId: null,
     referentRole: "none",
-    presentation: { depth: "standard", language: "standard", format: "prose", example: "none", grouping: "integrated", requestedSentenceCount: null, preserveMeaning: false },
+    presentation: { depth: "standard", language: "standard", format: "prose", example: "none", exampleScope: "independent", grouping: "integrated", requestedSentenceCount: null, preserveMeaning: false },
     summaryExtras: { unknown: false, observationFocus: false },
     observationExtras: { singleObservationLimit: false, additionalContext: false },
   }

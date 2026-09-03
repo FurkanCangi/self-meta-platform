@@ -64,6 +64,7 @@ const matchingContract: StudentRequestContract = Object.freeze({
     language: "plain_student",
     format: "prose",
     example: "none",
+    exampleScope: "independent",
     grouping: "integrated",
     requestedSentenceCount: null,
     preserveMeaning: false,

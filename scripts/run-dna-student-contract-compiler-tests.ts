@@ -22,6 +22,7 @@ const base: StudentObligationCompilationInput = Object.freeze({
     language: "standard",
     format: "prose",
     example: "none",
+    exampleScope: "independent",
     grouping: "integrated",
     requestedSentenceCount: null,
     preserveMeaning: false,
@@ -95,6 +96,16 @@ assert.deepEqual(kinds({
   comparisonTargetIds: ["planning", "working_memory"],
   presentation: { ...base.presentation, example: "brief" },
 }), ["distinguish_targets", "explain_relation", "give_concrete_example", "bind_example_to_target"])
+
+assert.deepEqual(kinds({
+  ...base,
+  semanticTask: "compare",
+  requestedSemanticTasks: ["compare", "example"],
+  conversationAction: "continue",
+  targetIds: ["planning", "working_memory"],
+  comparisonTargetIds: ["planning", "working_memory"],
+  presentation: { ...base.presentation, example: "brief", exampleScope: "shared" },
+}), ["distinguish_targets", "explain_relation", "give_concrete_example", "bind_example_to_target", "use_shared_scenario"])
 
 assert.deepEqual(kinds({
   ...base,
