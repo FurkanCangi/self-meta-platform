@@ -180,7 +180,7 @@ Only after B1 passes Student40:
 
 Stop at the first failed gate. No threshold reduction, fixture/gold editing, easier replacement set, or production deployment is allowed.
 
-Current R5 status on 2026-09-03: deterministic target-ownership Candidate 5 (`0588cbf`) passed its targeted preflight and 14 visible Student40 turns, then the semantic judge stopped `STUDENT40-C02-T07`: a true short-term-memory contrast claim was incorrectly bound as a working-memory example. The synthetic student simulation remains blocked while claim role/polarity is evaluated.
+Current R5 status on 2026-09-03: evidence-role Candidate 6 (`49ca31c`) removed the short-term/working-memory evidence error, but its targeted output used two different examples when the student explicitly requested both targets inside the same example. The formal preflight passed because shared-scenario intent is absent from the request contract. Candidate 6 was stopped before full Student40; the synthetic student simulation remains blocked pending a versioned shared-scenario obligation.
 
 The synthetic simulation replaces the unavailable human-student gate by user decision. It is a product-quality stress test, not evidence of independent human usability validation. Its prompts and judgments must be preserved separately from Student40 and Fresh Student60, and it cannot change their gold labels or thresholds.
 
