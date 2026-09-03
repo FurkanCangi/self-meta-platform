@@ -3,6 +3,8 @@ export {
   createEmptyStudentConversationState,
   detectContextStudentTargetIds,
   detectExplicitStudentTargetIds,
+  DNA_STUDENT_RECENT_SEMANTIC_HISTORY_LIMIT,
+  DNA_STUDENT_SEMANTIC_LEDGER_LIMIT,
   interpretStudentRequest,
   resolveStudentObligations,
 } from "./conversationState"
@@ -69,6 +71,7 @@ export type {
   StudentAnswerObligationKind,
   StudentConversationAction,
   StudentConversationState,
+  StudentConversationLedgerEntry,
   StudentConversationTurnSnapshot,
   StudentObservationScope,
   StudentPresentationRequest,

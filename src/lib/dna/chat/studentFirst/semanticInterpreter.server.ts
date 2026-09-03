@@ -153,7 +153,7 @@ export async function interpretStudentRequestWithProvider(input: Readonly<{
           conversationAction: resolveStudentConversationAction({
             message: input.message,
             providerAction,
-            hasHistory: input.state.semanticHistory.length > 0,
+            hasHistory: input.state.semanticLedger.length > 0,
             preserveMeaning: providerPresentation?.preserveMeaning === true,
           }),
         })

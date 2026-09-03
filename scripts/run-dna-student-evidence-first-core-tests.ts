@@ -4,8 +4,11 @@ import {
   applyStudentRequestContract,
   buildStudentStateCandidateEnvelope,
   createEmptyStudentConversationState,
+  DNA_STUDENT_RECENT_SEMANTIC_HISTORY_LIMIT,
+  DNA_STUDENT_SEMANTIC_LEDGER_LIMIT,
   interpretStudentRequest,
   observeStudentRequestFacts,
+  resolveStudentEvidenceFirstRequest,
   type StudentConversationState,
 } from "../src/lib/dna/chat/studentFirst"
 
@@ -121,6 +124,54 @@ const returnEnvelope = buildStudentStateCandidateEnvelope({ facts: returnFacts, 
 assert.equal(returnFacts.conversationAction, "return")
 assert.equal(returnEnvelope.allowedReferentTurnIds.includes("B1-SUM-T01"), true)
 
+const longConversationTurns = [
+  ["B1-LONG-T01", "hocam öz düzenleme ne demek"],
+  ["B1-LONG-T02", "dikkat ne demek"],
+  ["B1-LONG-T03", "planlama ne demek"],
+  ["B1-LONG-T04", "çalışma belleği nedir"],
+  ["B1-LONG-T05", "inhibisyon neyi ifade eder"],
+  ["B1-LONG-T06", "duygu düzenleme nedir"],
+  ["B1-LONG-T07", "planlamayı biraz daha aç"],
+  ["B1-LONG-T08", "çalışma belleğini sade anlat"],
+  ["B1-LONG-T09", "inhibisyonu kısaca açıkla"],
+  ["B1-LONG-T10", "duygu düzenlemeyi öğrenci gibi anlat"],
+] as const
+let longState = createEmptyStudentConversationState()
+for (const [turnId, message] of longConversationTurns) longState = append(longState, turnId, message)
+assert.equal(longState.semanticHistory.length, DNA_STUDENT_RECENT_SEMANTIC_HISTORY_LIMIT)
+assert.equal(longState.semanticLedger.length, longConversationTurns.length)
+assert.equal(longState.semanticHistory.some((turn) => turn.turnId === "B1-LONG-T01"), false)
+assert.equal(longState.semanticLedger.some((turn) => turn.turnId === "B1-LONG-T01"), true)
+
+const longReturn = resolveStudentEvidenceFirstRequest({
+  turnId: "B1-LONG-T11",
+  message: "ilk anlattığın öz düzenleme konusuna dönelim",
+  state: longState,
+})
+assert.equal(longReturn.ok, true)
+if (!longReturn.ok) throw new Error("long history return must resolve")
+assert.equal(longReturn.contract.referent.turnId, "B1-LONG-T01")
+assert.deepEqual(longReturn.contract.targetIds, ["self_regulation"])
+
+const longSummary = resolveStudentEvidenceFirstRequest({
+  turnId: "B1-LONG-T12",
+  message: "konuştuklarımızı üç cümlede özetle",
+  state: longState,
+})
+assert.equal(longSummary.ok, true)
+if (!longSummary.ok) throw new Error("long history summary must resolve")
+assert.deepEqual(sorted(longSummary.contract.targetIds), [
+  "attention", "emotion_regulation", "inhibition", "planning", "self_regulation", "working_memory",
+])
+
+let boundedState = longState
+for (let index = 1; index <= 70; index += 1) {
+  boundedState = append(boundedState, `B1-BOUND-${String(index).padStart(2, "0")}`, "dikkat ne demek")
+}
+assert.equal(boundedState.semanticHistory.length, DNA_STUDENT_RECENT_SEMANTIC_HISTORY_LIMIT)
+assert.equal(boundedState.semanticLedger.length, DNA_STUDENT_SEMANTIC_LEDGER_LIMIT)
+assert.equal(JSON.stringify(boundedState).includes("dikkat ne demek"), false, "raw messages must not enter semantic state")
+
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_EVIDENCE_FIRST_R1_LOCAL",
@@ -133,4 +184,9 @@ console.log(JSON.stringify({
   treatmentFalseFocusContrasts: 2,
   summaryScopeContrasts: 2,
   referentEnvelopeContrasts: 2,
+  longConversationReturn: true,
+  longConversationSummary: true,
+  recentHistoryLimit: DNA_STUDENT_RECENT_SEMANTIC_HISTORY_LIMIT,
+  semanticLedgerLimit: DNA_STUDENT_SEMANTIC_LEDGER_LIMIT,
+  rawMessagesInLedger: 0,
 }, null, 2))

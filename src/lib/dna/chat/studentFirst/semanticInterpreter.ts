@@ -112,7 +112,7 @@ export function groundStudentTargetRoles(input: Readonly<{
   state: StudentConversationState
   candidate: unknown
 }>): unknown {
-  if (!input.candidate || typeof input.candidate !== "object" || !input.state.semanticHistory.length) return input.candidate
+  if (!input.candidate || typeof input.candidate !== "object" || !input.state.semanticLedger.length) return input.candidate
   const row = input.candidate as Record<string, unknown>
   if (row.conversationAction !== "continue") return input.candidate
   const acts = row.semanticActs && typeof row.semanticActs === "object"
@@ -213,9 +213,9 @@ export function groundStudentRequestIntent(input: Readonly<{
     if (row.conversationAction === "return") {
       const firstCue = /\b(?:ilk|basa)\b/.test(normalized)
       const entityAnchor = entityCue
-        ? [...input.state.semanticHistory].reverse().find((turn) => turn.semanticTask === "example") ?? null
+        ? [...input.state.semanticLedger].reverse().find((turn) => turn.semanticTask === "example") ?? null
         : null
-      const compatibleHistory = (firstCue ? [...input.state.semanticHistory] : [...input.state.semanticHistory].reverse())
+      const compatibleHistory = (firstCue ? [...input.state.semanticLedger] : [...input.state.semanticLedger].reverse())
         .find((turn) => !focusTargetIds.length || focusTargetIds.some((targetId) => turn.targetIds.includes(targetId))) ?? null
       const anchor = entityAnchor ?? compatibleHistory
       if (anchor) {
@@ -266,7 +266,7 @@ export function resolveStudentSemanticTask(
   const enabledActs = DNA_STUDENT_SEMANTIC_TASKS.filter((task) => frame.semanticActs[task])
   if (!enabledActs.length && frame.presentation.preserveMeaning) {
     const anchor = frame.referentTurnId
-      ? state.semanticHistory.find((turn) => turn.turnId === frame.referentTurnId) ?? null
+      ? state.semanticLedger.find((turn) => turn.turnId === frame.referentTurnId) ?? null
       : state.semanticHistory.at(-1) ?? null
     return anchor?.semanticTask ?? "explain"
   }
@@ -282,7 +282,7 @@ export function resolveStudentSemanticTask(
             ? "explain"
             : FALLBACK_TASK_PRIORITY.find((task) => frame.semanticActs[task]) ?? "explain"
   if (frame.conversationAction === "return" && selected === "explain" && enabledActs.length === 1 && frame.referentTurnId) {
-    return state.semanticHistory.find((turn) => turn.turnId === frame.referentTurnId)?.semanticTask ?? selected
+    return state.semanticLedger.find((turn) => turn.turnId === frame.referentTurnId)?.semanticTask ?? selected
   }
   return selected
 }
@@ -338,7 +338,7 @@ function parseObservationExtras(value: unknown): StudentObservationScope | null 
 function parseReferentTurnId(value: unknown, state: StudentConversationState): Readonly<{ ok: true; turnId: string | null }> | null {
   const turnId = value === null ? null : typeof value === "string" ? value : null
   if (value !== null && turnId === null) return null
-  const historyIds = new Set(state.semanticHistory.map((turn) => turn.turnId))
+  const historyIds = new Set(state.semanticLedger.map((turn) => turn.turnId))
   if (turnId !== null && !historyIds.has(turnId)) return null
   return Object.freeze({ ok: true, turnId })
 }
@@ -374,7 +374,7 @@ export function validateStudentSemanticFrameDetailed(
   const enabledSemanticActs = DNA_STUDENT_SEMANTIC_TASKS.filter((task) => semanticActs[task])
   const presentationOnlyContinuation = enabledSemanticActs.length === 0 &&
     presentation.preserveMeaning &&
-    state.semanticHistory.length > 0 &&
+    state.semanticLedger.length > 0 &&
     row.conversationAction !== "start" &&
     row.conversationAction !== "summarize_session"
   if (enabledSemanticActs.length === 0 && !presentationOnlyContinuation) return frameFailure("invalid_semantic_acts")
@@ -388,8 +388,8 @@ export function validateStudentSemanticFrameDetailed(
     referentTurnId: referent.turnId,
     presentation,
   }, state)
-  if (row.conversationAction === "start" && state.semanticHistory.length) return frameFailure("conversation_state_mismatch")
-  if (row.conversationAction !== "start" && !state.semanticHistory.length) return frameFailure("conversation_state_mismatch")
+  if (row.conversationAction === "start" && state.semanticLedger.length) return frameFailure("conversation_state_mismatch")
+  if (row.conversationAction !== "start" && !state.semanticLedger.length) return frameFailure("conversation_state_mismatch")
   if (row.conversationAction === "return" && referent.turnId === null) return frameFailure("return_referent_mismatch")
   if (row.conversationAction === "summarize_session" && semanticTask !== "summarize") return frameFailure("summary_task_mismatch")
 
@@ -423,11 +423,11 @@ function resolveCaseEntityAnchor(turnId: string, state: StudentConversationState
   const visited = new Set<string>()
   for (let depth = 0; depth < 8 && !visited.has(currentTurnId); depth += 1) {
     visited.add(currentTurnId)
-    const snapshot = state.semanticHistory.find((turn) => turn.turnId === currentTurnId)
+    const snapshot = state.semanticLedger.find((turn) => turn.turnId === currentTurnId)
     if (!snapshot || snapshot.semanticTask === "example") return currentTurnId
     const parent = snapshot.referent
     if (parent.role !== "case_entity" || parent.turnId === null) return currentTurnId
-    if (!state.semanticHistory.some((turn) => turn.turnId === parent.turnId)) return currentTurnId
+    if (!state.semanticLedger.some((turn) => turn.turnId === parent.turnId)) return currentTurnId
     currentTurnId = parent.turnId
   }
   return currentTurnId
@@ -489,7 +489,7 @@ export function compileStudentRequestContract(
     ? resolveCaseEntityAnchor(effectiveReferentTurnId, state)
     : effectiveReferentTurnId
   const referentSnapshot = resolvedReferentTurnId
-    ? state.semanticHistory.find((turn) => turn.turnId === resolvedReferentTurnId) ?? null
+    ? state.semanticLedger.find((turn) => turn.turnId === resolvedReferentTurnId) ?? null
     : null
   const referent: StudentReferent = Object.freeze({
     kind: resolvedReferentTurnId === null
@@ -504,7 +504,7 @@ export function compileStudentRequestContract(
   const mergedTargetIds = frame.conversationAction === "summarize_session"
     ? allowedFocusTargets.length
       ? unique(allowedFocusTargets)
-      : unique(state.semanticHistory.flatMap((turn) => turn.targetIds))
+      : unique(state.semanticLedger.flatMap((turn) => turn.targetIds))
     : frame.conversationAction === "return"
         ? allowedFocusTargets.length
           ? unique(allowedFocusTargets)
@@ -579,7 +579,7 @@ export function compileStudentRequestContract(
 }
 
 export function studentSemanticFrameSchema(state: StudentConversationState): Record<string, unknown> {
-  const historyIds = state.semanticHistory.map((turn) => turn.turnId)
+  const historyIds = state.semanticLedger.map((turn) => turn.turnId)
   return {
     type: "object",
     additionalProperties: false,
@@ -663,6 +663,17 @@ export function studentSemanticInterpreterContent(input: Readonly<{
         contextTargetIds: turn.contextTargetIds,
         rejectedTargetIds: turn.rejectedTargetIds,
         comparisonTargetIds: turn.comparisonTargetIds,
+        referent: {
+          turnId: turn.referent.turnId,
+          role: turn.referent.role,
+        },
+      })),
+      semanticLedger: input.state.semanticLedger.map((turn) => ({
+        turnId: turn.turnId,
+        semanticTask: turn.semanticTask,
+        conversationAction: turn.conversationAction,
+        targetIds: turn.targetIds,
+        rejectedTargetIds: turn.rejectedTargetIds,
         referent: {
           turnId: turn.referent.turnId,
           role: turn.referent.role,

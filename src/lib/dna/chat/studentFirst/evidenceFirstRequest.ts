@@ -390,7 +390,7 @@ export function observeStudentRequestFacts(input: Readonly<{
     contextTargetIds: Object.freeze(contextTargetIds),
     rejectedTargetIds: rejectedTargets(input.message, explicitTargetIds, input.state),
     semanticTaskCandidates: tasks,
-    conversationAction: conversationAction(input.message, input.state.semanticHistory.length > 0),
+    conversationAction: conversationAction(input.message, input.state.semanticLedger.length > 0),
     presentation: presentation(input.message),
     summaryExtras: summaryExtras(input.message, tasks),
     observationExtras: observationExtras(input.message, tasks),
@@ -404,7 +404,7 @@ function caseEntityOrigin(turnId: string, state: StudentConversationState): stri
   const visited = new Set<string>()
   for (let depth = 0; depth < 8 && !visited.has(current); depth += 1) {
     visited.add(current)
-    const snapshot = state.semanticHistory.find((turn) => turn.turnId === current)
+    const snapshot = state.semanticLedger.find((turn) => turn.turnId === current)
     if (!snapshot || snapshot.semanticTask === "example") return current
     if (snapshot.referent.role !== "case_entity" || !snapshot.referent.turnId) return current
     current = snapshot.referent.turnId
@@ -416,13 +416,13 @@ function referentCandidates(
   facts: StudentObservedRequestFacts,
   state: StudentConversationState,
 ): readonly StudentReferentCandidate[] {
-  if (!state.semanticHistory.length || facts.semanticTaskCandidates.includes("treatment_boundary") || facts.conversationAction === "summarize_session") {
+  if (!state.semanticLedger.length || facts.semanticTaskCandidates.includes("treatment_boundary") || facts.conversationAction === "summarize_session") {
     return Object.freeze([])
   }
   const rows: StudentReferentCandidate[] = []
   const add = (turnId: string, role: Exclude<StudentReferent["role"], "none">, source: StudentReferentCandidate["source"], reason: string) => {
     if (rows.some((row) => row.turnId === turnId && row.role === role)) return
-    const snapshot = state.semanticHistory.find((turn) => turn.turnId === turnId)
+    const snapshot = state.semanticLedger.find((turn) => turn.turnId === turnId)
     if (!snapshot) return
     rows.push(Object.freeze({
       turnId,
@@ -432,11 +432,11 @@ function referentCandidates(
       eligibilityReason: reason,
     }))
   }
-  const latest = state.semanticHistory.at(-1)!
+  const latest = state.semanticHistory.at(-1) ?? state.semanticLedger.at(-1)!
   if (facts.referenceCues.historyReturn || facts.conversationAction === "return") {
-    const order = facts.referenceCues.firstHistory ? [...state.semanticHistory] : [...state.semanticHistory].reverse()
+    const order = facts.referenceCues.firstHistory ? [...state.semanticLedger] : [...state.semanticLedger].reverse()
     if (facts.referenceCues.caseEntity) {
-      const example = [...state.semanticHistory].reverse().find((turn) => turn.semanticTask === "example") ?? null
+      const example = [...state.semanticLedger].reverse().find((turn) => turn.semanticTask === "example") ?? null
       if (example) add(example.turnId, "case_entity", "case_entity_origin", "explicit history-return case cue")
       return Object.freeze(rows)
     }
@@ -473,7 +473,7 @@ export function buildStudentStateCandidateEnvelope(input: Readonly<{
   input.facts.explicitTargetIds.forEach((targetId) => addSource(targetId, "explicit_current_message"))
   input.facts.contextTargetIds.forEach((targetId) => addSource(targetId, "context_current_message"))
   input.state.activeTargetIds.forEach((targetId) => addSource(targetId, "active_state"))
-  input.state.semanticHistory.flatMap((turn) => turn.targetIds).forEach((targetId) => addSource(targetId, "semantic_history"))
+  input.state.semanticLedger.flatMap((turn) => turn.targetIds).forEach((targetId) => addSource(targetId, "semantic_history"))
 
   const explicitSet = new Set(input.facts.explicitTargetIds.filter((targetId) => !input.facts.rejectedTargetIds.includes(targetId)))
   const activeSet = new Set(input.state.activeTargetIds.filter((targetId) => !input.facts.rejectedTargetIds.includes(targetId)))

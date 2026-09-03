@@ -435,6 +435,7 @@ for (let index = 4; index <= 10; index += 1) {
 assert.equal(entityState.semanticHistory.length, 8, "semantic history must remain bounded to eight turns")
 assert.equal(entityState.semanticHistory.some((turn) => turn.turnId === "ENTITY-T02"), false)
 assert.equal(entityState.semanticHistory.some((turn) => turn.turnId === "ENTITY-T03"), true)
+assert.equal(entityState.semanticLedger.some((turn) => turn.turnId === "ENTITY-T02"), true)
 const truncatedEntityReturn = compileStudentRequestContract("ENTITY-T11", frame({
   semanticActs: acts("explain"),
   conversationAction: "return",
@@ -442,7 +443,7 @@ const truncatedEntityReturn = compileStudentRequestContract("ENTITY-T11", frame(
   referentTurnId: "ENTITY-T03",
   referentRole: "case_entity",
 }), entityState)
-assert.equal(truncatedEntityReturn.referent.turnId, "ENTITY-T03", "a truncated parent anchor must not create a dangling referent outside bounded history")
+assert.equal(truncatedEntityReturn.referent.turnId, "ENTITY-T02", "a parent anchor outside recent history must resolve through the bounded semantic ledger")
 assert.equal(JSON.stringify(entityState).includes("az önceki çocuğa dönelim"), false, "raw messages must not persist in state")
 
 assert.equal(resolveStudentConversationAction({

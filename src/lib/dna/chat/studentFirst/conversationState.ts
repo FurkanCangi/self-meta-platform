@@ -4,6 +4,7 @@ import {
   DNA_STUDENT_FIRST_REQUEST_VERSION,
   type StudentConversationAction,
   type StudentConversationState,
+  type StudentConversationLedgerEntry,
   type StudentConversationTurnSnapshot,
   type StudentObservationScope,
   type StudentPresentationRequest,
@@ -21,6 +22,9 @@ export type TargetLexeme = Readonly<{
   explicitStems?: readonly string[]
   contextAliases?: readonly string[]
 }>
+
+export const DNA_STUDENT_RECENT_SEMANTIC_HISTORY_LIMIT = 8
+export const DNA_STUDENT_SEMANTIC_LEDGER_LIMIT = 64
 
 export const DNA_STUDENT_TARGET_LEXICON: readonly TargetLexeme[] = Object.freeze([
   { id: "self_regulation", label: "öz düzenleme", aliases: ["öz düzenleme", "öz-düzenleme", "self regülasyon", "self-regülasyon"] },
@@ -212,10 +216,10 @@ function historyReferent(
   const role: StudentReferent["role"] = /\b(?:cocuk|ogrenci|vaka|ornek|davranis)\b/.test(normalized)
     ? "case_entity"
     : "utterance"
-  if (isReturn && state.semanticHistory.length) {
+  if (isReturn && state.semanticLedger.length) {
     const searchOrder = /\b(?:ilk|basa)\b/.test(normalized)
-      ? [...state.semanticHistory]
-      : [...state.semanticHistory].reverse()
+      ? [...state.semanticLedger]
+      : [...state.semanticLedger].reverse()
     const match = explicitTargets.length
       ? searchOrder.find((turn) => explicitTargets.some((target) => turn.targetIds.includes(target)))
       : searchOrder[0]
@@ -244,18 +248,19 @@ export function createEmptyStudentConversationState(): StudentConversationState 
     unresolvedObligations: Object.freeze([]),
     compactSummary: "",
     semanticHistory: Object.freeze([]),
+    semanticLedger: Object.freeze([]),
   })
 }
 
 export function interpretStudentRequest(
   input: Readonly<{ turnId: string; message: string; state: StudentConversationState }>,
 ): StudentRequestContract {
-  const conversationAction = conversationActionFor(input.message, input.state.semanticHistory.length > 0)
+  const conversationAction = conversationActionFor(input.message, input.state.semanticLedger.length > 0)
   const explicitTargets = detectedTargets(input.message)
   const rejected = rejectedTargets(input.message, explicitTargets)
   const referent = historyReferent(input.message, input.state, explicitTargets)
   const anchoredSnapshot = referent.turnId
-    ? input.state.semanticHistory.find((turn) => turn.turnId === referent.turnId) ?? null
+    ? input.state.semanticLedger.find((turn) => turn.turnId === referent.turnId) ?? null
     : null
   const detectedSemanticTask = semanticTaskFor(input.message)
   const semanticTask = conversationAction === "return" && detectedSemanticTask === "explain" && anchoredSnapshot
@@ -266,8 +271,8 @@ export function interpretStudentRequest(
 
   if (!targetIds.length && semanticTask !== "treatment_boundary") targetIds = [...input.state.activeTargetIds]
 
-  if (conversationAction === "summarize_session" && !allowedExplicitTargets.length && input.state.semanticHistory.length) {
-    targetIds = unique(input.state.semanticHistory.flatMap((turn) => turn.targetIds))
+  if (conversationAction === "summarize_session" && !allowedExplicitTargets.length && input.state.semanticLedger.length) {
+    targetIds = unique(input.state.semanticLedger.flatMap((turn) => turn.targetIds))
   }
 
   const normalized = normalizeDnaChatText(input.message)
@@ -369,7 +374,20 @@ export function applyStudentRequestContract(
     observationScope: contract.observationScope,
     semanticSummary: `${contract.semanticTask}/${contract.conversationAction}:${contract.targetIds.join(",")}`,
   })
-  const semanticHistory = Object.freeze([...state.semanticHistory, snapshot].slice(-8))
+  const ledgerEntry: StudentConversationLedgerEntry = Object.freeze({
+    turnId: contract.turnId,
+    semanticTask: contract.semanticTask,
+    conversationAction: contract.conversationAction,
+    targetIds: Object.freeze([...contract.targetIds]),
+    rejectedTargetIds: Object.freeze([...contract.rejectedTargetIds]),
+    referent: contract.referent,
+  })
+  const semanticHistory = Object.freeze(
+    [...state.semanticHistory, snapshot].slice(-DNA_STUDENT_RECENT_SEMANTIC_HISTORY_LIMIT),
+  )
+  const semanticLedger = Object.freeze(
+    [...state.semanticLedger, ledgerEntry].slice(-DNA_STUDENT_SEMANTIC_LEDGER_LIMIT),
+  )
   return Object.freeze({
     version: DNA_STUDENT_FIRST_CONVERSATION_VERSION,
     activeTargetIds: Object.freeze([...contract.targetIds]),
@@ -380,6 +398,7 @@ export function applyStudentRequestContract(
     unresolvedObligations: Object.freeze([...contract.obligations]),
     compactSummary: summaryForHistory(semanticHistory),
     semanticHistory,
+    semanticLedger,
   })
 }
 
