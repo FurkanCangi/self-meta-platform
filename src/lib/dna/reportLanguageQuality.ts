@@ -34,6 +34,7 @@ const TURKISH_ASCII_WORD_REPLACEMENTS: Record<string, string> = {
   ayrilma: "ayrılma",
   ayrilmasi: "ayrılması",
   ayrilmama: "ayrılmama",
+  ayriliyor: "ayrılıyor",
   arttigi: "arttığı",
   artirmak: "artırmak",
   basamaklarinda: "basamaklarında",
@@ -463,6 +464,37 @@ const TURKISH_ASCII_WORD_REPLACEMENTS: Record<string, string> = {
   tamamlayamiyor: "tamamlayamıyor",
   yorgunlugunu: "yorgunluğunu",
   zorlanip: "zorlanıp",
+  acikinca: "acıkınca",
+  basamakli: "basamaklı",
+  basini: "başını",
+  baslayamiyor: "başlayamıyor",
+  bagirip: "bağırıp",
+  birakiyor: "bırakıyor",
+  calismasina: "çalışmasına",
+  cantasini: "çantasını",
+  "çantasini": "çantasını",
+  "çalisinca": "çalışınca",
+  "düstügünde": "düştüğünde",
+  gecisi: "geçişi",
+  huzursuzlasiyor: "huzursuzlaşıyor",
+  isleri: "işleri",
+  kisa: "kısa",
+  koyamiyor: "koyamıyor",
+  kulaklarini: "kulaklarını",
+  ogleden: "öğleden",
+  "ögünden": "öğünden",
+  oluyo: "oluyor",
+  pes: "peş",
+  pese: "peşe",
+  siradan: "sıradan",
+  sirayi: "sırayı",
+  "söylendiginde": "söylendiğinde",
+  tamamlamiyor: "tamamlamıyor",
+  tamamliyor: "tamamlıyor",
+  uyaniyor: "uyanıyor",
+  yapiyor: "yapıyor",
+  yalniz: "yalnız",
+  yoruldugunda: "yorulduğunda",
 };
 
 const TURKISH_ASCII_WORD_PATTERN_SOURCE = `(?<![\\p{L}\\p{N}_])(?:${Object.keys(TURKISH_ASCII_WORD_REPLACEMENTS)
@@ -907,6 +939,7 @@ export function normalizeTurkishClinicalText(text: unknown): string {
   const value = String(text || "");
   if (!value) return "";
   return replaceTurkishAsciiWords(applyReplacements(value, TURKISH_ASCII_REPLACEMENTS))
+    .replace(/\bkacın/giu, "kaçın")
     .replace(/yönerge\s+follow\s+etmiyor\s+denmiş/giu, "yönergeyi takip etmediği bildirilmiş")
     .replace(/\b(\d+)\s*step\b/giu, "$1 basamak")
     .replace(/\b(\d+)\.\s*yi\s+uçuruyor\b/giu, "$1. basamağı atlıyor")
@@ -1118,6 +1151,7 @@ export function sanitizeFinalReportLanguage(text: string): string {
   sanitized = removeRepeatedLongSentences(sanitized);
   sanitized = removeTreatmentFocusedVocabulary(sanitized);
   sanitized = sanitized
+    .replace(/\bOyun bittikten sonra oyun beklenmeden bitince\b/giu, "Oyun beklenmeden bitince")
     .replace(/\böz-düzenlemenin\b/gi, "self-regülasyonun")
     .replace(/\böz-düzenlemeyi\b/gi, "self-regülasyonu")
     .replace(/\böz-düzenleme\b/gi, "self-regülasyon")

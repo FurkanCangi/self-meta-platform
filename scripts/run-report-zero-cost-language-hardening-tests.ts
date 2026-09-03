@@ -3,7 +3,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { calculateAssessment } from "../src/lib/assessment/assessmentEngine"
 import { analyzeReportLanguageQuality } from "../src/lib/dna/reportLanguageQuality"
-import { buildJuryReadyReport, type JuryReportResult } from "../src/lib/dna/reportJury"
+import { buildJuryReadyReport, VisibleReportPropositionValidator, type JuryReportResult } from "../src/lib/dna/reportJury"
 import { applyFullBoldClinicalReportParagraphs } from "../src/lib/dna/reportText"
 import { stableHash } from "../src/lib/dna/reportV2/evidenceEngine"
 import type { ReportInput } from "../src/lib/dna/reportEngine"
@@ -131,6 +131,30 @@ function adversarialInput(testCase: typeof JURY_CHALLENGE_CASES[number]): Readon
   })
 }
 
+function shortConcreteAnamnesisInput(): Readonly<{ id: string; input: ReportInput }> {
+  const id = "SHORT-CONCRETE-SENSORY"
+  const answers = answersForJuryTotals([45, 20, 45, 45, 45, 45])
+  const scores = calculateAssessment(answers)
+  return Object.freeze({
+    id,
+    input: Object.freeze({
+      clientCode: id,
+      ageMonths: 120,
+      anamnez: "Evde elektrik süpürgesi çalışınca kulaklarını kapatıyor.",
+      answers: [...answers],
+      scores: Object.freeze({
+        fizyolojik: scores.fizyolojik,
+        duyusal: scores.duyusal,
+        duygusal: scores.duygusal,
+        bilissel: scores.bilissel,
+        yurutucu: scores.yurutucu,
+        intero: scores.intero,
+        toplam: scores.toplam,
+      }),
+    }),
+  })
+}
+
 function assertSurface(id: string, result: JuryReportResult) {
   const report = productReport(result)
   const asciiIssue = analyzeReportLanguageQuality(result.finalReport).issues.some((issue) => issue.code === "ascii_turkish_leak")
@@ -161,7 +185,8 @@ async function main() {
   try {
     const professorCases = PROFESSOR_FILES.map(professorInput)
     const adversarialCases = JURY_CHALLENGE_CASES.map(adversarialInput)
-    const allCases = [...professorCases, ...adversarialCases]
+    const shortConcreteCase = shortConcreteAnamnesisInput()
+    const allCases = [...professorCases, ...adversarialCases, shortConcreteCase]
     const firstResults = new Map<string, JuryReportResult>()
 
     for (const testCase of allCases) {
@@ -169,6 +194,22 @@ async function main() {
       assertSurface(testCase.id, result)
       firstResults.set(testCase.id, result)
     }
+
+    const shortConcreteResult = firstResults.get(shortConcreteCase.id)!
+    assert.equal(shortConcreteResult.dataQuality.anamnesisMeaningful, true, "Kısa ama somut anamnez kullanılabilir sayılmalı")
+    assert.equal(shortConcreteResult.dataQuality.concreteFunctionalExample, true, "Kısa somut günlük yaşam örneği korunmalı")
+    assert.match(shortConcreteResult.finalReport, /elektrik süpürgesi[^.]{0,100}kulaklarını kapat/iu, "Somut vaka örneği görünür raporda yer almalı")
+    assert.doesNotMatch(shortConcreteResult.finalReport, /(?:somut|gözlenebilir)[^.]{0,120}(?:anamnez|günlük yaşam|bakım veren)[^.]{0,100}(?:bulunmad|bulunmuyor|bulunmamaktadır|içermemektedir)/iu, "Mevcut işlevsel kanıt yok sayılamaz")
+    const propositionValidator = new VisibleReportPropositionValidator()
+    const withDeniedCaregiverEvidence = shortConcreteResult.finalReport.replace("5. Bilimsel Literatür", "Bakım veren anlatısında somut günlük yaşam örneği bulunmamaktadır.\n\n5. Bilimsel Literatür")
+    const deniedCaregiverAudit = propositionValidator.validate(shortConcreteResult.lockedLanguagePlan, withDeniedCaregiverEvidence, shortConcreteResult.dataQuality, shortConcreteResult.therapistObservation, shortConcreteResult.externalEvidence)
+    assert.ok(deniedCaregiverAudit.contradictions.some((entry) => entry.error_type === "FUNCTIONAL_EVIDENCE_DENIED"), "Mevcut bakım veren kanıtını yok sayan cümle validator tarafından reddedilmeli")
+    const withAffectedAsPreserved = shortConcreteResult.finalReport.replace("5. Bilimsel Literatür", "Duyusal Regülasyon alanı beklenen aralıktadır.\n\n5. Bilimsel Literatür")
+    const affectedAsPreservedAudit = propositionValidator.validate(shortConcreteResult.lockedLanguagePlan, withAffectedAsPreserved, shortConcreteResult.dataQuality, shortConcreteResult.therapistObservation, shortConcreteResult.externalEvidence)
+    assert.ok(affectedAsPreservedAudit.contradictions.some((entry) => entry.error_type === "AFFECTED_DOMAIN_PRESENTED_AS_PRESERVED"), "Etkilenmiş alanın korunmuş gösterilmesi validator tarafından reddedilmeli")
+    const withInventedObservation = shortConcreteResult.finalReport.replace("5. Bilimsel Literatür", "Terapist gözleminde çocuk görevi bağımsız tamamladı.\n\n5. Bilimsel Literatür")
+    const inventedObservationAudit = propositionValidator.validate(shortConcreteResult.lockedLanguagePlan, withInventedObservation, shortConcreteResult.dataQuality, shortConcreteResult.therapistObservation, shortConcreteResult.externalEvidence)
+    assert.ok(inventedObservationAudit.contradictions.some((entry) => entry.error_type === "UNSUPPORTED_THERAPIST_OBSERVATION_CLAIM"), "Olmayan terapist gözlemi validator tarafından reddedilmeli")
 
     for (const testCase of allCases) {
       const first = firstResults.get(testCase.id)!

@@ -94,6 +94,7 @@ export type ReportDataQuality = Readonly<{
   requiredAssessmentComplete: boolean
   anamnesisMeaningful: boolean
   concreteFunctionalExample: boolean
+  shortConcreteAnamnesisOnly: boolean
   therapistObservationAvailable: boolean
   shortTherapistObservation: boolean
   interpretableExternalTestCount: number
