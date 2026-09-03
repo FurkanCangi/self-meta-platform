@@ -35,10 +35,19 @@ const mockFetch: typeof fetch = async (_input, init) => {
       targetIds: readonly string[]
       targetLabels: readonly string[]
       rawHistoryStored: false
+      caseContext: null | Readonly<{
+        eventIds: readonly string[]
+        eventLabels: readonly string[]
+        rawMessageStored: false
+      }>
     }>
     answerSlots: readonly Readonly<{
       slotId: string
       slotKind: "content" | "example"
+      caseBinding: null | Readonly<{
+        requiredForEveryActiveTarget: true
+        eventLabels: readonly string[]
+      }>
       obligations: readonly Readonly<{ id: string; kind: string }>[]
       activeTargets: readonly Readonly<{
         targetId: string
@@ -52,9 +61,12 @@ const mockFetch: typeof fetch = async (_input, init) => {
   }
   const slotText = (slot: (typeof content.answerSlots)[number]) => {
     const labels = slot.activeTargets.map((row) => row.visibleAliases[0]).join(", ")
-    const historyPrefix = content.historyAnchor
-      ? `Önceki ${content.historyAnchor.targetLabels.join(" ve ")} durumunda `
-      : ""
+    const caseEventPhrase = slot.caseBinding?.eventLabels.join(", ") ?? ""
+    const historyPrefix = slot.caseBinding
+      ? `${labels}, ${caseEventPhrase} olay dizisinin bu bölümünü anlamaya yardım eder: `
+      : content.historyAnchor
+        ? `Önceki ${content.historyAnchor.targetLabels.join(" ve ")} durumunda `
+        : ""
     const withHistory = (text: string) => `${historyPrefix}${text}`
     const kinds = new Set(slot.obligations.map((obligation) => obligation.kind))
     if (kinds.has("use_shared_scenario")) return withHistory(`Tek bir sınıf görevinde öğrenci ${labels} becerilerini aynı durum içinde ayrı ayrı kullanır.`)
@@ -186,6 +198,37 @@ async function main() {
   assert.equal(compositionControlsGrouped, true)
   assert.equal(localEnvironmentalSceneBound, true)
   assert.equal(privacySafeHistoryAnchorBound, true)
+
+  let recoveryState: StudentConversationState = createEmptyStudentConversationState()
+  const recoveryTurn = resolveStudentEvidenceFirstRequest({
+    turnId: "CASE-CONTEXT-T01",
+    message: "yok dikkat kısmını sormuyorum görevi bırakınca kendini toparlayıp dönmesi öz düzenleme açısından ne demek onu soruyom",
+    state: recoveryState,
+  })
+  if (!recoveryTurn.ok) throw new Error("recovery case contract missing")
+  recoveryState = applyStudentRequestContract(recoveryState, recoveryTurn.contract)
+  const componentQuestion = "peki bunda planlama dürtü kontrolü ve duygu kısmı üçü nasıl yer alır ayrı ayrı anlat"
+  const componentTurn = resolveStudentEvidenceFirstRequest({
+    turnId: "CASE-CONTEXT-T02",
+    message: componentQuestion,
+    state: recoveryState,
+  })
+  if (!componentTurn.ok) throw new Error("component case contract missing")
+  const componentResult = await executeStudentAnswer({
+    question: componentQuestion,
+    contract: componentTurn.contract,
+    apiKey: "mock-api-key",
+    fetchImpl: mockFetch,
+  })
+  if (!componentResult.ok) throw new Error(`component answer missing:${componentResult.reason}`)
+  assert.deepEqual(componentResult.plan.historyAnchor?.caseContext?.eventIds,
+    ["task_interrupted", "self_recovered", "task_resumed"])
+  assert.equal(componentResult.plan.historyAnchor?.caseContext?.rawMessageStored, false)
+  assert.equal(componentResult.candidate.blocks.every((block) =>
+    /görevi bırakma, kendi kendine toparlanma, göreve geri dönme/u.test(block.text)), true)
+  for (const label of ["planlama", "inhibisyon", "duygu düzenleme"]) {
+    assert.match(componentResult.answer, new RegExp(label, "u"))
+  }
 
   const first = fixture.conversations[0]!.turns[0]!
   const firstResolution = resolveStudentEvidenceFirstRequest({
@@ -441,6 +484,7 @@ async function main() {
     missingProviderExampleCueLabeled,
     requestedSentenceCountNormalized,
     compositionControlsGrouped,
+    structuredCaseContextBound: true,
     rejectedCandidateTelemetryPreserved: true,
   }, null, 2))
 }

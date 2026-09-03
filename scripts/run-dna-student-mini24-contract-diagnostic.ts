@@ -143,6 +143,8 @@ function main() {
           targetIds: resolved.contract.targetIds,
           rejectedTargetIds: resolved.contract.rejectedTargetIds,
           referentTurnId: resolved.contract.referent.turnId,
+          caseEventIds: resolved.contract.caseContext.eventIds,
+          referentCaseEventIds: resolved.contract.referentCaseContext?.eventIds ?? [],
           obligationKinds,
           ambiguity: resolved.contract.ambiguity,
         },
@@ -166,6 +168,8 @@ function main() {
           targetIds: resolved.contract.targetIds,
           rejectedTargetIds: resolved.contract.rejectedTargetIds,
           referentTurnId: resolved.contract.referent.turnId,
+          caseEventIds: resolved.contract.caseContext.eventIds,
+          referentCaseEventIds: resolved.contract.referentCaseContext?.eventIds ?? [],
           obligationKinds,
         },
       })

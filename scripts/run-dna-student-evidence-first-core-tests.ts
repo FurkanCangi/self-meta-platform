@@ -40,6 +40,12 @@ assert.deepEqual(contextOnlyRecovery.contextTargetIds, ["recovery"])
 const inflectedRecovery = observe("kendi kendine toparlanıp göreve dönmesini soruyorum")
 assert.deepEqual(inflectedRecovery.explicitTargetIds, ["recovery"])
 assert.deepEqual(inflectedRecovery.contextTargetIds, [])
+assert.deepEqual(inflectedRecovery.caseContext.eventIds, ["self_recovered", "task_resumed"])
+assert.equal(inflectedRecovery.caseContext.rawMessageStored, false)
+
+const interruptedRecovery = observe("görevi bırakınca kendini toparlayıp dönmesi öz düzenleme açısından ne demek")
+assert.deepEqual(interruptedRecovery.caseContext.eventIds, ["task_interrupted", "self_recovered", "task_resumed"])
+assert.equal(JSON.stringify(interruptedRecovery.caseContext).includes("görevi bırakınca"), false)
 
 const inflectedScientificTargets = observe("duygu düzenlemeyi değil interosepsiyonda beden sinyalini soruyorum")
 assert.deepEqual(inflectedScientificTargets.explicitTargetIds, ["emotion_regulation", "interoception"])

@@ -1,5 +1,6 @@
 import type {
   StudentAnswerObligationKind,
+  StudentCaseContext,
   StudentConversationAction,
   StudentConversationState,
   StudentObservationScope,
@@ -13,6 +14,7 @@ import {
 } from "./contracts"
 import { DNA_STUDENT_TARGET_LEXICON, detectExplicitStudentTargetIds } from "./conversationState"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
+import { EMPTY_STUDENT_CASE_CONTEXT } from "./caseContext"
 import { normalizeDnaChatText } from "../text"
 
 export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@27" as const
@@ -449,6 +451,7 @@ export function compileStudentRequestContract(
   turnId: string,
   frame: StudentSemanticFrame,
   state: StudentConversationState,
+  caseContext: StudentCaseContext = EMPTY_STUDENT_CASE_CONTEXT,
 ): StudentRequestContract {
   const semanticTask = resolveStudentSemanticTask(frame, state)
   const requestedSemanticTasks = Object.freeze(DNA_STUDENT_SEMANTIC_TASKS.filter((task) => frame.semanticActs[task]))
@@ -513,6 +516,9 @@ export function compileStudentRequestContract(
     turnId: resolvedReferentTurnId,
     targetIds: Object.freeze(referentSnapshot?.targetIds ?? []),
   })
+  const referentCaseContext = referentSnapshot?.caseContext.eventIds.length
+    ? referentSnapshot.caseContext
+    : null
   const mergedTargetIds = frame.conversationAction === "summarize_session"
     ? allowedFocusTargets.length
       ? unique(allowedFocusTargets)
@@ -572,6 +578,8 @@ export function compileStudentRequestContract(
     comparisonTargetIds: Object.freeze(comparisonTargetIds),
     componentTargetIds,
     referent,
+    caseContext,
+    referentCaseContext,
     presentation,
     summaryScope,
     observationScope,
@@ -693,6 +701,7 @@ export function studentSemanticInterpreterContent(input: Readonly<{
           turnId: turn.referent.turnId,
           role: turn.referent.role,
         },
+        caseContext: turn.caseContext,
       })),
       semanticLedger: input.state.semanticLedger.map((turn) => ({
         turnId: turn.turnId,
@@ -704,6 +713,7 @@ export function studentSemanticInterpreterContent(input: Readonly<{
           turnId: turn.referent.turnId,
           role: turn.referent.role,
         },
+        caseContext: turn.caseContext,
       })),
     },
     allowedTargets: DNA_STUDENT_TARGET_LEXICON,

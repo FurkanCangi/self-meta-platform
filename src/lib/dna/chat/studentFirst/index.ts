@@ -9,6 +9,12 @@ export {
   resolveStudentObligations,
 } from "./conversationState"
 export {
+  DNA_STUDENT_CASE_EVENT_LABELS,
+  EMPTY_STUDENT_CASE_CONTEXT,
+  observeStudentCaseContext,
+  studentCaseEventLabels,
+} from "./caseContext"
+export {
   adaptStudentDevelopmentExpectation,
   assessStudentDevelopmentContract,
   DNA_STUDENT_DEVELOPMENT_ADAPTER_VERSION,
@@ -69,6 +75,8 @@ export {
 export type {
   StudentAnswerObligation,
   StudentAnswerObligationKind,
+  StudentCaseContext,
+  StudentCaseEventId,
   StudentConversationAction,
   StudentConversationState,
   StudentConversationLedgerEntry,

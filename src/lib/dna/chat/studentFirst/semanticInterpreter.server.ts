@@ -7,6 +7,7 @@ import {
   type DnaS13ProviderUsage,
 } from "../s13/server"
 import type { StudentConversationState, StudentRequestContract } from "./contracts"
+import { observeStudentCaseContext } from "./caseContext"
 import {
   compileStudentRequestContract,
   DNA_STUDENT_CONVERSATION_ACTIONS,
@@ -175,7 +176,12 @@ export async function interpretStudentRequestWithProvider(input: Readonly<{
     const validation = validateStudentSemanticFrameDetailed(resolvedValue, input.state)
     if (validation.ok) return Object.freeze({
       ok: true,
-      contract: compileStudentRequestContract(input.turnId, validation.frame, input.state),
+      contract: compileStudentRequestContract(
+        input.turnId,
+        validation.frame,
+        input.state,
+        observeStudentCaseContext(input.message),
+      ),
       provider: aggregateProviderEvidence({ providerCalls, semanticAttempts, transportRetries, usageComplete }, evidenceRows),
     })
     lastFailureCode = validation.failureCode

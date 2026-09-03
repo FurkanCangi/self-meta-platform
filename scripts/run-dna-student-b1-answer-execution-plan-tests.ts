@@ -75,6 +75,36 @@ assert.ok(providerGrounded > 0, "general educational answers must retain a groun
 assert.ok(localSafetyBoundary > 0, "case and treatment boundaries must remain local")
 assert.ok(privacySafeHistoryAnchors > 0, "history-bound answers must expose a privacy-safe anchor")
 assert.equal(maximumTargets, 7)
+
+let recoveryState: StudentConversationState = createEmptyStudentConversationState()
+const recoveryTurn = resolveStudentEvidenceFirstRequest({
+  turnId: "CASE-CONTEXT-T01",
+  message: "yok dikkat kısmını sormuyorum görevi bırakınca kendini toparlayıp dönmesi öz düzenleme açısından ne demek onu soruyom",
+  state: recoveryState,
+})
+assert.equal(recoveryTurn.ok, true)
+if (!recoveryTurn.ok) throw new Error("recovery case contract missing")
+assert.deepEqual(recoveryTurn.contract.caseContext.eventIds, ["task_interrupted", "self_recovered", "task_resumed"])
+recoveryState = applyStudentRequestContract(recoveryState, recoveryTurn.contract)
+const componentTurn = resolveStudentEvidenceFirstRequest({
+  turnId: "CASE-CONTEXT-T02",
+  message: "peki bunda planlama dürtü kontrolü ve duygu kısmı üçü nasıl yer alır ayrı ayrı anlat",
+  state: recoveryState,
+})
+assert.equal(componentTurn.ok, true)
+if (!componentTurn.ok) throw new Error("component case contract missing")
+assert.deepEqual(componentTurn.contract.referentCaseContext?.eventIds,
+  ["task_interrupted", "self_recovered", "task_resumed"])
+const componentPlan = buildStudentAnswerExecutionPlan({
+  question: "peki bunda planlama dürtü kontrolü ve duygu kısmı üçü nasıl yer alır ayrı ayrı anlat",
+  contract: componentTurn.contract,
+})
+assert.deepEqual(componentPlan.historyAnchor?.caseContext?.eventIds,
+  ["task_interrupted", "self_recovered", "task_resumed"])
+assert.deepEqual(componentPlan.historyAnchor?.caseContext?.eventLabels,
+  ["görevi bırakma", "kendi kendine toparlanma", "göreve geri dönme"])
+assert.equal(componentPlan.historyAnchor?.caseContext?.rawMessageStored, false)
+
 const workingMemoryContrastTagged = classifyStudentAnswerEvidenceClaimRole(
   "Bir telefon numarasını birkaç saniye akılda tutmak kısa süreli bellek örneğidir.",
   "Çalışma Belleği · Çalışma Belleği ve Kısa Süreli Bellek",
@@ -95,6 +125,7 @@ console.log(JSON.stringify({
   providerGrounded,
   localSafetyBoundary,
   privacySafeHistoryAnchors,
+  structuredCaseContextBound: true,
   maximumTargets,
   missingEvidenceMutationsRejected: plans,
   missingObligationMutationsRejected: plans,

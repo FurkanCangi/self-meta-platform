@@ -1,5 +1,5 @@
-export const DNA_STUDENT_FIRST_CONVERSATION_VERSION = "dna-student-conversation-state@7" as const
-export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@18" as const
+export const DNA_STUDENT_FIRST_CONVERSATION_VERSION = "dna-student-conversation-state@8" as const
+export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@19" as const
 
 export type StudentSemanticTask =
   | "define"
@@ -51,6 +51,23 @@ export type StudentReferent = Readonly<{
   targetIds: readonly string[]
 }>
 
+export type StudentCaseEventId =
+  | "task_interrupted"
+  | "self_recovered"
+  | "task_resumed"
+  | "adult_support_received"
+  | "activity_resumed"
+  | "environmental_load_observed"
+  | "activation_increased"
+  | "emotional_response_observed"
+  | "instruction_received"
+  | "adult_orientation_observed"
+
+export type StudentCaseContext = Readonly<{
+  eventIds: readonly StudentCaseEventId[]
+  rawMessageStored: false
+}>
+
 export type StudentAnswerObligationKind =
   | "define_target"
   | "distinguish_targets"
@@ -92,6 +109,8 @@ export type StudentRequestContract = Readonly<{
   comparisonTargetIds: readonly string[]
   componentTargetIds: readonly string[]
   referent: StudentReferent
+  caseContext: StudentCaseContext
+  referentCaseContext: StudentCaseContext | null
   presentation: StudentPresentationRequest
   summaryScope: StudentSummaryScope
   observationScope: StudentObservationScope
@@ -113,6 +132,7 @@ export type StudentConversationTurnSnapshot = Readonly<{
   presentation: StudentPresentationRequest
   summaryScope: StudentSummaryScope
   observationScope: StudentObservationScope
+  caseContext: StudentCaseContext
   semanticSummary: string
 }>
 
@@ -123,6 +143,7 @@ export type StudentConversationLedgerEntry = Readonly<{
   targetIds: readonly string[]
   rejectedTargetIds: readonly string[]
   referent: StudentReferent
+  caseContext: StudentCaseContext
 }>
 
 export type StudentConversationState = Readonly<{

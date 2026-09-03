@@ -1,6 +1,7 @@
 import { normalizeDnaChatText } from "../text"
 import type {
   StudentConversationAction,
+  StudentCaseContext,
   StudentObservationScope,
   StudentConversationState,
   StudentPresentationRequest,
@@ -10,6 +11,7 @@ import type {
   StudentSummaryScope,
 } from "./contracts"
 import { DNA_STUDENT_TARGET_LEXICON } from "./conversationState"
+import { observeStudentCaseContext } from "./caseContext"
 import {
   compileStudentRequestContract,
   type StudentSemanticFrame,
@@ -53,6 +55,7 @@ export type StudentObservedRequestFacts = Readonly<{
   observationExtras: StudentObservationScope
   referenceCues: StudentReferenceCues
   safetyIntent: StudentObservedSafetyIntent
+  caseContext: StudentCaseContext
 }>
 
 export type StudentTargetCandidateSource =
@@ -511,6 +514,7 @@ export function observeStudentRequestFacts(input: Readonly<{
     observationExtras: observationExtras(input.message, tasks),
     referenceCues: referenceCues(input.message),
     safetyIntent: safetyIntent(input.message, tasks),
+    caseContext: observeStudentCaseContext(input.message),
   })
 }
 
@@ -820,6 +824,6 @@ export function resolveStudentEvidenceFirstRequest(input: Readonly<{
     facts,
     envelope,
     choice: validation.choice,
-    contract: compileStudentRequestContract(input.turnId, frame, input.state),
+    contract: compileStudentRequestContract(input.turnId, frame, input.state, facts.caseContext),
   })
 }

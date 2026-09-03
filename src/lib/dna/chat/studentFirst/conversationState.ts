@@ -14,6 +14,7 @@ import {
   type StudentSummaryScope,
 } from "./contracts"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
+import { observeStudentCaseContext } from "./caseContext"
 
 export type TargetLexeme = Readonly<{
   id: string
@@ -262,6 +263,10 @@ export function interpretStudentRequest(
   const anchoredSnapshot = referent.turnId
     ? input.state.semanticLedger.find((turn) => turn.turnId === referent.turnId) ?? null
     : null
+  const caseContext = observeStudentCaseContext(input.message)
+  const referentCaseContext = anchoredSnapshot?.caseContext.eventIds.length
+    ? anchoredSnapshot.caseContext
+    : null
   const detectedSemanticTask = semanticTaskFor(input.message)
   const semanticTask = conversationAction === "return" && detectedSemanticTask === "explain" && anchoredSnapshot
     ? anchoredSnapshot.semanticTask
@@ -330,6 +335,8 @@ export function interpretStudentRequest(
     comparisonTargetIds: Object.freeze(unique(comparisonTargets)),
     componentTargetIds: Object.freeze(unique(componentTargetIds)),
     referent,
+    caseContext,
+    referentCaseContext,
     presentation: normalizedPresentation,
     summaryScope,
     observationScope,
@@ -374,6 +381,7 @@ export function applyStudentRequestContract(
     presentation: contract.presentation,
     summaryScope: contract.summaryScope,
     observationScope: contract.observationScope,
+    caseContext: contract.caseContext,
     semanticSummary: `${contract.semanticTask}/${contract.conversationAction}:${contract.targetIds.join(",")}`,
   })
   const ledgerEntry: StudentConversationLedgerEntry = Object.freeze({
@@ -383,6 +391,7 @@ export function applyStudentRequestContract(
     targetIds: Object.freeze([...contract.targetIds]),
     rejectedTargetIds: Object.freeze([...contract.rejectedTargetIds]),
     referent: contract.referent,
+    caseContext: contract.caseContext,
   })
   const semanticHistory = Object.freeze(
     [...state.semanticHistory, snapshot].slice(-DNA_STUDENT_RECENT_SEMANTIC_HISTORY_LIMIT),
