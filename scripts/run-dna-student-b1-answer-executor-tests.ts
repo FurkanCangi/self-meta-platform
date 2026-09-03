@@ -50,7 +50,7 @@ const mockFetch: typeof fetch = async (_input, init) => {
     if (kinds.has("use_shared_scenario")) return `Tek bir sınıf görevinde öğrenci ${labels} becerilerini aynı durum içinde ayrı ayrı kullanır.`
     if (kinds.has("distinguish_targets")) return `${labels} aynı şey değildir.`
     if (kinds.has("explain_relation")) return `${labels} arasındaki ilişki ayrı kapsamlarıyla açıklanır.`
-    if (kinds.has("give_concrete_example")) return `${labels} için kısa bir öğrenci durumu anlatılır.`
+    if (kinds.has("give_concrete_example")) return `Örneğin, ${labels} için kısa bir öğrenci durumu anlatılır.`
     if (kinds.has("bind_example_to_target")) return `Bu örnek ${labels} kavramıyla doğrudan bağ kurar.`
     if (kinds.has("summarize_known")) return `${labels} konuşmada bildiğimiz başlıklardır.`
     if (kinds.has("summarize_unknown")) return "Bu açıklama tek başına bir öğrenci hakkında kesin sonuç vermez."
@@ -74,6 +74,8 @@ async function main() {
   let providerAnswers = 0
   let localSafetyAnswers = 0
   let sharedScenarioGrouped = false
+  let providerExampleCueDeduplicated = false
+  let missingProviderExampleCueLabeled = false
   for (const conversation of fixture.conversations) {
     let state: StudentConversationState = createEmptyStudentConversationState()
     for (const turn of conversation.turns) {
@@ -97,7 +99,12 @@ async function main() {
         const containsExampleDuty = result.plan.obligations.some((obligation) =>
           obligation.kind === "give_concrete_example" && block.obligationIds.includes(obligation.id))
         assert.equal(block.blockKind, containsExampleDuty ? "example" : "content", `${turn.turnId}: typed block kind`)
-        if (containsExampleDuty) assert.match(block.text, /Örnek:/u, `${turn.turnId}: deterministic example label`)
+        if (containsExampleDuty) {
+          assert.match(block.text, /Örnek:/u, `${turn.turnId}: deterministic example label`)
+          assert.doesNotMatch(block.text, /Örnek:\s+(?:Örnek:|Örneğin|Mesela)/iu, `${turn.turnId}: duplicate example lead`)
+          if (turn.turnId === "STUDENT40-C01-T03") providerExampleCueDeduplicated = true
+          if (turn.turnId === "STUDENT40-C02-T07") missingProviderExampleCueLabeled = true
+        }
       }
       if (turn.turnId === "STUDENT40-C02-T07") {
         const sharedIds = result.plan.obligations
@@ -124,6 +131,8 @@ async function main() {
   assert.equal(turns, 40)
   assert.equal(mockCalls, providerAnswers)
   assert.equal(sharedScenarioGrouped, true)
+  assert.equal(providerExampleCueDeduplicated, true)
+  assert.equal(missingProviderExampleCueLabeled, true)
 
   const first = fixture.conversations[0]!.turns[0]!
   const firstResolution = resolveStudentEvidenceFirstRequest({
@@ -375,6 +384,8 @@ async function main() {
     splitSharedScenarioRejected: true,
     wrongExampleBlockRoleRejected: true,
     missingDeterministicExampleLabelRejected: true,
+    providerExampleCueDeduplicated,
+    missingProviderExampleCueLabeled,
     rejectedCandidateTelemetryPreserved: true,
   }, null, 2))
 }

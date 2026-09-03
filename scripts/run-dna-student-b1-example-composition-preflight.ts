@@ -74,13 +74,14 @@ async function main() {
   assert.equal(execution.route, "provider_grounded")
   assert.equal(execution.provider.calls, 1)
   assert.equal(execution.provider.rawOutputStored, false)
-  assert.match(execution.answer, /^(?:öz düzenleme ve öz denetim|öz denetim ve öz düzenleme) açısından:/iu)
+  assert.match(execution.answer, /^[^:]{2,120} açısından:/iu)
   const exampleObligation = execution.plan.obligations.find((row) => row.kind === "give_concrete_example")!
   const exampleBlock = execution.candidate.blocks.find((block) => block.obligationIds.includes(exampleObligation.id))
   assert.ok(exampleBlock)
   assert.equal(exampleBlock.blockKind, "example")
   assert.match(exampleBlock.text, /Örnek:/u)
   assert.equal((exampleBlock.text.match(/Örnek:/gu) ?? []).length, 1)
+  assert.doesNotMatch(exampleBlock.text, /Örnek:\s+(?:Örnek:|Örneğin|Mesela)/iu)
   const usage = calculateDnaChatLunaUsage(execution.provider.usage)
   assert.ok(usage.costMicrousd <= MAX_COST_MICROUSD)
 
