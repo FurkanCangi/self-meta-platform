@@ -30,6 +30,12 @@ const mockFetch: typeof fetch = async (_input, init) => {
   const request = JSON.parse(String(init?.body)) as { input: string }
   const content = JSON.parse(request.input) as {
     operation: string
+    historyAnchor: null | Readonly<{
+      turnId: string
+      targetIds: readonly string[]
+      targetLabels: readonly string[]
+      rawHistoryStored: false
+    }>
     answerSlots: readonly Readonly<{
       slotId: string
       slotKind: "content" | "example"
@@ -46,16 +52,20 @@ const mockFetch: typeof fetch = async (_input, init) => {
   }
   const slotText = (slot: (typeof content.answerSlots)[number]) => {
     const labels = slot.activeTargets.map((row) => row.visibleAliases[0]).join(", ")
+    const historyPrefix = content.historyAnchor
+      ? `Önceki ${content.historyAnchor.targetLabels.join(" ve ")} durumunda `
+      : ""
+    const withHistory = (text: string) => `${historyPrefix}${text}`
     const kinds = new Set(slot.obligations.map((obligation) => obligation.kind))
-    if (kinds.has("use_shared_scenario")) return `Tek bir sınıf görevinde öğrenci ${labels} becerilerini aynı durum içinde ayrı ayrı kullanır.`
-    if (kinds.has("distinguish_targets")) return `${labels} aynı şey değildir.`
-    if (kinds.has("explain_relation")) return `${labels} arasındaki ilişki ayrı kapsamlarıyla açıklanır.`
-    if (kinds.has("give_concrete_example")) return `Örneğin, ${labels} için kısa bir öğrenci durumu anlatılır.`
-    if (kinds.has("bind_example_to_target")) return `Bu örnek ${labels} kavramıyla doğrudan bağ kurar.`
-    if (kinds.has("summarize_known")) return `${labels} konuşmada bildiğimiz başlıklardır.`
-    if (kinds.has("summarize_unknown")) return "Bu açıklama tek başına bir öğrenci hakkında kesin sonuç vermez."
-    if (kinds.has("summarize_observation_focus")) return "Gözlemde farklı ortam ve görevlerde ne olduğuna bakılır."
-    return `${labels} için kaynak bilgisine dayalı, öğrenci dilinde kısa bir açıklama veriyorum.`
+    if (kinds.has("use_shared_scenario")) return withHistory(`Tek bir sınıf görevinde öğrenci ${labels} becerilerini aynı durum içinde ayrı ayrı kullanır.`)
+    if (kinds.has("distinguish_targets")) return withHistory(`${labels} aynı şey değildir.`)
+    if (kinds.has("explain_relation")) return withHistory(`${labels} arasındaki ilişki ayrı kapsamlarıyla açıklanır.`)
+    if (kinds.has("give_concrete_example")) return withHistory(`Örneğin, ${labels} için kısa bir öğrenci durumu anlatılır.`)
+    if (kinds.has("bind_example_to_target")) return withHistory(`Bu örnek ${labels} kavramıyla doğrudan bağ kurar.`)
+    if (kinds.has("summarize_known")) return withHistory(`${labels} konuşmada bildiğimiz başlıklardır.`)
+    if (kinds.has("summarize_unknown")) return withHistory("Bu açıklama tek başına bir öğrenci hakkında kesin sonuç vermez.")
+    if (kinds.has("summarize_observation_focus")) return withHistory("Gözlemde farklı ortam ve görevlerde ne olduğuna bakılır.")
+    return withHistory(`${labels} için kaynak bilgisine dayalı, öğrenci dilinde kısa bir açıklama veriyorum.`)
   }
   const value = {
     blocks: Object.fromEntries(content.answerSlots.map((slot) => [
@@ -84,6 +94,7 @@ async function main() {
   let requestedSentenceCountNormalized = false
   let compositionControlsGrouped = false
   let localEnvironmentalSceneBound = false
+  let privacySafeHistoryAnchorBound = false
   for (const conversation of fixture.conversations) {
     let state: StudentConversationState = createEmptyStudentConversationState()
     for (const turn of conversation.turns) {
@@ -132,6 +143,13 @@ async function main() {
         assert.doesNotMatch(result.answer, /ikinci cümle\?/u)
         requestedSentenceCountNormalized = true
       }
+      if (turn.turnId === "STUDENT40-C02-T05") {
+        assert.ok(result.plan.historyAnchor)
+        assert.equal(result.plan.historyAnchor.rawHistoryStored, false)
+        assert.deepEqual(result.plan.historyAnchor.targetIds, ["inhibition", "executive_functions"])
+        assert.match(result.answer, /Önceki inhibisyon ve yürütücü işlev durumunda/u)
+        privacySafeHistoryAnchorBound = true
+      }
       if (turn.turnId === "STUDENT40-C02-T06") {
         assert.equal(result.plan.obligations.some((row) => row.kind === "preserve_target_while_simplifying"), true)
         assert.equal(result.candidate.blocks.length, 1)
@@ -167,6 +185,7 @@ async function main() {
   assert.equal(requestedSentenceCountNormalized, true)
   assert.equal(compositionControlsGrouped, true)
   assert.equal(localEnvironmentalSceneBound, true)
+  assert.equal(privacySafeHistoryAnchorBound, true)
 
   const first = fixture.conversations[0]!.turns[0]!
   const firstResolution = resolveStudentEvidenceFirstRequest({

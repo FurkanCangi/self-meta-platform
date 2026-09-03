@@ -25,6 +25,7 @@ const fixture = JSON.parse(readFileSync(
 let plans = 0
 let providerGrounded = 0
 let localSafetyBoundary = 0
+let privacySafeHistoryAnchors = 0
 let maximumTargets = 0
 for (const conversation of fixture.conversations) {
   let state: StudentConversationState = createEmptyStudentConversationState()
@@ -45,6 +46,11 @@ for (const conversation of fixture.conversations) {
     assert.equal(plan.rawQuestionStored, false, `${turn.turnId}: raw question storage`)
     if (plan.executionRoute === "provider_grounded") providerGrounded += 1
     else localSafetyBoundary += 1
+    if (plan.historyAnchor) {
+      assert.equal(plan.historyAnchor.rawHistoryStored, false)
+      assert.equal(plan.obligations.some((row) => row.kind === "use_history_anchor"), true)
+      privacySafeHistoryAnchors += 1
+    }
     maximumTargets = Math.max(maximumTargets, plan.activeTargetIds.length)
     plans += 1
 
@@ -67,6 +73,7 @@ for (const conversation of fixture.conversations) {
 assert.equal(plans, 40)
 assert.ok(providerGrounded > 0, "general educational answers must retain a grounded provider route")
 assert.ok(localSafetyBoundary > 0, "case and treatment boundaries must remain local")
+assert.ok(privacySafeHistoryAnchors > 0, "history-bound answers must expose a privacy-safe anchor")
 assert.equal(maximumTargets, 7)
 const workingMemoryContrastTagged = classifyStudentAnswerEvidenceClaimRole(
   "Bir telefon numarasını birkaç saniye akılda tutmak kısa süreli bellek örneğidir.",
@@ -87,6 +94,7 @@ console.log(JSON.stringify({
   plans,
   providerGrounded,
   localSafetyBoundary,
+  privacySafeHistoryAnchors,
   maximumTargets,
   missingEvidenceMutationsRejected: plans,
   missingObligationMutationsRejected: plans,

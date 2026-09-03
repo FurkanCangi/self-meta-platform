@@ -303,6 +303,8 @@ export function interpretStudentRequest(
     rejectedTargetIds: rejected,
     comparisonTargetIds: comparisonTargets,
     componentTargetIds,
+    historyAnchorRequired: conversationAction === "return"
+      || (referent.turnId !== null && componentTargetIds.length > 1),
     presentation: normalizedPresentation,
     summaryScope,
     observationScope,

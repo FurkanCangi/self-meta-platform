@@ -8,7 +8,7 @@ import type {
   StudentSummaryScope,
 } from "./contracts"
 
-export const DNA_STUDENT_OBLIGATION_COMPILER_VERSION = "dna-student-obligation-compiler@6" as const
+export const DNA_STUDENT_OBLIGATION_COMPILER_VERSION = "dna-student-obligation-compiler@7" as const
 
 const OBLIGATION_DESCRIPTIONS: Readonly<Record<StudentAnswerObligationKind, string>> = Object.freeze({
   define_target: "Hedef kavramı doğrudan tanımla",
@@ -41,6 +41,7 @@ export type StudentObligationCompilationInput = Readonly<{
   rejectedTargetIds: readonly string[]
   comparisonTargetIds: readonly string[]
   componentTargetIds: readonly string[]
+  historyAnchorRequired: boolean
   presentation: StudentPresentationRequest
   summaryScope: StudentSummaryScope
   observationScope: StudentObservationScope
@@ -102,7 +103,9 @@ export function compileStudentAnswerObligations(
   if (input.conversationAction === "repair" && input.rejectedTargetIds.length) {
     add("honor_rejected_target", input.rejectedTargetIds)
   }
-  if (input.conversationAction === "return") add("use_history_anchor", input.targetIds)
+  if (input.conversationAction === "return" || input.historyAnchorRequired) {
+    add("use_history_anchor", input.targetIds)
+  }
   if (input.presentation.preserveMeaning) add("preserve_target_while_simplifying", input.targetIds)
   for (const targetId of input.componentTargetIds) add("cover_requested_component", [targetId])
   if (!rows.length) add("define_target", input.targetIds)

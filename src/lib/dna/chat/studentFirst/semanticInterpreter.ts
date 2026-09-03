@@ -537,6 +537,8 @@ export function compileStudentRequestContract(
   const componentTargetIds = semanticTask === "explain" && targetIds.length > 1 && presentation.grouping === "separate_each"
     ? targetIds
     : Object.freeze([])
+  const historyAnchorRequired = frame.conversationAction === "return"
+    || (referent.turnId !== null && componentTargetIds.length > 1)
   const summaryScope = Object.freeze({
     known: semanticTask === "summarize",
     unknown: semanticTask === "summarize" && frame.summaryExtras.unknown,
@@ -581,6 +583,7 @@ export function compileStudentRequestContract(
       rejectedTargetIds: currentRejectedTargetIds,
       comparisonTargetIds,
       componentTargetIds,
+      historyAnchorRequired,
       summaryScope,
       observationScope,
       presentation,

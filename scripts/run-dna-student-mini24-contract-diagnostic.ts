@@ -52,7 +52,7 @@ const EXPECTED_CONTRACTS: Readonly<Record<string, ExpectedContract>> = Object.fr
   "NMINI-C01-T03": { task: "example", targetIds: ["self_regulation"], exactTargets: false, obligationKinds: ["give_concrete_example", "bind_example_to_target"] },
   "NMINI-C01-T04": { task: "compare", targetIds: ["self_regulation", "attention"], obligationKinds: ["state_single_observation_limit", "name_additional_context", "name_multiple_plausible_explanations"] },
   "NMINI-C01-T05": { task: "case_reasoning", targetIds: ["self_regulation", "recovery"], rejectedTargetIds: ["attention"], obligationKinds: ["state_single_observation_limit", "name_additional_context", "honor_rejected_target"] },
-  "NMINI-C01-T06": { task: "explain", targetIds: ["planning", "inhibition", "emotion_regulation"], obligationKinds: ["cover_requested_component"] },
+  "NMINI-C01-T06": { task: "explain", targetIds: ["planning", "inhibition", "emotion_regulation"], obligationKinds: ["use_history_anchor", "cover_requested_component"] },
   "NMINI-C01-T07": { task: "observe", targetIds: ["planning", "inhibition", "emotion_regulation"], referentTurnId: "NMINI-C01-T06", obligationKinds: ["state_single_observation_limit", "name_additional_context"] },
   "NMINI-C01-T08": { task: "compare", targetIds: ["self_regulation", "attention"], referentTurnId: "NMINI-C01-T01", obligationKinds: ["distinguish_targets", "explain_relation", "use_history_anchor"] },
   "NMINI-C01-T09": { task: "example", targetIds: ["self_regulation", "attention"], referentTurnId: "NMINI-C01-T08", obligationKinds: ["give_concrete_example", "bind_example_to_target"] },

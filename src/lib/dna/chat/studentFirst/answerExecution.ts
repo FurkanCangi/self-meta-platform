@@ -6,7 +6,7 @@ import {
   type StudentS13ResolvedRequestHandoff,
 } from "./runtimeBridge"
 
-export const DNA_STUDENT_ANSWER_EXECUTION_PLAN_VERSION = "dna-student-answer-execution-plan@1" as const
+export const DNA_STUDENT_ANSWER_EXECUTION_PLAN_VERSION = "dna-student-answer-execution-plan@2" as const
 
 export type StudentAnswerEvidenceClaim = Readonly<{
   claimId: string
@@ -29,6 +29,13 @@ export type StudentAnswerExecutionPlan = Readonly<{
     ownerBookTopicId: string
     ownerBookTopicTitle: string
   }>[]
+  historyAnchor: Readonly<{
+    turnId: string
+    role: Exclude<StudentRequestContract["referent"]["role"], "none">
+    targetIds: readonly string[]
+    targetLabels: readonly string[]
+    rawHistoryStored: false
+  }> | null
   targetEvidence: readonly Readonly<{
     studentTargetId: string
     ownerBookTopicId: string
@@ -196,6 +203,18 @@ export function buildStudentAnswerExecutionPlan(input: Readonly<{
     return unit
   })
   const local = localSafetyBoundary(input.contract)
+  const historyAnchorRequired = input.contract.obligations.some((obligation) => obligation.kind === "use_history_anchor")
+  const historyAnchor = historyAnchorRequired && input.contract.referent.turnId && input.contract.referent.role !== "none"
+    ? Object.freeze({
+        turnId: input.contract.referent.turnId,
+        role: input.contract.referent.role,
+        targetIds: Object.freeze([...input.contract.referent.targetIds]),
+        targetLabels: Object.freeze(input.contract.referent.targetIds.map((targetId) =>
+          TARGET_VISIBLE_ALIASES[targetId]?.[0] ?? targetId)),
+        rawHistoryStored: false as const,
+      })
+    : null
+  if (historyAnchorRequired && !historyAnchor) throw new Error("dna_student_answer_history_anchor_missing")
   const plan: StudentAnswerExecutionPlan = Object.freeze({
     version: DNA_STUDENT_ANSWER_EXECUTION_PLAN_VERSION,
     requestContractVersion: input.contract.version,
@@ -209,6 +228,7 @@ export function buildStudentAnswerExecutionPlan(input: Readonly<{
       ownerBookTopicId: target.ownerBookTopicId,
       ownerBookTopicTitle: target.ownerBookTopicTitle,
     }))),
+    historyAnchor,
     targetEvidence: Object.freeze(active.map((target) => evidenceForTarget(target, input.contract))),
     obligations: Object.freeze([...input.contract.obligations]),
     policyUnits: Object.freeze(policyUnits),
@@ -240,6 +260,15 @@ export function validateStudentAnswerExecutionPlan(
   if (plan.executionRoute !== expectedRoute
     || plan.providerMayReceiveTransientQuestion !== (expectedRoute === "provider_grounded")) return false
   if (!sameSet(plan.targetEvidence.map((row) => row.studentTargetId), contract.targetIds)) return false
+  const historyAnchorRequired = contract.obligations.some((obligation) => obligation.kind === "use_history_anchor")
+  if (historyAnchorRequired !== (plan.historyAnchor !== null)) return false
+  if (plan.historyAnchor && (
+    plan.historyAnchor.turnId !== contract.referent.turnId
+    || plan.historyAnchor.role !== contract.referent.role
+    || plan.historyAnchor.rawHistoryStored !== false
+    || !sameSet(plan.historyAnchor.targetIds, contract.referent.targetIds)
+    || plan.historyAnchor.targetLabels.length !== plan.historyAnchor.targetIds.length
+  )) return false
   const handoff = buildStudentS13ResolvedRequestHandoff({ question: "typed validation", contract })
   const expectedTopicByTarget = new Map(handoff.crosswalk.filter((row) => row.polarity === "ACTIVE_TARGET")
     .map((row) => [row.studentTargetId, row.ownerBookTopicId]))

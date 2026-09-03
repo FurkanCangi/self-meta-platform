@@ -1,5 +1,5 @@
 export const DNA_STUDENT_FIRST_CONVERSATION_VERSION = "dna-student-conversation-state@7" as const
-export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@17" as const
+export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@18" as const
 
 export type StudentSemanticTask =
   | "define"

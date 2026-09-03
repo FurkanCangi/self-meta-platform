@@ -17,6 +17,7 @@ const base: StudentObligationCompilationInput = Object.freeze({
   rejectedTargetIds: Object.freeze([]),
   comparisonTargetIds: Object.freeze([]),
   componentTargetIds: Object.freeze([]),
+  historyAnchorRequired: false,
   presentation: Object.freeze({
     depth: "standard",
     language: "standard",
@@ -85,7 +86,8 @@ assert.deepEqual(kinds({
   conversationAction: "continue",
   targetIds: ["planning", "inhibition", "emotion_regulation"],
   componentTargetIds: ["planning", "inhibition", "emotion_regulation"],
-}), ["define_target", "cover_requested_component", "cover_requested_component", "cover_requested_component"])
+  historyAnchorRequired: true,
+}), ["define_target", "use_history_anchor", "cover_requested_component", "cover_requested_component", "cover_requested_component"])
 
 assert.deepEqual(kinds({
   ...base,
