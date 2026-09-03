@@ -12,7 +12,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@12" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@13" as const
 export const DNA_STUDENT_ANSWER_EXECUTOR_TIMEOUT_MS = 20_000
 export const DNA_STUDENT_ANSWER_EXECUTOR_MAX_PROVIDER_CALLS = 1
 
@@ -248,7 +248,76 @@ function composeCandidate(
   })
 }
 
-function localSafetyCandidate(plan: StudentAnswerExecutionPlan): StudentAnswerCandidate {
+function hasEveryTarget(plan: StudentAnswerExecutionPlan, targetIds: readonly string[]) {
+  return targetIds.every((targetId) => plan.activeTargetIds.includes(targetId))
+}
+
+function localCaseObservationStatement(
+  question: string,
+  plan: StudentAnswerExecutionPlan,
+  hasHistoryReferent: boolean,
+): string | null {
+  const caseInterpretive = plan.operation === "case_reasoning" || plan.operation === "observe"
+    || plan.obligations.some((obligation) => [
+      "state_single_observation_limit",
+      "name_additional_context",
+      "name_multiple_plausible_explanations",
+      "avoid_context_free_judgment",
+    ].includes(obligation.kind))
+  if (!caseInterpretive || plan.operation === "treatment_boundary") return null
+  const normalized = normalizeDnaChatText(question)
+  const hasRecovery = /\btoparla\w*.{0,40}\bdon\w*\b/u.test(normalized)
+  const hasTaskBreak = /\b(?:gorev|is)\w*.{0,45}\b(?:birak|kalk|gez)\w*\b/u.test(normalized)
+  const hasAdultSupport = /\b(?:ogretmen|yetiskin)\w*\b/u.test(normalized)
+    && /\b(?:yavas\w*|yumusat\w*|sakin\w*|yan\w*|destek\w*)\b/u.test(normalized)
+  const hasActivityReturn = /\b(?:oyun|gorev|etkinlik)\w*.{0,24}\bdon\w*\b/u.test(normalized)
+    || /\b(?:sakinles|duzel)\w*\b/u.test(normalized)
+  const hasEnvironmentLoad = /\b(?:kalabalik|sesli|gurultu|ortam)\w*\b/u.test(normalized)
+  const hasVoiceRise = /\bses\w*.{0,20}\b(?:yuksel|art)\w*\b/u.test(normalized)
+  const hasMovementRise = /\b(?:cok\s+hareket|hareket\w*.{0,16}\bart|hizli\s+dolas)\w*\b/u.test(normalized)
+  const hasEmotionEvent = /\b(?:sinirlen|ofkelen|gergin)\w*\b/u.test(normalized)
+  const hasInstruction = /\b(?:sozlu\s+)?yonerge\w*\b/u.test(normalized)
+  const hasAdultLook = /\b(?:yetiskin|ogretmen)\w*.{0,32}\bbak\w*\b/u.test(normalized)
+
+  if (hasEveryTarget(plan, ["self_regulation", "recovery"]) && hasRecovery) {
+    return "Kendi kendine toparlanıp göreve dönme, öz-düzenleme açısından davranışı o anda yeniden göreve yöneltebilme olarak düşünülebilir; toparlanma burada gözlenen geri dönüşü anlatır."
+  }
+  if (hasEveryTarget(plan, ["self_regulation", "attention"]) && hasTaskBreak) {
+    return "Göreve başladıktan sonra görevden kopma ve sınıfta dolaşma, öz-düzenleme ile dikkati sürdürme açısından ayrı ayrı değerlendirilebilecek bir gözlemdir."
+  }
+  if (hasEveryTarget(plan, ["coregulation"]) && hasAdultSupport && hasActivityReturn) {
+    return "Yetişkinin sakin desteğinden sonra çocuğun etkinliğe dönebilmesi, eş düzenleme açısından dış desteğin düzenlenmeye eşlik ettiği somut bir örnek olarak düşünülebilir."
+  }
+  if (hasEveryTarget(plan, ["arousal", "sensory_regulation"]) && (hasEnvironmentLoad || hasVoiceRise || hasMovementRise)) {
+    return "Kalabalık veya sesli ortamla birlikte sesin ya da hareketin artması, arousal ve duyusal düzenleme açısından ayrı ayrı ele alınabilecek bir gözlemdir."
+  }
+  if (hasEveryTarget(plan, ["arousal", "emotion_regulation"]) && (hasEmotionEvent || hasVoiceRise)) {
+    return "Sinirlenme sırasında sesin yükselmesi, hem arousal hem de duygu düzenleme açısından düşünülebilir; aynı görünüm bu iki kavramı tek başına birbirinden ayırmaz."
+  }
+  if (hasInstruction && hasAdultLook) {
+    const labels = plan.targetEvidence.map((target) => target.visibleAliases[0]).filter(Boolean).join(" ve ")
+    return `Yönergeyi duyduğu halde başlamak için yetişkine bakma, ${labels} açısından göreve başlama ile dış destek ihtiyacını birlikte incelemeyi gerektiren bir gözlemdir.`
+  }
+  if (hasAdultSupport && hasActivityReturn) {
+    const labels = plan.targetEvidence.map((target) => target.visibleAliases[0]).filter(Boolean).join(" ve ")
+    return `Yetişkin desteğinden sonra sakinleşip etkinliğe dönme, ${labels} açısından desteğin öncesi ve sonrasını birlikte değerlendirmeyi gerektiren bir gözlemdir.`
+  }
+  if (hasEnvironmentLoad || hasVoiceRise || hasMovementRise || hasTaskBreak || hasRecovery) {
+    const labels = plan.targetEvidence.map((target) => target.visibleAliases[0]).filter(Boolean).join(" ve ")
+    return `Mesajdaki davranış örüntüsü, ${labels} açısından ele alınabilecek bir gözlemdir; bu ifade tek başına kişiye ilişkin kesin bir sonuç değildir.`
+  }
+  if (hasHistoryReferent) {
+    const labels = plan.targetEvidence.map((target) => target.visibleAliases[0]).filter(Boolean).join(" ve ")
+    return `Önceki örnekteki davranış, ${labels} açısından işlevi ve bağlamı korunarak değerlendirilmelidir.`
+  }
+  return null
+}
+
+function localSafetyCandidate(
+  plan: StudentAnswerExecutionPlan,
+  question: string,
+  hasHistoryReferent: boolean,
+): StudentAnswerCandidate {
   const targetStatements = plan.targetEvidence.map((target) => {
     const label = target.visibleAliases[0] ?? target.ownerBookTopicTitle.split(" · ").at(-1) ?? target.studentTargetId
     const claim = target.claims.find((candidate) => candidate.role !== "contrast") ?? target.claims[0]!
@@ -264,7 +333,14 @@ function localSafetyCandidate(plan: StudentAnswerExecutionPlan): StudentAnswerCa
   ]
   const exampleStatement = obligationKinds.has("give_concrete_example")
     ? "Örnek: Bu kavramları yalnız açıklayıcı varsayımsal bir durumda düşünebiliriz." : null
-  const text = [...relationStatements, ...targetStatements, ...policyStatements, ...(exampleStatement ? [exampleStatement] : [])]
+  const caseStatement = localCaseObservationStatement(question, plan, hasHistoryReferent)
+  const renderedCaseStatement = caseStatement && obligationKinds.has("give_concrete_example")
+    ? `Örnek: ${caseStatement}`
+    : caseStatement
+  const contentStatements = caseStatement
+    ? [renderedCaseStatement!, ...policyStatements]
+    : [...relationStatements, ...targetStatements, ...policyStatements, ...(exampleStatement ? [exampleStatement] : [])]
+  const text = contentStatements
     .join(" ")
   return composeCandidate([Object.freeze({
     blockId: "b1",
@@ -275,7 +351,7 @@ function localSafetyCandidate(plan: StudentAnswerExecutionPlan): StudentAnswerCa
     usedClaimIds: Object.freeze(plan.targetEvidence.map((row) =>
       (row.claims.find((candidate) => candidate.role !== "contrast") ?? row.claims[0]!).claimId)),
     usedPolicyUnitIds: Object.freeze(plan.policyUnits.map((row) => row.id)),
-  })], exampleStatement ? "hypothetical" : "none")
+  })], exampleStatement ? (caseStatement ? "user_supplied" : "hypothetical") : "none")
 }
 
 const POLICY_ID_BY_OBLIGATION_KIND: Readonly<Partial<Record<
@@ -495,7 +571,7 @@ export async function executeStudentAnswer(input: Readonly<{
 }>): Promise<StudentAnswerExecutorResult> {
   const plan = buildStudentAnswerExecutionPlan(input)
   if (plan.executionRoute === "local_safety_boundary") {
-    const candidate = localSafetyCandidate(plan)
+    const candidate = localSafetyCandidate(plan, input.question, input.contract.referent.kind !== "none")
     const failureCodes = validateStudentAnswerCandidate({ candidate, plan })
     const provider = Object.freeze({
       calls: 0,

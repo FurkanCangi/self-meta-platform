@@ -83,6 +83,7 @@ async function main() {
   let missingProviderExampleCueLabeled = false
   let requestedSentenceCountNormalized = false
   let compositionControlsGrouped = false
+  let localEnvironmentalSceneBound = false
   for (const conversation of fixture.conversations) {
     let state: StudentConversationState = createEmptyStudentConversationState()
     for (const turn of conversation.turns) {
@@ -140,6 +141,13 @@ async function main() {
         )
         compositionControlsGrouped = true
       }
+      if (turn.turnId === "STUDENT40-C04-T03") {
+        assert.equal(result.route, "local_safety_boundary")
+        assert.match(result.answer, /Kalabalık veya sesli ortamla birlikte/u)
+        assert.match(result.answer, /arousal ve duyusal düzenleme/u)
+        assert.doesNotMatch(result.answer, /Duyusal Regülasyonun Self-Regülasyon İçindeki Yeri/u)
+        localEnvironmentalSceneBound = true
+      }
       if (result.route === "provider_grounded") {
         providerAnswers += 1
         assert.equal(result.provider.calls, 1, `${turn.turnId}: bounded provider call`)
@@ -158,6 +166,7 @@ async function main() {
   assert.equal(missingProviderExampleCueLabeled, true)
   assert.equal(requestedSentenceCountNormalized, true)
   assert.equal(compositionControlsGrouped, true)
+  assert.equal(localEnvironmentalSceneBound, true)
 
   const first = fixture.conversations[0]!.turns[0]!
   const firstResolution = resolveStudentEvidenceFirstRequest({
