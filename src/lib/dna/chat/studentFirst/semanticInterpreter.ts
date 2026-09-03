@@ -15,7 +15,7 @@ import { DNA_STUDENT_TARGET_LEXICON, detectExplicitStudentTargetIds } from "./co
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 import { normalizeDnaChatText } from "../text"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@26" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@27" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
   "define", "explain", "compare", "example", "case_reasoning", "summarize",
@@ -31,6 +31,7 @@ export type StudentSemanticActs = Readonly<Record<StudentSemanticTask, boolean>>
 export const DNA_STUDENT_OBLIGATION_KINDS = Object.freeze([
   "define_target",
   "distinguish_targets",
+  "contrast_target_states",
   "explain_relation",
   "give_concrete_example",
   "bind_example_to_target",
@@ -41,6 +42,8 @@ export const DNA_STUDENT_OBLIGATION_KINDS = Object.freeze([
   "cover_requested_component",
   "state_single_observation_limit",
   "name_additional_context",
+  "name_multiple_plausible_explanations",
+  "avoid_context_free_judgment",
   "summarize_known",
   "summarize_unknown",
   "summarize_observation_focus",
@@ -252,9 +255,9 @@ function parseSemanticActs(value: unknown): StudentSemanticActs | null {
 }
 
 const FALLBACK_TASK_PRIORITY: readonly StudentSemanticTask[] = Object.freeze([
+  "case_reasoning",
   "observe",
   "evidence",
-  "case_reasoning",
   "define",
   "explain",
 ])
@@ -332,7 +335,16 @@ function parseObservationExtras(value: unknown): StudentObservationScope | null 
   if (!value || typeof value !== "object") return null
   const row = value as Record<string, unknown>
   if (typeof row.singleObservationLimit !== "boolean" || typeof row.additionalContext !== "boolean") return null
-  return Object.freeze({ singleObservationLimit: row.singleObservationLimit, additionalContext: row.additionalContext })
+  for (const key of ["multiplePlausibleExplanations", "contextualJudgment", "withinTargetStateContrast"] as const) {
+    if (row[key] !== undefined && typeof row[key] !== "boolean") return null
+  }
+  return Object.freeze({
+    singleObservationLimit: row.singleObservationLimit,
+    additionalContext: row.additionalContext,
+    multiplePlausibleExplanations: row.multiplePlausibleExplanations === true,
+    contextualJudgment: row.contextualJudgment === true,
+    withinTargetStateContrast: row.withinTargetStateContrast === true,
+  })
 }
 
 function parseReferentTurnId(value: unknown, state: StudentConversationState): Readonly<{ ok: true; turnId: string | null }> | null {
@@ -530,14 +542,18 @@ export function compileStudentRequestContract(
     unknown: semanticTask === "summarize" && frame.summaryExtras.unknown,
     observationFocus: semanticTask === "summarize" && frame.summaryExtras.observationFocus,
   })
-  const observationScope = semanticTask === "observe" || semanticTask === "case_reasoning"
-    ? Object.freeze({ singleObservationLimit: true, additionalContext: true })
+  const observationScope: StudentObservationScope = semanticTask === "observe" || semanticTask === "case_reasoning"
+    ? Object.freeze({
+        ...frame.observationExtras,
+        singleObservationLimit: true,
+        additionalContext: true,
+      })
     : semanticTask === "compare"
       ? frame.observationExtras
       : Object.freeze({ singleObservationLimit: false, additionalContext: false })
   const ambiguity = frame.conversationAction === "return" && referent.kind !== "history"
     ? "history_anchor_missing"
-    : semanticTask === "compare" && comparisonTargetIds.length < 2
+    : semanticTask === "compare" && comparisonTargetIds.length < 2 && !observationScope.withinTargetStateContrast
       ? "comparison_side_missing"
       : !targetIds.length && semanticTask !== "treatment_boundary"
         ? "target_missing"
@@ -573,6 +589,10 @@ export function compileStudentRequestContract(
     safetyIntent: semanticTask === "treatment_boundary"
       ? "treatment_selection"
       : semanticTask === "observe" || semanticTask === "case_reasoning"
+        || (semanticTask !== "summarize" && (
+          requestedSemanticTasks.includes("observe") || requestedSemanticTasks.includes("case_reasoning")
+          || observationScope.singleObservationLimit
+        ))
         ? "case_interpretation"
         : "general_education",
   })
@@ -634,6 +654,9 @@ export function studentSemanticFrameSchema(state: StudentConversationState): Rec
         properties: {
           singleObservationLimit: { type: "boolean" },
           additionalContext: { type: "boolean" },
+          multiplePlausibleExplanations: { type: "boolean" },
+          contextualJudgment: { type: "boolean" },
+          withinTargetStateContrast: { type: "boolean" },
         },
       },
     },

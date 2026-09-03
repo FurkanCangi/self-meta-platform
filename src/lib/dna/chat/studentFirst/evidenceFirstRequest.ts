@@ -15,7 +15,7 @@ import {
   type StudentSemanticFrame,
 } from "./semanticInterpreter"
 
-export const DNA_STUDENT_EVIDENCE_FIRST_VERSION = "dna-student-evidence-first@3" as const
+export const DNA_STUDENT_EVIDENCE_FIRST_VERSION = "dna-student-evidence-first@4" as const
 
 export type StudentObservedTargetFact = Readonly<{
   targetId: string
@@ -29,6 +29,7 @@ export type StudentReferenceCues = Readonly<{
   historyReturn: boolean
   firstHistory: boolean
   caseEntity: boolean
+  fragmentaryCase: boolean
 }>
 
 export type StudentObservedSafetyIntent =
@@ -186,7 +187,7 @@ function targetFacts(message: string): Readonly<{
         ? `${normalizedAlias}k`
         : null
       const attentionCaseMatch = entry.id === "attention" && normalizedAlias === "dikkat"
-        ? /(?:^| )(dikkati|dikkate|dikkatten)(?= |$)/u.exec(normalized)
+        ? /(?:^| )(dikkati|dikkate|dikkatten|dikkatle)(?= |$)/u.exec(normalized)
         : null
       const attentionCaseStart = attentionCaseMatch?.index === undefined
         ? null
@@ -199,6 +200,8 @@ function targetFacts(message: string): Readonly<{
           : null)
       if (!match) continue
       if (entry.id === "attention" && normalizedAlias === "dikkat" && /^ (?:et|cek)\w*\b/.test(normalized.slice(match.end))) continue
+      if (entry.id === "attention" && match && normalized.slice(match.start, match.end) === "dikkatle"
+        && !/\b(?:fark\w*|ayir\w*|karsilastir\w*)\b/u.test(normalized)) continue
       const fact = Object.freeze({
         targetId: entry.id,
         evidenceKind: isContext ? "context_alias" : "explicit_alias",
@@ -302,13 +305,16 @@ function semanticTaskCandidates(message: string, explicitTargetCount: number): r
   add("summarize", /\b(?:toparla|ozetle|ozet yap|ozeti yap|ogrenci ozeti|ozet cikar|konustuklarimizi|konustugumuzu|konusmayi)\b/.test(normalized))
   add("evidence", words.some((word) => startsWithAny(word, ["kanit", "kaynak", "calismalar"]))
     || /\bne kadar guvenilir\b/.test(normalized))
-  add("observe", /\b(?:tek gozlem|tek bir gozlem|gozlemde|neye bak|nasil gozlemler|baska neye)\b/.test(normalized))
+  add("observe", /\b(?:tek (?:bir )?gozlem\w*|gozlemde|neye bak|nasil gozlemler|baska neye)\b/.test(normalized))
   add("compare", /\b(?:ayni mi|ayni sey mi|farki\w*|ayir\w*|karsilastir\w*|hangisi|hangisine girer|ikisini de)\b/.test(normalized) ||
+    (explicitTargetCount === 1 && /\b(?:dusuk|az)\b.{0,40}\b(?:yuksek|cok)\b/u.test(normalized)) ||
     (explicitTargetCount > 1 && /\bmi\b/.test(normalized)) ||
     (explicitTargetCount === 2 && /\bayni ornekte\b/.test(normalized)))
   add("example", exampleSignals.requested)
-  add("case_reasoning", /\b(?:diyebilir miyim|diyebilir miyiz|ne olabilir|ne dusun\w*|nasil dusun\w*|kesin soyle|zayif diyebilir|ilgili mi)\b/.test(normalized) &&
-    /\b(?:cocu(?:k|g)\w*|ogrenci\w*|vaka\w*|davranis\w*|gozlem\w*|sadece bu)\b/.test(normalized))
+  const caseQuestion = /\b(?:diyebilir miyim|diyebilir miyiz|ne olabilir|ne dusun\w*|nasil dusun\w*|kesin soyle|zayif diyebilir|ilgili mi|iyi mi kotu mu|bu ne simdi|hangisi)\b/.test(normalized)
+    || (/\bne demek\b/.test(normalized) && /\bgorevi birak\w*\b/.test(normalized))
+  const caseScene = /\b(?:cocu(?:k|g)\w*|ogrenci\w*|vaka\w*|davranis\w*|sadece bu|gorevi birak\w*|sinirlen\w*|ses\w* yuksel\w*)\b/.test(normalized)
+  add("case_reasoning", caseQuestion && (caseScene || /\biyi mi kotu mu\b/.test(normalized)))
   add("define", /\b(?:ne demek|nedir|neydi|tam olarak ne|neyi kastediyoruz|neyi ifade eder)\b/.test(normalized))
   add("explain", /\b(?:anlat|acikla|nasil dusun\w*|nasil yer al\w*|ne anlama gelir|baglama gore|bunun icinde mi)\b/.test(normalized))
   if (!tasks.length) tasks.push("explain")
@@ -362,11 +368,33 @@ function summaryExtras(message: string, tasks: readonly StudentSemanticTask[]): 
 
 function observationExtras(message: string, tasks: readonly StudentSemanticTask[]): StudentObservationScope {
   const normalized = normalizeDnaChatText(message)
-  if (!tasks.includes("compare")) return Object.freeze({ singleObservationLimit: false, additionalContext: false })
-  const singleObservationLimit = /\b(?:tek gozlem|tek bir gozlem|sadece bu|kesin soyle|kesin diy|hangisi olabilir|niye kesin)\b/.test(normalized)
+  const multiplePlausibleExplanations = tasks.includes("case_reasoning")
+  const contextualJudgment = /\biyi mi kotu mu\b/.test(normalized)
+  const withinTargetStateContrast = tasks.includes("compare")
+    && /\b(?:dusuk|az)\b.{0,40}\b(?:yuksek|cok)\b/u.test(normalized)
+  if (tasks.includes("observe") || tasks.includes("case_reasoning")) {
+    return Object.freeze({
+      singleObservationLimit: true,
+      additionalContext: true,
+      multiplePlausibleExplanations,
+      contextualJudgment,
+      withinTargetStateContrast,
+    })
+  }
+  if (!tasks.includes("compare")) return Object.freeze({
+    singleObservationLimit: false,
+    additionalContext: false,
+    multiplePlausibleExplanations,
+    contextualJudgment,
+    withinTargetStateContrast,
+  })
+  const singleObservationLimit = /\b(?:tek (?:bir )?gozlem\w*|sadece bu|kesin soyle|kesin diy|hangisi olabilir|ne dusun\w*|neden kesin|niye kesin)\b/.test(normalized)
   return Object.freeze({
     singleObservationLimit,
-    additionalContext: singleObservationLimit && /\b(?:baska|neye bak|hangisi olabilir|neden kesin|niye kesin)\b/.test(normalized),
+    additionalContext: singleObservationLimit && /\b(?:baska|neye bak|hangisi olabilir|ne dusun\w*|neden kesin|niye kesin)\b/.test(normalized),
+    multiplePlausibleExplanations,
+    contextualJudgment,
+    withinTargetStateContrast,
   })
 }
 
@@ -375,12 +403,51 @@ function referenceCues(message: string): StudentReferenceCues {
   const historyReturn = /\b(?:ilk anlattigin|ilk konu|az onceki konu|az onceki cocuk|geri donelim|donelim|basa donelim)\b/.test(normalized)
   const active = /\b(?:bunu|bunun|bununla|bunda|burada|onu|o zaman|ayni sey|dedigin|ikisinden|ikisini|bu destek|bu ornek|bu davranis|bu cocu(?:k|g)|bu ogrenci|bu vaka)\w*\b/.test(normalized)
   const entityWord = /\b(?:cocu(?:k|g)|ogrenci|vaka|davranis|ornek)\w*\b/.test(normalized)
+  const fragmentaryCase = /\bsesli yaziyorum\b/.test(normalized)
+    || (/\b(?:bu ne simdi|yani bu ne)\b/.test(normalized)
+      && /\b(?:cocu(?:k|g)\w*|ogrenci\w*|ogretmen\w*|yetiskin\w*)\b/.test(normalized))
   return Object.freeze({
     active,
     historyReturn,
     firstHistory: historyReturn && /\b(?:ilk|basa)\b/.test(normalized),
     caseEntity: entityWord && (active || historyReturn || /\b(?:onceki ornek|ornekteki)\b/.test(normalized)),
+    fragmentaryCase,
   })
+}
+
+function historyGroundedContextFacts(input: Readonly<{
+  message: string
+  state: StudentConversationState
+}>): readonly StudentObservedTargetFact[] {
+  const normalized = normalizeDnaChatText(input.message)
+  const historyTargets = new Set(input.state.semanticLedger.flatMap((turn) => turn.targetIds))
+  const fragmentaryCase = /\bsesli yaziyorum\b/.test(normalized)
+    || (/\b(?:bu ne simdi|yani bu ne)\b/.test(normalized)
+      && /\b(?:cocu(?:k|g)\w*|ogrenci\w*|ogretmen\w*|yetiskin\w*)\b/.test(normalized))
+  const candidates: Array<Readonly<{ targetId: string; pattern: RegExp }>> = []
+  const historicalSensoryTargets = ["sensory_regulation", "sensory_modulation"].filter((targetId) => historyTargets.has(targetId))
+  if (historicalSensoryTargets.length === 1 && (/\bduyusal\b/.test(normalized)
+    || (fragmentaryCase && /\bses\w*\b/.test(normalized) && /\bortam\w*\b/.test(normalized)))) {
+    candidates.push({ targetId: historicalSensoryTargets[0]!, pattern: /\b(?:duyusal|ses\w*)\b/u })
+  }
+  if (fragmentaryCase && historyTargets.has("arousal") && /\b(?:hareket\w*|uyan\w*|sakin\w*)\b/.test(normalized)) {
+    candidates.push({ targetId: "arousal", pattern: /\b(?:hareket\w*|uyan\w*|sakin\w*)\b/u })
+  }
+  if (fragmentaryCase && historyTargets.has("coregulation")
+    && /\b(?:ogretmen\w*|yetiskin\w*)\b/.test(normalized)
+    && /\b(?:duzel\w*|sakin\w*|don\w*|degis\w*)\b/.test(normalized)) {
+    candidates.push({ targetId: "coregulation", pattern: /\b(?:ogretmen\w*|yetiskin\w*)\b/u })
+  }
+  return Object.freeze(candidates.flatMap((candidate) => {
+    const match = candidate.pattern.exec(normalized)
+    if (!match || match.index === undefined) return []
+    return [Object.freeze({
+      targetId: candidate.targetId,
+      evidenceKind: "context_alias" as const,
+      normalizedStart: match.index,
+      normalizedEnd: match.index + match[0].length,
+    })]
+  }))
 }
 
 function safetyIntent(message: string, tasks: readonly StudentSemanticTask[]): StudentObservedSafetyIntent {
@@ -398,15 +465,39 @@ export function observeStudentRequestFacts(input: Readonly<{
   state: StudentConversationState
 }>): StudentObservedRequestFacts {
   const facts = targetFacts(input.message)
-  const explicitTargetIds = unique(facts.explicit.map((fact) => fact.targetId))
-  const contextTargetIds = unique(facts.context.map((fact) => fact.targetId).filter((targetId) => !explicitTargetIds.includes(targetId)))
+  const normalized = normalizeDnaChatText(input.message)
+  const emotionComponentMatch = /\bduygu (?:kismi|tarafi)\w*\b/u.exec(normalized)
+  const recoveryCaseMatch = /\bkendi(?:ni| kendine)?\s+toparla\w*.{0,30}\bdon\w*\b/u.exec(normalized)
+  const componentFacts = emotionComponentMatch
+    ? [Object.freeze({
+        targetId: "emotion_regulation",
+        evidenceKind: "explicit_alias" as const,
+        normalizedStart: emotionComponentMatch.index,
+        normalizedEnd: emotionComponentMatch.index + emotionComponentMatch[0].length,
+      })]
+    : []
+  const recoveryFacts = recoveryCaseMatch
+    ? [Object.freeze({
+        targetId: "recovery",
+        evidenceKind: "explicit_stem" as const,
+        normalizedStart: recoveryCaseMatch.index,
+        normalizedEnd: recoveryCaseMatch.index + recoveryCaseMatch[0].length,
+      })]
+    : []
+  const explicitFacts = Object.freeze([...facts.explicit, ...componentFacts, ...recoveryFacts]
+    .sort((left, right) => left.normalizedStart - right.normalizedStart))
+  const groundedContextFacts = historyGroundedContextFacts(input)
+  const contextFacts = Object.freeze([...facts.context, ...groundedContextFacts]
+    .sort((left, right) => left.normalizedStart - right.normalizedStart))
+  const explicitTargetIds = unique(explicitFacts.map((fact) => fact.targetId))
+  const contextTargetIds = unique(contextFacts.map((fact) => fact.targetId).filter((targetId) => !explicitTargetIds.includes(targetId)))
   const tasks = semanticTaskCandidates(input.message, explicitTargetIds.length)
   return Object.freeze({
     version: DNA_STUDENT_EVIDENCE_FIRST_VERSION,
     turnId: input.turnId,
-    explicitTargetFacts: facts.explicit,
+    explicitTargetFacts: explicitFacts,
     explicitTargetIds: Object.freeze(explicitTargetIds),
-    contextTargetFacts: facts.context,
+    contextTargetFacts: contextFacts,
     contextTargetIds: Object.freeze(contextTargetIds),
     rejectedTargetIds: rejectedTargets(input.message, explicitTargetIds, input.state),
     semanticTaskCandidates: tasks,
@@ -496,18 +587,26 @@ export function buildStudentStateCandidateEnvelope(input: Readonly<{
   input.state.semanticLedger.flatMap((turn) => turn.targetIds).forEach((targetId) => addSource(targetId, "semantic_history"))
 
   const explicitSet = new Set(input.facts.explicitTargetIds.filter((targetId) => !input.facts.rejectedTargetIds.includes(targetId)))
+  const contextSet = new Set(input.facts.contextTargetIds.filter((targetId) => !input.facts.rejectedTargetIds.includes(targetId)))
   const activeSet = new Set(input.state.activeTargetIds.filter((targetId) => !input.facts.rejectedTargetIds.includes(targetId)))
   const targetFreeSummary = input.facts.conversationAction === "summarize_session" && explicitSet.size === 0
   const targetFreeReturn = input.facts.conversationAction === "return" && explicitSet.size === 0
   const singleActiveTreatment = input.facts.safetyIntent === "treatment_selection" && explicitSet.size === 0 && activeSet.size === 1
-  const comparisonNeedsStateSide = input.facts.semanticTaskCandidates.includes("compare") && explicitSet.size < 2
+  const comparisonNeedsStateSide = input.facts.semanticTaskCandidates.includes("compare")
+    && !input.facts.observationExtras.withinTargetStateContrast
+    && explicitSet.size < 2
+  const contextCanFocus = input.facts.referenceCues.fragmentaryCase
+    || input.facts.conversationAction === "summarize_session"
+    || (input.facts.conversationAction === "repair" && explicitSet.size > 0)
+  const hasFocusedContext = contextCanFocus && contextSet.size > 0
   const targetCandidates = [...sources.entries()].map(([targetId, targetSources]): StudentTargetCandidate => {
     const explicit = explicitSet.has(targetId)
     const contextOnly = targetSources.has("context_current_message") && !explicit
     const history = targetSources.has("semantic_history")
     const active = activeSet.has(targetId)
-    const focusEligible = explicit || (targetFreeSummary && history) || (targetFreeReturn && history) || (singleActiveTreatment && active) || (comparisonNeedsStateSide && active) ||
-      (!explicitSet.size && !targetFreeSummary && input.facts.safetyIntent !== "treatment_selection" && active)
+    const focusEligible = explicit || (contextCanFocus && contextOnly) || (targetFreeSummary && history) || (targetFreeReturn && history) || (singleActiveTreatment && active) ||
+      (comparisonNeedsStateSide && active && !hasFocusedContext) ||
+      (!explicitSet.size && !targetFreeSummary && !hasFocusedContext && input.facts.safetyIntent !== "treatment_selection" && active)
     const eligibilityReason: StudentTargetCandidate["eligibilityReason"] = explicit
       ? "explicit_current_message"
       : targetFreeSummary && history
@@ -555,7 +654,7 @@ export function resolveStudentEvidenceFirstPrimaryTask(facts: StudentObservedReq
   if (tasks.has("compare")) return "compare"
   if (tasks.has("example")) return "example"
   if (facts.presentation.grouping === "separate_each") return "explain"
-  for (const task of ["observe", "evidence", "case_reasoning", "define", "explain"] as const) {
+  for (const task of ["case_reasoning", "observe", "evidence", "define", "explain"] as const) {
     if (tasks.has(task)) return task
   }
   return "explain"

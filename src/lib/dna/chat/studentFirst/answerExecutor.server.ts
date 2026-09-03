@@ -12,7 +12,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@11" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@12" as const
 export const DNA_STUDENT_ANSWER_EXECUTOR_TIMEOUT_MS = 20_000
 export const DNA_STUDENT_ANSWER_EXECUTOR_MAX_PROVIDER_CALLS = 1
 
@@ -119,6 +119,11 @@ function visibleObligation(kind: StudentRequestContract["obligations"][number]["
   if (kind === "state_single_observation_limit") return /\b(?:tek\s+(?:bir\s+)?(?:gozlem|davranis)|yalnizca\s+bu\s+durum)\b/u.test(normalized)
     && /\b(?:yeterli\s+degil|karar\w*|kesin\w*|gostermez\w*|cikarilamaz\w*)\b/u.test(normalized)
   if (kind === "name_additional_context") return /\b(?:farkli\s+(?:zaman|ortam|gorev)|oncesi\w*\s+(?:ve|ile)\s+sonrasi\w*|destek\w*\s+nasil\s+degis)\b/u.test(normalized)
+  if (kind === "name_multiple_plausible_explanations") return /\b(?:birden\s+fazla|farkli)\s+(?:makul\s+)?(?:aciklama|neden|olas)\w*\b/u.test(normalized)
+    || /\btek\s+(?:bir\s+)?nedeni\b.{0,60}\b(?:yeterli\s+degil|sec\w*|soyle\w*)\b/u.test(normalized)
+  if (kind === "avoid_context_free_judgment") return /\biyi\s+(?:veya|ya da)\s+kotu\b/u.test(normalized)
+    && /\b(?:baglam|islev)\w*\b/u.test(normalized)
+  if (kind === "contrast_target_states") return /\bdusuk\w*\b/u.test(normalized) && /\byuksek\w*\b/u.test(normalized)
   if (kind === "summarize_unknown") return /\b(?:bilin\w*|kesin\w*|soyle\w*|cikarilamaz\w*|sonuc\w*\s+vermez)\b/u.test(normalized)
   if (kind === "summarize_observation_focus") return /\bgozlem\w*\b/u.test(normalized)
   if (kind === "refuse_treatment_selection") return /\b(?:terapi|tedavi)\w*\b.{0,80}\b(?:sec\w*|oner\w*|uygula\w*)\b/u.test(normalized)
@@ -281,6 +286,8 @@ const POLICY_ID_BY_OBLIGATION_KIND: Readonly<Partial<Record<
   bind_example_to_target: "policy.example-target-binding",
   state_single_observation_limit: "policy.single-observation-limit",
   name_additional_context: "policy.additional-context",
+  name_multiple_plausible_explanations: "policy.multiple-plausible-explanations",
+  avoid_context_free_judgment: "policy.contextual-judgment",
   refuse_treatment_selection: "policy.no-treatment-selection",
   offer_safe_assessment_frame: "policy.safe-assessment-frame",
 })

@@ -62,6 +62,8 @@
     "scripts/run-dna-student-one-hour-contract.ts",
     "scripts/run-dna-student-one-hour-visible.ts",
     "scripts/run-dna-student-one-hour-t08-preflight.ts",
+    "scripts/run-dna-student-mini24-contract-diagnostic.ts",
+    "scripts/run-dna-student-mini24-visible.ts",
     "scripts/run-dna-student-batch-failure-map.ts",
     "scripts/run-dna-chat-runtime-assurance-tests.ts",
     "scripts/run-dna-chat-case-e2e-tests.ts",

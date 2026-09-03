@@ -8,11 +8,12 @@ import type {
   StudentSummaryScope,
 } from "./contracts"
 
-export const DNA_STUDENT_OBLIGATION_COMPILER_VERSION = "dna-student-obligation-compiler@5" as const
+export const DNA_STUDENT_OBLIGATION_COMPILER_VERSION = "dna-student-obligation-compiler@6" as const
 
 const OBLIGATION_DESCRIPTIONS: Readonly<Record<StudentAnswerObligationKind, string>> = Object.freeze({
   define_target: "Hedef kavramı doğrudan tanımla",
   distinguish_targets: "Karşılaştırılan kavramları birbirinden ayır",
+  contrast_target_states: "Aynı hedefin istenen düşük ve yüksek durumlarını karşılaştır",
   explain_relation: "Kavramların ilişkisini açıkla",
   give_concrete_example: "İstenen bağlamda somut örnek ver",
   bind_example_to_target: "Örneğin hedef kavramla bağını açıkla",
@@ -23,6 +24,8 @@ const OBLIGATION_DESCRIPTIONS: Readonly<Record<StudentAnswerObligationKind, stri
   cover_requested_component: "İstenen bileşeni ayrı karşıla",
   state_single_observation_limit: "Tek gözlemden kesin sonuç çıkarma",
   name_additional_context: "Gerekli ek bağlam veya gözlemi belirt",
+  name_multiple_plausible_explanations: "Vaka davranışı için birden fazla makul açıklama sun",
+  avoid_context_free_judgment: "Davranışı bağlamdan kopuk biçimde iyi veya kötü diye sınıflandırma",
   summarize_known: "Konuşmada desteklenen bilgileri özetle",
   summarize_unknown: "Bilinmeyen veya kesinleştirilemeyen noktaları özetle",
   summarize_observation_focus: "Gözlemde izlenecek noktaları özetle",
@@ -63,8 +66,12 @@ export function compileStudentAnswerObligations(
   const presentationOnly = requestedTasks.size === 0 && input.presentation.preserveMeaning && input.conversationAction === "continue"
   if (!treatmentBoundary && !summary) {
     if (!presentationOnly && input.semanticTask === "compare") {
-      add("distinguish_targets", input.comparisonTargetIds)
-      add("explain_relation", input.comparisonTargetIds)
+      if (input.observationScope.withinTargetStateContrast) {
+        add("contrast_target_states", input.comparisonTargetIds)
+      } else {
+        add("distinguish_targets", input.comparisonTargetIds)
+        add("explain_relation", input.comparisonTargetIds)
+      }
     }
     if (!presentationOnly && (input.semanticTask === "example" || requestedTasks.has("example"))) {
       add("give_concrete_example", input.targetIds)
@@ -77,6 +84,12 @@ export function compileStudentAnswerObligations(
   }
   if (input.observationScope.singleObservationLimit) add("state_single_observation_limit", input.targetIds)
   if (input.observationScope.additionalContext) add("name_additional_context", input.targetIds)
+  if (input.observationScope.multiplePlausibleExplanations) {
+    add("name_multiple_plausible_explanations", input.targetIds)
+  }
+  if (input.observationScope.contextualJudgment) {
+    add("avoid_context_free_judgment", input.targetIds)
+  }
   if (summary) {
     if (input.summaryScope.known) add("summarize_known", input.targetIds)
     if (input.summaryScope.unknown) add("summarize_unknown", input.targetIds)

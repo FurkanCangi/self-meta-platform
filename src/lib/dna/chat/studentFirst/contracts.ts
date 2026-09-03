@@ -1,5 +1,5 @@
 export const DNA_STUDENT_FIRST_CONVERSATION_VERSION = "dna-student-conversation-state@7" as const
-export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@16" as const
+export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@17" as const
 
 export type StudentSemanticTask =
   | "define"
@@ -39,6 +39,9 @@ export type StudentSummaryScope = Readonly<{
 export type StudentObservationScope = Readonly<{
   singleObservationLimit: boolean
   additionalContext: boolean
+  multiplePlausibleExplanations?: boolean
+  contextualJudgment?: boolean
+  withinTargetStateContrast?: boolean
 }>
 
 export type StudentReferent = Readonly<{
@@ -51,6 +54,7 @@ export type StudentReferent = Readonly<{
 export type StudentAnswerObligationKind =
   | "define_target"
   | "distinguish_targets"
+  | "contrast_target_states"
   | "explain_relation"
   | "give_concrete_example"
   | "bind_example_to_target"
@@ -61,6 +65,8 @@ export type StudentAnswerObligationKind =
   | "cover_requested_component"
   | "state_single_observation_limit"
   | "name_additional_context"
+  | "name_multiple_plausible_explanations"
+  | "avoid_context_free_judgment"
   | "summarize_known"
   | "summarize_unknown"
   | "summarize_observation_focus"

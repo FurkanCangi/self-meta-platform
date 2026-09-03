@@ -66,6 +66,14 @@ const POLICY_UNIT_BY_OBLIGATION: Readonly<Partial<Record<StudentAnswerObligation
     id: "policy.additional-context",
     text: "Yorum için farklı zaman, ortam ve görevlerdeki tekrarlar, davranışın öncesi ve sonrası ve destekle nasıl değiştiği incelenmelidir.",
   }),
+  name_multiple_plausible_explanations: Object.freeze({
+    id: "policy.multiple-plausible-explanations",
+    text: "Bu davranışın birden fazla makul açıklaması olabilir; tek bir nedeni seçmek için yeterli bilgi yoktur.",
+  }),
+  avoid_context_free_judgment: Object.freeze({
+    id: "policy.contextual-judgment",
+    text: "Davranış tek başına iyi veya kötü diye sınıflandırılmaz; işlevi ve bağlamı birlikte değerlendirilir.",
+  }),
   refuse_treatment_selection: Object.freeze({
     id: "policy.no-treatment-selection",
     text: "Bu sohbet belirli bir kişi için terapi veya tedavi seçmez.",
