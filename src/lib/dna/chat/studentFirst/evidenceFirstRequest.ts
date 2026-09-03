@@ -270,23 +270,43 @@ function rejectedTargets(
   return Object.freeze(unique(rejected))
 }
 
+function normalizedStudentWords(message: string): readonly string[] {
+  return Object.freeze(normalizeDnaChatText(message).split(/[^a-z0-9_]+/u).filter(Boolean))
+}
+
+function startsWithAny(word: string, stems: readonly string[]) {
+  return stems.some((stem) => word === stem || word.startsWith(stem))
+}
+
+function studentExampleSignals(message: string) {
+  const words = normalizedStudentWords(message)
+  const exampleIndexes = words.flatMap((word, index) => startsWithAny(word, ["ornek", "orne", "senaryo"]) ? [index] : [])
+  const requested = exampleIndexes.length > 0 && words.some((word) =>
+    startsWithAny(word, ["anlat", "acikla", "goster", "ver", "bagla", "ayir"]))
+  const shared = requested && exampleIndexes.some((index) =>
+    words.slice(Math.max(0, index - 4), index + 1).some((word) => ["ayni", "ortak", "tek"].includes(word)))
+  const concrete = requested && words.some((word) =>
+    startsWithAny(word, ["cocuk", "ogrenci", "sinif", "ders", "ogretmen", "oyun", "gunluk"]))
+  return Object.freeze({ requested, shared, concrete })
+}
+
 function semanticTaskCandidates(message: string, explicitTargetCount: number): readonly StudentSemanticTask[] {
   const normalized = normalizeDnaChatText(message)
+  const words = normalizedStudentWords(message)
+  const exampleSignals = studentExampleSignals(message)
   const tasks: StudentSemanticTask[] = []
   const add = (task: StudentSemanticTask, matched: boolean) => {
     if (matched && !tasks.includes(task)) tasks.push(task)
   }
   add("treatment_boundary", /\b(?:hangi tedaviyi|hangi tedavi|hangi terapiyi|hangi terapi|ne uygulayayim|seans plani|tedavi plani|terapiyi sec|tedaviyi sec)\b/.test(normalized))
   add("summarize", /\b(?:toparla|ozetle|ozet yap|ozeti yap|ogrenci ozeti|ozet cikar|konustuklarimizi|konustugumuzu|konusmayi)\b/.test(normalized))
-  add("evidence", /\b(?:kanit|kaynak|calismalar|ne kadar guvenilir)\b/.test(normalized))
+  add("evidence", words.some((word) => startsWithAny(word, ["kanit", "kaynak", "calismalar"]))
+    || /\bne kadar guvenilir\b/.test(normalized))
   add("observe", /\b(?:tek gozlem|tek bir gozlem|gozlemde|neye bak|nasil gozlemler|baska neye)\b/.test(normalized))
   add("compare", /\b(?:ayni mi|ayni sey mi|farki\w*|ayir\w*|karsilastir\w*|hangisi|hangisine girer|ikisini de)\b/.test(normalized) ||
     (explicitTargetCount > 1 && /\bmi\b/.test(normalized)) ||
     (explicitTargetCount === 2 && /\bayni ornekte\b/.test(normalized)))
-  const newExampleRequest = /\b(?:ornek ver|bir ornek ver|ornekle anlat|ornek gibi acikla|ornek uzerinden|ornegiyle bagla|ornekte ayri ayri goster)\b/.test(normalized) ||
-    /\borne\w* (?:anlat|acikla|goster|ver|bagla)\w*\b/.test(normalized) ||
-    (/\b(?:ornek|mesela)\b/.test(normalized) && /\b(?:anlat|acikla|goster|ver|bagla)\b/.test(normalized))
-  add("example", newExampleRequest)
+  add("example", exampleSignals.requested)
   add("case_reasoning", /\b(?:diyebilir miyim|diyebilir miyiz|ne olabilir|ne dusun\w*|nasil dusun\w*|kesin soyle|zayif diyebilir|ilgili mi)\b/.test(normalized) &&
     /\b(?:cocu(?:k|g)\w*|ogrenci\w*|vaka\w*|davranis\w*|gozlem\w*|sadece bu)\b/.test(normalized))
   add("define", /\b(?:ne demek|nedir|neydi|tam olarak ne|neyi kastediyoruz|neyi ifade eder)\b/.test(normalized))
@@ -305,14 +325,14 @@ function conversationAction(message: string, hasHistory: boolean): StudentConver
 
 function presentation(message: string): StudentPresentationRequest {
   const normalized = normalizeDnaChatText(message)
+  const exampleSignals = studentExampleSignals(message)
   const countMatch = normalized.match(/\b(iki|uc|dort|[2-4]) cumle\w*\b/)
   const requestedSentenceCount = countMatch
     ? ({ iki: 2, uc: 3, dort: 4 } as Record<string, number>)[countMatch[1]!] ?? Number(countMatch[1])
     : null
-  const exampleRequested = semanticTaskCandidates(message, 0).includes("example")
-  const concreteExample = exampleRequested && /\b(?:cocuk|ogrenci|sinif|ders|ogretmen|oyun|gunluk)\w*\b/.test(normalized)
-  const sharedExample = /\b(?:ayni|ortak)\s+(?:ornek|senaryo)\w*\b/.test(normalized)
-    || /\btek\s+(?:bir\s+)?(?:ornek|senaryo)\w*(?:\s+(?:icinde|uzerinden))?\b/.test(normalized)
+  const exampleRequested = exampleSignals.requested
+  const concreteExample = exampleSignals.concrete
+  const sharedExample = exampleSignals.shared
   return Object.freeze({
     depth: /\b(?:kisa|kisaca|minicik|ozet|[2-4] cumle\w*|iki cumle\w*|uc cumle\w*|dort cumle\w*)\b/.test(normalized)
       ? "brief"

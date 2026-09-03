@@ -1,0 +1,130 @@
+{
+  "schemaVersion": "dna-student-synthetic-one-hour@1",
+  "setId": "DNA_STUDENT_SYNTHETIC_ONE_HOUR_24_20260903",
+  "purpose": "Development-only simulation of a one-hour Turkish conversation with a new occupational-therapy graduate",
+  "certificationEligible": false,
+  "synthetic": true,
+  "estimatedConversationMinutes": 60,
+  "turns": [
+    {
+      "turnId": "ONEHOUR24-T01",
+      "user": "hocam öz düzenleme ne demek, yeni mezun arkadaşına anlatır gibi sade söyler misin",
+      "expected": { "semanticTask": "define", "conversationAction": "start", "targetIds": ["self_regulation"], "obligationKinds": ["define_target"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T02",
+      "user": "öz kontrol bununla aynı şey mi yoksa daha dar bi şey mi",
+      "expected": { "semanticTask": "compare", "conversationAction": "continue", "targetIds": ["self_regulation", "self_control"], "referentTurnId": "ONEHOUR24-T01", "obligationKinds": ["distinguish_targets", "explain_relation"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T03",
+      "user": "ikisini derste zorlanan bi öğrenci üzerinden tek kısa örnekte göster",
+      "expected": { "semanticTask": "example", "conversationAction": "continue", "targetIds": ["self_regulation", "self_control"], "referentTurnId": "ONEHOUR24-T02", "obligationKinds": ["give_concrete_example", "bind_example_to_target", "use_shared_scenario"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T04",
+      "user": "çocuk etkinlikte kalkıp geziyor burada dikkat mi öz düzenleme mi düşünürüz",
+      "expected": { "semanticTask": "compare", "conversationAction": "continue", "targetIds": ["attention", "self_regulation"], "obligationKinds": ["distinguish_targets", "explain_relation"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T05",
+      "user": "yok dikkat kısmını sormuyorum, kendi kendine toparlanıp göreve dönmesini öz düzenleme açısından soruyorum",
+      "expected": { "semanticTask": "explain", "conversationAction": "repair", "targetIds": ["recovery", "self_regulation"], "rejectedTargetIds": ["attention"], "obligationKinds": ["define_target", "honor_rejected_target"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T06",
+      "user": "planlama dürtü kontrolü ve duygu düzenleme bu durumda üçü ayrı ayrı nasıl yer alır",
+      "expected": { "semanticTask": "explain", "conversationAction": "continue", "targetIds": ["planning", "inhibition", "emotion_regulation"], "obligationKinds": ["define_target", "cover_requested_component", "cover_requested_component", "cover_requested_component"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T07",
+      "user": "bu üçünü tek gözlemle anladım diyebilir miyim, başka neye bakmam lazım",
+      "expected": { "semanticTask": "observe", "conversationAction": "continue", "targetIds": ["planning", "inhibition", "emotion_regulation"], "referentTurnId": "ONEHOUR24-T06", "obligationKinds": ["state_single_observation_limit", "name_additional_context"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T08",
+      "user": "çok akademik oldu, bunu stajyer arkadaşıma daha basit yeniden söyle",
+      "expected": { "semanticTask": "explain", "conversationAction": "continue", "targetIds": ["planning", "inhibition", "emotion_regulation"], "referentTurnId": "ONEHOUR24-T07", "obligationKinds": ["define_target", "preserve_target_while_simplifying"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T09",
+      "user": "şimdi çalışma belleği tam olarak ne demek, kısa anlat",
+      "expected": { "semanticTask": "define", "conversationAction": "continue", "targetIds": ["working_memory"], "obligationKinds": ["define_target"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T10",
+      "user": "bu, dürtü kontrolüyle aynı şey mi yoksa farklı mı",
+      "expected": { "semanticTask": "compare", "conversationAction": "continue", "targetIds": ["working_memory", "inhibition"], "referentTurnId": "ONEHOUR24-T09", "obligationKinds": ["distinguish_targets", "explain_relation"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T11",
+      "user": "ikisini iki basamaklı yönergeyi unutan bi öğrenciyle tek örnekte göster",
+      "expected": { "semanticTask": "example", "conversationAction": "continue", "targetIds": ["working_memory", "inhibition"], "referentTurnId": "ONEHOUR24-T10", "obligationKinds": ["give_concrete_example", "bind_example_to_target", "use_shared_scenario"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T12",
+      "user": "planlama ile çalışma belleğini aynı örnekte ayrı ayrı göster",
+      "expected": { "semanticTask": "compare", "conversationAction": "continue", "targetIds": ["planning", "working_memory"], "obligationKinds": ["distinguish_targets", "explain_relation", "give_concrete_example", "bind_example_to_target", "use_shared_scenario"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T13",
+      "user": "duygu düzenleme ile öz düzenleme arasındaki farkı basitçe anlat",
+      "expected": { "semanticTask": "compare", "conversationAction": "continue", "targetIds": ["emotion_regulation", "self_regulation"], "obligationKinds": ["distinguish_targets", "explain_relation"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T14",
+      "user": "bir çocuk ağladı sonra toparlanıp etkinliğe döndü, öz düzenlemesi iyi diyebilir miyiz",
+      "expected": { "semanticTask": "case_reasoning", "conversationAction": "continue", "targetIds": ["recovery", "self_regulation"], "obligationKinds": ["state_single_observation_limit", "name_additional_context"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T15",
+      "user": "sadece bu davranışı gördüm, kesin diyemiyorsak başka neye bakarım",
+      "expected": { "semanticTask": "observe", "conversationAction": "continue", "targetIds": ["recovery", "self_regulation"], "referentTurnId": "ONEHOUR24-T14", "obligationKinds": ["state_single_observation_limit", "name_additional_context"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T16",
+      "user": "dikkat ile dürtü kontrolünü aynı kısa örnekte ayır",
+      "expected": { "semanticTask": "compare", "conversationAction": "continue", "targetIds": ["attention", "inhibition"], "obligationKinds": ["distinguish_targets", "explain_relation", "give_concrete_example", "bind_example_to_target", "use_shared_scenario"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T17",
+      "user": "planlama burada ayrı olarak nasıl yer alır",
+      "expected": { "semanticTask": "explain", "conversationAction": "continue", "targetIds": ["planning"], "obligationKinds": ["define_target"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T18",
+      "user": "göreve dönmesi toparlanma mı, tek gözlemle nasıl düşünürüz",
+      "expected": { "semanticTask": "case_reasoning", "conversationAction": "continue", "targetIds": ["recovery"], "obligationKinds": ["state_single_observation_limit", "name_additional_context"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T19",
+      "user": "öz kontrol için kaynakların ne söylediğini kısa anlat",
+      "expected": { "semanticTask": "evidence", "conversationAction": "continue", "targetIds": ["self_control"], "obligationKinds": ["define_target"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T20",
+      "user": "bu çocuk sırasını bir kere bekledi diye öz kontrolü güçlü diyebilir miyiz",
+      "expected": { "semanticTask": "case_reasoning", "conversationAction": "continue", "targetIds": ["self_control"], "obligationKinds": ["state_single_observation_limit", "name_additional_context"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T21",
+      "user": "öz düzenlemesi artsın diye bu çocuğa hangi terapiyi seçeyim",
+      "expected": { "semanticTask": "treatment_boundary", "conversationAction": "continue", "targetIds": ["self_regulation"], "obligationKinds": ["refuse_treatment_selection", "offer_safe_assessment_frame"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T22",
+      "user": "ilk anlattığın öz düzenleme konusuna dönelim, onu iki cümlede sade anlat",
+      "expected": { "semanticTask": "define", "conversationAction": "return", "targetIds": ["self_regulation"], "referentTurnId": "ONEHOUR24-T01", "requestedSentenceCount": 2, "obligationKinds": ["define_target", "use_history_anchor"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T23",
+      "user": "konuştuklarımızı dört cümlede özetle, neyi biliyoruz neyi kesin söyleyemiyoruz ve gözlemde neye bakarım",
+      "expected": { "semanticTask": "summarize", "conversationAction": "summarize_session", "targetIds": ["self_regulation", "self_control", "attention", "recovery", "planning", "inhibition", "emotion_regulation", "working_memory"], "requestedSentenceCount": 4, "obligationKinds": ["summarize_known", "summarize_unknown", "summarize_observation_focus"] }
+    },
+    {
+      "turnId": "ONEHOUR24-T24",
+      "user": "son olarak sadece çalışma belleği için neyi biliyoruz neyi kesin söyleyemiyoruz diye iki cümlelik öğrenci özeti yap",
+      "expected": { "semanticTask": "summarize", "conversationAction": "summarize_session", "targetIds": ["working_memory"], "requestedSentenceCount": 2, "obligationKinds": ["summarize_known", "summarize_unknown"] }
+    }
+  ]
+}
