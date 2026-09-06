@@ -12,6 +12,7 @@ import {
   factEligibleForPreservedCapacity,
   factHasObservedContextComparison,
   factSupportsDifficultyDirection,
+  buildEvidenceSemanticSegments,
   relationIsConvergent,
   relationIsDiscrepant,
   relationsForFacts,
@@ -38,6 +39,7 @@ export const TEMPLATE_SEMANTIC_REQUIREMENTS: readonly SemanticRequirement[] = Ob
   { id: "structured_context", category: "context", visible: /\byapılandırılmış\s+(?:koşul|ortam|görev)/iu, evidence: /\byapılandırılmış\s+(?:koşul|ortam|görev)/iu },
   { id: "choice_offered", category: "support", visible: /seçenek\s+sun|iki\s+seçenek|seçim\s+hakkı/iu, evidence: /seçenek\s+sun|iki\s+seçenek|seçim\s+hakkı/iu },
   { id: "visual_support", category: "support", visible: /görsel(?:le| olarak)?\s+destek|görsel\s+program|sıra\s+kartı/iu, evidence: /görsel(?:le| olarak)?\s+destek|görsel\s+program|sıra\s+kartı/iu },
+  { id: "visual_or_written_scaffolding", category: "support", visible: /(?:yazılı\s+veya\s+)?görsel\s+adımlarla\s+yapılandır/iu, evidence: /(?:yazılı|görsel|resimli)\s+(?:(?:üç|3|sıra)\s+)?(?:adım|basamak|kart|liste|destek)|resimle\s+destek/iu },
   { id: "written_steps", category: "support", visible: /yazılı\s+(?:üç|3)\s+basamak|yazılı\s+sıra/iu, evidence: /yazılı\s+(?:üç|3)\s+basamak|yazılı\s+sıra/iu },
   { id: "task_split", category: "support", visible: /tek\s+basamaklara?\s+ayr|görev(?:in)?\s+parçalan/iu, evidence: /tek\s+basamaklara?\s+ayr|görev(?:in)?\s+parçalan/iu },
   { id: "calm_environment", category: "support", visible: /sakin\s+(?:bir\s+)?(?:ortam|köşe|oda)/iu, evidence: /sakin\s+(?:bir\s+)?(?:ortam|köşe|oda)/iu },
@@ -47,6 +49,7 @@ export const TEMPLATE_SEMANTIC_REQUIREMENTS: readonly SemanticRequirement[] = Ob
   { id: "reengagement", category: "outcome", visible: /etkinliğe\s+geri\s+dön|göreve\s+geri\s+dön|yeniden\s+(?:etkinliğe|göreve)\s+dön/iu, evidence: /etkinliğe\s+geri\s+dön|göreve\s+geri\s+dön|yeniden\s+(?:etkinliğe|göreve)\s+dön/iu },
   { id: "task_completed", category: "outcome", visible: /görevi[^.]{0,60}(?:tamamladı|tamamlayabildi|tamamlanabildi|tamamlandı)|alışveriş\s+görevini[^.]{0,50}(?:tamamladı|tamamlayabildi)/iu, evidence: /görevi[^.]{0,60}(?:tamamladı|tamamlayabildi|tamamlanabildi|tamamlandı)|alışveriş\s+görevini[^.]{0,50}(?:tamamladı|tamamlayabildi)/iu },
   { id: "support_removed_breakdown", category: "outcome", visible: /deste(?:k|ğin)\s+kaldırıl[^.]{0,80}(?:bozul|zorlan)/iu, evidence: /deste(?:k|ğin)\s+kaldırıl[^.]{0,80}(?:bozul|zorlan)/iu },
+  { id: "unobserved_support_dependence", category: "outcome", visible: /desteğin\s+olmadığı[^.]{0,100}arttığını/iu, evidence: /(?:destek\s+(?:yokken|olmadan)|desteğin\s+olmadığı|desteksiz)[^.!?]{0,100}(?:art|zorlan|bırak|tamamlayamad)/iu },
   { id: "need_named", category: "outcome", visible: /gereksinim(?:in)?\s+adlandırıl/iu, evidence: /gereksinim(?:in)?\s+adlandırıl/iu },
   { id: "distress_resolved", category: "outcome", visible: /itiraz(?:ın)?[^.]{0,100}(?:çözül|azal)|zorlanma[^.]{0,100}(?:çözül|azal)/iu, evidence: /itiraz(?:ın)?[^.]{0,100}(?:çözül|azal)|zorlanma[^.]{0,100}(?:çözül|azal)/iu },
   { id: "recovery_duration", category: "temporal", visible: /toparlanma\s+süresinin[^.]{0,100}(?:ayırt|uzun|kısa|değiş)|(?:dakika|saat)\s+sonra[^.]{0,60}toparlan/iu, evidence: /toparlanma\s+süresinin[^.]{0,100}(?:ayırt|uzun|kısa|değiş)|(?:dakika|saat)\s+sonra[^.]{0,60}toparlan/iu },
@@ -65,7 +68,7 @@ export const TEMPLATE_SEMANTIC_REQUIREMENTS: readonly SemanticRequirement[] = Ob
   { id: "queue_tracking", category: "task", visible: /sıra\s+takib/iu, evidence: /sıra\s+takib/iu },
   { id: "hunger", category: "context", visible: /\baçlık\b/iu, evidence: /\baçlık\b/iu },
   { id: "thirst", category: "context", visible: /\bsusuzluk\b|\bsusuz\b/iu, evidence: /\bsusuzluk\b|\bsusuz\b/iu },
-  { id: "toilet", category: "context", visible: /\btuvalet\b/iu, evidence: /\btuvalet\b/iu },
+  { id: "toilet", category: "context", visible: /(?:^|[^\p{L}])tuvalet(?:e|i|te|ten|in|ini|inde)?(?=$|[^\p{L}])/iu, evidence: /(?:^|[^\p{L}])tuvalet(?:e|i|te|ten|in|ini|inde)?(?=$|[^\p{L}])/iu },
   { id: "heat", category: "context", visible: /\bsıcaklık\b/iu, evidence: /\bsıcaklık\b/iu },
   { id: "blender_sound", category: "context", visible: /blender\s+sesi/iu, evidence: /blender\s+sesi/iu },
   { id: "chair_sound", category: "context", visible: /sandalye\s+sesi/iu, evidence: /sandalye\s+sesi/iu },
@@ -199,7 +202,13 @@ export function evaluateSentenceEntailment(input: EvaluateSentenceInput): readon
     }
     if (observedContextVariabilityClaim && input.facts.length) {
       const contextFacts = input.facts.filter((fact) => fact.source_type === "THERAPIST_OBSERVATION" || fact.source_type === "CAREGIVER_ANAMNESIS")
-      const hasObservedComparison = contextFacts.some(factHasObservedContextComparison)
+      const claimsPerformanceChange = /performans|aynı düzeyde kullanılam/iu.test(clause)
+      const hasObservedComparison = contextFacts.some((fact) => {
+        if (!factHasObservedContextComparison(fact)) return false
+        if (!claimsPerformanceChange) return true
+        const segments = buildEvidenceSemanticSegments(fact.id, fact.source_excerpt, fact.semantic_validity).filter((segment) => segment.observed_performance && segment.epistemic_status === "OBSERVED_OR_REPORTED")
+        return segments.some((segment) => segment.semantic_direction === "DIFFICULTY") && segments.some((segment) => segment.semantic_direction === "PRESERVED")
+      })
       epistemicStatusMatch = hasObservedComparison ? "PASS" : "FAIL"
       if (!hasObservedComparison) {
         errors.push("UNASSESSED_CONTEXT_AS_OBSERVED")

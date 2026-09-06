@@ -70,7 +70,14 @@ async function main() {
     results.push(result)
   }
   const averageWordCount = results.reduce((sum, result) => sum + result.validation.wordCount, 0) / results.length
-  assert.ok(averageWordCount >= 1000, `average repetition-aware substantive report depth: ${averageWordCount}`)
+  // Exact repetitions are now emitted once. Preserve the per-case 800-word
+  // floor above, and verify actual usable case details instead of rewarding
+  // duplicated prose to reach an average word target.
+  const compact = (text: string) => text.toLocaleLowerCase("tr-TR").replace(/[^a-z0-9çğıöşü]+/gu, " ").trim()
+  for (const result of results) for (const fact of result.caseScopedEvidenceEnvelope.anamnesis_evidence.filter(f => f.evidence_status === "USABLE" && f.epistemic_status === "OBSERVED_OR_REPORTED")) {
+    const detail = compact(fact.statement.replace(/^Bakım\s*veren(?:in)?[,\s]+/iu, ""))
+    assert.ok(compact(result.finalReport).includes(detail), `${result.input.clientCode}: unique case detail missing: ${fact.id}`)
+  }
   assert.equal(legacyMismatchCount, 4, "known before-state classification mismatch count")
 
   const case1 = results.find((result) => result.input.clientCode === "ADV-BE-01")!
@@ -100,7 +107,7 @@ async function main() {
   assert.ok(vineland?.decision_relevant && vineland.evidence_direction === "supports_preserved_function", "ADV-BE-08 Vineland-3 preserved support")
   assert.ok(brief && !brief.decision_relevant && brief.validity_status === "invalid", "ADV-BE-08 invalid BRIEF-P excluded")
   assert.match(case8.finalReport, /Sensory Processing Measure, Second Edition \(SPM-2\).+güçlük yönündeki bulguyu desteklemektedir/iu)
-  assert.match(case8.finalReport, /Vineland-3.+korunmuş kapasite bulunduğunu göstermektedir/iu)
+  assert.match(case8.finalReport, /Vineland-3.+değerlendirdiği kapsamda korunmuş bir sonuç göstermektedir/iu)
 
   const humanSurfaceAnswers = answersForJuryTotals([40, 21, 40, 36, 24, 40])
   const humanSurfaceScores = calculateAssessment(humanSurfaceAnswers)
@@ -114,7 +121,8 @@ async function main() {
   assert.equal(humanSurface.priorityProfile.primary_priority, "sensory")
   assert.deepEqual(humanSurface.priorityProfile.secondary_priorities, ["cognitive", "executive"])
   assert.match(humanSurface.finalReport, /Bulgular en çok duyusal regülasyon alanındaki güçlüğü desteklemektedir/iu)
-  assert.match(humanSurface.finalReport, /çevresel düzenleme ile görev yapılandırması aynı anda uygulanmıştır/iu)
+  assert.match(humanSurface.finalReport, /birden fazla destek birlikte sunul/iu)
+  assert.match(humanSurface.finalReport, /sakin bir köşede yazılı üç adımla alışveriş oyununu tamamladı/iu)
   assert.match(humanSurface.finalReport, /günlük yaşam güçlüğü yalnız duyusal regülasyon ile açıklanmamalıdır/iu)
   assert.doesNotMatch(humanSurface.finalReport, /Birincil öncelik klinik ağırlık sırasını gösterir/iu)
   assert.doesNotMatch(humanSurface.finalReport, /bu bilgi desteklemediği bir klinik alana bağlanmamıştır/iu)
@@ -143,7 +151,7 @@ async function main() {
     has_performance_variability_evidence: false,
   })
   assert.equal(sparse.templateSemanticLeakage.finding_count, 0)
-  assert.match(sparse.finalReport, /gözlenmiş bir işlev kaybı olarak yorumlamamaktadır/iu)
+  assert.match(sparse.finalReport, /günlük yaşamda belirli bir davranış hakkında sonuç çıkarılmamıştır/iu)
   assert.doesNotMatch(sparse.finalReport, /günlük yaşamda görülen performans|günlük performanstaki değişkenlik|performansın hangi koşullarda bozulduğu|günlük görevlerde ortaya çıkan|bakım verenin bildirdiği işlevsel güçlük/iu)
 
   const contextOnlyAnswers = answersForJuryTotals([48, 11, 48, 48, 48, 12])

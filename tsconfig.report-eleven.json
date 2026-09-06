@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.report-live-release.json",
+  "compilerOptions": { "outDir": "./compiled-eleven" },
+  "include": [
+    "scripts/run-report-eleven-regression.ts",
+    "scripts/run-assessment-scoring-tests.ts",
+    "scripts/run-report-forbidden-imports.ts",
+    "scripts/run-report-privacy.ts",
+    "scripts/run-literature-integrity-tests.ts"
+  ]
+}

@@ -31,7 +31,8 @@ function observationIsUnavailable(rawText: string): boolean {
     .split(/;|(?<=[.!?])\s+/u)
     .map(clean)
     .filter(Boolean)
-  return clauses.length > 0 && clauses.every((clause) => UNAVAILABLE_OBSERVATION_CLAUSE.test(clause))
+  return clauses.length > 0 && clauses.every((clause) => UNAVAILABLE_OBSERVATION_CLAUSE.test(clause)
+    || /(?:^(?:henüz\s+)?(?:doğrudan\s+)?gözlem(?:i)?\s+yapılmadı|konuşulmadı|sorulmadı|örneği?\s+verilmedi)/iu.test(clause))
 }
 
 export function extractCanonicalTherapistObservation(input: ReportInput | string): CanonicalTherapistObservation {
@@ -42,10 +43,10 @@ export function extractCanonicalTherapistObservation(input: ReportInput | string
   const rawText = clean(match?.[1] ?? "")
   const unavailable = observationIsUnavailable(rawText)
   const normalizedText = unavailable ? "" : rawText
-  const meaningfulContextComparison = !unavailable && (
-    /(?:sessiz|sakin|yapılandırılmış|görsel|resim|kart|destek|mola|iyi uyudu|dinlenmiş)[\s\S]{0,120}(?:sonra|yokken|önceki|daha|ile|tamam|sürdür|geri dön|yaptı|zorlan)/iu.test(normalizedText)
-    || /(?:yüksek ses|gürültü|uyaran|desteksiz|resim yok|önceki seans)[\s\S]{0,120}(?:denenmedi|zorlan|bırak|kapıya|yere)/iu.test(normalizedText)
-  )
+  const observedClauses = normalizedText.split(/[.;]/u).filter((clause) => !/(?:denenmedi|gözlenmedi|yapılmadı|belirlenemedi|konuşulmadı)/iu.test(clause))
+  const meaningfulContextComparison = !unavailable && observedClauses.length >= 2
+    && /(?:başlayınca|bitirildiğinde|durduktan sonra|verildiğinde|gösterilip|hatırlatmasıyla|yokken|olmadan|değiştiğinde)/iu.test(observedClauses.join(" "))
+    && observedClauses.filter((clause) => /(?:tamamla|durula|kaldı|ağladı|uzaklaş|götürdü|yürüdü|topladı|yöneldi|aldı)/iu.test(clause)).length >= 2
   return Object.freeze({
     id: "canonical.therapist-observation",
     present: !unavailable,

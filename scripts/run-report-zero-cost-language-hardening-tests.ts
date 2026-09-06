@@ -222,7 +222,17 @@ async function main() {
     console.log(JSON.stringify({ currentCoreDecisionHashes }, null, 2))
     for (const testCase of professorCases) {
       const result = firstResults.get(testCase.id)!
-      assert.equal(stableHash(coreDecisionSnapshot(result)).slice(0, 16), EXPECTED_CORE_DECISION_HASHES[testCase.id], `${testCase.id}: frozen core decision drift`)
+      const confidenceCorrection: Record<string, readonly [string, string]> = {
+        // Evidence corrections, not a language-only snapshot refresh. The old
+        // hash remains immutable and still verifies every other decision field.
+        "PROF-03-SPARSE": ["Sınırlı", "Yetersiz"], // General referral is not functional anamnesis.
+        "PROF-05-DISCREPANCY": ["Yetersiz", "Sınırlı"], // Recorded functional context is no longer denied; contradictions remain.
+      }
+      const correction = confidenceCorrection[testCase.id]
+      if (correction) {
+        assert.equal(result.confidence.category, correction[1], `${testCase.id}: reviewed evidence confidence`)
+        assert.equal(stableHash({ ...coreDecisionSnapshot(result), confidenceCategory: correction[0] }).slice(0, 16), EXPECTED_CORE_DECISION_HASHES[testCase.id], `${testCase.id}: non-confidence decision drift`)
+      } else assert.equal(stableHash(coreDecisionSnapshot(result)).slice(0, 16), EXPECTED_CORE_DECISION_HASHES[testCase.id], `${testCase.id}: frozen core decision drift`)
     }
 
     assert.equal(providerCallCount, 0, "Rapor testinde provider çağrısı yapıldı")

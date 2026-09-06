@@ -13,6 +13,7 @@ import {
   inferEvidenceDirection,
   inferEvidenceEpistemicStatus,
   inferSemanticContext,
+  isNegatedClinicalDifficulty,
 } from "./evidenceSemantics"
 
 const THERAPIST_OR_EXTERNAL_MARKER = /(?:terap[ıi]st\s+(?:yorumlar[ıi]?|yorumlari?|yorumu|gözlemi?)(?![a-zçğıöşü])|therapist_comments|clinical_observation|ek\s+klinik\s+test(?:\s*\/\s*bulgular)?|d[ıi]ş\s+test|dis\s+test|external_clinical_findings)\s*[:=]?/iu
@@ -44,7 +45,7 @@ const HYPOTHETICAL_ONLY = /(?:\beğer\b|\beger\b|olursa|olabilir\s+diye|varsayal
 const NON_INDEPENDENT_LIMITATION = /^(?:ama|fakat|ancak|buna\s+karşın|buna\s+rağmen)\b[^.!?]{0,140}(?:son\s+olayı\s+tarif\s+edemedi|başarılı\s+olduğu\s+veya\s+bıraktığı\s+görevi\s+söylemedi|hangi\s+günlük\s+görevde[^.!?]{0,40}örnek\s+vermedi|gözlenebilir\s+davranış\s+örneği\s+sunmadı|görev,?\s+destek\s+ve\s+sonuç\s+bilgisi\s+paylaşmadı|süre\s+her\s+seferinde\s+aynı\s+değil)/iu
 const GENERIC_CONCERN_WITHOUT_FUNCTION = /(?:(?:alan\s+adını\s+söyledi|alan\s+ismini\s+söyledi|bu\s+alanın\s+zor\s+olduğunu\s+söylüyor|bu\s+alanin\s+zor\s+oldugunu\s+soyluyor|başvuruda\s+bu\s+alan\s+işaretlenmiş|basvuruda\s+bu\s+alan\s+isaretlenmis|kısa\s+bir\s+şikâyet\s+var|kisa\s+bir\s+sikayet\s+var|yakınma\s+tek\s+cümleyle\s+kaydedilmiş|yakinma\s+tek\s+cumleyle\s+kaydedilmis)[^.!?]{0,180}(?:örnek|bilgi|görev|davranış|ne\s+zaman)|başvuru\s+notunda[^.!?]{0,100}yalnız[^.!?]{0,40}zorlanıyor)/iu
 const ABSENCE_PATTERN = /(?:güçlük|sorun|şikâyet|şikayet|tepki|örnek|bildirim)[^.]{0,80}(?:yok|yoktur|olmad|görmed|bildirilmed|verilmed)|(?:hiç|belirgin)[^.]{0,80}(?:güçlük|sorun|zorlan)[^.]{0,40}(?:yok|olmad|görmed|bildirilmed|mıyor|miyor)|(?:zorlanmıyor|zorlanmadi|zorlanmadı)|(?:hakkında\s+)?bilgi\s+(?:yok|bulunmuyor)|yaşına uygun|beklenen aralık/iu
-const PRESERVED_PATTERN = /(?:bağımsız|bagimsiz|\btamam\b|tamamlıyor|tamamladı|tamamlanıyor|tamamlayabiliyor|bitiriyor|bitirdi|sürdürüyor|sürdürdü|sürdürebiliyor|yerleştiriyor|yerleştirdi|koyuyor|koydu|dolduruyor|doldurdu|eşliyor|esliyor|eşleme yapıyor|esleme yapiyor|doğru\s+yapıyor|dogru\s+yapiyor|doğru(?:\s+biçimde|\s+sırayla)?\s+uyguluyor|dogru(?:\s+bicimde|\s+sirayla)?\s+uyguluyor|yapabiliyor|katılıyor|katılabiliyor|katilabiliyor|katılımı daha iyi|geçebiliyor|giyiyor|fermuar(?:ını|ini)?\s+çekiyor|inceliyor|kurabiliyor|çalışabiliyor|calisabiliyor|başlatıyor|baslatiyor|ihtiyac[ıi]n[ıi]\s+(?:adlandır|söyleyip[^.!?]{0,45}(?:gidiyor|geçiyor))|ihtiyacini\s+(?:adlandir|soyleyip[^.!?]{0,45}(?:gidiyor|geciyor))|mola\s+istiyor|(?:yemeğe|göreve|goreve|işe|ise)\s+başlıyor|başladı|başlattı|getiriyor|getirdi|topluyor|belirtiyor|yapabildi|sakinleşiyor|sakinleşti|geri\s+(?:dönüyor|döndü|dönmüş)|geri\s+(?:donuyor|dondu|donmus)|oyuna\s+(?:dönüyor|döndü)|sözel\s+olarak\s+ifade\s+ediyor|sakin\s+yerde\s+bekliyor|sırasını\s+bekliyor|sirasini\s+bekliyor|(?:sofraya|masaya|kapıya|kapiya|kahvaltıya|kahvaltiya)\s+(?:zamanında\s+)?geliyor|zamanında\s+(?:bildiriyor|söylüyor|geliyor|geçiyor|geciyor)|(?:\bhırka\b|\bsu\b|\bmola\b|\btuvalet\b)[^.]{0,35}(?:istediğini\s+)?söylüyor|seçtiği[^.]{0,40}dokunuyor|sorun\s+yaşamıyor|yaşına uygun|korunmuş|sorun bildirilmiyor|güçlük bildirilmiyor|güçlük görmedi|güçlük olmad|aynı yönergeyi yapabiliyor|rutini sürdürüyor)/iu
+const PRESERVED_PATTERN = /(?:bağımsız|bagimsiz|\btamam\b|tamamlıyor|tamamladı|topladı|geçiyormuş|tamamlanıyor|tamamlayabiliyor|bitiriyor|bitirdi|sürdürüyor|sürdürdü|sürdürülebildiğini|sürdürebiliyor|yerleştiriyor|yerleştirdi|koyuyor|koydu|dolduruyor|doldurdu|eşliyor|esliyor|eşleme yapıyor|esleme yapiyor|doğru\s+yapıyor|dogru\s+yapiyor|doğru(?:\s+biçimde|\s+sırayla)?\s+uyguluyor|dogru(?:\s+bicimde|\s+sirayla)?\s+uyguluyor|yapabiliyor|katılıyor|katılabiliyor|katilabiliyor|katılımı daha iyi|geçebiliyor|giyiyor|fermuar(?:ını|ini)?\s+çekiyor|inceliyor|kurabiliyor|çalışabiliyor|calisabiliyor|başlatıyor|baslatiyor|ihtiyac[ıi]n[ıi]\s+(?:adlandır|söyleyip[^.!?]{0,45}(?:gidiyor|geçiyor))|ihtiyacini\s+(?:adlandir|soyleyip[^.!?]{0,45}(?:gidiyor|geciyor))|mola\s+istiyor|(?:yemeğe|göreve|goreve|işe|ise)\s+başlıyor|başladı(?!ğı)|başlattı|getiriyor|getirdi|topluyor|belirtiyor|yapabildi|sakinleşiyor|sakinleşti|geri\s+(?:dönüyor|döndü|dönmüş)|geri\s+(?:donuyor|dondu|donmus)|oyuna\s+(?:dönüyor|döndü)|sözel\s+olarak\s+ifade\s+ediyor|sakin\s+yerde\s+bekliyor|sırasını\s+bekliyor|sirasini\s+bekliyor|(?:sofraya|masaya|kapıya|kapiya|kahvaltıya|kahvaltiya)\s+(?:zamanında\s+)?geliyor|zamanında\s+(?:bildiriyor|söylüyor|geliyor|geçiyor|geciyor)|(?:\bhırka\b|\bsu\b|\bmola\b|\btuvalet\b)[^.]{0,35}(?:istediğini\s+)?söylüyor|seçtiği[^.]{0,40}dokunuyor|sorun\s+yaşamıyor|yaşına uygun|korunmuş|sorun bildirilmiyor|güçlük bildirilmiyor|güçlük görmedi|güçlük olmad|aynı yönergeyi yapabiliyor|rutini sürdürüyor)/iu
 const PRESERVED_SUPPLEMENTAL_PATTERN = /(?:tamamlayıp|tamamlayarak|servise\s+yetişiyor|servise\s+yetisiyor|(?:su|mola|tuvalet)\s+istiyor|sırayı\s+bekliyor|sirayi\s+bekliyor)/iu
 const FAILED_OUTCOME_PATTERN = /(?:(?:yanlış|yanlis|ters|eksik|hatalı|hatali)[^.!?]{0,45}(?:koyuyor|koydu|yerleştiriyor|yerlestiriyor|eşliyor|esliyor|yapıyor|yapiyor|uyguluyor)|hangi\s+adımdan[^.!?]{0,80}bulamad|hangi\s+adimdan[^.!?]{0,80}bulamad|yetişkin\s+yönlendirmesi\s+bekliyor|yetiskin\s+yonlendirmesi\s+bekliyor)/iu
 const NON_OUTCOME_BODY_PLACEMENT_PATTERN = /(?:başını|basini)[^.!?]{0,35}(?:masaya|sıraya|siraya|zemine)[^.!?]{0,20}koyuyor/iu
@@ -99,7 +100,9 @@ function sourceSegments(input: ReportInput): string[] {
   const denseFormSegments = denseIntakeFormSegments(raw)
   if (denseFormSegments) return denseFormSegments
   const marker = THERAPIST_OR_EXTERNAL_MARKER.exec(raw)
-  const primary = clean(marker ? raw.slice(0, marker.index) : raw)
+  const strengthStart = raw.search(CAREGIVER_STRENGTH_MARKER)
+  const primaryEnd = Math.min(marker?.index ?? raw.length, strengthStart < 0 ? raw.length : strengthStart)
+  const primary = clean(raw.slice(0, primaryEnd))
   const strengths: string[] = []
   for (const match of raw.matchAll(CAREGIVER_STRENGTH_MARKER)) {
     const start = (match.index ?? 0) + match[0].length
@@ -114,6 +117,7 @@ function sourceSegments(input: ReportInput): string[] {
 function splitClauses(segment: string): string[] {
   const pieces = segment
     .replace(/\r?\n/gu, ". ")
+    .replace(/\s*\/\s*(?=bakım\s*veren\s*:)/giu, ". ")
     .replace(/\s+sonra\s+(?=(?:ipucu|görsel|resimli|hatırlatma|hatirlatma|destek)\b)/giu, ". ")
     .split(/(?<=[.!?])\s+|;+\s*|[,]\s*(?=(?:ancak|ama|fakat|buna\s+karşın|buna\s+rağmen|diğer|öte\s+yandan|bunun\s+neden(?:i|ine)?|ne\s+zaman|tetikleyici\s+ya\s+da))|\s+(?=(?:ama|fakat|buna\s+karşın|buna\s+rağmen)\b)/u)
     .map((piece) => clean(piece.replace(/^Bakım veren önce (?:bunun|güçlüğün)[^,]{0,100}söyledi,\s*sonra\s+/iu, "")))
@@ -122,7 +126,7 @@ function splitClauses(segment: string): string[] {
   for (const piece of pieces) {
     const wordCount = piece.match(/[a-zçğıöşü0-9]+/giu)?.length ?? 0
     if (NON_INDEPENDENT_LIMITATION.test(piece) && merged.length) merged[merged.length - 1] = clean(`${merged[merged.length - 1]}, ${piece}`)
-    else if (wordCount <= 2 && merged.length && !PLACEHOLDER_OR_NOISE.test(piece) && !SUPPLEMENTAL_PLACEHOLDER_OR_NOISE.test(piece)) merged[merged.length - 1] = clean(`${merged[merged.length - 1]} ${piece}`)
+    else if (wordCount <= 2 && merged.length && !/[?]/u.test(merged[merged.length - 1]) && !/[?]/u.test(piece) && inferEvidenceEpistemicStatus(piece) === "OBSERVED_OR_REPORTED" && !PLACEHOLDER_OR_NOISE.test(piece) && !SUPPLEMENTAL_PLACEHOLDER_OR_NOISE.test(piece)) merged[merged.length - 1] = clean(`${merged[merged.length - 1]} ${piece}`)
     else merged.push(piece)
   }
   return merged.flatMap((piece) => {
@@ -140,6 +144,10 @@ function splitClauses(segment: string): string[] {
 }
 
 function directionFor(clause: string): AnamnesisEvidenceDirection {
+  if (inferEvidenceEpistemicStatus(clause) !== "OBSERVED_OR_REPORTED") return "VAGUE"
+  if (isNegatedClinicalDifficulty(clause)) return "ABSENCE"
+  if (/(?:düğme(?:lerini|leri)?|görevi|yemeği)[^.!?]{0,40}(?:kapat|tamamla|bitir)madan[^.!?]{0,60}(?:başka|ayrıl|geçiyor)/iu.test(clause)) return "DIFFICULTY"
+  if (/(?:geceleri?[^.!?]{0,55}uyan|ara verdi|çok sıkışınca|(?:tuvalet|ihtiyac)[^.!?]{0,45}son anda|yetişemedi|kendiliğinden söylemedi|fark etmediğinde|(?:ağrı|yanma|rahatsızlık)[^.!?]{0,45}bildirmeye başl)/iu.test(clause)) return "DIFFICULTY"
   const absence = ABSENCE_PATTERN.test(clause)
   const preserved = (PRESERVED_PATTERN.test(clause) || PRESERVED_SUPPLEMENTAL_PATTERN.test(clause)) && !FAILED_OUTCOME_PATTERN.test(clause) && !NON_OUTCOME_BODY_PLACEMENT_PATTERN.test(clause)
   const difficulty = DIFFICULTY_PATTERN.test(clause) || DIFFICULTY_SUPPLEMENTAL_PATTERN.test(clause)
@@ -153,6 +161,7 @@ function directionFor(clause: string): AnamnesisEvidenceDirection {
   if (SUPPORT_PATTERN.test(clause) && !preserved && !difficulty && !absence && !OUTCOME_PATTERN.test(clause)) return "CONTEXTUAL"
   if (absence && difficulty) return explicitContrast ? "MIXED" : "ABSENCE"
   if (difficulty && PERFORMANCE_BREAKDOWN_PATTERN.test(clause)) return "DIFFICULTY"
+  if (!difficulty && /sürdürülebildiğini|tamamlayabildiğini/iu.test(clause)) return "PRESERVED"
   if (preserved && difficulty) return "MIXED"
   if (contextualComparison) return "CONTEXTUAL"
   if (TEMPORAL_CONTEXT_PATTERN.test(clause) && VARIABILITY_PATTERN.test(clause) && !CONCRETE_CONTEXT_BEHAVIOR.test(clause)) return "CONTEXTUAL"
@@ -167,6 +176,11 @@ function directionFor(clause: string): AnamnesisEvidenceDirection {
 function domainsFor(clause: string): AnamnesisDomainSupport[] {
   let direct = (Object.keys(DOMAIN_PATTERNS) as DomainKey[]).filter((domain) => DOMAIN_PATTERNS[domain].test(clause) || Boolean(DOMAIN_SUPPLEMENTAL_PATTERNS[domain]?.test(clause)))
   if (direct.includes("emotional") && direct.includes("cognitive")) direct = direct.filter((domain) => domain !== "cognitive")
+  // Toilets may be a location for a sensory event or a self-care task. Neither
+  // establishes awareness of an internal signal.
+  if (direct.includes("interoception") && /tuvalet/iu.test(clause)
+    && !/(?:ihtiyac|sıkış|yetişeme|açlık|susuz|ağrı|yanma|beden.{0,15}sinyal)/iu.test(clause)) direct = direct.filter((domain) => domain !== "interoception")
+  if (/(?:çorab|çorap)[^.!?]{0,60}(?:yumuşak|çıkar)|yumuşak\s+çorab/iu.test(clause) && !direct.includes("sensory")) direct.push("sensory")
   return direct.map((domain) => Object.freeze({ domain, support_level: "DIRECT" as const }))
 }
 
@@ -179,7 +193,14 @@ function matchedText(clause: string, pattern: RegExp): string | null {
 }
 
 function functionalContext(clause: string): AnamnesisFunctionalContext {
-  const task = matchedText(clause, TASK_PATTERN)
+  const task = /el(?:lerini)?\s+(?:yıka|durula)/iu.test(clause) ? "el yıkama"
+    : /giyinirken/iu.test(clause) ? "giyinme"
+    : /düğme(?:lerini|leri)?\s+kapat/iu.test(clause) ? "düğmeleri kapatma"
+    : /ayakkabı\s+giy/iu.test(clause) ? "ayakkabı giyme"
+    : /(?:çorap|çorab)/iu.test(clause) ? (/giy/iu.test(clause) ? "çorap giyme" : "çorapla ilgili iş")
+    : /tuvalet\s+ihtiyac/iu.test(clause) ? "tuvalet ihtiyacını bildirme"
+    : /tuvalette/iu.test(clause) && !/tuvalet\s+ihtiyac/iu.test(clause) ? null
+    : matchedText(clause, TASK_PATTERN)
   const environment = matchedText(clause, ENVIRONMENT_PATTERN)
   const trigger = matchedText(clause, TRIGGER_PATTERN)
   const support = matchedText(clause, SUPPORT_PATTERN)
@@ -190,6 +211,13 @@ function functionalContext(clause: string): AnamnesisFunctionalContext {
 }
 
 function evidenceStatus(clause: string, direction: AnamnesisEvidenceDirection, context: AnamnesisFunctionalContext, domains: readonly AnamnesisDomainSupport[]): AnamnesisEvidenceStatus {
+  if (/^(?:ama\s+)?(?:ne\s+zor|ne\s+olduğu|hangi\s+güçlük)[^.!?]{0,70}(?:anlatılmadı|açıklanmadı|belirtilmedi)/iu.test(clause)) return "UNUSABLE"
+  // Repeated punctuation after an explicit, qualified behavior report is noise,
+  // not a reason to discard that behavior. Actual questions remain unusable.
+  const noisyDeclarative = /\?{2,}$/.test(clause) && Boolean(context.behavior)
+    && /(?:bazen|bazı\s+koşullarda)/iu.test(clause)
+    && !/(?:^|\s)(?:mı|mi|mu|mü|neden|nasıl|hangi|acaba)(?:\s|[?]|$)/iu.test(clause)
+  if ((/\?/.test(clause) && !noisyDeclarative) || /(?:not\s*not\s*:|rapora[^.!?]{0,70}yaz|kuralları?\s+yok\s+say|klinik\s+bulgu\s+değil|mecaz\s+yani|yanlışlıkla\s+yapıştırılmış)/iu.test(clause)) return "UNUSABLE"
   if (!clause || PLACEHOLDER_OR_NOISE.test(clause) || SUPPLEMENTAL_PLACEHOLDER_OR_NOISE.test(clause) || DOMAIN_LABEL_ONLY.test(clause) || HYPOTHETICAL_ONLY.test(clause)) return "UNUSABLE"
   const wordCount = clause.match(/[a-zçğıöşü]{2,}/giu)?.length ?? 0
   if (wordCount < 2 && !(direction === "PRESERVED" && domains.length > 0 && Boolean(context.behavior || context.outcome))) return "UNUSABLE"
@@ -230,6 +258,9 @@ function normalizedFact(clause: string): string {
   ))
   if (!withoutLabel) return ""
   const normalized = normalizeTurkishClinicalText(withoutLabel)
+    .replace(/(?<!\p{L})çorap\s+yarım\s+kalıyor/iu, "çorapla ilgili iş yarım kalıyor")
+    .replace(/akşam\s+oyun\s+bitince\s+bağırma\s+var/iu, "Akşam oyun bittiğinde bağırdığı bildiriliyor")
+    .replace(/\bkahvaltı\s+başladı\s+bitmiyor/iu, "başlayan kahvaltı tamamlanmıyor")
     .replace(/\bkapasite korunurken\b/iu, "performans korunurken")
     .replace(/\s+bazen\s+de\s+hiç\s+olmuyor\s*[?!….]*/giu, ". Bakım veren bu güçlüğün bazı koşullarda görülmediğini de bildiriyor.")
     .replace(/^günlük rutine daha düzenli katılım\s*[.!?]*$/iu, "Günlük rutine daha düzenli katıldığı bildiriliyor.")
@@ -238,7 +269,20 @@ function normalizedFact(clause: string): string {
     .replace(/\s+([.,;:!?])/gu, "$1")
     .replace(/(^|(?<!\d)[.!?]\s+)([a-zçğıöşü])/gu, (_match, boundary: string, first: string) => `${boundary}${first.toLocaleUpperCase("tr-TR")}`)
     .trim()
+  if (/^[^.?!]{2,90}\s+olunca\s+[^.?!]{2,60}\s+altına\.?$/iu.test(normalized)) {
+    return `Bakım verenin “${normalized.replace(/[.!?]$/u, "")}” notunda çocuğun yaptığı hareket açıklanmamıştır.`
+  }
   return /[.!?]$/u.test(normalized) ? normalized : `${normalized}.`
+}
+
+// Report-only surface normalization. Preserve raw_span/source_excerpt verbatim.
+// Only unambiguous spelling/inflection repairs; do not invent missing behavior.
+function normalizeReportNote(text: string): string {
+  const words: Record<string, string> = { corap: "çorap", corabi: "çorabı", yumusak: "yumuşak", cikarip: "çıkarıp", dun: "dün", disari: "dışarı", cikti: "çıktı", baska: "başka", ornek: "örnek", anlatilmadi: "anlatılmadı", yarim: "yarım", kaliyo: "kalıyor", basladi: "başladı", bitmio: "bitmiyor", kapisi: "kapısı", kalabaliksa: "kalabalıksa", gidiyo: "gidiyor", altina: "altına", aksam: "akşam", bagirma: "bağırma", diyo: "diyor", cok: "çok" }
+  return normalizeTurkishClinicalText(text.replace(/[\p{L}]+/gu, (word) => {
+    const replacement = words[word.toLocaleLowerCase("tr-TR")]
+    return replacement ? (/^[A-ZÇĞİÖŞÜ]/u.test(word) ? replacement[0].toLocaleUpperCase("tr-TR") + replacement.slice(1) : replacement) : word
+  }))
 }
 
 function stableFactKey(clause: string, index: number): string {
@@ -255,11 +299,11 @@ export function extractCanonicalAnamnesisEvidence(input: ReportInput): Canonical
   const rawClauses = sourceSegments(input).flatMap((segment, segmentIndex) => splitClauses(segment).map((rawSpan) => ({ rawSpan, segmentIndex })))
   const facts: CanonicalAnamnesisEvidenceFact[] = []
   const previousDomains = new Map<number, AnamnesisDomainSupport[]>()
-  let previousGlobalDomains: AnamnesisDomainSupport[] = []
   rawClauses.forEach(({ rawSpan, segmentIndex }, index) => {
-    const direction = directionFor(rawSpan)
-    const directDomainSupport = domainsFor(rawSpan)
-    const context = functionalContext(rawSpan)
+    const analyzed = normalizeReportNote(rawSpan)
+    const direction = directionFor(analyzed)
+    const directDomainSupport = domainsFor(analyzed)
+    const context = functionalContext(analyzed)
     const contextOnly = UNCERTAINTY_PATTERN.test(rawSpan)
       || TEMPORAL_CONTEXT_PATTERN.test(rawSpan)
       || VARIABILITY_PATTERN.test(rawSpan)
@@ -268,26 +312,21 @@ export function extractCanonicalAnamnesisEvidence(input: ReportInput): Canonical
     const domainSupport = directDomainSupport.length
       ? directDomainSupport
       : contextOnly
-      ? previousDomains.get(segmentIndex) ?? previousGlobalDomains
+      ? previousDomains.get(segmentIndex) ?? []
       : []
     if (directDomainSupport.length) {
       previousDomains.set(segmentIndex, directDomainSupport)
-      previousGlobalDomains = directDomainSupport
     }
-    const status = evidenceStatus(rawSpan, direction, context, domainSupport)
+    const status = evidenceStatus(analyzed, direction, context, domainSupport)
     if (status === "UNUSABLE") return
-    const proposition = normalizedFact(rawSpan)
+    const proposition = normalizedFact(analyzed)
     if (!proposition) return
     const domains = domainSupport.map((entry) => entry.domain)
-    const inferredEpistemicStatus = inferEvidenceEpistemicStatus(rawSpan)
+    const inferredEpistemicStatus = inferEvidenceEpistemicStatus(analyzed)
     const epistemicStatus = EVIDENCE_EXISTENCE_UNCERTAIN_PATTERN.test(rawSpan)
       ? "UNKNOWN" as const
-      : inferredEpistemicStatus !== "OBSERVED_OR_REPORTED"
-      && ["DIFFICULTY", "PRESERVED", "MIXED", "CONTEXTUAL"].includes(direction)
-      && (CONCRETE_CONTEXT_BEHAVIOR.test(rawSpan) || REPORTED_DIFFICULTY_MARKER.test(rawSpan))
-      ? "OBSERVED_OR_REPORTED"
       : inferredEpistemicStatus
-    const inferredSemanticDirection = inferEvidenceDirection(rawSpan, epistemicStatus)
+    const inferredSemanticDirection = inferEvidenceDirection(analyzed, epistemicStatus)
     const semanticDirection: ReturnType<typeof inferEvidenceDirection> = direction === "ABSENCE"
       ? "NEUTRAL"
       : epistemicStatus === "OBSERVED_OR_REPORTED" && ["DIFFICULTY", "PRESERVED", "MIXED"].includes(direction)

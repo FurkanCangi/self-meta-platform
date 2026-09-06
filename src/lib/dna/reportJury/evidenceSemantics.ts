@@ -13,11 +13,11 @@ import type {
   SourceEvidenceRelationType,
 } from "./contracts"
 
-const NO_INFORMATION = /(?:hakkında\s+bilgi(?:si)?\s+(?:yok|bulunmuyor|verilmedi)|bilgi(?:si)?\s+(?:yok|bulunmuyor|verilmedi)|bilgi\s+vermedi|bilinmiyor|kaydedilmemiş)/iu
-const NOT_ASSESSED = /(?:değerlendirilmedi|gözlenmedi|denenmedi|test edilmedi|uygulanmadı|gözlem(?:i)?\s+yapılmadı)/iu
+const NO_INFORMATION = /(?:hakkında\s+bilgi(?:si)?\s+(?:yok|bulunmuyor|verilmedi)|bilgi(?:si)?\s+(?:yok|bulunmuyor|verilmedi)|bilgi\s+vermedi|bilinmiyor|bilmiyoruz|bilmiyor|kaydedilmemiş|örneği?\s+verilmedi)/iu
+const NOT_ASSESSED = /(?:değerlendirilmedi|gözlenmedi|denenmedi|test edilmedi|uygulanmadı|konuşulmadı|sorulmadı|gözlem(?:i)?\s+yapılmadı)/iu
 const INVALID = /(?:geçersiz|yorumlanamaz|yorumlanamıyor|form geçersiz|çok eksik)/iu
-const EXPLICIT_PRESERVED = /(?:yaş(?:a|ına) uygun|beklenen\s+(?:aralık|düzey)|korunmuş|bağımsız|tamamlıyor|tamamladı|tamamlanıyor|tamamlayabiliyor|bitiriyor|bitirdi|sürdürüyor|sürdürdü|başlıyor|başladı|başlattı|getiriyor|getirdi|giyiyor|inceliyor|yapabildi|sakinleşiyor|sakinleşti|geri\s+(?:dönüyor|döndü)|oyuna\s+(?:dönüyor|döndü)|sakin\s+yerde\s+bekliyor|zamanında\s+(?:bildiriyor|söylüyor)|seçtiği[^.]{0,40}dokunuyor|sorun\s+yaşamıyor|katılım(?:ı)?\s+(?:iyi|uygun)|hiç[^.]{0,80}(?:güçlük|sorun)[^.]{0,40}(?:olmad|yok)|(?:güçlük|sorun)\s+(?:bildirilmedi|görülmedi|yok)|güçlük\s+(?:olmadığını|görmediğini)\s+(?:bildir|söyl))/iu
-const EXPLICIT_DIFFICULTY = /(?:(?:beklenen(?:den|in)|beklenen\s+düzeyin)\s+(?:çok|fazla|az|altında)|belirgin\s+(?:güçlük|zorlanma)|sorun\s+bildirildi|\bgüçlük|\bzorlan|\byüksek\b|\bdüşük\b|\brisk\b|yapam|bitirem|tamamlamıyor|yarım(?:\s+kal)?|bırak|kaç|uzaklaş|kulaklarını kapat|bağır|ağl|unut|\batla|karıştır|dağıl|çok\s+yorgun|geç\s+(?:fark|söyl)|sıradan\s+çık|etkinliği bırak|kapıya yönel|yere\s+(?:yat|uzan)|uzanıyor|masadan\s+sık\s+kalk|(?:uzun|sık|yoğun)\s+hatırlatma|(?:ancak|yalnız|sadece)[^.]{0,100}(?:hatırlatma|destek|yardım|ipucu))/iu
+const EXPLICIT_PRESERVED = /(?:yaş(?:a|ına) uygun|beklenen\s+(?:aralık|düzey)|korunmuş|bağımsız|tamamlıyor|tamamladı|topladı|geçiyormuş|duruladı|etkinlikte kaldı|tamamlanıyor|tamamlayabiliyor|bitiriyor|bitirdi|sürdürüyor|sürdürdü|sürdürülebildiğini|başlıyor|başladı(?!ğı)|başlattı|getiriyor|getirdi|giyiyor|inceliyor|yapabildi|sakinleşiyor|sakinleşti|geri\s+(?:dönüyor|döndü)|oyuna\s+(?:dönüyor|döndü)|sakin\s+yerde\s+bekliyor|zamanında\s+(?:bildiriyor|söylüyor)|seçtiği[^.]{0,40}dokunuyor|sorun\s+yaşamıyor|katılım(?:ı)?\s+(?:iyi|uygun)|hiç[^.]{0,80}(?:güçlük|sorun)[^.]{0,40}(?:olmad|yok)|(?:güçlük|sorun)\s+(?:bildirilmedi|görülmedi|yok)|güçlük\s+(?:olmadığını|görmediğini)\s+(?:bildir|söyl))/iu
+const EXPLICIT_DIFFICULTY = /(?:(?:beklenen(?:den|in)|beklenen\s+düzeyin)\s+(?:çok|fazla|az|altında)|belirgin\s+(?:güçlük|zorlanma)|sorun\s+bildirildi|\bgüçlük|\bzorlan|\byüksek\b|\bdüşük\b|\brisk\b|yapam|bitirem|tamamlamıyor|yarım(?:\s+kal)?|bırak|kaç|uzaklaş|kulaklarını kapat|ellerini kulaklarına götür|kulaklarına götürdü|bağır|ağl|unut|\batla|karıştır|dağıl|çok\s+yorgun|geç\s+(?:fark|söyl)|sıradan\s+çık|etkinliği bırak|kapıya yönel|yere\s+(?:yat|uzan)|uzanıyor|masadan\s+sık\s+kalk|(?:uzun|sık|yoğun)\s+hatırlatma|(?:ancak|yalnız|sadece)[^.]{0,100}(?:hatırlatma|destek|yardım|ipucu))/iu
 const OBSERVED_PERFORMANCE = /(?:yaşa uygun|katılım|performans|tamamla|sürdür|bitir|yapab|yaptı|giydi|kaldı|yönel|geri dön|döndü|karış|bırak|kaç|uzaklaş|kapattı|bağır|ağl|zorlan|yarım|başlat|adlandır|söyledi|tepki)/iu
 const CONTEXT_SUPPORT_PRESENT = /(?:görsel|resim|kart|destek|ipucu|yazılı|sakin|sessiz|mola|tek tek|seçenek|önceden haber verildi)/iu
 const CONTEXT_SUPPORT_ABSENT_OR_LOAD = /(?:destek(?:\s+)?kaldır|resim yok|desteksiz|önceden haber verilmeden|yüksek ses|gürült|uyaran|sandalye|zil|ani ses)/iu
@@ -55,13 +55,22 @@ export function inferEvidenceDirection(text: string, epistemicStatus: EvidenceEp
   if (["ABSENT_INFORMATION", "UNKNOWN", "NOT_ASSESSED", "INVALID_OR_UNINTERPRETABLE"].includes(epistemicStatus)) return "UNKNOWN"
   if (epistemicStatus === "NOT_APPLICABLE") return "NOT_APPLICABLE"
   const negatedDifficulty = /(?:güçlük|sorun)\s+(?:bildirilmedi|görülmedi|yok)|(?:güçlük|sorun)\s+(?:olmadığını|görmediğini)\s+(?:bildir|söyl)|hiç[^.]{0,80}(?:güçlük|sorun)[^.]{0,40}(?:olmad|yok)|(?:asla|hiç)\s+[^.]{0,60}(?:ağlamaz|bağırmaz|kaçmaz|bırakmaz|zorlanmaz)|(?:ağlamıyor|bağırmıyor|kaçmıyor|bırakmıyor|zorlanmıyor)(?!\s+değil)/iu.test(text)
-  const difficulty = EXPLICIT_DIFFICULTY.test(text) && !negatedDifficulty
+  // Negation applies to its clause, not every other observation in the source.
+  const clauses = text.split(/[.;]|\s+(?:ancak|fakat|ama)\s+/iu).filter(Boolean)
+  const positiveClauses = clauses.filter((clause) => !isNegatedClinicalDifficulty(clause))
+  const difficulty = positiveClauses.some((clause) => (EXPLICIT_DIFFICULTY.test(clause) && !(negatedDifficulty && clauses.length === 1)) || /(?:geceleri?[^.!?]{0,55}uyan|ara verdi|çok sıkışınca|yetişemedi|kendiliğinden söylemedi)/iu.test(clause))
   const belowExpected = /(?:beklenen(?:den|in)|beklenen\s+düzeyin)\s+(?:çok|fazla|az|altında)/iu.test(text)
-  const preserved = EXPLICIT_PRESERVED.test(text) && !belowExpected
+  const preserved = EXPLICIT_PRESERVED.test(text) && !belowExpected && !/(?:ancak\s+çok\s+sıkışınca|yetişemedi|kendiliğinden söylemedi)/iu.test(text)
   if (difficulty && preserved) return "MIXED"
   if (difficulty) return "DIFFICULTY"
   if (preserved) return "PRESERVED"
   return "NEUTRAL"
+}
+
+export function isNegatedClinicalDifficulty(text: string): boolean {
+  if (/(?:mıyor|miyor|maz|mez)\s+değil/iu.test(text)) return false
+  return /(?:ağlama|bağırma|etkinliği terk etme|güçlük|sorun|ağrı|yanma)[^.!?]{0,90}(?:bildirilmedi|bildirmiyor|görülmedi|gözlenmedi|yoktur|yok\b)/iu.test(text)
+    || /(?:ağlamıyor|bağırmıyor|kaçmıyor|bırakmıyor|zorlanmıyor)(?!\s+değil)/iu.test(text)
 }
 
 export function inferSemanticContext(text: string): EvidenceSemanticContext {
