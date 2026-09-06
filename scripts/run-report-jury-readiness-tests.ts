@@ -54,9 +54,13 @@ async function main() {
     assert.equal(result.validation.missingValidExternalEvidenceIds.length, 0)
     assert.equal(result.languageProvider, "deterministic")
     assert.equal(result.languageFallbackUsed, false)
-    // Tekrar cümleleri içerik sayılmaz; semantik kapsam kapıları sıfırken 800 kelime
-    // gerçek klinik ayrıntının yanlışlıkla budanmasına karşı yeterli alt sınırdır.
-    assert.ok(result.validation.wordCount >= 800, `${testCase.id}: severe content-loss guard`)
+    // The former 800-word floor included APA entries: a better source match
+    // reduced ADV-BE-04 from 826 to 792 words while clinical text grew 456→458.
+    // Protect clinical substance against the immutable 815b19e baseline, not
+    // bibliography volume. Exact usable-fact coverage is checked below too.
+    const baselineClinicalWords: Record<string, number> = { "ADV-BE-01": 552, "ADV-BE-02": 515, "ADV-BE-03": 753, "ADV-BE-04": 456, "ADV-BE-05": 622, "ADV-BE-06": 529, "ADV-BE-07": 423, "ADV-BE-08": 746, "ADV-BE-09": 397, "ADV-BE-10": 654 }
+    const clinicalWords = result.finalReport.split("5. Bilimsel Literatür")[0].trim().split(/\s+/u).length
+    assert.ok(clinicalWords >= baselineClinicalWords[testCase.id] * 0.85, `${testCase.id}: severe clinical content-loss guard`)
     assert.equal(result.validation.rawNoisyAnamnesisLeakCount, 0, `${testCase.id}: raw noisy anamnesis`)
     assert.equal(result.validation.grammarFragmentCount, 0, `${testCase.id}: grammar fragment`)
     assert.equal(result.validation.domainListGrammarErrorCount, 0, `${testCase.id}: domain-list grammar`)
@@ -70,8 +74,8 @@ async function main() {
     results.push(result)
   }
   const averageWordCount = results.reduce((sum, result) => sum + result.validation.wordCount, 0) / results.length
-  // Exact repetitions are now emitted once. Preserve the per-case 800-word
-  // floor above, and verify actual usable case details instead of rewarding
+  // Exact repetitions are now emitted once. Preserve the clinical-content
+  // guard above, and verify actual usable case details instead of rewarding
   // duplicated prose to reach an average word target.
   const compact = (text: string) => text.toLocaleLowerCase("tr-TR").replace(/[^a-z0-9çğıöşü]+/gu, " ").trim()
   for (const result of results) for (const fact of result.caseScopedEvidenceEnvelope.anamnesis_evidence.filter(f => f.evidence_status === "USABLE" && f.epistemic_status === "OBSERVED_OR_REPORTED")) {

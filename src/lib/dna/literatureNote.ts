@@ -42,6 +42,8 @@ export type LiteratureSource = {
 export type LiteratureSelectionContext = {
   ageMonths?: number
   stableSeed?: string
+  /** Opt-in Report policy; legacy callers and the source catalog are unchanged. */
+  sourceEligibility?: (source: LiteratureSource, purpose: string) => boolean
 }
 
 type LiteratureBlock = {
@@ -773,13 +775,14 @@ function getSourceYear(sourceId: string): number {
   return match ? Number(match[0]) : 0
 }
 
-function selectSourceIds(
+function selectEligibleSourceIds(
   sourcePool: readonly string[],
   count: number,
-  seed: string
+  seed: string,
+  eligibility?: LiteratureSelectionContext["sourceEligibility"]
 ): string[] {
   const candidates = uniqueNonEmpty([...sourcePool]).filter(
-    (sourceId) => Boolean(VERIFIED_LITERATURE_SOURCES[sourceId])
+    (sourceId) => Boolean(VERIFIED_LITERATURE_SOURCES[sourceId]) && (!eligibility || eligibility(VERIFIED_LITERATURE_SOURCES[sourceId], seed.split(":").at(-1) || ""))
   )
   const bySeed = (left: string, right: string) => {
     const scoreDifference = stableHash(`${seed}:${left}`) - stableHash(`${seed}:${right}`)
@@ -874,8 +877,10 @@ function joinTestNames(names: string[]): string {
 
 function buildRegulationParagraph(
   analysis: ClinicalAnalysis,
-  seed: string
+  seed: string,
+  eligibility?: LiteratureSelectionContext["sourceEligibility"]
 ): LiteratureBlock {
+  const selectSourceIds = (pool: readonly string[], count: number, seed: string) => selectEligibleSourceIds(pool, count, seed, eligibility)
   const levelText =
     String(analysis.globalLevel || "").toLowerCase() === "tipik"
       ? "genel düzeyde büyük ölçüde korunmuş"
@@ -920,8 +925,10 @@ function buildRegulationParagraph(
 
 function buildDomainParagraph(
   analysis: ClinicalAnalysis,
-  seed: string
+  seed: string,
+  eligibility?: LiteratureSelectionContext["sourceEligibility"]
 ): LiteratureBlock {
+  const selectSourceIds = (pool: readonly string[], count: number, seed: string) => selectEligibleSourceIds(pool, count, seed, eligibility)
   const weakDomains = analysis.weakDomains || []
   const matchedDomains = analysis.matchedDomains || []
   const therapistInsights = analysis.therapistInsights || []
@@ -1199,8 +1206,10 @@ function buildDomainParagraph(
 
 function buildIntegrationParagraph(
   analysis: ClinicalAnalysis,
-  seed: string
+  seed: string,
+  eligibility?: LiteratureSelectionContext["sourceEligibility"]
 ): LiteratureBlock {
+  const selectSourceIds = (pool: readonly string[], count: number, seed: string) => selectEligibleSourceIds(pool, count, seed, eligibility)
   const therapistInsights = analysis.therapistInsights || []
   const externalClinicalFindings = analysis.externalClinicalFindings || []
   const balancedProfile = String(analysis.globalLevel || "").toLowerCase() === "tipik" && (analysis.weakDomains || []).length === 0
@@ -1287,9 +1296,9 @@ export function buildLiteratureAlignedSection(
   if (!analysis) return null
 
   const seed = buildSelectionSeed(analysis, context)
-  const paragraph1 = buildRegulationParagraph(analysis, seed)
-  const paragraph2 = buildDomainParagraph(analysis, seed)
-  const paragraph3 = buildIntegrationParagraph(analysis, seed)
+  const paragraph1 = buildRegulationParagraph(analysis, seed, context.sourceEligibility)
+  const paragraph2 = buildDomainParagraph(analysis, seed, context.sourceEligibility)
+  const paragraph3 = buildIntegrationParagraph(analysis, seed, context.sourceEligibility)
   const bodyParagraphs = [paragraph1.text, paragraph2.text, paragraph3.text]
   const sourceIds = uniqueNonEmpty([
     ...paragraph1.sourceIds,

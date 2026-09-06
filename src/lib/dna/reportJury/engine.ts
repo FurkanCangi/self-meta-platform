@@ -1,5 +1,6 @@
 import { analyzeExternalClinicalTests, findSupportedExternalTestByName, type ExternalTestCategory, type ExternalTestMatch } from "../externalTestRegistry"
 import { buildLiteratureAlignedSection, VERIFIED_LITERATURE_SOURCES } from "../literatureNote"
+import { reportLiteratureSourceEligible } from "./literatureEligibility"
 import type { DomainKey, DomainResult, ReportInput } from "../reportEngine"
 import { normalizeTurkishClinicalText } from "../reportLanguageQuality"
 import { extractCanonicalTherapistObservation, type CanonicalTherapistObservation } from "../reportV2/canonicalCaseEvidence"
@@ -1102,7 +1103,8 @@ type PreparedLiterature = Readonly<{
 }>
 
 function prepareLiterature(input: ReportInput, base: Awaited<ReturnType<typeof runReportV2Shadow>>, profile: JuryPriorityProfile, observation: CanonicalTherapistObservation, external: readonly JuryExternalEvidence[]): PreparedLiterature {
-  const externalCategories = unique(external.filter((entry) => entry.category !== "unrecognized").map((entry) => entry.category as ExternalTestCategory))
+  const eligibleExternal = external.filter((entry) => entry.decision_relevant)
+  const externalCategories = unique(eligibleExternal.filter((entry) => entry.category !== "unrecognized").map((entry) => entry.category as ExternalTestCategory))
   const section = buildLiteratureAlignedSection({
     globalLevel: base.decisionPlan.overallClassification,
     profileType: profile.display_label,
@@ -1111,11 +1113,11 @@ function prepareLiterature(input: ReportInput, base: Awaited<ReturnType<typeof r
     matchedDomains: profile.affected_domains.map((domain) => DOMAIN_LABELS[domain]),
     primaryWeakDomain: profile.primary_priority ? DOMAIN_LABELS[profile.primary_priority] : undefined,
     therapistInsights: observation.present ? [observation.normalizedText] : [],
-    externalClinicalFindings: external.map((entry) => entry.source_text),
-    externalTestIds: external.filter((entry) => entry.category !== "unrecognized").map((entry) => entry.id),
+    externalClinicalFindings: eligibleExternal.map((entry) => entry.source_text),
+    externalTestIds: eligibleExternal.filter((entry) => entry.category !== "unrecognized").map((entry) => entry.id),
     externalTestCategories: externalCategories,
     primaryExternalTestCategory: external.find((entry) => entry.decision_relevant && entry.category !== "unrecognized")?.category as ExternalTestCategory | undefined,
-  }, { ageMonths: input.ageMonths ?? undefined, stableSeed: input.clientCode ?? "jury-case" })
+  }, { ageMonths: input.ageMonths ?? undefined, stableSeed: input.clientCode ?? "jury-case", sourceEligibility: (source, purpose) => reportLiteratureSourceEligible(source, purpose, input.ageMonths) })
   const rawParagraphs = section?.text.split(/\n{2,}/u).map((entry) => entry.trim()).filter(Boolean) ?? []
   const bodyParagraphs = rawParagraphs.slice(0, 3).map((entry) => entry.replace(/^8\. Literatürle Uyumlu Klinik Dayanak\s*/u, "").trim()).filter(Boolean)
   const sourcesIn = (text: string) => Object.values(VERIFIED_LITERATURE_SOURCES).filter((source) => text.includes(source.inlineCitation.replace(/^\(|\)$/gu, "")) || text.includes(source.inlineCitation)).map((source) => source.id)
@@ -1128,7 +1130,10 @@ function prepareLiterature(input: ReportInput, base: Awaited<ReturnType<typeof r
   const sourceIds = selectedSources.length > 10 ? domainSources.slice(0, 10) : selectedSources
   const effectiveBody = sourceIds.length === selectedSources.length ? selectedBody : [domainParagraph]
   const references = sourceIds.map((id) => VERIFIED_LITERATURE_SOURCES[id]?.apaReference).filter(Boolean) as string[]
-  const paragraphs = [...effectiveBody, "Kaynaklar (APA 7):", ...references]
+  // One explanation and its citation per paragraph; do not split a citation or
+  // modify bibliography capitalization/DOIs. No scientific content is removed.
+  const readableBody = effectiveBody.flatMap((text) => text.split(/(?<=\)\.)\s+(?=[A-ZÇĞİÖŞÜ])/u))
+  const paragraphs = [...readableBody, "Kaynaklar (APA 7):", ...references]
   const missing = sourceIds.filter((id) => !VERIFIED_LITERATURE_SOURCES[id])
   const duplicates = (section?.sourceIds ?? []).filter((id, index, all) => all.indexOf(id) !== index)
   const doiMismatch = sourceIds.filter((id) => {
@@ -1420,7 +1425,7 @@ function buildClinicalInsightPlan(input: ReportInput, profile: JuryPriorityProfi
     ? functional.has_performance_variability_evidence
       ? `${preserved.length === 5 ? `${primary} dışındaki korunmuş beş alanın puanları yaş grubuna göre` : domainAreaSubject(preserved)} beklenen aralıktadır; bu sonuçlar belgelenen performans değişkenliğinin bütün self-regülasyon alanlarına yayılmadığını göstermektedir.`
       : `${preserved.length === 5 ? `${primary} dışındaki korunmuş beş alanın puanları yaş grubuna göre` : domainAreaSubject(preserved)} beklenen aralıktadır; bu dağılım güçlüğün bütün self-regülasyon alanlarına yayılmadığını göstermektedir.`
-    : "Ayrı bir korunmuş alan bulunmamaktadır; bu nedenle bütün etkilenen alanlar birlikte değerlendirilmiştir."
+    : "Tüm alan puanları beklenen aralığın dışındadır; çocuğun günlük yaşamda yapabildikleri ayrıca değerlendirilmelidir."
   const contextEffect = observationSupports.multiple
     ? "Doğrudan gözlemde birden fazla destek birlikte sunulmuştur. Bu gözlem, desteklerin ayrı ayrı etkisini göstermemektedir."
     : observationContextComparison
@@ -1436,7 +1441,7 @@ function buildClinicalInsightPlan(input: ReportInput, profile: JuryPriorityProfi
     : observation.present && observationSupportsPrimary
     ? "Doğrudan gözlem, ölçümde öne çıkan alanın görev sırasında nasıl göründüğüne ilişkin ek bilgi sağlamaktadır."
     : observation.present
-    ? "Doğrudan gözlem yalnız gözlenen görev ve koşullar hakkında bilgi vermektedir."
+    ? "Doğrudan gözlem, yalnız kayıt altındaki görev ve koşullarda görülen performansı göstermektedir."
     : "Alan puanlarının dağılımı, etkilenimin profil içinde seçici mi yoksa yaygın mı olduğunu göstermektedir."
   const crossDomain = profile.profile_breadth === "broad_multidomain"
     ? functionalCaregiverFacts.length
@@ -1711,7 +1716,7 @@ function buildLockedPlan(input: ReportInput, base: Awaited<ReturnType<typeof run
       ? `${DOMAIN_LABELS[key]} skoru ölçüm düzeyinde güçlük yönünde ayrışmaktadır.`
       : domain.level === "Tipik"
       ? DOMAIN_PRESERVED[key]
-      : `${DOMAIN_LABELS[key]} puanı bu alandaki klinik güçlüğü göstermektedir. Günlük yaşamdaki anlamı şu işlevlerle ilişkilidir: ${DOMAIN_FUNCTION[key]}`
+      : `${DOMAIN_LABELS[key]} puanı ölçekte güçlük yönündedir. ${DOMAIN_FUNCTION[key]} Bu olasılıkların çocukta nasıl görüldüğü, günlük yaşam bilgisiyle birlikte değerlendirilmelidir.`
     const sourceSentence = sources.length > 1 ? `${DOMAIN_LABELS[key]} için birlikte değerlendirilen kanıtlar: ${sources.join(", ")}.` : ""
     const sourceLink = sources.includes("bakım veren anlatısı") && sources.includes("terapist gözlemi") && hasConcreteCaregiverExample
       ? `${DOMAIN_LABELS[key]} bulgusu, bakım verenin aktardığı örnek ve doğrudan gözlemle birlikte ele alınmıştır.`
@@ -1768,7 +1773,7 @@ function buildLockedPlan(input: ReportInput, base: Awaited<ReturnType<typeof run
       ? `${preservedNames.length ? `${domainAreaSubject(preservedNames)} ölçümde beklenen aralıktadır. ` : ""}Kayıttaki korunmuş performans örneği, kapasitenin hangi koşulda kullanılabildiğini göstermektedir.`
       : preservedNames.length
       ? `${domainAreaSubject(preservedNames)} ölçümde beklenen aralıktadır. Bu dağılım, güçlüğün bütün self-regülasyon alanlarına yayılmadığını göstermektedir.`
-      : "Korunmuş yönler ayrı bir alan puanında görünmemektedir. Bu nedenle profil bütün etkilenen alanlar birlikte ele alınarak yorumlanmıştır.", base.decisionPlan.primaryFormulation?.preservedCapacityEvidenceIds ?? [], ["preserved"], "normal", "synthesis", preservedCaseFactIds)]
+      : "Tüm alan puanları beklenen aralığın dışındadır; çocuğun günlük yaşamda yapabildikleri ayrıca değerlendirilmelidir.", base.decisionPlan.primaryFormulation?.preservedCapacityEvidenceIds ?? [], ["preserved"], "normal", "synthesis", preservedCaseFactIds)]
     : []
   const relationParagraphs = sourceRelationNarrative.factIds.length
     ? [p("evidence.relations", sourceRelationNarrative.text, base.decisionPlan.contradictoryEvidence, [], "normal", "synthesis", sourceRelationNarrative.factIds)]
@@ -1905,7 +1910,7 @@ function buildLockedPlan(input: ReportInput, base: Awaited<ReturnType<typeof run
   sections.push(Object.freeze({ id: "decision_support", heading: JURY_REPORT_HEADINGS[3], paragraphs: Object.freeze(decisionParagraphs) }))
 
   const referenceMarkerIndex = literature.paragraphs.findIndex((text) => text === "Kaynaklar (APA 7):")
-  const literatureBodyParagraphs = literature.paragraphs.slice(0, referenceMarkerIndex < 0 ? literature.paragraphs.length : referenceMarkerIndex).map((text, index) => p(`science.${index + 1}`, userFacingClinicalText(text), [], [], "normal", "literature_link", [], literature.selection.sourceIds))
+  const literatureBodyParagraphs = literature.paragraphs.slice(0, referenceMarkerIndex < 0 ? literature.paragraphs.length : referenceMarkerIndex).map((text, index) => p(`science.${index + 1}`, userFacingClinicalText(text), [], [], "normal", "literature_link", [], literature.selection.sourceIds.filter((id) => text.includes(VERIFIED_LITERATURE_SOURCES[id].inlineCitation.replace(/^\(|\)$/gu, "")))))
   const literatureReferenceParagraphs = referenceMarkerIndex < 0 ? [] : literature.paragraphs.slice(referenceMarkerIndex).map((text, index) => p(`science.reference.${index + 1}`, text, [], [], "normal", "literature_link", [], literature.selection.sourceIds))
   sections.push(Object.freeze({
     id: "limits_science",
@@ -2544,7 +2549,14 @@ export class DeterministicClinicalCritic implements AIClinicalCritic {
       findings.push(Object.freeze({ type: "INVALID_EXTERNAL_EVIDENCE_USE", severity: "critical", message: `${evidence?.test_name ?? evidenceId} yorumlanamaz olduğu hâlde yapılandırılmış claim provenance içinde klinik kanıt rolüne bağlanmıştır.` }))
     }
     if (input.dataQuality.status === "insufficient" && /günlük yaşamda şu biçimde/iu.test(input.finalReport)) findings.push(Object.freeze({ type: "UNSUPPORTED_FUNCTIONAL_INFERENCE", severity: "high", message: "Yetersiz vakada gözlenmemiş işlevsel ayrıntı üretilmiştir." }))
-    if (input.decisionExplanation.preserved_evidence.length && !/(?:Korunmuş (?:yönler|performans|kapasite|sonuç)|korunmuş kapasite|beklenen aralıktadır)/iu.test(input.finalReport)) findings.push(Object.freeze({ type: "PRESERVED_CAPACITY_OMISSION", severity: "high", message: "Korunmuş kapasite görünür raporda yer almıyor." }))
+    // A keyword such as "korunmuş yönler" is not proof of retained capacity.
+    // Require the actual locked preserved-capacity/measurement-boundary text,
+    // including the calibrated boundary when no functional capacity is known.
+    const capacityParagraphs = input.lockedPlan.sections.flatMap((section) => section.paragraphs)
+      .filter((entry) => ["evidence.preserved", "formulation.bold-synthesis"].includes(entry.id))
+    const compactText = (text: string) => text.replace(/\*\*/gu, "").replace(/\s+/gu, " ").trim()
+    const capacityContentMissing = !capacityParagraphs.length || capacityParagraphs.some((entry) => !compactText(input.finalReport).includes(compactText(entry.text)))
+    if (input.decisionExplanation.preserved_evidence.length && capacityContentMissing) findings.push(Object.freeze({ type: "PRESERVED_CAPACITY_OMISSION", severity: "high", message: "Kilitli plandaki korunmuş beceri veya ölçüm sınırı görünür raporda yer almıyor." }))
     if (input.decisionExplanation.limitations.length && !/maddi sınır|ayrıntılar sınırlı|sınırlı tutul|sınırlandırılmıştır|sonucuna izin vermemektedir|kısmen yorumlanabilir|geçersiz|somut[^.]{0,80}örne(?:k|ği)[^.]{0,60}bulunma|somut görev ve ortam ayrıntısı bulunmayan|kapsamını (?:sınırlandır|daralt)|günlük yaşamın tümüne genellenmemiştir|yalnız[^.]{0,160}(?:içinde|kapsamında|dayanmaktadır|kullanılmıştır|kullanılmış|değerlendirilmiştir)|(?:bu|alan) puan[^.]{0,120}bilgi vermez/iu.test(input.finalReport)) findings.push(Object.freeze({ type: "MAJOR_LIMITATION_OMISSION", severity: "high", message: "Kararı maddi olarak sınırlayan bilgi görünür değil." }))
     if (/(?:neden olmaktadır|kaynaklanmaktadır|doğrudan sebebidir|yol açmaktadır)/iu.test(input.finalReport)) findings.push(Object.freeze({ type: "UNSUPPORTED_CAUSALITY", severity: "critical", message: "Desteksiz nedensellik dili saptandı." }))
     return Object.freeze({ status: findings.some((finding) => ["high", "critical"].includes(finding.severity)) ? "review_required" : "pass", findings: Object.freeze(findings) })

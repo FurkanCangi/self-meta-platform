@@ -35,14 +35,25 @@ function observationIsUnavailable(rawText: string): boolean {
     || /(?:^(?:henüz\s+)?(?:doğrudan\s+)?gözlem(?:i)?\s+yapılmadı|konuşulmadı|sorulmadı|örneği?\s+verilmedi)/iu.test(clause))
 }
 
+// Reject unmistakable entry noise, not short clinical observations such as
+// "Ağladı." or "Ağrı yok.". Length alone is not an evidence-quality test.
+function observationClauseIsNoise(clause: string): boolean {
+  const words = clause.toLocaleLowerCase("tr-TR").match(/[a-zçğıöşü]+/gu) ?? []
+  if (!words.length) return true
+  return words.every((word) => !/[aeıioöuü]/u.test(word)
+    || /^(.)\1{2,}$/u.test(word)
+    || /^(?:asdf[ghjkl]*|qwert[yuiop]*|abc(?:def)?|deneme|test|placeholder|lorem|ipsum)$/u.test(word))
+}
+
 export function extractCanonicalTherapistObservation(input: ReportInput | string): CanonicalTherapistObservation {
   const text = anamnesisText(input)
   const match = text.match(
     /(?:(?:terapist yorumlar[ıi]?|terapist yorumu|terapist gözlemi?|therapist_comments|clinical_observation)\s*[:=]\s*|terapist yorumu\s+)([\s\S]*?)(?=\s*(?:(?:ek klinik test(?:\s*\/\s*bulgular)?|d[ıi]ş test|dis test|günlük (?:yaşam )?örnek(?:i|leri)?|çocuğun güçlü yanlar[ıi]?|güçlü yanlar[ıi]?|güçlü yan[ıi]?|başka bilgi|strengths|preserved_areas|başvuru sebebi|basvuru sebebi)\s*[:=]?|$))/iu
   )
   const rawText = clean(match?.[1] ?? "")
-  const unavailable = observationIsUnavailable(rawText)
-  const normalizedText = unavailable ? "" : rawText
+  const usableText = rawText.split(/(?<=[.!?;])\s+/u).filter((clause) => !observationClauseIsNoise(clause)).join(" ")
+  const unavailable = observationIsUnavailable(usableText)
+  const normalizedText = unavailable ? "" : usableText
   const observedClauses = normalizedText.split(/[.;]/u).filter((clause) => !/(?:denenmedi|gözlenmedi|yapılmadı|belirlenemedi|konuşulmadı)/iu.test(clause))
   const meaningfulContextComparison = !unavailable && observedClauses.length >= 2
     && /(?:başlayınca|bitirildiğinde|durduktan sonra|verildiğinde|gösterilip|hatırlatmasıyla|yokken|olmadan|değiştiğinde)/iu.test(observedClauses.join(" "))
