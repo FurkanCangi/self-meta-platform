@@ -1,6 +1,7 @@
 import type {
   StudentAnswerObligationKind,
   StudentCaseContext,
+  StudentCaseHistoryContext,
   StudentConversationAction,
   StudentConversationState,
   StudentObservationScope,
@@ -17,10 +18,10 @@ import { compileStudentAnswerObligations } from "./obligationCompiler"
 import { EMPTY_STUDENT_CASE_CONTEXT } from "./caseContext"
 import { normalizeDnaChatText } from "../text"
 
-export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@28" as const
+export const DNA_STUDENT_SEMANTIC_INTERPRETER_VERSION = "dna-student-semantic-interpreter@34" as const
 
 export const DNA_STUDENT_SEMANTIC_TASKS = Object.freeze([
-  "define", "explain", "compare", "example", "case_reasoning", "summarize",
+  "define", "explain", "significance", "relate", "deepen", "boundary", "measurement", "mechanism", "daily_life", "compare", "example", "case_reasoning", "summarize",
   "observe", "evidence", "treatment_boundary",
 ] as const satisfies readonly StudentSemanticTask[])
 
@@ -32,6 +33,15 @@ export type StudentSemanticActs = Readonly<Record<StudentSemanticTask, boolean>>
 
 export const DNA_STUDENT_OBLIGATION_KINDS = Object.freeze([
   "define_target",
+  "explain_target",
+  "explain_source_evidence",
+  "explain_significance",
+  "deepen_with_new_information",
+  "state_evidence_limit",
+  "avoid_causal_overclaim",
+  "describe_measurement_scope",
+  "explain_mechanism",
+  "explain_daily_life_meaning",
   "distinguish_targets",
   "contrast_target_states",
   "state_context_dependency",
@@ -260,8 +270,15 @@ function parseSemanticActs(value: unknown): StudentSemanticActs | null {
 const FALLBACK_TASK_PRIORITY: readonly StudentSemanticTask[] = Object.freeze([
   "case_reasoning",
   "observe",
-  "evidence",
+  "deepen",
+  "measurement",
   "define",
+  "relate",
+  "significance",
+  "boundary",
+  "evidence",
+  "mechanism",
+  "daily_life",
   "explain",
 ])
 
@@ -282,10 +299,12 @@ export function resolveStudentSemanticTask(
       ? "summarize"
       : frame.semanticActs.compare
         ? "compare"
-        : frame.semanticActs.example
-          ? "example"
-          : frame.presentation.grouping === "separate_each"
-            ? "explain"
+          : frame.semanticActs.example
+            ? "example"
+            : frame.presentation.grouping === "separate_each"
+              ? "explain"
+              : frame.semanticActs.define && frame.semanticActs.deepen
+                ? "define"
             : FALLBACK_TASK_PRIORITY.find((task) => frame.semanticActs[task]) ?? "explain"
   if (frame.conversationAction === "return" && selected === "explain" && enabledActs.length === 1 && frame.referentTurnId) {
     return state.semanticLedger.find((turn) => turn.turnId === frame.referentTurnId)?.semanticTask ?? selected
@@ -453,15 +472,16 @@ export function compileStudentRequestContract(
   frame: StudentSemanticFrame,
   state: StudentConversationState,
   caseContext: StudentCaseContext = EMPTY_STUDENT_CASE_CONTEXT,
+  caseHistoryContext: StudentCaseHistoryContext | null = null,
 ): StudentRequestContract {
   const semanticTask = resolveStudentSemanticTask(frame, state)
-  const requestedSemanticTasks = Object.freeze(DNA_STUDENT_SEMANTIC_TASKS.filter((task) => frame.semanticActs[task]))
+  const explicitRequestedSemanticTasks = DNA_STUDENT_SEMANTIC_TASKS.filter((task) => frame.semanticActs[task])
   const presentation: StudentPresentationRequest = Object.freeze({
     ...frame.presentation,
-    example: requestedSemanticTasks.includes("example")
+    example: explicitRequestedSemanticTasks.includes("example")
       ? frame.presentation.example === "none" ? "brief" : frame.presentation.example
       : "none",
-    exampleScope: requestedSemanticTasks.includes("example") ? frame.presentation.exampleScope : "independent",
+    exampleScope: explicitRequestedSemanticTasks.includes("example") ? frame.presentation.exampleScope : "independent",
   })
   const unique = (values: readonly string[]) => [...new Set(values)]
   const currentRejectedTargetIds = Object.freeze(frame.conversationAction === "repair" ? [...frame.rejectedTargetIds] : [])
@@ -520,6 +540,14 @@ export function compileStudentRequestContract(
   const referentCaseContext = referentSnapshot?.caseContext.eventIds.length
     ? referentSnapshot.caseContext
     : null
+  const inheritedAdditiveTask = semanticTask === "example"
+    && presentation.preserveMeaning
+    && referentSnapshot
+    && referentSnapshot.semanticTask !== "example"
+      ? referentSnapshot.semanticTask
+      : null
+  const requestedSemanticTasks = Object.freeze(DNA_STUDENT_SEMANTIC_TASKS.filter((task) =>
+    explicitRequestedSemanticTasks.includes(task) || task === inheritedAdditiveTask))
   const mergedTargetIds = frame.conversationAction === "summarize_session"
     ? allowedFocusTargets.length
       ? unique(allowedFocusTargets)
@@ -540,7 +568,9 @@ export function compileStudentRequestContract(
   const targetIds = frame.conversationAction === "summarize_session"
     ? mergedTargetIds
     : mergedTargetIds.filter((targetId) => !currentRejectedTargetIds.includes(targetId))
-  const comparisonTargetIds = semanticTask === "compare" ? targetIds : Object.freeze([])
+  const comparisonTargetIds = semanticTask === "compare" || requestedSemanticTasks.includes("compare")
+    ? targetIds
+    : Object.freeze([])
   const componentTargetIds = semanticTask === "explain" && targetIds.length > 1 && presentation.grouping === "separate_each"
     ? targetIds
     : Object.freeze([])
@@ -557,7 +587,7 @@ export function compileStudentRequestContract(
         singleObservationLimit: true,
         additionalContext: true,
       })
-    : semanticTask === "compare"
+    : semanticTask === "compare" || semanticTask === "example"
       || ((semanticTask === "define" || semanticTask === "explain")
         && frame.observationExtras.singleObservationLimit)
       ? frame.observationExtras
@@ -583,6 +613,7 @@ export function compileStudentRequestContract(
     referent,
     caseContext,
     referentCaseContext,
+    caseHistoryContext,
     presentation,
     summaryScope,
     observationScope,
@@ -603,6 +634,7 @@ export function compileStudentRequestContract(
     safetyIntent: semanticTask === "treatment_boundary"
       ? "treatment_selection"
       : semanticTask === "observe" || semanticTask === "case_reasoning"
+        || (semanticTask === "example" && observationScope.singleObservationLimit)
         || (semanticTask === "compare" && (
           requestedSemanticTasks.includes("observe") || requestedSemanticTasks.includes("case_reasoning")
           || observationScope.singleObservationLimit
@@ -727,11 +759,11 @@ export const DNA_STUDENT_SEMANTIC_INTERPRETER_INSTRUCTIONS = `
 Sen yalnız Türkçe bilimsel öğrenci konuşmasını yapılandıran bir yorumlayıcısın. Cevap veya klinik öneri yazma.
 
 Her mesaj için üç bağımsız eksen çıkar:
-1. semanticActs: kullanıcının bilimsel olarak istediği işleri birbirinden bağımsız boolean olarak işaretle (define, explain, compare, example, case_reasoning, summarize, observe, evidence, treatment_boundary),
+1. semanticActs: kullanıcının bilimsel olarak istediği işleri birbirinden bağımsız boolean olarak işaretle (define, explain, significance, relate, deepen, boundary, measurement, mechanism, daily_life, compare, example, case_reasoning, summarize, observe, evidence, treatment_boundary),
 2. conversationAction: konuşmadaki hareket (start, continue, repair, return, summarize_session),
 3. presentation: sade dil, uzunluk, biçim, örnek, örneğin ortak senaryo kapsamı ve aynı anlamı koruyarak yeniden anlatma isteği.
 
-Tek bir semantic act seçmeye çalışma. Açıkça istenen her act true, istenmeyenler false olsun. “Ne demek / nedir / neyi ifade eder” define=true; aynı mesaj genel açıklama da gerektiriyorsa explain de true olabilir. Yerel resolver primary taskı seçecek. Sunum isteği semantic acts yerine geçmez. Örneğin “ne demek, öğrenci gibi anlat” define=true ve language=plain_student olur. Yalnız önceki cevabı aynı anlamı koruyarak daha sade/yeniden söyleme isteğinde yeni bilimsel görev yoksa bütün semanticActs false olabilir; bu durumda presentation.preserveMeaning=true ve önceki referans doğru verilmelidir. Türkçe ekleri ve gündelik ifadeleri anlam düzeyinde yorumla; “tek gözlemle”, “bir kere görerek” ve “sadece bunu gördüm” gözlemden sonuç çıkarma sınırını soruyorsa observe=true olur.
+Tek bir semantic act seçmeye çalışma. Açıkça istenen her act true, istenmeyenler false olsun. “Ne demek / nedir / neyi ifade eder” define=true; aynı mesaj genel açıklama da gerektiriyorsa explain de true olabilir. “Mekanizma” açıkça isteniyorsa mechanism=true; “günlük yaşamdaki/günlük hayattaki anlam” açıkça isteniyorsa daily_life=true kullan. Bunları genel explain actı içinde eritme. Yerel resolver primary taskı seçecek. Sunum isteği semantic acts yerine geçmez. Örneğin “ne demek, öğrenci gibi anlat” define=true ve language=plain_student olur. Yalnız önceki cevabı aynı anlamı koruyarak daha sade/yeniden söyleme isteğinde yeni bilimsel görev yoksa bütün semanticActs false olabilir; bu durumda presentation.preserveMeaning=true ve önceki referans doğru verilmelidir. Türkçe ekleri ve gündelik ifadeleri anlam düzeyinde yorumla; “tek gözlemle”, “bir kere görerek” ve “sadece bunu gördüm” gözlemden sonuç çıkarma sınırını soruyorsa observe=true olur.
 
 Bir örnek üretme veya bir kavramı örnekle gösterme açıkça isteniyorsa semanticActs.example=true kullan. “Bu örnekte”, “önceki örnek” veya “örnekteki çocuk” yalnız mevcut örneğe gönderme yapıyorsa ve yeni örnek istenmiyorsa semanticActs.example=false ve presentation.example=none kullan. presentation.example yalnız istenen örneğin kısa/somut sunum biçimini belirtir; kendi başına örnek isteği değildir.
 Kullanıcı “aynı örnekte”, “tek bir örnek içinde” veya “ortak bir senaryoda” birden fazla hedefi göstermeyi istiyorsa presentation.exampleScope=shared kullan. Bunun dışındaki örnek isteklerinde independent kullan.

@@ -137,6 +137,33 @@ if (!coherentResolution.ok) throw new Error("expected coherent closed choice")
 assert.deepEqual(coherentResolution.contract.targetIds, ["self_regulation"])
 assert.equal(coherentResolution.contract.referent.turnId, "B1-AMB-T01")
 
+let explicitReturnState = createEmptyStudentConversationState()
+explicitReturnState = append(explicitReturnState, "B1-RETURN-SET-T01", "öz düzenleme ne demek")
+explicitReturnState = append(explicitReturnState, "B1-RETURN-SET-T02", "self regülasyonla interosepsiyon aynı şey mi")
+explicitReturnState = append(explicitReturnState, "B1-RETURN-SET-T03", "yürütücü işlevleri daha uzun anlat")
+const explicitReturnMessage = "az önce interosepsiyonla self regulasyonu karşılaştırmıştık ona geri dönelim"
+const explicitReturnFacts = observeStudentRequestFacts({
+  turnId: "B1-RETURN-SET-T04",
+  message: explicitReturnMessage,
+  state: explicitReturnState,
+})
+const explicitReturnEnvelope = buildStudentStateCandidateEnvelope({
+  facts: explicitReturnFacts,
+  state: explicitReturnState,
+})
+assert.equal(explicitReturnEnvelope.referentCandidates.length, 1)
+assert.equal(explicitReturnEnvelope.referentCandidates[0]?.turnId, "B1-RETURN-SET-T02")
+const explicitReturnResolution = resolveStudentEvidenceFirstRequest({
+  turnId: "B1-RETURN-SET-T04",
+  message: explicitReturnMessage,
+  state: explicitReturnState,
+})
+if (!explicitReturnResolution.ok) throw new Error("explicit multi-target return should resolve deterministically")
+assert.equal(explicitReturnResolution.contract.conversationAction, "return")
+assert.equal(explicitReturnResolution.contract.semanticTask, "compare")
+assert.deepEqual(explicitReturnResolution.contract.targetIds, ["interoception", "self_regulation"])
+assert.equal(explicitReturnResolution.contract.referent.turnId, "B1-RETURN-SET-T02")
+
 const diagnosis = resolveStudentEvidenceFirstRequest({
   turnId: "B1-DIAG-T01",
   message: "bu çocuğun tanısı ne",

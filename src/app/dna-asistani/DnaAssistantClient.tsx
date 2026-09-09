@@ -86,6 +86,10 @@ function formatDate(value: string | null) {
   return new Intl.DateTimeFormat("tr-TR", { day: "2-digit", month: "short", year: "numeric" }).format(date)
 }
 
+function visibleSourceLabel(source: DnaAnswer["sources"][number]) {
+  return source.labelTr || source.title || source.citation || "Kaynak"
+}
+
 const V3_ANSWER_SECTION_LABEL: Record<V3AnswerSection, string> = {
   definition: "Tanım",
   function_or_relation: "İşlev, mekanizma veya ilişki",
@@ -126,6 +130,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
   const [previousTopic, setPreviousTopic] = useState<string | null>(null)
   const [conversationContext, setConversationContext] = useState<DnaChatConversationContext | null>(null)
   const [limitedRolloutContextToken, setLimitedRolloutContextToken] = useState<string | null>(null)
+  const [studentContextToken, setStudentContextToken] = useState<string | null>(null)
   const [sending, setSending] = useState(false)
   const [sendError, setSendError] = useState("")
   const [sendErrorCode, setSendErrorCode] = useState("")
@@ -255,6 +260,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
     setPreviousTopic(null)
     setConversationContext(null)
     setLimitedRolloutContextToken(null)
+    setStudentContextToken(null)
     conversationIdRef.current = ""
     setPendingReportQuestion(null)
     setQuestion("")
@@ -312,6 +318,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
       appendUser?: boolean
       previousTopic?: string | null
       conversationContext?: DnaChatConversationContext | null
+      studentContextToken?: string | null
       responseDepth?: ResponseDepth
     } = {},
   ) {
@@ -329,6 +336,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
       reportId: requestReportId || null,
       previousTopic: requestPreviousTopic,
       conversationContext: requestConversationContext,
+      studentContextToken: options.studentContextToken === undefined ? studentContextToken : options.studentContextToken,
       responseDepth: options.responseDepth ?? responseDepth,
       appendUserMessage: options.appendUser !== false,
     })
@@ -360,6 +368,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
           responseDepth: request.snapshot.responseDepth,
           conversationId: conversationIdRef.current,
           ...(limitedRolloutContextToken ? { limitedRolloutContextToken } : {}),
+          ...(request.snapshot.studentContextToken ? { studentContextToken: request.snapshot.studentContextToken } : {}),
           ...(request.snapshot.reportId ? { reportId: request.snapshot.reportId } : {}),
           ...((request.snapshot.previousTopic || request.snapshot.conversationContext)
             ? {
@@ -388,6 +397,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
       setPreviousTopic(answer.topic)
       setConversationContext(answer.conversationContext ?? null)
       setLimitedRolloutContextToken(answer.limitedRolloutContextToken)
+      setStudentContextToken(answer.studentContextToken ?? null)
       if (answer.contextRequest?.type === "report" && !request.snapshot.reportId) {
         setPendingReportQuestion(request.snapshot.question)
         reportPickerFocusPendingRef.current = true
@@ -438,6 +448,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
         await sendQuestion(waitingQuestion, {
           reportId: transition.selectedReportId,
           previousTopic: transition.clearConversation ? transition.previousTopic : previousTopic,
+          studentContextToken: transition.clearConversation ? null : studentContextToken,
           conversationContext: transition.clearConversation
             ? transition.conversationContext
             : conversationContext,
@@ -467,6 +478,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
           reportId: failedRequest.reportId,
           previousTopic: failedRequest.previousTopic,
           conversationContext: failedRequest.conversationContext,
+          studentContextToken: failedRequest.studentContextToken ?? null,
           responseDepth,
           appendUser: false,
         }
@@ -479,6 +491,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
       reportId: failedRequest.reportId,
       previousTopic: failedRequest.previousTopic,
       conversationContext: failedRequest.conversationContext,
+      studentContextToken: failedRequest.studentContextToken ?? null,
       responseDepth: failedRequest.responseDepth,
       appendUser: false,
     })
@@ -915,6 +928,12 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
   const visibleAnswerUnits = answer.answerUnits.filter((unit) =>
     unit.kind !== "safety_boundary" || unit.section === "case_non_inference")
   const hasStructuredUnits = visibleAnswerUnits.length > 0
+  const visibleCitationCardIds = new Set(
+    visibleAnswerUnits.flatMap((unit) => unit.citationCardIds),
+  )
+  const visibleSources = hasStructuredUnits
+    ? answer.sources.filter((source) => visibleCitationCardIds.has(source.id))
+    : answer.sources
   const boundaryText = [
     answer.summary,
     ...answer.details,
@@ -955,7 +974,11 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
               ))}
             </ul>
           ) : null}
-          {hasStructuredUnits ? (
+          {answer.studentVisibleAnswer !== undefined ? (
+            <p className="whitespace-pre-wrap text-sm font-medium leading-6 text-[var(--sm-text)]" aria-label="DNA Intelligence yanıtı">
+              {answer.studentVisibleAnswer}
+            </p>
+          ) : hasStructuredUnits ? (
             <div className={answerStatusLabels.length ? "mt-3 space-y-3" : "space-y-3"} aria-label="DNA Intelligence yanıtı">
               {visibleAnswerUnits.map((unit, index) => {
                 const sectionHeading = answer.runtimeGeneration === "v3"
@@ -998,6 +1021,22 @@ function AssistantAnswer({ answer }: { answer: DnaAnswer }) {
             {answer.caseEvidence.map((evidence) => <li key={evidence}>{evidence}</li>)}
           </ul>
         </div>
+      ) : null}
+
+      {visibleSources.length ? (
+        <section className="mt-4 rounded-2xl border border-[var(--sm-border)] bg-[var(--sm-surface-soft)] p-3" aria-label="Kaynaklar">
+          <h3 className="text-[11px] font-black uppercase tracking-[0.1em] text-[var(--sm-text-muted)]">Kaynaklar</h3>
+          <ul className="mt-2 space-y-2">
+            {visibleSources.map((source) => (
+              <li key={source.id} className="text-xs font-semibold leading-5 text-[var(--sm-text-soft)]">
+                <span className="block text-[var(--sm-text)]">{visibleSourceLabel(source)}</span>
+                {source.locator ? (
+                  <span className="block text-[11px] text-[var(--sm-text-muted)]">Bölüm/sayfa: {source.locator}</span>
+                ) : null}
+              </li>
+            ))}
+          </ul>
+        </section>
       ) : null}
 
       <div className="mt-3 flex flex-wrap items-center justify-end gap-2">

@@ -1,0 +1,89 @@
+{
+  "version": "dna-student40-contract-expectation-overlay@2",
+  "scope": "Evaluation-only removal of seven unrequested explain_relation requirements; not visible-answer certification",
+  "baseFixture": {
+    "path": "scripts/dna-student-fixtures/STUDENT40_DEVELOPMENT.json",
+    "sha256": "e8bf1368ea3f3ea5c09ba710a90c6e4f16a64e1d4f0388339c43c42b734f0a65"
+  },
+  "originalHarness": {
+    "path": "scripts/run-dna-student-evidence-first-contract-student40-tests.ts",
+    "sha256": "03be7713e1290aa6ec23904644e353a5ac62b0832830f31a87a194061a285550"
+  },
+  "scorer": {
+    "path": "src/lib/dna/chat/studentFirst/developmentAdapter.ts",
+    "sha256": "e63fa937a9cd99f235ad43e6897ddd4370e41b3bb657b333a1b8777fdf1c2fc6"
+  },
+  "acceptanceRule": {
+    "totalExpectedTurns": 40,
+    "minimumFullPassTurns": 36,
+    "requireZeroFailedRecords": true,
+    "unchangedFromOriginalHarness": true
+  },
+  "ownerAuthorization": {
+    "role": "PRODUCT_OWNER",
+    "question": "Eski gold ve FAIL kayıtlarını koruyarak, soruda istenmeyen ek görevleri ayrı sürümlü bir değerlendirmede düzeltmemi onaylıyor musun? Bu, önceki “ölçütleri değiştirme” sınırını etkilediği için ayrıca soruyorum.",
+    "reply": "evet",
+    "decision": "APPROVED_VERSIONED_CORRECTION_OF_UNREQUESTED_DUTIES_ONLY",
+    "individualAnswerApproval": false,
+    "independentHumanReview": false,
+    "newCandidateDataEgressApprovedByThisReply": false,
+    "newBudgetApprovedByThisReply": false,
+    "releaseAcceptanceApprovedByThisReply": false
+  },
+  "preservedOpenIds": [
+    "STUDENT40-C01-T02",
+    "STUDENT40-C02-T02",
+    "STUDENT40-C03-T05"
+  ],
+  "corrections": [
+    {
+      "turnId": "STUDENT40-C01-T04",
+      "question": "çocuk işe başlıyor sonra kalkıp geziyor burada dikkat mi öz düzenleme mi düşünebiliriz",
+      "originalExpectationSha256": "5cd7c1104055c8494b166f3cb72d014d98d771cddfb07150a15a216b77618a83",
+      "remove": "explain_relation",
+      "reason": "Gözlemi iki kavram bakımından ayırma isteği, ayrıca kavramlar arası bilimsel ilişki açıklama isteği değildir. Gözlem sınırı ve cevap kalitesi ayrı denetlenir."
+    },
+    {
+      "turnId": "STUDENT40-C02-T07",
+      "question": "planlama ile çalışma belleğini aynı örnekte ayrı ayrı göster",
+      "originalExpectationSha256": "bd9d97bd9e486c13e24cb2a388cbdf88d3e1155d06327a4551e436f488163223",
+      "remove": "explain_relation",
+      "reason": "Aynı örnekte kavramları ayrı gösterme isteniyor; bağımsız bilimsel ilişki açıklaması ayrıca istenmiyor. Ayrım ve mevcut örnek zorunluluğu korunur; ortak senaryonun kalitesi otomatik onaylanmaz."
+    },
+    {
+      "turnId": "STUDENT40-C04-T02",
+      "question": "duyusal düzenleme bununla aynı mı farkı nerede",
+      "originalExpectationSha256": "9988da1d7b7e305b774a1598c7254d90e65a67d0b27802083436832fb920080c",
+      "remove": "explain_relation",
+      "reason": "Aynılık ve fark sorusu kavram ayrımı gerektirir. Kaynakta destekleyici bir ilişki bulunması, soruya ayrı zorunlu ilişki görevi eklemez."
+    },
+    {
+      "turnId": "STUDENT40-C04-T03",
+      "question": "kalabalık sınıfta kulak kapatıp hızlı dolaşan öğrenci bu ikisinden hangisi olabilir",
+      "originalExpectationSha256": "af7d0948962450336009cca35c1d6212cab6f9c72011b6bd619ffd69ad0dc58a",
+      "remove": "explain_relation",
+      "reason": "Gözlemin iki kavram bakımından ayrımı isteniyor; ayrı bilimsel ilişki zorunluluğu sorudan çıkmıyor. Tek gözlem sınırı ve ek bağlam görevleri aynen kalır."
+    },
+    {
+      "turnId": "STUDENT40-C04-T04",
+      "question": "ikisini de ayır bir de niye kesin söyleyemiyoruz onu açıkla",
+      "originalExpectationSha256": "63cac34f76ab258ae5e8e12027384af9879b8113aad9a28607f8add3e74aa26c",
+      "remove": "explain_relation",
+      "reason": "Ayrım ve kesinleştirememenin açıklaması isteniyor. Belirsizlik gerekçesi, kavramlar arası yeni bilimsel ilişki üretme görevi değildir. Tek gözlem sınırı korunur."
+    },
+    {
+      "turnId": "STUDENT40-C04-T06",
+      "question": "sinirlenince ses yükselmesi arousal mı duygu düzenleme mi ikisini ayır",
+      "originalExpectationSha256": "cb02e4cfcc6b1db203d309cc11334320aa77bfc5dad3316856f4d160b834a310",
+      "remove": "explain_relation",
+      "reason": "İstek olayda iki kavramı ayırmaktır; ayrıca bilimsel ilişki sorulmuyor. Cevaptaki çıkarımın kaynak gücü bu düzeltmeyle onaylanmaz."
+    },
+    {
+      "turnId": "STUDENT40-C05-T05",
+      "question": "interosepsiyonla duygu düzenleme aynı mı mesela gerginliği fark etmek hangisine girer",
+      "originalExpectationSha256": "cb8b2ffa1fd03bc122893233ea122e432ae9b06af95ce7d4f11d8d9730212496",
+      "remove": "explain_relation",
+      "reason": "Kavram ayrımı ve gerginliği fark etmenin hangi kavrama girdiği soruluyor. Ayrı ilişki açıklaması zorunlu değil; cevapta bağlam ve kaynak desteği ayrıca incelenir."
+    }
+  ]
+}

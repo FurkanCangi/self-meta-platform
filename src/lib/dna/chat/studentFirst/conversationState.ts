@@ -28,15 +28,19 @@ export const DNA_STUDENT_RECENT_SEMANTIC_HISTORY_LIMIT = 8
 export const DNA_STUDENT_SEMANTIC_LEDGER_LIMIT = 64
 
 export const DNA_STUDENT_TARGET_LEXICON: readonly TargetLexeme[] = Object.freeze([
-  { id: "self_regulation", label: "öz düzenleme", aliases: ["öz düzenleme", "öz-düzenleme", "self regülasyon", "self-regülasyon"] },
+  {
+    id: "self_regulation",
+    label: "öz düzenleme",
+    aliases: ["öz düzenleme", "öz-düzenleme", "self regülasyon", "self-regülasyon", "regülsyon"],
+  },
   { id: "self_control", label: "öz denetim", aliases: ["öz denetim", "öz-denetim", "öz kontrol", "self kontrol"] },
-  { id: "attention", label: "dikkat", aliases: ["dikkat", "odaklanma"] },
+  { id: "attention", label: "dikkat", aliases: ["dikkat", "odaklanma", "dikkatini"], contextAliases: ["dikkatini"] },
   { id: "executive_functions", label: "yürütücü işlevler", aliases: ["yürütücü işlev", "yürütücü işlevler", "yönetici işlev"] },
   { id: "inhibition", label: "inhibisyon", aliases: ["inhibisyon", "ketleme", "ketleyici kontrol", "dürtü kontrolü", "dürtüyü durdurma"] },
   {
     id: "working_memory",
     label: "çalışma belleği",
-    aliases: ["çalışma belleği", "yönergeyi aklında tutma", "akılda tutma"],
+    aliases: ["çalışma belleği", "working memory", "yönergeyi aklında tutma", "akılda tutma"],
     contextAliases: ["yönergeyi aklında tutma", "akılda tutma"],
   },
   { id: "planning", label: "planlama", aliases: ["planlama", "plan yapma"] },
@@ -45,9 +49,14 @@ export const DNA_STUDENT_TARGET_LEXICON: readonly TargetLexeme[] = Object.freeze
   { id: "arousal", label: "uyarılma", aliases: ["arousal", "uyarılma", "uyarılmışlık"] },
   { id: "sensory_regulation", label: "duyusal düzenleme", aliases: ["duyusal düzenleme", "duyusal regülasyon"] },
   { id: "sensory_modulation", label: "duyusal modülasyon", aliases: ["duyusal modülasyon", "duyusal modulasyon"] },
-  { id: "emotion_regulation", label: "duygu düzenleme", aliases: ["duygu düzenleme", "duygusal düzenleme", "duygu regülasyonu"] },
+  { id: "sensory_registration", label: "duyusal kayıt", aliases: ["duyusal kayıt"] },
+  { id: "sensory_underresponsivity", label: "duyusal yetersiz yanıt verme", aliases: ["duyusal yetersiz yanıt verme", "hiporeaktif", "hiporeaktivite"] },
+  { id: "emotion_regulation", label: "duygu düzenleme", aliases: ["duygu düzenleme", "duygusal düzenleme", "duygu regülasyonu", "duygusal regülasyon"] },
   { id: "interoception", label: "interosepsiyon", aliases: ["interosepsiyon", "beden sinyali", "bedensel sinyal", "iç duyum"] },
   { id: "reactivity", label: "reaktivite", aliases: ["reaktivite", "tepkisellik"] },
+  { id: "stress_reactivity", label: "stres reaktivitesi", aliases: ["stres reaktivitesi", "stres"] },
+  { id: "heart_rate_variability", label: "kalp hızı değişkenliği", aliases: ["HRV", "kalp hızı değişkenliği"] },
+  { id: "sleep_regulation", label: "uyku ve öz düzenleme", aliases: ["uyku zorlanması", "uyku ve self-regülasyon", "uyku ve öz düzenleme", "uyku"] },
   {
     id: "recovery",
     label: "toparlanma",
@@ -145,6 +154,8 @@ function semanticTaskFor(message: string): StudentSemanticTask {
   if (/\b(?:ornek|ornegi|mesela)\b/.test(normalized)) return "example"
   if (/\b(?:cocuk|ogrenci)\b/.test(normalized) && /\b(?:ne olabilir|ne dusun|diyebilir miyiz|kesin)\b/.test(normalized)) return "case_reasoning"
   if (/\b(?:ne demek|nedir|neydi|tam olarak ne)\b/.test(normalized)) return "define"
+  if (/\bmekanizma\w*\b/.test(normalized)) return "mechanism"
+  if (/\b(?:gunluk\s+(?:yasam|hayat)|gundelik\s+(?:yasam|hayat))\w*\b/.test(normalized)) return "daily_life"
   return "explain"
 }
 
@@ -158,22 +169,24 @@ function conversationActionFor(message: string, hasHistory: boolean): StudentCon
 
 function presentationFor(message: string): StudentPresentationRequest {
   const normalized = normalizeDnaChatText(message)
-  const countMatch = normalized.match(/\b(iki|uc|dort|[2-4]) cumle\b/)
+  const countMatch = normalized.match(/\b(iki|uc|dort|bes|alti|[2-6]) (?:cumle|madde)\w*\b/)
   const sentenceCount = countMatch
-    ? ({ iki: 2, uc: 3, dort: 4 } as Record<string, number>)[countMatch[1]] ?? Number(countMatch[1])
+    ? ({ iki: 2, uc: 3, dort: 4, bes: 5, alti: 6 } as Record<string, number>)[countMatch[1]] ?? Number(countMatch[1])
     : null
   const plain = /\b(?:sade|basit|ogrenci|akademik olma|akademik oldu|gunluk dil|duz anlat)\b/.test(normalized)
-  const brief = /\b(?:kisa|kisaca|minicik|ozet|[2-4] cumle|iki cumle|uc cumle|dort cumle)\b/.test(normalized)
-  const deep = /\b(?:ayrintili|detayli|derin|biraz ac|daha ac)\b/.test(normalized)
+  const negatedBrief = /\bkisa\b.{0,24}\b(?:degil|deil)\b/.test(normalized)
+  const brief = !negatedBrief && /\b(?:kisa|kisaca|minicik|ozet)\w*\b/.test(normalized)
+  const deep = /\b(?:uzun|ayrintili|detayli|derin|biraz ac|daha ac)\w*\b/.test(normalized)
   const concreteExample = /\b(?:cocuk|ogrenci|sinif|ders|oyun|gunluk hayat)\b/.test(normalized) && /\b(?:ornek|mesela)\b/.test(normalized)
   const sharedExample = /\b(?:ayni|ortak)\s+(?:ornek|senaryo)\w*\b/.test(normalized)
     || /\btek\s+(?:bir\s+)?(?:ornek|senaryo)\w*(?:\s+(?:icinde|uzerinden))?\b/.test(normalized)
   return Object.freeze({
-    depth: brief ? "brief" : deep ? "deep" : "standard",
+    depth: sentenceCount !== null ? "brief" : deep ? "deep" : brief ? "brief" : "standard",
     language: plain ? "plain_student" : "standard",
     format: /\btablo\b/.test(normalized) && !/\btablo yapma\b/.test(normalized)
       ? "table"
-      : /\b(?:madde madde|maddelerle)\b/.test(normalized)
+      : /\b(?:madde madde|maddelerle|maddeyle|madde halinde|madde olarak)\b/.test(normalized)
+          || /\b(?:iki|uc|dort|bes|alti|[2-6]) madde\w*\b/.test(normalized)
         ? "bullets"
         : "prose",
     example: concreteExample ? "concrete" : /\b(?:ornek|mesela)\b/.test(normalized) ? "brief" : "none",
@@ -337,6 +350,7 @@ export function interpretStudentRequest(
     referent,
     caseContext,
     referentCaseContext,
+    caseHistoryContext: null,
     presentation: normalizedPresentation,
     summaryScope,
     observationScope,

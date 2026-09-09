@@ -1,7 +1,6 @@
 import { existsSync, readFileSync, statSync } from "node:fs"
 import {
   dirname,
-  extname,
   isAbsolute,
   join,
   relative,
@@ -68,7 +67,9 @@ function resolveLocalModule(input: Readonly<{
   const absoluteBase = input.specifier.startsWith("@/")
     ? resolve(input.projectRoot, "src", input.specifier.slice(2))
     : resolve(input.projectRoot, dirname(input.importer), input.specifier)
-  const candidates = extname(absoluteBase)
+  // A dotted module stem such as context.server is not a complete extension.
+  // Explicit supported extensions still resolve exactly, without substitution.
+  const candidates = LOCAL_MODULE_EXTENSIONS.some((extension) => absoluteBase.endsWith(extension))
     ? [absoluteBase]
     : [
         absoluteBase,

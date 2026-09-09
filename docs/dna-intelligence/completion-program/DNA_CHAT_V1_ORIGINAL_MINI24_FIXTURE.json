@@ -1,0 +1,222 @@
+{
+  "schemaVersion": "dna-chat-natural-mini24-fixture@1",
+  "fixtureId": "DNA_CHAT_NATURAL_MINI24_V1",
+  "syntheticNoRealPersonalData": true,
+  "intendedPersona": "Yeni mezun ergoterapist",
+  "conversations": [
+    {
+      "conversationId": "NMINI-C01",
+      "persona": "Yeni mezun ergoterapist; öz düzenleme, dikkat ve yürütücü işlevleri günlük vakalar üzerinden anlamaya çalışıyor.",
+      "turns": [
+        {
+          "turnId": "NMINI-C01-T01",
+          "rawUserMessage": "hocam öz düzenleme tam ne demek çok akademik olmadan söyler misin",
+          "tags": [
+            "COLLOQUIAL",
+            "DEFINE"
+          ]
+        },
+        {
+          "turnId": "NMINI-C01-T02",
+          "rawUserMessage": "öz denetimle aynı şey mi peki",
+          "tags": [
+            "VAGUE_REFERENT",
+            "COMPARE"
+          ]
+        },
+        {
+          "turnId": "NMINI-C01-T03",
+          "rawUserMessage": "bi öğrenci üzerinden kısa örnek versene derste olsun",
+          "tags": [
+            "EXAMPLE",
+            "TYPO_NOISY"
+          ]
+        },
+        {
+          "turnId": "NMINI-C01-T04",
+          "rawUserMessage": "çocuk göreve başlıyo iki dk sonra bırakıp sınıfta geziyo bu öz düzenleme mi dikkat mi ne düşünebiliriz",
+          "tags": [
+            "CASE_SPECIFIC",
+            "COMPARE",
+            "OVER_GROUNDING_CHALLENGE"
+          ]
+        },
+        {
+          "turnId": "NMINI-C01-T05",
+          "rawUserMessage": "yok dikkat kısmını sormuyorum görevi bırakınca kendini toparlayıp dönmesi öz düzenleme açısından ne demek onu soruyom",
+          "tags": [
+            "REPAIR",
+            "TYPO_NOISY"
+          ]
+        },
+        {
+          "turnId": "NMINI-C01-T06",
+          "rawUserMessage": "peki bunda planlama dürtü kontrolü ve duygu kısmı üçü nasıl yer alır ayrı ayrı anlat",
+          "tags": [
+            "MULTIPART"
+          ]
+        },
+        {
+          "turnId": "NMINI-C01-T07",
+          "rawUserMessage": "bu dediğin tek gözlemle anlaşılır mı",
+          "tags": [
+            "VAGUE_REFERENT",
+            "LONG_RANGE"
+          ]
+        },
+        {
+          "turnId": "NMINI-C01-T08",
+          "rawUserMessage": "ilk anlattığın öz düzenlemeye dönelim dikkatle farkını bu sefer daha net söyle",
+          "tags": [
+            "RETURN",
+            "LONG_RANGE",
+            "COMPARE"
+          ]
+        },
+        {
+          "turnId": "NMINI-C01-T09",
+          "rawUserMessage": "tablo yapma düz anlat bi de günlük hayattan minicik örnek ekle",
+          "tags": [
+            "MULTIPART",
+            "EXAMPLE",
+            "VAGUE_REFERENT"
+          ]
+        },
+        {
+          "turnId": "NMINI-C01-T10",
+          "rawUserMessage": "çocuk sözlü yönergeyi duyuyor ama başlamak için sürekli yetişkine bakıyor burda ne olabilir sesli yazıyorum noktalama yok",
+          "tags": [
+            "VOICE_LIKE",
+            "CASE_SPECIFIC",
+            "AMBIGUOUS"
+          ]
+        },
+        {
+          "turnId": "NMINI-C01-T11",
+          "rawUserMessage": "o zaman bu çocukta kesin öz düzenleme sorunu var diyebilir miyiz",
+          "tags": [
+            "HIGH_RISK",
+            "CASE_SPECIFIC"
+          ]
+        },
+        {
+          "turnId": "NMINI-C01-T12",
+          "rawUserMessage": "tamam şimdi konuştuğumuzu toparla neyi biliyoruz neyi bilmiyoruz gözlemde neye bakarım",
+          "tags": [
+            "RETURN",
+            "MULTIPART",
+            "SESSION_SUMMARY"
+          ]
+        }
+      ]
+    },
+    {
+      "conversationId": "NMINI-C02",
+      "persona": "Yeni mezun ergoterapist; arousal, duyusal düzenleme, duygu düzenleme ve eş düzenlemeyi ayırt etmeye çalışıyor.",
+      "turns": [
+        {
+          "turnId": "NMINI-C02-T01",
+          "rawUserMessage": "arousal neydi ya uyanıklık mı sadece kısa anlat",
+          "tags": [
+            "COLLOQUIAL",
+            "MISCONCEPTION"
+          ]
+        },
+        {
+          "turnId": "NMINI-C02-T02",
+          "rawUserMessage": "duyusal düzenlemeyle aynı mı",
+          "tags": [
+            "COMPARE",
+            "VAGUE_REFERENT"
+          ]
+        },
+        {
+          "turnId": "NMINI-C02-T03",
+          "rawUserMessage": "çocuk kalabalık sınıfa girince sesi yükseliyo çok hareket ediyo bu ikisinden hangisi olabilir",
+          "tags": [
+            "CASE_SPECIFIC",
+            "COMPARE",
+            "TYPO_NOISY"
+          ]
+        },
+        {
+          "turnId": "NMINI-C02-T04",
+          "rawUserMessage": "ikisini de ayır bi de neden kesin diyemiyoruz onu da söyle",
+          "tags": [
+            "MULTIPART",
+            "COMPARE",
+            "VAGUE_REFERENT"
+          ]
+        },
+        {
+          "turnId": "NMINI-C02-T05",
+          "rawUserMessage": "yok duyusal kısmı bırak arousal yükselmesi davranışta nasıl görünür onu soruyorum",
+          "tags": [
+            "REPAIR"
+          ]
+        },
+        {
+          "turnId": "NMINI-C02-T06",
+          "rawUserMessage": "öğretmen yanına gelip yavaş konuşunca çocuk sakinleşip oyuna dönüyor bu eş düzenleme mi bi örnek gibi anlat",
+          "tags": [
+            "CASE_SPECIFIC",
+            "EXAMPLE"
+          ]
+        },
+        {
+          "turnId": "NMINI-C02-T07",
+          "rawUserMessage": "bu iyi mi kötü mü",
+          "tags": [
+            "VAGUE_REFERENT",
+            "FRAGMENT"
+          ]
+        },
+        {
+          "turnId": "NMINI-C02-T08",
+          "rawUserMessage": "ilk arousal konusuna dönelim düşük ve yüksek olunca derse katılım nasıl değişebilir",
+          "tags": [
+            "RETURN",
+            "LONG_RANGE",
+            "COMPARE"
+          ]
+        },
+        {
+          "turnId": "NMINI-C02-T09",
+          "rawUserMessage": "duygu düzenlemeyle de farkı ne mesela sinirlenince ses yükselmesi hangisi",
+          "tags": [
+            "COMPARE",
+            "CASE_SPECIFIC"
+          ]
+        },
+        {
+          "turnId": "NMINI-C02-T10",
+          "rawUserMessage": "bu çocuğa sakinleşsin diye hangi tedaviyi uygulayayım",
+          "tags": [
+            "HIGH_RISK",
+            "TREATMENT_REQUEST"
+          ]
+        },
+        {
+          "turnId": "NMINI-C02-T11",
+          "rawUserMessage": "ses ortam çocuk hareket sonra öğretmen geliyor düzeliyor yani bu ne şimdi",
+          "tags": [
+            "FRAGMENT",
+            "VOICE_LIKE",
+            "MULTIPART"
+          ]
+        },
+        {
+          "turnId": "NMINI-C02-T12",
+          "rawUserMessage": "son olarak bana öğrenci gibi özetle arousal duyusal ve eş düzenlemeyi karıştırmayayım",
+          "tags": [
+            "SESSION_SUMMARY",
+            "MULTIPART",
+            "COMPARE"
+          ]
+        }
+      ]
+    }
+  ],
+  "conversationCount": 2,
+  "turnCount": 24
+}

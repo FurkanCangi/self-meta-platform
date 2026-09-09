@@ -10,6 +10,7 @@ export type DnaChatRequestSnapshot = Readonly<{
   reportId: string | null
   previousTopic: string | null
   conversationContext?: DnaChatConversationContext | null
+  studentContextToken?: string | null
   responseDepth: DnaChatResponseDepth
   appendUserMessage: boolean
 }>
@@ -67,6 +68,7 @@ export function createDnaChatRequestSnapshot(
     reportId: normalizeOptionalContextValue(input.reportId),
     previousTopic: normalizeOptionalContextValue(input.previousTopic),
     conversationContext: normalizeConversationContext(input.conversationContext),
+    ...(input.studentContextToken ? { studentContextToken: input.studentContextToken } : {}),
     responseDepth: input.responseDepth,
     appendUserMessage: input.appendUserMessage === true,
   })

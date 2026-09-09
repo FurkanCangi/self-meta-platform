@@ -5,7 +5,7 @@ import type {
   StudentSemanticTask,
 } from "./contracts"
 
-export const DNA_STUDENT_DEVELOPMENT_ADAPTER_VERSION = "dna-student40-adapter@1" as const
+export const DNA_STUDENT_DEVELOPMENT_ADAPTER_VERSION = "dna-student40-adapter@2" as const
 
 export type StudentLegacyOperation =
   | StudentSemanticTask
@@ -78,6 +78,13 @@ export type StudentContractSetScore = Readonly<{
 const SEMANTIC_OPERATIONS = new Set<StudentLegacyOperation>([
   "define",
   "explain",
+  "significance",
+  "relate",
+  "deepen",
+  "boundary",
+  "measurement",
+  "mechanism",
+  "daily_life",
   "compare",
   "example",
   "case_reasoning",
@@ -86,6 +93,18 @@ const SEMANTIC_OPERATIONS = new Set<StudentLegacyOperation>([
   "evidence",
   "treatment_boundary",
 ])
+
+export function adaptStudentLegacyObligationKinds(input: Readonly<{
+  semanticTask: StudentSemanticTask | null
+  obligationKinds: readonly StudentAnswerObligationKind[]
+}>): readonly StudentAnswerObligationKind[] {
+  return Object.freeze(input.obligationKinds.map((kind) => {
+    if (kind !== "define_target") return kind
+    if (input.semanticTask === "explain") return "explain_target"
+    if (input.semanticTask === "evidence") return "state_evidence_limit"
+    return kind
+  }))
+}
 
 function sameSet(left: readonly string[], right: readonly string[]): boolean {
   const leftSorted = [...new Set(left)].sort()
@@ -109,9 +128,11 @@ export function adaptStudentDevelopmentExpectation(input: Readonly<{
         : input.turnIndex === 0
           ? "start"
           : "continue"
+  const observationBounded = input.expected.requiredObligationKinds.includes("state_single_observation_limit")
+    || input.expected.requiredObligationKinds.includes("name_additional_context")
   const safetyIntent: StudentRequestContract["safetyIntent"] = semanticTask === "treatment_boundary"
     ? "treatment_selection"
-    : semanticTask === "case_reasoning" || semanticTask === "observe"
+    : semanticTask === "case_reasoning" || semanticTask === "observe" || observationBounded
       ? "case_interpretation"
       : "general_education"
   return Object.freeze({
@@ -122,7 +143,10 @@ export function adaptStudentDevelopmentExpectation(input: Readonly<{
     comparisonTargetIds: Object.freeze([...(input.expected.comparisonTargetIds ?? [])]),
     componentTargetIds: Object.freeze([...(input.expected.componentTargetIds ?? [])]),
     referentTurnId: input.expected.referentTurnId ?? null,
-    requiredObligationKinds: Object.freeze([...input.expected.requiredObligationKinds]),
+    requiredObligationKinds: adaptStudentLegacyObligationKinds({
+      semanticTask,
+      obligationKinds: input.expected.requiredObligationKinds,
+    }),
     presentation: input.expected.presentation,
     safetyIntent,
   })

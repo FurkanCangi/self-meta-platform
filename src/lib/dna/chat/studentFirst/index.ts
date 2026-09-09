@@ -16,6 +16,7 @@ export {
 } from "./caseContext"
 export {
   adaptStudentDevelopmentExpectation,
+  adaptStudentLegacyObligationKinds,
   assessStudentDevelopmentContract,
   DNA_STUDENT_DEVELOPMENT_ADAPTER_VERSION,
   scoreStudentDevelopmentContracts,

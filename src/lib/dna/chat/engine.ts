@@ -52,6 +52,10 @@ import {
   resolveDnaChatSocialConversation,
   type DnaChatSocialMatch,
 } from "./socialConversation"
+import {
+  adaptDnaReportConversationQuestion,
+  type DnaReportConversationAdaptation,
+} from "./reportConversationAdapter"
 import { normalizeDnaChatText, scoreDnaTextMatch, stableUnique } from "./text"
 import {
   DNA_CHAT_DOMAIN_KEYS,
@@ -444,6 +448,43 @@ function socialConversationResponse(
     safety,
     suggestedQuestions: [],
     answerAuthority: safety.authority,
+  })
+}
+
+function reportConversationControlResponse(
+  safety: DnaChatSafetyResult,
+  control: Extract<DnaReportConversationAdaptation, { scope: "control" }>["control"],
+): DnaChatResponse {
+  if (control === "general_information") {
+    return makeResponse({
+      route: "theory",
+      outcome: "answered",
+      classification: "clarification",
+      topic: "Genel bilgi",
+      intentId: "conversation_general_information",
+      summary: "Tamam. Seçili raporu kullanmadan genel bilgiyle devam edebiliriz.",
+      details: ["Merak ettiğiniz kavramı kendi cümlenizle yazın."],
+      sources: [],
+      limitations: [],
+      safety,
+      suggestedQuestions: ["Duyusal regülasyon nedir?", "Self-regülasyon nedir?"],
+    })
+  }
+
+  return makeResponse({
+    route: "dna",
+    outcome: "answered",
+    classification: "clarification",
+    topic: "DNA mahremiyet sınırı",
+    intentId: "conversation_identity_privacy",
+    summary: "Bu sohbette çocuğun adını veya kimliğini göstermem ve hatırlatmam.",
+    details: [
+      "Seçili rapor yalnız kimliksiz ve güvenli yapılandırılmış bulgular üzerinden ele alınır; sohbet mesajından yeni bir isim kaydedilmez.",
+    ],
+    sources: [],
+    limitations: ["Kimlik bilgisi rapor yorumu için gerekli değildir."],
+    safety,
+    suggestedQuestions: ["Seçili raporu kimlik bilgisi kullanmadan özetle."],
   })
 }
 
@@ -1333,7 +1374,7 @@ function caseDraft(
   }
 
   if (intent.id === "case_primary_axis") {
-    const axis = context.chatContext.primaryAxis
+    const axis = context.chatContext.primaryAxis ?? weakDomainLabels(context)[0] ?? null
     const evidence = context.chatContext.evidence.slice(0, 3)
     return {
       available: Boolean(axis),
@@ -1345,6 +1386,26 @@ function caseDraft(
       limitations: [...context.chatContext.limitations, standardLimit],
       sources: stableSources([
         ...(axis ? [caseSource(context, "primary-axis", "Vaka ana ekseni", axis)] : []),
+        ...clinicalSources,
+      ]),
+    }
+  }
+
+  if (intent.id === "case_primary_axis_rationale") {
+    const axis = context.chatContext.primaryAxis ?? weakDomainLabels(context)[0] ?? null
+    const evidence = context.chatContext.evidence.slice(0, 4)
+    return {
+      available: Boolean(axis || evidence.length),
+      summary: axis
+        ? `Raporda “${axis}” ana ekseninin öne çıkmasının nedeni, aşağıdaki yapılandırılmış bulguların bu eksen çevresinde toplanmasıdır.`
+        : "Bu raporda ana eksenin neden öne çıktığını gösterecek yeterli yapılandırılmış bulgu bulunmuyor.",
+      details: evidence,
+      evidence,
+      limitations: [...context.chatContext.limitations, standardLimit],
+      sources: stableSources([
+        ...(axis ? [caseSource(context, "primary-axis", "Vaka ana ekseni", axis)] : []),
+        ...evidence.slice(0, 3).map((line, index) =>
+          caseSource(context, `axis-rationale-${index + 1}`, "Ana ekseni destekleyen vaka bulgusu", line)),
         ...clinicalSources,
       ]),
     }
@@ -1392,6 +1453,110 @@ function caseDraft(
     }
   }
 
+  if (intent.id === "case_evidence_alignment") {
+    const channels = [
+      context.themes[0] ? { label: "Bakım veren/anamnez", line: context.themes[0] } : null,
+      context.observations[0] ? { label: "Klinik gözlem", line: context.observations[0] } : null,
+      context.externalFindings[0] ? { label: "Ek değerlendirme", line: context.externalFindings[0] } : null,
+    ].filter((entry): entry is { label: string; line: string } => Boolean(entry))
+    const commonDomain = DNA_CHAT_DOMAIN_KEYS.find((domain) => {
+      const domainRoot = normalizeDnaChatText(DOMAIN_LABELS[domain]).split(" ")[0] ?? ""
+      return channels.filter((entry) => {
+        const normalizedLine = normalizeDnaChatText(entry.line)
+        return Boolean(domainRoot && normalizedLine.includes(domainRoot)) ||
+          DOMAIN_PATTERNS[domain].some((pattern) =>
+            normalizedLine.includes(normalizeDnaChatText(pattern)))
+      }).length >= 2
+    })
+    const details = channels.map((entry) => `${entry.label}: ${entry.line}`)
+    return {
+      available: channels.length >= 2,
+      summary: channels.length < 2
+        ? "Veri kanalları arasında uyum veya çelişki değerlendirmek için en az iki ayrı yapılandırılmış kanal bulunmuyor."
+        : commonDomain
+          ? `${channels.map((entry) => entry.label).join(", ")} ${DOMAIN_LABELS[commonDomain].toLocaleLowerCase("tr-TR")} çevresinde aynı genel yönde bulgu taşıyor.`
+          : "Mevcut veri kanalları birlikte okunabilir; ancak aynı yönde olduklarını veya çeliştiklerini söylemek için açık ortak örüntü bulunmuyor.",
+      details,
+      evidence: channels.map((entry) => entry.line),
+      limitations: [...context.chatContext.limitations, standardLimit],
+      sources: stableSources([
+        ...channels.map((entry, index) =>
+          caseSource(context, `alignment-${index + 1}`, entry.label, entry.line)),
+        ...clinicalSources,
+      ]),
+    }
+  }
+
+  if (intent.id === "case_daily_impact") {
+    const narrative = stableUnique([
+      ...context.themes,
+      ...context.observations,
+      ...context.externalFindings,
+      ...context.chatContext.evidence,
+    ], 12).filter((line) => !/\b\d+(?:[.,]\d+)?\s*\/\s*50\b/u.test(line))
+    return {
+      available: narrative.length > 0,
+      summary: narrative.length
+        ? "Raporda günlük yaşama yansıdığı açıkça kaydedilen zorlanma örnekleri şunlardır:"
+        : "Bu raporun güvenli sohbet bağlamında günlük yaşam örneği bulunmuyor.",
+      details: narrative.slice(0, 4),
+      evidence: narrative.slice(0, 4),
+      limitations: [...context.chatContext.limitations, standardLimit],
+      sources: stableSources([
+        ...narrative.slice(0, 3).map((line, index) =>
+          caseSource(context, `daily-impact-${index + 1}`, "Günlük yaşama yansıyan vaka bulgusu", line)),
+        ...clinicalSources,
+      ]),
+    }
+  }
+
+  if (intent.id === "case_information_needed") {
+    const limitations = context.chatContext.limitations.slice(0, 5)
+    return {
+      available: limitations.length > 0,
+      summary: limitations.length
+        ? "Vaka yorumunu güçlendirmek için raporda sınırlı veya eksik olduğu belirtilen şu bilgi alanları tamamlanmalıdır:"
+        : "Bu raporun güvenli sohbet bağlamında hangi ek bilginin gerektiğine ilişkin yapılandırılmış kayıt bulunmuyor.",
+      details: limitations,
+      evidence: [],
+      limitations: [...limitations, standardLimit],
+      sources: stableSources([
+        ...(limitations.length
+          ? [caseSource(context, "information-needed", "Vaka veri sınırlılıkları", limitations.join(" "))]
+          : []),
+        ...clinicalSources,
+      ]),
+    }
+  }
+
+  if (intent.id === "case_evidence_sources") {
+    const channels = [
+      ...context.themes.slice(0, 2).map((line) => ({ label: "Bakım veren/anamnez kaydı", line })),
+      ...context.observations.slice(0, 2).map((line) => ({ label: "Klinik gözlem kaydı", line })),
+      ...context.externalFindings.slice(0, 2).map((line) => ({ label: "Ek değerlendirme kaydı", line })),
+    ]
+    const structured = channels.length
+      ? channels
+      : context.chatContext.evidence.slice(0, 4).map((line) => ({
+          label: "Yapılandırılmış alan kaydı",
+          line,
+        }))
+    return {
+      available: structured.length > 0,
+      summary: structured.length
+        ? "Rapor yorumunu doğrudan destekleyen vaka veri kanalları aşağıdadır. Bunlar genel literatür kaynağı değil, seçili raporun güvenli yapılandırılmış kayıtlarıdır."
+        : "Bu rapor yorumunu doğrudan destekleyen yapılandırılmış vaka veri kanalı bulunmuyor.",
+      details: structured.map((entry) => `${entry.label}: ${entry.line}`),
+      evidence: structured.map((entry) => entry.line),
+      limitations: [...context.chatContext.limitations, standardLimit],
+      sources: stableSources([
+        ...structured.slice(0, 4).map((entry, index) =>
+          caseSource(context, `evidence-channel-${index + 1}`, entry.label, entry.line)),
+        ...clinicalSources,
+      ]),
+    }
+  }
+
   const listIntents: Record<string, { values: string[]; title: string }> = {
     case_anamnesis: { values: context.themes, title: "Kimliksiz anamnez temaları" },
     case_observations: { values: context.observations, title: "Kimliksiz klinik gözlemler" },
@@ -1418,8 +1583,10 @@ function caseDraft(
   if (intent.id === "case_confidence") {
     const confidence = context.chatContext.confidence
     return {
-      available: Boolean(confidence || context.chatContext.confidenceRationale),
-      summary: confidence ? `Raporda kayıtlı veri güveni: ${confidence}.` : "Bu vaka için veri güveni düzeyi kaydı bulunmuyor.",
+      available: true,
+      summary: confidence
+        ? `Bu yorum kesin değildir; raporda kayıtlı veri güveni ${confidence} düzeyindedir.`
+        : "Bu yorum kesin değildir; raporda yapılandırılmış bir veri güveni düzeyi bulunmuyor.",
       details: context.chatContext.confidenceRationale ? [context.chatContext.confidenceRationale] : [],
       evidence: [confidence ?? "", context.chatContext.confidenceRationale ?? ""].filter(Boolean),
       limitations: [...context.chatContext.limitations, standardLimit],
@@ -1996,11 +2163,25 @@ function resolveSingleDnaChat(
     : missingCaseContextResponse(safety, routed.intent)
 }
 
+// A known topic is evidence of *what* a clause refers to, not evidence that
+// it requests a separate answer. Resolve scope-modifier versus request act
+// before catalog matching. This distinction is shared by execution and the
+// unchanged runtime assurance through splitDnaChatQuestion.
+function questionClauseAct(normalized: string): "request" | "scope_modifier" | "unspecified" {
+  const explicitRequest = /\b(?:nedir|neler|neden|nasil|hangi|neyi|ne demek|ne diyor|ne zaman|olur mu|midir|mudur|misin)\b/.test(normalized)
+    || /\b(?:anlat|acikla|ozetle|listele|goster|karsilastir|degerlendir|yorumla|tanimla|aktar|belirt|say|ver)(?:r|ir|ar|er|ur|abilir|ebilir)?\b/.test(normalized)
+    || /\b(?:tani\w*\s+koy\w*|teshis\w*\s+et\w*|ilac\w*\s+yaz\w*|tedavi\w*\s+oner\w*|seans\w*\s+planla\w*)\b/.test(normalized)
+  if (explicitRequest) return "request"
+  return /^(?:(?:ama|fakat|ancak)\s+)?(?:sadece|yalniz|yalnizca)\b/.test(normalized)
+    ? "scope_modifier" : "unspecified"
+}
+
 function splitDnaChatQuestion(question: string): { parts: string[]; overflow: boolean } {
   const questionMarker = /\b(?:ne|nedir|ne demek|ne diyor|nasil|neden|hangi|neyi|olur mu|midir|mudur|misin|anlat\w*|acikla\w*|bilgi\s+ver\w*|degerlendiril\w*|kapsar\w*|gosterir mi|iliskili mi|olcumu|kaniti|kaynagi|kaynaklari|gelisimi|yas kapsami|tani\w*\s+koy\w*|teshis\w*\s+et\w*|ilac\w*\s+yaz\w*|tedavi\w*\s+oner\w*|seans\w*\s+planla\w*)\b/
   const independentPart = (part: string): boolean => {
     const normalized = normalizeDnaChatText(part)
     if (normalized.replace(/\d/g, "").length < 2) return false
+    if (questionClauseAct(normalized) === "scope_modifier" && !emptySafety(part).blocked) return false
     if (/^(?:kisaca|dogrudan|acikca|oncelikle|basitce|guvenli bicimde|klinik siniri gozeterek|kaynak sinirini koruyarak|kisisel veri kullanmadan|yeni varsayim eklemeden)$/.test(normalized)) {
       return false
     }
@@ -2042,7 +2223,8 @@ function splitDnaChatQuestion(question: string): { parts: string[]; overflow: bo
       ? [rawQuestionMarkCandidates[0], `${rawQuestionMarkCandidates[1]}? ${rawQuestionMarkCandidates[2]}`]
       : rawQuestionMarkCandidates
   const questionMarkParts = questionMarkCandidates.length > 1 && questionMarkCandidates.every((part) =>
-    questionMarker.test(normalizeDnaChatText(part)))
+    (questionClauseAct(normalizeDnaChatText(part)) !== "scope_modifier" || emptySafety(part).blocked)
+      && questionMarker.test(normalizeDnaChatText(part)))
     ? questionMarkCandidates
     : []
   const structuralCandidates = question
@@ -2516,20 +2698,34 @@ function combineDnaChatResponses(
 }
 
 export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
-  const question = String(request?.question ?? "").trim()
-  const safety = emptySafety(question)
-  if (mustRefuseWholeMessage(safety, question)) return refusalResponse(safety)
-  if (question.length < 2 || question.length > 600) {
+  const userQuestion = String(request?.question ?? "").trim()
+  const reportAdaptation = adaptDnaReportConversationQuestion({
+    question: userQuestion,
+    previousTopic: request.previousTopic,
+    hasCaseContext: Boolean(request.caseContext),
+  })
+  const question = reportAdaptation.scope === "report"
+    ? reportAdaptation.canonicalQuestion
+    : userQuestion
+  const safety = emptySafety(reportAdaptation.safeQuestionForSafetyGate)
+  if (mustRefuseWholeMessage(safety, reportAdaptation.safeQuestionForSafetyGate)) {
+    return refusalResponse(safety)
+  }
+  if (userQuestion.length < 2 || userQuestion.length > 600) {
     return clarificationResponse(
       safety,
       "Soru 2-600 karakter arasında olmalı ve en fazla iki açık başlığa odaklanmalıdır.",
     )
   }
-  if (normalizeDnaChatText(question).replace(/\d/g, "").length < 2) {
+  if (normalizeDnaChatText(userQuestion).replace(/\d/g, "").length < 2) {
     return clarificationResponse(
       safety,
       "Lütfen en az bir anlamlı kavram içeren kısa ve açık bir soru yazın.",
     )
+  }
+
+  if (reportAdaptation.scope === "control") {
+    return reportConversationControlResponse(safety, reportAdaptation.control)
   }
 
   const socialConversation = resolveDnaChatSocialConversation(question)
@@ -2629,5 +2825,5 @@ export function resolveDnaChat(request: DnaChatRequest): DnaChatResponse {
     routingQuestion,
     routingSafety,
   )
-  return preserveVerifiedFollowUpTopics(response, question, request)
+  return preserveVerifiedFollowUpTopics(response, userQuestion, request)
 }

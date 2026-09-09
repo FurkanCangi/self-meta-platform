@@ -146,7 +146,7 @@ for (const [index, [message, targets]] of multiActMessages.entries()) {
   assert.equal(result.contract.requestedSemanticTasks.includes("example"), true, message)
   assertTargets(result.contract, targets, message)
   const kinds = result.contract.obligations.map((row) => row.kind)
-  for (const kind of ["distinguish_targets", "explain_relation", "give_concrete_example", "bind_example_to_target"] as const) {
+  for (const kind of ["distinguish_targets", "give_concrete_example", "bind_example_to_target"] as const) {
     assert.equal(kinds.includes(kind), true, `${message}: missing ${kind}`)
   }
   const sharedRequested = /aynı örnekte/u.test(message)
@@ -197,6 +197,84 @@ assertTargets(simplify.contract, ["attention"], "simplify")
 assert.equal(simplify.contract.presentation.preserveMeaning, true)
 assert.equal(simplify.contract.referent.turnId, "B1-DISC-T02")
 
+let reformattedComparisonState = createEmptyStudentConversationState()
+reformattedComparisonState = append(reformattedComparisonState, "B1-REFORMAT-T01", "öz düzenleme ne demek")
+reformattedComparisonState = append(
+  reformattedComparisonState,
+  "B1-REFORMAT-T02",
+  "öz düzenleme ile dikkati karşılaştır",
+)
+const reformattedComparison = resolve(
+  "B1-REFORMAT-T03",
+  "tablo yapma düz anlat bi de günlük hayattan minicik örnek ekle",
+  reformattedComparisonState,
+)
+assert.equal(reformattedComparison.contract.semanticTask, "example")
+assert.equal(reformattedComparison.contract.presentation.preserveMeaning, true)
+assert.equal(reformattedComparison.contract.referent.turnId, "B1-REFORMAT-T02")
+assertTargets(reformattedComparison.contract, ["self_regulation", "attention"], "reformatted comparison")
+assert.equal(reformattedComparison.contract.requestedSemanticTasks.includes("compare"), true)
+assert.equal(reformattedComparison.contract.requestedSemanticTasks.includes("example"), true)
+assert.equal(
+  reformattedComparison.contract.requestedSemanticTasks.includes("daily_life"),
+  false,
+  "daily-life example context must not become a separate daily-life outcome request",
+)
+assert.deepEqual(reformattedComparison.contract.comparisonTargetIds, ["self_regulation", "attention"])
+for (const kind of ["distinguish_targets", "give_concrete_example", "bind_example_to_target"] as const) {
+  assert.equal(reformattedComparison.contract.obligations.some((row) => row.kind === kind), true, `reformatted comparison: missing ${kind}`)
+}
+
+const standaloneDailyExample = resolve(
+  "B1-REFORMAT-T04",
+  "günlük hayattan minicik bir örnek ver",
+  reformattedComparisonState,
+)
+assert.equal(standaloneDailyExample.contract.semanticTask, "example")
+assert.equal(standaloneDailyExample.contract.requestedSemanticTasks.includes("daily_life"), false)
+
+const actualDailyMeaning = resolve(
+  "B1-REFORMAT-T05",
+  "dikkatin günlük yaşamdaki anlamını açıkla",
+  reformattedComparisonState,
+)
+assert.equal(actualDailyMeaning.contract.requestedSemanticTasks.includes("daily_life"), true)
+
+let implicitExampleState = createEmptyStudentConversationState()
+implicitExampleState = append(implicitExampleState, "B1-IMPLICIT-EXAMPLE-T01", "öz düzenleme ne demek")
+implicitExampleState = append(implicitExampleState, "B1-IMPLICIT-EXAMPLE-T02", "öz denetimle aynı mı")
+const implicitSingleExample = resolve(
+  "B1-IMPLICIT-EXAMPLE-T03",
+  "bir öğrenci üzerinden kısa örnek versene",
+  implicitExampleState,
+)
+assertTargets(implicitSingleExample.contract, ["self_regulation"], "implicit single example after comparison")
+const explicitPairExample = resolve(
+  "B1-IMPLICIT-EXAMPLE-T04",
+  "bunu bir öğrenci üzerinden kısa örnekle anlat",
+  implicitExampleState,
+)
+assertTargets(explicitPairExample.contract, ["self_regulation", "self_control"], "explicit pair example after comparison")
+const describedPairExample = resolve(
+  "B1-IMPLICIT-EXAMPLE-T05",
+  "derste arkadaşının sözünü kesen bir öğrenci üzerinden kısa örnek ver",
+  implicitExampleState,
+)
+assertTargets(describedPairExample.contract, ["self_regulation", "self_control"], "described pair example after comparison")
+
+const userSuppliedCaseExample = resolve(
+  "B1-CASE-EXAMPLE-T01",
+  "öğretmen yanına gelip yavaş konuşunca çocuk sakinleşip oyuna dönüyor bu eş düzenleme mi bi örnek gibi anlat",
+)
+assert.equal(userSuppliedCaseExample.contract.semanticTask, "example")
+assert.equal(userSuppliedCaseExample.contract.safetyIntent, "case_interpretation")
+assert.equal(userSuppliedCaseExample.contract.observationScope.singleObservationLimit, true)
+assert.deepEqual(userSuppliedCaseExample.contract.obligations.map((row) => row.kind), [
+  "give_concrete_example",
+  "bind_example_to_target",
+  "state_single_observation_limit",
+])
+
 let caseState = createEmptyStudentConversationState()
 caseState = append(caseState, "B1-CASE-T01", "interosepsiyon ne demek")
 caseState = append(caseState, "B1-CASE-T02", "interosepsiyonu çocuk üzerinden örnekle anlat")
@@ -215,7 +293,7 @@ if (ambiguousReturn.ok || ambiguousReturn.reason !== "closed_slot_failure") thro
 assert.equal(ambiguousReturn.failureCode, "referent_choice_required")
 
 const total = explicitMorphology.length + keyboardVariants.length + ordinaryBehaviorMessages.length +
-  treatmentNoiseMessages.length + multiActMessages.length + broadSummaries.length + scopedSummaries.length + 5
+  treatmentNoiseMessages.length + multiActMessages.length + broadSummaries.length + scopedSummaries.length + 12
 
 console.log(JSON.stringify({
   ok: true,
@@ -235,5 +313,8 @@ console.log(JSON.stringify({
     broadSummary: broadSummaries.length,
     scopedSummary: scopedSummaries.length,
     discourseAndReferent: 5,
+    reformatContinuation: 3,
+    implicitExampleFocus: 3,
+    userSuppliedCaseExample: 1,
   },
 }, null, 2))

@@ -23,6 +23,14 @@ export {
   resolveDnaChatSocialConversation,
 } from "./socialConversation"
 export {
+  DNA_REPORT_CONVERSATION_ADAPTER_VERSION,
+  adaptDnaReportConversationQuestion,
+} from "./reportConversationAdapter"
+export type {
+  DnaReportConversationAdaptation,
+  DnaReportConversationTarget,
+} from "./reportConversationAdapter"
+export {
   DNA_CHAT_RUNTIME_ASSURANCE_VERSION,
   evaluateDnaChatRuntimeAssurance,
 } from "./runtimeAssurance"

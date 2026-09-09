@@ -1,9 +1,16 @@
-export const DNA_STUDENT_FIRST_CONVERSATION_VERSION = "dna-student-conversation-state@8" as const
-export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@20" as const
+export const DNA_STUDENT_FIRST_CONVERSATION_VERSION = "dna-student-conversation-state@11" as const
+export const DNA_STUDENT_FIRST_REQUEST_VERSION = "dna-student-request-contract@29" as const
 
 export type StudentSemanticTask =
   | "define"
   | "explain"
+  | "significance"
+  | "relate"
+  | "deepen"
+  | "boundary"
+  | "measurement"
+  | "mechanism"
+  | "daily_life"
   | "compare"
   | "example"
   | "case_reasoning"
@@ -65,11 +72,27 @@ export type StudentCaseEventId =
 
 export type StudentCaseContext = Readonly<{
   eventIds: readonly StudentCaseEventId[]
+  describedSituation?: true
+  rawMessageStored: false
+}>
+
+export type StudentCaseHistoryContext = Readonly<{
+  turnIds: readonly string[]
+  eventIds: readonly StudentCaseEventId[]
   rawMessageStored: false
 }>
 
 export type StudentAnswerObligationKind =
   | "define_target"
+  | "explain_target"
+  | "explain_source_evidence"
+  | "explain_significance"
+  | "deepen_with_new_information"
+  | "state_evidence_limit"
+  | "avoid_causal_overclaim"
+  | "describe_measurement_scope"
+  | "explain_mechanism"
+  | "explain_daily_life_meaning"
   | "distinguish_targets"
   | "contrast_target_states"
   | "state_context_dependency"
@@ -112,6 +135,7 @@ export type StudentRequestContract = Readonly<{
   referent: StudentReferent
   caseContext: StudentCaseContext
   referentCaseContext: StudentCaseContext | null
+  caseHistoryContext: StudentCaseHistoryContext | null
   presentation: StudentPresentationRequest
   summaryScope: StudentSummaryScope
   observationScope: StudentObservationScope

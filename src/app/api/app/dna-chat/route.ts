@@ -55,6 +55,10 @@ import {
 import { evaluateDnaS13LimitedBudget } from "@/lib/dna/chat/s13/limitedRollout/telemetry"
 import { DNA_INTELLIGENCE_INTENDED_USE_VERSION } from "@/lib/dna/chat/intendedUse"
 import { DNA_KNOWLEDGE_AUTHORITY_CONTRACT_VERSION } from "@/lib/dna/chat/knowledgeAuthority"
+import type { DnaChatApiResolverDependencies } from "@/lib/dna/chat/apiResolver"
+import { resolveStudentApplicationTurn, studentLocalCandidateEnabled } from "@/lib/dna/chat/studentFirst/applicationTurn.server"
+import { STUDENT_APPLICATION_TOKEN_MAX_LENGTH } from "@/lib/dna/chat/studentFirst/applicationContext.server"
+import { studentCandidateSha256 } from "../../../../../scripts/dna-student-candidate-identity"
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
@@ -74,6 +78,7 @@ const dnaChatPostSchema = z
     reportId: z.string().uuid().optional(),
     conversationId: z.string().uuid().optional(),
     limitedRolloutContextToken: z.string().trim().min(16).max(2_048).optional(),
+    studentContextToken: z.string().min(40).max(STUDENT_APPLICATION_TOKEN_MAX_LENGTH).regex(/^[A-Za-z0-9_-]+$/).optional(),
     context: z
       .object({
         previousTopic: z.string().trim().min(1).max(120).optional(),
@@ -411,10 +416,38 @@ export async function POST(request: Request) {
     const {
       conversationId,
       limitedRolloutContextToken,
+      studentContextToken,
       ...payload
     } = parsed.data
     const requestId = crypto.randomUUID()
     const lunaSafetyIdentifier = createDnaChatLunaSafetyIdentifier(auth.user.id)
+    const normalDependencies: DnaChatApiResolverDependencies = {
+      createRequestId: () => requestId,
+      resolveRuntimeAnswer: (input) => resolveCommittedDnaChatRuntime({ ...input, rolloutSubjectKey: auth.user.id }),
+      loadCaseAnswer: async ({ reportId, question, mode, previousTopic, conversationContext, responseDepth }) => {
+        const recentReports = await timing.measure("report_list", () => listOwnReports(auth.user.id))
+        if (!recentReports.ok) return { ok: false, status: 500, error: "dna_chat_failed" }
+        if (!recentReports.reports.some((report) => report.id === reportId)) {
+          return { ok: false, status: 404, error: "report_not_found" }
+        }
+        return timing.measure("case_answer", () => resolveOwnedDnaCaseAnswer({
+          userId: auth.user.id, reportId, question, mode, previousTopic, conversationContext, responseDepth,
+        }))
+      },
+      writeAudit: (auditInput) => timing.measure("audit_write", () => writeDnaChatAudit({ userId: auth.user.id, ...auditInput })),
+    }
+    if (studentLocalCandidateEnabled()) {
+      if (!conversationId || limitedRolloutContextToken) return finish(errorResponse("invalid_payload", 400), requestId)
+      const resolution = await timing.measure("runtime_resolution", () => resolveStudentApplicationTurn({
+        payload, contextToken: studentContextToken, normal: normalDependencies, safetyIdentifier: lunaSafetyIdentifier,
+        binding: { actorId: auth.user.id, conversationId, candidateSha256: studentCandidateSha256(),
+          secret: process.env[DNA_S13_LIMITED_ROLLOUT_ENV.contextSecret]?.trim() || "" },
+      }))
+      return finish(json(resolution.body, { status: resolution.status }), requestId)
+    }
+    // A token from a disabled/changed candidate is never downgraded to a
+    // different engine with silently discarded history.
+    if (studentContextToken) return finish(errorResponse("dna_chat_unavailable", 503), requestId)
     const limitedConfig = resolveDnaS13LimitedRolloutConfig()
     const limitedGate = resolveDnaS13LimitedRolloutGate({
       config: limitedConfig,
@@ -614,35 +647,7 @@ export async function POST(request: Request) {
             rolloutSubjectKey: auth.user.id,
           }),
     )
-    const resolution = await timing.measure("runtime_resolution", () => resolveDnaChatApiRequest(prepared.payload, {
-      createRequestId: () => requestId,
-      // The authenticated owner ID is used only as the deterministic rollout
-      // bucket input. It is never exposed in the answer or audit metadata.
-      resolveRuntimeAnswer: (input) => resolveCommittedDnaChatRuntime({
-        ...input,
-        rolloutSubjectKey: auth.user.id,
-      }),
-      loadCaseAnswer: async ({ reportId, question, mode, previousTopic, conversationContext, responseDepth }) => {
-        const recentReports = await timing.measure("report_list", () => listOwnReports(auth.user.id))
-        if (!recentReports.ok) return { ok: false, status: 500, error: "dna_chat_failed" }
-        if (!recentReports.reports.some((report) => report.id === reportId)) {
-          return { ok: false, status: 404, error: "report_not_found" }
-        }
-        return timing.measure("case_answer", () => resolveOwnedDnaCaseAnswer({
-          userId: auth.user.id,
-          reportId,
-          question,
-          mode,
-          previousTopic,
-          conversationContext,
-          responseDepth,
-        }))
-      },
-      writeAudit: (auditInput) => timing.measure(
-        "audit_write",
-        () => writeDnaChatAudit({ userId: auth.user.id, ...auditInput }),
-      ),
-    }))
+    const resolution = await timing.measure("runtime_resolution", () => resolveDnaChatApiRequest(prepared.payload, normalDependencies))
 
     let responseBody = resolution.body
     let polishTrace: DnaChatLunaStageTrace | null = null

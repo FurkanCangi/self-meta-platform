@@ -183,6 +183,9 @@ export function resolveCommittedDnaChatRuntime(input: Readonly<{
       previousTopic: input.previousTopic,
       conversationContext: input.conversationContext,
       caseContext: input.caseContext ?? undefined,
+      // The runtime selector must preserve the same presentation request as
+      // the direct engine/API path, including an explicit short or deep choice.
+      responseDepth: input.responseDepth ?? undefined,
     }))
   }
 

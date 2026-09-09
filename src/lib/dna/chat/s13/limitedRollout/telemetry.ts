@@ -6,6 +6,7 @@ import {
 
 export const DNA_S13_LIMITED_TELEMETRY_VERSION = "dna-s13-limited-rollout-telemetry@1" as const
 export const DNA_S13_LIMITED_READOUT_VERSION = "dna-s13-limited-rollout-readout@1" as const
+export const DNA_S13_LIMITED_TELEMETRY_MAX_ROUTING_ITEMS = 8
 
 export type DnaS13LimitedTelemetryRecord = Readonly<{
   schemaVersion: typeof DNA_S13_LIMITED_TELEMETRY_VERSION
@@ -139,9 +140,9 @@ export function validateDnaS13LimitedTelemetryRecord(input: unknown): DnaS13Limi
     || !HASH.test(row.conversationIdHash)
     || !["L0", "L1", "L2", "L3"].includes(row.rolloutPhase)) return null
   if (!isRecord(row.routing)
-    || !safeCodes(row.routing.intents, 2)
-    || !safeCodes(row.routing.topicIds, 2)
-    || !safeCodes(row.routing.questionTypes, 2)
+    || !safeCodes(row.routing.intents, DNA_S13_LIMITED_TELEMETRY_MAX_ROUTING_ITEMS)
+    || !safeCodes(row.routing.topicIds, DNA_S13_LIMITED_TELEMETRY_MAX_ROUTING_ITEMS)
+    || !safeCodes(row.routing.questionTypes, DNA_S13_LIMITED_TELEMETRY_MAX_ROUTING_ITEMS)
     || typeof row.routing.operation !== "string"
     || !SAFE_CODE.test(row.routing.operation)
     || [row.routing.followUp, row.routing.correction, row.routing.contextInherited, row.routing.parserUncertainty]

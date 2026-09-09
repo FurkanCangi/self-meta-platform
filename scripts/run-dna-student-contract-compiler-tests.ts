@@ -2,9 +2,11 @@ import assert from "node:assert/strict"
 
 import {
   applyStudentRequestContract,
+  buildStudentAnswerExecutionPlan,
   compileStudentRequestContract,
   compileStudentAnswerObligations,
   createEmptyStudentConversationState,
+  resolveStudentEvidenceFirstRequest,
   validateStudentSemanticFrameDetailed,
   type StudentObligationCompilationInput,
 } from "../src/lib/dna/chat/studentFirst"
@@ -45,12 +47,83 @@ assert.deepEqual(kinds({
 
 assert.deepEqual(kinds({
   ...base,
+  semanticTask: "significance",
+  requestedSemanticTasks: ["significance"],
+}), ["explain_target", "explain_significance"])
+
+assert.deepEqual(kinds({
+  ...base,
+  semanticTask: "relate",
+  requestedSemanticTasks: ["relate"],
+  targetIds: ["interoception", "emotion_regulation"],
+}), ["explain_relation"])
+
+assert.deepEqual(kinds({
+  ...base,
+  semanticTask: "deepen",
+  requestedSemanticTasks: ["deepen"],
+}), ["deepen_with_new_information"])
+
+assert.deepEqual(kinds({
+  ...base,
+  semanticTask: "boundary",
+  requestedSemanticTasks: ["boundary"],
+}), ["explain_target", "state_evidence_limit", "avoid_causal_overclaim"])
+
+assert.deepEqual(kinds({
+  ...base,
+  semanticTask: "measurement",
+  requestedSemanticTasks: ["measurement"],
+}), ["explain_target", "describe_measurement_scope", "state_evidence_limit"])
+
+assert.deepEqual(kinds({
+  ...base,
+  semanticTask: "evidence",
+  requestedSemanticTasks: ["evidence"],
+// Existing compiler @29 already requires source content as well as the limit.
+// Align this legacy unit assertion; no frozen gold, threshold, or compiler edit.
+}), ["explain_source_evidence", "state_evidence_limit"])
+
+assert.deepEqual(kinds({
+  ...base,
+  semanticTask: "mechanism",
+  requestedSemanticTasks: ["mechanism"],
+}), ["explain_mechanism"])
+
+assert.deepEqual(kinds({
+  ...base,
+  semanticTask: "daily_life",
+  requestedSemanticTasks: ["daily_life"],
+}), ["explain_daily_life_meaning"])
+
+assert.deepEqual(kinds({
+  ...base,
+  semanticTask: "define",
+  requestedSemanticTasks: ["define", "explain", "boundary", "mechanism", "daily_life"],
+}), [
+  "define_target",
+  "explain_mechanism",
+  "explain_daily_life_meaning",
+  "state_evidence_limit",
+  "avoid_causal_overclaim",
+])
+
+assert.deepEqual(kinds({
+  ...base,
   semanticTask: "compare",
   requestedSemanticTasks: ["compare"],
   conversationAction: "continue",
   targetIds: ["executive_functions", "inhibition"],
   comparisonTargetIds: ["executive_functions", "inhibition"],
-}), ["distinguish_targets", "explain_relation"], "active comparison must not invent history/component obligations")
+}), ["distinguish_targets"], "comparison alone must not invent relation/history/component obligations")
+
+assert.deepEqual(kinds({
+  ...base,
+  semanticTask: "compare",
+  requestedSemanticTasks: ["compare", "relate"],
+  targetIds: ["executive_functions", "inhibition"],
+  comparisonTargetIds: ["executive_functions", "inhibition"],
+}), ["distinguish_targets", "explain_relation"], "an explicit relation request remains mandatory")
 
 assert.deepEqual(kinds({
   ...base,
@@ -67,7 +140,7 @@ assert.deepEqual(kinds({
   conversationAction: "summarize_session",
   targetIds: ["executive_functions", "inhibition", "working_memory", "planning"],
   summaryScope: { known: true, unknown: true, observationFocus: true },
-}), ["summarize_known", "summarize_unknown", "summarize_observation_focus"])
+}), ["summarize_known", "distinguish_targets", "summarize_unknown", "summarize_observation_focus"])
 
 assert.deepEqual(kinds({
   ...base,
@@ -77,7 +150,7 @@ assert.deepEqual(kinds({
   targetIds: ["arousal", "sensory_regulation"],
   comparisonTargetIds: ["arousal", "sensory_regulation"],
   observationScope: { singleObservationLimit: true, additionalContext: true },
-}), ["distinguish_targets", "explain_relation", "state_single_observation_limit", "name_additional_context"])
+}), ["distinguish_targets", "state_single_observation_limit", "name_additional_context"])
 
 assert.deepEqual(kinds({
   ...base,
@@ -98,7 +171,7 @@ assert.deepEqual(kinds({
   targetIds: ["planning", "inhibition", "emotion_regulation"],
   componentTargetIds: ["planning", "inhibition", "emotion_regulation"],
   historyAnchorRequired: true,
-}), ["define_target", "use_history_anchor", "cover_requested_component", "cover_requested_component", "cover_requested_component"])
+  }), ["explain_target", "use_history_anchor", "cover_requested_component", "cover_requested_component", "cover_requested_component"])
 
 assert.deepEqual(kinds({
   ...base,
@@ -108,7 +181,7 @@ assert.deepEqual(kinds({
   targetIds: ["planning", "working_memory"],
   comparisonTargetIds: ["planning", "working_memory"],
   presentation: { ...base.presentation, example: "brief" },
-}), ["distinguish_targets", "explain_relation", "give_concrete_example", "bind_example_to_target"])
+}), ["distinguish_targets", "give_concrete_example", "bind_example_to_target"])
 
 assert.deepEqual(kinds({
   ...base,
@@ -118,7 +191,7 @@ assert.deepEqual(kinds({
   targetIds: ["planning", "working_memory"],
   comparisonTargetIds: ["planning", "working_memory"],
   presentation: { ...base.presentation, example: "brief", exampleScope: "shared" },
-}), ["distinguish_targets", "explain_relation", "give_concrete_example", "bind_example_to_target", "use_shared_scenario"])
+}), ["distinguish_targets", "give_concrete_example", "bind_example_to_target", "use_shared_scenario"])
 
 assert.deepEqual(kinds({
   ...base,
@@ -215,7 +288,7 @@ const actionCompatibilityMatrix: readonly Readonly<{
       comparisonTargetIds: ["planning", "working_memory"],
       presentation: { ...base.presentation, example: "concrete" },
     },
-    expected: ["distinguish_targets", "explain_relation", "give_concrete_example", "bind_example_to_target"],
+    expected: ["distinguish_targets", "give_concrete_example", "bind_example_to_target"],
   },
   {
     name: "observation and supporting explanation",
@@ -258,6 +331,13 @@ for (const row of actionCompatibilityMatrix) {
 const semanticActs = (...enabled: readonly string[]) => Object.freeze({
   define: enabled.includes("define"),
   explain: enabled.includes("explain"),
+  significance: enabled.includes("significance"),
+  relate: enabled.includes("relate"),
+  deepen: enabled.includes("deepen"),
+  boundary: enabled.includes("boundary"),
+  measurement: enabled.includes("measurement"),
+  mechanism: enabled.includes("mechanism"),
+  daily_life: enabled.includes("daily_life"),
   compare: enabled.includes("compare"),
   example: enabled.includes("example"),
   case_reasoning: enabled.includes("case_reasoning"),
@@ -301,7 +381,7 @@ assert.deepEqual(integratedContract.targetIds, ["executive_functions", "inhibiti
 assert.deepEqual(integratedContract.comparisonTargetIds, ["executive_functions", "inhibition"])
 assert.deepEqual(integratedContract.referent, { kind: "active", role: "utterance", turnId: "GROUPING-T01", targetIds: ["executive_functions"] })
 assert.deepEqual(integratedContract.componentTargetIds, [])
-assert.deepEqual(integratedContract.obligations.map((row) => row.kind), ["distinguish_targets", "explain_relation"])
+assert.deepEqual(integratedContract.obligations.map((row) => row.kind), ["distinguish_targets"])
 const comparisonState = applyStudentRequestContract(activeState, integratedContract)
 
 const presentationOnlyValidation = validateStudentSemanticFrameDetailed({
@@ -412,6 +492,7 @@ const summaryContract = compileStudentRequestContract("GROUPING-T05", summaryVal
 assert.deepEqual(summaryContract.targetIds, ["executive_functions", "inhibition"])
 assert.deepEqual(summaryContract.obligations.map((row) => row.kind), [
   "summarize_known",
+  "distinguish_targets",
   "summarize_unknown",
   "summarize_observation_focus",
 ])
@@ -446,16 +527,46 @@ if (!separateValidation.ok) throw new Error(separateValidation.failureCode)
 const separateContract = compileStudentRequestContract("GROUPING-T07", separateValidation.frame, emptyState)
 assert.deepEqual(separateContract.componentTargetIds, ["planning", "inhibition", "emotion_regulation"])
 assert.deepEqual(separateContract.obligations.map((row) => row.kind), [
-  "define_target",
+  "explain_target",
   "cover_requested_component",
   "cover_requested_component",
   "cover_requested_component",
 ])
 
+const multipartQuestion = "hocam Regülasyon Güçlüğünün Katılımı Azaltması tam olarak ne demek ya, kısa tanım deil net anlatır mısın Uzun ve detaylı anlat; mekanizma, günlük yaşamdaki anlam ve kanıt sınırını birlikte açıkla."
+const multipartResolution = resolveStudentEvidenceFirstRequest({
+  turnId: "MULTIPART-T01",
+  message: multipartQuestion,
+  state: emptyState,
+})
+if (!multipartResolution.ok) throw new Error(`multipart contract: ${multipartResolution.reason}`)
+assert.equal(multipartResolution.contract.semanticTask, "define")
+assert.equal(multipartResolution.contract.presentation.depth, "deep")
+assert.deepEqual(multipartResolution.contract.requestedSemanticTasks, [
+  "define", "explain", "deepen", "boundary", "mechanism", "daily_life", "evidence",
+])
+assert.deepEqual(multipartResolution.contract.obligations.map((row) => row.kind), [
+  "define_target",
+  "deepen_with_new_information",
+  "explain_mechanism",
+  "explain_daily_life_meaning",
+  "state_evidence_limit",
+  "avoid_causal_overclaim",
+])
+assert.match(
+  multipartResolution.contract.obligations.find((row) => row.kind === "explain_daily_life_meaning")!.description,
+  /kaynak bu sonucu sunmuyorsa hedefe özgü günlük yaşam kanıt sınırını açıkça belirt/u,
+)
+const multipartPlan = buildStudentAnswerExecutionPlan({
+  question: multipartQuestion,
+  contract: multipartResolution.contract,
+})
+assert.deepEqual(multipartPlan.presentation.depth, "deep")
+
 console.log(JSON.stringify({
   ok: true,
   gate: "STUDENT_OBLIGATION_COMPILER_LOCAL",
-  cases: 33,
+  cases: 42,
   actionCompatibilityMatrixCases: actionCompatibilityMatrix.length,
   providerOwnsFinalObligations: false,
   deterministicCompilation: true,

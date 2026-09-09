@@ -21,7 +21,7 @@ const HARNESS_VERSION = "dna-student-evidence-first-student40@1" as const
 const FIXTURE_PATH = "scripts/dna-student-fixtures/STUDENT40_DEVELOPMENT.json"
 const EXPECTED_FIXTURE_SHA256 = "e8bf1368ea3f3ea5c09ba710a90c6e4f16a64e1d4f0388339c43c42b734f0a65"
 const TASKS: readonly StudentSemanticTask[] = Object.freeze([
-  "define", "explain", "compare", "example", "case_reasoning", "summarize",
+  "define", "explain", "significance", "relate", "deepen", "boundary", "measurement", "mechanism", "daily_life", "compare", "example", "case_reasoning", "summarize",
   "observe", "evidence", "treatment_boundary",
 ])
 

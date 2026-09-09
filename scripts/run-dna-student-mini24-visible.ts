@@ -2,18 +2,16 @@ import assert from "node:assert/strict"
 import { createHash } from "node:crypto"
 import { existsSync, readFileSync } from "node:fs"
 import dotenv from "dotenv"
+import { studentCandidateSha256 as candidateSha256, STUDENT_CANDIDATE_IDENTITY_VERSION } from "./dna-student-candidate-identity"
 
 import { calculateDnaChatLunaUsage } from "../src/lib/dna/chat/lunaUsage"
 import { requestDnaS13StructuredOutputDetailed, type DnaS13ProviderUsage } from "../src/lib/dna/chat/s13/server"
 import {
-  applyStudentRequestContract,
-  createEmptyStudentConversationState,
-  resolveStudentEvidenceFirstRequest,
   type StudentAnswerExecutionPlan,
-  type StudentConversationState,
   type StudentRequestContract,
 } from "../src/lib/dna/chat/studentFirst"
-import { executeStudentAnswer } from "../src/lib/dna/chat/studentFirst/answerExecutor.server"
+import { configuredStudentReplaySession, studentApplicationReplaySha256, STUDENT_REPLAY_AUTHORITY, STUDENT_REPLAY_CLOCK } from "./dna-student-application-replay"
+import { journalApplicationTurn, openStudentReplayJournal } from "./dna-student-replay-journal"
 
 dotenv.config({ path: ".env.local", override: false, quiet: true })
 
@@ -69,6 +67,7 @@ const ROOT_CANDIDATES = [
 const FIXTURE_SHA256 = "9f146c18fe4cccf2a54aa4fa4aecd038dfecff3aee81e751f2308e6ea3845adc"
 const GOLD_SHA256 = "2a54904a77979b381948d7815f832013720b127a4199989087b9e3183723bc50"
 const MAX_TOTAL_COST_MICROUSD = 350_000
+const ONLY_TURN = process.env.DNA_MINI24_ONLY_TURN?.trim() || null
 const ZERO_USAGE: DnaS13ProviderUsage = Object.freeze({ inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 })
 const FAILURE_CODES = [
   "WRONG_TARGET", "WRONG_REFERENT", "HISTORY_DISCONTINUITY", "WRONG_BUT_TRUE", "MISSING_OBLIGATION",
@@ -203,8 +202,8 @@ function parseJudgment(value: unknown, gold: GoldRow): GoldJudgment | null {
 async function judge(input: Readonly<{
   gold: GoldRow
   answer: string
-  contract: StudentRequestContract
-  plan: StudentAnswerExecutionPlan
+  contract: StudentRequestContract | null
+  plan: StudentAnswerExecutionPlan | null
   visibleHistory: readonly Readonly<{ turnId: string; user: string; assistant: string }>[]
 }>) {
   const requiredTurnId = input.gold.requiredReferent ?? input.gold.requiredHistoryAnchor
@@ -220,14 +219,14 @@ async function judge(input: Readonly<{
       requiredOlderTurn,
       currentStudentMessage: input.gold.rawUserMessage,
       immutableGold: input.gold,
-      implementationContractForTraceOnly: {
+      implementationContractForTraceOnly: input.contract ? {
         operation: input.contract.semanticTask,
         activeTargetIds: input.contract.targetIds,
         rejectedTargetIds: input.contract.rejectedTargetIds,
         referent: input.contract.referent,
-      },
-      lockedEvidence: input.plan.targetEvidence,
-      policyUnits: input.plan.policyUnits,
+      } : null,
+      lockedEvidence: input.plan?.targetEvidence ?? null,
+      policyUnits: input.plan?.policyUnits ?? null,
       visibleAnswer: input.answer,
     }),
     maxOutputTokens: 1_200,
@@ -254,49 +253,63 @@ async function main() {
   assert.equal(fixture.fixtureId, gold.fixtureId)
   assert.equal(gold.rows.length, 24)
   const goldByTurn = new Map(gold.rows.map((row) => [row.turnId, row]))
+  if (ONLY_TURN) assert.ok(goldByTurn.has(ONLY_TURN), `unknown Mini24 turn:${ONLY_TURN}`)
+  const candidate = candidateSha256()
+  const replaySha256 = studentApplicationReplaySha256(["scripts/run-dna-student-mini24-visible.ts",
+    `${root}/NATURAL_MINI24_FIXTURE.json`, `${root}/NATURAL_MINI24_GOLD.json`])
+  const { journal, file: journalPath } = openStudentReplayJournal("mini24", candidate, replaySha256)
 
   let usage = ZERO_USAGE
+  let answerExecutionTurns = 0
+  let contextReconstructionTurns = 0
   let evaluatedTurns = 0
   let passTurns = 0
   let composerCalls = 0
+  let interpretationCalls = 0
+  let localSafetyAnswerTurns = 0
   let judgeCalls = 0
   let firstFailure: Record<string, unknown> | null = null
   const samples: Array<Record<string, unknown>> = []
 
   outer: for (const conversation of fixture.conversations) {
-    let state: StudentConversationState = createEmptyStudentConversationState()
+    if (ONLY_TURN && !conversation.turns.some((turn) => turn.turnId === ONLY_TURN)) continue
+    const session = configuredStudentReplaySession({ candidateSha256: candidate, replaySha256, sessionId: conversation.conversationId })
     const visibleHistory: Array<{ turnId: string; user: string; assistant: string }> = []
     for (const turn of conversation.turns) {
       const goldRow = goldByTurn.get(turn.turnId)
       assert.ok(goldRow)
       assert.equal(turn.rawUserMessage, goldRow.rawUserMessage)
-      const resolved = resolveStudentEvidenceFirstRequest({ turnId: turn.turnId, message: turn.rawUserMessage, state })
-      if (!resolved.ok) {
-        firstFailure = { turnId: turn.turnId, stage: "request_contract", reason: resolved.reason }
-        break outer
-      }
-      const execution = await executeStudentAnswer({ question: turn.rawUserMessage, contract: resolved.contract })
-      evaluatedTurns += 1
-      composerCalls += execution.provider.calls
-      usage = addUsage(usage, execution.provider.usage)
-      if (!execution.ok) {
+      const replay = await journalApplicationTurn(journal, turn.turnId, session, { question: turn.rawUserMessage })
+      answerExecutionTurns += 1
+      composerCalls += replay.student?.result.provider.calls ?? 0
+      interpretationCalls += replay.requestInterpretation?.provider.attempts ?? 0
+      localSafetyAnswerTurns += replay.providerCalls === 0 ? 1 : 0
+      usage = addUsage(usage, replay.usage)
+      const captured = replay.student
+      if (replay.status !== 200 || !replay.visibleAnswer || !replay.usageComplete) {
         firstFailure = {
-          turnId: turn.turnId,
-          stage: "answer_executor",
-          reason: execution.reason,
-          detail: execution.reason === "candidate_invalid" ? execution.failureCodes : execution.failure.reason,
+          turnId: turn.turnId, stage: "application_visible_handoff", status: replay.status,
+          reason: replay.body.error ?? "visible_answer_or_usage_unavailable", usageComplete: replay.usageComplete,
         }
         break outer
       }
-      const judged = await judge({
+      const contract = captured?.contract ?? null
+      if (ONLY_TURN && turn.turnId !== ONLY_TURN) {
+        contextReconstructionTurns += 1
+        visibleHistory.push({ turnId: turn.turnId, user: turn.rawUserMessage, assistant: replay.visibleAnswer })
+        continue
+      }
+      evaluatedTurns += 1
+      const judgeInput = {
         gold: goldRow,
-        answer: execution.answer,
-        contract: resolved.contract,
-        plan: execution.plan,
+        answer: replay.visibleAnswer,
+        contract,
+        plan: captured?.result.plan ?? null,
         visibleHistory,
-      })
+      }
+      const judged = await journal.once(`${turn.turnId}:judge`, judgeInput, () => judge(judgeInput))
       if (!judged.ok) {
-        firstFailure = { turnId: turn.turnId, stage: "gold_judge", reason: judged.reason, answer: execution.answer }
+        firstFailure = { turnId: turn.turnId, stage: "gold_judge", reason: judged.reason, answer: replay.visibleAnswer }
         break outer
       }
       judgeCalls += 1
@@ -305,42 +318,56 @@ async function main() {
         firstFailure = {
           turnId: turn.turnId,
           stage: "gold_semantic_execution",
-          answer: execution.answer,
-          contract: {
-            operation: resolved.contract.semanticTask,
-            targets: resolved.contract.targetIds,
-            obligations: resolved.contract.obligations.map((row) => row.kind),
-          },
+          answer: replay.visibleAnswer,
+          contract: contract ? {
+            operation: contract.semanticTask,
+            targets: contract.targetIds,
+            obligations: contract.obligations.map((row) => row.kind),
+          } : null,
           judgment: judged.judgment,
         }
         break outer
       }
       passTurns += 1
       if (["NMINI-C01-T03", "NMINI-C01-T10", "NMINI-C02-T08", "NMINI-C02-T11"].includes(turn.turnId)) {
-        samples.push({ turnId: turn.turnId, answer: execution.answer })
+        samples.push({ turnId: turn.turnId, answer: replay.visibleAnswer })
       }
-      visibleHistory.push({ turnId: turn.turnId, user: turn.rawUserMessage, assistant: execution.answer })
-      state = applyStudentRequestContract(state, resolved.contract)
+      if (ONLY_TURN === turn.turnId) samples.push({ turnId: turn.turnId, answer: replay.visibleAnswer })
+      // Gold history anchors retain the immutable fixture IDs. Internal
+      // application turn IDs are trace metadata, not replacements for gold IDs.
+      visibleHistory.push({ turnId: turn.turnId, user: turn.rawUserMessage, assistant: replay.visibleAnswer })
       if (calculateDnaChatLunaUsage(usage).costMicrousd > MAX_TOTAL_COST_MICROUSD) throw new Error("mini24_visible_cost_cap_exceeded")
+      if (ONLY_TURN === turn.turnId) break outer
     }
   }
 
   assert.equal(sha256(readFileSync(`${root}/NATURAL_MINI24_FIXTURE.json`)), FIXTURE_SHA256, "fixture mutated")
   assert.equal(sha256(readFileSync(`${root}/NATURAL_MINI24_GOLD.json`)), GOLD_SHA256, "gold mutated")
-  const pass = evaluatedTurns === 24 && passTurns === 24 && firstFailure === null
+  const pass = ONLY_TURN
+    ? evaluatedTurns === 1 && passTurns === 1 && firstFailure === null
+    : evaluatedTurns === 24 && passTurns === 24 && firstFailure === null
   console.log(JSON.stringify({
     ok: pass,
-    gate: "STUDENT_FROZEN_NATURAL_MINI24_VISIBLE_GOLD",
+    gate: ONLY_TURN
+      ? "STUDENT_FROZEN_NATURAL_MINI24_VISIBLE_GOLD_TARGETED_COMPLETION"
+      : "STUDENT_FROZEN_NATURAL_MINI24_VISIBLE_GOLD",
+    candidateSha256: candidate,
+    replaySha256, replayAuthority: STUDENT_REPLAY_AUTHORITY, clockAuthority: STUDENT_REPLAY_CLOCK, journalPath,
+    candidateIdentityVersion: STUDENT_CANDIDATE_IDENTITY_VERSION,
+    onlyTurn: ONLY_TURN,
     fixtureSha256: FIXTURE_SHA256,
     goldSha256: GOLD_SHA256,
     mutated: false,
     stoppedEarly: firstFailure !== null,
     evaluatedTurns,
+    answerExecutionTurns,
+    contextReconstructionTurns,
     passTurns,
     criticalFailures: firstFailure ? 1 : 0,
     firstFailure,
     composerCalls,
-    localSafetyAnswers: evaluatedTurns - composerCalls,
+    interpretationCalls,
+    localSafetyAnswers: localSafetyAnswerTurns,
     judgeCalls,
     rawOutputsStored: 0,
     usage: calculateDnaChatLunaUsage(usage),

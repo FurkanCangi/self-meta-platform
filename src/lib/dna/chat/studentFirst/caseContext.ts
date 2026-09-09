@@ -23,6 +23,17 @@ function unique<T>(values: readonly T[]): T[] {
   return [...new Set(values)]
 }
 
+// Preserve the already observed presence of a situation separately from the
+// finite event taxonomy. This does not classify an unknown event or retain text.
+export function studentCurrentSituationObserved(message: string): boolean {
+  const unquoted = message.replace(/[“«][\s\S]*?[”»]|"[^"\n]*"|(?:^|\s)'[^'\n]*'/gu, " ")
+  const normalized = normalizeDnaChatText(unquoted)
+  if (/\b(?:ornek|vaka|durum)\w*.{0,24}\b(?:verme|kurma|anlatma|istemiyorum)\b/u.test(normalized)
+    || /\b(?:cumle|ifade)\w*.{0,24}\b(?:cevir|duzelt|yazim|dilbilgisi)\w*\b/u.test(normalized)) return false
+  return /\b(?:cocu(?:k|g)|ogrenci|vaka|davranis|ornek)\w*\b/u.test(normalized)
+    && /\b(?:soz\w*.{0,16}kes|unut|don|kalk|gez|bekle|sakinles|agla|bagir|basla|bitir|terk|hareket\w*|ses\w*.{0,16}yuksel|yapam|zorlan)\w*\b/u.test(normalized)
+}
+
 export function observeStudentCaseContext(message: string): StudentCaseContext {
   const normalized = normalizeDnaChatText(message)
   const eventIds: StudentCaseEventId[] = []
@@ -60,6 +71,7 @@ export function observeStudentCaseContext(message: string): StudentCaseContext {
 
   return Object.freeze({
     eventIds: Object.freeze(unique(eventIds)),
+    ...(!eventIds.length && studentCurrentSituationObserved(message) ? { describedSituation: true as const } : {}),
     rawMessageStored: false,
   })
 }

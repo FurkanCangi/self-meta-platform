@@ -63,7 +63,7 @@ export type DnaChatApiAuditInput = {
   classification: DnaChatResponse["classification"]
   outcome: DnaChatResponse["outcome"]
   engineVersion: string
-  runtimeGeneration: DnaChatRuntimeMetadata["generation"]
+  runtimeGeneration: DnaChatRuntimeMetadata["generation"] | "student_first_candidate"
   catalogVersion: string
   packageVersion: string
   packageSha256: string | null
@@ -170,6 +170,8 @@ export type DnaChatCaseLoadResult =
   | { ok: false; status: 404 | 500; error: "report_not_found" | "dna_chat_failed" }
 
 export type DnaChatApiResolverDependencies = {
+  /** Opt-in local diagnostic sink. Never receives question, answer, case or exception text. */
+  onLocalDiagnostic?: (event: Readonly<{ stage: string; codes: readonly string[] }>) => void
   createRequestId: () => string
   resolveRuntimeAnswer?: (input: Readonly<{
     question: string
@@ -677,7 +679,7 @@ function conversationContextFromPayload(
     : null
 }
 
-function responseDepthForConversation(
+export function responseDepthForConversation(
   payload: DnaChatApiPayload,
 ): DnaV3ResponseDepth {
   const base = resolveDnaV3ResponseDepth(payload.question, payload.responseDepth)
@@ -693,6 +695,12 @@ export async function resolveDnaChatApiRequest(
   dependencies: DnaChatApiResolverDependencies,
 ): Promise<DnaChatApiResolution> {
   const startedAt = monotonicNow()
+  const diagnostic = (stage: string, codes: readonly string[] = []) => {
+    if ((process.env.NODE_ENV === "test" || process.env.NODE_ENV === "development")
+      && !process.env.VERCEL_ENV && process.env.DNA_CHAT_STUDENT_LOCAL_CANDIDATE === "1") {
+      try { dependencies.onLocalDiagnostic?.({ stage, codes }) } catch { /* diagnostics cannot alter request behavior */ }
+    }
+  }
   const legacyCaseMode = payload.mode === "case"
   const responseDepth = responseDepthForConversation(payload)
   const conversationContext = conversationContextFromPayload(payload)
@@ -713,6 +721,7 @@ export async function resolveDnaChatApiRequest(
       }))
 
   if (!isDnaChatRuntimeAnswerAuthentic(runtimeAnswer)) {
+    diagnostic("initial_runtime_authenticity")
     return { status: 500, body: { ok: false, error: "dna_chat_failed" }, accessedCaseReport: false }
   }
 
@@ -730,6 +739,7 @@ export async function resolveDnaChatApiRequest(
       responseDepth,
     })
     if (!loaded.ok) {
+      diagnostic("case_load", [loaded.error])
       return {
         status: loaded.status,
         body: { ok: false, error: loaded.error },
@@ -740,6 +750,7 @@ export async function resolveDnaChatApiRequest(
     accessedCaseReport = true
     const normalized = normalizeLoadedRuntimeAnswer(loaded.answer)
     if (!normalized) {
+      diagnostic("loaded_runtime_normalization")
       return {
         status: 500,
         body: { ok: false, error: "dna_chat_failed" },
@@ -754,6 +765,7 @@ export async function resolveDnaChatApiRequest(
   // exact, unchanged object minted by the engine before any audit or public
   // response work.
   if (!isDnaChatRuntimeAnswerAuthentic(runtimeAnswer)) {
+    diagnostic("final_runtime_authenticity")
     return {
       status: 500,
       body: { ok: false, error: "dna_chat_failed" },
@@ -772,6 +784,7 @@ export async function resolveDnaChatApiRequest(
       })
     : { allowed: true }
   if (!runtimeRelease.allowed) {
+    diagnostic("runtime_release")
     return {
       status: 500,
       body: { ok: false, error: "dna_chat_failed" },
@@ -785,6 +798,7 @@ export async function resolveDnaChatApiRequest(
   // as an answered request and then returned as a 500.
   const publicBody = publicRuntimeAnswer(runtimeAnswer, requestId, responseDepth)
   if (!publicBody) {
+    diagnostic("public_serialization")
     return {
       status: 500,
       body: { ok: false, error: "dna_chat_failed" },
@@ -797,6 +811,7 @@ export async function resolveDnaChatApiRequest(
     publicBody,
   })
   if (!assurance.allowed) {
+    diagnostic("runtime_assurance", assurance.issues.map((issue) => `${issue.stage}:${issue.code}`))
     return {
       status: 500,
       body: { ok: false, error: "dna_chat_failed" },

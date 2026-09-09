@@ -3,6 +3,7 @@ import {
   type DnaIntelligencePublicIntendedUse,
 } from "./intendedUse"
 import type { DnaChatResponseDepth } from "./conversationPolicy"
+import { hasValidStudentApplicationResponse, STUDENT_APPLICATION_RUNTIME } from "./studentFirst/applicationPublicContract"
 import type {
   DnaChatConversationContext,
   DnaChatConversationQueryKind,
@@ -125,7 +126,7 @@ type EvidenceSummary = {
 export type DnaChatPublicAnswer = {
   requestId: string
   responseDepth: DnaChatResponseDepth
-  runtimeGeneration: "v2_legacy" | "v3"
+  runtimeGeneration: "v2_legacy" | "v3" | typeof STUDENT_APPLICATION_RUNTIME
   classification: DnaChatPublicClassification
   availabilityScope?: "knowledge" | "report"
   summary: string
@@ -143,6 +144,8 @@ export type DnaChatPublicAnswer = {
   topic: string | null
   limitedRolloutFeedbackEligible: boolean
   limitedRolloutContextToken: string | null
+  studentContextToken?: string | null
+  studentVisibleAnswer?: string
   conversationContext?: DnaChatConversationContext
   contextRequest?: ContextRequest
   evidenceSummary?: EvidenceSummary
@@ -332,11 +335,16 @@ export function normalizeDnaChatPublicResponse(value: unknown): DnaChatPublicAns
   if (hasLimitedRolloutContract && !limitedRolloutContract) return null
   if (row.limitedRolloutFeedbackEligible === true && !limitedRolloutContract) return null
   const limitedResponse = Boolean(limitedRolloutContract)
+  const studentResponse = row.runtimeGeneration === STUDENT_APPLICATION_RUNTIME
+  if ((studentResponse || row.studentCandidate !== undefined) && !hasValidStudentApplicationResponse(row)) return null
+  if (row.studentContextToken !== undefined && (typeof row.studentContextToken !== "string"
+    || row.studentContextToken.length < 40 || row.studentContextToken.length > 6_000
+    || !/^[A-Za-z0-9_-]+$/.test(row.studentContextToken))) return null
   const classification = String(row.classification || "") as DnaChatPublicClassification
   if (!CLASSIFICATIONS.has(classification)) return null
   const requestId = String(row.requestId || "").trim()
   const responseDepth = String(row.responseDepth || "standard") as DnaChatResponseDepth
-  const runtimeGeneration = row.runtimeGeneration === "v3" ? "v3" : "v2_legacy"
+  const runtimeGeneration = studentResponse ? STUDENT_APPLICATION_RUNTIME : row.runtimeGeneration === "v3" ? "v3" : "v2_legacy"
   const summary = String(row.summary || "").trim()
   const clarificationResponse = classification === "clarification"
     && runtimeGeneration === "v3"
@@ -402,7 +410,7 @@ export function normalizeDnaChatPublicResponse(value: unknown): DnaChatPublicAns
       return !cards.length || cards.some((source) => source.authority?.layer !== unit.authority.layer)
     }))) return null
 
-  if (runtimeGeneration === "v3" && answerUnits.some((unit) => {
+  if ((runtimeGeneration === "v3" || studentResponse) && answerUnits.some((unit) => {
     const isScientific = unit.role === "product_definition" || unit.role === "owner_book_information"
       || unit.role === "scientific_evidence" || unit.role === "dna_specific_validation"
     if (!isScientific) return unit.citationCardIds.length > 0 || unit.claimIds.length > 0
@@ -440,6 +448,10 @@ export function normalizeDnaChatPublicResponse(value: unknown): DnaChatPublicAns
     topic: typeof row.topic === "string" && row.topic.trim() ? row.topic.trim() : null,
     limitedRolloutFeedbackEligible: limitedResponse,
     limitedRolloutContextToken,
+    ...(typeof row.studentContextToken === "string" ? { studentContextToken: row.studentContextToken } : {}),
+    ...(studentResponse ? { studentVisibleAnswer: answerUnits.map((unit) => unit.text).join(
+      (row.studentCandidate as Record<string, unknown>).presentationFormat === "bullets" ? "\n" : " ",
+    ) } : {}),
     ...(conversationContext ? { conversationContext } : {}),
     ...(contextRequest ? { contextRequest } : {}),
     ...(evidenceSummary && Object.values(evidenceSummary).some(Boolean) ? { evidenceSummary } : {}),

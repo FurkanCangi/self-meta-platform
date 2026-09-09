@@ -1,7 +1,4 @@
-import {
-  getDnaOwnerBookTopicTitle,
-  resolveDnaOwnerBook,
-} from "../ownerBookRuntime"
+import { getDnaOwnerBookTopicTitle } from "../ownerBookRuntime"
 import type { DnaS13Depth, DnaS13RequestedFacet } from "../s13/contracts"
 import {
   DNA_S13_CONVERSATION_CONTEXT_VERSION,
@@ -17,8 +14,9 @@ import {
 } from "../s13/pragmaticTask"
 import { normalizeDnaChatText } from "../text"
 import type { StudentRequestContract } from "./contracts"
+import { resolveStudentTargetDescriptor } from "./targetCatalog"
 
-export const DNA_STUDENT_S13_HANDOFF_VERSION = "dna-student-s13-handoff@1" as const
+export const DNA_STUDENT_S13_HANDOFF_VERSION = "dna-student-s13-handoff@3" as const
 
 export type StudentS13ResolvedRequestHandoff = Readonly<{
   version: typeof DNA_STUDENT_S13_HANDOFF_VERSION
@@ -32,34 +30,6 @@ export type StudentS13ResolvedRequestHandoff = Readonly<{
   }>[]
 }>
 
-const TARGET_TO_OWNER_CROSSWALK: Readonly<Record<string, Readonly<{ query: string; expectedLeaf: string }>>> = Object.freeze({
-  self_regulation: Object.freeze({ query: "Self-Regülasyon Nedir?", expectedLeaf: "Self-Regülasyon Nedir?" }),
-  self_control: Object.freeze({ query: "Yürütücü İşlev ve Öz-Kontrol", expectedLeaf: "Yürütücü İşlev ve Öz-Kontrol" }),
-  attention: Object.freeze({ query: "Yürütücü İşlev ve Dikkat", expectedLeaf: "Yürütücü İşlev ve Dikkat" }),
-  executive_functions: Object.freeze({ query: "Yürütücü İşlevlerin Temel Yapısı", expectedLeaf: "Yürütücü İşlevlerin Temel Yapısı" }),
-  inhibition: Object.freeze({ query: "İnhibisyon Nedir?", expectedLeaf: "İnhibisyon Nedir?" }),
-  working_memory: Object.freeze({ query: "Çalışma Belleği", expectedLeaf: "Çalışma Belleği ve Kısa Süreli Bellek" }),
-  planning: Object.freeze({ query: "Planlama", expectedLeaf: "Planlama" }),
-  cognitive_flexibility: Object.freeze({ query: "Esneklik Nedir?", expectedLeaf: "Esneklik Nedir?" }),
-  coregulation: Object.freeze({ query: "Ko-Regülasyon", expectedLeaf: "Ko-Regülasyon" }),
-  arousal: Object.freeze({
-    query: "Arousal, Uyanıklık ve Dikkat Arasındaki Ayrım",
-    expectedLeaf: "Arousal, Uyanıklık ve Dikkat Arasındaki Ayrım",
-  }),
-  sensory_regulation: Object.freeze({
-    query: "Duyusal Regülasyonun Self-Regülasyon İçindeki Yeri",
-    expectedLeaf: "Duyusal Regülasyonun Self-Regülasyon İçindeki Yeri",
-  }),
-  sensory_modulation: Object.freeze({ query: "Duyusal Modülasyon", expectedLeaf: "Duyusal Modülasyon" }),
-  emotion_regulation: Object.freeze({
-    query: "Duygunun Oluşumu ve Düzenlenmesi",
-    expectedLeaf: "Duygunun Oluşumu ve Düzenlenmesi",
-  }),
-  interoception: Object.freeze({ query: "İnterosepsiyon Nedir?", expectedLeaf: "İnterosepsiyonun Tanımı" }),
-  reactivity: Object.freeze({ query: "Reaktivite ve Regülasyon Ayrımı", expectedLeaf: "Reaktivite ve Regülasyon Ayrımı" }),
-  recovery: Object.freeze({ query: "Reaktivite ve Toparlanma", expectedLeaf: "Reaktivite ve Toparlanma" }),
-})
-
 function unique<T>(values: readonly T[]) {
   return [...new Set(values)]
 }
@@ -72,6 +42,8 @@ function depth(contract: StudentRequestContract): DnaS13Depth {
 function action(contract: StudentRequestContract): DnaS13PragmaticAction {
   if (contract.conversationAction === "repair") return "CORRECT_TARGET"
   if (contract.semanticTask === "define") return "DEFINE"
+  if (contract.semanticTask === "significance") return "WHY_SIGNIFICANCE"
+  if (contract.semanticTask === "deepen") return "DEEPEN"
   if (contract.semanticTask === "compare") return "COMPARE"
   if (contract.semanticTask === "example") return "EXAMPLE"
   if (contract.semanticTask === "summarize") return "SUMMARIZE"
@@ -80,26 +52,50 @@ function action(contract: StudentRequestContract): DnaS13PragmaticAction {
 
 function facets(contract: StudentRequestContract): readonly DnaS13RequestedFacet[] {
   const result: DnaS13RequestedFacet[] = []
+  const tasks = new Set([...contract.requestedSemanticTasks, contract.semanticTask])
+  const explicitMultipart = tasks.has("mechanism") || tasks.has("daily_life")
   const add = (facet: DnaS13RequestedFacet) => {
     if (!result.includes(facet)) result.push(facet)
   }
-  if (contract.semanticTask === "define") add("definition")
-  else if (contract.semanticTask === "compare") add("distinction")
-  else if (contract.semanticTask === "example") add("verified_example")
-  else if (contract.semanticTask === "evidence") {
+  if (tasks.has("define")) add("definition")
+  else if (tasks.has("significance")) {
+    add("function")
+    if (!explicitMultipart) add("core_scope")
+    if (!explicitMultipart) add("limitation")
+  } else if (tasks.has("relate")) {
+    add("explanatory_detail")
+    if (!explicitMultipart) add("core_scope")
+    if (!explicitMultipart) add("limitation")
+  } else if (tasks.has("deepen")) {
+    add("explanatory_detail")
+    if (!explicitMultipart) add("limitation")
+  } else if (tasks.has("measurement")) {
     add("supported_meaning")
     add("limitation")
-  } else if (contract.semanticTask === "observe" || contract.semanticTask === "case_reasoning") {
+  }
+  else if (tasks.has("compare")) add("distinction")
+  else if (tasks.has("example")) add("verified_example")
+  else if (tasks.has("evidence") && !explicitMultipart) {
+    add("supported_meaning")
+    add("limitation")
+  } else if (tasks.has("observe") || tasks.has("case_reasoning")) {
     add("core_scope")
     add("boundary")
-  } else if (contract.semanticTask === "treatment_boundary") {
+  } else if (tasks.has("treatment_boundary")) {
     add("boundary")
     add("limitation")
-  } else {
+  } else if (!explicitMultipart && !tasks.has("boundary")) {
     add("core_scope")
+  }
+  if (tasks.has("mechanism")) add("explanatory_detail")
+  if (tasks.has("daily_life")) add("supported_meaning")
+  if (tasks.has("boundary") || tasks.has("evidence")) {
+    add("limitation")
+    add("boundary")
   }
   if (contract.componentTargetIds.length) add("components")
   if (contract.summaryScope.unknown || contract.observationScope.singleObservationLimit) add("limitation")
+  if (!result.length) add("core_scope")
   return Object.freeze(result.slice(0, 4))
 }
 
@@ -114,7 +110,7 @@ function constraints(contract: StudentRequestContract): readonly DnaS13Discourse
 
 function operation(contract: StudentRequestContract): DnaS13ContextOperation {
   if (contract.conversationAction === "repair") return "replace_previous_target"
-  if (contract.presentation.preserveMeaning) return "simplify_same_topic"
+  if (contract.presentation.preserveMeaning && contract.referent.kind !== "none") return "simplify_same_topic"
   if (contract.semanticTask === "example" && contract.referent.kind !== "none") return "example_same_topic"
   if (contract.semanticTask === "summarize" && contract.referent.kind !== "none") return "summarize_same_topic"
   if (contract.referent.kind !== "none") return "explain_same_topic"
@@ -122,31 +118,38 @@ function operation(contract: StudentRequestContract): DnaS13ContextOperation {
 }
 
 function resolveTarget(targetId: string) {
-  const crosswalk = TARGET_TO_OWNER_CROSSWALK[targetId]
-  if (!crosswalk) throw new Error(`dna_student_s13_crosswalk_missing:${targetId}`)
-  const match = resolveDnaOwnerBook(crosswalk.query, [], "standard")
-  if (!match) throw new Error(`dna_student_s13_crosswalk_unresolved:${targetId}`)
-  const title = getDnaOwnerBookTopicTitle(match.topicId)
-  if (!title) throw new Error(`dna_student_s13_crosswalk_title_missing:${targetId}`)
-  if (title.split(" · ").at(-1) !== crosswalk.expectedLeaf) {
-    throw new Error(`dna_student_s13_crosswalk_title_drift:${targetId}`)
-  }
-  return Object.freeze({ topicId: match.topicId, title })
+  const descriptor = resolveStudentTargetDescriptor(targetId)
+  return Object.freeze({ topicId: descriptor.ownerBookTopicId, title: descriptor.ownerBookTopicTitle })
 }
 
 function retrievalQuestion(title: string, contract: StudentRequestContract) {
-  if (contract.semanticTask === "define") return `${title} ne demek?`
+  const tasks = new Set([...contract.requestedSemanticTasks, contract.semanticTask])
+  let base: string
+  if (contract.semanticTask === "define") base = `${title} ne demek?`
+  else if (contract.semanticTask === "significance") base = `${title} ne işe yarar ve neden önemlidir?`
+  else if (contract.semanticTask === "relate") base = `${title} diğer hedeflerle nasıl ilişkilidir ve bu ilişkinin sınırı nedir?`
+  else if (contract.semanticTask === "deepen") base = `${title} için temel kapsamın ötesindeki açıklayıcı ayrıntı ve sınır nedir?`
+  else if (contract.semanticTask === "boundary") base = `${title} hakkında kanıtın desteklediği yorum ve nedensellik sınırı nedir?`
+  else if (contract.semanticTask === "measurement") base = `${title} nasıl değerlendirilir ve ölçüm sonucu neyi tek başına göstermez?`
   // The user's scenario is a presentation payload, not owner-book evidence.
   // Retrieve the scientific target binding here; the obligation-aware answer
   // executor must realize the scenario separately and label it illustrative.
-  if (contract.semanticTask === "example") return `${title} temel kapsamı nedir?`
-  if (contract.semanticTask === "compare") return `${title} temel ayrımı nedir?`
-  if (contract.semanticTask === "observe" || contract.semanticTask === "case_reasoning") {
-    return `${title} için tek gözlemin sınırı ve gerekli ek bağlam nedir?`
-  }
-  if (contract.semanticTask === "treatment_boundary") return `${title} için değerlendirme ve tedavi önerisi sınırı nedir?`
-  if (contract.semanticTask === "summarize") return `${title} ana kapsamı ve sınırı nedir?`
-  return `${title} temel kapsamı nedir?`
+  else if (contract.semanticTask === "example") base = `${title} temel kapsamı nedir?`
+  else if (contract.semanticTask === "compare") base = `${title} temel ayrımı nedir?`
+  else if (contract.semanticTask === "observe" || contract.semanticTask === "case_reasoning") {
+    base = `${title} için tek gözlemin sınırı ve gerekli ek bağlam nedir?`
+  } else if (contract.semanticTask === "treatment_boundary") base = `${title} için değerlendirme ve tedavi önerisi sınırı nedir?`
+  else if (contract.semanticTask === "summarize") base = `${title} ana kapsamı ve sınırı nedir?`
+  else base = `${title} temel kapsamı nedir?`
+  const extraParts = [
+    ...(tasks.has("mechanism") ? ["desteklenen mekanizma"] : []),
+    ...(tasks.has("daily_life") ? ["günlük yaşamdaki anlam"] : []),
+    ...((tasks.has("boundary") || tasks.has("evidence")) && contract.semanticTask !== "boundary"
+      ? ["kanıt sınırı"] : []),
+  ]
+  return extraParts.length
+    ? `${base.replace(/\?$/u, "")} Ayrıca ${extraParts.join(", ")} nedir?`
+    : base
 }
 
 export function buildStudentS13ResolvedRequestHandoff(input: Readonly<{
@@ -165,8 +168,9 @@ export function buildStudentS13ResolvedRequestHandoff(input: Readonly<{
   }))
   const activeTopicIds = unique(active.map((target) => target.topicId))
   const rejectedTopicIds = unique(rejected.map((target) => target.topicId))
+  const activeTopicLimit = input.contract.semanticTask === "summarize" ? 16 : 8
   if (!activeTopicIds.length) throw new Error("dna_student_s13_handoff_target_missing")
-  if (activeTopicIds.length > 8) throw new Error("dna_student_s13_handoff_target_limit")
+  if (activeTopicIds.length > activeTopicLimit) throw new Error("dna_student_s13_handoff_target_limit")
   if (activeTopicIds.some((topicId) => rejectedTopicIds.includes(topicId))) {
     throw new Error("dna_student_s13_handoff_target_polarity_conflict")
   }

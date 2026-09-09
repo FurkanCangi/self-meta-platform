@@ -33,6 +33,16 @@ assert.equal(explicitDefinition.semanticTaskCandidates.includes("define"), true)
 assert.equal(explicitDefinition.conversationAction, "start")
 assert.equal(explicitDefinition.presentation.language, "plain_student")
 
+const original90MisspelledDefinition = resolveStudentEvidenceFirstRequest({
+  turnId: "original90:1:3",
+  message: "regülsyon neydi tam olarak",
+  state: createEmptyStudentConversationState(),
+})
+assert.equal(original90MisspelledDefinition.ok, true)
+if (!original90MisspelledDefinition.ok) throw new Error("Original90 misspelled target must resolve")
+assert.deepEqual(original90MisspelledDefinition.contract.targetIds, ["self_regulation"])
+assert.equal(original90MisspelledDefinition.contract.ambiguity, "none")
+
 const contextOnlyRecovery = observe("öğretmen yavaş konuşunca çocuk göreve dönüyor")
 assert.deepEqual(contextOnlyRecovery.explicitTargetIds, [])
 assert.deepEqual(contextOnlyRecovery.contextTargetIds, ["recovery"])

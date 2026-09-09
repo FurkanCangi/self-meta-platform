@@ -2,6 +2,7 @@ import { DNA_OWNER_BOOK_CHAT_AUTHORITY } from "../../knowledgeAuthority"
 
 export const DNA_S13_LIMITED_RESPONSE_SCHEMA_VERSION = "dna-s13-limited-response@1" as const
 export const DNA_S13_LIMITED_RESPONSE_ROUTE = "s13_limited_rollout" as const
+export const DNA_S13_LIMITED_RESPONSE_MAX_LOCKED_TOPICS = 8
 export const DNA_S13_LIMITED_ROLLOUT_RELEASE_VERSION =
   "dna-v1-s13v4-contextv1-limited-rc1.2" as const
 export const DNA_S13_LIMITED_OWNER_BOOK_SOURCE_ID = DNA_OWNER_BOOK_CHAT_AUTHORITY.proof.sourceId
@@ -105,7 +106,7 @@ export function validateDnaS13LimitedResponseContract(
     || row.lockedPlanFallback !== (row.realizationStatus === "fallback")
     || !safeFailureCodes(row.lockedPlanTopicIds)
     || row.lockedPlanTopicIds.length < 1
-    || row.lockedPlanTopicIds.length > 2
+    || row.lockedPlanTopicIds.length > DNA_S13_LIMITED_RESPONSE_MAX_LOCKED_TOPICS
     || !safeFailureCodes(row.validatorFailureCodes)
     || !finiteNonNegativeInteger(row.unsupportedFactualAdditionCount)
     || !finiteNonNegativeInteger(row.unsupportedRelationCount)

@@ -11,7 +11,10 @@ import { policyAuthorityForSafetyCategory } from "./authorityRegistry"
 
 const NATIONAL_ID_PATTERN = /\b[1-9][0-9]{10}\b/g
 const BIRTH_DATE_PATTERN = /\b\d{1,2}[./-]\d{1,2}[./-](?:19|20)\d{2}\b/g
-const LABELED_NAME_PATTERN = /\b(?:ad(?:\s+soyad)?|soyad|isim|hasta(?:\s+ad(?:ı|i))?|danışan(?:\s+ad(?:ı|i))?|danisan(?:\s+ad(?:i|ı))?|çocuk(?:\s+ad(?:ı|i))?|cocuk(?:\s+ad(?:i|ı))?)\s*[:=-]\s*[^,;.\n]{1,80}/gi
+// JS \b and /i do not implement Turkish word boundaries or dotted/dotless I
+// casing. Match Unicode token boundaries and NFC/NFD label spellings in place;
+// normalizing the whole question would falsely classify benign text as redacted.
+const LABELED_NAME_PATTERN = /(?<![\p{L}\p{M}\p{N}_])(?:ad(?:\s+soyad)?|soyad|[iıİ]\u0307?s[iıİ]\u0307?m|hasta(?:\s+ad[iıİ]\u0307?)?|dan[iıİ]\u0307?(?:ş|s\u0327?)an(?:\s+ad[iıİ]\u0307?)?|(?:ç|c\u0327?)ocuk(?:\s+ad[iıİ]\u0307?)?)\s*[:=-]\s*[^,;.\n]{1,80}/giu
 const LABELED_RECORD_PATTERN = /\b(?:protokol|dosya|hasta)\s*(?:no|numarası|numarasi)?\s*[:=-]\s*[A-Z0-9/-]{4,}\b/gi
 const TITLE_CASE_FULL_NAME_PATTERN = /(?<![A-Za-zÇĞİÖŞÜçğıöşü])[A-ZÇĞİÖŞÜ][a-zçğıöşü]{1,}\s+[A-ZÇĞİÖŞÜ][a-zçğıöşü]{1,}(?=(?:['’](?:ın|in|un|ün)(?![A-Za-zÇĞİÖŞÜçğıöşü]))|\s*(?:,|$)|\s+(?:bu|için|adlı|isimli|raporu|raporunda|vakası|vakasi|vakayı|vakayi|çocuğu|cocugu|danışanı|danisani|okulda|evde|klinikte|değerlendirmesi|degerlendirmesi|hakkında|hakkinda|açısından|acisindan|self[-\s]?regülasyon|self[-\s]?regulasyon|interosepsiyon|duyusal|fizyolojik|otonom|sempatik|parasempatik)(?![A-Za-zÇĞİÖŞÜçğıöşü]))/g
 const UPPERCASE_FULL_NAME_PATTERN = /(?<![A-Za-zÇĞİÖŞÜçğıöşü])[A-ZÇĞİÖŞÜ]{2,}\s+[A-ZÇĞİÖŞÜ]{2,}(?=(?:['’](?:IN|İN|UN|ÜN)(?![A-Za-zÇĞİÖŞÜçğıöşü]))|\s*(?:,|$)|\s+(?:BU|İÇİN|ICIN|ADLI|İSİMLİ|ISIMLI|RAPORU|RAPORUNDA|VAKASI|VAKAYI|HAKKINDA|AÇISINDAN|ACISINDAN|SELF[-\s]?REGÜLASYON|SELF[-\s]?REGULASYON|İNTEROSEPSİYON|INTEROSEPSIYON)(?![A-Za-zÇĞİÖŞÜçğıöşü]))/g
