@@ -1,11 +1,11 @@
 // Prospective V1 subset only; unchanged product and existing judges. No old answer cache.
 const fs=require('node:fs'),path=require('node:path'),assert=require('node:assert/strict'),Module=require('node:module');
 const {createHash}=require('node:crypto'),{execFileSync}=require('node:child_process');
-const root='/Volumes/ResearchSSD/Outputs/SelfMetaAI/DNA_CHAT_V1_SCENARIO_FIDELITY_20260910',compiled=root+'/compiled',doc='docs/dna-intelligence/completion-program';
+const root='/Volumes/ResearchSSD/Outputs/SelfMetaAI/DNA_CHAT_SOURCE_PREMISE_FIX_20260910',compiled=root+'/compiled',doc='docs/dna-intelligence/completion-program';
 const json=p=>JSON.parse(fs.readFileSync(p)),h=x=>createHash('sha256').update(x).digest('hex'),fh=p=>h(fs.readFileSync(p));
 const manifestFile=doc+'/DNA_CHAT_V1_ACCEPTANCE_MANIFEST_20260910.json',manifest=json(manifestFile),policy=doc+'/DNA_CHAT_V1_RELEASE_POLICY_20260910.md';
 const identity=require(compiled+'/scripts/dna-student-candidate-identity.js'),candidate=identity.studentCandidateSha256();
-const bindingFile=doc+'/DNA_CHAT_V1_FINAL_BINDING_20260910.json',binding=json(bindingFile);
+const bindingFile=doc+'/DNA_CHAT_SOURCE_PREMISE_BINDING_20260910.json',binding=json(bindingFile);
 assert.equal(candidate,binding.candidateSource);assert.equal(fh(manifestFile),binding.manifestSha256);assert.equal(fh(policy),binding.policySha256);
 // Original selection/gold and previous candidate binding stay immutable.
 // This prospective binding does not transfer any old answer's acceptance.
@@ -29,7 +29,19 @@ for(const [file,sha] of Object.entries(closeout.evidencePins))assert.equal(fh(pr
 const priorStarted=fs.readdirSync(previousRoot+'/acceptance-attempt-1').filter(f=>/^call-\d+-started.json$/.test(f));
 for(const file of priorStarted){const c=json(previousRoot+'/acceptance-attempt-1/'+file.replace('-started','-completed'));assert.equal(c.exactUsage,true);priorCalls++;priorCost+=c.chargedMicrousd;}
 assert.equal(priorCalls,126);assert.equal(priorCost,441505);
-const baseline={calls:718+priorCalls,conservativeMicrousd:2537784+priorCost,sha256:fh(oldBudget)};
+const lastRoot='/Volumes/ResearchSSD/Outputs/SelfMetaAI/DNA_CHAT_V1_SCENARIO_FIDELITY_20260910';
+const lastCloseoutFile=lastRoot+'/V1_FINAL_CANDIDATE_CLOSEOUT_20260910.json';
+assert.equal(fh(lastCloseoutFile),binding.previousFinalCloseoutSha256);
+const lastCloseout=json(lastCloseoutFile);assert.equal(lastCloseout.candidateCommit,binding.parentCommit);
+for(const [file,sha] of Object.entries(lastCloseout.evidencePins))assert.equal(fh(lastRoot+'/acceptance-attempt-1/'+file),sha);
+let lastCalls=0,lastCost=0;
+for(const file of fs.readdirSync(lastRoot+'/acceptance-attempt-1').filter(f=>/^call-\d+-started.json$/.test(f))){
+ const completed=json(lastRoot+'/acceptance-attempt-1/'+file.replace('-started','-completed'));
+ assert.equal(completed.exactUsage,true);lastCalls++;lastCost+=completed.chargedMicrousd;
+}
+assert.equal(lastCalls,36);assert.equal(lastCost,107895);
+const baseline={calls:718+priorCalls+lastCalls,conservativeMicrousd:2537784+priorCost+lastCost,sha256:fh(oldBudget)};
+assert.equal(baseline.calls,binding.baselineCalls);assert.equal(baseline.conservativeMicrousd,binding.baselineConservativeMicrousd);
 const reserve=require(compiled+'/scripts/dna-stabilization-budget.js').reserveStabilizationRequest;
 const usageCost=require(compiled+'/src/lib/dna/chat/lunaUsage.js').calculateDnaChatLunaUsage;
 const roles={dna_student_answer_executor:900,dna_student_context_scope:120,dna_student_long_visible_answer_judge:1000,dna_student_frozen_natural_mini24_gold_judge:1200};

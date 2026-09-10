@@ -53,7 +53,7 @@ const mockFetch: typeof fetch = async (_url, init) => {
       : kinds.includes("summarize_unknown") ? "Bu açıklama tek başına kesin bir sonuç göstermez."
       : kinds.includes("summarize_observation_focus") ? "Gözlemde farklı ortam ve görevlerde ne olduğuna bakılır."
       : `${labels} için kaynak bilgisine dayalı bir açıklama veriyorum.`
-    return [slot.slotId, slot.relationComposition ? { definitionPremises: Object.fromEntries(slot.relationComposition.orderedDefinitionSources.map((source) => [source.targetId, source.definitionText])),
+    return [slot.slotId, slot.relationComposition ? {
       requestFocus: slot.relationComposition.requestedFocus ?? "definition_difference",
       scopeOrder: slot.relationComposition.requestedFocus === "definition_scope" ? "first_narrower" : "not_ordered" } : text]
   }))

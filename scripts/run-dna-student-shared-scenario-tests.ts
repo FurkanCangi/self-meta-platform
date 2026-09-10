@@ -132,7 +132,7 @@ async function run(question: string, mutate?: (value: Value) => unknown) {
         [id, { eventStep: text, conceptLink: "Bu adım verilen kavramsal açıklamayı örnekler." }])) }
       const blocks = Object.fromEntries(input.answerSlots.map((slot) => [slot.slotId, slot === shared
         ? mutate ? mutate(value) : value
-        : slot.relationComposition ? { definitionPremises: Object.fromEntries(slot.relationComposition.orderedDefinitionSources.map((source) => [source.targetId, source.definitionText])), requestFocus: "definition_difference", scopeOrder: "not_ordered" }
+        : slot.relationComposition ? {  requestFocus: "definition_difference", scopeOrder: "not_ordered" }
           : `${slot.activeTargets.map((target) => target.visibleAliases[0]).join(" ve ")} aynı şey değildir; kapsamları farklıdır.`]))
       return new Response(JSON.stringify({ id: "mock-shared-scenario", output_text: JSON.stringify({ blocks, illustrationKind: "hypothetical" }),
         usage: { input_tokens: 100, output_tokens: 50 } }), { status: 200, headers: { "Content-Type": "application/json" } })

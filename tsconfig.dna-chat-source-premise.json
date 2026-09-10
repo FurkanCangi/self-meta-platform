@@ -1,0 +1,6 @@
+{
+  "extends": "./tsconfig.dna-chat-v1-final.json",
+  "compilerOptions": {
+    "outDir": "/Volumes/ResearchSSD/Outputs/SelfMetaAI/DNA_CHAT_SOURCE_PREMISE_FIX_20260910/compiled"
+  }
+}

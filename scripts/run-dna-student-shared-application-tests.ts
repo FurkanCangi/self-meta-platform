@@ -41,8 +41,7 @@ const mockFetch: typeof fetch = async (_url, init) => {
     const request = JSON.parse(String(init?.body))
     const slots = JSON.parse(request.input).answerSlots as Slot[]
     const blocks = Object.fromEntries(slots.map((slot) => {
-      if (slot.relationComposition) return [slot.slotId, { definitionPremises: Object.fromEntries(
-        slot.relationComposition.orderedDefinitionSources.map((s) => [s.targetId, s.definitionText])),
+      if (slot.relationComposition) return [slot.slotId, {
         requestFocus: "definition_difference", scopeOrder: "not_ordered" }]
       assert.equal(slot.sharedScenarioBinding!.representation, "activity_then_target_event_and_concept_link")
       const schema = request.text.format.schema.properties.blocks.properties[slot.slotId]

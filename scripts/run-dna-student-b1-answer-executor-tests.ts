@@ -115,7 +115,7 @@ const mockFetch: typeof fetch = async (_input, init) => {
   const value = {
     blocks: Object.fromEntries(content.answerSlots.map((slot) => [
       slot.slotId,
-      slot.relationComposition ? { definitionPremises: Object.fromEntries(slot.relationComposition.orderedDefinitionSources.map((source) => [source.targetId, source.definitionText])),
+      slot.relationComposition ? {
         requestFocus: slot.relationComposition.requestedFocus ?? "definition_difference",
         scopeOrder: slot.relationComposition.requestedFocus === "definition_scope" ? "first_narrower" : "not_ordered" } : slot.sharedScenarioBinding ? {
         activity: slotText(slot),

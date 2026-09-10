@@ -41,9 +41,12 @@ const mockFetch: typeof fetch = async (_url, init) => {
       assert.equal(slot.relationComposition.representation, "source_premise_then_scope_selection")
       const schema = request.text.format.schema.properties.blocks.properties[slot.slotId]
       assert.equal(schema.type, "object")
-      assert.deepEqual(schema.required, ["definitionPremises", "requestFocus", "scopeOrder"])
-      assert.deepEqual(schema.properties.definitionPremises.required.slice().sort(), slot.activeTargets.map((t) => t.targetId).sort())
-      assert.equal(schema.properties.definitionPremises.additionalProperties, false)
+      assert.deepEqual(schema.required, ["requestFocus", "scopeOrder"])
+      assert.equal(Object.hasOwn(schema.properties, "definitionPremises"), false)
+      for (const branch of schema.anyOf) {
+        assert.deepEqual(branch.required, ["requestFocus", "scopeOrder"])
+        assert.equal(Object.hasOwn(branch.properties, "definitionPremises"), false)
+      }
       assert.equal(schema.additionalProperties, false)
       assert.ok(slot.obligations.length > 0)
       for (const source of slot.relationComposition.orderedDefinitionSources) {
@@ -51,7 +54,8 @@ const mockFetch: typeof fetch = async (_url, init) => {
         assert.equal(source.claimId, target.lockedClaims[0]!.claimId)
       }
       const premises = Object.fromEntries(slot.relationComposition.orderedDefinitionSources.map((source) => [source.targetId, source.definitionText]))
-      return [slot.slotId, override ? override.value : { definitionPremises: premiseMutation ? premiseMutation(premises) : premises, requestFocus: focus,
+      return [slot.slotId, override ? override.value : {
+        ...(premiseMutation ? { definitionPremises: premiseMutation(premises) } : {}), requestFocus: focus,
         scopeOrder: focus === "definition_scope"
           ? slot.relationComposition.orderedDefinitionSources[0]!.targetId === "self_control" ? "first_narrower" : "second_narrower"
           : "not_ordered" }]
@@ -149,7 +153,6 @@ async function main() {
     focusControls++
   }
   let malformedRejected = 0
-  const validPremises = Object.fromEntries(captured[0]!.relationComposition.orderedDefinitionSources.map((s) => [s.targetId, s.definitionText]))
   for (const value of ["Öz kontrol öz düzenlemenin kesin nedenidir", [], {},
     { requestFocus: "definition_scope" }, { scopeOrder: "first_narrower" },
     { requestFocus: "causal", scopeOrder: "not_ordered" },
@@ -157,9 +160,10 @@ async function main() {
     { requestFocus: "definition_difference", scopeOrder: "first_narrower" },
     { requestFocus: "source_connection", scopeOrder: "first_narrower" },
     { requestFocus: "source_connection", scopeOrder: "second_narrower" },
-    { requestFocus: "definition_scope", scopeOrder: "first_narrower", text: "Kesin alt kümesidir" }]) {
-    override = { value: value && typeof value === "object" && !Array.isArray(value)
-      ? { definitionPremises: validPremises, ...value } : value }
+    { requestFocus: "definition_scope", scopeOrder: "first_narrower", text: "Kesin alt kümesidir" },
+    { requestFocus: "definition_scope", scopeOrder: "first_narrower", sourceIds: ["unrelated-source"] },
+    { requestFocus: "definition_scope", scopeOrder: "first_narrower", excerptStart: 5, excerptEnd: 45 }]) {
+    override = { value }
     const r = await executeStudentAnswer({ question, contract: resolved.contract, apiKey: "synthetic-not-real", fetchImpl: mockFetch })
     assert.equal(r.ok, false)
     assert.equal(r.provider.calls, 1)
@@ -169,6 +173,7 @@ async function main() {
   focus = "definition_scope"
   let invalidSourcePremisesRejected = 0
   for (const mutate of [
+    (p: Record<string, string>) => p,
     () => null,
     () => [],
     () => ({}),
@@ -187,26 +192,26 @@ async function main() {
   }
   premiseMutation = (p) => Object.fromEntries(Object.entries(p).map(([id, text]) => [id, text.slice(10, 50)]))
   const excerptResult = await executeStudentAnswer({ question, contract: resolved.contract, apiKey: "synthetic-not-real", fetchImpl: mockFetch })
-  assert.ok(excerptResult.ok)
-  for (const premise of excerptResult.candidate.compositionDecisions![0]!.definitionPremises) {
-    const source = captured[0]!.relationComposition.orderedDefinitionSources.find((s) => s.targetId === premise.targetId)!
-    const excerpt = source.definitionText.slice(10, 50).trim()
-    assert.equal(premise.excerptStart, source.definitionText.indexOf(excerpt))
-    assert.equal(premise.excerptEnd, premise.excerptStart + excerpt.length)
-    assert.equal(source.definitionText.slice(premise.excerptStart, premise.excerptEnd), excerpt)
-  }
+  assert.equal(excerptResult.ok, false, "provider_may_not_choose_even_a_verbatim_substring")
+  invalidSourcePremisesRejected++
   premiseMutation = null
   override = { value: { requestFocus: "definition_scope", scopeOrder: "first_narrower" } }
-  const missingPremises = await executeStudentAnswer({ question, contract: resolved.contract, apiKey: "synthetic-not-real", fetchImpl: mockFetch })
-  assert.equal(missingPremises.ok, false)
-  assert.equal(missingPremises.provider.calls, 1)
-  invalidSourcePremisesRejected++
+  const canonicalPremises = await executeStudentAnswer({ question, contract: resolved.contract, apiKey: "synthetic-not-real", fetchImpl: mockFetch })
+  assert.ok(canonicalPremises.ok, "source_binding_does_not_depend_on_provider_transcription")
+  assert.equal(canonicalPremises.provider.calls, 1)
+  for (const premise of canonicalPremises.candidate.compositionDecisions![0]!.definitionPremises) {
+    const source = captured[0]!.relationComposition.orderedDefinitionSources.find(s => s.targetId === premise.targetId)!
+    assert.equal(premise.claimId, source.claimId)
+    assert.equal(premise.excerptStart, 0)
+    assert.equal(premise.excerptEnd, source.definitionText.length)
+  }
   assert.equal(hash(JSON.stringify(state)), beforeState)
   assert.equal(hash(readFileSync(journalPath)), journalSha256)
   assert.equal(externalCalls, 0)
-  console.log(JSON.stringify({ ok: true, gate: "STUDENT_DEFINITION_SCOPE_COMPOSITION", candidateSha256: binding.candidateSha256,
+  console.log(JSON.stringify({ ok: true, gate: "STUDENT_DEFINITION_SCOPE_COMPOSITION", testVersion: "server-owned-premise-wire@2", candidateSha256: binding.candidateSha256,
     authenticatedPriorReceipts: 1, exactFailedContract: true, applicationDepths: 3, presentationControls, focusControls, malformedRejected,
     stateAndJournalUnchanged: true, invalidSourcePremisesRejected, sourceOffsetsRetainedWithoutRawText: true,
+    canonicalPremisesServerOwned: true, sourceProseAndOffsetsAbsentFromProviderSchema: true,
     mockCalls, audits, externalProviderCalls: externalCalls, sample,
     interpretationSelectionMockedNotSemanticallyVerified: true, semanticQualityCertified: false, liveAuthenticatedProof: false }, null, 2))
 }

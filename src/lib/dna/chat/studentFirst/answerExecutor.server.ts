@@ -15,7 +15,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@100" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@101" as const
 // One deadline uses the shared transport's existing 30s ceiling instead of two
 // 20s attempts. A timeout/network error may already have incurred usage; never
 // submit a second generation automatically when its first outcome is unknown.
@@ -1017,26 +1017,22 @@ function isDefinitionScopeSlot(plan: StudentAnswerExecutionPlan, slot: StudentAn
 function definitionScopeSelection(value: unknown, plan: StudentAnswerExecutionPlan, slot: StudentAnswerSlotMetadata): DefinitionScopeSelection | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null
   const row = value as Record<string, unknown>
-  if (!sameSet(Object.keys(row), ["definitionPremises", "requestFocus", "scopeOrder"])
+  if (!sameSet(Object.keys(row), ["requestFocus", "scopeOrder"])
     || !["definition_difference", "definition_scope", "source_connection"].includes(String(row.requestFocus))
     || !["first_narrower", "second_narrower", "not_ordered"].includes(String(row.scopeOrder))
     || row.requestFocus !== "definition_scope" && row.scopeOrder !== "not_ordered") return null
   if (plan.requestedRelationFocus && row.requestFocus !== plan.requestedRelationFocus) return null
-  if (!row.definitionPremises || typeof row.definitionPremises !== "object" || Array.isArray(row.definitionPremises)) return null
-  const excerpts = row.definitionPremises as Record<string, unknown>
   const sources = definitionPremiseSources(plan, slot)
-  if (!sameSet(Object.keys(excerpts), sources.map((source) => source.targetId))) return null
-  const definitionPremises = sources.map((source) => {
-    const text = excerpts[source.targetId]
-    if (typeof text !== "string" || text.trim().length < 20 || text.length > 1_000) return null
-    // Validate source membership, not the model's semantic interpretation. Only
-    // canonical source offsets and closed choices enter the retained trace.
-    const excerpt = text.trim()
-    const start = source.definitionText.indexOf(excerpt)
-    return start < 0 ? null : Object.freeze({ targetId: source.targetId, claimId: source.claimId,
-      excerptStart: start, excerptEnd: start + excerpt.length })
-  })
-  if (definitionPremises.some((premise) => !premise)) return null
+  if (!sameSet(slot.targetIds, sources.map(source => source.targetId))
+    || sources.some(source => !source.definitionText.trim())) return null
+  // The plan already owns the target-bound source. Never ask the model to
+  // transcribe it, then treat an innocuous paraphrase as a missing answer.
+  // Full canonical offsets are retained; provider-supplied prose, offsets and
+  // source IDs remain forbidden, rather than accepted by fuzzy matching.
+  const definitionPremises = sources.map(source => Object.freeze({
+    targetId: source.targetId, claimId: source.claimId,
+    excerptStart: 0, excerptEnd: source.definitionText.length,
+  }))
   // This is a bounded composer interpretation, not a semantic truth verdict.
   // The closed values cannot supply free causal or clinical relationship text.
   return Object.freeze({ requestFocus: row.requestFocus, scopeOrder: row.scopeOrder,
@@ -1134,7 +1130,7 @@ function answerSchema(plan: StudentAnswerExecutionPlan): Record<string, unknown>
         additionalProperties: false,
         required: slotIds,
         properties: Object.fromEntries(slots.map((slot, index) => [slot.blockId, isDefinitionScopeSlot(plan, slot) ? {
-          type: "object", additionalProperties: false, required: ["definitionPremises", "requestFocus", "scopeOrder"],
+          type: "object", additionalProperties: false, required: ["requestFocus", "scopeOrder"],
           // Generation must obey the same cross-field invariant as parsing.
           // Distinct definitions do not authorize a simultaneous scope ordering.
           // Keep parser rejection intact; never repair an invalid choice to PASS.
@@ -1144,17 +1140,13 @@ function answerSchema(plan: StudentAnswerExecutionPlan): Record<string, unknown>
           ].map(({ focus, order }) => ({ focus: plan.requestedRelationFocus
             ? focus.filter(value => value === plan.requestedRelationFocus) : focus, order }))
             .filter(({ focus }) => focus.length > 0).map(({ focus, order }) => ({
-            type: "object", additionalProperties: false, required: ["definitionPremises", "requestFocus", "scopeOrder"],
+            type: "object", additionalProperties: false, required: ["requestFocus", "scopeOrder"],
             properties: {
-              definitionPremises: { type: "object", additionalProperties: false, required: [...slot.targetIds],
-                properties: Object.fromEntries(slot.targetIds.map(id => [id, { type: "string", minLength: 20, maxLength: 1_000 }])) },
               requestFocus: { type: "string", enum: focus },
               scopeOrder: { type: "string", enum: order },
             },
           })),
           properties: {
-            definitionPremises: { type: "object", additionalProperties: false, required: [...slot.targetIds],
-              properties: Object.fromEntries(slot.targetIds.map((id) => [id, { type: "string", minLength: 20, maxLength: 1_000 }])) },
             requestFocus: { type: "string", enum: plan.requestedRelationFocus
               ? [plan.requestedRelationFocus] : ["definition_difference", "definition_scope", "source_connection"] },
             scopeOrder: { type: "string", enum: ["first_narrower", "second_narrower", "not_ordered"] },
@@ -1221,6 +1213,8 @@ function providerContent(input: Readonly<{
         obligations,
         ...(definitionScope ? { relationComposition: {
           representation: "source_premise_then_scope_selection",
+          sourceBindingVersion: "server-owned-definition-premises@1",
+          sourceBindingAuthority: "canonical_target_sources_not_provider_output",
           ...(input.plan.requestedRelationFocus ? { requestedFocus: input.plan.requestedRelationFocus,
             focusAuthority: "observed_user_request_not_provider_choice_or_scientific_evidence" } : {}),
           orderedDefinitionSources: definitionPremiseSources(input.plan, metadata),
@@ -1820,7 +1814,7 @@ Cümle sayısı belirtildiğinde kutu sayısı cümle sayısı demek değildir. 
 `.trim()
 
 const DEFINITION_SCOPE_INSTRUCTIONS = `
-relationComposition.representation=source_premise_then_scope_selection olan kutu için serbest metin, yeniden anlatım ve cümle dizisi talimatları geçerli değildir. Yalnız şemadaki üç alanı sırayla doldur. Önce definitionPremises içinde her hazır hedef anahtarına, aynı hedefin orderedDefinitionSources.definitionText alanından kapsamını belirten kesintisiz bir alıntı koy: hangi kapasiteyi veya hangi alanları kapsadığını söyleyen en az 20 karakterlik ifade; sözcük, noktalama veya anlam değiştirme. Bu alan yeni gerekçe üretme yeri değildir, verilen tanımdan seçilmiş kaynak öncülüdür. Ardından requestFocus ile sorulan boyutu seç: aynı mı/farkı ne sorusu definition_difference, açık dar/geniş/kapsam karşılaştırması definition_scope, etki yönü veya kaynakta açıklanan bağlantı source_connection. Aynı mesaj hem aynı mı hem dar/geniş diye soruyorsa kapsam sorusu da cevaplanmalıdır: definition_scope seç. Son olarak scopeOrder: definition_scope dışındaki odaklarda not_ordered; definition_scope içinde seçtiğin kaynak öncülleri bir tanımın daha dar bir kapasiteye, diğerinin daha geniş alanlara odaklandığını gösteriyorsa orderedDefinitionSources sırasına göre first_narrower veya second_narrower, bu sıralamayı desteklemiyorsa not_ordered. Kullanıcının önerisini kanıt sayma. Aynı kaynak cümlesinde iki kavramın birlikte geçmesi, tanımların kapsamını karşılaştırmak için şart değildir; ancak farklı tanımlar etki yönünü, nedenselliği, kesin alt-küme ilişkisini veya mekanizmayı kanıtlamaz. Bu aynı üretici çağrısının sınırlı yorumudur, hakem kararı değildir. Yeni iddia, serbest açıklama veya ek alan yazma. Sistem kaynak tanımlarını, sınırlı kapsam yorumunu ve varsa açık kaynak bağlantısını görev-sahipli cümle bütçesinde gösterecek. caseBinding ve ortak örnek kutularının sözleşmesini değiştirme.
+relationComposition.representation=source_premise_then_scope_selection olan kutu için serbest metin, yeniden anlatım ve cümle dizisi talimatları geçerli değildir. Kilitli tanım metinlerini sistem orderedDefinitionSources içinden doğrudan bağlar; bu metinleri, kimliklerini veya alıntı aralıklarını çıktı olarak üretme. Yalnız şemadaki requestFocus ve scopeOrder alanlarını doldur. requestFocus ile sorulan boyutu seç: aynı mı/farkı ne sorusu definition_difference, açık dar/geniş/kapsam karşılaştırması definition_scope, etki yönü veya kaynakta açıklanan bağlantı source_connection. Aynı mesaj hem aynı mı hem dar/geniş diye soruyorsa kapsam sorusu da cevaplanmalıdır: definition_scope seç. Son olarak scopeOrder: definition_scope dışındaki odaklarda not_ordered; definition_scope içinde orderedDefinitionSources ile verilen kaynak tanımları bir tanımın daha dar bir kapasiteye, diğerinin daha geniş alanlara odaklandığını gösteriyorsa orderedDefinitionSources sırasına göre first_narrower veya second_narrower, bu sıralamayı desteklemiyorsa not_ordered. Kullanıcının önerisini kanıt sayma. Aynı kaynak cümlesinde iki kavramın birlikte geçmesi, tanımların kapsamını karşılaştırmak için şart değildir; ancak farklı tanımlar etki yönünü, nedenselliği, kesin alt-küme ilişkisini veya mekanizmayı kanıtlamaz. Bu aynı üretici çağrısının sınırlı yorumudur, hakem kararı değildir. Yeni iddia, serbest açıklama veya ek alan yazma. Sistem kaynak tanımlarını, sınırlı kapsam yorumunu ve varsa açık kaynak bağlantısını görev-sahipli cümle bütçesinde gösterecek. caseBinding ve ortak örnek kutularının sözleşmesini değiştirme.
 `.trim()
 
 const CURRENT_COMPARISON_INSTRUCTIONS = `

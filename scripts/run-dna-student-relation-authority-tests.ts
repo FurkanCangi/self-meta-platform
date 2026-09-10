@@ -44,7 +44,7 @@ const mockFetch: typeof fetch = async (_url, init) => {
     }
     return Response.json({ id: `mock-relation-authority-${mockCalls}`, output_text: JSON.stringify({
       blocks: Object.fromEntries(captured.map((slot) => [slot.slotId, slot.relationComposition && !rawRelationAttack
-        ? { definitionPremises: Object.fromEntries(slot.relationComposition.orderedDefinitionSources.map((source) => [source.targetId, source.definitionText])), requestFocus: "definition_difference", scopeOrder: "not_ordered" } : (slot.sentenceComposition?.sentenceUnits ?? 1) > 1
+        ? {  requestFocus: "definition_difference", scopeOrder: "not_ordered" } : (slot.sentenceComposition?.sentenceUnits ?? 1) > 1
         ? Array.from({ length: slot.sentenceComposition!.sentenceUnits }, () => badProviderText) : badProviderText])), illustrationKind: "none" }),
       usage: { input_tokens: 100, output_tokens: 50 } })
   } catch (error) { transportAssertion = error; throw error }

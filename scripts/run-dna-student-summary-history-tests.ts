@@ -47,7 +47,7 @@ async function main() {
     apiKey: "mock", fetchImpl: async (_url, init) => {
       const payload = JSON.parse(JSON.parse(String(init?.body)).input)
       const blocks = Object.fromEntries(payload.answerSlots.map((slot: any) => [slot.slotId,
-        { definitionPremises: Object.fromEntries(slot.relationComposition.orderedDefinitionSources.map((source: any) => [source.targetId, source.definitionText])),
+        {
           requestFocus: slot.relationComposition.requestedFocus ?? "definition_difference",
           scopeOrder: slot.relationComposition.requestedFocus === "definition_scope" ? "first_narrower" : "not_ordered" }]))
       return Response.json({ output_text: JSON.stringify({ blocks, illustrationKind: "none" }), usage: { input_tokens: 1, output_tokens: 1 } })

@@ -83,7 +83,7 @@ async function main() {
         const n = slot.sentenceComposition?.sentenceUnits ?? 1
         return [slot.slotId, n > 1 ? Array.from({ length: n }, () => text) : text]
       }
-      if (slot.relationComposition) return [slot.slotId, { definitionPremises: Object.fromEntries(slot.relationComposition.orderedDefinitionSources.map((source) => [source.targetId, source.definitionText])), requestFocus: "definition_difference", scopeOrder: "not_ordered" }]
+      if (slot.relationComposition) return [slot.slotId, {  requestFocus: "definition_difference", scopeOrder: "not_ordered" }]
       if (kinds.includes("give_concrete_example")) {
         example = true
         if (slot.sharedScenarioBinding) return [slot.slotId, {

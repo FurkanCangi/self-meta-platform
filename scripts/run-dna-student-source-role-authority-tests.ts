@@ -72,7 +72,7 @@ async function main() {
     selectedSourceReachedProvider = content.answerSlots.some((slot) => slot.activeTargets.some((target) =>
       target.lockedClaims.some((claim) => claim.claimId === "owner.unit:0854:ee5f7087f7c9")))
     const blocks = Object.fromEntries(content.answerSlots.map((slot) => [slot.slotId, {
-      definitionPremises: Object.fromEntries(slot.relationComposition.orderedDefinitionSources.map((s) => [s.targetId, s.definitionText])),
+
       requestFocus: "definition_scope", scopeOrder: "second_narrower",
     }]))
     return Response.json({ id: "mock-inverted-scope-with-recovered-source", output_text: JSON.stringify({ blocks, illustrationKind: "none" }),
@@ -97,8 +97,7 @@ async function main() {
         const content = JSON.parse(JSON.parse(String(init?.body)).input) as { answerSlots: Array<{ slotId: string;
           relationComposition: { orderedDefinitionSources: Array<{ targetId: string; definitionText: string }> } }> }
         return Response.json({ id: "mock-component-order", output_text: JSON.stringify({ blocks: Object.fromEntries(
-          content.answerSlots.map((s) => [s.slotId, { definitionPremises: Object.fromEntries(s.relationComposition.orderedDefinitionSources
-            .map((source) => [source.targetId, source.definitionText])), requestFocus: "definition_scope", scopeOrder }])), illustrationKind: "none" }),
+          content.answerSlots.map((s) => [s.slotId, {  requestFocus: "definition_scope", scopeOrder }])), illustrationKind: "none" }),
           usage: { input_tokens: 1, output_tokens: 1 } })
       } })
       assert.ok(r.ok)

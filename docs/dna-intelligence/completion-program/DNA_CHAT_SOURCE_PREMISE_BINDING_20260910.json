@@ -1,0 +1,23 @@
+{
+  "version": "dna-chat-source-premise-candidate-binding@1",
+  "parentCommit": "503016d0b11260458512abe2c61e32785c718b6a",
+  "candidateSource": "be55223f3f4529d929eaf58fb78ce2f54add141b151925bc20e732e813cf7f27",
+  "sourceIdentityIsCommit": false,
+  "manifestSha256": "3f4c5e10f82e02a7f5878f7163d4629aece6d7959d5bc026234cf69f8fa6beb4",
+  "policySha256": "50f53928ca2654eaa7d4fc3d8a989200b2cd62130a8eda9b0e5c550533382d46",
+  "previousCloseoutSha256": "a0ca9a274f46e8195aba7a04a305b4888fb25bb60884178b65c12683c3834420",
+  "previousFinalCloseoutSha256": "da203a62941f4ec578d59d087e58fd7b6aec90e3dfd685d86060bd9a245d562f",
+  "policy": "DNA_CHAT_V1@1_UNCHANGED",
+  "selectionGoldAndJudges": "UNCHANGED",
+  "oldResponses": "REGRESSION_COMPARISON_ONLY_NOT_ACCEPTANCE",
+  "baselineCalls": 880,
+  "baselineConservativeMicrousd": 3087184,
+  "maximumNewAcceptanceRequests": 400,
+  "maximumCumulativeCalls": 2884,
+  "maximumCumulativeMicrousd": 20000000,
+  "implementationScope": "Server-owned canonical definition premises; provider chooses only existing requestFocus and scopeOrder. No new science/model/gold/threshold or Report Engine change.",
+  "wireVersion": "server-owned-definition-premises@1",
+  "newPaidAcceptanceLaunchedByFix": false,
+  "releaseApproved": false,
+  "commitBinding": "Actual clean HEAD is recorded at immutable run freeze; source identity is not a commit SHA"
+}

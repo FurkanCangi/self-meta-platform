@@ -68,7 +68,7 @@ async function main() {
         providerReceivedUnit = input.answerSlots.some((slot) => slot.activeTargets.some((t) =>
           [anchorId, relationId].every((id) => t.lockedClaims.some((claim) => claim.claimId === id))))
         const blocks = Object.fromEntries(input.answerSlots.map((slot) => [slot.slotId, {
-          definitionPremises: Object.fromEntries(slot.relationComposition.orderedDefinitionSources.map((s) => [s.targetId, s.definitionText])),
+
           requestFocus: "definition_difference", scopeOrder: "not_ordered",
         }]))
         return Response.json({ id: "mock-relation-source-unit", output_text: JSON.stringify({ blocks, illustrationKind: "none" }),
