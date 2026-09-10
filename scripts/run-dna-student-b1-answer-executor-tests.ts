@@ -865,7 +865,11 @@ async function main() {
   })
   if (!deepenSetupResult.ok) throw new Error(`deepen novelty setup answer missing:${deepenSetupResult.reason}`)
   const firstClaimId = deepenSetupResult.plan.targetEvidence[0]?.claims[0]?.claimId
-  assert.deepEqual(deepenSetupResult.candidate.blocks[0]?.usedClaimIds, firstClaimId ? [firstClaimId] : [])
+  // Context-only definitions now preserve the whole selected source unit,
+  // including its qualifications. The old first-ID assertion lost that
+  // provenance; this changes a unit-level binding check, not acceptance gold.
+  assert.deepEqual(deepenSetupResult.candidate.blocks[0]?.usedClaimIds,
+    deepenSetupResult.plan.targetEvidence[0]!.claims.filter(c => c.role === "context").map(c => c.claimId))
   deepenState = applyStudentRequestContract(deepenState, deepenSetup.contract)
   const deepenQuestion = "brz daha derine gir, mekanizmayı aç ama önceki tanımı tekrarlama."
   const deepenTurn = resolveStudentEvidenceFirstRequest({

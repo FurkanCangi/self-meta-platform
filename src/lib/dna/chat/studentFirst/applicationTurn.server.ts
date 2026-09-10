@@ -21,8 +21,17 @@ import { STUDENT_APPLICATION_RUNTIME } from "./applicationPublicContract"
 import { rememberStudentConversationEvidence } from "./conversationEvidence"
 
 export function studentLocalCandidateEnabled(env: Readonly<Record<string, string | undefined>> = process.env): boolean {
-  return (env.NODE_ENV === "development" || env.NODE_ENV === "test")
+  return studentReleaseIdentity(env) !== null || (env.NODE_ENV === "development" || env.NODE_ENV === "test")
     && !env.VERCEL_ENV && env.DNA_CHAT_STUDENT_LOCAL_CANDIDATE === "1"
+}
+
+// Promotion is a separate operator decision after acceptance. Never enable
+// through a client header/token or infer release from NODE_ENV alone. The
+// deployment manifest must attest this configured source hash against its SHA.
+export function studentReleaseIdentity(env: Readonly<Record<string, string | undefined>> = process.env): string | null {
+  const identity = env.DNA_CHAT_STUDENT_RELEASE_SOURCE_SHA256?.trim() ?? ""
+  return env.DNA_CHAT_STUDENT_RELEASE_ENABLED === "1" && /^[a-f0-9]{64}$/.test(identity)
+    ? identity : null
 }
 
 /** Shared by the real authenticated POST and candidate replay. The normal

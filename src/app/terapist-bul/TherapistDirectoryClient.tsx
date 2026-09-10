@@ -23,112 +23,7 @@ const TherapistMap = dynamic(() => import("./TherapistMap"), {
   loading: () => <div className={styles.mapLoading}>Harita hazırlanıyor...</div>,
 })
 
-type DirectoryTherapist = PublicTherapist & {
-  isExample: boolean
-}
-
-const demoTherapists: DirectoryTherapist[] = [
-  {
-    id: "demo-istanbul",
-    firstName: "Selin",
-    lastName: "Acar",
-    fullName: "Uzm. Ergoterapist Selin Acar",
-    profession: "Ergoterapist",
-    title: "Uzm. Ergoterapist",
-    workplace: "DNA Uygulama Ağı",
-    country: "Türkiye",
-    city: "İstanbul",
-    district: "Kadıköy",
-    phone: "",
-    email: "",
-    shortAddress: "",
-    specialties: ["Duyu bütünleme", "Öz düzenleme", "Pediatrik uygulama"],
-    latitude: 40.9917,
-    longitude: 29.0277,
-    locationPrecision: "district",
-    isExample: true,
-  },
-  {
-    id: "demo-ankara",
-    firstName: "Mert",
-    lastName: "Yalın",
-    fullName: "Uzm. Fizyoterapist Mert Yalın",
-    profession: "Fizyoterapist",
-    title: "Uzm. Fizyoterapist",
-    workplace: "DNA Uygulama Ağı",
-    country: "Türkiye",
-    city: "Ankara",
-    district: "Çankaya",
-    phone: "",
-    email: "",
-    shortAddress: "",
-    specialties: ["Motor planlama", "Postüral kontrol", "Gelişimsel destek"],
-    latitude: 39.9179,
-    longitude: 32.8627,
-    locationPrecision: "district",
-    isExample: true,
-  },
-  {
-    id: "demo-izmir",
-    firstName: "Derya",
-    lastName: "Işık",
-    fullName: "Psikolojik Danışman Derya Işık",
-    profession: "Psikolojik Danışman",
-    title: "Psikolojik Danışman",
-    workplace: "DNA Uygulama Ağı",
-    country: "Türkiye",
-    city: "İzmir",
-    district: "Bornova",
-    phone: "",
-    email: "",
-    shortAddress: "",
-    specialties: ["Duygusal düzenleme", "Ebeveyn danışmanlığı", "Okul uyumu"],
-    latitude: 38.4622,
-    longitude: 27.221,
-    locationPrecision: "district",
-    isExample: true,
-  },
-  {
-    id: "demo-bursa",
-    firstName: "Elif",
-    lastName: "Demir",
-    fullName: "Çocuk Gelişim Uzmanı Elif Demir",
-    profession: "Çocuk Gelişim Uzmanı",
-    title: "Çocuk Gelişim Uzmanı",
-    workplace: "DNA Uygulama Ağı",
-    country: "Türkiye",
-    city: "Bursa",
-    district: "Nilüfer",
-    phone: "",
-    email: "",
-    shortAddress: "",
-    specialties: ["Erken çocukluk", "Gelişimsel izlem", "Aile rehberliği"],
-    latitude: 40.2137,
-    longitude: 28.9846,
-    locationPrecision: "district",
-    isExample: true,
-  },
-  {
-    id: "demo-antalya",
-    firstName: "Can",
-    lastName: "Eren",
-    fullName: "Dil ve Konuşma Terapisti Can Eren",
-    profession: "Dil ve Konuşma Terapisti",
-    title: "Dil ve Konuşma Terapisti",
-    workplace: "DNA Uygulama Ağı",
-    country: "Türkiye",
-    city: "Antalya",
-    district: "Muratpaşa",
-    phone: "",
-    email: "",
-    shortAddress: "",
-    specialties: ["Dil gelişimi", "İletişim becerileri", "Sosyal katılım"],
-    latitude: 36.8841,
-    longitude: 30.7056,
-    locationPrecision: "district",
-    isExample: true,
-  },
-]
+type DirectoryTherapist = PublicTherapist
 
 function normalize(value: string) {
   return value.toLocaleLowerCase("tr-TR").trim()
@@ -160,7 +55,7 @@ function TherapistRow({
         </div>
         <div>
           <div className={styles.rowBadges}>
-            {therapist.isExample ? <span>Örnek profil</span> : <span className={styles.approvedBadge}>Onaylı profil</span>}
+            <span className={styles.approvedBadge}>Onaylı profil</span>
           </div>
           <h3>{therapist.fullName}</h3>
           <p>{therapist.title || therapist.profession || "DNA eğitim katılımcısı"}</p>
@@ -197,13 +92,13 @@ function TherapistRow({
             Haritada göster
           </button>
         ) : null}
-        {!therapist.isExample && therapist.phone ? (
+        {therapist.phone ? (
           <a href={`tel:${therapist.phone.replace(/\s/g, "")}`} aria-label={`${therapist.fullName} telefon numarası`}>
             <Phone size={16} />
             Ara
           </a>
         ) : null}
-        {!therapist.isExample && therapist.email ? (
+        {therapist.email ? (
           <a href={`mailto:${therapist.email}`} aria-label={`${therapist.fullName} e-posta adresi`}>
             <Mail size={16} />
             E-posta
@@ -216,6 +111,9 @@ function TherapistRow({
 
 export default function TherapistDirectoryClient() {
   const [liveTherapists, setLiveTherapists] = useState<DirectoryTherapist[]>([])
+  const [loadingTherapists, setLoadingTherapists] = useState(true)
+  const [therapistLoadError, setTherapistLoadError] = useState(false)
+  const [reloadAttempt, setReloadAttempt] = useState(0)
   const [draftQuery, setDraftQuery] = useState("")
   const [query, setQuery] = useState("")
   const [selectedCountry, setSelectedCountry] = useState("Tümü")
@@ -227,6 +125,9 @@ export default function TherapistDirectoryClient() {
     let active = true
 
     async function loadTherapists() {
+      setLoadingTherapists(true)
+      setTherapistLoadError(false)
+
       try {
         const response = await fetch("/api/public/therapists", { cache: "no-store" })
         const payload = await response.json().catch(() => ({}))
@@ -235,12 +136,15 @@ export default function TherapistDirectoryClient() {
         }
         if (active) {
           const rows = Array.isArray(payload?.therapists) ? payload.therapists : []
-          setLiveTherapists(rows.map((therapist: PublicTherapist) => ({ ...therapist, isExample: false })))
+          setLiveTherapists(rows as PublicTherapist[])
         }
       } catch {
         if (active) {
           setLiveTherapists([])
+          setTherapistLoadError(true)
         }
+      } finally {
+        if (active) setLoadingTherapists(false)
       }
     }
 
@@ -249,12 +153,11 @@ export default function TherapistDirectoryClient() {
     return () => {
       active = false
     }
-  }, [])
+  }, [reloadAttempt])
 
-  const usingExamples = liveTherapists.length === 0
   const therapists = useMemo(
-    () => (usingExamples ? demoTherapists : liveTherapists),
-    [liveTherapists, usingExamples],
+    () => liveTherapists,
+    [liveTherapists],
   )
 
   const countries = useMemo(() => {
@@ -347,7 +250,6 @@ export default function TherapistDirectoryClient() {
           latitude: therapist.latitude,
           longitude: therapist.longitude,
           locationPrecision: therapist.locationPrecision,
-          isExample: therapist.isExample,
         }]
       }),
     [filtered],
@@ -403,6 +305,33 @@ export default function TherapistDirectoryClient() {
     window.requestAnimationFrame(() => {
       document.getElementById(`therapist-${id}`)?.scrollIntoView({ behavior: "smooth", block: "nearest" })
     })
+  }
+
+  if (loadingTherapists) {
+    return (
+      <section className={styles.directoryPanel} aria-live="polite">
+        <div className={styles.empty}>
+          <Search size={24} />
+          <strong>Yayımlanmış uzman profilleri yükleniyor.</strong>
+          <span>Liste hazır olduğunda yalnızca gerçek ve yayına açık profiller gösterilecektir.</span>
+        </div>
+      </section>
+    )
+  }
+
+  if (therapistLoadError) {
+    return (
+      <section className={styles.directoryPanel} role="alert">
+        <div className={styles.empty}>
+          <MapPin size={24} />
+          <strong>Uzman listesi şu anda yüklenemedi.</strong>
+          <span>Bağlantıyı yenileyip tekrar deneyebilirsiniz.</span>
+          <button type="button" onClick={() => setReloadAttempt((attempt) => attempt + 1)}>
+            Yeniden dene
+          </button>
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -508,7 +437,7 @@ export default function TherapistDirectoryClient() {
         <div className={styles.mapPanel} aria-label="Uzman haritası">
           <div className={styles.mapTopbar}>
             <div>
-              <span>{usingExamples ? "Örnek uzman haritası" : "Canlı uzman haritası"}</span>
+              <span>Canlı uzman haritası</span>
               <strong>
                 {selectedCity !== "Tümü"
                   ? [selectedCity, selectedCountry === "Tümü" ? "" : selectedCountry].filter(Boolean).join(" / ")
@@ -545,18 +474,26 @@ export default function TherapistDirectoryClient() {
               <span>Sonuçlar</span>
               <strong>{filtered.length} profil bulundu</strong>
             </div>
-            {usingExamples ? <em>Örnek görünüm</em> : null}
           </div>
 
           <div className={styles.listRows}>
             {filtered.length === 0 ? (
               <div className={styles.empty}>
                 <MapPin size={24} />
-                <strong>Bu filtreyle eşleşen profil yok.</strong>
-                <span>Filtreleri temizleyip yeniden deneyin.</span>
-                <button type="button" onClick={resetFilters}>
-                  Filtreleri temizle
-                </button>
+                {therapists.length === 0 ? (
+                  <>
+                    <strong>Henüz yayımlanmış uzman profili yok.</strong>
+                    <span>Yalnızca yayın izni açık ve gerekli bilgileri tamamlanmış gerçek profiller burada görünür.</span>
+                  </>
+                ) : (
+                  <>
+                    <strong>Bu filtreyle eşleşen profil yok.</strong>
+                    <span>Filtreleri temizleyip yeniden deneyin.</span>
+                    <button type="button" onClick={resetFilters}>
+                      Filtreleri temizle
+                    </button>
+                  </>
+                )}
               </div>
             ) : (
               filtered.map((therapist) => (

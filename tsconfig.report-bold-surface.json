@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "target": "ES2020",
+    "outDir": ".tmp/report-bold-surface",
+    "noEmit": false,
+    "incremental": false
+  },
+  "include": [
+    "scripts/run-report-bold-surface-tests.ts",
+    "src/lib/dna/reportText.ts"
+  ]
+}

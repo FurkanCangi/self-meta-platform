@@ -127,7 +127,7 @@ async function main() {
     const decision = r.candidate.compositionDecisions![0]!
     assert.equal(decision.requestFocus, "definition_scope")
     assert.equal(decision.scopeOrder, reverse ? "second_narrower" : "first_narrower")
-    assert.deepEqual(Object.keys(decision).sort(), ["definitionPremises", "requestFocus", "scopeOrder", "slotId"])
+    assert.deepEqual(Object.keys(decision).sort(), ["definitionPremises", "providerScopeOrder", "requestFocus", "scopeAuthority", "scopeOrder", "slotId"])
     assert.ok(Object.isFrozen(decision))
     for (const premise of decision.definitionPremises) {
       const source = captured[0]!.relationComposition.orderedDefinitionSources.find((s) => s.targetId === premise.targetId)!

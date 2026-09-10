@@ -9,13 +9,14 @@ import { normalizeDnaChatText } from "../text"
 import type { StudentRequestContract } from "./contracts"
 import type { StudentConversationEvidenceRef } from "./conversationEvidence"
 import { explicitScenarioEvents, preservesScenarioEvents, SCENARIO_FIDELITY_INSTRUCTIONS } from "./scenarioFidelity"
+import { sourceBoundDefinitionScope, withoutExampleScopeDeclarations } from "./sourceScope"
 import {
   buildStudentAnswerExecutionPlan,
   studentRelationSourceUnits,
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@101" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@103" as const
 // One deadline uses the shared transport's existing 30s ceiling instead of two
 // 20s attempts. A timeout/network error may already have incurred usage; never
 // submit a second generation automatically when its first outcome is unknown.
@@ -818,6 +819,9 @@ function slotMetadataForObligations(
     const structuredDefinitionSlot = obligations.some((obligation) => obligation.kind === "define_target")
       && Boolean(evidence && evidence.claims.length > 3 && evidence.claims[0]?.text.trim().endsWith(":"))
     if (structuredDefinitionSlot) return evidence!.claims.map((claim) => claim.claimId)
+    if (evidence && obligations.some(o => o.kind === "define_target")
+      && contextOnlyDefinitionClaims(evidence.claims)) return evidence.claims
+        .filter(c => c.role === "context").map(c => c.claimId)
     // The comparison composer already receives this full non-contrast source
     // unit. Bind it rather than dropping useful context to match two base IDs.
     // Cross-target link authority remains a separate, narrower projection.
@@ -995,6 +999,8 @@ function isSharedScenarioSlot(plan: StudentAnswerExecutionPlan, slot: StudentAns
 type DefinitionScopeSelection = Readonly<{
   requestFocus: "definition_difference" | "definition_scope" | "source_connection"
   scopeOrder: "first_narrower" | "second_narrower" | "not_ordered"
+  providerScopeOrder: "first_narrower" | "second_narrower" | "not_ordered"
+  scopeAuthority: ReturnType<typeof sourceBoundDefinitionScope>
   definitionPremises: readonly Readonly<{ targetId: string; claimId: string; excerptStart: number; excerptEnd: number }>[]
 }>
 
@@ -1033,9 +1039,12 @@ function definitionScopeSelection(value: unknown, plan: StudentAnswerExecutionPl
     targetId: source.targetId, claimId: source.claimId,
     excerptStart: 0, excerptEnd: source.definitionText.length,
   }))
-  // This is a bounded composer interpretation, not a semantic truth verdict.
-  // The closed values cannot supply free causal or clinical relationship text.
-  return Object.freeze({ requestFocus: row.requestFocus, scopeOrder: row.scopeOrder,
+  const scopeAuthority = sourceBoundDefinitionScope(sources.map(s => ({ ...s,
+    aliases: plan.targetEvidence.find(t => t.studentTargetId === s.targetId)!.visibleAliases })))
+  // Retain the model's choice for diagnosis, never use it as source authority.
+  const scopeOrder = row.requestFocus !== "definition_scope" || !scopeAuthority ? "not_ordered"
+    : sources[0]!.targetId === scopeAuthority.narrowerTargetId ? "first_narrower" : "second_narrower"
+  return Object.freeze({ requestFocus: row.requestFocus, scopeOrder, providerScopeOrder: row.scopeOrder, scopeAuthority,
     definitionPremises: Object.freeze(definitionPremises) } as DefinitionScopeSelection)
 }
 
@@ -1205,6 +1214,8 @@ function providerContent(input: Readonly<{
         } } : {}),
         ...(sharedScenario ? { sharedScenarioBinding: {
           scope: "one_activity", targetIds: metadata.targetIds,
+          eventAuthority: "activity_actor_object_goal_and_outcome",
+          applicationRule: "elaborate_same_event_without_reversing_goal_or_distractor",
           representation: "activity_then_target_event_and_concept_link",
           ...(sentenceBudgets ? { applicationSentenceUnits: Object.fromEntries(metadata.targetIds.map((id, targetIndex) =>
             [id, sharedApplicationBudgets(metadata, sentenceBudgets[index]!)[targetIndex]])) } : {}),
@@ -1670,6 +1681,8 @@ function lockedClaimsForAnswerSlot(
     return eligible.length > 1 ? eligible.slice(1) : eligible
   }
   if (obligations.some((obligation) => obligation.kind === "define_target")) {
+    const contextual = contextOnlyDefinitionClaims(claims)
+    if (contextual) return contextual
     // A list lead-in is not a definition by itself. Hand off the complete
     // already-selected source unit and let the composer explain it; punctuation
     // must not authorize replacing its answer with a fabricated cycle/flow.
@@ -1678,6 +1691,19 @@ function lockedClaimsForAnswerSlot(
     return definitionClaim ? [definitionClaim] : claims
   }
   return claims
+}
+
+// Context evidence supports a contextual explanation, not a newly invented
+// formal definition or successful capacity attribution. Preserve all selected
+// qualifications/negations and their claim IDs; no catalog/test IDs here.
+export function contextOnlyDefinitionClaims(
+  claims: StudentAnswerExecutionPlan["targetEvidence"][number]["claims"],
+) {
+  const eligible = claims.filter(c => c.role !== "contrast")
+  // Existing explicitly enumerated source flows already have a complete
+  // structured-definition handoff; this fallback does not take it over.
+  if (eligible.length > 3 && eligible[0]?.text.trim().endsWith(":")) return null
+  return eligible.length && eligible.every(c => c.role === "context") ? eligible : null
 }
 
 function withoutProviderSectionLead(text: string, sectionPrefix: string | null) {
@@ -1813,6 +1839,10 @@ const COUNTED_DISCOURSE_INSTRUCTIONS = `
 Cümle sayısı belirtildiğinde kutu sayısı cümle sayısı demek değildir. Her kutu kendi obligations görevlerinin tek anlam sahibidir; sentenceComposition veya summaryComposition o göreve ayrılan cümle sayısını verir ve önceki genel cümle-kutusu kuralının yerine geçer. sentenceUnits=1 için tek metin parçası, daha büyükse şemadaki tam sayıda parçadan oluşan dizi yaz; her öğe bir cümlenin içeriği olsun, başlık veya son noktalama ekleme. Bütün öğeler aynı kutunun kaynak, ilişki, olay ve politika sınırlarına bağlıdır. Diziye geçmek bu yetkiyi genişletmez. Ek cümleleri farklı desteklenen noktaları açıklamak için kullan; tekrarla veya kaynaksız çıkarımla doldurma. Bir görevdeki bilgiyi başka görevin kutusuna taşıma. Örnek kutusu activity ve applications yapısını korur: activity tek etkinliktir; applications alanındaki her öğe eventStep ve conceptLink çifti olarak kalır, serbest metne dönüşmez. applicationSentenceUnits çift sayısıdır; her çift aynı hedefin aynı etkinlik içindeki farklı somut adımıyla kavramsal bağını taşır, yeni etkinlik başlatma. Sistem çiftin iki alanını aynı görev-sahipli cümlede birleştirir. Sistem görevleri ve örneğin alanlarını ancak sonunda, istenen toplam cümle sayısına göre birleştirir.
 `.trim()
 
+const SHARED_EVENT_OWNERSHIP_INSTRUCTIONS = `
+Ortak örnekte olayın sahibi activity alanıdır. Her eventStep bu olayın aynı kişi, nesne, hedef ve sonucunu korur; kavram tanımına benzetmek için yeni veya ters bir olay kurmaz. Özellikle ertelenen/sınırlandırılan davranışın nesnesini değiştirip hedefe yönelik davranışı ertelenen davranışa dönüştürme. Önce activity içinde hangi davranışın sürdüğünü, hangisinin yapılmadığını belirle; eventStep ve conceptLink içindeki yüklemleri aynı nesnelere bağla. Bir kavramın tanımında erteleme veya durdurma geçmesi, etkinlikteki her eylemin ertelendiği veya durduğu anlamına gelmez. Başarı/başarısızlık, hatırlama/unutma, dönme/dönmeme ve destekli/desteksiz koşullar hem olayda hem kavramsal açıklamasında aynı kalır. Yanlış olay yazıp sonuna doğru tanım ekleme; bütün alanları tek tutarlı örnek olarak oluştur.
+`.trim()
+
 const DEFINITION_SCOPE_INSTRUCTIONS = `
 relationComposition.representation=source_premise_then_scope_selection olan kutu için serbest metin, yeniden anlatım ve cümle dizisi talimatları geçerli değildir. Kilitli tanım metinlerini sistem orderedDefinitionSources içinden doğrudan bağlar; bu metinleri, kimliklerini veya alıntı aralıklarını çıktı olarak üretme. Yalnız şemadaki requestFocus ve scopeOrder alanlarını doldur. requestFocus ile sorulan boyutu seç: aynı mı/farkı ne sorusu definition_difference, açık dar/geniş/kapsam karşılaştırması definition_scope, etki yönü veya kaynakta açıklanan bağlantı source_connection. Aynı mesaj hem aynı mı hem dar/geniş diye soruyorsa kapsam sorusu da cevaplanmalıdır: definition_scope seç. Son olarak scopeOrder: definition_scope dışındaki odaklarda not_ordered; definition_scope içinde orderedDefinitionSources ile verilen kaynak tanımları bir tanımın daha dar bir kapasiteye, diğerinin daha geniş alanlara odaklandığını gösteriyorsa orderedDefinitionSources sırasına göre first_narrower veya second_narrower, bu sıralamayı desteklemiyorsa not_ordered. Kullanıcının önerisini kanıt sayma. Aynı kaynak cümlesinde iki kavramın birlikte geçmesi, tanımların kapsamını karşılaştırmak için şart değildir; ancak farklı tanımlar etki yönünü, nedenselliği, kesin alt-küme ilişkisini veya mekanizmayı kanıtlamaz. Bu aynı üretici çağrısının sınırlı yorumudur, hakem kararı değildir. Yeni iddia, serbest açıklama veya ek alan yazma. Sistem kaynak tanımlarını, sınırlı kapsam yorumunu ve varsa açık kaynak bağlantısını görev-sahipli cümle bütçesinde gösterecek. caseBinding ve ortak örnek kutularının sözleşmesini değiştirme.
 `.trim()
@@ -1904,8 +1934,13 @@ function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan, questi
       slot.targetIds,
       slot.obligationIds,
     )
+    const contextualTargets = slot.targetIds.map(id => plan.targetEvidence.find(t => t.studentTargetId === id))
+    const contextDefinition = slotObligations.length === 1 && slotObligations[0]?.kind === "define_target"
+      && contextualTargets.every(t => t && contextOnlyDefinitionClaims(t.claims))
+      ? contextualTargets.flatMap(t => contextOnlyDefinitionClaims(t!.claims)!
+        .map(c => citationFreeStudentClaim(c.text))).join(" ") : null
     const authoritativeText = measurementScopeText || deterministicPolicyText || supportedExampleText || relationUnits?.join(" ")
-      || deepenMechanismText || supportedMechanismText || unsupportedDailyLifeText || targetExplanationText || multiTargetSummaryText
+      || deepenMechanismText || supportedMechanismText || unsupportedDailyLifeText || targetExplanationText || contextDefinition || multiTargetSummaryText
     if (relationProjection && authoritativeText === relationProjection.units.join(" ")) {
       projectedClaimIdsBySlot.set(slot.blockId, relationProjection.usedClaimIds)
     }
@@ -1926,7 +1961,10 @@ function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan, questi
         withoutProviderSectionLead(text.trim(), sectionPrefix), plan, slot,
       )
       const withoutExampleLead = slot.blockKind === "example" ? withoutProviderExampleLead(withoutSectionLead) : withoutSectionLead
-      return withoutUnrequestedExampleBoundary(withoutExampleLead, plan, slot.blockKind)
+      const scopedExample = slot.blockKind === "example" && compositionDecisions.length
+        ? withoutExampleScopeDeclarations(withoutExampleLead, plan.targetEvidence.flatMap(t => t.visibleAliases))
+        : withoutExampleLead
+      return withoutUnrequestedExampleBoundary(scopedExample, plan, slot.blockKind)
     })
     return [slot.blockId, sentenceBudgets
       ? realizeOwnedSentences(units, budget, plan.presentation.format) ?? ""
@@ -2033,7 +2071,7 @@ export async function executeStudentAnswer(input: Readonly<{
         ...(plan.obligations.some((obligation) => obligation.kind === "distinguish_targets")
           && !plan.obligations.some((obligation) => obligation.kind === "explain_relation")
           ? ["Kavram ayrımı alt görevinde farkı kaynakla açıkla. Sözleşmedeki özet, örnek, gözlem ve diğer görevler aynen geçerlidir. relationSupport mevcut kaynak sınırını belirtir; kavram ayrımına ek bir bilimsel ilişki açıklama görevi oluşturmaz. Kullanıcının istemediği ayrıca bilimsel ilişki, etki yönü veya ilişki yokluğu açıklaması üretme."] : []),
-        ...(answerSlotMetadata(plan).some((slot) => isSharedScenarioSlot(plan, slot)) ? [SHARED_SCENARIO_INSTRUCTIONS] : []),
+        ...(answerSlotMetadata(plan).some((slot) => isSharedScenarioSlot(plan, slot)) ? [SHARED_SCENARIO_INSTRUCTIONS, SHARED_EVENT_OWNERSHIP_INSTRUCTIONS] : []),
         ...(plan.obligations.some(o => o.kind === "give_concrete_example") ? [SCENARIO_FIDELITY_INSTRUCTIONS] : []),
         ...(answerSentenceBudgets(plan) ? [COUNTED_DISCOURSE_INSTRUCTIONS] : []),
         ...(answerSlotMetadata(plan).some((slot) => isDefinitionScopeSlot(plan, slot)) ? [DEFINITION_SCOPE_INSTRUCTIONS] : []),

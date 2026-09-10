@@ -12,6 +12,49 @@ export const OPTIONAL_REPORT_HEADINGS = [
   "8. Literatürle Uyumlu Klinik Dayanak",
 ] as const
 
+// The doctoral-jury report is the current product contract. Keep this list
+// local to the presentation adapter so the legacy 7+1 heading aliases can
+// continue to render older saved reports without rewriting the new 5-heading
+// report. In particular, the new second heading contains the legacy phrase
+// "Klinik Kanıt Profili" and must be recognized before legacy substring
+// replacement runs.
+export const JURY_REPORT_HEADINGS = [
+  "1. Klinik Özet",
+  "2. Bulgular ve Klinik Kanıt Profili",
+  "3. Klinik Örüntü",
+  "4. Klinik Karar",
+  "5. Bilimsel Literatür",
+] as const
+
+export function extractFullBoldClinicalReportParagraphs(text: string): string[] {
+  const paragraphs = String(text || "")
+    .replace(/\r\n/gu, "\n")
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => /^\*\*[^*\n].*[^*\n]\*\*$|^\*\*[^*\n]\*\*$/u.test(line))
+    .map((line) => normalizeClinicalReportText(line.slice(2, -2).trim()))
+    .filter(Boolean)
+
+  return [...new Set(paragraphs)]
+}
+
+export function applyFullBoldClinicalReportParagraphs(
+  text: string,
+  paragraphs: readonly string[]
+): string {
+  const normalized = normalizeClinicalReportText(text)
+  const targets = new Set(
+    paragraphs
+      .map((paragraph) => normalizeClinicalReportText(paragraph).trim())
+      .filter(Boolean)
+  )
+
+  return normalized
+    .split("\n")
+    .map((line) => targets.has(line.trim()) ? `**${line.trim()}**` : line)
+    .join("\n")
+}
+
 const LEGACY_OR_VARIANT_HEADINGS: Array<[RegExp, string]> = [
   [/^\s*(?:1\.\s*)?Klinik Karar Özeti\s*:?\s*$/gim, CANONICAL_REPORT_HEADINGS[0]],
   [/^\s*(?:1\.\s*)?Genel Sonuç\s*:?\s*$/gim, CANONICAL_REPORT_HEADINGS[0]],
@@ -73,6 +116,25 @@ function applyHeadingLineNormalization(text: string): string {
   return normalized
 }
 
+function hasOrderedJuryHeadings(text: string) {
+  let previousOffset = -1
+  for (const heading of JURY_REPORT_HEADINGS) {
+    const offset = text.indexOf(heading)
+    if (offset < 0 || offset <= previousOffset) return false
+    previousOffset = offset
+  }
+  return true
+}
+
+function normalizeJuryReportHeadingBoundaries(text: string) {
+  return JURY_REPORT_HEADINGS.reduce(
+    (current, heading) => current.replaceAll(heading, `\n${heading}\n`),
+    text
+  )
+    .replace(/\n{3,}/g, "\n\n")
+    .trim()
+}
+
 export function normalizeClinicalReportText(text: string): string {
   if (!text) return ""
 
@@ -91,6 +153,10 @@ export function normalizeClinicalReportText(text: string): string {
     .replace(/[ \t]+\n/g, "\n")
     .replace(/[ \t]{2,}/g, " ")
     .trim()
+
+  if (hasOrderedJuryHeadings(normalized)) {
+    return normalizeJuryReportHeadingBoundaries(normalized)
+  }
 
   normalized = applyHeadingLineNormalization(normalized)
 

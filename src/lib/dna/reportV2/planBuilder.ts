@@ -9,6 +9,7 @@ import type {
   ClinicalDecisionState,
   ClinicalDecisionPlan,
   ClinicalEvidenceMatrix,
+  ClinicalEvidenceUnit,
   ConfidenceBreakdown,
   EvidenceSufficiency,
   FormulationId,
@@ -300,8 +301,28 @@ function section4SynthesisClaim(input: Readonly<{
     .filter((entry) => entry.availability === "AVAILABLE" && entry.evidenceIds.some((id) => supportingEvidenceIds.includes(id)))
     .map((entry) => CASE_SOURCE_LABELS[entry.source])
   const evidenceIds = unique(supportingEvidenceIds.length ? supportingEvidenceIds : ["evidence.total-score"])
+  const supportingUnits = evidenceIds
+    .map((id) => input.matrix.units.find((unit) => unit.id === id))
+    .filter((unit): unit is ClinicalEvidenceUnit => Boolean(unit))
+  const caseFinding = supportingUnits.find((unit) => unit.sourceType === "CAREGIVER_REPORT" && unit.direction === "SUPPORTS")
+    ?? supportingUnits.find((unit) => unit.sourceType === "THERAPIST_OBSERVATION" && unit.direction === "SUPPORTS")
+  const contextual = input.primary?.id === "balanced" || input.matrix.discrepancyClusters.length === 0
+    ? undefined
+    : input.matrix.units.find((unit) => unit.sourceType === "CONTEXTUAL_EVIDENCE")
+  const caseContext = caseFinding?.finding.match(/^Bakım veren,\s+(.+?)\s+(?:fizyolojik düzenleme|duyusal işleme|duygusal düzenleme|bilişsel düzenleme|yürütücü işlevler|bedensel sinyalleri fark etme)\s+ile ilişkili güçlük/iu)?.[1]?.trim()
+  const corroboratingLabels = sourceLabels.filter((label) => label !== "bakım veren anlatısı" && label !== "terapist gözlemi")
+  const caseFindingLead = caseFinding?.sourceType === "CAREGIVER_REPORT"
+    ? `Bakım verenin ${caseContext && caseContext.length <= 70 ? `${caseContext} ` : "günlük yaşamda "}bildirdiği güçlük`
+    : caseFinding?.sourceType === "THERAPIST_OBSERVATION"
+    ? "Terapist gözleminde görülen güçlük"
+    : null
   const text = input.primary
-    ? `${joinTurkish(sourceLabels)} ${SECTION_4_FOCUS_OBJECTS[input.primary.id]} desteklemektedir.`
+    ? [
+        caseFindingLead
+          ? `${caseFindingLead}${corroboratingLabels.length ? `, ${joinTurkish(corroboratingLabels)} ile birlikte` : ""} ${SECTION_4_FOCUS_OBJECTS[input.primary.id]} desteklemektedir.`
+          : `${joinTurkish(sourceLabels)} ${SECTION_4_FOCUS_OBJECTS[input.primary.id]} desteklemektedir.`,
+        contextual?.finding,
+      ].filter(Boolean).join(" ")
     : `${joinTurkish(sourceLabels)} tek bir alanda baskın güçlük göstermemektedir.`
   return claim({
     id: "claim.section4-synthesis",
@@ -342,6 +363,7 @@ function section4BoundaryClaim(input: Readonly<{
       formulationId: input.primary?.id ?? null,
     })
   }
+  if (input.primary?.id === "balanced") return null
   const contextual = input.matrix.units.find((unit) => unit.sourceType === "CONTEXTUAL_EVIDENCE")
   const preserved = input.matrix.units.find((unit) => unit.sourceType === "PRESERVED_CAPACITY")
   const capacity = contextual ?? preserved
@@ -403,7 +425,7 @@ function sourceComparisonClaim(input: Readonly<{
   const relationPriority: Record<CaseEvidenceSourceRelation, number> = { DISAGREES: 0, PARTIALLY_SUPPORTS: 1, SUPPORTS: 2, NOT_COMPARABLE: 3, MISSING: 4 }
   const candidateRelations = input.sourceMatrix.canonicalRelations
     .filter((relation) => relation.relation !== "MISSING" && (focalDomains.size === 0 || relation.domain === "global" || relation.domain == null || focalDomains.has(relation.domain as DomainKey) || relation.relation === "DISAGREES"))
-  const relevant = candidateRelations
+  const orderedRelations = candidateRelations
     .filter((relation) => !(relation.domain == null || relation.domain === "global") || !candidateRelations.some((specific) => {
       if (specific.domain == null || specific.domain === "global" || specific.relation !== relation.relation) return false
       const relationPair = sourcePair(relation.sourceA, relation.sourceB).join("|")
@@ -412,7 +434,12 @@ function sourceComparisonClaim(input: Readonly<{
     }))
     .sort((left, right) => relationPriority[left.relation] - relationPriority[right.relation]
       || Number(right.relationIds.length) - Number(left.relationIds.length))
-    .slice(0, 4)
+  const discrepantRelations = orderedRelations.filter((relation) => relation.relation === "DISAGREES")
+  const relevant = [
+    ...discrepantRelations,
+    ...orderedRelations.filter((relation) => relation.relation !== "DISAGREES")
+      .slice(0, Math.max(0, 4 - discrepantRelations.length)),
+  ]
   const sentences = relevant.map(sourcePairSentence)
   const relationIds = relevant.flatMap((relation) => relation.relationIds)
   const comparedSources = new Set(relevant.flatMap((relation) => [relation.sourceA, relation.sourceB]))

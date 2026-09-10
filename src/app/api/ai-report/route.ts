@@ -153,11 +153,14 @@ import { readJsonWithSchema } from "@/lib/security/schemaGuards"
 import { consumeReportCredit, grantReportCredits } from "@/lib/security/reportCredits"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { isOwnerAuditEmail } from "@/lib/owner/ownerAccess"
-import { buildAdvancedReport } from "@/lib/dna/reportEngine"
+import { buildJuryReadyReport } from "@/lib/dna/reportJury/index"
 import { buildDnaChatSnapshotContext } from "@/lib/dna/chat/reportSnapshot"
 import { extractAgeMonthsFromAnamnez, isSupportedAgeMonths } from "@/lib/dna/ageUtils"
-import { buildLiteratureAlignedSection } from "@/lib/dna/literatureNote"
-import { normalizeClinicalReportText } from "@/lib/dna/reportText"
+import {
+  applyFullBoldClinicalReportParagraphs,
+  extractFullBoldClinicalReportParagraphs,
+  normalizeClinicalReportText,
+} from "@/lib/dna/reportText"
 import { validateAndNormalizeClinicalReport } from "@/lib/dna/clinicalSafetyValidator"
 import { calculateAssessment } from "@/lib/assessment/assessmentEngine"
 import { ASSESSMENT_SCORING_VERSION } from "@/lib/assessment/itemScoring"
@@ -186,14 +189,25 @@ async function createSupabaseServerClient() {
 }
 
 function cleanRenderedReport(text: string): string {
-  return validateAndNormalizeClinicalReport(normalizeClinicalReportText(text)).text
+  const emphasizedParagraphs = extractFullBoldClinicalReportParagraphs(text).map(
+    (paragraph) => validateAndNormalizeClinicalReport(paragraph).text
+  )
+  const cleaned = validateAndNormalizeClinicalReport(normalizeClinicalReportText(text)).text
+  return applyFullBoldClinicalReportParagraphs(cleaned, emphasizedParagraphs)
 }
 
-function appendOptionalSection(baseText: string, optionalSection?: string | null): string {
-  const main = String(baseText || "").trim()
-  const extra = String(optionalSection || "").trim()
-  if (!extra) return main
-  return [main, extra].filter(Boolean).join("\n\n")
+function renderAcceptedReportForProduct(
+  juryReport: Awaited<ReturnType<typeof buildJuryReadyReport>>
+): string {
+  const emphasizedParagraphs = juryReport.lockedLanguagePlan.sections
+    .flatMap((section) => section.paragraphs)
+    .filter((entry) => entry.emphasis === "full_bold")
+    .map((entry) => entry.text)
+
+  return applyFullBoldClinicalReportParagraphs(
+    juryReport.finalReport,
+    emphasizedParagraphs
+  )
 }
 
 function validateInputDna(body: any) {
@@ -432,13 +446,31 @@ if (__validationErrors.length > 0) {
       )
     }
 
-    const report = buildAdvancedReport({
+    const juryReport = await buildJuryReadyReport({
       clientCode: body?.clientCode || "",
       ageMonths: incomingAgeMonths,
       anamnez: body?.anamnez || "",
       answers: body.answers,
       scores: numericScores,
     })
+
+    if (
+      juryReport.reportStatus !== "ready_for_therapist_review" ||
+      !juryReport.validation.pass ||
+      !juryReport.templateSemanticLeakage.pass
+    ) {
+      console.error("DNA report clinical validation failed", {
+        reportStatus: juryReport.reportStatus,
+        validationFailureCodes: juryReport.validation.failureCodes,
+        templateLeakageFailureCodes: juryReport.templateSemanticLeakage.findings.map((finding) => finding.code),
+      })
+      return NextResponse.json(
+        { ok: false, error: "Rapor klinik doğrulama kontrolünü geçemedi." },
+        { status: 422 }
+      )
+    }
+
+    const report = juryReport.base.v1
 
     if (!report.clinicalAnalysis) {
       return NextResponse.json(
@@ -447,16 +479,8 @@ if (__validationErrors.length > 0) {
       )
     }
 
-    const literatureSection = buildLiteratureAlignedSection(report.clinicalAnalysis, {
-      ageMonths: incomingAgeMonths ?? undefined,
-      stableSeed: `${String(body?.clientCode || body?.client_code || "")}|${assessmentId}`,
-    })
-    const finalText = cleanRenderedReport(
-      appendOptionalSection(report.deterministicReport, literatureSection?.text)
-    )
-    const cleanDeterministic = cleanRenderedReport(
-      appendOptionalSection(report.deterministicReport, literatureSection?.text)
-    )
+    const finalText = renderAcceptedReportForProduct(juryReport)
+    const cleanDeterministic = finalText
 
     const credit = await consumeReportCredit({
       admin,

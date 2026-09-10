@@ -3,7 +3,7 @@
 import "leaflet/dist/leaflet.css"
 
 import { latLngBounds } from "leaflet"
-import { Building2, GraduationCap, MapPin } from "lucide-react"
+import { Building2, MapPin } from "lucide-react"
 import { useEffect } from "react"
 import { CircleMarker, MapContainer, Popup, ScaleControl, TileLayer, Tooltip, ZoomControl, useMap } from "react-leaflet"
 import styles from "./page.module.css"
@@ -21,7 +21,6 @@ export type TherapistMapPoint = {
   latitude: number
   longitude: number
   locationPrecision: "district" | "city"
-  isExample: boolean
 }
 
 type TherapistMapProps = {
@@ -138,11 +137,6 @@ export default function TherapistMap({ points, selectedId, onSelect }: Therapist
                       <span key={specialty}>{specialty}</span>
                     ))}
                   </div>
-                ) : null}
-                {point.isExample ? (
-                  <em>
-                    <GraduationCap size={14} /> Örnek profil
-                  </em>
                 ) : null}
               </article>
             </Popup>

@@ -56,7 +56,7 @@ import { evaluateDnaS13LimitedBudget } from "@/lib/dna/chat/s13/limitedRollout/t
 import { DNA_INTELLIGENCE_INTENDED_USE_VERSION } from "@/lib/dna/chat/intendedUse"
 import { DNA_KNOWLEDGE_AUTHORITY_CONTRACT_VERSION } from "@/lib/dna/chat/knowledgeAuthority"
 import type { DnaChatApiResolverDependencies } from "@/lib/dna/chat/apiResolver"
-import { resolveStudentApplicationTurn, studentLocalCandidateEnabled } from "@/lib/dna/chat/studentFirst/applicationTurn.server"
+import { resolveStudentApplicationTurn, studentLocalCandidateEnabled, studentReleaseIdentity } from "@/lib/dna/chat/studentFirst/applicationTurn.server"
 import { STUDENT_APPLICATION_TOKEN_MAX_LENGTH } from "@/lib/dna/chat/studentFirst/applicationContext.server"
 import { studentCandidateSha256 } from "../../../../../scripts/dna-student-candidate-identity"
 
@@ -440,7 +440,7 @@ export async function POST(request: Request) {
       if (!conversationId || limitedRolloutContextToken) return finish(errorResponse("invalid_payload", 400), requestId)
       const resolution = await timing.measure("runtime_resolution", () => resolveStudentApplicationTurn({
         payload, contextToken: studentContextToken, normal: normalDependencies, safetyIdentifier: lunaSafetyIdentifier,
-        binding: { actorId: auth.user.id, conversationId, candidateSha256: studentCandidateSha256(),
+        binding: { actorId: auth.user.id, conversationId, candidateSha256: studentReleaseIdentity() ?? studentCandidateSha256(),
           secret: process.env[DNA_S13_LIMITED_ROLLOUT_ENV.contextSecret]?.trim() || "" },
       }))
       return finish(json(resolution.body, { status: resolution.status }), requestId)

@@ -208,7 +208,14 @@ function locativeVowel(vowel: string | null) {
 
 function suffixHarmonyErrors(text: string) {
   const errors: string[] = []
-  for (const match of text.matchAll(/\b([\p{L}]+?)([ıiuü])n([dt])([ae])\b/giu)) {
+  // A bare `-in/-ın/-un/-ün + -de/-da` shape is ambiguous in Turkish: the
+  // `in` may belong to the lexical stem (for example `kantin-de` or
+  // `rutin-de`) rather than a possessive suffix. Restrict this heuristic to
+  // softened `ğ` stems, which are the generated report forms this guard is
+  // intended to validate (for example the malformed `önceliğinda`). This
+  // preserves the hard failure for generated suffix errors without rejecting
+  // valid lexical locatives.
+  for (const match of text.matchAll(/\b([\p{L}]*ğ)([ıiuü])n([dt])([ae])\b/giu)) {
     const expectedPossessive = harmonyVowel(lastVowel(match[1]!))
     const expectedLocative = locativeVowel(match[2]!)
     if (match[2] !== expectedPossessive || match[3] !== "d" || match[4] !== expectedLocative) errors.push(match[0])

@@ -1,0 +1,28 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp/report-live-release",
+    "rootDir": ".",
+    "module": "CommonJS",
+    "moduleResolution": "Node",
+    "target": "ES2020",
+    "incremental": false,
+    "isolatedModules": false
+  },
+  "include": [
+    "scripts/fixtures/dna-report-form-dump-case.ts",
+    "scripts/fixtures/dna-report-jury-cases.ts",
+    "scripts/run-report-form-dump-regression-tests.ts",
+    "scripts/run-report-jury-readiness-tests.ts",
+    "scripts/run-report-human-readability-acceptance.ts",
+    "scripts/run-report-final-closure-200.ts",
+    "scripts/run-report-final-polish-1000.ts",
+    "scripts/run-report-mega100-human-replay.ts",
+    "scripts/run-report-product-surface-integration.ts",
+    "scripts/run-report-zero-cost-language-hardening-tests.ts",
+    "scripts/run-report-surface-heading-compat-tests.ts",
+    "src/lib/dna/reportJury/**/*.ts",
+    "src/lib/dna/reportV2/**/*.ts"
+  ]
+}
