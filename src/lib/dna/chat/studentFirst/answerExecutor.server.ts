@@ -16,7 +16,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@103" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@104" as const
 // One deadline uses the shared transport's existing 30s ceiling instead of two
 // 20s attempts. A timeout/network error may already have incurred usage; never
 // submit a second generation automatically when its first outcome is unknown.
@@ -1706,6 +1706,18 @@ export function contextOnlyDefinitionClaims(
   return eligible.length && eligible.every(c => c.role === "context") ? eligible : null
 }
 
+export function contextOnlyDefinitionText(
+  claims: StudentAnswerExecutionPlan["targetEvidence"][number]["claims"],
+): string | null {
+  const contextual = contextOnlyDefinitionClaims(claims)
+  if (!contextual) return null
+  // A context-only source cannot silently discharge a definition duty by
+  // listing related facts. Make the source limitation responsive and visible,
+  // then retain the useful evidence instead of refusing the whole question.
+  return `Mevcut kaynakta doğrudan bir tanım verilmiyor. Konuyu şu bilgilerle açıklayabiliriz: ${contextual
+    .map(c => citationFreeStudentClaim(c.text)).join(" ")}`
+}
+
 function withoutProviderSectionLead(text: string, sectionPrefix: string | null) {
   if (sectionPrefix === "Mekanizma ve işleyiş açısından:") {
     return text.replace(/^mekanizma(?:\s+ve\s+işleyiş)?\s+açısından\s*:?\s*/iu, "").trim()
@@ -1937,8 +1949,7 @@ function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan, questi
     const contextualTargets = slot.targetIds.map(id => plan.targetEvidence.find(t => t.studentTargetId === id))
     const contextDefinition = slotObligations.length === 1 && slotObligations[0]?.kind === "define_target"
       && contextualTargets.every(t => t && contextOnlyDefinitionClaims(t.claims))
-      ? contextualTargets.flatMap(t => contextOnlyDefinitionClaims(t!.claims)!
-        .map(c => citationFreeStudentClaim(c.text))).join(" ") : null
+      ? contextualTargets.map(t => contextOnlyDefinitionText(t!.claims)!).join(" ") : null
     const authoritativeText = measurementScopeText || deterministicPolicyText || supportedExampleText || relationUnits?.join(" ")
       || deepenMechanismText || supportedMechanismText || unsupportedDailyLifeText || targetExplanationText || contextDefinition || multiTargetSummaryText
     if (relationProjection && authoritativeText === relationProjection.units.join(" ")) {

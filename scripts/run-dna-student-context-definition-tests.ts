@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { readFileSync } from "node:fs"
-import { contextOnlyDefinitionClaims, executeStudentAnswer } from "../src/lib/dna/chat/studentFirst/answerExecutor.server"
+import { contextOnlyDefinitionClaims, contextOnlyDefinitionText, executeStudentAnswer } from "../src/lib/dna/chat/studentFirst/answerExecutor.server"
 
 const root = "/Volumes/ResearchSSD/Outputs/SelfMetaAI/DNA_CHAT_V1_BOUNDED_CLOSEOUT_20260910/development-cycle-1"
 const read = (name: string) => JSON.parse(readFileSync(`${root}/${name}`, "utf8"))
@@ -20,6 +20,12 @@ async function main() {
     "Destek olmadan sürdürür.", "Öğretmen desteğiyle sürdürür."]) {
     const input = [{ ...claims[0], claimId: "generic-source", text }]
     assert.deepEqual(contextOnlyDefinitionClaims(input), input); checks++
+    assert.ok(contextOnlyDefinitionText(input)?.endsWith(text)); checks++
+    assert.match(contextOnlyDefinitionText(input)!, /Mevcut kaynakta doğrudan bir tanım verilmiyor/u); checks++
+  }
+  for (const input of [[], claims.map((c: any) => ({ ...c, role: "target" })),
+    claims.map((c: any) => ({ ...c, role: "contrast" }))]) {
+    assert.equal(contextOnlyDefinitionText(input), null); checks++
   }
   let calls = 0
   // Inject the actual bad model definition; canonical context must replace
@@ -29,6 +35,7 @@ async function main() {
   assert.ok(result.ok)
   for (const claim of claims) assert.ok(result.answer.includes(claim.text))
   assert.doesNotMatch(result.answer, /kendi kendine düzenleyerek sürdürdüğü/u)
+  assert.match(result.answer, /Mevcut kaynakta doğrudan bir tanım verilmiyor/u)
   assert.deepEqual([...result.candidate.usedClaimIds].sort(), claims.map((c: any) => c.claimId).sort())
   checks++
   console.log(JSON.stringify({ ok: true, checks, mockCalls: calls, externalProviderCalls: 0,
