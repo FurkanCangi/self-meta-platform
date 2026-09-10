@@ -33,6 +33,7 @@ const mockFetch: typeof fetch = async (_input, init) => {
   mockCalls += 1
   const request = JSON.parse(String(init?.body)) as { input: string }
   const content = JSON.parse(request.input) as {
+    scenarioFidelity?: { constraints: readonly { axis: "recall" | "completion" | "return" | "support"; polarity: "negative" | "positive" }[] }
     operation: string
     summaryEpistemicScope?: { limitPolicyIds: readonly string[] }
     historyAnchor: null | Readonly<{
@@ -79,6 +80,15 @@ const mockFetch: typeof fetch = async (_input, init) => {
         : ""
     const withHistory = (text: string) => `${historyPrefix}${text}`
     const kinds = new Set(slot.obligations.map((obligation) => obligation.kind))
+    // Transport double follows the new event contract; no gold/fixture changes.
+    // Generic success prose is intentionally no longer a valid negative scene.
+    if (kinds.has("give_concrete_example") && content.scenarioFidelity?.constraints.length) {
+      const event = { recall: { negative: "yönergeyi unutuyor", positive: "yönergeyi hatırlıyor" },
+        completion: { negative: "görevi başaramıyor", positive: "görevi başarıyor" },
+        return: { negative: "göreve dönmüyor", positive: "göreve dönüyor" },
+        support: { negative: "desteksiz çalışıyor", positive: "yetişkin desteğiyle çalışıyor" } }
+      return `${labels} için aynı etkinlikte öğrenci ${content.scenarioFidelity.constraints.map(c => event[c.axis][c.polarity]).join(" ve ")}.`
+    }
     if (kinds.has("use_shared_scenario")) return withHistory(`Tek bir sınıf görevinde öğrenci ${labels} becerilerini aynı durum içinde ayrı ayrı kullanır.`)
     if (kinds.has("distinguish_targets") && kinds.has("explain_relation")) {
       return withHistory(`${labels} aynı şey değildir; birbiriyle ilişkili olsalar da kapsamları ayrıdır.`)

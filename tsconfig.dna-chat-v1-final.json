@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.dna-chat-v1.json",
+  "compilerOptions": {
+    "typeRoots": ["../../node_modules/@types", "./types"],
+    "outDir": "/Volumes/ResearchSSD/Outputs/SelfMetaAI/DNA_CHAT_V1_SCENARIO_FIDELITY_20260910/compiled"
+  },
+  "include": [
+    "scripts/dna-student-application-replay.ts",
+    "scripts/dna-student-candidate-identity.ts",
+    "scripts/dna-stabilization-budget.ts",
+    "scripts/dna-student-visible-evaluation-input.ts",
+    "scripts/dna-student-visible-judge.ts",
+    "scripts/run-dna-student-mini24-visible.ts",
+    "scripts/run-dna-student-*-tests.ts",
+    "scripts/run-typescript-source-scope-tests.ts"
+  ],
+  "exclude": ["node_modules", "scripts/run-dna-student-development-adapter-tests.ts", "scripts/run-dna-student-resolver-contrastive-tests.ts"]
+}

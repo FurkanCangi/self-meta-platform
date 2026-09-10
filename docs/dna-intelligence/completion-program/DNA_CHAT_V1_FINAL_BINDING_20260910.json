@@ -1,0 +1,20 @@
+{
+  "version": "dna-chat-v1-final-candidate-binding@1",
+  "parentCommit": "bf441fff99a2b1a2df98fe47e2af586d359e7c86",
+  "candidateSource": "a9496c8ba879d8a47aa40d8e3939616830dc6c7f85a3930e478a014ccaae543f",
+  "sourceIdentityIsCommit": false,
+  "manifestSha256": "3f4c5e10f82e02a7f5878f7163d4629aece6d7959d5bc026234cf69f8fa6beb4",
+  "policySha256": "50f53928ca2654eaa7d4fc3d8a989200b2cd62130a8eda9b0e5c550533382d46",
+  "previousCloseoutSha256": "a0ca9a274f46e8195aba7a04a305b4888fb25bb60884178b65c12683c3834420",
+  "policy": "DNA_CHAT_V1@1_UNCHANGED",
+  "selectionGoldAndJudges": "UNCHANGED",
+  "oldResponses": "REGRESSION_COMPARISON_ONLY_NOT_ACCEPTANCE",
+  "baselineCalls": 844,
+  "baselineConservativeMicrousd": 2979289,
+  "maximumNewAcceptanceRequests": 400,
+  "maximumCumulativeCalls": 2884,
+  "maximumCumulativeMicrousd": 20000000,
+  "implementationScope": "Explicit concrete-example event direction and support condition preservation only; no scientific, safety, target or Report Engine change",
+  "guardScope": "Bounded lexical contradiction guard for recall/completion/return/support, not a general semantic judge or automatic release acceptance. Mixed actors and unrecognized paraphrases still need existing source-aware and direct text review.",
+  "commitBinding": "Actual clean HEAD recorded at immutable run freeze; this source identity is not a commit SHA"
+}

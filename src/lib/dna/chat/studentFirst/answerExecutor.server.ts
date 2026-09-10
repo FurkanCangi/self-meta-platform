@@ -8,13 +8,14 @@ import {
 import { normalizeDnaChatText } from "../text"
 import type { StudentRequestContract } from "./contracts"
 import type { StudentConversationEvidenceRef } from "./conversationEvidence"
+import { explicitScenarioEvents, preservesScenarioEvents, SCENARIO_FIDELITY_INSTRUCTIONS } from "./scenarioFidelity"
 import {
   buildStudentAnswerExecutionPlan,
   studentRelationSourceUnits,
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@99" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@100" as const
 // One deadline uses the shared transport's existing 30s ceiling instead of two
 // 20s attempts. A timeout/network error may already have incurred usage; never
 // submit a second generation automatically when its first outcome is unknown.
@@ -39,6 +40,7 @@ export const DNA_STUDENT_ANSWER_FAILURE_CODES = Object.freeze([
   "shared_scenario_block_mismatch",
   "example_block_role_mismatch",
   "unrequested_example_boundary",
+  "scenario_event_direction_mismatch",
 ] as const)
 
 export type StudentAnswerFailureCode = typeof DNA_STUDENT_ANSWER_FAILURE_CODES[number]
@@ -1182,6 +1184,10 @@ function providerContent(input: Readonly<{
   const sentenceBudgets = answerSentenceBudgets(input.plan)
   return JSON.stringify({
     currentUserMessage: input.question,
+    ...(input.plan.obligations.some(o => o.kind === "give_concrete_example") ? {
+      scenarioFidelity: { authority: "explicit_user_event_not_scientific_evidence",
+        constraints: explicitScenarioEvents(input.question), preserveActorObjectAndOrder: true },
+    } : {}),
     operation: input.plan.operation,
     rejectedTargetIds: input.plan.rejectedTargetIds,
     historyAnchor: input.plan.historyAnchor,
@@ -2034,6 +2040,7 @@ export async function executeStudentAnswer(input: Readonly<{
           && !plan.obligations.some((obligation) => obligation.kind === "explain_relation")
           ? ["Kavram ayrımı alt görevinde farkı kaynakla açıkla. Sözleşmedeki özet, örnek, gözlem ve diğer görevler aynen geçerlidir. relationSupport mevcut kaynak sınırını belirtir; kavram ayrımına ek bir bilimsel ilişki açıklama görevi oluşturmaz. Kullanıcının istemediği ayrıca bilimsel ilişki, etki yönü veya ilişki yokluğu açıklaması üretme."] : []),
         ...(answerSlotMetadata(plan).some((slot) => isSharedScenarioSlot(plan, slot)) ? [SHARED_SCENARIO_INSTRUCTIONS] : []),
+        ...(plan.obligations.some(o => o.kind === "give_concrete_example") ? [SCENARIO_FIDELITY_INSTRUCTIONS] : []),
         ...(answerSentenceBudgets(plan) ? [COUNTED_DISCOURSE_INSTRUCTIONS] : []),
         ...(answerSlotMetadata(plan).some((slot) => isDefinitionScopeSlot(plan, slot)) ? [DEFINITION_SCOPE_INSTRUCTIONS] : []),
         ...(plan.currentComparisonContext ? [CURRENT_COMPARISON_INSTRUCTIONS] : []),
@@ -2071,8 +2078,28 @@ export async function executeStudentAnswer(input: Readonly<{
     })
   }
   const candidate = parseCandidate(attempt.result.value, plan, input.question)
-  const failureCodes = candidate ? validateStudentAnswerCandidate({ candidate, plan })
-    : Object.freeze(["answer_missing" as const])
+  const failureCodes: StudentAnswerFailureCode[] = candidate ? [...validateStudentAnswerCandidate({ candidate, plan })]
+    : ["answer_missing"]
+  // Check event fields before conceptual prose and then the visible projection.
+  // Definitions cannot conceal a reversed event; an echoed question is not an example.
+  if (candidate && plan.obligations.some(o => o.kind === "give_concrete_example")) {
+    const constraints = explicitScenarioEvents(input.question)
+    const rawBlocks = (attempt.result.value as { blocks?: Record<string, unknown> }).blocks ?? {}
+    const slots = answerSlotMetadata(plan).filter(slot => slot.blockKind === "example")
+    const eventsPreserved = slots.every(slot => {
+      const raw = rawBlocks[slot.blockId]
+      if (isSharedScenarioSlot(plan, slot)) {
+        const structured = sharedScenarioDiscourse(raw, slot,
+          answerSentenceBudgets(plan)?.[answerSlotMetadata(plan).findIndex(s => s.blockId === slot.blockId)] ?? 1)
+        return !!structured && preservesScenarioEvents(constraints,
+          [structured.activity, ...structured.applications.map(a => a.eventStep)].join(" "))
+      }
+      return preservesScenarioEvents(constraints, Array.isArray(raw) ? raw.join(" ") : String(raw ?? ""))
+    })
+    const visiblePreserved = preservesScenarioEvents(constraints,
+      candidate.blocks.filter(b => b.blockKind === "example").map(b => b.text).join(" "), false)
+    if (!eventsPreserved || !visiblePreserved) failureCodes.push("scenario_event_direction_mismatch")
+  }
   const provider = Object.freeze({
     calls,
     transportRetries,
