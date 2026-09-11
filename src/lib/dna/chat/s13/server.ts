@@ -60,6 +60,14 @@ export type DnaS13ProviderFailure = Readonly<{
   httpStatus: number | null
   apiErrorType: string | null
   apiErrorCode: string | null
+  // Server-side diagnostics only; never raw error messages, request content or keys.
+  transport?: Readonly<{
+    phase: "waiting_headers" | "reading_body" | "parsing_output"
+    elapsedMs: number
+    deadlineMs: number
+    deadlineExceeded: boolean
+    causeCode: string | null
+  }>
 }>
 
 export type DnaS13ProviderAttempt<T> =
@@ -147,11 +155,29 @@ export async function requestDnaS13StructuredOutputDetailed(input: Readonly<{
   const apiKey = input.apiKey?.trim() || process.env.OPENAI_API_KEY?.trim()
   if (!apiKey) return Object.freeze({ ok: false, failure: providerFailure("missing_key") })
   const controller = new AbortController()
+  const studentAnswer = input.name === "dna_student_answer_executor"
+  // The answer executor may wait for one slow response; other S13 users keep
+  // their existing ceiling. This does not retry or change the model payload.
+  const timeoutCeiling = studentAnswer ? 90_000 : 30_000
   const timeoutMs = Number.isFinite(input.timeoutMs) && Number(input.timeoutMs) > 0
-    ? Math.min(Math.round(Number(input.timeoutMs)), 30_000)
+    ? Math.min(Math.round(Number(input.timeoutMs)), timeoutCeiling)
     : DNA_S13_REQUEST_TIMEOUT_MS
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
   const started = performance.now()
+  let phase: "waiting_headers" | "reading_body" | "parsing_output" = "waiting_headers"
+  let receivedStatus: number | null = null
+  const fail = (reason: DnaS13ProviderFailureReason, error?: unknown): DnaS13ProviderAttempt<never> => {
+    const row = error && typeof error === "object" ? error as { code?: unknown; cause?: { code?: unknown } } : null
+    const code = row?.cause?.code ?? row?.code
+    const causeCode = typeof code === "string" && /^(?:ECONNRESET|ECONNREFUSED|ENOTFOUND|EAI_AGAIN|ETIMEDOUT|UND_ERR_CONNECT_TIMEOUT|UND_ERR_HEADERS_TIMEOUT|UND_ERR_BODY_TIMEOUT|UND_ERR_SOCKET)$/.test(code) ? code : null
+    const failure = Object.freeze({
+      ...providerFailure(reason, { httpStatus: receivedStatus }),
+      ...(studentAnswer ? { transport: Object.freeze({ phase, elapsedMs: Math.round(performance.now() - started),
+        deadlineMs: timeoutMs, deadlineExceeded: controller.signal.aborted, causeCode }) } : {}),
+    })
+    if (studentAnswer) console.warn("[dna_chat_provider_transport]", JSON.stringify(failure))
+    return Object.freeze({ ok: false, failure })
+  }
   try {
     const response = await (input.fetchImpl ?? fetch)(OPENAI_RESPONSES_URL, {
       method: "POST",
@@ -171,15 +197,19 @@ export async function requestDnaS13StructuredOutputDetailed(input: Readonly<{
       }),
       signal: controller.signal,
     })
+    receivedStatus = response.status
+    phase = "reading_body"
     let payload: unknown
     try {
       payload = await response.json() as unknown
-    } catch {
+    } catch (error) {
+      if (studentAnswer) return fail(controller.signal.aborted ? "timeout" : "invalid_response_json", error)
       return Object.freeze({
         ok: false,
         failure: providerFailure("invalid_response_json", { httpStatus: response.status }),
       })
     }
+    phase = "parsing_output"
     if (!response.ok) {
       return Object.freeze({
         ok: false,
@@ -206,6 +236,8 @@ export async function requestDnaS13StructuredOutputDetailed(input: Readonly<{
       }),
     })
   } catch (error) {
+    if (studentAnswer) return fail(controller.signal.aborted || (error instanceof Error && error.name === "AbortError")
+      ? "timeout" : "network_error", error)
     return Object.freeze({
       ok: false,
       failure: providerFailure(error instanceof Error && error.name === "AbortError" ? "timeout" : "network_error"),

@@ -16,11 +16,10 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@105" as const
-// One deadline uses the shared transport's existing 30s ceiling instead of two
-// 20s attempts. A timeout/network error may already have incurred usage; never
-// submit a second generation automatically when its first outcome is unknown.
-export const DNA_STUDENT_ANSWER_EXECUTOR_TIMEOUT_MS = 30_000
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@106" as const
+// Wait for the same request through a bounded slow response, not a second
+// generation. Unknown usage remains unknown and never authorizes a retry.
+export const DNA_STUDENT_ANSWER_EXECUTOR_TIMEOUT_MS = 90_000
 export const DNA_STUDENT_ANSWER_EXECUTOR_MAX_PROVIDER_CALLS = 1
 export const DNA_STUDENT_ANSWER_EXECUTOR_MAX_TRANSPORT_RETRIES = 0
 
@@ -2126,7 +2125,7 @@ export async function executeStudentAnswer(input: Readonly<{
         usageComplete,
         responseId: null,
         usage: ZERO_USAGE,
-        latencyMs: 0,
+        latencyMs: attempt.failure.transport?.elapsedMs ?? 0,
         rawOutputStored: false as const,
       }),
     })

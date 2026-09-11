@@ -62,6 +62,9 @@ import { studentCandidateSha256 } from "../../../../../scripts/dna-student-candi
 
 export const dynamic = "force-dynamic"
 export const runtime = "nodejs"
+// Includes bounded context interpretation, one90s answer request and auth/audit.
+// Deployment must support this duration; no provider retry is introduced.
+export const maxDuration = 180
 
 const MAX_BODY_BYTES = 8 * 1024
 const NO_STORE_HEADERS = {
