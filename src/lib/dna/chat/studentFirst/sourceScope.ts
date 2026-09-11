@@ -54,12 +54,28 @@ export function sourceBoundDefinitionScope(sources: readonly DefinitionScopeSour
  * example slot owns the concrete event, not a second hierarchy declaration.
  * Keep ordinary scenario sentences and their target links; do not copy a gold
  * answer or replace the user's event with a successful event. */
-export function withoutExampleScopeDeclarations(text: string, aliases: readonly string[]): string {
+export function withoutExampleScopeDeclarations(text: string, aliases: readonly string[],
+  supportedScope?: Readonly<{ broaderAliases: readonly string[]; narrowerAliases: readonly string[] }>): string {
   return [...new Intl.Segmenter("tr", { granularity: "sentence" }).segment(text)]
     .map(p => p.segment.trim()).filter(sentence => {
       const s = normalizeDnaChatText(sentence)
       const namesTarget = aliases.some(alias => s.includes(normalizeDnaChatText(alias)))
       const scopeAssertion = /\b(?:daha (?:dar|genis|kapsamli)|genis bir (?:kavram|cerceve)|alt kume|altinda yer|icindeki alan|icindedir|kapsaminda|kapsamina|kapsar|icerir|parcasidir|bilesenidir)\b/u.test(s)
-      return !(namesTarget && scopeAssertion)
+      if (!(namesTarget && scopeAssertion)) return true
+      // Do not delete a concrete event merely because the SAME sentence also
+      // contains a scope statement already established by the locked sources.
+      // Count every scope assertion: one valid phrase cannot launder another
+      // unsupported hierarchy or a reverse-direction statement in the sentence.
+      if (!supportedScope) return false
+      const assertions = [...s.matchAll(/\b(?:daha (?:dar|genis|kapsamli)|genis bir (?:kavram|cerceve)|alt kume|altinda yer|icindeki alan|icindedir|kapsaminda|kapsamina|kapsar|icerir|parcasidir|bilesenidir)\b/gu)]
+      return assertions.length > 0 && assertions.every(match => {
+        const expectedAliases = match[0] === "daha dar" ? supportedScope.narrowerAliases
+          : ["daha genis", "daha kapsamli"].includes(match[0]) ? supportedScope.broaderAliases : []
+        const prefix = s.slice(0, match.index).trimEnd()
+        return expectedAliases.some(alias => {
+          const name = normalizeDnaChatText(alias)
+          return prefix === name || prefix.endsWith(` ${name}`)
+        }) && !/\b(?:degil|degildir|olmayabilir)\b/u.test(s.slice(match.index).split(/[.;]/u)[0]!)
+      })
     }).join(" ")
 }

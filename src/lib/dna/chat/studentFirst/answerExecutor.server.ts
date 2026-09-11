@@ -16,7 +16,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@107" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@108" as const
 // Wait for the same request through a bounded slow response, not a second
 // generation. Unknown usage remains unknown and never authorizes a retry.
 export const DNA_STUDENT_ANSWER_EXECUTOR_TIMEOUT_MS = 90_000
@@ -2007,8 +2007,12 @@ function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan, questi
         withoutProviderSectionLead(text.trim(), sectionPrefix), plan, slot,
       )
       const withoutExampleLead = slot.blockKind === "example" ? withoutProviderExampleLead(withoutSectionLead) : withoutSectionLead
+      const scope = compositionDecisions.length === 1 ? compositionDecisions[0]?.scopeAuthority : null
       const scopedExample = slot.blockKind === "example" && compositionDecisions.length
-        ? withoutExampleScopeDeclarations(withoutExampleLead, plan.targetEvidence.flatMap(t => t.visibleAliases))
+        ? withoutExampleScopeDeclarations(withoutExampleLead, plan.targetEvidence.flatMap(t => t.visibleAliases), scope ? {
+          broaderAliases: plan.targetEvidence.find(t => t.studentTargetId === scope.broaderTargetId)?.visibleAliases ?? [],
+          narrowerAliases: plan.targetEvidence.find(t => t.studentTargetId === scope.narrowerTargetId)?.visibleAliases ?? [],
+        } : undefined)
         : withoutExampleLead
       return withoutUnrequestedExampleBoundary(scopedExample, plan, slot.blockKind)
     })
