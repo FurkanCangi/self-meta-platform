@@ -16,7 +16,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@106" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@107" as const
 // Wait for the same request through a bounded slow response, not a second
 // generation. Unknown usage remains unknown and never authorizes a retry.
 export const DNA_STUDENT_ANSWER_EXECUTOR_TIMEOUT_MS = 90_000
@@ -264,7 +264,7 @@ export function validateStudentAnswerCandidate(input: Readonly<{
   if (!exampleRequired && candidate.illustrationKind !== "none") failures.add("example_not_identified")
   if (!plan.obligations.some((obligation) => EXPLICIT_BOUNDARY_KINDS.includes(obligation.kind))
     && candidate.blocks.some((block) => block.blockKind === "example"
-      && containsUnrequestedExampleBoundary(block.text))) failures.add("unrequested_example_boundary")
+      && containsUnrequestedExampleBoundary(block.text, plan))) failures.add("unrequested_example_boundary")
   if (plan.presentation.requestedSentenceCount !== null
     && sentenceCount(candidate.answer) !== plan.presentation.requestedSentenceCount) failures.add("sentence_count_mismatch")
   if (INTERNAL_LANGUAGE.test(candidate.answer)
@@ -1094,7 +1094,7 @@ function realizeSharedScenarioDiscourse(value: SharedScenarioDiscourse, plan: St
   const renderPart = (content: string) => {
     // Do not tokenize valid field text just to rejoin it: decimals and internal
     // abbreviations are not boundaries between the already-typed fields.
-    const scoped = containsUnrequestedExampleBoundary(content)
+    const scoped = containsUnrequestedExampleBoundary(content, plan)
       ? withoutUnrequestedExampleBoundary(content, plan, "example") : content
     if (scoped.trim().length < 4) return null
     return counted ? asSingleSentenceFragment(scoped)
@@ -1220,6 +1220,14 @@ function providerContent(input: Readonly<{
             [id, sharedApplicationBudgets(metadata, sentenceBudgets[index]!)[targetIndex]])) } : {}),
         } } : {}),
         slotKind: metadata.blockKind,
+        ...(exampleSlot ? { exampleRealization: {
+          authority: "illustration_not_evidence_of_capacity",
+          requiredContent: "concrete_actor_action_object_and_outcome_not_definition_repetition",
+          targetApplication: "match_each_source_requirement_to_the_actual_event_before_claiming_it_is_demonstrated",
+          permittedRelations: ["illustrates_source_process", "difficulty_using_source_process", "not_demonstrated_by_this_event"],
+          absentEvidence: "explain_the_missing_condition_without_inventing_a_success_or_diagnosing_a_deficit",
+          definitionOnlyIsNotAnExample: true,
+        } } : {}),
         obligations,
         ...(definitionScope ? { relationComposition: {
           representation: "source_premise_then_scope_selection",
@@ -1752,21 +1760,34 @@ const EXPLICIT_BOUNDARY_KINDS: readonly StudentRequestContract["obligations"][nu
   "offer_safe_assessment_frame",
 ])
 
-function containsUnrequestedExampleBoundary(text: string) {
+function containsUnrequestedExampleBoundary(text: string, plan?: StudentAnswerExecutionPlan) {
+  // A source-bound explanation that the described event does NOT instantiate
+  // a target is part of bind_example_to_target, not an optional diagnostic
+  // disclaimer. Do not erase the negative half of a conceptual distinction.
+  if (plan && isConceptApplicationLimit(text, plan)) return false
   const normalized = normalizeDnaChatText(text)
   const boundarySubject = /\b(?:bilimsel|kanit|tani|kesin|tek\s+basina|sonuc|cikarim|ornek|durum|gozlem)\w*\b/u
   const limitingConclusion = /\b(?:degerlendirilmez|gostermez|kanitlamaz|yetmez|yeterli\s+degil|yeterli\s+degildir|cikarilamaz|soylenemez|sonuc\s+vermez)\b/u
   return boundarySubject.test(normalized) && limitingConclusion.test(normalized)
 }
 
-function withoutBoundarySentences(text: string) {
+function isConceptApplicationLimit(text: string, plan: StudentAnswerExecutionPlan) {
+  const normalized = normalizeDnaChatText(text)
+  if (/\b(?:tani|terapi|tedavi|kapasite|bilimsel\s+kanit|kesin\s+sonuc)\w*\b/u.test(normalized)) return false
+  const namesTarget = plan.targetEvidence.some(target => target.visibleAliases.some(alias =>
+    normalized.includes(normalizeDnaChatText(alias))))
+  return namesTarget && /\b(?:orneklemez|gostermez|gostermiyor|gosterildigi\s+soylenemez)\b/u.test(normalized)
+    && /\b(?:olay|davranis|ornek|durum|adim)\w*\b/u.test(normalized)
+}
+
+function withoutBoundarySentences(text: string, plan: StudentAnswerExecutionPlan) {
   const sentences = text.match(/[^.!?]+[.!?]?/gu) ?? [text]
   return sentences.flatMap((sentence) => {
     const terminal = sentence.match(/[.!?]\s*$/u)?.[0]?.trim() ?? ""
     const clauses = sentence.replace(/[.!?]\s*$/u, "").split(/\s*;\s*/u)
       .map((clause) => clause.trim())
       .filter(Boolean)
-      .filter((clause) => !containsUnrequestedExampleBoundary(clause))
+      .filter((clause) => !containsUnrequestedExampleBoundary(clause, plan))
     if (!clauses.length) return []
     return [`${clauses.join("; ")}${terminal}`]
   }).join(" ").trim()
@@ -1783,10 +1804,10 @@ function withoutUnrequestedExampleBoundary(
   const withoutConjunctiveBoundary = text
     .replace(
       /\s*[;,]?\s*(?:ancak|fakat|ama)\s+(?:bu\s+)?(?:kısa\s+)?(?:örnek|durum|gözlem)\s+tek\s+başına[^.!?]*(?:göstermez|kanıtlamaz|yetmez|yeterli\s+değildir|çıkarılamaz)[.!?]?/giu,
-      "",
+      (match) => isConceptApplicationLimit(match, plan) ? match : "",
     )
     .trim()
-  return withoutBoundarySentences(withoutConjunctiveBoundary)
+  return withoutBoundarySentences(withoutConjunctiveBoundary, plan)
 }
 
 function asSingleSentenceFragment(text: string) {
@@ -1863,6 +1884,10 @@ Cümle sayısı belirtildiğinde kutu sayısı cümle sayısı demek değildir. 
 
 const SHARED_EVENT_OWNERSHIP_INSTRUCTIONS = `
 Ortak örnekte olayın sahibi activity alanıdır. Her eventStep bu olayın aynı kişi, nesne, hedef ve sonucunu korur; kavram tanımına benzetmek için yeni veya ters bir olay kurmaz. Özellikle ertelenen/sınırlandırılan davranışın nesnesini değiştirip hedefe yönelik davranışı ertelenen davranışa dönüştürme. Önce activity içinde hangi davranışın sürdüğünü, hangisinin yapılmadığını belirle; eventStep ve conceptLink içindeki yüklemleri aynı nesnelere bağla. Bir kavramın tanımında erteleme veya durdurma geçmesi, etkinlikteki her eylemin ertelendiği veya durduğu anlamına gelmez. Başarı/başarısızlık, hatırlama/unutma, dönme/dönmeme ve destekli/desteksiz koşullar hem olayda hem kavramsal açıklamasında aynı kalır. Yanlış olay yazıp sonuna doğru tanım ekleme; bütün alanları tek tutarlı örnek olarak oluştur.
+`.trim()
+
+const EXAMPLE_APPLICATION_INSTRUCTIONS = `
+exampleRealization bulunan kutu soyut tanım kutusu değildir. Kullanıcı yalnız kısa bir örnek istese de gözlenebilir bir kişi, eylem, eylemin nesnesi ve sonuç bulunmalıdır. Tanımı yeniden söyleyip önüne Örnek etiketi gelmesi bu görevi karşılamaz. Önce verilen olayın neyi içerdiğini belirle, sonra her hedefin kaynak tanımının gerektirdiği sürecin gerçekten o olayda bulunup bulunmadığını karşılaştır. Her kavramın başarılı kullanıldığını göstermek zorunda değilsin: olay bir süreci kullanmakta güçlüğü gösterebilir veya diğer kavramın gösterildiği söylenemeyebilir. Bir eylemin gerçekleşmemesi, o eylemin hedef doğrultusunda bilinçli olarak sınırlandığı anlamına gelmez; bir adımın unutulması da başka bir tepkinin durdurulduğunu göstermez. Başarısızlığı tanımdaki başarılı sürecin örneği diye etiketleme. Kavramın koşulu olayda yoksa somut olarak eksik olan koşulu açıkla; kavramın bu olayda neden gösterilmediğini belirtmek bind_example_to_target görevinin parçasıdır, tanı/kapasite sınırı değildir. Bu açıklamada gerekirse visibleAliases içindeki kavram adını kullanabilirsin. Kullanıcının vermediği başarı, telafi, dikkat dağıtıcı, niyet veya kişisel neden ekleme. İstenen ayrımı bu aynı olay üzerinden ver, genel ret veya tanım tekrarıyla değiştirme. conceptLink varsa bu kural orada da geçerlidir; eventStep yalnız gerçekleşen olayı anlatsın. Bu öğretici eşleme, bir kişinin kapasitesi veya tanısı hakkında sonuç değildir.
 `.trim()
 
 const DEFINITION_SCOPE_INSTRUCTIONS = `
@@ -2093,7 +2118,7 @@ export async function executeStudentAnswer(input: Readonly<{
           && !plan.obligations.some((obligation) => obligation.kind === "explain_relation")
           ? ["Kavram ayrımı alt görevinde farkı kaynakla açıkla. Sözleşmedeki özet, örnek, gözlem ve diğer görevler aynen geçerlidir. relationSupport mevcut kaynak sınırını belirtir; kavram ayrımına ek bir bilimsel ilişki açıklama görevi oluşturmaz. Kullanıcının istemediği ayrıca bilimsel ilişki, etki yönü veya ilişki yokluğu açıklaması üretme."] : []),
         ...(answerSlotMetadata(plan).some((slot) => isSharedScenarioSlot(plan, slot)) ? [SHARED_SCENARIO_INSTRUCTIONS, SHARED_EVENT_OWNERSHIP_INSTRUCTIONS] : []),
-        ...(plan.obligations.some(o => o.kind === "give_concrete_example") ? [SCENARIO_FIDELITY_INSTRUCTIONS] : []),
+        ...(plan.obligations.some(o => o.kind === "give_concrete_example") ? [SCENARIO_FIDELITY_INSTRUCTIONS, EXAMPLE_APPLICATION_INSTRUCTIONS] : []),
         ...(answerSentenceBudgets(plan) ? [COUNTED_DISCOURSE_INSTRUCTIONS] : []),
         ...(answerSlotMetadata(plan).some((slot) => isDefinitionScopeSlot(plan, slot)) ? [DEFINITION_SCOPE_INSTRUCTIONS] : []),
         ...(plan.currentComparisonContext ? [CURRENT_COMPARISON_INSTRUCTIONS] : []),
