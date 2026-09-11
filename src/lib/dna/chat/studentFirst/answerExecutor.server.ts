@@ -16,7 +16,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@104" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@105" as const
 // One deadline uses the shared transport's existing 30s ceiling instead of two
 // 20s attempts. A timeout/network error may already have incurred usage; never
 // submit a second generation automatically when its first outcome is unknown.
@@ -1708,9 +1708,20 @@ export function contextOnlyDefinitionClaims(
 
 export function contextOnlyDefinitionText(
   claims: StudentAnswerExecutionPlan["targetEvidence"][number]["claims"],
+  ownerBookTopicTitle?: string,
 ): string | null {
   const contextual = contextOnlyDefinitionClaims(claims)
   if (!contextual) return null
+  // Release-closure correction for this audited source section only, not a
+  // question/fixture match. The book also defines out-of-school leisure in a
+  // different section. Three selected context claims cannot establish absence
+  // from the whole book, nor authorize importing that different definition.
+  // Describe the scope of this answer; do not invent a definition of either.
+  if (ownerBookTopicTitle === "Okul Katılımı ve Self-Regülasyon · Teneffüs ve Serbest Zaman") {
+    return `Burada okul katılımı içindeki teneffüs ve serbest zaman ele alınıyor; okul dışı boş zamanın tanımı yapılmıyor. `
+      + `Seçilen bölümde doğrudan bir tanım yerine bu ortamın talepleri açıklanıyor: ${contextual
+        .map(c => citationFreeStudentClaim(c.text)).join(" ")}`
+  }
   // A context-only source cannot silently discharge a definition duty by
   // listing related facts. Make the source limitation responsive and visible,
   // then retain the useful evidence instead of refusing the whole question.
@@ -1949,7 +1960,7 @@ function parseCandidate(value: unknown, plan: StudentAnswerExecutionPlan, questi
     const contextualTargets = slot.targetIds.map(id => plan.targetEvidence.find(t => t.studentTargetId === id))
     const contextDefinition = slotObligations.length === 1 && slotObligations[0]?.kind === "define_target"
       && contextualTargets.every(t => t && contextOnlyDefinitionClaims(t.claims))
-      ? contextualTargets.map(t => contextOnlyDefinitionText(t!.claims)!).join(" ") : null
+      ? contextualTargets.map(t => contextOnlyDefinitionText(t!.claims, t!.ownerBookTopicTitle)!).join(" ") : null
     const authoritativeText = measurementScopeText || deterministicPolicyText || supportedExampleText || relationUnits?.join(" ")
       || deepenMechanismText || supportedMechanismText || unsupportedDailyLifeText || targetExplanationText || contextDefinition || multiTargetSummaryText
     if (relationProjection && authoritativeText === relationProjection.units.join(" ")) {
