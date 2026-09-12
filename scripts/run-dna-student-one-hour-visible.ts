@@ -72,7 +72,7 @@ async function main() {
         turnId: turn.turnId,
         stage: "answer_executor",
         reason: execution.reason,
-        detail: execution.reason === "candidate_invalid" ? execution.failureCodes : execution.failure.reason,
+        detail: execution.reason === "candidate_invalid" ? execution.failureCodes : "failure" in execution ? execution.failure.reason : execution.reason,
       }
       break
     }

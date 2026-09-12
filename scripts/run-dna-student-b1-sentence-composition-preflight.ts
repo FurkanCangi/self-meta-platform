@@ -67,7 +67,7 @@ async function main() {
       gate: "STUDENT_B1_SENTENCE_COMPOSITION_PREFLIGHT",
       turnId: target.turnId,
       failure: execution.reason,
-      detail: execution.reason === "candidate_invalid" ? execution.failureCodes : execution.failure.reason,
+      detail: execution.reason === "candidate_invalid" ? execution.failureCodes : "failure" in execution ? execution.failure.reason : execution.reason,
       providerCalls: execution.provider.calls,
       rawOutputsStored: 0,
       usage,

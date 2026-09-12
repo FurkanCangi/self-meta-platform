@@ -27,6 +27,13 @@ function acts(...enabled: readonly StudentSemanticTask[]): StudentSemanticFrame[
   return Object.freeze({
     define: selected.has("define"),
     explain: selected.has("explain"),
+    significance: selected.has("significance"),
+    relate: selected.has("relate"),
+    deepen: selected.has("deepen"),
+    boundary: selected.has("boundary"),
+    measurement: selected.has("measurement"),
+    mechanism: selected.has("mechanism"),
+    daily_life: selected.has("daily_life"),
     compare: selected.has("compare"),
     example: selected.has("example"),
     case_reasoning: selected.has("case_reasoning"),

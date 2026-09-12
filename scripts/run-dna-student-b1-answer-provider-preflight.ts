@@ -48,7 +48,7 @@ async function main() {
           const detail = answer.reason === "provider_failure"
             ? [answer.failure.reason, answer.failure.httpStatus, answer.failure.apiErrorType, answer.failure.apiErrorCode]
               .filter((value) => value !== null).join("/")
-            : answer.failureCodes.join(",")
+            : "failureCodes" in answer ? answer.failureCodes.join(",") : answer.reason
           throw new Error(`${turn.turnId}:${answer.reason}:${detail}`)
         }
         assert.equal(answer.route, "provider_grounded", `${turn.turnId}: preflight must exercise provider route`)
