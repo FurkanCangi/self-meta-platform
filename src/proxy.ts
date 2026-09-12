@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse, type NextRequest } from "next/server";
+import { sessionReadFailure } from "./lib/security/sessionReadFailure";
 
 const APP_SESSION_COOKIE = "sm_active_session";
 const DEVICE_MANAGEMENT_COOKIE = "sm_device_management";
@@ -136,7 +137,8 @@ async function parseAppSessionCookie(value: string | undefined) {
   return { sessionId, legacy: false };
 }
 
-function sessionExpiredRedirect(request: NextRequest) {
+function sessionExpiredRedirect(request: NextRequest, reason: string) {
+  console.warn("[page-session] denied", { reason });
   const loginUrl = new URL("/login", request.url);
   const nextPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
   loginUrl.searchParams.set("next", nextPath);
@@ -148,6 +150,26 @@ function sessionExpiredRedirect(request: NextRequest) {
 }
 
 export async function proxy(request: NextRequest) {
+  try {
+    return await verifyPageSession(request);
+  } catch (error) {
+    return sessionUnavailable("unexpected_dependency", error);
+  }
+}
+
+// A failed read cannot prove revocation. Fail closed without deleting the
+// browser's session, including background Next Link prefetch requests.
+function sessionUnavailable(stage: string, error: unknown) {
+  const { code, transient } = sessionReadFailure(error);
+  console.warn("[page-session] unavailable", { stage, code, transient });
+  return new NextResponse("Oturum şu anda doğrulanamıyor. Lütfen sayfayı yeniden deneyin.", {
+    status: 503,
+    headers: { "Cache-Control": "private, no-store, max-age=0", "Retry-After": "5",
+      "Content-Type": "text/plain; charset=utf-8" },
+  });
+}
+
+async function verifyPageSession(request: NextRequest) {
   if (request.nextUrl.pathname === LOCAL_ACTIVITY_LAB_PATH) {
     if (process.env.NODE_ENV === "production") {
       return new NextResponse("Not Found", {
@@ -198,7 +220,11 @@ export async function proxy(request: NextRequest) {
 
   const {
     data: { user },
+    error: userError,
   } = await supabase.auth.getUser();
+  if (userError && sessionReadFailure(userError).transient) {
+    return sessionUnavailable("auth_user", userError);
+  }
 
   const managementAccess =
     request.nextUrl.pathname === "/profile-setting" &&
@@ -220,14 +246,14 @@ export async function proxy(request: NextRequest) {
   let parsedAppSession: Awaited<ReturnType<typeof parseAppSessionCookie>> = null;
   try {
     parsedAppSession = await parseAppSessionCookie(rawAppSessionCookie);
-  } catch {
-    parsedAppSession = null;
+  } catch (error) {
+    return sessionUnavailable("cookie_verification", error);
   }
 
   if (!parsedAppSession) {
     if (managementAccess) return response;
 
-    return sessionExpiredRedirect(request);
+    return sessionExpiredRedirect(request, rawAppSessionCookie ? "cookie_invalid" : "cookie_missing");
   }
 
   const admin = createClient(
@@ -238,7 +264,8 @@ export async function proxy(request: NextRequest) {
   const { data: currentAuthSession, error: currentAuthSessionError } =
     await supabase.auth.getSession();
   const authSessionId = extractAuthSessionId(currentAuthSession.session?.access_token);
-  if (currentAuthSessionError || !authSessionId) return sessionExpiredRedirect(request);
+  if (currentAuthSessionError) return sessionUnavailable("auth_session", currentAuthSessionError);
+  if (!authSessionId) return sessionExpiredRedirect(request, "auth_session_invalid");
 
   const { data: appSession, error: appSessionError } = await admin
     .from("account_sessions")
@@ -247,25 +274,25 @@ export async function proxy(request: NextRequest) {
     .eq("user_id", user.id)
     .maybeSingle();
 
+  if (appSessionError) return sessionUnavailable("session_record", appSessionError);
   const expiresAt = appSession?.expires_at ? new Date(appSession.expires_at).getTime() : 0;
   if (
-    appSessionError ||
     !appSession ||
     appSession.status !== "active" ||
     !expiresAt ||
     expiresAt <= Date.now()
   ) {
-    return sessionExpiredRedirect(request);
+    return sessionExpiredRedirect(request, "session_inactive_or_expired");
   }
 
   if (appSession.auth_session_id && appSession.auth_session_id !== authSessionId) {
-    return sessionExpiredRedirect(request);
+    return sessionExpiredRedirect(request, "auth_session_binding_mismatch");
   }
   if (!appSession.auth_session_id) {
     // A legacy raw UUID was readable under the former browser RLS policy. It
     // cannot prove possession by itself. Only rows paired to their original
     // Supabase auth session by the rollout migration may be upgraded.
-    if (parsedAppSession.legacy) return sessionExpiredRedirect(request);
+    if (parsedAppSession.legacy) return sessionExpiredRedirect(request, "legacy_unbound");
     const bound = await admin
       .from("account_sessions")
       .update({ auth_session_id: authSessionId })
@@ -275,7 +302,8 @@ export async function proxy(request: NextRequest) {
       .is("auth_session_id", null)
       .select("id")
       .maybeSingle();
-    if (bound.error || !bound.data) return sessionExpiredRedirect(request);
+    if (bound.error) return sessionUnavailable("session_binding", bound.error);
+    if (!bound.data) return sessionExpiredRedirect(request, "session_binding_rejected");
   }
 
   const { data: device, error: deviceError } = await admin
@@ -284,14 +312,14 @@ export async function proxy(request: NextRequest) {
     .eq("id", appSession.device_id)
     .eq("user_id", user.id)
     .maybeSingle();
+  if (deviceError) return sessionUnavailable("device_record", deviceError);
   if (
-    deviceError ||
     !device ||
     device.revoked_at ||
     device.verification_required !== false ||
     !device.verified_at
   ) {
-    return sessionExpiredRedirect(request);
+    return sessionExpiredRedirect(request, "device_invalid_or_revoked");
   }
 
   const { data: securityState, error: securityStateError } = await admin
@@ -299,15 +327,15 @@ export async function proxy(request: NextRequest) {
     .select("suspended_at, temporary_locked_until")
     .eq("user_id", user.id)
     .maybeSingle();
+  if (securityStateError) return sessionUnavailable("security_state", securityStateError);
   const temporaryLockedUntil = securityState?.temporary_locked_until
     ? new Date(securityState.temporary_locked_until).getTime()
     : 0;
   if (
-    securityStateError ||
     securityState?.suspended_at ||
     (temporaryLockedUntil && temporaryLockedUntil > Date.now())
   ) {
-    return sessionExpiredRedirect(request);
+    return sessionExpiredRedirect(request, "account_locked_or_suspended");
   }
 
   if (parsedAppSession.legacy) {
@@ -320,7 +348,7 @@ export async function proxy(request: NextRequest) {
       !appSession.cookie_signing_upgraded_at &&
       Boolean(appSession.user_agent) &&
       appSession.user_agent === userAgent;
-    if (!legacyUpgradeAllowed) return sessionExpiredRedirect(request);
+    if (!legacyUpgradeAllowed) return sessionExpiredRedirect(request, "legacy_upgrade_disallowed");
 
     const upgraded = await admin
       .from("account_sessions")
@@ -330,7 +358,8 @@ export async function proxy(request: NextRequest) {
       .is("cookie_signing_upgraded_at", null)
       .select("id")
       .maybeSingle();
-    if (upgraded.error || !upgraded.data) return sessionExpiredRedirect(request);
+    if (upgraded.error) return sessionUnavailable("cookie_upgrade", upgraded.error);
+    if (!upgraded.data) return sessionExpiredRedirect(request, "cookie_upgrade_rejected");
 
     response.cookies.set(
       APP_SESSION_COOKIE,
