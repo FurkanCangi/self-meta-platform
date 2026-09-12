@@ -537,7 +537,7 @@ export function compileStudentRequestContract(
     turnId: resolvedReferentTurnId,
     targetIds: Object.freeze(referentSnapshot?.targetIds ?? []),
   })
-  const referentCaseContext = referentSnapshot?.caseContext.eventIds.length
+  const referentCaseContext = referentSnapshot && (referentSnapshot.caseContext.eventIds.length || referentSnapshot.caseContext.scenario)
     ? referentSnapshot.caseContext
     : null
   const inheritedAdditiveTask = semanticTask === "example"
@@ -611,7 +611,10 @@ export function compileStudentRequestContract(
     comparisonTargetIds: Object.freeze(comparisonTargetIds),
     componentTargetIds,
     referent,
-    caseContext,
+    caseContext: caseContext.continuesScenario && !caseContext.scenario && !referentCaseContext?.scenario
+      ? Object.freeze({ eventIds: caseContext.eventIds, rawMessageStored: false as const,
+          ...(caseContext.describedSituation ? { describedSituation: caseContext.describedSituation } : {}) })
+      : caseContext,
     referentCaseContext,
     caseHistoryContext,
     presentation,

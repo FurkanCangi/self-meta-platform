@@ -50,6 +50,7 @@ export type StudentAnswerExecutionPlan = Readonly<{
     rawHistoryStored: false
     caseContext: Readonly<{
       eventIds: StudentRequestContract["caseContext"]["eventIds"]
+      scenario?: StudentRequestContract["caseContext"]["scenario"]
       eventLabels: readonly string[]
       rawMessageStored: false
     }> | null
@@ -404,11 +405,12 @@ export function buildStudentAnswerExecutionPlan(input: Readonly<{
   })
   const local = localSafetyBoundary(input.contract)
   const historyAnchorRequired = input.contract.obligations.some((obligation) => obligation.kind === "use_history_anchor")
-    || Boolean(input.contract.referentCaseContext?.eventIds.length)
-  const referentCaseContext = input.contract.referentCaseContext?.eventIds.length
+    || Boolean(input.contract.referentCaseContext?.eventIds.length || input.contract.referentCaseContext?.scenario)
+  const referentCaseContext = input.contract.referentCaseContext && (input.contract.referentCaseContext.eventIds.length || input.contract.referentCaseContext.scenario)
     ? Object.freeze({
         eventIds: Object.freeze([...input.contract.referentCaseContext.eventIds]),
         eventLabels: studentCaseEventLabels(input.contract.referentCaseContext),
+        ...(input.contract.referentCaseContext.scenario ? { scenario: input.contract.referentCaseContext.scenario } : {}),
         rawMessageStored: false as const,
       })
     : null
@@ -550,7 +552,7 @@ export function validateStudentAnswerExecutionPlan(
       target.claims.filter((claim) => claim.role !== "contrast").map((claim) => claim.claimId)))
   )) return false
   const historyAnchorRequired = contract.obligations.some((obligation) => obligation.kind === "use_history_anchor")
-    || Boolean(contract.referentCaseContext?.eventIds.length)
+    || Boolean(contract.referentCaseContext?.eventIds.length || contract.referentCaseContext?.scenario)
   if (historyAnchorRequired !== (plan.historyAnchor !== null)) return false
   if (plan.historyAnchor && (
     plan.historyAnchor.turnId !== contract.referent.turnId
@@ -558,10 +560,11 @@ export function validateStudentAnswerExecutionPlan(
     || plan.historyAnchor.rawHistoryStored !== false
     || !sameSet(plan.historyAnchor.targetIds, contract.referent.targetIds)
     || plan.historyAnchor.targetLabels.length !== plan.historyAnchor.targetIds.length
-    || Boolean(plan.historyAnchor.caseContext) !== Boolean(contract.referentCaseContext?.eventIds.length)
+    || Boolean(plan.historyAnchor.caseContext) !== Boolean(contract.referentCaseContext?.eventIds.length || contract.referentCaseContext?.scenario)
   )) return false
   if (plan.historyAnchor?.caseContext && (
     plan.historyAnchor.caseContext.rawMessageStored !== false
+    || JSON.stringify(plan.historyAnchor.caseContext.scenario) !== JSON.stringify(contract.referentCaseContext?.scenario)
     || !sameSet(plan.historyAnchor.caseContext.eventIds, contract.referentCaseContext?.eventIds ?? [])
     || !sameSet(plan.historyAnchor.caseContext.eventLabels,
       contract.referentCaseContext ? studentCaseEventLabels(contract.referentCaseContext) : [])

@@ -8,7 +8,7 @@ import {
 import { normalizeDnaChatText } from "../text"
 import type { StudentRequestContract } from "./contracts"
 import type { StudentConversationEvidenceRef } from "./conversationEvidence"
-import { explicitScenarioEvents, preservesScenarioEvents, SCENARIO_FIDELITY_INSTRUCTIONS } from "./scenarioFidelity"
+import { effectiveScenarioEvents, preservesScenarioEvents, scenarioForAnswer, SCENARIO_FIDELITY_INSTRUCTIONS } from "./scenarioFidelity"
 import { sourceBoundDefinitionScope, withoutExampleScopeDeclarations } from "./sourceScope"
 import {
   buildStudentAnswerExecutionPlan,
@@ -16,7 +16,7 @@ import {
   type StudentAnswerExecutionPlan,
 } from "./answerExecution"
 
-export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@108" as const
+export const DNA_STUDENT_ANSWER_EXECUTOR_VERSION = "dna-student-answer-executor@109" as const
 // Wait for the same request through a bounded slow response, not a second
 // generation. Unknown usage remains unknown and never authorizes a retry.
 export const DNA_STUDENT_ANSWER_EXECUTOR_TIMEOUT_MS = 90_000
@@ -1182,11 +1182,15 @@ function providerContent(input: Readonly<{
   plan: StudentAnswerExecutionPlan
 }>) {
   const sentenceBudgets = answerSentenceBudgets(input.plan)
+  const historicalScenario = scenarioForAnswer(input.question, input.plan.historyAnchor?.caseContext?.scenario)
   return JSON.stringify({
     currentUserMessage: input.question,
     ...(input.plan.obligations.some(o => o.kind === "give_concrete_example") ? {
       scenarioFidelity: { authority: "explicit_user_event_not_scientific_evidence",
-        constraints: explicitScenarioEvents(input.question), preserveActorObjectAndOrder: true },
+        constraints: effectiveScenarioEvents(input.question, input.plan.historyAnchor?.caseContext?.scenario),
+        ...(historicalScenario ? { boundedScenario: historicalScenario,
+          instruction: "Bu kimliksiz actor/object/stepCount ve olay koşulları önceki kullanıcı örneğinin devamıdır. Aynı örnek istendiğinde olayın sonucunu değiştirme; yeni başarı, destek, aktör veya nesne ekleme. eventLabels yanında bu koşullar da olayın yetkili parçasıdır." } : {}),
+        preserveActorObjectAndOrder: true },
     } : {}),
     operation: input.plan.operation,
     rejectedTargetIds: input.plan.rejectedTargetIds,
@@ -1760,24 +1764,36 @@ const EXPLICIT_BOUNDARY_KINDS: readonly StudentRequestContract["obligations"][nu
   "offer_safe_assessment_frame",
 ])
 
-function containsUnrequestedExampleBoundary(text: string, plan?: StudentAnswerExecutionPlan) {
+export function containsUnrequestedExampleBoundary(text: string, plan?: StudentAnswerExecutionPlan) {
   // A source-bound explanation that the described event does NOT instantiate
   // a target is part of bind_example_to_target, not an optional diagnostic
   // disclaimer. Do not erase the negative half of a conceptual distinction.
-  if (plan && isConceptApplicationLimit(text, plan)) return false
-  const normalized = normalizeDnaChatText(text)
-  const boundarySubject = /\b(?:bilimsel|kanit|tani|kesin|tek\s+basina|sonuc|cikarim|ornek|durum|gozlem)\w*\b/u
+  // Apply the exemption per clause: a valid conceptual limitation cannot
+  // whitelist a different diagnostic assertion or disclaimer in the block.
+  const boundarySubject = /\b(?:bilimsel|kanit|tani|kesin|tek\s+basina|sonuc|cikarim|ornek|durum|gozlem|olay)\w*\b/u
   const limitingConclusion = /\b(?:degerlendirilmez|gostermez|kanitlamaz|yetmez|yeterli\s+degil|yeterli\s+degildir|cikarilamaz|soylenemez|sonuc\s+vermez)\b/u
-  return boundarySubject.test(normalized) && limitingConclusion.test(normalized)
+  return text.split(/[.!?;]+|\s+(?:ama|ancak|fakat)\s+/iu).filter(clause => clause.trim()).some(clause => {
+    if (plan && isConceptApplicationLimit(clause, plan)) return false
+    const normalized = normalizeDnaChatText(clause)
+    const clinicalAssertion = /\b(?:tani(?:si|sal|ya|yi|dan|dir)?|terapi\w*|tedavi\w*|bozukluk\w*)\b/u.test(normalized)
+      || /\bkapasite\w*.{0,35}\b(?:guclu|zayif|bozuk|yetersiz)\w*\b/u.test(normalized)
+    return clinicalAssertion || boundarySubject.test(normalized) && limitingConclusion.test(normalized)
+  })
 }
 
 function isConceptApplicationLimit(text: string, plan: StudentAnswerExecutionPlan) {
   const normalized = normalizeDnaChatText(text)
-  if (/\b(?:tani|terapi|tedavi|kapasite|bilimsel\s+kanit|kesin\s+sonuc)\w*\b/u.test(normalized)) return false
+  if (!plan.obligations.some(o => o.kind === "give_concrete_example")
+    || !plan.obligations.some(o => o.kind === "bind_example_to_target")) return false
+  if (/\b(?:tani(?:si|sal|ya|yi|dan|dir)?|terapi\w*|tedavi\w*|bozukluk\w*|bilimsel\s+kanit|kesin\s+sonuc)\b/u.test(normalized)) return false
   const namesTarget = plan.targetEvidence.some(target => target.visibleAliases.some(alias =>
     normalized.includes(normalizeDnaChatText(alias))))
-  return namesTarget && /\b(?:orneklemez|gostermez|gostermiyor|gosterildigi\s+soylenemez)\b/u.test(normalized)
-    && /\b(?:olay|davranis|ornek|durum|adim)\w*\b/u.test(normalized)
+  const boundEvent = /\b(?:olay|davranis|ornek|durum|adim)\w*\b/u.test(normalized)
+  // A denial of capacity inference is not a positive capacity conclusion.
+  if (/\bkapasite\w*\b/u.test(normalized)) return namesTarget && boundEvent
+    && /\btek basina\b/u.test(normalized)
+    && /\bkapasite\w*\s+(?:guclu|zayif|yeterli|yetersiz)\s+oldugunu\s+(?:gostermez|kanitlamaz)\s*$/u.test(normalized)
+  return namesTarget && boundEvent && /\b(?:orneklemez|gostermez|gostermiyor|gosterilemiyor|gosterilemez|gosterilmedigi|gosterildigi\s+soylenemez|(?:basariyla\s+)?kullanildigi\s+soylenemez)\b/u.test(normalized)
 }
 
 function withoutBoundarySentences(text: string, plan: StudentAnswerExecutionPlan) {
@@ -2165,7 +2181,7 @@ export async function executeStudentAnswer(input: Readonly<{
   // Check event fields before conceptual prose and then the visible projection.
   // Definitions cannot conceal a reversed event; an echoed question is not an example.
   if (candidate && plan.obligations.some(o => o.kind === "give_concrete_example")) {
-    const constraints = explicitScenarioEvents(input.question)
+    const constraints = effectiveScenarioEvents(input.question, plan.historyAnchor?.caseContext?.scenario)
     const rawBlocks = (attempt.result.value as { blocks?: Record<string, unknown> }).blocks ?? {}
     const slots = answerSlotMetadata(plan).filter(slot => slot.blockKind === "example")
     const eventsPreserved = slots.every(slot => {

@@ -15,6 +15,7 @@ import {
 } from "./contracts"
 import { compileStudentAnswerObligations } from "./obligationCompiler"
 import { observeStudentCaseContext } from "./caseContext"
+import { inheritStudentScenario } from "./scenarioFidelity"
 
 export type TargetLexeme = Readonly<{
   id: string
@@ -276,8 +277,8 @@ export function interpretStudentRequest(
   const anchoredSnapshot = referent.turnId
     ? input.state.semanticLedger.find((turn) => turn.turnId === referent.turnId) ?? null
     : null
-  const caseContext = observeStudentCaseContext(input.message)
-  const referentCaseContext = anchoredSnapshot?.caseContext.eventIds.length
+  const caseContext = observeStudentCaseContext(input.message, Boolean(anchoredSnapshot?.caseContext.scenario))
+  const referentCaseContext = anchoredSnapshot && (anchoredSnapshot.caseContext.eventIds.length || anchoredSnapshot.caseContext.scenario)
     ? anchoredSnapshot.caseContext
     : null
   const detectedSemanticTask = semanticTaskFor(input.message)
@@ -382,6 +383,10 @@ export function applyStudentRequestContract(
   state: StudentConversationState,
   contract: StudentRequestContract,
 ): StudentConversationState {
+  const scenario = contract.caseContext.continuesScenario
+    ? inheritStudentScenario(contract.caseContext.scenario, contract.referentCaseContext?.scenario)
+    : contract.caseContext.scenario
+  const persistedCaseContext = scenario ? Object.freeze({ ...contract.caseContext, scenario }) : contract.caseContext
   const snapshot: StudentConversationTurnSnapshot = Object.freeze({
     turnId: contract.turnId,
     semanticTask: contract.semanticTask,
@@ -395,7 +400,7 @@ export function applyStudentRequestContract(
     presentation: contract.presentation,
     summaryScope: contract.summaryScope,
     observationScope: contract.observationScope,
-    caseContext: contract.caseContext,
+    caseContext: persistedCaseContext,
     semanticSummary: `${contract.semanticTask}/${contract.conversationAction}:${contract.targetIds.join(",")}`,
   })
   const ledgerEntry: StudentConversationLedgerEntry = Object.freeze({
@@ -405,7 +410,7 @@ export function applyStudentRequestContract(
     targetIds: Object.freeze([...contract.targetIds]),
     rejectedTargetIds: Object.freeze([...contract.rejectedTargetIds]),
     referent: contract.referent,
-    caseContext: contract.caseContext,
+    caseContext: persistedCaseContext,
   })
   const semanticHistory = Object.freeze(
     [...state.semanticHistory, snapshot].slice(-DNA_STUDENT_RECENT_SEMANTIC_HISTORY_LIMIT),

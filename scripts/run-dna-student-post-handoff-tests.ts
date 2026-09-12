@@ -67,6 +67,7 @@ async function main() {
         output_text: JSON.stringify({ scope: scopeChoice }), usage: { input_tokens: 30, output_tokens: 5 } })
     }
     const content = JSON.parse(request.input) as {
+      scenarioFidelity?: { constraints: Array<{ normalizedEvidence: string }> }
       historyAnchor: null | { targetLabels: string[] }
       answerSlots: Array<{ slotId: string; sharedScenarioBinding?: unknown; summaryComposition?: { sentenceUnits: number };
         sentenceComposition?: { sentenceUnits: number };
@@ -87,9 +88,13 @@ async function main() {
       if (kinds.includes("give_concrete_example")) {
         example = true
         if (slot.sharedScenarioBinding) return [slot.slotId, {
-          activity: "Bir öğrenci bir ödevin adımlarını sıralar",
+          activity: content.scenarioFidelity?.constraints.length
+            ? `Öğrenci yönergede ${content.scenarioFidelity.constraints.map(e => e.normalizedEvidence).join(" ve ")}`
+            : "Bir öğrenci bir ödevin adımlarını sıralar",
           applications: Object.fromEntries(slot.activeTargets.map((target) => [target.targetId,
-            { eventStep: target.targetId === "planning" ? "Planlama, aynı ödevin adımlarını sıraya koymada görülür"
+            { eventStep: content.scenarioFidelity?.constraints.length
+              ? `Öğrenci ${content.scenarioFidelity.constraints.map(e => e.normalizedEvidence).join(" ve ")}; bu görev yönergenin ilgili adımını gerektirir`
+              : target.targetId === "planning" ? "Planlama, aynı ödevin adımlarını sıraya koymada görülür"
               : "Çalışma belleği, aynı ödevin sıradaki adımını akılda tutup işlemede görülür",
               conceptLink: "Bu adım verilen kavramsal açıklamayı örnekler" }])),
         }]
@@ -347,8 +352,8 @@ async function main() {
   assert.equal(discourseResponse.status, 200, JSON.stringify(discourseBody))
   const discourseAnswer = normalizeDnaChatPublicResponse(discourseBody)
   assert.ok(discourseAnswer)
-  assert.match(JSON.stringify(discourseAnswer), /adımlarını sıralar\. planlama: Planlama/u)
-  assert.match(JSON.stringify(discourseAnswer), /koymada görülür\. Bu adım verilen kavramsal açıklamayı örnekler\. çalışma belleği: Çalışma belleği/u)
+  assert.match(JSON.stringify(discourseAnswer), /unutuyor\. planlama: Öğrenci unutuyor/u)
+  assert.match(JSON.stringify(discourseAnswer), /gerektirir\. Bu adım verilen kavramsal açıklamayı örnekler\. çalışma belleği: Öğrenci unutuyor/u)
   const discourseAfter = openStudentApplicationContext(discourseAnswer.studentContextToken!, binding)
   assert.equal(discourseAfter?.sequence, 12)
   assert.deepEqual(discourseAfter?.student.semanticLedger.slice(0, 11), discourseState.student.semanticLedger)

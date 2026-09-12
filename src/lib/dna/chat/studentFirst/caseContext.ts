@@ -1,5 +1,6 @@
 import { normalizeDnaChatText } from "../text"
 import type { StudentCaseContext, StudentCaseEventId } from "./contracts"
+import { observeStudentScenario, referencesPriorScenario } from "./scenarioFidelity"
 
 export const DNA_STUDENT_CASE_EVENT_LABELS: Readonly<Record<StudentCaseEventId, string>> = Object.freeze({
   task_interrupted: "görevi bırakma",
@@ -34,7 +35,7 @@ export function studentCurrentSituationObserved(message: string): boolean {
     && /\b(?:soz\w*.{0,16}kes|unut|don|kalk|gez|bekle|sakinles|agla|bagir|basla|bitir|terk|hareket\w*|ses\w*.{0,16}yuksel|yapam|zorlan)\w*\b/u.test(normalized)
 }
 
-export function observeStudentCaseContext(message: string): StudentCaseContext {
+export function observeStudentCaseContext(message: string, hasPriorScenario = false): StudentCaseContext {
   const normalized = normalizeDnaChatText(message)
   const eventIds: StudentCaseEventId[] = []
   const add = (eventId: StudentCaseEventId, present: boolean) => {
@@ -71,6 +72,8 @@ export function observeStudentCaseContext(message: string): StudentCaseContext {
 
   return Object.freeze({
     eventIds: Object.freeze(unique(eventIds)),
+    ...(observeStudentScenario(message) ? { scenario: observeStudentScenario(message) } : {}),
+    ...(hasPriorScenario && referencesPriorScenario(message) ? { continuesScenario: true as const } : {}),
     ...(!eventIds.length && studentCurrentSituationObserved(message) ? { describedSituation: true as const } : {}),
     rawMessageStored: false,
   })

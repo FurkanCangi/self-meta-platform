@@ -780,7 +780,8 @@ export function observeStudentRequestFacts(input: Readonly<{
     .sort((left, right) => left.normalizedStart - right.normalizedStart))
   const explicitTargetIds = unique(explicitFacts.map((fact) => fact.targetId))
   const contextTargetIds = unique(contextFacts.map((fact) => fact.targetId).filter((targetId) => !explicitTargetIds.includes(targetId)))
-  const detectedCaseContext = observeStudentCaseContext(input.message)
+  const detectedCaseContext = observeStudentCaseContext(input.message,
+    input.state.semanticLedger.some(turn => Boolean(turn.caseContext.scenario)))
   const userSuppliedCaseExample = tasks.includes("example")
     && detectedCaseContext.eventIds.length > 0
     && /\bmi\b/u.test(normalized)

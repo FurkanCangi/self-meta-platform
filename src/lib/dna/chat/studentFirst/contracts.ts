@@ -72,6 +72,8 @@ export type StudentCaseEventId =
 
 export type StudentCaseContext = Readonly<{
   eventIds: readonly StudentCaseEventId[]
+  scenario?: import("./scenarioFidelity").StudentScenarioContext
+  continuesScenario?: true
   describedSituation?: true
   rawMessageStored: false
 }>
