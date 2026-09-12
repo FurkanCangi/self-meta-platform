@@ -21,6 +21,9 @@ const CORE_TARGET_CROSSWALK: Readonly<Record<string, Readonly<{
   // not a section whose approved claims retain only an orphan list lead-in.
   executive_functions: Object.freeze({ query: "Yürütücü İşlev ve Bilişsel Kontrol Modelleri", expectedLeaf: "Temel Bileşenler" }),
   inhibition: Object.freeze({ query: "İnhibisyon Nedir?", expectedLeaf: "İnhibisyon Nedir?" }),
+  // Distinct concepts share this approved section. Keep working_memory last
+  // so topic-only legacy lookups retain their existing primary target.
+  short_term_memory: Object.freeze({ query: "Çalışma Belleği", expectedLeaf: "Çalışma Belleği ve Kısa Süreli Bellek" }),
   working_memory: Object.freeze({ query: "Çalışma Belleği", expectedLeaf: "Çalışma Belleği ve Kısa Süreli Bellek" }),
   planning: Object.freeze({ query: "Planlama", expectedLeaf: "Planlama" }),
   cognitive_flexibility: Object.freeze({ query: "Esneklik Nedir?", expectedLeaf: "Esneklik Nedir?" }),
@@ -58,6 +61,7 @@ const CORE_VISIBLE_ALIASES: Readonly<Record<string, readonly string[]>> = Object
   attention: Object.freeze(["dikkat"]),
   executive_functions: Object.freeze(["yürütücü işlev"]),
   inhibition: Object.freeze(["inhibisyon", "dürtü kontrol"]),
+  short_term_memory: Object.freeze(["kısa süreli bellek"]),
   working_memory: Object.freeze(["çalışma belleği"]),
   planning: Object.freeze(["planlama"]),
   cognitive_flexibility: Object.freeze(["bilişsel esneklik", "esneklik"]),

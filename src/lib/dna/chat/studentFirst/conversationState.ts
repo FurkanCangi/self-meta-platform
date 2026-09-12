@@ -38,6 +38,7 @@ export const DNA_STUDENT_TARGET_LEXICON: readonly TargetLexeme[] = Object.freeze
   { id: "attention", label: "dikkat", aliases: ["dikkat", "odaklanma", "dikkatini"], contextAliases: ["dikkatini"] },
   { id: "executive_functions", label: "yürütücü işlevler", aliases: ["yürütücü işlev", "yürütücü işlevler", "yönetici işlev"] },
   { id: "inhibition", label: "inhibisyon", aliases: ["inhibisyon", "ketleme", "ketleyici kontrol", "dürtü kontrolü", "dürtüyü durdurma"] },
+  { id: "short_term_memory", label: "kısa süreli bellek", aliases: ["kısa süreli bellek", "short term memory", "short-term memory"] },
   {
     id: "working_memory",
     label: "çalışma belleği",

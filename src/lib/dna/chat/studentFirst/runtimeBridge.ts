@@ -167,17 +167,18 @@ export function buildStudentS13ResolvedRequestHandoff(input: Readonly<{
     polarity: "REJECTED_TARGET" as const,
   }))
   const activeTopicIds = unique(active.map((target) => target.topicId))
-  const rejectedTopicIds = unique(rejected.map((target) => target.topicId))
   const activeTopicLimit = input.contract.semanticTask === "summarize" ? 16 : 8
   if (!activeTopicIds.length) throw new Error("dna_student_s13_handoff_target_missing")
   if (activeTopicIds.length > activeTopicLimit) throw new Error("dna_student_s13_handoff_target_limit")
-  if (activeTopicIds.some((topicId) => rejectedTopicIds.includes(topicId))) {
+  if (active.some((target) => rejected.some((row) => row.studentTargetId === target.studentTargetId))) {
     throw new Error("dna_student_s13_handoff_target_polarity_conflict")
   }
   const activeByTopic = active.filter((target, index, rows) =>
     rows.findIndex((row) => row.topicId === target.topicId) === index)
+  // A rejected concept must not exclude the shared source of a different
+  // active concept; its concept-level rejection stays in the crosswalk.
   const rejectedByTopic = rejected.filter((target, index, rows) =>
-    rows.findIndex((row) => row.topicId === target.topicId) === index)
+    !activeTopicIds.includes(target.topicId) && rows.findIndex((row) => row.topicId === target.topicId) === index)
   const normalizedQuestion = normalizeDnaChatText(input.question)
   const pragmaticAction = action(input.contract)
   const requestedFacets = facets(input.contract)
@@ -240,7 +241,9 @@ export function buildStudentS13ResolvedRequestHandoff(input: Readonly<{
     version: DNA_STUDENT_S13_HANDOFF_VERSION,
     contextResolution: context,
     pragmaticTaskFrame: task,
-    crosswalk: Object.freeze([...activeByTopic, ...rejectedByTopic].map((target) => Object.freeze({
+    // Retrieval sections can be deduplicated; concept bindings cannot. Two
+    // contrasted concepts may be defined in the same approved paragraph.
+    crosswalk: Object.freeze([...active, ...rejected].map((target) => Object.freeze({
       studentTargetId: target.studentTargetId,
       ownerBookTopicId: target.topicId,
       ownerBookTopicTitle: target.title,
