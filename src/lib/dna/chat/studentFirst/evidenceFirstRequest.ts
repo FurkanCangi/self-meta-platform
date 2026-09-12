@@ -470,12 +470,19 @@ function preserveReformattedContinuation(
 ): Readonly<{ tasks: readonly StudentSemanticTask[]; preserveMeaning: boolean }> {
   const normalized = normalizeDnaChatText(message)
   const latest = state.semanticHistory.at(-1) ?? null
-  const reformatRequested = /\b(?:tablo\s+yapma|duz\s+anlat|madde\s+madde\s+(?:yazma|anlatma))\b/u.test(normalized)
+  const answerReference = /\b(?:(?:son|onceki|az onceki)\s+(?:cevap|cevab|yanit|aciklama)\w*|bunu|onu)\b/u.test(normalized)
+  const wordingChange = /\b(?:daha\s+(?:sade|basit|kisa)|kisalt\w*|sadeles\w*|yeniden\s+soyle\w*)\b/u.test(normalized)
+  const addsContent = /\b(?:derin\w*|detay\w*|kapsamli|mekanizma\w*|yeni\s+bilgi\w*|baska\s+ne)\b/u.test(normalized)
+  const answerRephrase = answerReference && wordingChange && !addsContent
+    && tasks.every(task => task === "explain" || task === "deepen")
+  const reformatRequested = answerRephrase || /\b(?:tablo\s+yapma|duz\s+anlat|madde\s+madde\s+(?:yazma|anlatma))\b/u.test(normalized)
   if (!latest || explicitTargetIds.length || !reformatRequested) {
     return Object.freeze({ tasks, preserveMeaning: false })
   }
   return Object.freeze({
-    tasks,
+    // Wording-only follow-ups retain the preceding scientific task (e.g. a
+    // comparison), not just its topic IDs. New explicit tasks/targets win.
+    tasks: answerRephrase ? Object.freeze([latest.semanticTask]) : tasks,
     preserveMeaning: true,
   })
 }
@@ -643,7 +650,7 @@ function observationExtras(message: string, tasks: readonly StudentSemanticTask[
 function referenceCues(message: string): StudentReferenceCues {
   const normalized = normalizeDnaChatText(message)
   const historyReturn = /\b(?:ilk anlattigin|ilk konu|az onceki konu|az onceki cocuk|geri donelim|donelim|basa donelim)\b/.test(normalized)
-  const active = /\b(?:bunu|bunun|bununla|bunda|burada|onu|o zaman|ayni sey|dedigin|ikisinden|ikisini|bu destek|bu ornek|bu davranis|bu cocu(?:k|g)|bu ogrenci|bu vaka)\w*\b/.test(normalized)
+  const active = /\b(?:bunu|bunun|bununla|bunda|burada|onu|o zaman|ayni sey|dedigin|ikisinden|ikisini|bu destek|bu ornek|bu davranis|bu cocu(?:k|g)|bu ogrenci|bu vaka|(?:son|onceki|az onceki)\s+(?:cevap|cevab|yanit|aciklama))\w*\b/.test(normalized)
   const entityWord = /\b(?:cocu(?:k|g)|ogrenci|vaka|davranis|ornek)\w*\b/.test(normalized)
   const describedScenario = studentCurrentSituationObserved(message)
   const fragmentaryCase = /\bsesli yaziyorum\b/.test(normalized)
