@@ -170,6 +170,9 @@ async function normalizeAuthFailure(response: NextResponse) {
     rawError = String(body?.error || "").toLowerCase()
   } catch {}
 
+  if (response.status === 503 && rawError === "auth_service_unavailable") {
+    return errorResponse("auth_service_unavailable", 503)
+  }
   return errorResponse(rawError.includes("session") ? "session_expired" : "unauthorized", 401)
 }
 
@@ -407,7 +410,7 @@ export async function POST(request: Request) {
     const trusted = await timing.measure("trusted_mutation", () => requireTrustedMutation(request))
     if (trusted) return finish(errorResponse("unauthorized", 401))
 
-    const auth = await timing.measure("authentication", () => requireConfirmedUser())
+    const auth = await timing.measure("authentication", () => requireConfirmedUser({ recoverSessionRead: true }))
     if (!auth.ok) return finish(await normalizeAuthFailure(auth.response))
 
     const limit = await timing.measure("rate_limit", () => enforceQuestionRateLimits(auth.user.id))

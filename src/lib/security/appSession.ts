@@ -9,6 +9,7 @@ import {
   recordAccountSecurityEvent,
 } from "@/lib/security/anomalyDetection"
 import { extractSupabaseAuthSessionId } from "@/lib/security/authSessionBinding"
+import { sessionReadFailure } from "@/lib/security/sessionReadFailure"
 import { createSupabaseAdminClient } from "@/lib/supabase/admin"
 import { createSupabaseServerClient } from "@/lib/supabase/server"
 
@@ -19,7 +20,8 @@ const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3
 
 export type AppSessionCheck =
   | { ok: true; sessionId: string; deviceId: string }
-  | { ok: false; reason: "missing" | "invalid" | "expired" | "locked" | "suspended" | "error" }
+  | { ok: false; reason: "missing" | "invalid" | "expired" | "locked" | "suspended" | "error";
+      stage?: "session_record" | "device_record" | "security_state"; code?: string; transient?: boolean }
 
 function appSessionSecret() {
   const configured =
@@ -195,7 +197,7 @@ export async function verifyCurrentAppSession(userId: string): Promise<AppSessio
     .eq("user_id", userId)
     .maybeSingle()
 
-  if (error) return { ok: false, reason: "error" }
+  if (error) return { ok: false, reason: "error", stage: "session_record", ...sessionReadFailure(error) }
   if (!data || data.status !== "active") return { ok: false, reason: "invalid" }
 
   if (data.auth_session_id && data.auth_session_id !== authSessionId) {
@@ -220,7 +222,7 @@ export async function verifyCurrentAppSession(userId: string): Promise<AppSessio
     .eq("id", data.device_id)
     .eq("user_id", userId)
     .maybeSingle()
-  if (deviceError) return { ok: false, reason: "error" }
+  if (deviceError) return { ok: false, reason: "error", stage: "device_record", ...sessionReadFailure(deviceError) }
   if (
     !device ||
     device.revoked_at ||
@@ -239,7 +241,7 @@ export async function verifyCurrentAppSession(userId: string): Promise<AppSessio
     .eq("user_id", userId)
     .maybeSingle()
 
-  if (stateError) return { ok: false, reason: "error" }
+  if (stateError) return { ok: false, reason: "error", stage: "security_state", ...sessionReadFailure(stateError) }
   const lockExemptUser = await isSecurityLockExemptUser(userId)
   if (!lockExemptUser && securityState?.suspended_at) return { ok: false, reason: "suspended" }
 

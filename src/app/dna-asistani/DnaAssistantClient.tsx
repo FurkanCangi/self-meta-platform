@@ -67,6 +67,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   mode_report_mismatch: "Rapor sorusu için bir rapor seçilmelidir.",
   unauthorized: "Oturum doğrulanamadı. Yeniden giriş yapmanız gerekiyor.",
   session_expired: "Uygulama oturumunuz sona erdi. Yeniden giriş yapın.",
+  auth_service_unavailable: "Oturum şu anda doğrulanamıyor. Sorunuz korunuyor; biraz sonra yeniden deneyebilirsiniz.",
   report_not_found: "Rapor bulunamadı veya bu hesap için erişilebilir değil.",
   payload_too_large: "Soru izin verilen boyutu aşıyor.",
   too_many_requests: "Çok hızlı soru gönderildi. Kısa bir süre bekleyip yeniden deneyin.",
@@ -486,7 +487,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
   }
 
   function retryLastQuestion() {
-    if (!failedRequest || sending || !isDnaChatRetryableError(sendErrorCode)) return
+    if (!failedRequest || sending || !(sendErrorCode === "auth_service_unavailable" || isDnaChatRetryableError(sendErrorCode))) return
     void sendQuestion(failedRequest.question, {
       reportId: failedRequest.reportId,
       previousTopic: failedRequest.previousTopic,
@@ -539,7 +540,7 @@ export default function DnaAssistantClient({ initialReportId }: { initialReportI
               <Link href="/app-login" className="mt-1 inline-flex min-h-11 items-center font-black text-blue-700 underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500">
                 Yeniden giriş yap
               </Link>
-            ) : failedRequest && isDnaChatRetryableError(sendErrorCode) ? (
+            ) : failedRequest && (sendErrorCode === "auth_service_unavailable" || isDnaChatRetryableError(sendErrorCode)) ? (
               <button
                 type="button"
                 onClick={retryLastQuestion}

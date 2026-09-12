@@ -10,7 +10,7 @@ export type AuthGuardResult =
   | { ok: true; user: User }
   | { ok: false; response: NextResponse }
 
-export async function requireConfirmedUser(): Promise<AuthGuardResult> {
+export async function requireConfirmedUser(options: { recoverSessionRead?: boolean } = {}): Promise<AuthGuardResult> {
   const supabase = await createSupabaseServerClient()
   const {
     data: { user },
@@ -31,8 +31,22 @@ export async function requireConfirmedUser(): Promise<AuthGuardResult> {
     }
   }
 
-  const appSession = await verifyCurrentAppSession(user.id)
+  let appSession = await verifyCurrentAppSession(user.id)
+  // Opt-in for Chat only. No model request or cached authorization is replayed.
+  // Retry availability failures only, re-running all session validity checks once.
+  if (options.recoverSessionRead && !appSession.ok && appSession.reason === "error") {
+    console.warn("[auth-session] read failure", { stage: appSession.stage, code: appSession.code,
+      retry: appSession.transient === true })
+    if (appSession.transient === true) appSession = await verifyCurrentAppSession(user.id)
+  }
   if (!appSession.ok) {
+    if (options.recoverSessionRead) {
+      console.warn("[auth-session] denied", { reason: appSession.reason, stage: appSession.stage, code: appSession.code })
+      if (appSession.reason === "error") {
+        return { ok: false, response: NextResponse.json(
+          { ok: false, error: "auth_service_unavailable" }, { status: 503, headers: { "Cache-Control": "no-store" } }) }
+      }
+    }
     return {
       ok: false,
       response: NextResponse.json({ ok: false, error: "Session expired" }, { status: 401 }),
