@@ -211,17 +211,31 @@ export function preservesScenarioEvents(
   realizedEventText: string,
   rejectOpposite = true,
 ): boolean {
+  return inspectScenarioEvents(constraints, realizedEventText, rejectOpposite).passed
+}
+
+/** Finite operational evidence only. Never return input text, matched words,
+ * names or excerpts. A missing matcher hit is NOT proof of a semantic omission.
+ * Keep this as the single implementation used by the existing boolean guard. */
+export function inspectScenarioEvents(
+  constraints: readonly ScenarioEventConstraint[],
+  realizedEventText: string,
+  rejectOpposite = true,
+) {
   const unquoted = realizedEventText.replace(/[“«][\s\S]*?[”»]|"[^"\n]*"/gu, " ")
   const asserted = assertedEventView(unquoted)
   const observed = events(asserted)
   const recallOutcome = events(recallOutcomeView(asserted))
-  return constraints.every(c => {
+  const checks = constraints.map(c => {
     const requested = new Set(constraints.filter(x => x.axis === c.axis).map(x => x.polarity))
-    if (!observed.some(x => x.axis === c.axis && x.polarity === c.polarity)) return false
-    return !rejectOpposite || requested.size > 1
-      || !(c.axis === "recall" && c.polarity === "negative" ? recallOutcome : observed).some(x => x.axis === c.axis && x.polarity !== c.polarity
+    const requiredPoleFound = observed.some(x => x.axis === c.axis && x.polarity === c.polarity)
+    const oppositePoleFound = rejectOpposite && requested.size <= 1
+      && (c.axis === "recall" && c.polarity === "negative" ? recallOutcome : observed).some(x => x.axis === c.axis && x.polarity !== c.polarity
         && !(c.polarity === "negative" && !c.partialStep && x.partialStep))
+    return { axis: c.axis, requiredPolarity: c.polarity, requiredPoleFound, oppositePoleFound,
+      passed: requiredPoleFound && !oppositePoleFound }
   })
+  return { passed: checks.every(c => c.passed), checks }
 }
 
 export const SCENARIO_FIDELITY_INSTRUCTIONS = `

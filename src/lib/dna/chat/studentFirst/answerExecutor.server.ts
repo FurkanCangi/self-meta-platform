@@ -8,7 +8,7 @@ import {
 import { normalizeDnaChatText } from "../text"
 import type { StudentRequestContract } from "./contracts"
 import type { StudentConversationEvidenceRef } from "./conversationEvidence"
-import { effectiveScenarioEvents, preservesScenarioEvents, scenarioForAnswer, SCENARIO_FIDELITY_INSTRUCTIONS } from "./scenarioFidelity"
+import { effectiveScenarioEvents, inspectScenarioEvents, scenarioForAnswer, SCENARIO_FIDELITY_INSTRUCTIONS } from "./scenarioFidelity"
 import { sourceBoundDefinitionScope, withoutExampleScopeDeclarations } from "./sourceScope"
 import { explicitCaseSupportQualifier } from "./caseSupportContext"
 import {
@@ -94,6 +94,7 @@ export type StudentAnswerExecutorResult =
       ok: false
       reason: "candidate_invalid"
       failureCodes: readonly StudentAnswerFailureCode[]
+      scenarioDiagnostic?: readonly ScenarioValidationDiagnostic[]
       plan: StudentAnswerExecutionPlan
       provider: StudentAnswerProviderTelemetry
     }>
@@ -106,6 +107,14 @@ type StudentAnswerProviderTelemetry = Readonly<{
   usage: DnaS13ProviderUsage
   latencyMs: number
   rawOutputStored: false
+}>
+
+type ScenarioValidationDiagnostic = Readonly<{
+  stage: "raw_example" | "visible_example"
+  slotIndex: number | null
+  structureValid: boolean
+  passed: boolean
+  checks: ReturnType<typeof inspectScenarioEvents>["checks"]
 }>
 
 const ZERO_USAGE: DnaS13ProviderUsage = Object.freeze({ inputTokens: 0, cachedInputTokens: 0, outputTokens: 0 })
@@ -2181,25 +2190,31 @@ export async function executeStudentAnswer(input: Readonly<{
   const candidate = parseCandidate(attempt.result.value, plan, input.question)
   const failureCodes: StudentAnswerFailureCode[] = candidate ? [...validateStudentAnswerCandidate({ candidate, plan })]
     : ["answer_missing"]
+  const scenarioDiagnostic: ScenarioValidationDiagnostic[] = []
   // Check event fields before conceptual prose and then the visible projection.
   // Definitions cannot conceal a reversed event; an echoed question is not an example.
   if (candidate && plan.obligations.some(o => o.kind === "give_concrete_example")) {
     const constraints = effectiveScenarioEvents(input.question, plan.historyAnchor?.caseContext?.scenario)
     const rawBlocks = (attempt.result.value as { blocks?: Record<string, unknown> }).blocks ?? {}
     const slots = answerSlotMetadata(plan).filter(slot => slot.blockKind === "example")
-    const eventsPreserved = slots.every(slot => {
+    slots.forEach((slot, slotIndex) => {
       const raw = rawBlocks[slot.blockId]
       if (isSharedScenarioSlot(plan, slot)) {
         const structured = sharedScenarioDiscourse(raw, slot,
           answerSentenceBudgets(plan)?.[answerSlotMetadata(plan).findIndex(s => s.blockId === slot.blockId)] ?? 1)
-        return !!structured && preservesScenarioEvents(constraints,
-          [structured.activity, ...structured.applications.map(a => a.eventStep)].join(" "))
+        const inspected = inspectScenarioEvents(constraints, structured
+          ? [structured.activity, ...structured.applications.map(a => a.eventStep)].join(" ") : "")
+        scenarioDiagnostic.push({ stage: "raw_example", slotIndex, structureValid: !!structured,
+          ...inspected, passed: !!structured && inspected.passed })
+      } else {
+        scenarioDiagnostic.push({ stage: "raw_example", slotIndex, structureValid: true,
+          ...inspectScenarioEvents(constraints, Array.isArray(raw) ? raw.join(" ") : String(raw ?? "")) })
       }
-      return preservesScenarioEvents(constraints, Array.isArray(raw) ? raw.join(" ") : String(raw ?? ""))
     })
-    const visiblePreserved = preservesScenarioEvents(constraints,
-      candidate.blocks.filter(b => b.blockKind === "example").map(b => b.text).join(" "), false)
-    if (!eventsPreserved || !visiblePreserved) failureCodes.push("scenario_event_direction_mismatch")
+    scenarioDiagnostic.push({ stage: "visible_example", slotIndex: null, structureValid: true,
+      ...inspectScenarioEvents(constraints,
+        candidate.blocks.filter(b => b.blockKind === "example").map(b => b.text).join(" "), false) })
+    if (scenarioDiagnostic.some(d => !d.passed)) failureCodes.push("scenario_event_direction_mismatch")
   }
   const provider = Object.freeze({
     calls,
@@ -2211,7 +2226,7 @@ export async function executeStudentAnswer(input: Readonly<{
     rawOutputStored: false as const,
   })
   if (!candidate || failureCodes.length) {
-    return Object.freeze({ ok: false, reason: "candidate_invalid", failureCodes, plan, provider })
+    return Object.freeze({ ok: false, reason: "candidate_invalid", failureCodes, scenarioDiagnostic, plan, provider })
   }
   return Object.freeze({
     ok: true,

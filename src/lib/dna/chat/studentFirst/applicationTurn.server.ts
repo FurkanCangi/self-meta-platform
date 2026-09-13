@@ -251,6 +251,8 @@ export async function resolveStudentApplicationTurn(input: {
           ? { reason: result.failure.reason, httpStatus: result.failure.httpStatus } : null,
         failureCodes: !result.ok && result.reason === "candidate_invalid"
           ? result.failureCodes.filter((code) => DNA_STUDENT_ANSWER_FAILURE_CODES.includes(code)) : [],
+        scenarioDiagnostic: !result.ok && result.reason === "candidate_invalid"
+          ? result.scenarioDiagnostic ?? [] : [],
         provider: { calls: result.provider.calls, transportRetries: result.provider.transportRetries,
           usageComplete: result.provider.usageComplete, latencyMs: result.provider.latencyMs,
           usage: { inputTokens: result.provider.usage.inputTokens,
