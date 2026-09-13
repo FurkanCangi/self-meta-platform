@@ -70,6 +70,44 @@ async function main() {
     DNA_CHAT_V3_KILL_SWITCH: "0", DNA_CHAT_V3_ROLLOUT_PERCENT: "0" })
   delete process.env.VERCEL_ENV
   assert.equal(studentLocalCandidateEnabled(), true)
+  // Definition noun inflections must not impersonate diagnosis requests.
+  // No turn IDs, source-title whitelist, or provider permission shortcut.
+  const definitionPrivacyControls = [
+    "Okul dışındaki boş zamanın tanımı da bu kaynakta var mı?",
+    "Okul katılımının tanımını bu kaynakta bulabilir miyim?",
+    "Bu eğitim kaynağında okul katılımı tanımları var mı?",
+    "Kurum katılımının tanımından bu kaynakta söz ediliyor mu?",
+    "Bu kaynakta okul katılımı tanımına yer verilmiş mi?",
+  ]
+  for (const question of definitionPrivacyControls) {
+    const decision = inspectDnaS13LimitedRolloutPrivacy({ question })
+    assert.equal(decision.allowed, true, question)
+    assert.equal(decision.category, "general_non_sensitive", question)
+    assert.equal(decision.automaticTrainingAllowed, false)
+  }
+  const protectedPrivacyControls = [
+    "Bu okul tanısı hakkında ne düşünüyorsun?",
+    "Bu okul tanısını yorumla.",
+    "Bu okul tanısının anlamı nedir?",
+    "Bu okul tanıya göre karar verdi.",
+    "Bu okul tanıda hangi bulguyu kullandı?",
+    "Bu okul tanıdan ne çıkarmalı?",
+    "Bu okul tanımızı açıklıyor.",
+    "Bu çocuk için tanı koy.",
+    "Benim hastamın tanımını bu kaynakla karşılaştır.",
+    "Bu okulda Ada isimli çocuğun tanımını açıkla.",
+    "Bu kaynakta ada@example.test kişinin tanımını açıkla.",
+    "Bu kaynakta dosya no 123456 tanımını açıkla.",
+    "Bu çocuk için terapi planı oluştur.",
+  ]
+  for (const question of protectedPrivacyControls) {
+    assert.equal(inspectDnaS13LimitedRolloutPrivacy({ question }).allowed, false, question)
+  }
+  for (const context of [{ mode: "case" }, { reportId }]) {
+    assert.equal(inspectDnaS13LimitedRolloutPrivacy({
+      question: definitionPrivacyControls[0]!, ...context,
+    }).allowed, false)
+  }
   let inflectedCatalogControls = 0
   for (const [title, suffixes] of [
     ["Teneffüs ve Serbest Zaman", ["", "ın", "ı", "da", "dan", "la"]],
@@ -549,6 +587,23 @@ async function main() {
     assert.equal(reached, false)
     inflectedSummaryRouteControls++
   }
+  const definitionPrefix = await resolveStudentApplicationTurn({
+    payload: { question: "Teneffüs ve serbest zaman kavramını açıklar mısın?" }, binding, normal, execute,
+  })
+  assert.equal(definitionPrefix.status, 200)
+  let definitionClaims: readonly string[] = []
+  const definitionFollowup = await resolveStudentApplicationTurn({
+    payload: { question: definitionPrivacyControls[0]! }, binding, normal,
+    contextToken: String(definitionPrefix.body.studentContextToken), execute: async (input) => {
+      assert.equal(input.externalProviderAllowed, true)
+      definitionClaims = buildStudentAnswerExecutionPlan(input).targetEvidence
+        .flatMap(target => target.claims.map(claim => claim.text))
+      return execute(input)
+    },
+  })
+  assert.equal(definitionFollowup.status, 200)
+  assert.equal(definitionFollowup.body.runtimeGeneration, "student_first_candidate")
+  assert.ok(definitionClaims.some(text => /okul dışındaki seçimlerini/u.test(text)))
   const newConversationSummary = await resolveStudentApplicationTurn({ payload: { question: caseConversation[7]!.user },
     binding, normal, execute })
   assert.equal(newConversationSummary.status, 200, "explicit_current_summary_must_not_require_prior_student_history")
@@ -614,6 +669,8 @@ async function main() {
     privacyRouteControls: { localPolicy: localPrivacyRouteControls, sensitiveProviderDenied, personalDataProtected,
       originalThirdFixtureQuestionPreserved: true, priorContextSeededNotRegenerated: true, auditFailureClosed: true },
     postNormalSummaryControls, inflectedCatalogControls, inflectedSummaryRouteControls, newConversationSummaryControl: true, summaryScopeFailures,
+    definitionPrivacyControls: { allowed: definitionPrivacyControls.length, protected: protectedPrivacyControls.length + 2,
+      sameConversationSourceHandoff: true },
     summaryProtectedNormalControls: 4, sensitiveSummaryProviderDenied: true,
     mockProviderCalls: providerCalls, reportLoads, finalAudits: audits.length,
     diagnosticControls: { failureStageAndCode: true, unchangedPublicError: true, noSensitiveText: true, failingLogSinkNonInterfering: true },

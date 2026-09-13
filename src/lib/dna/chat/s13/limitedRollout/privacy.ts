@@ -7,7 +7,11 @@ import { resolveDnaS13NamedTopicSurfaces } from "../conversationContext"
 const DIRECT_IDENTIFIER = /(?:\b[\w.%+-]+@[\w.-]+\.[a-z]{2,}\b|\b(?:\+?90\s*)?(?:0?5\d{2})[\s.-]*\d{3}[\s.-]*\d{2}[\s.-]*\d{2}\b|\b(?:tc|t\.c\.?|kimlik|protokol|dosya)\s*(?:no|numarasi|numarası)?\s*[:#-]?\s*\d{4,}\b)/iu
 const PERSON_MARKER = /(?:^|\s)(?:adi|adı|soyadi|soyadı|isimli|annesi|babasi|babası|ogretmeni|öğretmeni)\b/u
 const ORGANIZATION_MARKER = /(?:^|\s)(?:klinik|klini|hastane|okul|kurum|merkez|rehabilitasyon)\w*\b/u
-const CLINICAL_MARKER = /(?:^|\s)(?:vaka|danisan|danışan|hasta|anamnez|seans|terapi|rapor|degerlendirme|değerlendirme|muayene|tani|tanı)\w*\b/u
+// "tanı" (diagnosis) and "tanım" (definition) are distinct noun stems.
+// Bound diagnosis inflections instead of letting tani\w* consume tanımı,
+// tanımını or tanımları. Identifiers, actual case grammar and safety checks
+// remain independent blockers; this is not a scientific-topic bypass.
+const CLINICAL_MARKER = /(?:^|\s)(?:(?:vaka|danisan|danışan|hasta|anamnez|seans|terapi|rapor|degerlendirme|değerlendirme|muayene)\w*|tani(?:nin|yi|ya|da|dan|si(?:nin|ni|na|nda|ndan)?|lar\w*|miz\w*)?)\b/u
 const PERSONAL_OR_CASE_GRAMMAR = /\b(?:bu (?:cocuk|vaka|danisan|hasta|rapor|sonuc|bulgu)|cocugum\w*|oglum\w*|kizim\w*|ogrencim\w*|danisanim\w*|hastam\w*|vakami\w*|raporum\w*|seansta\w*|klinigimiz\w*|okulumuz\w*|kurumumuz\w*)\b|\b(?:danisan|hasta|vaka)\w*\b.{0,80}\b(?:anamnez|seans|rapor|degerlendir|yorumla|bulgu|sonuc)\w*\b/u
 const SCIENTIFIC_QUESTION_GRAMMAR = /\b(?:nedir|ndr|neydi\w*|ne demek|neyi ifade eder|what is|definition|core meaning|temel sey|tanim\w*|acikla\w*|anlat\w*|hakkinda|konusunda|neden|niye|ne ise yarar|function|onem\w*|ornek\w*|mesela|fark\w*|ayrim\w*|karsilastir\w*|nasil ayril\w*|derin\w*|ayrinti\w*|detay\w*|devam\w*|sadelestir\w*|sade\w*|yalin\w*)\b/u
 const GENERIC_DIAGNOSTIC_BOUNDARY = /\b(?:tek basina tani koy\w*|ayri bir tani midir|tani midir|tani degildir|tani anlamina gelmez|guvenli bilimsel sinir|bilimsel yorum siniri|tani\w*.{0,80}(?:fark|ayrim|karsilastir|sinir))\b/u
