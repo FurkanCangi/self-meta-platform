@@ -4,8 +4,10 @@ import { explicitScenarioEvents, preservesScenarioEvents, scenarioEventConstrain
 // failure behind the first assertion. This is local evidence, not acceptance.
 const checks: { name: string; pass: boolean; observed?: unknown }[] = []
 const check = (name: string, pass: boolean, observed?: unknown) => checks.push({ name, pass, observed })
-const negative = ["unutan", "unuttu", "unuttuğu", "unutuyor", "unutmuş", "hatırlayamıyor", "hatırlayamadı", "hatırlayamadığı", "hatırlamadığı"]
-const positive = ["unutmuyor", "hatırlıyor", "hatırladı", "hatırladığı", "unutmadığı"]
+const negative = ["unutan", "unuttu", "unuttuğu", "unutuyor", "unutmuş", "hatırlayamıyor", "hatırlayamadı", "hatırlayamadığı", "hatırlamadığı",
+  "unutması", "unutmasını", "unutmasına", "unutmasının", "unutulan", "unutuldu", "unutulmuş", "unutulduğu", "hatırlamaması", "hatırlayamaması"]
+const positive = ["unutmuyor", "hatırlıyor", "hatırladı", "hatırladığı", "unutmadığı", "hatırlaması", "hatırlamasını", "hatırlamasına", "hatırlamasının",
+  "unutmaması", "unutulmayan", "unutulmadı", "unutulmamış", "unutulmadığı"]
 for (const [words, polarity] of [[negative, "negative"], [positive, "positive"]] as const) {
   const constraints = scenarioEventConstraints({ actor: "student", object: "instruction", stepCount: 2,
     events: [{ axis: "recall", polarity, partialStep: false }] })

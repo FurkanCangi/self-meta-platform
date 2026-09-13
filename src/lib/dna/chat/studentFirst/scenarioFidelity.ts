@@ -18,8 +18,11 @@ const EVENTS: readonly Readonly<{
     // Whole-word, polarity-specific suffix families: past participles soften
     // -duk to -dug- before possessive endings; inability (-yama-) is not
     // affirmative recall. Do not use a stem wildcard that also eats negation.
-    negative: /\b(?:unut(?:an|uyor|ur|tu|mus|tuk|tug(?:um|un|u|umuz|unuz|unu))|hatirla(?:mayan|miyor|madi|madig(?:im|in|i|imiz|iniz|ini)|yamayan|yamiyor|yamadi|yamadig(?:im|in|i|imiz|iniz|ini))|aklinda tut(?:amayan|amiyor|amaz)|forgets?|forgot|does not remember|cannot remember)\b/gu,
-    positive: /\b(?:hatirla(?:yan|yip|yarak|r|di|dig(?:im|in|i|imiz|iniz|ini))|hatirliyor|unut(?:mayan|muyor|maz|madi|madig(?:im|in|i|imiz|iniz|ini))|aklinda tut(?:an|uyor|ar|arak)|remembers?|remembered|does not forget)\b/gu },
+    // Nominalized and passive events retain polarity too: unutması/unutulan
+    // are losses, unutmaması/unutulmayan are not. Modally required events are
+    // excluded from the assertion view below, not treated as realized facts.
+    negative: /\b(?:unut(?:an|uyor|ur|tu|mus|tuk|tug(?:um|un|u|umuz|unuz|unu)|masi(?:ni|nin|na|nda|ndan)?|ul(?:an|du|mus|dugu))|hatirla(?:mayan|miyor|madi|madig(?:im|in|i|imiz|iniz|ini)|mamasi(?:ni|nin|na|nda|ndan)?|yamayan|yamiyor|yamadi|yamadig(?:im|in|i|imiz|iniz|ini)|yamamasi(?:ni|nin|na|nda|ndan)?)|aklinda tut(?:amayan|amiyor|amaz)|forgets?|forgot|does not remember|cannot remember)\b/gu,
+    positive: /\b(?:hatirla(?:yan|yip|yarak|r|di|dig(?:im|in|i|imiz|iniz|ini)|masi(?:ni|nin|na|nda|ndan)?)|hatirliyor|unut(?:mayan|muyor|maz|madi|madig(?:im|in|i|imiz|iniz|ini)|mamasi(?:ni|nin|na|nda|ndan)?|ulma(?:yan|di|mis|digi))|aklinda tut(?:an|uyor|ar|arak)|remembers?|remembered|does not forget)\b/gu },
   { axis: "completion",
     negative: /\b(?:basara(?:mayan|miyor|madi|maz)|basarisiz|tamamlaya(?:mayan|miyor|madi|maz)|yapa(?:mayan|miyor|madi|maz)|fails?|failed|does not succeed)\b/gu,
     positive: /\b(?:basar(?:an|iyor|di|ir)|basarili|tamamla(?:yan|yip|yarak|di|r)|tamamliyor|dogru uygula(?:yan|yip|yarak|di|r)|dogru uyguluyor|succeeds?|succeeded|does not fail)\b/gu },
@@ -180,13 +183,15 @@ function assertedEventView(text: string): string {
         // converb, permit a bounded object phrase and nominalized head verb;
         // a separate finite event or new subject cannot borrow that scope.
         const immediate = new RegExp(`^\\s+olmasi\\s+${modal}\\b`, "u").test(tail)
+        const nominalRequirement = /(?:masi|mesi)(?:ni|nin|na|nda|ndan)?$/u.test(match[0])
+          && new RegExp(`^\\s+(?:${modal}|gerek\\s+yok|sart)\\b`, "u").test(tail)
         const governed = /(?:yip|yup|ip|up|arak|erek)$/u.test(match[0])
           ? tail.match(new RegExp(`^((?:\\s+[a-z0-9]+){0,8})\\s+[a-z]+(?:masi|mesi)\\s+${modal}\\b`, "u")) : null
         const bridge = governed?.[1] ?? ""
         const hasSeparateEvent = events(bridge).some(e => !/(?:yip|yup|ip|up|arak|erek)$/u.test(e.normalizedEvidence))
           || /\b[a-z]+(?:iyor|uyor|yor|di|ti|du|tu|mis|mus|acak|ecek)\b/u.test(bridge)
         const hasNewSubject = /\b(?:ogrencinin|cocugun|kisinin|ogretmeninin|ogretmenin|yetiskinin|arkadasinin|digerinin|nin|nun|in|un)\b/u.test(bridge)
-        if (immediate || (governed && !hasSeparateEvent && !hasNewSubject)) ranges.push({ start: match.index!, end })
+        if (immediate || nominalRequirement || (governed && !hasSeparateEvent && !hasNewSubject)) ranges.push({ start: match.index!, end })
       }
     }
     // Overlapping positive/negative phrases must not be deleted twice.

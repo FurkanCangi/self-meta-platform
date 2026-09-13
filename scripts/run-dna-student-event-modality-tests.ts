@@ -8,6 +8,8 @@ const requirements = [
   "Çocuğun talimatı hatırlayarak görevi tamamlaması gerekiyor",
   "Öğrencinin yönergeyi hatırlıyor olması gerekir",
   "Öğrencinin bilgiyi hatırlayıp işlemesi beklenir",
+  "Öğrencinin yönergeyi hatırlaması gerekir",
+  "Öğrencinin yönergeyi hatırlamasına gerek yok",
 ]
 let checks = 0
 for (const requirement of requirements) {
@@ -35,6 +37,16 @@ for (const text of [
 ]) { assert.equal(preservesScenarioEvents(remember, text), true, text); checks++ }
 // A requirement of failure cannot falsely fulfill a negative event either.
 assert.equal(preservesScenarioEvents(forget, "Öğrencinin yönergeyi unutuyor olması gerekir."), false); checks++
+for (const text of ["Öğrencinin yönergeyi unutması gerekir.", "Öğrencinin yönergeyi unutması beklenir.",
+  "Öğrencinin yönergeyi unutmasına gerek yok."]) {
+  assert.equal(preservesScenarioEvents(forget, text), false, text); checks++
+}
+for (const text of ["Öğrencinin bir basamağı unutması bu örneğin koşuludur.",
+  "Unutulan basamak nedeniyle olayda bütün yönerge akılda tutulmuş değildir."]) {
+  assert.equal(preservesScenarioEvents(forget, text), true, text);
+  assert.equal(preservesScenarioEvents(remember, text), false, text); checks += 2
+}
+assert.equal(preservesScenarioEvents(forget, "Öğrencinin yönergeyi unutması anlatıldı; sonra yönergeyi hatırlaması gözlendi."), false); checks++
 assert.equal(preservesScenarioEvents(remember, "Öğrenci yönergeyi hatırlıyor; unutuyor olması gerekir."), true); checks++
 // The same converb/requirement scope applies to other existing event axes.
 const fails = explicitScenarioEvents("Öğrenci görevi başaramıyor")
