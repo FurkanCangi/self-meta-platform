@@ -514,6 +514,35 @@ async function main() {
   assert.equal(sensitiveSummary.status, 503)
   assert.equal(sensitiveSummary.body.error, "student_provider_privacy_boundary")
   assert.equal(providerCalls, beforeSummaryProtected)
+  const diagnosticEvents: Array<Record<string, unknown>> = []
+  const originalInfo = console.info
+  console.info = (_label, payload) => { diagnosticEvents.push(JSON.parse(String(payload))) }
+  try {
+    const probe = { payload: { question: "çalışma belleği nedir" }, binding, normal }
+    const invalid = await resolveStudentApplicationTurn({ ...probe, execute: async (input) => {
+      const baseline = await execute(input)
+      return { ok: false, reason: "candidate_invalid", plan: baseline.plan, provider: baseline.provider,
+        failureCodes: ["scenario_event_direction_mismatch"] }
+    } })
+    assert.equal(invalid.status, 503)
+    assert.equal(invalid.body.error, "student_answer_contract_rejected")
+    const details = diagnosticEvents.find((row) => row.event === "executor_result")!
+    assert.deepEqual(details.failureCodes, ["scenario_event_direction_mismatch"])
+    assert.equal(details.stage, "student_executor")
+    assert.equal(JSON.stringify(invalid.body).includes("failureCodes"), false)
+    diagnosticEvents.length = 0
+    const thrown = await resolveStudentApplicationTurn({ ...probe, execute: async () => {
+      throw new Error("SECRET_EXCEPTION_TEXT_MUST_NEVER_BE_LOGGED")
+    } })
+    assert.equal(thrown.status, 503)
+    assert.ok(diagnosticEvents.some((row) => row.event === "unexpected_exception" && row.stage === "student_executor"))
+    const serialized = JSON.stringify(diagnosticEvents)
+    for (const sensitive of [probe.payload.question, binding.secret, binding.actorId,
+      "SECRET_EXCEPTION_TEXT_MUST_NEVER_BE_LOGGED"]) assert.equal(serialized.includes(sensitive), false)
+    console.info = () => { throw new Error("LOG_SINK_UNAVAILABLE") }
+    const sinkFailure = await resolveStudentApplicationTurn({ ...probe, execute })
+    assert.equal(sinkFailure.status, 200, "logging must not turn success into 503")
+  } finally { console.info = originalInfo }
   console.log(JSON.stringify({ ok: summaryScopeFailures.length === 0, authority: "LOCAL_SHARED_APPLICATION_CONTROLLER_WITH_MOCK_PROVIDER_AND_REPORT_LOADER",
     candidateSha256: binding.candidateSha256, contextRoundtrips: roundtrips, maxTargets, maxTokenLength,
     directPublicDepthPairs: 3, ownershipControls, protectedNormalRoutes: 3,
@@ -525,6 +554,7 @@ async function main() {
     postNormalSummaryControls, newConversationSummaryControl: true, summaryScopeFailures,
     summaryProtectedNormalControls: 4, sensitiveSummaryProviderDenied: true,
     mockProviderCalls: providerCalls, reportLoads, finalAudits: audits.length,
+    diagnosticControls: { failureStageAndCode: true, unchangedPublicError: true, noSensitiveText: true, failingLogSinkNonInterfering: true },
     externalProviderCalls: 0, authenticatedPostTested: false, semanticQualityCertified: false, productionEligible: false }, null, 2))
   if (summaryScopeFailures.length) process.exitCode = 1
 }

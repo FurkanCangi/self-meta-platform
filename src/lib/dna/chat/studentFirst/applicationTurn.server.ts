@@ -13,7 +13,7 @@ import { applyStudentRequestContract, resolveStudentObligations } from "./conver
 import { resolveStudentEvidenceFirstRequest } from "./evidenceFirstRequest"
 import { interpretStudentContextScope, type StudentContextScopeResult } from "./evidenceFirstInterpreter.server"
 import { buildStudentAnswerExecutionPlan } from "./answerExecution"
-import { executeStudentAnswer } from "./answerExecutor.server"
+import { executeStudentAnswer, DNA_STUDENT_ANSWER_FAILURE_CODES } from "./answerExecutor.server"
 import { studentApplicationAnswer, studentApplicationTreatmentRefusal } from "./applicationAnswer.server"
 import { emptyStudentApplicationState, openStudentApplicationContext, sealStudentApplicationContext,
   type StudentApplicationState, type StudentContextBinding } from "./applicationContext.server"
@@ -47,16 +47,28 @@ export async function resolveStudentApplicationTurn(input: {
   safetyIdentifier?: string | null
 }): Promise<DnaChatApiResolution & { requestInterpretation?: StudentContextScopeResult }> {
   let requestInterpretation: StudentContextScopeResult | undefined
+  let diagnosticStage = "preconditions"
+  let diagnosticRequestId: string | null = null
+  // Operational metadata only: never log question, answer, context token,
+  // actor/report identifiers, exception message, or provider raw output.
+  const diagnostic = (details: Record<string, unknown>) => {
+    try { console.info("[dna-chat] student application diagnostic", JSON.stringify({
+      schemaVersion: "dna-student-application-diagnostic@1", stage: diagnosticStage,
+      requestId: diagnosticRequestId, ...details,
+    })) } catch { /* Observability must not alter request behavior. */ }
+  }
   const interpretationTrace = () => requestInterpretation ? { requestInterpretation } : {}
-  const fail = (error = "dna_chat_failed") => ({
-    status: 503, body: { ok: false, error }, accessedCaseReport: false,
-    ...interpretationTrace(),
-  } as DnaChatApiResolution & { requestInterpretation?: StudentContextScopeResult })
+  const fail = (error = "dna_chat_failed") => {
+    diagnostic({ event: "failure", error })
+    return { status: 503, body: { ok: false, error }, accessedCaseReport: false,
+      ...interpretationTrace() } as DnaChatApiResolution & { requestInterpretation?: StudentContextScopeResult }
+  }
   try {
     if (!studentLocalCandidateEnabled() || input.binding.secret.length < 32
       || !input.binding.actorId || !input.binding.conversationId
       || !/^[a-f0-9]{64}$/.test(input.binding.candidateSha256)) return fail("dna_chat_unavailable")
     const reportId = input.payload.reportId ?? null
+    diagnosticStage = "context_open"
     let state = input.contextToken ? openStudentApplicationContext(input.contextToken, input.binding)
       : emptyStudentApplicationState(reportId)
     if (!state) return fail("student_context_invalid")
@@ -71,6 +83,7 @@ export async function resolveStudentApplicationTurn(input: {
       // the context. The authenticated token carries both state representations.
       context: { ...(state.previousTopic ? { previousTopic: state.previousTopic } : {}),
         ...(state.normalContext ? { topicIds: [...state.normalContext.topicIds], lastQueryKind: state.normalContext.lastQueryKind } : {}) } }
+    diagnosticStage = "request_contract"
     const resolved = resolveStudentEvidenceFirstRequest({ turnId: `turn-${state.sequence + 1}`,
       message: input.payload.question, state: state.student })
     // An observed and resolved student referent establishes ownership even when
@@ -103,9 +116,12 @@ export async function resolveStudentApplicationTurn(input: {
     const safety = inspectDnaChatSafety(input.payload.question)
     const responseDepth = responseDepthForConversation(input.payload)
     const requestId = input.normal.createRequestId()
+    diagnosticRequestId = /^[a-zA-Z0-9-]{1,80}$/.test(requestId) ? requestId : null
+    diagnosticStage = "normal_runtime"
     const runtime = await input.normal.resolveRuntimeAnswer({ question: input.payload.question, mode: input.payload.mode,
       previousTopic: state.previousTopic, conversationContext: state.normalContext, responseDepth })
     if (!isDnaChatRuntimeAnswerAuthentic(runtime)) return fail()
+    diagnosticStage = "route_ownership"
     const protectedNormalRequest = safety.blocked || runtime.answer.classification === "refusal" || explicitReport
     // Local policy ownership comes from this request's bound targets/events and
     // its existing execution plan, not from a primary-task whitelist or merely
@@ -155,6 +171,7 @@ export async function resolveStudentApplicationTurn(input: {
       if (prior) {
         const plan = buildStudentAnswerExecutionPlan({ question: input.payload.question, contract: resolved.contract })
         try {
+          diagnosticStage = "scope_interpreter"
           requestInterpretation = await (input.interpretScope ?? interpretStudentContextScope)({
             message: input.payload.question, proposedTargetIds: resolved.contract.targetIds,
             proposedTargetLabels: plan.targetEvidence.map((target) => target.visibleAliases[0] ?? target.ownerBookTopicTitle),
@@ -175,6 +192,7 @@ export async function resolveStudentApplicationTurn(input: {
     let nextState: StudentApplicationState
     let finalAudit: DnaChatApiAuditInput
     if (normalOwnsRequest) {
+      diagnosticStage = "normal_resolver"
       normal = await resolveDnaChatApiRequest(normalPayload, { ...input.normal,
         resolveRuntimeAnswer: () => runtime,
         // Commit exactly one final audit after public projection succeeds.
@@ -205,6 +223,7 @@ export async function resolveStudentApplicationTurn(input: {
           assuranceStatus: "not_recorded", assuranceVersion: "not_recorded", sourceBindingCoveragePercent: 0 }
       }
     } else {
+      diagnosticStage = "student_contract_privacy"
       // No success-shaped fallback after interpreter/provider failure. Preserve
       // normal product responses only by the explicit routing decision above.
       if (!resolved.ok || !resolved.contract.targetIds.length) return fail("student_interpretation_unresolved")
@@ -222,11 +241,24 @@ export async function resolveStudentApplicationTurn(input: {
           && safety.redactedQuestion === input.payload.question.trim().slice(0, 600)
         if (!localResponseAuthorized) return fail("student_provider_privacy_boundary")
       }
+      diagnosticStage = "student_executor"
       const result = await (input.execute ?? executeStudentAnswer)({ question: input.payload.question,
         contract, historyEvidence: state.scientificEvidence ?? [],
         safetyIdentifier: input.safetyIdentifier, externalProviderAllowed: privacy.allowed })
+      diagnostic({ event: "executor_result", ok: result.ok,
+        reason: result.ok ? null : result.reason,
+        providerFailure: !result.ok && result.reason === "provider_failure"
+          ? { reason: result.failure.reason, httpStatus: result.failure.httpStatus } : null,
+        failureCodes: !result.ok && result.reason === "candidate_invalid"
+          ? result.failureCodes.filter((code) => DNA_STUDENT_ANSWER_FAILURE_CODES.includes(code)) : [],
+        provider: { calls: result.provider.calls, transportRetries: result.provider.transportRetries,
+          usageComplete: result.provider.usageComplete, latencyMs: result.provider.latencyMs,
+          usage: { inputTokens: result.provider.usage.inputTokens,
+            cachedInputTokens: result.provider.usage.cachedInputTokens, outputTokens: result.provider.usage.outputTokens } },
+      })
       if (!result.ok) return fail(result.reason === "candidate_invalid" ? "student_answer_contract_rejected"
         : result.reason === "provider_permission_denied" ? "student_provider_privacy_boundary" : "dna_chat_failed")
+      diagnosticStage = "student_public_projection"
       body = studentApplicationAnswer({ result, candidateSha256: input.binding.candidateSha256,
         requestId, responseDepth })
       nextState = { ...state, sequence: state.sequence + 1, lastRoute: "student",
@@ -251,10 +283,13 @@ export async function resolveStudentApplicationTurn(input: {
         // The new candidate has not passed the old runtime's assurance system.
         assuranceStatus: "not_recorded", assuranceVersion: "not_recorded", sourceBindingCoveragePercent: 0 }
     }
+    diagnosticStage = "context_seal"
     const token = sealStudentApplicationContext(nextState, input.binding)
     body = { ...body, studentContextToken: token }
+    diagnosticStage = "public_response_validation"
     if (!normalizeDnaChatPublicResponse(body)) return fail()
+    diagnosticStage = "audit_write"
     if (!(await input.normal.writeAudit(finalAudit)).ok) return fail("audit_unavailable")
     return { ...normal, body, ...interpretationTrace() }
-  } catch { return fail() }
+  } catch { diagnostic({ event: "unexpected_exception" }); return fail() }
 }
