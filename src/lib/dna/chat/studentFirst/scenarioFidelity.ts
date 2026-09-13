@@ -125,6 +125,77 @@ export function effectiveScenarioEvents(question: string, previous?: StudentScen
   return [...scenarioEventConstraints(previous).filter(e => !current.some(c => c.axis === e.axis)), ...current]
 }
 
+/** Only for checking a negative recall OUTCOME. Initial encoding followed by
+ * explicit loss is not successful retention. Keep the exception clause-local:
+ * no new subject, unrelated object, quotation or later recovery can supply it.
+ * This transient checker view never changes the answer, prompt or saved state.
+ */
+function recallOutcomeView(text: string): string {
+  return text.split(/([.!?;\n])/u).map(sentence => {
+    const n = normalizeDnaChatText(sentence)
+    const positive = EVENTS.find(e => e.axis === "recall")!.positive
+    const negative = EVENTS.find(e => e.axis === "recall")!.negative
+    const ranges: { start: number; end: number }[] = []
+    for (const match of n.matchAll(positive)) {
+      const prefix = n.slice(0, match.index)
+      // An initial phase must be explicit and local, not merely an "however".
+      const phase = prefix.match(/\b(?:baslangicta|basta|ilk anda|alirken|duyarken|ilk okudugunda)\b/u)
+      if (!phase || prefix.length - phase.index! > 85) continue
+      if (/\b(?:diger|baska|arkadas|ogretmen|yetiskin|ikinci ogrenci)\w*\b/u.test(prefix)) continue
+      const end = match.index! + match[0].length
+      const tail = n.slice(end)
+      // No arbitrary intervening prose: the same omitted subject must lose
+      // the same informational object (or a part of it) after the conjunction.
+      const loss = tail.match(/^\s+(?:ancak|ama|fakat|sonra|ardindan)\s+(?:(?:daha sonra|ardindan)\s+)?((?:(?:yonergenin|talimatin|bilginin|bilgilerin|adimlarin)\s+)?(?:bir bolumunu|bir kismini|bir adimini|ikinci adimini)|yonergeyi|talimati|bilgiyi|bilgileri|bunu|bir bolumunu|bir kismini)\s+/u)
+      if (!loss) continue
+      const lossPredicate = tail.slice(loss[0].length)
+      const lossMatch = [...lossPredicate.matchAll(negative)].find(m => m.index === 0)
+      if (!lossMatch) continue
+      // Avoid transporting loss of information from an unrelated object.
+      const objectKind = (s: string) => /\b(?:yonerge|talimat|adim|basamak)\w*\b/u.test(s) ? "instruction"
+        : /\bbilgi\w*\b/u.test(s) ? "information" : undefined
+      const beforeObject = objectKind(prefix), afterObject = objectKind(loss[1]!)
+      if (!beforeObject || (afterObject && afterObject !== beforeObject)) continue
+      ranges.push({ start: match.index!, end })
+    }
+    return ranges.reverse().reduce((s, r) => s.slice(0, r.start) + " " + s.slice(r.end), n)
+  }).join(" ")
+}
+
+/** A converb under an explicit requirement is not an asserted event:
+ * "hatırlayıp sıralaması gerekir" describes what the task requires. Do not
+ * let that either contradict a failed event or fulfill a successful one.
+ * Only erase the predicate from this checker view, never from public output.
+ */
+function assertedEventView(text: string): string {
+  return text.split(/([.!?;,:\n]|\b(?:ancak|ama|fakat|oysa)\b)/giu).map(clause => {
+    if (/^(?:[.!?;,:\n]|ancak|ama|fakat|oysa)$/iu.test(clause)) return clause
+    const n = normalizeDnaChatText(clause)
+    const ranges: { start: number; end: number }[] = []
+    for (const { negative, positive } of EVENTS) for (const pattern of [negative, positive]) {
+      for (const match of n.matchAll(pattern)) {
+        const end = match.index! + match[0].length, tail = n.slice(end)
+        const modal = "(?:gerekir|gerekiyor|gerekmektedir|gerekli|lazim|beklenir|bekleniyor)"
+        // Immediate 'olması gerekir' scopes a finite predicate too. For a
+        // converb, permit a bounded object phrase and nominalized head verb;
+        // a separate finite event or new subject cannot borrow that scope.
+        const immediate = new RegExp(`^\\s+olmasi\\s+${modal}\\b`, "u").test(tail)
+        const governed = /(?:yip|yup|ip|up|arak|erek)$/u.test(match[0])
+          ? tail.match(new RegExp(`^((?:\\s+[a-z0-9]+){0,8})\\s+[a-z]+(?:masi|mesi)\\s+${modal}\\b`, "u")) : null
+        const bridge = governed?.[1] ?? ""
+        const hasSeparateEvent = events(bridge).some(e => !/(?:yip|yup|ip|up|arak|erek)$/u.test(e.normalizedEvidence))
+          || /\b[a-z]+(?:iyor|uyor|yor|di|ti|du|tu|mis|mus|acak|ecek)\b/u.test(bridge)
+        const hasNewSubject = /\b(?:ogrencinin|cocugun|kisinin|ogretmeninin|ogretmenin|yetiskinin|arkadasinin|digerinin|nin|nun|in|un)\b/u.test(bridge)
+        if (immediate || (governed && !hasSeparateEvent && !hasNewSubject)) ranges.push({ start: match.index!, end })
+      }
+    }
+    // Overlapping positive/negative phrases must not be deleted twice.
+    const spans = ranges.sort((a, b) => a.start - b.start || b.end - a.end)
+      .filter((r, i, all) => !all.slice(0, i).some(p => p.start <= r.start && p.end >= r.end))
+    return spans.reverse().reduce((s, r) => s.slice(0, r.start) + " " + s.slice(r.end), n)
+  }).join(" ")
+}
+
 /** A bounded contradiction guard, not a general semantic acceptance judge.
  * Mixed-pole requests (two actors or before/after comparisons) retain both
  * conditions for the producer; do not flatten them into one global polarity.
@@ -136,12 +207,14 @@ export function preservesScenarioEvents(
   rejectOpposite = true,
 ): boolean {
   const unquoted = realizedEventText.replace(/[“«][\s\S]*?[”»]|"[^"\n]*"/gu, " ")
-  const observed = events(unquoted)
+  const asserted = assertedEventView(unquoted)
+  const observed = events(asserted)
+  const recallOutcome = events(recallOutcomeView(asserted))
   return constraints.every(c => {
     const requested = new Set(constraints.filter(x => x.axis === c.axis).map(x => x.polarity))
     if (!observed.some(x => x.axis === c.axis && x.polarity === c.polarity)) return false
     return !rejectOpposite || requested.size > 1
-      || !observed.some(x => x.axis === c.axis && x.polarity !== c.polarity
+      || !(c.axis === "recall" && c.polarity === "negative" ? recallOutcome : observed).some(x => x.axis === c.axis && x.polarity !== c.polarity
         && !(c.polarity === "negative" && !c.partialStep && x.partialStep))
   })
 }
