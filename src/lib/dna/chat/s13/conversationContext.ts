@@ -454,11 +454,21 @@ export function resolveDnaS13NamedTopicSurfaces(
   question: string,
   preferredTopicIds: readonly string[] = [],
   maximum = 2,
+  options: Readonly<{ allowTurkishCaseSuffix?: boolean }> = {},
 ): readonly DnaS13NamedTopicResolution[] {
   const normalized = normalizeDnaChatText(question)
   if (!normalized) return Object.freeze([])
   const preferred = new Set(preferredTopicIds)
-  const matches = TOPIC_SURFACES.filter((surface) => phraseIncludes(normalized, surface.normalized))
+  // Opt-in for the student request adapter; legacy S13 matching is unchanged.
+  // Preserve the entire registered title and only accept a bounded nominal
+  // case ending on its final word. Never fuzzy-strip arbitrary word endings.
+  const includesTitle = (value: string, title: string) => {
+    if (phraseIncludes(value, title)) return true
+    if (!options.allowTurkishCaseSuffix) return false
+    const escaped = title.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&")
+    return new RegExp(`(?:^| )${escaped}(?:i|u|in|un|nin|nun|yi|yu|ni|nu|a|e|ya|ye|na|ne|da|de|ta|te|dan|den|tan|ten|nda|nde|ndan|nden|la|le|yla|yle)(?: |$)`, "u").test(value)
+  }
+  const matches = TOPIC_SURFACES.filter((surface) => includesTitle(normalized, surface.normalized))
     .sort((left, right) => normalized.indexOf(left.normalized) - normalized.indexOf(right.normalized)
       || right.normalized.length - left.normalized.length || left.title.localeCompare(right.title, "tr"))
   const selected: TopicSurface[] = []
@@ -473,7 +483,7 @@ export function resolveDnaS13NamedTopicSurfaces(
     })) continue
     const sameTitle = SURFACES_BY_CANONICAL.get(match.normalized) ?? [match]
     const preferredMatch = sameTitle.find((row) => preferred.has(row.topicId))
-    const hierarchicalMatches = sameTitle.filter((row) => phraseIncludes(normalized, normalizeDnaChatText(row.headingLabel)))
+    const hierarchicalMatches = sameTitle.filter((row) => includesTitle(normalized, normalizeDnaChatText(row.headingLabel)))
     const resolved = preferredMatch ?? (hierarchicalMatches.length === 1 ? hierarchicalMatches[0]
       : sameTitle.length === 1 ? match : sameTitle[0])
     if (resolved && !selected.some((row) => row.topicId === resolved.topicId)) selected.push(resolved)

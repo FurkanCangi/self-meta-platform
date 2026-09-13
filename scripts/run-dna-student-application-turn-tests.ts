@@ -15,6 +15,8 @@ import { buildDnaChatAuditMetadata, responseDepthForConversation, type DnaChatAp
 import { createVerifiedTestCaseContext } from "./dna-chat-test-helpers"
 import { replayPublicAnswerBody } from "./dna-replay-public-api"
 import { studentCandidateSha256 } from "./dna-student-candidate-identity"
+import { resolveStudentNamedCatalogTargets } from "../src/lib/dna/chat/studentFirst/targetCatalog"
+import { resolveDnaS13NamedTopicSurfaces } from "../src/lib/dna/chat/s13/conversationContext"
 
 const binding = { secret: "synthetic-local-test-secret-not-a-real-secret", actorId: "synthetic-owner",
   conversationId: "11111111-1111-4111-8111-111111111111", candidateSha256: studentCandidateSha256(), nowMs: 10_000 }
@@ -68,6 +70,29 @@ async function main() {
     DNA_CHAT_V3_KILL_SWITCH: "0", DNA_CHAT_V3_ROLLOUT_PERCENT: "0" })
   delete process.env.VERCEL_ENV
   assert.equal(studentLocalCandidateEnabled(), true)
+  let inflectedCatalogControls = 0
+  for (const [title, suffixes] of [
+    ["Teneffüs ve Serbest Zaman", ["", "ın", "ı", "da", "dan", "la"]],
+    ["Stres Reaktivitesi ve Toparlanma", ["", "nın", "yı", "da", "dan", "yla"]],
+    ["Duyusal Modülasyon", ["", "un", "u", "da", "dan", "la"]],
+  ] as const) {
+    const exact = resolveStudentNamedCatalogTargets(`${title} nedir?`).map(row => row.targetId)
+    assert.ok(exact.length > 0)
+    for (const suffix of suffixes) {
+      const question = `${title}${suffix} ilgili bilgileri özetle`
+      const actual = resolveStudentNamedCatalogTargets(question).map(row => row.targetId)
+      assert.deepEqual(actual, exact, question)
+      inflectedCatalogControls++
+    }
+  }
+  const inflectedSummary = "Teneffüs ve serbest zamanın sınıftaki yapılandırılmış etkinlikten farkını özetle."
+  // Existing legacy callers do not opt into student-specific nominal matching.
+  assert.deepEqual(resolveDnaS13NamedTopicSurfaces(inflectedSummary, [], 8), [])
+  const schoolTarget = resolveStudentNamedCatalogTargets("Teneffüs ve Serbest Zaman nedir?")[0]!.targetId
+  for (const question of ["Teneffüs ve serbest zamanlama nedir?", "Okul dışındaki boş zaman nedir?", "Bunu özetle", "teşekkür ederim"]) {
+    assert.equal(resolveStudentNamedCatalogTargets(question).some(row => row.targetId === schoolTarget), false, question)
+    inflectedCatalogControls++
+  }
   for (const env of [{ NODE_ENV: "production", DNA_CHAT_STUDENT_LOCAL_CANDIDATE: "1" },
     { NODE_ENV: "test", VERCEL_ENV: "preview", DNA_CHAT_STUDENT_LOCAL_CANDIDATE: "1" }, {},
     { NODE_ENV: "development", DNA_CHAT_STUDENT_LOCAL_CANDIDATE: "0" }]) assert.equal(studentLocalCandidateEnabled(env), false)
@@ -487,6 +512,43 @@ async function main() {
   assert.equal(afterGreetingSummary.status, 200)
   assert.equal(afterGreetingSummary.body.runtimeGeneration, "student_first_candidate")
   postNormalSummaryControls++
+  // A named catalog topic must regain student ownership after a normal reply,
+  // even when the last title word carries a Turkish case suffix. This is a
+  // routing/source-handoff test with a mock provider, not semantic acceptance.
+  let inflectedSummaryRouteControls = 0
+  const referencedComparison = resolveStudentEvidenceFirstRequest({ turnId: "summary-with-explicit-history",
+    message: "Bununla duyusal modülasyon arasındaki farkı özetle", state: afterRefusalState.student })
+  assert.ok(referencedComparison.ok)
+  assert.ok(referencedComparison.contract.targetIds.includes("interoception"))
+  assert.ok(referencedComparison.contract.targetIds.includes("sensory_modulation"))
+  for (const contextToken of [afterRefusalToken, undefined]) {
+    let targetIds: readonly string[] = []
+    let claimTexts: readonly string[] = []
+    const beforeLoads = reportLoads
+    const result = await resolveStudentApplicationTurn({ payload: { question: inflectedSummary },
+      contextToken, binding, normal, execute: async (input) => {
+        targetIds = input.contract.targetIds
+        claimTexts = buildStudentAnswerExecutionPlan(input).targetEvidence.flatMap(target => target.claims.map(claim => claim.text))
+        return execute(input)
+      } })
+    assert.equal(result.status, 200)
+    assert.equal(result.body.runtimeGeneration, "student_first_candidate", JSON.stringify({
+      inflectedSummary, withHistory: Boolean(contextToken), resolved: resolveStudentEvidenceFirstRequest({ turnId: "diagnostic",
+        message: inflectedSummary, state: contextToken ? openStudentApplicationContext(contextToken, binding)!.student : createEmptyStudentConversationState() }) }))
+    assert.deepEqual(targetIds, [schoolTarget])
+    assert.ok(claimTexts.some(text => /yapılandırılmış sınıf/u.test(text)))
+    assert.ok(claimTexts.some(text => /Teneffüs yetişkin kontrolünden/u.test(text)))
+    assert.equal(reportLoads, beforeLoads)
+    inflectedSummaryRouteControls++
+  }
+  for (const payload of [{ question: `${inflectedSummary} Bu raporu da özetle.`, reportId },
+    { question: `${inflectedSummary} Çocuk için kişiye özel terapi planı hazırla.` }]) {
+    let reached = false
+    await resolveStudentApplicationTurn({ payload, binding, contextToken: afterRefusalToken, normal,
+      execute: async () => { reached = true; throw new Error("protected_inflected_request") } })
+    assert.equal(reached, false)
+    inflectedSummaryRouteControls++
+  }
   const newConversationSummary = await resolveStudentApplicationTurn({ payload: { question: caseConversation[7]!.user },
     binding, normal, execute })
   assert.equal(newConversationSummary.status, 200, "explicit_current_summary_must_not_require_prior_student_history")
@@ -551,7 +613,7 @@ async function main() {
       noStudentExecution: true, preservedRefusalAndState: true, auditIdentity: true, auditFailureClosed: true },
     privacyRouteControls: { localPolicy: localPrivacyRouteControls, sensitiveProviderDenied, personalDataProtected,
       originalThirdFixtureQuestionPreserved: true, priorContextSeededNotRegenerated: true, auditFailureClosed: true },
-    postNormalSummaryControls, newConversationSummaryControl: true, summaryScopeFailures,
+    postNormalSummaryControls, inflectedCatalogControls, inflectedSummaryRouteControls, newConversationSummaryControl: true, summaryScopeFailures,
     summaryProtectedNormalControls: 4, sensitiveSummaryProviderDenied: true,
     mockProviderCalls: providerCalls, reportLoads, finalAudits: audits.length,
     diagnosticControls: { failureStageAndCode: true, unchangedPublicError: true, noSensitiveText: true, failingLogSinkNonInterfering: true },

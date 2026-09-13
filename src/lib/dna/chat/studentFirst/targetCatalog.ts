@@ -187,7 +187,7 @@ export function resolveStudentNamedCatalogTargets(
   const candidates: Array<Readonly<{
     topic: ReturnType<typeof resolveDnaS13NamedTopicSurfaces>[number]
     relationEquivalent: boolean
-  }>> = resolveDnaS13NamedTopicSurfaces(message, preferredTopicIds, maximum)
+  }>> = resolveDnaS13NamedTopicSurfaces(message, preferredTopicIds, maximum, { allowTurkishCaseSuffix: true })
     .map((topic) => Object.freeze({ topic, relationEquivalent: false }))
   // A named theory remains a catalog topic, not the general concept it models.
   // Match the complete registered title, never a question-specific target pair.
@@ -202,7 +202,7 @@ export function resolveStudentNamedCatalogTargets(
   const relationParts = message.split(/\s+ile\s+/iu).map((part) => part.trim()).filter(Boolean)
   if (relationParts.length > 1) {
     for (const part of relationParts) {
-      for (const topic of resolveDnaS13NamedTopicSurfaces(part, preferredTopicIds, maximum)) {
+      for (const topic of resolveDnaS13NamedTopicSurfaces(part, preferredTopicIds, maximum, { allowTurkishCaseSuffix: true })) {
         candidates.push(Object.freeze({ topic, relationEquivalent: false }))
       }
     }
@@ -211,7 +211,7 @@ export function resolveStudentNamedCatalogTargets(
       const at = match.index ?? -1
       if (at < 0) continue
       const variant = `${message.slice(0, at)} ve ${message.slice(at + match[0].length)}`
-      for (const topic of resolveDnaS13NamedTopicSurfaces(variant, preferredTopicIds, maximum)) {
+      for (const topic of resolveDnaS13NamedTopicSurfaces(variant, preferredTopicIds, maximum, { allowTurkishCaseSuffix: true })) {
         if (!explicitSurface(variant, [topic.surface, topic.title])) continue
         candidates.push(Object.freeze({ topic, relationEquivalent: true }))
       }

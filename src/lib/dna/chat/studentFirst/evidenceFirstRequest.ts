@@ -951,6 +951,11 @@ export function buildStudentStateCandidateEnvelope(input: Readonly<{
   const comparisonNeedsStateSide = input.facts.semanticTaskCandidates.includes("compare")
     && !input.facts.observationExtras.withinTargetStateContrast
     && explicitSet.size < 2
+    // A summary naming its own subject does not ask to compare that subject
+    // with an unrelated previously active topic. Import a history-side target
+    // only when the current summary actually refers back to it.
+    && !(input.facts.conversationAction === "summarize_session" && explicitSet.size > 0
+      && !input.facts.referenceCues.active && !input.facts.referenceCues.historyReturn)
   const latestTurn = input.state.semanticLedger.at(-1) ?? null
   const implicitSingleExampleAfterComparison = input.facts.semanticTaskCandidates.includes("example")
     && explicitSet.size === 0
