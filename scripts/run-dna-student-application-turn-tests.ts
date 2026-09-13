@@ -596,6 +596,9 @@ async function main() {
     payload: { question: definitionPrivacyControls[0]! }, binding, normal,
     contextToken: String(definitionPrefix.body.studentContextToken), execute: async (input) => {
       assert.equal(input.externalProviderAllowed, true)
+      assert.equal(input.contract.semanticTask, "evidence")
+      assert.equal(input.contract.requestedSemanticTasks.includes("boundary"), false)
+      assert.ok(input.contract.obligations.some(obligation => obligation.kind === "explain_source_evidence"))
       definitionClaims = buildStudentAnswerExecutionPlan(input).targetEvidence
         .flatMap(target => target.claims.map(claim => claim.text))
       return execute(input)

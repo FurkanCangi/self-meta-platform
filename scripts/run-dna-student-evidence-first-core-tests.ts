@@ -33,6 +33,26 @@ assert.equal(explicitDefinition.semanticTaskCandidates.includes("define"), true)
 assert.equal(explicitDefinition.conversationAction, "start")
 assert.equal(explicitDefinition.presentation.language, "plain_student")
 
+for (const message of [
+  "Çalışma belleğinin tanımı kaynakta var mı?",
+  "İnhibisyon tanımının açıklaması bu kaynakta bulunuyor mu?",
+  "Planlama tanımları bu kitapta var mı, kaynak ne söylüyor?",
+  "Okul dışındaki boş zamanın tanımı da bu kaynakta var mı?",
+  "Bu kaynakta interosepsiyon tanımı yok mu?",
+]) {
+  const facts = observe(message)
+  assert.equal(facts.semanticTaskCandidates.includes("boundary"), false, message)
+  assert.equal(facts.semanticTaskCandidates.includes("evidence"), true, message)
+}
+for (const message of [
+  "Bu çocukta tanı var mı?", "Otizm tanısı var mı?", "Tanımız kesin midir?",
+  "Bu tanısal sonuç kesin midir?", "ADHD var mı?",
+  "İnhibisyonun düşük olması tek başına bozukluk gösterir mi?",
+  "Bu kaynakta tanımı var; çocukta bu tanı var mı?",
+]) {
+  assert.equal(observe(message).semanticTaskCandidates.includes("boundary"), true, message)
+}
+
 const original90MisspelledDefinition = resolveStudentEvidenceFirstRequest({
   turnId: "original90:1:3",
   message: "regülsyon neydi tam olarak",

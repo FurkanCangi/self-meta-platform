@@ -20,7 +20,7 @@ import {
   type StudentSemanticFrame,
 } from "./semanticInterpreter"
 
-export const DNA_STUDENT_EVIDENCE_FIRST_VERSION = "dna-student-evidence-first@21" as const
+export const DNA_STUDENT_EVIDENCE_FIRST_VERSION = "dna-student-evidence-first@22" as const
 
 export type StudentObservedTargetFact = Readonly<{
   targetId: string
@@ -412,7 +412,10 @@ function semanticTaskCandidates(message: string, explicitTargetCount: number): r
     /\b(?:gunluk|gundelik)\s+(?:hayat|yasam)\w*\b.{0,32}\b(?:ornek|senaryo)\w*\b/u.test(normalized)
     || /\b(?:ornek|senaryo)\w*\b.{0,32}\b(?:gunluk|gundelik)\s+(?:hayat|yasam)\w*\b/u.test(normalized)
   )
-  const diagnosticCausality = /\b(?:adhd|otizm|tani|hiporeaktif|bozukluk)\w*\b/u.test(normalized)
+  // Diagnosis inflections must not consume the distinct noun “tanım”. In
+  // particular, a question about a source's definition is not a diagnosis
+  // proposition and must retain its evidence task instead of a blanket “no”.
+  const diagnosticCausality = /\b(?:(?:adhd|otizm|hiporeaktif|bozukluk)\w*|tani(?:nin|yi|ya|da|dan|si(?:nin|ni|na|nda|ndan)?|lar\w*|miz\w*|sal\w*|lan\w*)?)\b/u.test(normalized)
     && /\b(?:mi|midir|var\s+mi|diyebilir\w*)\b/u.test(normalized)
   const causalityBoundary = diagnosticCausality || (/\b(?:kesin\w*\s+neden|mutlaka|bozuk\w*|guclu\s+mu|olur\s+mu|midir|mi|diyebilir\w*)\b/u.test(normalized)
     && /\b(?:tek\s+basina|kesin\w*|mutlaka|dusuk\w*|yuksek\w*|bakm\w*|hareket\w*|zorlan\w*|surdu\w*|bozuk\w*|diyebilir\w*)\b/u.test(normalized)
