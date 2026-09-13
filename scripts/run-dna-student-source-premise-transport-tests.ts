@@ -95,8 +95,19 @@ async function main() {
       const receipt = await session.turn({ question: original.question })
       assert.equal(receipt.status, 200, JSON.stringify({ id, result: receipt.student?.result, body: receipt.body }))
       assert.ok(receipt.visibleAnswer?.trim())
-      if (i < 9) assert.equal(receipt.visibleAnswer, original.visibleAnswer,
-        "earlier_successful_visible_answer_changed_in_recorded_response_regression")
+      if (i < 9) {
+        // The support-context fix intentionally removes an unprovided fact.
+        // Preserve historical bytes; only this local projection expectation
+        // changes, and every source/policy sentence after it must stay exact.
+        const unprovidedSupport = original.visibleAnswer.startsWith("Kendi kendine toparlanıp göreve dönme,")
+          && !/kendi kendine|desteksiz|yardım almadan|tek başına|bağımsız/iu.test(original.question)
+        const expected = unprovidedSupport ? original.visibleAnswer.replace(
+          "Kendi kendine toparlanıp göreve dönme, öz-düzenleme açısından davranışı o anda yeniden göreve yöneltebilme",
+          "Toparlanıp etkinliğe dönmesi, öz-düzenleme açısından davranışı o anda yeniden etkinliğe yöneltebilme",
+        ) : original.visibleAnswer
+        assert.equal(receipt.visibleAnswer, expected,
+          "only_unprovided_support_projection_may_change_in_recorded_regression")
+      }
       assert.equal(queue.length, 0, "recorded_response_not_consumed")
       assert.equal(session.state()?.sequence, i)
       receipts.push({ id, status: receipt.status, visibleAnswer: receipt.visibleAnswer })

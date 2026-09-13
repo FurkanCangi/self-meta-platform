@@ -10,6 +10,7 @@ import type { StudentRequestContract } from "./contracts"
 import type { StudentConversationEvidenceRef } from "./conversationEvidence"
 import { effectiveScenarioEvents, preservesScenarioEvents, scenarioForAnswer, SCENARIO_FIDELITY_INSTRUCTIONS } from "./scenarioFidelity"
 import { sourceBoundDefinitionScope, withoutExampleScopeDeclarations } from "./sourceScope"
+import { explicitCaseSupportQualifier } from "./caseSupportContext"
 import {
   buildStudentAnswerExecutionPlan,
   studentRelationSourceUnits,
@@ -438,7 +439,9 @@ function localCaseObservationStatement(
   const hasAdultLook = /\b(?:yetiskin|ogretmen)\w*.{0,32}\bbak\w*\b/u.test(normalized)
 
   if (hasEveryTarget(plan, ["self_regulation", "recovery"]) && hasRecovery) {
-    return "Kendi kendine toparlanıp göreve dönme, öz-düzenleme açısından davranışı o anda yeniden göreve yöneltebilme olarak düşünülebilir; toparlanma burada gözlenen geri dönüşü anlatır."
+    const support = explicitCaseSupportQualifier(question, plan.historyAnchor?.caseContext?.scenario)
+    const observation = support ? `${support} toparlanıp etkinliğe dönmesi` : "Toparlanıp etkinliğe dönmesi"
+    return `${observation}, öz-düzenleme açısından davranışı o anda yeniden etkinliğe yöneltebilme olarak düşünülebilir; toparlanma burada gözlenen geri dönüşü anlatır.`
   }
   if (hasEveryTarget(plan, ["self_regulation", "attention"]) && hasTaskBreak) {
     return "Göreve başladıktan sonra görevden kopma ve sınıfta dolaşma, öz-düzenleme ile dikkati sürdürme açısından ayrı ayrı değerlendirilebilecek bir gözlemdir."
